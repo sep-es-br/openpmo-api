@@ -22,6 +22,7 @@ public abstract class WorkpackModelDto {
     private String modelName;
     private String modelNameInPlural;
     private String fontIcon;
+    private PropertyModelDto sortBy;
 
     public Long getId() {
         return id;
@@ -61,5 +62,13 @@ public abstract class WorkpackModelDto {
 
     public void setFontIcon(String fontIcon) {
         this.fontIcon = fontIcon;
+    }
+
+    public PropertyModelDto getSortBy() {
+        return sortBy;
+    }
+
+    public void setSortBy(PropertyModelDto sortBy) {
+        this.sortBy = sortBy;
     }
 }

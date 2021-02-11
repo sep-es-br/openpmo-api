@@ -430,38 +430,71 @@ public class WorkpackModelService {
     }
 
     public WorkpackModelDto getWorkpackModelDto(WorkpackModel workpackModel) {
+        PropertyModelDto sortBy = null;
+        if (workpackModel.getSortBy() != null) {
+            sortBy = getPropertyModelDto(workpackModel.getSortBy());
+        }
+        workpackModel.setSortBy(null);
         switch (workpackModel.getClass().getTypeName()) {
             case TYPE_NAME_MODEL_PORTFOLIO:
-                return modelMapper.map(workpackModel, PortfolioModelDto.class);
+                PortfolioModelDto portfolioModelDto = modelMapper.map(workpackModel, PortfolioModelDto.class);
+                portfolioModelDto.setSortBy(sortBy);
+                return portfolioModelDto;
             case TYPE_NAME_MODEL_PROGRAM:
-                return modelMapper.map(workpackModel, ProgramModelDto.class);
+                ProgramModelDto programModelDto = modelMapper.map(workpackModel, ProgramModelDto.class);
+                programModelDto.setSortBy(sortBy);
+                return programModelDto;
             case TYPE_NAME_MODEL_ORGANIZER:
-                return modelMapper.map(workpackModel, OrganizerModelDto.class);
+                OrganizerModelDto organizerModelDto = modelMapper.map(workpackModel, OrganizerModelDto.class);
+                organizerModelDto.setSortBy(sortBy);
+                return organizerModelDto;
             case TYPE_NAME_MODEL_DELIVERABLE:
-                return modelMapper.map(workpackModel, DeliverableModelDto.class);
+                DeliverableModelDto deliverableModelDto = modelMapper.map(workpackModel, DeliverableModelDto.class);
+                deliverableModelDto.setSortBy(sortBy);
+                return deliverableModelDto;
             case TYPE_NAME_MODEL_PROJECT:
-                return modelMapper.map(workpackModel, ProjectModelDto.class);
+                ProjectModelDto projectModelDto = modelMapper.map(workpackModel, ProjectModelDto.class);
+                projectModelDto.setSortBy(sortBy);
+                return projectModelDto;
             case TYPE_NAME_MODEL_MILESTONE:
-                return modelMapper.map(workpackModel, MilestoneModelDto.class);
+                MilestoneModelDto milestoneModelDto = modelMapper.map(workpackModel, MilestoneModelDto.class);
+                milestoneModelDto.setSortBy(sortBy);
+                return milestoneModelDto;
             default:
                 return null;
         }
     }
 
     private WorkpackModelDetailDto convertWorkpackModelDetailDto(WorkpackModel workpackModel) {
+        PropertyModelDto sortBy = null;
+        if (workpackModel.getSortBy() != null) {
+            sortBy = getPropertyModelDto(workpackModel.getSortBy());
+        }
         switch (workpackModel.getClass().getTypeName()) {
             case TYPE_NAME_MODEL_PORTFOLIO:
-                return modelMapper.map(workpackModel, PortfolioModelDetailDto.class);
+                PortfolioModelDetailDto portfolioModelDetailDto = modelMapper.map(workpackModel, PortfolioModelDetailDto.class);
+                portfolioModelDetailDto.setSortBy(sortBy);
+                return portfolioModelDetailDto;
             case TYPE_NAME_MODEL_PROGRAM:
-                return modelMapper.map(workpackModel, ProgramModelDetailDto.class);
+                ProgramModelDetailDto programModelDetailDto = modelMapper.map(workpackModel, ProgramModelDetailDto.class);
+                programModelDetailDto.setSortBy(sortBy);
+                return programModelDetailDto;
             case TYPE_NAME_MODEL_ORGANIZER:
-                return modelMapper.map(workpackModel, OrganizerModelDetailDto.class);
+                OrganizerModelDetailDto organizerModelDetailDto = modelMapper.map(workpackModel, OrganizerModelDetailDto.class);
+                organizerModelDetailDto.setSortBy(sortBy);
+                return organizerModelDetailDto;
             case TYPE_NAME_MODEL_DELIVERABLE:
-                return modelMapper.map(workpackModel, DeliverableModelDetailDto.class);
+                DeliverableModelDetailDto deliverableModelDetailDto = modelMapper.map(workpackModel, DeliverableModelDetailDto.class);
+                deliverableModelDetailDto.setSortBy(sortBy);
+                return deliverableModelDetailDto;
             case TYPE_NAME_MODEL_PROJECT:
-                return modelMapper.map(workpackModel, ProjectModelDetailDto.class);
+                ProjectModelDetailDto projectModelDetailDto = modelMapper.map(workpackModel, ProjectModelDetailDto.class);
+                projectModelDetailDto.setSortBy(sortBy);
+                return projectModelDetailDto;
             case TYPE_NAME_MODEL_MILESTONE:
-                return modelMapper.map(workpackModel, MilestoneModelDetailDto.class);
+                MilestoneModelDetailDto milestoneModelDetailDto = modelMapper.map(workpackModel, MilestoneModelDetailDto.class);
+                milestoneModelDetailDto.setSortBy(sortBy);
+                return milestoneModelDetailDto;
             default:
                 return null;
         }

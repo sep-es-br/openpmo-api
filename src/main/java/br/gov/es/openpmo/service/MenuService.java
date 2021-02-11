@@ -10,18 +10,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import br.gov.es.openpmo.dto.menu.MenuOfficeDto;
-import br.gov.es.openpmo.dto.menu.PlanModelMenuDto;
+import br.gov.es.openpmo.dto.menu.PlanMenuDto;
 import br.gov.es.openpmo.dto.menu.WorkpackMenuDto;
-import br.gov.es.openpmo.dto.menu.WorkpackModelMenuDto;
 import br.gov.es.openpmo.dto.workpack.PropertyDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackDetailDto;
 import br.gov.es.openpmo.dto.workpackmodel.PropertyModelDto;
 import br.gov.es.openpmo.model.Office;
 import br.gov.es.openpmo.model.Plan;
-import br.gov.es.openpmo.model.PlanModel;
 import br.gov.es.openpmo.model.Property;
 import br.gov.es.openpmo.model.Workpack;
-import br.gov.es.openpmo.model.WorkpackModel;
 
 @Service
 public class MenuService {
@@ -62,29 +59,13 @@ public class MenuService {
         List<Office> offices = officeService.findAll();
         offices.forEach(office -> {
             MenuOfficeDto item = modelMapper.map(office, MenuOfficeDto.class);
-            List<PlanModel> planModels = planModelService.findAllInOffice(office.getId());
-            planModels.forEach(plan -> {
-                PlanModelMenuDto planModel = modelMapper.map(plan, PlanModelMenuDto.class);
-                Set<WorkpackModel> workpackModels = workpackModelService.findAllByIdPlanModelWithChildren(plan.getId());
-                planModel.getModels().addAll(getWorkpackModelMenuDto(workpackModels));
-                item.getPlanModels().add(planModel);
+            List<Plan> plans = planService.findAllInOffice(office.getId());
+            plans.forEach(plan -> {
+                item.getPlans().add(modelMapper.map(plan, PlanMenuDto.class));
             });
             menus.add(item);
         });
         return menus;
-    }
-
-    private Set<WorkpackModelMenuDto> getWorkpackModelMenuDto(Set<WorkpackModel> workpackModels) {
-        Set<WorkpackModelMenuDto> workpackMenuDtos = new HashSet<>(0);
-        workpackModels.forEach(model -> {
-            WorkpackModelMenuDto menuDto = modelMapper.map(model, WorkpackModelMenuDto.class);
-            workpackMenuDtos.add(menuDto);
-            if (model.getChildren() != null) {
-                menuDto.setChildren(getWorkpackModelMenuDto(model.getChildren()));
-            }
-        });
-
-        return workpackMenuDtos;
     }
 
     private Set<WorkpackMenuDto> getWorkpackMenuDto(Set<Workpack> workpacks) {

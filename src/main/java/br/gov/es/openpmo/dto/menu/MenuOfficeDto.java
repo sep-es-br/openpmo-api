@@ -7,7 +7,7 @@ public class MenuOfficeDto {
     private Long id;
     private String nome;
     private String fullName;
-    private List<PlanModelMenuDto> planModels = new ArrayList<>(0);
+    private List<PlanMenuDto> plans = new ArrayList<>(0);
 
     public Long getId() {
         return id;
@@ -33,11 +33,11 @@ public class MenuOfficeDto {
         this.fullName = fullName;
     }
 
-    public List<PlanModelMenuDto> getPlanModels() {
-        return planModels;
+    public List<PlanMenuDto> getPlans() {
+        return plans;
     }
 
-    public void setPlanModels(List<PlanModelMenuDto> planModels) {
-        this.planModels = planModels;
+    public void setPlans(List<PlanMenuDto> plans) {
+        this.plans = plans;
     }
 }

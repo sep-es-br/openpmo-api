@@ -15,7 +15,9 @@ public interface WorkpackModelRepository extends Neo4jRepository<WorkpackModel, 
 
     @Query("MATCH (w:WorkpackModel)-[wp:IS_ROOT_OF]->(pm:PlanModel) "
                + "WHERE ID(pm) = $id AND NOT (w)-[:IS_IN]->(:WorkpackModel) "
-               + " RETURN w, wp, pm ")
+               + " RETURN w, wp, pm, ["
+               + "  [(w)-[is:IS_SORTED_BY]->(ps:PropertyModel) | [is, ps] ] "
+               + "]")
     List<WorkpackModel> findAllByIdPlanModel(@Param("id") Long id);
 
     @Query("MATCH (w:WorkpackModel)-[wp:IS_ROOT_OF]->(pm:PlanModel) "
@@ -35,6 +37,7 @@ public interface WorkpackModelRepository extends Neo4jRepository<WorkpackModel, 
     @Query("MATCH (w:Workpack)-[wp:IS_INSTANCE_BY]->(wm:WorkpackModel) "
                + "WHERE ID(w) = $idWorkpack "
                + " RETURN wm , ["
+               + "  [(wm)-[is:IS_SORTED_BY]->(ps:PropertyModel) | [is, ps] ], "
                + "  [(wm)<-[i:IS_IN]-(wm2:WorkpackModel) |[i,wm2] ],"
                + "  [(wm)<-[f:FEATURES]-(p:PropertyModel) |[f, p] ]"
                + "] ")

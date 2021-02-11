@@ -36,6 +36,7 @@ import br.gov.es.openpmo.dto.workpack.ToggleDto;
 import br.gov.es.openpmo.dto.workpack.UnitSelectionDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackDetailDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackParamDto;
+import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.CostAccount;
 import br.gov.es.openpmo.model.Currency;
@@ -52,11 +53,13 @@ import br.gov.es.openpmo.model.Milestone;
 import br.gov.es.openpmo.model.MilestoneModel;
 import br.gov.es.openpmo.model.Number;
 import br.gov.es.openpmo.model.NumberModel;
+import br.gov.es.openpmo.model.Office;
 import br.gov.es.openpmo.model.OrganizationSelection;
 import br.gov.es.openpmo.model.OrganizationSelectionModel;
 import br.gov.es.openpmo.model.Organizer;
 import br.gov.es.openpmo.model.OrganizerModel;
 import br.gov.es.openpmo.model.Person;
+import br.gov.es.openpmo.model.Plan;
 import br.gov.es.openpmo.model.Portfolio;
 import br.gov.es.openpmo.model.PortfolioModel;
 import br.gov.es.openpmo.model.Program;
@@ -78,6 +81,7 @@ import br.gov.es.openpmo.model.UnitSelectionModel;
 import br.gov.es.openpmo.model.Workpack;
 import br.gov.es.openpmo.model.WorkpackModel;
 import br.gov.es.openpmo.model.domain.Session;
+import br.gov.es.openpmo.model.relations.CanAccessOffice;
 import br.gov.es.openpmo.model.relations.CanAccessPlan;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.utils.ApplicationMessage;
@@ -109,6 +113,9 @@ public class WorkpackService {
 
     @Autowired
     private PlanPermissionService planPermissionService;
+
+    @Autowired
+    private OfficePermissionService officePermissionService;
 
     private static final String TYPE_NAME_PORTFOLIO = "br.gov.es.openpmo.model.Portfolio";
     private static final String TYPE_NAME_PROGRAM = "br.gov.es.openpmo.model.Program";
@@ -1081,6 +1088,10 @@ public class WorkpackService {
         if (person.isAdministrator()) {
             return workpackList;
         }
+        Plan plan = planService.findById(idPlan);
+        List<PermissionDto> permissionsOffice = getOfficePermissionDto(plan.getOffice(), person);
+        List<PermissionDto> permissionsPlan = getPlanPermissionDto(idPlan, idUser);
+
         Set<Workpack> workpacks = workpackRepository.findAll(idPlan);
         for (Iterator<WorkpackDetailDto> it = workpackList.iterator(); it.hasNext();) {
             WorkpackDetailDto workpackDetailDto = it.next();
@@ -1089,7 +1100,8 @@ public class WorkpackService {
                 WorkpackDetailDto detailDto = getWorkpackDetailDto(workpack);
                 if (detailDto.getModel().isStakeholderSessionActive()) {
                     List<PermissionDto> permissions = getPermissionDtoWorkpack(workpack, idUser);
-                    if (permissions == null || permissions.isEmpty()) {
+                    permissions = getPermissions(permissions, permissionsPlan, permissionsOffice);
+                    if ((permissions.isEmpty())) {
                         it.remove();
                         continue;
                     }
@@ -1097,13 +1109,8 @@ public class WorkpackService {
                     continue;
                 }
                 List<PermissionDto> permissions = getPermissionDtoWorkpackParent(workpack, idUser);
-                if (permissions == null) {
-                    permissions = getPermissionDto(workpack, idUser);
-                    if (permissions == null || permissions.isEmpty()) {
-                        it.remove();
-                        continue;
-                    }
-                }
+                permissions = getPermissions(permissions, permissionsPlan, permissionsOffice);
+
                 if (permissions.isEmpty()) {
                     it.remove();
                     continue;
@@ -1113,6 +1120,23 @@ public class WorkpackService {
         }
 
         return workpackList;
+    }
+
+    private List<PermissionDto> getPermissions(List<PermissionDto> permissions, List<PermissionDto> permissionsPlan,
+                                               List<PermissionDto> permissionsOffice) {
+        if (permissions != null && permissions.stream().anyMatch(c -> PermissionLevelEnum.EDIT.equals(c.getLevel()))) {
+            return permissions;
+        }
+        if (permissionsPlan.stream().anyMatch(c -> PermissionLevelEnum.EDIT.equals(c.getLevel()))) {
+            return permissionsPlan;
+        }
+        if (permissionsOffice.stream().anyMatch(c -> PermissionLevelEnum.EDIT.equals(c.getLevel()))) {
+            return permissionsOffice;
+        }
+        if (permissions != null && !permissions.isEmpty()) {
+            return permissions;
+        }
+        return CollectionUtils.isEmpty(permissionsPlan) ? permissionsOffice : permissionsPlan;
     }
 
     private Workpack getWorkpack(Set<Workpack> workpacks, Long id) {
@@ -1132,8 +1156,19 @@ public class WorkpackService {
         return null;
     }
 
-    private List<PermissionDto> getPermissionDto(Workpack workpack, Long idUser) {
-        List<CanAccessPlan> canAccessPlan = planPermissionService.findByIdPlan(workpack.getPlan().getId());
+    private List<PermissionDto> getOfficePermissionDto(Office office, Person person) {
+        List<CanAccessOffice> canAccessOffices = officePermissionService.findByOfficeAndPerson(office, person);
+        return canAccessOffices.stream().map(c -> {
+            PermissionDto permissionDto = new PermissionDto();
+            permissionDto.setRole(c.getPermitedRole());
+            permissionDto.setLevel(c.getPermissionLevel());
+            permissionDto.setId(c.getId());
+            return permissionDto;
+        }).collect(Collectors.toList());
+    }
+
+    private List<PermissionDto> getPlanPermissionDto(Long idPlan, Long idUser) {
+        List<CanAccessPlan> canAccessPlan = planPermissionService.findByIdPlan(idPlan);
         return canAccessPlan.stream().filter(c -> c.getPerson().getId().equals(idUser)).map(c -> {
             PermissionDto permissionDto = new PermissionDto();
             permissionDto.setRole(c.getPermitedRole());
@@ -1144,18 +1179,21 @@ public class WorkpackService {
     }
 
     public List<PermissionDto> getPermissionDto(WorkpackDetailDto workpackDetailDto, Long idUser) {
+        Person person = personService.findById(idUser);
+        Plan plan = planService.findById(workpackDetailDto.getPlan().getId());
+        List<PermissionDto> permissionsOffice = getOfficePermissionDto(plan.getOffice(), person);
+        List<PermissionDto> permissionsPlan = getPlanPermissionDto(workpackDetailDto.getPlan().getId(), idUser);
+
         Set<Workpack> workpacks = workpackRepository.findAll(workpackDetailDto.getPlan().getId());
         Workpack workpack = getWorkpack(workpacks, workpackDetailDto.getId());
         if (workpack != null) {
             WorkpackDetailDto detailDto = getWorkpackDetailDto(workpack);
             if (detailDto.getModel().isStakeholderSessionActive()) {
-                return getPermissionDtoWorkpack(workpack, idUser);
+                List<PermissionDto> permissions = getPermissionDtoWorkpack(workpack, idUser);
+                return getPermissions(permissions, permissionsPlan, permissionsOffice);
             }
             List<PermissionDto> permissions = getPermissionDtoWorkpackParent(workpack, idUser);
-            if (permissions == null) {
-                return getPermissionDto(workpack, idUser);
-            }
-            return permissions;
+            return getPermissions(permissions, permissionsPlan, permissionsOffice);
         }
         return null;
     }
