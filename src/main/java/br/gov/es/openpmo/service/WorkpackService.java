@@ -385,8 +385,9 @@ public class WorkpackService {
                     continue;
                 }
                 if (workpackUpdate.getProperties() != null) {
-                    workpackUpdate.getProperties().stream().filter(p -> p.getId().equals(property.getId())).findFirst()
-                                  .ifPresent(propertyUpdate -> loadPropertyUpdate(propertyUpdate, property));
+                    workpackUpdate.getProperties().stream().filter(
+                        p -> p.getId() != null && p.getId().equals(property.getId())).findFirst().ifPresent(
+                        propertyUpdate -> loadPropertyUpdate(propertyUpdate, property));
                 }
             }
         }
