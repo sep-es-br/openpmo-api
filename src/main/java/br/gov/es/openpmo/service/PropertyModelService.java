@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import br.gov.es.openpmo.exception.NegocioException;
+import br.gov.es.openpmo.model.Property;
 import br.gov.es.openpmo.model.PropertyModel;
 import br.gov.es.openpmo.repository.PropertyModelRepository;
 import br.gov.es.openpmo.utils.ApplicationMessage;
@@ -33,5 +34,9 @@ public class PropertyModelService {
 
     public void delete(Set<PropertyModel> propertyModels) {
         propertyModelRepository.deleteAll(propertyModels);
+    }
+
+    public boolean canDeleteProperty(Long id) {
+        return propertyModelRepository.countPropertyByIdPropertyModel(id) == 0;
     }
 }

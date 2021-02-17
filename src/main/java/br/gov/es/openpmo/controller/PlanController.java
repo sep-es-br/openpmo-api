@@ -63,7 +63,7 @@ public class PlanController {
         Long idUser = tokenService.getPersonId(token, TokenType.AUTHENTICATION);
         List<PlanDto> plans = planService.findAllInOffice(idOffice).stream().map(PlanDto::new).collect(
             Collectors.toList());
-        plans = planService.chekPermission(plans, idUser);
+        plans = planService.chekPermission(plans, idUser, idOffice);
         ResponseBase<List<PlanDto>> response =
                 new ResponseBase<List<PlanDto>>().setData(plans).setSuccess(true);
         return ResponseEntity.status(200).body(response);

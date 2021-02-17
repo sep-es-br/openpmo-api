@@ -109,4 +109,17 @@ public class WorkpackModelController {
 		return ResponseEntity.status(200).body(response);
 	}
 
+	@GetMapping("/can-delete-property/{id}")
+	public ResponseEntity<ResponseBase<Boolean>> canDelete(@PathVariable Long id) {
+		Boolean canDelete = workpackModelService.isCanDeleteProperty(id);
+		ResponseBase<Boolean> response = new ResponseBase<Boolean>().setData(canDelete).setSuccess(true);
+		return ResponseEntity.status(200).body(response);
+	}
+
+	@GetMapping("/delete-property/{id}")
+	public ResponseEntity<Void> deleteProperty(@PathVariable Long id) {
+		workpackModelService.deleteProperty(id);
+		return ResponseEntity.ok().build();
+	}
+
 }

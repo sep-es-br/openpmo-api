@@ -144,6 +144,11 @@ public class WorkpackModelService {
                     || workpackModel.getProperties().stream().noneMatch(
                     p -> p.getId() != null && p.getId().equals(propertyModel.getId()))).collect(Collectors.toSet());
             if (!propertyModelDelete.isEmpty()) {
+                for(PropertyModel propertyModel : propertyModelDelete) {
+                    if (!isCanDeleteProperty(propertyModel.getId())) {
+                        throw new NegocioException(ApplicationMessage.PROPERTYMODEL_DELETE_REALATIONSHIP_ERROR);
+                    }
+                }
                 propertyModelService.delete(propertyModelDelete);
             }
 
@@ -627,5 +632,19 @@ public class WorkpackModelService {
 
     public Set<WorkpackModel> findAllByIdPlanModelWithChildren(Long id) {
         return workpackModelRepository.findAllByIdPlanModelWithChildren(id);
+    }
+
+    public boolean isCanDeleteProperty(Long idPropertyModel) {
+        return propertyModelService.canDeleteProperty(idPropertyModel);
+    }
+
+    public void deleteProperty(Long idPropertyModel) {
+        PropertyModel propertyModel = propertyModelService.findById(idPropertyModel);
+        if (!isCanDeleteProperty(idPropertyModel)) {
+            throw new NegocioException(ApplicationMessage.PROPERTYMODEL_DELETE_REALATIONSHIP_ERROR);
+        }
+        Set<PropertyModel> properties = new HashSet<>();
+        properties.add(propertyModel);
+        propertyModelService.delete(properties);
     }
 }

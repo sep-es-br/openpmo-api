@@ -21,6 +21,7 @@ public class ApplicationMessage {
     public static final String FINISH_NOT_NULL = "finish.not.null";
     public static final String PLANMODEL_DELETE_REALATIONSHIP_ERROR = "planModel.delete.relationship.error";
     public static final String WORKPACKMODEL_DELETE_REALATIONSHIP_ERROR = "workpackModel.delete.relationship.error";
+    public static final String PROPERTYMODEL_DELETE_REALATIONSHIP_ERROR = "propertyModel.delete.relationship.error";
     public static final String WORKPACKMODEL_NOT_FOUND = "workpackModel.not.found";
     public static final String WORKPACKMODEL_MILESTONE_DELIVERABLE_PROGRAM_ERROR = "workpack.milestone.deliverable.error";
     public static final String OFFICE_DELETE_RELATIONSHIP_ERROR = "office.delete.relationship.error";
