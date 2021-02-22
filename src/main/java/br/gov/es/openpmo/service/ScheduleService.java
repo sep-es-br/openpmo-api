@@ -129,6 +129,9 @@ public class ScheduleService {
     }
 
     public void delete(Schedule schedule) {
+        if (!CollectionUtils.isEmpty(schedule.getSteps())) {
+            stepRepository.deleteAll(schedule.getSteps());
+        }
         scheduleRepository.delete(schedule);
     }
 

@@ -502,7 +502,8 @@ public class WorkpackService {
                 }
                 break;
         }
-        models.stream().filter(m -> Session.PROPERTIES.equals(m.getSession())).forEach(m -> validateProperty(workpack, m));
+        models.stream().filter(m -> Session.PROPERTIES.equals(m.getSession()) && m.isActive())
+              .forEach(m -> validateProperty(workpack, m));
 
     }
 

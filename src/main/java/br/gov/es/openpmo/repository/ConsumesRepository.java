@@ -15,7 +15,7 @@ public interface ConsumesRepository extends Neo4jRepository<Consumes, Long> {
                + " WHERE ID(w) = $idWorkpack AND (ID(c) = $id OR $id IS NULL) RETURN c,co,s,w")
     List<Consumes> findAllByIdAndWorkpack(@Param("id") Long id, @Param("idWorkpack") Long idWorkpack);
 
-    @Query("MATCH (c:CostAccount)<-[co:CONSUMES]-(s:Step)"
+    @Query("MATCH (c:CostAccount)<-[co:CONSUMES]-(s:Step)-[cp:COMPOSES]->(sc:Schedule)"
                + " WHERE ID(c) = $id RETURN c,co,s ")
     List<Consumes> findAllByIdCostAccount(@Param("id") Long id);
 }
