@@ -14,7 +14,7 @@ public class Domain extends Entity {
 	@Relationship(type = "APPLIES_TO")
 	private Office office;
 
-	@Relationship(type = "IS_ROOT_OF", direction = Relationship.INCOMING)
+	@Relationship(type = "BELONGS_TO", direction = Relationship.INCOMING)
 	private Set<Locality> localities;
 
 	public String getName() {

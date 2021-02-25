@@ -44,7 +44,7 @@ public class WorkpackModel extends Entity {
 	@Relationship(type = "IS_IN")
 	private WorkpackModel parent;
 
-	@Relationship(type = "IS_ROOT_OF")
+	@Relationship(type = "BELONGS_TO")
 	private PlanModel planModel;
 
 	@Relationship(type = "FEATURES", direction = Relationship.INCOMING)

@@ -13,7 +13,7 @@ public class LocalitySelectionModel extends PropertyModel {
 	@Relationship(value = "DEFAULTS_TO")
 	private Set<Locality> defaultValue;
 
-	@Relationship(value = "IS_ROOT_OF")
+	@Relationship(value = "IS_LIMITED_BY")
 	private Domain domain;
 
 	public boolean isMultipleSelection() {

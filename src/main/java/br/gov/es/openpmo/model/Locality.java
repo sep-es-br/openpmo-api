@@ -20,7 +20,7 @@ public class Locality extends Entity {
 	@Relationship(type = "IS_IN")
 	private Locality parent;
 
-	@Relationship(type = "IS_ROOT_OF")
+	@Relationship(type = "BELONGS_TO")
 	private Domain domain;
 
 	@Relationship(type = "IS_IN", direction = Relationship.INCOMING)

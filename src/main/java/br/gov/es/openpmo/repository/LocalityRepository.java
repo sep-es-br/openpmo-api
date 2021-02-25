@@ -10,17 +10,17 @@ import br.gov.es.openpmo.model.Locality;
 
 public interface LocalityRepository extends Neo4jRepository<Locality, Long> {
 
-    @Query("MATCH (d:Domain)<-[:IS_ROOT_OF]-(l:Locality)" + " WHERE id(d) = {0} RETURN l, "
-            + " [ [(l)<-[btl:IS_IN]-(lc:Locality)-[:IS_ROOT_OF]->(d) | [btl, lc] ] " + "]")
+    @Query("MATCH (d:Domain)<-[:BELONGS_TO]-(l:Locality)" + " WHERE id(d) = {0} RETURN l, "
+            + " [ [(l)<-[btl:IS_IN]-(lc:Locality)-[:BELONGS_TO]->(d) | [btl, lc] ] " + "]")
     Collection<Locality> findAllByDomain(@Param("idDomain") Long idDomain);
 
-    @Query("MATCH (d:Domain)<-[:IS_ROOT_OF]-(l:Locality)"
+    @Query("MATCH (d:Domain)<-[:BELONGS_TO]-(l:Locality)"
                + " WHERE id(d) = {0} AND NOT (l)-[:IS_IN]->(:Locality) RETURN l, "
-               + " [ [(l)<-[btl:IS_IN]-(lc:Locality)-[:IS_ROOT_OF]->(d) | [btl, lc] ] " + "]")
+               + " [ [(l)<-[btl:IS_IN]-(lc:Locality)-[:BELONGS_TO]->(d) | [btl, lc] ] " + "]")
     Collection<Locality> findAllByDomainFirstLevel(@Param("idDomain") Long idDomain);
 
-    @Query("MATCH (d:Domain)<-[:IS_ROOT_OF]-(l:Locality)"
+    @Query("MATCH (d:Domain)<-[:BELONGS_TO]-(l:Locality)"
             + " WHERE id(d) = {0} AND NOT (l)-[:IS_IN*1..]->(:Locality) RETURN l, "
-            + " [ [(l)<-[btl:IS_IN*1..]-(lc:Locality)-[:IS_ROOT_OF]->(d) | [btl, lc] ] " + "]")
+            + " [ [(l)<-[btl:IS_IN*1..]-(lc:Locality)-[:BELONGS_TO]->(d) | [btl, lc] ] " + "]")
     Collection<Locality> findAllByDomainProperties(@Param("idDomain") Long idDomain);
 }

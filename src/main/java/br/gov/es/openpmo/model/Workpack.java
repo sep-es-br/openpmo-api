@@ -26,7 +26,7 @@ import io.swagger.annotations.ApiModel;
 @NodeEntity
 public class Workpack extends Entity {
 
-	@Relationship(type = "IS_ROOT_OF")
+	@Relationship(type = "BELONGS_TO")
 	private Plan plan;
 
 	@Relationship(type = "IS_IN")
