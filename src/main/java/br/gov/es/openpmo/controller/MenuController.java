@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,7 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.menu.MenuOfficeDto;
 import br.gov.es.openpmo.dto.menu.WorkpackMenuDto;
+import br.gov.es.openpmo.model.domain.TokenType;
 import br.gov.es.openpmo.service.MenuService;
+import br.gov.es.openpmo.service.TokenService;
 
 @RestController
 @CrossOrigin
@@ -21,15 +24,19 @@ import br.gov.es.openpmo.service.MenuService;
 public class MenuController {
 
     private final MenuService menuService;
+    private final TokenService tokenService;
 
     @Autowired
-    public MenuController(MenuService menuService) {
+    public MenuController(MenuService menuService, TokenService tokenService) {
         this.menuService = menuService;
+        this.tokenService = tokenService;
     }
 
     @GetMapping("/office")
-    public ResponseEntity<ResponseBase<List<MenuOfficeDto>>> indexOffice() {
-        List<MenuOfficeDto> offices = menuService.findAllOffice();
+    public ResponseEntity<ResponseBase<List<MenuOfficeDto>>> indexOffice(@RequestHeader(name="Authorization") String autorization) {
+        String token = autorization.substring(7);
+        Long idUser = tokenService.getPersonId(token, TokenType.AUTHENTICATION);
+        List<MenuOfficeDto> offices = menuService.findAllOffice(idUser);
         if (offices.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
@@ -38,8 +45,10 @@ public class MenuController {
     }
 
     @GetMapping("/portfolio")
-    public ResponseEntity<ResponseBase<List<WorkpackMenuDto>>> indexPortfolio(@RequestParam(value = "id-office") Long idOffice) {
-        List<WorkpackMenuDto> portfolios = menuService.findAllPortfolio(idOffice);
+    public ResponseEntity<ResponseBase<List<WorkpackMenuDto>>> indexPortfolio(@RequestParam(value = "id-office") Long idOffice, @RequestHeader(name="Authorization") String autorization) {
+        String token = autorization.substring(7);
+        Long idUser = tokenService.getPersonId(token, TokenType.AUTHENTICATION);
+        List<WorkpackMenuDto> portfolios = menuService.findAllPortfolio(idOffice, idUser);
         if (portfolios.isEmpty()) {
             return ResponseEntity.noContent().build();
         }

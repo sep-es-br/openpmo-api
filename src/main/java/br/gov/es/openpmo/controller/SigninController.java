@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import br.gov.es.openpmo.dto.AcessoDto;
 import br.gov.es.openpmo.service.AuthenticationService;
 import br.gov.es.openpmo.service.CookieService;
+import br.gov.es.openpmo.utils.ApplicationMessage;
 import io.swagger.annotations.Api;
 
 @Api(hidden = true)
@@ -36,8 +37,10 @@ public class SigninController {
     public RedirectView acessoCidadao(@RequestParam(name = "access_token") String token, HttpServletRequest request,
             HttpServletResponse response) throws Exception {
         AcessoDto acessoDto = authenticationService.authenticate(token);
-        String valor = Base64.getEncoder().withoutPadding()
-                .encodeToString(new ObjectMapper().writeValueAsString(acessoDto).getBytes());
+        String valor = acessoDto == null
+                       ? ApplicationMessage.ERROR_UNAUTHORIZED
+                       : Base64.getEncoder().withoutPadding().encodeToString(
+                           new ObjectMapper().writeValueAsString(acessoDto).getBytes());
         return new RedirectView(buildFronstCallBackUrl(request, response, valor));
     }
 

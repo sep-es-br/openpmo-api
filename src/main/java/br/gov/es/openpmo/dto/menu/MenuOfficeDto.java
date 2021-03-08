@@ -1,13 +1,13 @@
 package br.gov.es.openpmo.dto.menu;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class MenuOfficeDto {
     private Long id;
     private String nome;
     private String fullName;
-    private List<PlanMenuDto> plans = new ArrayList<>(0);
+    private Set<PlanMenuDto> plans = new HashSet<>(0);
 
     public Long getId() {
         return id;
@@ -33,11 +33,12 @@ public class MenuOfficeDto {
         this.fullName = fullName;
     }
 
-    public List<PlanMenuDto> getPlans() {
+    public Set<PlanMenuDto> getPlans() {
         return plans;
     }
 
-    public void setPlans(List<PlanMenuDto> plans) {
+    public void setPlans(Set<PlanMenuDto> plans) {
         this.plans = plans;
     }
+
 }

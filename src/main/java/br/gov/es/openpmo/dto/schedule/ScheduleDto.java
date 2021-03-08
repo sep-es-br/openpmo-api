@@ -60,7 +60,9 @@ public class ScheduleDto {
 			for (GroupStepDto group : groupStep) {
 				if (!CollectionUtils.isEmpty(group.getSteps())) {
 					for (StepDto step : group.getSteps()) {
-						planed = planed.add(step.getPlannedWork());
+						if (step.getPlannedWork() != null) {
+							planed = planed.add(step.getPlannedWork());
+						}
 					}
 				}
 			}
@@ -74,7 +76,9 @@ public class ScheduleDto {
 			for (GroupStepDto group : groupStep) {
 				if (!CollectionUtils.isEmpty(group.getSteps())) {
 					for (StepDto step : group.getSteps()) {
-						actual = actual.add(step.getActualWork());
+						if (step.getActualWork() != null) {
+							actual = actual.add(step.getActualWork());
+						}
 					}
 				}
 			}
@@ -90,7 +94,9 @@ public class ScheduleDto {
 					for (StepDto step : group.getSteps()) {
 						if (!CollectionUtils.isEmpty(step.getConsumes())) {
 							for (ConsumesDto consume : step.getConsumes()) {
-								planedCost = planedCost.add(consume.getPlannedCost());
+								if (consume.getPlannedCost() != null) {
+									planedCost = planedCost.add(consume.getPlannedCost());
+								}
 							}
 						}
 					}
@@ -108,7 +114,9 @@ public class ScheduleDto {
 					for (StepDto step : group.getSteps()) {
 						if (!CollectionUtils.isEmpty(step.getConsumes())) {
 							for (ConsumesDto consume : step.getConsumes()) {
-								planedCost = planedCost.add(consume.getActualCost());
+								if (consume.getActualCost() != null) {
+									planedCost = planedCost.add(consume.getActualCost());
+								}
 							}
 						}
 					}

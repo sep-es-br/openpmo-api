@@ -64,6 +64,11 @@ public class LocalityService {
             () -> new NegocioException(ApplicationMessage.LOCALITY_NOT_FOUND));
     }
 
+    public Locality findByIdWithParent(Long id) {
+        return localityRepository.findByIdWithParent(id).orElseThrow(
+            () -> new NegocioException(ApplicationMessage.LOCALITY_NOT_FOUND));
+    }
+
     public void delete(Locality locality) {
         if (!CollectionUtils.isEmpty(locality.getChildren())) {
             throw new NegocioException(ApplicationMessage.LOCALITY_DELETE_RELATIONSHIP_ERROR);

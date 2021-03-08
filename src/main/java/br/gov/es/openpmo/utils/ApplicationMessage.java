@@ -11,6 +11,7 @@ public class ApplicationMessage {
     public static final String INVALID_TOKEN = "invalid.token";
     public static final String TOKEN_NOT_FOUND = "token.not.found";
     public static final String AUTHENTICATION_ERROR = "authentication.error";
+    public static final String ERROR_UNAUTHORIZED = "error.unauthorized";
     public static final String ERRO_NEGOCIO = "erro.negocio";
     public static final String REGISTRO_NOT_FOUND = "registro.not.found";
     public static final String OPERATION_SUCCESS = "operation.success";

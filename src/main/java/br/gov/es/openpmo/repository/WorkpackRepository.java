@@ -97,4 +97,14 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long> {
                + " ]")
     Set<Workpack> findAllByPlanWithProperties(@Param("idPlan") Long idPlan);
 
+    @Query("MATCH (w:Workpack)-[ii:IS_INSTANCE_BY]->(wm:WorkpackModel) "
+               + " WHERE ID(w) = $id "
+               + " RETURN  w, ii, wm, [ "
+               + "  [(w)<-[f1:FEATURES]-(p1:Property)-[d1:IS_DRIVEN_BY]->(pm1:PropertyModel) | [f1, p1, d1, pm1] ], "
+               + "  [(w)-[wi:IS_IN*]->(w2:Workpack)<-[f2:FEATURES]-(p2:Property)-[d2:IS_DRIVEN_BY]->(pm2:PropertyModel) | [wi,w2,f2, p2, d2, pm2]  ], "
+               + "  [(w2)-[ib2:IS_INSTANCE_BY]->(wm2:WorkpackModel)<-[f5:FEATURES]-(pm5:PropertyModel) | [ib2, wm2, f5, pm5]  ], "
+               + "  [(wm)<-[f4:FEATURES]-(pm4:PropertyModel) | [f4, pm4] ] "
+               + " ]")
+    Optional<Workpack> findByIdWithParent(@Param("id") Long id);
+
 }

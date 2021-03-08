@@ -745,6 +745,11 @@ public class WorkpackService {
                 .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
     }
 
+    public Workpack findByIdWithParent(Long id) {
+        return workpackRepository.findByIdWithParent(id)
+                                 .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
+    }
+
     public void delete(Workpack workpack) {
         if (!CollectionUtils.isEmpty(workpack.getChildren())) {
             throw new NegocioException(ApplicationMessage.WORKPACK_DELETE_REALATIONSHIP_ERROR);
@@ -1158,7 +1163,7 @@ public class WorkpackService {
         return null;
     }
 
-    private List<PermissionDto> getOfficePermissionDto(Office office, Person person) {
+    public List<PermissionDto> getOfficePermissionDto(Office office, Person person) {
         List<CanAccessOffice> canAccessOffices = officePermissionService.findByOfficeAndPerson(office, person);
         return canAccessOffices.stream().map(c -> {
             PermissionDto permissionDto = new PermissionDto();

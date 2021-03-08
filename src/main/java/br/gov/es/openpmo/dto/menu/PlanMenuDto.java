@@ -1,12 +1,11 @@
 package br.gov.es.openpmo.dto.menu;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 
 public class PlanMenuDto {
     private Long id;
     private String name;
-    private List<WorkpackMenuDto> workpacks = new ArrayList<>(0);
+
 
     public Long getId() {
         return id;
@@ -24,11 +23,18 @@ public class PlanMenuDto {
         this.name = name;
     }
 
-    public List<WorkpackMenuDto> getWorkpacks() {
-        return workpacks;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        PlanMenuDto that = (PlanMenuDto) o;
+        return Objects.equals(id, that.id) && Objects.equals(name, that.name);
     }
 
-    public void setWorkpacks(List<WorkpackMenuDto> workpacks) {
-        this.workpacks = workpacks;
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name);
     }
 }

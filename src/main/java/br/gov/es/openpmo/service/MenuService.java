@@ -12,10 +12,12 @@ import org.springframework.stereotype.Service;
 import br.gov.es.openpmo.dto.menu.MenuOfficeDto;
 import br.gov.es.openpmo.dto.menu.PlanMenuDto;
 import br.gov.es.openpmo.dto.menu.WorkpackMenuDto;
+import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.dto.workpack.PropertyDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackDetailDto;
 import br.gov.es.openpmo.dto.workpackmodel.PropertyModelDto;
 import br.gov.es.openpmo.model.Office;
+import br.gov.es.openpmo.model.Person;
 import br.gov.es.openpmo.model.Plan;
 import br.gov.es.openpmo.model.Property;
 import br.gov.es.openpmo.model.Workpack;
@@ -24,46 +26,50 @@ import br.gov.es.openpmo.model.Workpack;
 public class MenuService {
 
     private final WorkpackService workpackService;
-    private final WorkpackModelService workpackModelService;
     private final PlanService planService;
     private final OfficeService officeService;
     private final ModelMapper modelMapper;
-    private final PlanModelService planModelService;
+    private final PersonService personService;
 
     @Autowired
-    public MenuService(WorkpackService workpackService, WorkpackModelService workpackModelService,
-                       PlanService planService, OfficeService officeService, ModelMapper modelMapper,
-                       PlanModelService planModelService) {
-        this.workpackModelService = workpackModelService;
+    public MenuService(WorkpackService workpackService, PlanService planService, PersonService personService,
+                       OfficeService officeService, ModelMapper modelMapper) {
+        this.personService = personService;
         this.workpackService = workpackService;
         this.planService = planService;
         this.officeService = officeService;
         this.modelMapper = modelMapper;
-        this.planModelService = planModelService;
     }
 
-    public List<WorkpackMenuDto> findAllPortfolio(Long idOffice) {
+    public List<WorkpackMenuDto> findAllPortfolio(Long idOffice, Long idUser) {
+        Person person = personService.findById(idUser);
         List<WorkpackMenuDto> menus = new ArrayList<>(0);
         Office office = officeService.findById(idOffice);
-        List<Plan> plans = planService.findAllInOffice(office.getId());
-        plans.forEach(plan -> {
-            Set<Workpack> workpacks = workpackService.findAllByPlanWithProperties(plan.getId());
-            menus.addAll(getWorkpackMenuDto(workpacks));
-
-        });
+        List<PermissionDto> permissions = workpackService.getOfficePermissionDto(office, person);
+        if (person.isAdministrator() || (permissions != null && !permissions.isEmpty())) {
+            List<Plan> plans = planService.findAllInOffice(office.getId());
+            plans.forEach(plan -> {
+                Set<Workpack> workpacks = workpackService.findAllByPlanWithProperties(plan.getId());
+                menus.addAll(getWorkpackMenuDto(workpacks));
+            });
+        }
         return menus;
     }
 
-    public List<MenuOfficeDto> findAllOffice() {
+    public List<MenuOfficeDto> findAllOffice(Long idUser) {
+        Person person = personService.findById(idUser);
         List<MenuOfficeDto> menus = new ArrayList<>(0);
         List<Office> offices = officeService.findAll();
         offices.forEach(office -> {
-            MenuOfficeDto item = modelMapper.map(office, MenuOfficeDto.class);
-            List<Plan> plans = planService.findAllInOffice(office.getId());
-            plans.forEach(plan -> {
-                item.getPlans().add(modelMapper.map(plan, PlanMenuDto.class));
-            });
-            menus.add(item);
+            List<PermissionDto> permissions = workpackService.getOfficePermissionDto(office, person);
+            if (person.isAdministrator() || (permissions != null && !permissions.isEmpty())) {
+                MenuOfficeDto item = modelMapper.map(office, MenuOfficeDto.class);
+                List<Plan> plans = planService.findAllInOffice(office.getId());
+                plans.forEach(plan -> {
+                    item.getPlans().add(modelMapper.map(plan, PlanMenuDto.class));
+                });
+                menus.add(item);
+            }
         });
         return menus;
     }

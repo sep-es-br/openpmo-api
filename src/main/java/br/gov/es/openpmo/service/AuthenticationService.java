@@ -48,11 +48,22 @@ public class AuthenticationService {
 
     public AcessoDto authenticate(String token) throws Exception {
         JSONObject personInfo = getUserInfo(token);
-        Person usuario = findOrCreatePerson(personInfo);
-
-        String authenticationToken = tokenService.generateToken(usuario, TokenType.AUTHENTICATION);
-        String refreshToken = tokenService.generateToken(usuario, TokenType.REFRESH);
-        return new AcessoDto(authenticationToken, refreshToken);
+        String email = personInfo.getString(EMAIL);
+        Optional<Person> person = personService.findByEmail(email);
+        Person usuario = null;
+        if (person.isPresent()) {
+            usuario = person.get();
+            String authenticationToken = tokenService.generateToken(usuario, TokenType.AUTHENTICATION);
+            String refreshToken = tokenService.generateToken(usuario, TokenType.REFRESH);
+            return new AcessoDto(authenticationToken, refreshToken);
+        }
+        if (administrators.contains(email)) {
+            usuario = createPerson(personInfo);
+            String authenticationToken = tokenService.generateToken(usuario, TokenType.AUTHENTICATION);
+            String refreshToken = tokenService.generateToken(usuario, TokenType.REFRESH);
+            return new AcessoDto(authenticationToken, refreshToken);
+        }
+        return null;
     }
 
     public boolean isValidToken(String token) throws IOException {

@@ -48,7 +48,7 @@ public interface WorkpackModelRepository extends Neo4jRepository<WorkpackModel, 
                + " RETURN  w, rf, p, [ "
                + "  [(w)-[wi:IS_IN*]->(w2:WorkpackModel) | [wi, w2] ]"
                + " ]")
-    WorkpackModel findByIdWithParents(@Param("id") Long id);
+    Optional<WorkpackModel> findByIdWithParents(@Param("id") Long id);
 
     @Query("MATCH (w:WorkpackModel)-[wp:BELONGS_TO]->(pm:PlanModel) "
                + "WHERE ID(pm) = $id AND NOT (w)-[:IS_IN]->(:WorkpackModel) "

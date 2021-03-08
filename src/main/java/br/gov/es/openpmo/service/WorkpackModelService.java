@@ -273,6 +273,11 @@ public class WorkpackModelService {
             () -> new NegocioException(ApplicationMessage.WORKPACKMODEL_NOT_FOUND));
     }
 
+    public WorkpackModel findByIdWithParents(Long id) {
+        return workpackModelRepository.findByIdWithParents(id).orElseThrow(
+            () -> new NegocioException(ApplicationMessage.WORKPACKMODEL_NOT_FOUND));
+    }
+
     public void delete(WorkpackModel workpackModel) {
         if (!isCanDelete(workpackModel)) {
             throw new NegocioException(ApplicationMessage.WORKPACKMODEL_DELETE_REALATIONSHIP_ERROR);
@@ -613,12 +618,14 @@ public class WorkpackModelService {
 
     public Boolean isParentProject(Long id) {
         Boolean isParentProject = false;
-        WorkpackModel workpack = workpackModelRepository.findByIdWithParents(id);
+        WorkpackModel workpack = findByIdWithParents(id);
         if (workpack != null) {
             isParentProject = isParentProject(workpack);
         }
         return isParentProject;
     }
+
+
 
     private Boolean isParentProject(WorkpackModel workpackModel) {
         if (workpackModel.getClass().getTypeName().equals(TYPE_NAME_MODEL_PROJECT)) {

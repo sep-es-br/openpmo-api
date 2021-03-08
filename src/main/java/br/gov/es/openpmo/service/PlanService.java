@@ -98,7 +98,7 @@ public class PlanService {
                 });
             }
             List<PermissionDto> permissions = getPermissions(planPermissions, officePermissions);
-            if (permissions == null || planPermissions.isEmpty()) {
+            if (permissions == null || permissions.isEmpty()) {
                 it.remove();
                 continue;
             }

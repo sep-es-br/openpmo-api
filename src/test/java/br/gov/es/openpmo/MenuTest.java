@@ -162,12 +162,13 @@ public class MenuTest extends BaseTest {
 
     @Test
     public void shouldListAll() {
-        ResponseEntity<ResponseBase<List<MenuOfficeDto>>> responseOffice = menuController.indexOffice();
+        String token = getToken(true);
+        ResponseEntity<ResponseBase<List<MenuOfficeDto>>> responseOffice = menuController.indexOffice(token);
         Assertions.assertEquals(200, responseOffice.getStatusCodeValue());
         Assertions.assertNotNull(responseOffice.getBody());
         Assertions.assertNotNull(responseOffice.getBody().getData());
 
-        ResponseEntity<ResponseBase<List<WorkpackMenuDto>>> responsePortfolio = menuController.indexPortfolio(idOffice);
+        ResponseEntity<ResponseBase<List<WorkpackMenuDto>>> responsePortfolio = menuController.indexPortfolio(idOffice, token);
         Assertions.assertEquals(200, responsePortfolio.getStatusCodeValue());
         Assertions.assertNotNull(responsePortfolio.getBody());
         Assertions.assertNotNull(responsePortfolio.getBody().getData());
