@@ -114,18 +114,6 @@ public class AuthenticationService {
         throw new IllegalArgumentException();
     }
 
-    private Person findOrCreatePerson(JSONObject personInfo) {
-        Optional<Person> person = personService.findByEmail(personInfo.getString(EMAIL));
-
-        if (person.isPresent()) {
-            Person usuario = person.get();
-            usuario = personService.save(usuario);
-            return usuario;
-        }
-
-        return createPerson(personInfo);
-    }
-
     private Person createPerson(JSONObject personInfo) {
         Person usuario = new Person();
         usuario.setEmail(personInfo.getString(EMAIL));

@@ -8,7 +8,6 @@ import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
-import br.gov.es.openpmo.model.Workpack;
 import br.gov.es.openpmo.model.WorkpackModel;
 
 public interface WorkpackModelRepository extends Neo4jRepository<WorkpackModel, Long> {

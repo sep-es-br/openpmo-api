@@ -57,9 +57,9 @@ public class SwaggerConfiguration {
 
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder().title("OPEN-PMO Backend")
-                .contact(new Contact("Totem Treinamento & Consultoria em TI", "http://www.totemti.com.br/",
-                        "atendimento@totemti.com.br"))
-                .description("This API documentation is responsible for explaining how to use the methods developed for OPEN-PMO.")
+                .contact(new Contact("Support", "https://github.com/sep-es-br/openpmo-api", null))
+                .description(
+                        "This API documentation is responsible for explaining how to use the methods developed for OPEN-PMO.")
                 .version("1.0.0").build();
     }
 }

@@ -54,7 +54,7 @@ public abstract class BaseTest {
     private TokenService tokenService;
 
     @Container
-    protected static final Neo4jContainer databaseServer = new Neo4jContainer<>().withoutAuthentication();
+    protected static final Neo4jContainer<?> databaseServer = new Neo4jContainer<>().withoutAuthentication();
 
     private Person getPerson(boolean administrator) {
         Person person = personRepository.findByEmail("user.test@openpmo.com").orElse(null);

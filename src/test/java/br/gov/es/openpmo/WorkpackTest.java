@@ -47,7 +47,6 @@ import br.gov.es.openpmo.dto.workpackmodel.OrganizerModelParamDto;
 import br.gov.es.openpmo.dto.workpackmodel.PortfolioModelParamDto;
 import br.gov.es.openpmo.dto.workpackmodel.ProgramModelParamDto;
 import br.gov.es.openpmo.dto.workpackmodel.WorkpackModelParamDto;
-import br.gov.es.openpmo.model.Property;
 import br.gov.es.openpmo.model.PropertyModel;
 import br.gov.es.openpmo.model.Workpack;
 import br.gov.es.openpmo.model.WorkpackModel;

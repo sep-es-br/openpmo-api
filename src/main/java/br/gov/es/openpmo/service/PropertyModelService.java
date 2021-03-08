@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import br.gov.es.openpmo.exception.NegocioException;
-import br.gov.es.openpmo.model.Property;
 import br.gov.es.openpmo.model.PropertyModel;
 import br.gov.es.openpmo.repository.PropertyModelRepository;
 import br.gov.es.openpmo.utils.ApplicationMessage;

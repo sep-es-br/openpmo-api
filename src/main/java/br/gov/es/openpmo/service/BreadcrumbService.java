@@ -11,8 +11,6 @@ import br.gov.es.openpmo.dto.menu.BreadcrumbDto;
 import br.gov.es.openpmo.dto.workpack.PropertyDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackDetailDto;
 import br.gov.es.openpmo.dto.workpackmodel.PropertyModelDto;
-import br.gov.es.openpmo.dto.workpackmodel.WorkpackModelDetailDto;
-import br.gov.es.openpmo.dto.workpackmodel.WorkpackModelDto;
 import br.gov.es.openpmo.model.Locality;
 import br.gov.es.openpmo.model.Property;
 import br.gov.es.openpmo.model.Workpack;

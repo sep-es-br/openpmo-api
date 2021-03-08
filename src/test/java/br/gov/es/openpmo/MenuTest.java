@@ -1,8 +1,6 @@
 package br.gov.es.openpmo;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.Assertions;
@@ -32,12 +30,8 @@ import br.gov.es.openpmo.dto.menu.WorkpackMenuDto;
 import br.gov.es.openpmo.dto.office.OfficeStoreDto;
 import br.gov.es.openpmo.dto.plan.PlanStoreDto;
 import br.gov.es.openpmo.dto.planmodel.PlanModelStoreDto;
-import br.gov.es.openpmo.dto.workpack.DateDto;
-import br.gov.es.openpmo.dto.workpack.PropertyDto;
-import br.gov.es.openpmo.dto.workpack.TextDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackParamDto;
 import br.gov.es.openpmo.dto.workpackmodel.WorkpackModelParamDto;
-import br.gov.es.openpmo.model.domain.Session;
 
 @Testcontainers
 @SpringBootTest
@@ -130,34 +124,6 @@ public class MenuTest extends BaseTest {
         if (idWorkpack == null) {
             idWorkpack = getIdWorkpack();
         }
-    }
-
-    private List<PropertyDto> getProperties() {
-        List<PropertyDto> properties = new ArrayList<>();
-        ResponseEntity<ResponseBaseWorkpackModelDetail> responseFind = workpackModelController.find(this.idWorkpackModel);
-        Assertions.assertNotNull(responseFind.getBody());
-        Assertions.assertNotNull(responseFind.getBody().getData());
-        responseFind.getBody().getData().getProperties().stream().filter(
-            p -> Session.COST.equals(p.getSession())).forEach(property -> {
-                switch (property.getClass().getTypeName()) {
-                    case "br.gov.es.openpmo.dto.workpackmodel.TextModelDto":
-                        TextDto textDto = new TextDto();
-                        textDto.setIdPropertyModel(property.getId());
-                        textDto.setValue("Text cost");
-                        properties.add(textDto);
-                        break;
-                    case "br.gov.es.openpmo.dto.workpackmodel.DateModelDto":
-                        DateDto dateDto = new DateDto();
-                        dateDto.setIdPropertyModel(property.getId());
-                        dateDto.setValue(LocalDateTime.now());
-                        properties.add(dateDto);
-                        break;
-                    default:
-                        break;
-                }
-        });
-
-        return properties;
     }
 
     @Test
