@@ -8,6 +8,7 @@ import br.gov.es.openpmo.dto.permission.PermissionDto;
 
 public class WorkpackMenuDto {
     private Long id;
+    private Long idPlan;
     private String name;
     private String fontIcon;
     private List<PermissionDto> permissions;
@@ -19,6 +20,14 @@ public class WorkpackMenuDto {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getIdPlan() {
+        return idPlan;
+    }
+
+    public void setIdPlan(Long idPlan) {
+        this.idPlan = idPlan;
     }
 
     public String getName() {

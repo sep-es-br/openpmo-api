@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.dto.schedule;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 
@@ -13,6 +14,9 @@ public class StepStoreParamDto {
     @NotNull
     private Boolean endStep;
     private Set<ConsumesParamDto> consumes;
+
+    @NotNull
+    private LocalDate periodFromStart;
 
     public Long getIdSchedule() {
         return idSchedule;
@@ -52,5 +56,13 @@ public class StepStoreParamDto {
 
     public void setConsumes(Set<ConsumesParamDto> consumes) {
         this.consumes = consumes;
+    }
+
+    public LocalDate getPeriodFromStart() {
+        return periodFromStart;
+    }
+
+    public void setPeriodFromStart(LocalDate periodFromStart) {
+        this.periodFromStart = periodFromStart;
     }
 }

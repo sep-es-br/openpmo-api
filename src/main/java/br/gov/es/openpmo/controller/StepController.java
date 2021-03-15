@@ -52,7 +52,7 @@ public class StepController {
 	public ResponseEntity<ResponseBase<EntityDto>> saveStep(@Valid @RequestBody StepStoreParamDto stepStoreParamDto) {
 		Step step = scheduleService.getStep(stepStoreParamDto);
 		step = scheduleService.save(step);
-		scheduleService.addMonthToSchedule(step);
+		scheduleService.addMonthToSchedule(stepStoreParamDto);
 		ResponseBase<EntityDto> entity = new ResponseBase<EntityDto>().setData(new EntityDto(step.getId())).setSuccess(true);
 		return ResponseEntity.status(200).body(entity);
 	}

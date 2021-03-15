@@ -50,7 +50,7 @@ public class MenuService {
             List<Plan> plans = planService.findAllInOffice(office.getId());
             plans.forEach(plan -> {
                 Set<Workpack> workpacks = workpackService.findAllByPlanWithProperties(plan.getId());
-                menus.addAll(getWorkpackMenuDto(workpacks));
+                menus.addAll(getWorkpackMenuDto(workpacks, plan.getId()));
             });
         }
         return menus;
@@ -74,10 +74,11 @@ public class MenuService {
         return menus;
     }
 
-    private Set<WorkpackMenuDto> getWorkpackMenuDto(Set<Workpack> workpacks) {
+    private Set<WorkpackMenuDto> getWorkpackMenuDto(Set<Workpack> workpacks, Long idPlan) {
         Set<WorkpackMenuDto> workpackMenuDtos = new HashSet<>(0);
         workpacks.forEach(workpack -> {
             WorkpackMenuDto menuDto = modelMapper.map(workpack, WorkpackMenuDto.class);
+            menuDto.setIdPlan(idPlan);
             WorkpackDetailDto detailDto = workpackService.getWorkpackDetailDto(workpack);
             menuDto.setFontIcon(detailDto.getModel().getFontIcon());
             if (detailDto.getModel() != null && detailDto.getModel().getProperties() != null) {
@@ -97,7 +98,7 @@ public class MenuService {
 
             }
             if (workpack.getChildren() != null) {
-                menuDto.setChildren(getWorkpackMenuDto(workpack.getChildren()));
+                menuDto.setChildren(getWorkpackMenuDto(workpack.getChildren(), idPlan));
             }
         });
         return workpackMenuDtos;

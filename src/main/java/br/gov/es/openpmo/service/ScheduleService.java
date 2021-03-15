@@ -4,8 +4,10 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.Period;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -73,6 +75,9 @@ public class ScheduleService {
                 .orElseThrow(() -> new NegocioException(ApplicationMessage.STEP_NOT_FOUND));
         stepUpdate.setActualWork(step.getActualWork());
         stepUpdate.setPlannedWork(step.getPlannedWork());
+        if (step.getPeriodFromStart() != null) {
+            stepUpdate.setPeriodFromStart(step.getPeriodFromStart());
+        }
         if (!CollectionUtils.isEmpty(stepUpdate.getConsumes())) {
             Set<Consumes> consumesDelete = stepUpdate.getConsumes().stream()
                     .filter(consumes -> step.getConsumes() == null || step.getConsumes().stream()
@@ -115,6 +120,22 @@ public class ScheduleService {
             }
 
         }
+        if (stepUpdate.getPeriodFromStart() != null) {
+            Schedule schedule = findById(stepUpdate.getSchedule().getId());
+            if (stepUpdate.getPeriodFromStart().getYear() == schedule.getStart().getYear()
+                && stepUpdate.getPeriodFromStart().getMonthValue() == schedule.getStart().getMonthValue()
+                && !stepUpdate.getPeriodFromStart().equals(schedule.getStart())) {
+                schedule.setStart(stepUpdate.getPeriodFromStart());
+                scheduleRepository.save(schedule);
+            }
+            if (stepUpdate.getPeriodFromStart().getYear() == schedule.getEnd().getYear()
+                && stepUpdate.getPeriodFromStart().getMonthValue() == schedule.getEnd().getMonthValue()
+                && !stepUpdate.getPeriodFromStart().equals(schedule.getEnd())) {
+                schedule.setEnd(stepUpdate.getPeriodFromStart());
+                scheduleRepository.save(schedule);
+            }
+        }
+
         return stepRepository.save(stepUpdate);
     }
 
@@ -138,11 +159,29 @@ public class ScheduleService {
     public void delete(Step step) {
         Schedule schedule = findById(step.getSchedule().getId());
         LocalDate periodFromStart = step.getPeriodFromStart();
+        List<Step> steps = schedule.getSteps().stream().sorted(Comparator.comparing(Step::getPeriodFromStart)).collect(
+            Collectors.toList());
         stepRepository.delete(step);
-        if (periodFromStart.equals(schedule.getStart())) {
-            schedule.setStart(periodFromStart.plusMonths(1));
-        } else if (periodFromStart.equals(schedule.getEnd())) {
-            schedule.setEnd(periodFromStart.minusMonths(1));
+        boolean start = periodFromStart.getYear() == schedule.getStart().getYear()
+            && periodFromStart.getMonthValue() == schedule.getStart().getMonthValue();
+
+        if (steps.size() > 1) {
+            if (start) {
+                steps.remove(0);
+                Step first = steps.get(0);
+                schedule.setStart(first.getPeriodFromStart());
+            } else {
+                Collections.reverse(steps);
+                steps.remove(0);
+                Step last = steps.get(0);
+                schedule.setEnd(last.getPeriodFromStart());
+            }
+        } else {
+            if (start) {
+                schedule.setStart(periodFromStart.plusMonths(1));
+            } else {
+                schedule.setEnd(periodFromStart.minusMonths(1));
+            }
         }
         scheduleRepository.save(schedule);
     }
@@ -165,7 +204,7 @@ public class ScheduleService {
 
     private Set<Step> getSteps(ScheduleParamDto scheduleParamDto) {
         Set<Step> steps = new HashSet<>();
-        long months = ChronoUnit.MONTHS.between(scheduleParamDto.getStart(), scheduleParamDto.getEnd()) + 1;
+        long months = ChronoUnit.MONTHS.between(scheduleParamDto.getStart().withDayOfMonth(1), scheduleParamDto.getEnd().withDayOfMonth(1)) + 1;
         BigDecimal parts = BigDecimal.ZERO;
         if (scheduleParamDto.getPlannedWork() != null) {
             parts = scheduleParamDto.getPlannedWork().divide(new BigDecimal(months),
@@ -182,8 +221,13 @@ public class ScheduleService {
         }
         for (int i = 1; i <= months; i++) {
             Step step = new Step();
-            step.setPeriodFromStart(
-                    i == 1 ? scheduleParamDto.getStart() : scheduleParamDto.getStart().plusMonths(i - 1L));
+            if (i == 1) {
+                step.setPeriodFromStart(scheduleParamDto.getStart());
+            } else if (i == months) {
+                step.setPeriodFromStart(scheduleParamDto.getEnd());
+            } else {
+                step.setPeriodFromStart(scheduleParamDto.getStart().plusMonths(i - 1L));
+            }
             step.setActualWork(BigDecimal.ZERO);
             step.setPlannedWork(parts);
             if (!costs.isEmpty()) {
@@ -202,7 +246,6 @@ public class ScheduleService {
         Step step = modelMapper.map(stepStoreParamDto, Step.class);
         Schedule schedule = findById(stepStoreParamDto.getIdSchedule());
         step.setSchedule(schedule);
-        step.setPeriodFromStart(getPeriodFromStart(schedule, stepStoreParamDto.getEndStep()));
         if (!CollectionUtils.isEmpty(stepStoreParamDto.getConsumes())) {
             step.setConsumes(new HashSet<>());
             stepStoreParamDto.getConsumes().forEach(c -> {
@@ -212,20 +255,6 @@ public class ScheduleService {
             });
         }
         return step;
-    }
-
-    private LocalDate getPeriodFromStart(Schedule schedule, boolean endStep) {
-        if (endStep) {
-            Step last = schedule.getSteps().stream().max(Comparator.comparing(Step::getPeriodFromStart)).orElse(null);
-            if (last != null && last.getPeriodFromStart() != null) {
-                return last.getPeriodFromStart().plusMonths(1);
-            }
-        }
-        Step first = schedule.getSteps().stream().min(Comparator.comparing(Step::getPeriodFromStart)).orElse(null);
-        if (first != null && first.getPeriodFromStart() != null) {
-            return first.getPeriodFromStart().minusMonths(1);
-        }
-        return null;
     }
 
     public Step getStep(StepParamDto stepParamDto) {
@@ -241,13 +270,12 @@ public class ScheduleService {
         return step;
     }
 
-    public void addMonthToSchedule(Step step) {
-        Schedule schedule = findById(step.getSchedule().getId());
-        LocalDate periodFromStart = step.getPeriodFromStart();
-        if (periodFromStart.equals(schedule.getStart())) {
-            schedule.setStart(periodFromStart.plusMonths(1));
-        } else if (periodFromStart.equals(schedule.getEnd())) {
-            schedule.setEnd(periodFromStart.minusMonths(1));
+    public void addMonthToSchedule(StepStoreParamDto stepStoreParamDto) {
+        Schedule schedule = findById(stepStoreParamDto.getIdSchedule());
+        if (stepStoreParamDto.getEndStep()) {
+            schedule.setEnd(stepStoreParamDto.getPeriodFromStart());
+        }else {
+            schedule.setStart(stepStoreParamDto.getPeriodFromStart());
         }
         scheduleRepository.save(schedule);
     }

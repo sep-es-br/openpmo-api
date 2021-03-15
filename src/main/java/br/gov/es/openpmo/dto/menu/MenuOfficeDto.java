@@ -5,7 +5,7 @@ import java.util.Set;
 
 public class MenuOfficeDto {
     private Long id;
-    private String nome;
+    private String name;
     private String fullName;
     private Set<PlanMenuDto> plans = new HashSet<>(0);
 
@@ -17,12 +17,12 @@ public class MenuOfficeDto {
         this.id = id;
     }
 
-    public String getNome() {
-        return nome;
+    public String getName() {
+        return name;
     }
 
-    public void setNome(String nome) {
-        this.nome = nome;
+    public void setName(String nome) {
+        this.name = nome;
     }
 
     public String getFullName() {
