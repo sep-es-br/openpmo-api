@@ -6,6 +6,7 @@ public class BreadcrumbDto {
     private String name;
     private String fullName;
     private String type;
+    private String modelName;
 
     public BreadcrumbDto() {
 
@@ -48,5 +49,13 @@ public class BreadcrumbDto {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+
+    public String getModelName() {
+        return modelName;
+    }
+
+    public void setModelName(String modelName) {
+        this.modelName = modelName;
     }
 }

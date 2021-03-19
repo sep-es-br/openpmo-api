@@ -11,7 +11,6 @@ import br.gov.es.openpmo.dto.menu.BreadcrumbDto;
 import br.gov.es.openpmo.dto.workpack.PropertyDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackDetailDto;
 import br.gov.es.openpmo.dto.workpackmodel.PropertyModelDto;
-import br.gov.es.openpmo.model.Domain;
 import br.gov.es.openpmo.model.Locality;
 import br.gov.es.openpmo.model.Office;
 import br.gov.es.openpmo.model.Plan;
@@ -19,6 +18,7 @@ import br.gov.es.openpmo.model.PlanModel;
 import br.gov.es.openpmo.model.Property;
 import br.gov.es.openpmo.model.Workpack;
 import br.gov.es.openpmo.model.WorkpackModel;
+import br.gov.es.openpmo.model.domain.Session;
 
 @Service
 public class BreadcrumbService {
@@ -49,7 +49,6 @@ public class BreadcrumbService {
         if (locality.getParent() != null) {
             addParentBreadcrumbDto(locality.getParent(), breadcrumbs);
         }
-        // addDomainBreadcrumbDto(breadcrumbs, locality.getDomain());
         Collections.reverse(breadcrumbs);
         return breadcrumbs;
     }
@@ -64,14 +63,6 @@ public class BreadcrumbService {
         addOfficeAndPlanBreadcrumbDto(breadcrumbs, workpack.getIdPlan());
         Collections.reverse(breadcrumbs);
         return breadcrumbs;
-    }
-
-    private void addDomainBreadcrumbDto(List<BreadcrumbDto> breadcrumbs, Domain domain) {
-        Office office = domain.getOffice();
-        BreadcrumbDto breadcrumbDomainDto = new BreadcrumbDto(domain.getId(), domain.getName(), domain.getFullName(), "domain");
-        BreadcrumbDto breadcrumbDomainListDto = new BreadcrumbDto(office.getId(), office.getName(), office.getFullName(), "domains");
-        breadcrumbs.add(breadcrumbDomainDto);
-        breadcrumbs.add(breadcrumbDomainListDto);
     }
 
     public List<BreadcrumbDto> models(Long id) {
@@ -132,13 +123,14 @@ public class BreadcrumbService {
         if (detailDto.getModel() != null && detailDto.getModel().getProperties() != null) {
             breadcrumbDto.setName(getValueProperty(workpack,detailDto.getModel().getProperties(), detailDto.getProperties(), "name"));
             breadcrumbDto.setFullName(getValueProperty(workpack,detailDto.getModel().getProperties(), detailDto.getProperties(), "fullName"));
+            breadcrumbDto.setModelName(detailDto.getModel().getModelName());
         }
         return breadcrumbDto;
     }
 
     private String getValueProperty(Workpack workpack, List<? extends PropertyModelDto> propertyModels, List<? extends PropertyDto>  properties, String name) {
         PropertyModelDto propertyModelName = propertyModels.stream().filter(
-            pm -> pm.getName().equals(name)).findFirst().orElse(null);
+            pm -> Session.PROPERTIES.equals(pm.getSession()) && pm.getName().equals(name)).findFirst().orElse(null);
         PropertyDto propertyName = properties.stream().filter(
             pn -> propertyModelName != null && pn.getIdPropertyModel().equals(
                 propertyModelName.getId())).findFirst().orElse(null);

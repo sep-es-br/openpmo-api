@@ -21,6 +21,7 @@ import br.gov.es.openpmo.model.Person;
 import br.gov.es.openpmo.model.Plan;
 import br.gov.es.openpmo.model.Property;
 import br.gov.es.openpmo.model.Workpack;
+import br.gov.es.openpmo.model.domain.Session;
 
 @Service
 public class MenuService {
@@ -83,7 +84,8 @@ public class MenuService {
             menuDto.setFontIcon(detailDto.getModel().getFontIcon());
             if (detailDto.getModel() != null && detailDto.getModel().getProperties() != null) {
                 PropertyModelDto propertyModelName = detailDto.getModel().getProperties().stream().filter(
-                    pm -> pm.getName().equals("name")).findFirst().orElse(null);
+                    pm -> Session.PROPERTIES.equals(pm.getSession())
+                        && pm.getName().equals("name")).findFirst().orElse(null);
 
                 PropertyDto propertyName = detailDto.getProperties().stream().filter(
                     pn -> propertyModelName != null && pn.getIdPropertyModel().equals(
