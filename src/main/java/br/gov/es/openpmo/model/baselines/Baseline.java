@@ -17,9 +17,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Set;
 
-import static br.gov.es.openpmo.model.baselines.Status.APPROVED;
-import static br.gov.es.openpmo.model.baselines.Status.DRAFT;
-import static br.gov.es.openpmo.model.baselines.Status.REJECTED;
+import static br.gov.es.openpmo.model.baselines.Status.*;
 import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_IS_NOT_DRAFT_INVALID_STATE_ERROR;
 
 @NodeEntity
@@ -54,9 +52,9 @@ public class Baseline extends Entity {
   }
 
   public Baseline(
-    final String name,
-    final String description,
-    final String message
+      final String name,
+      final String description,
+      final String message
   ) {
     this.name = name;
     this.description = description;
@@ -168,7 +166,7 @@ public class Baseline extends Entity {
   }
 
   public Baseline ifIsNotDraftThrowsException() {
-    if(this.isDraft()) {
+    if (this.isDraft()) {
       return this;
     }
     throw new NegocioException(BASELINE_IS_NOT_DRAFT_INVALID_STATE_ERROR);
@@ -182,16 +180,16 @@ public class Baseline extends Entity {
   @Transient
   public String getWorkpackName() {
     return Optional.ofNullable(this.baselinedBy)
-      .map(IsBaselinedBy::getWorkpack)
-      .map(Workpack::getWorkpackModelInstance)
-      .map(WorkpackModel::getModelName)
-      .orElse(null);
+        .map(IsBaselinedBy::getWorkpack)
+        .map(Workpack::getWorkpackModelInstance)
+        .map(WorkpackModel::getModelName)
+        .orElse(null);
   }
 
   public String getFormattedRole() {
     return Optional.ofNullable(this.proposer)
-      .map(IsProposedBy::getFormattedRole)
-      .orElse(null);
+        .map(IsProposedBy::getFormattedRole)
+        .orElse(null);
   }
 
   public void approve() {

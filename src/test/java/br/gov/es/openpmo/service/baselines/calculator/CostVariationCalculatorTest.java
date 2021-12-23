@@ -37,7 +37,7 @@ class CostVariationCalculatorTest {
   private static final long ID_WORKPACK = 2L;
   private static final long ID_BASELINE = 1L;
   private static final long ID_STEP = 3L;
-  // private CostVariationCalculator costVariationCalculator;
+ // private CostVariationCalculator costVariationCalculator;
 
   @Mock
   private BaselineRepository repository;

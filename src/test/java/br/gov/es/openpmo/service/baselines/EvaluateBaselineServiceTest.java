@@ -23,20 +23,14 @@ import java.util.Optional;
 
 import static br.gov.es.openpmo.model.baselines.Decision.APPROVED;
 import static br.gov.es.openpmo.model.baselines.Decision.REJECTED;
-import static br.gov.es.openpmo.service.baselines.EvaluateBaselineServiceTest.BaselineApprove.ID_BASELINE;
-import static br.gov.es.openpmo.service.baselines.EvaluateBaselineServiceTest.BaselineApprove.ID_MEMBER;
-import static br.gov.es.openpmo.service.baselines.EvaluateBaselineServiceTest.BaselineApprove.ID_WORKPACK;
+import static br.gov.es.openpmo.service.baselines.EvaluateBaselineServiceTest.BaselineApprove.*;
 import static br.gov.es.openpmo.utils.ApplicationMessage.NOT_VALID_CCB_MEMBER;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.isA;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @Tag("unit")
 @ExtendWith(MockitoExtension.class)
@@ -60,10 +54,10 @@ class EvaluateBaselineServiceTest {
   @BeforeEach
   void setUp() {
     this.service = new EvaluateBaselineService(
-      this.repository,
-      this.ccbMemberRepository,
-      this.evaluatedByRepository,
-      this.journalCreator
+        this.repository,
+        this.ccbMemberRepository,
+        this.evaluatedByRepository,
+        this.journalCreator
     );
   }
 

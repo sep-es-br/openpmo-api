@@ -30,21 +30,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static br.gov.es.openpmo.utils.ApplicationMessage.ID_WORKPACK_NOT_NULL;
-import static br.gov.es.openpmo.utils.ApplicationMessage.PROCESS_ID_NOT_NULL;
-import static br.gov.es.openpmo.utils.ApplicationMessage.PROCESS_NOT_FOUND;
+import static br.gov.es.openpmo.utils.ApplicationMessage.*;
 import static java.util.Arrays.asList;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyMap;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isA;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @Tag("unit")
 @ExtendWith(MockitoExtension.class)
@@ -70,11 +60,11 @@ class ProcessServiceTest {
   @BeforeEach
   void setUp() {
     this.service = new ProcessService(
-      this.repository,
-      this.eDocsApi,
-      this.workpackService,
-      this.findAllProcess,
-      this.customFilterService
+        this.repository,
+        this.eDocsApi,
+        this.workpackService,
+        this.findAllProcess,
+        this.customFilterService
     );
   }
 
@@ -84,52 +74,52 @@ class ProcessServiceTest {
 
   ProcessCreateDto processCreateDto(final Long idWorkpack) {
     return new ProcessCreateDto(
-      idWorkpack,
-      "Processo 2021-J8BS5",
-      "Note 2021-J8BS5",
-      "2021-J8BS5",
-      "EmAndamento",
-      "Subject 2021-J8BS5",
-      "J8BS5",
-      3L,
-      false
+        idWorkpack,
+        "Processo 2021-J8BS5",
+        "Note 2021-J8BS5",
+        "2021-J8BS5",
+        "EmAndamento",
+        "Subject 2021-J8BS5",
+        "J8BS5",
+        3L,
+        false
     );
   }
 
   Process process() {
     return new Process(
-      "",
-      "",
-      "",
-      "",
-      1L,
-      "",
-      false,
-      "",
-      new Workpack()
+        "",
+        "",
+        "",
+        "",
+        1L,
+        "",
+        false,
+        "",
+        new Workpack()
     );
   }
 
   ProcessUpdateDto processUpdateDto() {
     return new ProcessUpdateDto(
-      1L,
-      "name",
-      "note"
+        1L,
+        "name",
+        "note"
     );
   }
 
   ProcessResponse processResponse() {
     final ProcessResponse processResponse = new ProcessResponse(
-      "id",
-      "processNumber",
-      "subject",
-      "status",
-      true
+        "id",
+        "processNumber",
+        "subject",
+        "status",
+        true
     );
     processResponse.addHistory(new ProcessHistoryResponse(
-      LocalDateTime.now(),
-      "name",
-      "abbr"
+        LocalDateTime.now(),
+        "name",
+        "abbr"
     ));
     return processResponse;
   }
@@ -151,8 +141,8 @@ class ProcessServiceTest {
     @Test
     void shouldThrowExceptionIfIdWorkpackIsNull() {
       final NegocioException exception = assertThrows(
-        NegocioException.class,
-        () -> ProcessServiceTest.this.service.create(ProcessServiceTest.this.processCreateDto(null))
+          NegocioException.class,
+          () -> ProcessServiceTest.this.service.create(ProcessServiceTest.this.processCreateDto(null))
       );
       assertEquals(ID_WORKPACK_NOT_NULL, exception.getMessage());
       verify(ProcessServiceTest.this.repository, never()).save(isA(Process.class));
@@ -168,10 +158,7 @@ class ProcessServiceTest {
     void shouldUpdateProcess() {
       when(ProcessServiceTest.this.repository.save(isA(Process.class), anyInt())).thenReturn(ProcessServiceTest.this.process());
       when(ProcessServiceTest.this.repository.findById(anyLong())).thenReturn(Optional.of(ProcessServiceTest.this.process()));
-      when(ProcessServiceTest.this.eDocsApi.findProcessByProtocol(
-        anyString(),
-        eq(1L)
-      )).thenReturn(ProcessServiceTest.this.processResponse());
+      when(ProcessServiceTest.this.eDocsApi.findProcessByProtocol(anyString(), eq(1L))).thenReturn(ProcessServiceTest.this.processResponse());
 
       ProcessServiceTest.this.service.update(ProcessServiceTest.this.processUpdateDto(), 1L);
 
@@ -184,8 +171,8 @@ class ProcessServiceTest {
     void shouldThrowExceptionIfProcessNotFound() {
 
       final RegistroNaoEncontradoException exception = assertThrows(
-        RegistroNaoEncontradoException.class,
-        () -> ProcessServiceTest.this.service.update(ProcessServiceTest.this.processUpdateDto(), 1L)
+          RegistroNaoEncontradoException.class,
+          () -> ProcessServiceTest.this.service.update(ProcessServiceTest.this.processUpdateDto(), 1L)
       );
 
       verify(ProcessServiceTest.this.repository, never()).save(isA(Process.class), anyInt());
@@ -212,8 +199,8 @@ class ProcessServiceTest {
     void shouldThrowExceptionIfIdIsNull() {
 
       final IllegalArgumentException exception = assertThrows(
-        IllegalArgumentException.class,
-        () -> ProcessServiceTest.this.service.deleteById(null)
+          IllegalArgumentException.class,
+          () -> ProcessServiceTest.this.service.deleteById(null)
       );
 
       assertEquals(PROCESS_ID_NOT_NULL, exception.getMessage());
@@ -227,10 +214,7 @@ class ProcessServiceTest {
     @Test
     void shouldFindById() {
       when(ProcessServiceTest.this.repository.findById(anyLong())).thenReturn(Optional.of(ProcessServiceTest.this.process()));
-      when(ProcessServiceTest.this.eDocsApi.findProcessByProtocol(
-        anyString(),
-        eq(1L)
-      )).thenReturn(ProcessServiceTest.this.processResponse());
+      when(ProcessServiceTest.this.eDocsApi.findProcessByProtocol(anyString(), eq(1L))).thenReturn(ProcessServiceTest.this.processResponse());
       when(ProcessServiceTest.this.repository.save(isA(Process.class), anyInt())).thenReturn(ProcessServiceTest.this.process());
 
       final ProcessDetailDto processFromEDocsDto = ProcessServiceTest.this.service.findById(1L, 1L);
@@ -245,8 +229,8 @@ class ProcessServiceTest {
       when(ProcessServiceTest.this.repository.findById(anyLong())).thenReturn(Optional.empty());
 
       Assertions.assertThatThrownBy(() -> ProcessServiceTest.this.service.findById(1L, 1L))
-        .hasMessage(PROCESS_NOT_FOUND)
-        .isInstanceOf(RegistroNaoEncontradoException.class);
+          .hasMessage(PROCESS_NOT_FOUND)
+          .isInstanceOf(RegistroNaoEncontradoException.class);
 
       verify(ProcessServiceTest.this.repository, times(1)).findById(anyLong());
       verify(ProcessServiceTest.this.repository, never()).save(isA(Process.class));
@@ -273,8 +257,8 @@ class ProcessServiceTest {
     void shouldFindAllProcessUsingCustomFilter() {
       when(ProcessServiceTest.this.customFilterService.findById(anyLong())).thenReturn(new CustomFilter());
       when(ProcessServiceTest.this.findAllProcess.execute(
-        isA(CustomFilter.class),
-        anyMap()
+          isA(CustomFilter.class),
+          anyMap()
       )).thenReturn(asList(ProcessServiceTest.this.process()));
 
       ProcessServiceTest.this.service.findAllAsCardDto(1L, 1L);
@@ -287,8 +271,8 @@ class ProcessServiceTest {
     @Test
     void shouldThrowExceptionIfIdWorkpackIsNull() {
       Assertions.assertThatThrownBy(() -> ProcessServiceTest.this.service.findAllAsCardDto(null, 1L))
-        .hasMessage(ID_WORKPACK_NOT_NULL)
-        .isInstanceOf(IllegalArgumentException.class);
+          .hasMessage(ID_WORKPACK_NOT_NULL)
+          .isInstanceOf(IllegalArgumentException.class);
     }
 
   }

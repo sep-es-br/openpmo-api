@@ -28,20 +28,20 @@ public class Person extends Actor {
 
   @Transient
   public Optional<IsAuthenticatedBy> findAuthenticationDataBy(final String serverName) {
-    if(this.authentications == null) return Optional.empty();
+    if (this.authentications == null) return Optional.empty();
     return this.authentications
-      .stream()
-      .filter(auth -> auth.getAuthService().getServer().equalsIgnoreCase(serverName))
-      .findFirst();
+        .stream()
+        .filter(auth -> auth.getAuthService().getServer().equalsIgnoreCase(serverName))
+        .findFirst();
   }
 
   @Transient
   public Optional<IsInContactBookOf> findContactInformationBy(final Long idOffice) {
-    if(this.authentications == null) return Optional.empty();
+    if (this.authentications == null) return Optional.empty();
     return this.isInContactBookOf
-      .stream()
-      .filter(contact -> contact.getOfficeId().equals(idOffice))
-      .findFirst();
+        .stream()
+        .filter(contact -> contact.getOfficeId().equals(idOffice))
+        .findFirst();
   }
 
   public Boolean getAdministrator() {
@@ -53,7 +53,7 @@ public class Person extends Actor {
   }
 
   public Set<IsAuthenticatedBy> getAuthentications() {
-    if(this.authentications == null) return new HashSet<>();
+    if (this.authentications == null) return new HashSet<>();
     return Collections.unmodifiableSet(this.authentications);
   }
 
@@ -62,7 +62,7 @@ public class Person extends Actor {
   }
 
   public Set<IsInContactBookOf> getIsInContactBookOf() {
-    if(this.isInContactBookOf == null) return new HashSet<>();
+    if (this.isInContactBookOf == null) return new HashSet<>();
     return Collections.unmodifiableSet(this.isInContactBookOf);
   }
 
