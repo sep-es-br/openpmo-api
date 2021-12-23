@@ -2,13 +2,13 @@ package br.gov.es.openpmo.dto;
 
 public class ErroDto {
 
-    private String erro;
+  private final String erro;
 
-    public ErroDto(String erro) {
-        this.erro = erro;
-    }
+  public ErroDto(final String erro) {
+    this.erro = erro;
+  }
 
-    public String getErro() {
-        return erro;
-    }
+  public String getErro() {
+    return this.erro;
+  }
 }

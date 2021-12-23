@@ -1,37 +1,51 @@
 package br.gov.es.openpmo.dto.planpermission;
 
-import java.util.List;
-
 import br.gov.es.openpmo.dto.permission.PermissionDto;
+import br.gov.es.openpmo.dto.person.PersonDto;
+
+import javax.validation.constraints.NotNull;
+import java.util.Collections;
+import java.util.List;
 
 public class PlanPermissionParamDto {
 
-    private Long idPlan;
-    private String email;
-    private List<PermissionDto> permissions;
+  @NotNull
+  private Long idPlan;
+  @NotNull
+  private String email;
+  private PersonDto person;
+  private List<PermissionDto> permissions;
 
-    public String getEmail() {
-        return this.email;
-    }
+  public PersonDto getPerson() {
+    return this.person;
+  }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+  public void setPerson(final PersonDto person) {
+    this.person = person;
+  }
 
-    public Long getIdPlan() {
-        return this.idPlan;
-    }
+  public String getEmail() {
+    return this.email;
+  }
 
-    public void setIdPlan(Long idPlan) {
-        this.idPlan = idPlan;
-    }
+  public void setEmail(final String email) {
+    this.email = email;
+  }
 
-    public List<PermissionDto> getPermissions() {
-        return this.permissions;
-    }
+  public Long getIdPlan() {
+    return this.idPlan;
+  }
 
-    public void setPermissions(List<PermissionDto> permissions) {
-        this.permissions = permissions;
-    }
+  public void setIdPlan(final Long idPlan) {
+    this.idPlan = idPlan;
+  }
+
+  public List<PermissionDto> getPermissions() {
+    return Collections.unmodifiableList(this.permissions);
+  }
+
+  public void setPermissions(final List<PermissionDto> permissions) {
+    this.permissions = permissions;
+  }
 
 }

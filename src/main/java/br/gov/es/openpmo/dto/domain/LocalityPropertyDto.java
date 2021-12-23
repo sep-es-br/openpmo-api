@@ -3,42 +3,42 @@ package br.gov.es.openpmo.dto.domain;
 import java.util.Set;
 
 public class LocalityPropertyDto {
-    
-    private Long id;
-    private String name;
-    private String fullName;
-    private Set<LocalityPropertyDto> children;
 
-    public Long getId() {
-        return this.id;
-    }
+  private Long id;
+  private String name;
+  private String fullName;
+  private Set<LocalityPropertyDto> children;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+  public Long getId() {
+    return this.id;
+  }
 
-    public String getName() {
-        return this.name;
-    }
+  public void setId(final Long id) {
+    this.id = id;
+  }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+  public String getName() {
+    return this.name;
+  }
 
-    public String getFullName() {
-        return this.fullName;
-    }
+  public void setName(final String name) {
+    this.name = name;
+  }
 
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
+  public String getFullName() {
+    return this.fullName;
+  }
 
-    public Set<LocalityPropertyDto> getChildren() {
-        return this.children;
-    }
+  public void setFullName(final String fullName) {
+    this.fullName = fullName;
+  }
 
-    public void setChildren(Set<LocalityPropertyDto> children) {
-        this.children = children;
-    }
+  public Set<LocalityPropertyDto> getChildren() {
+    return this.children;
+  }
+
+  public void setChildren(final Set<LocalityPropertyDto> children) {
+    this.children = children;
+  }
 
 }

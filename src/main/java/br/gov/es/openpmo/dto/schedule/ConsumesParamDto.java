@@ -1,45 +1,45 @@
 package br.gov.es.openpmo.dto.schedule;
 
-import java.math.BigDecimal;
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 
 public class ConsumesParamDto {
 
-	private Long id;
-	private BigDecimal actualCost;
-	private BigDecimal plannedCost;
-	@NotNull
-	private Long idCostAccount;
+  private Long id;
+  private BigDecimal actualCost;
+  private BigDecimal plannedCost;
+  @NotNull
+  private Long idCostAccount;
 
-	public Long getId() {
-		return id;
-	}
+  public Long getId() {
+    return this.id;
+  }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+  public void setId(final Long id) {
+    this.id = id;
+  }
 
-	public BigDecimal getActualCost() {
-		return actualCost;
-	}
+  public BigDecimal getActualCost() {
+    return this.actualCost;
+  }
 
-	public void setActualCost(BigDecimal actualCost) {
-		this.actualCost = actualCost;
-	}
+  public void setActualCost(final BigDecimal actualCost) {
+    this.actualCost = actualCost;
+  }
 
-	public BigDecimal getPlannedCost() {
-		return plannedCost;
-	}
+  public BigDecimal getPlannedCost() {
+    return this.plannedCost;
+  }
 
-	public void setPlannedCost(BigDecimal plannedCost) {
-		this.plannedCost = plannedCost;
-	}
+  public void setPlannedCost(final BigDecimal plannedCost) {
+    this.plannedCost = plannedCost;
+  }
 
-	public Long getIdCostAccount() {
-		return idCostAccount;
-	}
+  public Long getIdCostAccount() {
+    return this.idCostAccount;
+  }
 
-	public void setIdCostAccount(Long idCostAccount) {
-		this.idCostAccount = idCostAccount;
-	}
+  public void setIdCostAccount(final Long idCostAccount) {
+    this.idCostAccount = idCostAccount;
+  }
 }

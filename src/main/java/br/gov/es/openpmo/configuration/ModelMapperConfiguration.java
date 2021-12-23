@@ -1,86 +1,86 @@
 package br.gov.es.openpmo.configuration;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
 import org.modelmapper.AbstractConverter;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 @Configuration
 public class ModelMapperConfiguration {
 
-    DateTimeFormatter localDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-	DateTimeFormatter localDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+  DateTimeFormatter localDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+  DateTimeFormatter localDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    @Bean
-    public ModelMapper modelMapper() {
+  @Bean
+  public ModelMapper modelMapper() {
 
-        ModelMapper modelMapper = new ModelMapper();
-        modelMapper.addConverter(getStringToLocalDateConverter());
-        modelMapper.addConverter(getLocalDateToStringConverter());
-        modelMapper.addConverter(getStringToLocalDateTimeConverter());
-        modelMapper.addConverter(getLocalDateTimeToStringConverter());
-		modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-        return modelMapper;
-    }
+    final ModelMapper modelMapper = new ModelMapper();
+    modelMapper.addConverter(this.getStringToLocalDateConverter());
+    modelMapper.addConverter(this.getLocalDateToStringConverter());
+    modelMapper.addConverter(this.getStringToLocalDateTimeConverter());
+    modelMapper.addConverter(this.getLocalDateTimeToStringConverter());
+    modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+    return modelMapper;
+  }
 
-    private AbstractConverter<String, LocalDate> getStringToLocalDateConverter() {
-        return new AbstractConverter<String, LocalDate>() {
+  private AbstractConverter<String, LocalDate> getStringToLocalDateConverter() {
+    return new AbstractConverter<String, LocalDate>() {
 
-			@Override
-			protected LocalDate convert(String source) {
-				if (source == null) {
-					return null;
-				}
+      @Override
+      protected LocalDate convert(final String source) {
+        if(source == null) {
+          return null;
+        }
 
-				return LocalDate.parse(source, localDateFormatter);
-			}
-		};
-    }
+        return LocalDate.parse(source, ModelMapperConfiguration.this.localDateFormatter);
+      }
+    };
+  }
 
-    private AbstractConverter<LocalDate, String> getLocalDateToStringConverter() {
-        return new AbstractConverter<LocalDate, String>() {
+  private AbstractConverter<LocalDate, String> getLocalDateToStringConverter() {
+    return new AbstractConverter<LocalDate, String>() {
 
-			@Override
-			protected String convert(LocalDate source) {
-				if (source == null) {
-					return null;
-				}
+      @Override
+      protected String convert(final LocalDate source) {
+        if(source == null) {
+          return null;
+        }
 
-				return localDateFormatter.format(source);
-			}
-		};
-    }
+        return ModelMapperConfiguration.this.localDateFormatter.format(source);
+      }
+    };
+  }
 
-	private AbstractConverter<String, LocalDateTime> getStringToLocalDateTimeConverter() {
-		return new AbstractConverter<String, LocalDateTime>() {
+  private AbstractConverter<String, LocalDateTime> getStringToLocalDateTimeConverter() {
+    return new AbstractConverter<String, LocalDateTime>() {
 
-			@Override
-			protected LocalDateTime convert(String source) {
-				if (source == null) {
-					return null;
-				}
+      @Override
+      protected LocalDateTime convert(final String source) {
+        if(source == null) {
+          return null;
+        }
 
-				return LocalDateTime.parse(source, localDateTimeFormatter);
-			}
-		};
-	}
+        return LocalDateTime.parse(source, ModelMapperConfiguration.this.localDateTimeFormatter);
+      }
+    };
+  }
 
-	private AbstractConverter<LocalDateTime, String> getLocalDateTimeToStringConverter() {
-		return new AbstractConverter<LocalDateTime, String>() {
+  private AbstractConverter<LocalDateTime, String> getLocalDateTimeToStringConverter() {
+    return new AbstractConverter<LocalDateTime, String>() {
 
-			@Override
-			protected String convert(LocalDateTime source) {
-				if (source == null) {
-					return null;
-				}
+      @Override
+      protected String convert(final LocalDateTime source) {
+        if(source == null) {
+          return null;
+        }
 
-				return localDateFormatter.format(source);
-			}
-		};
-	}
+        return ModelMapperConfiguration.this.localDateFormatter.format(source);
+      }
+    };
+  }
 }

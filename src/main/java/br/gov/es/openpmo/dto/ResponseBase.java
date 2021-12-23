@@ -1,45 +1,68 @@
 package br.gov.es.openpmo.dto;
 
+import br.gov.es.openpmo.utils.ApplicationMessage;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 @ApiModel(description = "Model responsável por encapsular todos responses da api.")
-@JsonPropertyOrder({ "sucess", "message", "data", "paginacao" })
+@JsonPropertyOrder({"success", "message", "data", "paginacao"})
 public class ResponseBase<T> {
 
-    @ApiModelProperty(position = 2)
-    private String message;
-    @ApiModelProperty(position = 1)
-    private boolean success = true;
-    @ApiModelProperty(position = 3)
-    private T data;
+  @ApiModelProperty(position = 2)
+  private String message;
 
-    public String getMessage() {
-        return this.message;
-    }
+  @ApiModelProperty(position = 1)
+  private boolean success = true;
 
-    public ResponseBase<T> setMessage(String message) {
-        this.message = message;
-        return this;
-    }
+  @ApiModelProperty(position = 3)
+  private T data;
 
-    public boolean isSuccess() {
-        return this.success;
-    }
+  public static <T> ResponseBase<T> of(final T data) {
+    return new ResponseBase<T>()
+      .setData(data)
+      .setMessage(ApplicationMessage.OPERATION_SUCCESS)
+      .setSuccess(true);
+  }
 
-    public ResponseBase<T> setSuccess(boolean success) {
-        this.success = success;
-        return this;
-    }
+  public static <T> ResponseBase<T> of() {
+    return new ResponseBase<T>()
+      .setData(null)
+      .setMessage(ApplicationMessage.OPERATION_SUCCESS)
+      .setSuccess(true);
+  }
 
-    public T getData() {
-        return this.data;
-    }
+  public static ResponseBase<Void> success() {
+    final ResponseBase<Void> responseBase = new ResponseBase<>();
+    responseBase.setSuccess(true);
+    return responseBase;
+  }
 
-    public ResponseBase<T> setData(T entidade) {
-        this.data = entidade;
-       return this;
-    }
+  public String getMessage() {
+    return this.message;
+  }
+
+  public ResponseBase<T> setMessage(final String message) {
+    this.message = message;
+    return this;
+  }
+
+  public boolean isSuccess() {
+    return this.success;
+  }
+
+  public ResponseBase<T> setSuccess(final boolean success) {
+    this.success = success;
+    return this;
+  }
+
+  public T getData() {
+    return this.data;
+  }
+
+  public ResponseBase<T> setData(final T entidade) {
+    this.data = entidade;
+    return this;
+  }
+
 }

@@ -1,69 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>Swagger UI</title>
-        <link rel="stylesheet" type="text/css" href="./swagger-ui.css" >
-        <link rel="icon" type="image/png" href="./favicon-16x16.ico" sizes="16x16" />
-        <style>
-            html
-            {
-                box-sizing: border-box;
-                overflow: -moz-scrollbars-vertical;
-                overflow-y: scroll;
-            }
+  <head>
+    <meta charset="UTF-8">
+    <title>Swagger UI</title>
+    <link href="./swagger-ui.css" rel="stylesheet" type="text/css">
+    <link href="./favicon-16x16.ico" rel="icon" sizes="16x16" type="image/png"/>
+    <style>
+        html {
+            box-sizing: border-box;
+            overflow: -moz-scrollbars-vertical;
+            overflow-y: scroll;
+        }
 
-            .swagger-ui .topbar{
-                background-color: #e2e2e2 !important
-            }
-			
-			.scheme-container {
-                background-color: #fafafa !important
-            }
+        .swagger-ui .topbar {
+            background-color: #e2e2e2 !important
+        }
 
-            .topbar-wrapper img {
-                height: 70px;
-            }
+        .scheme-container {
+            background-color: #fafafa !important
+        }
 
-            *,
-            *:before,
-            *:after
-            {
-                box-sizing: inherit;
-            }
+        .topbar-wrapper img {
+            height: 70px;
+        }
 
-            body
-            {
-                margin:0;
-                background: #fafafa;
-            }
-        </style>
-    </head>
+        *,
+        *:before,
+        *:after {
+            box-sizing: inherit;
+        }
 
-    <body>
-        <div id="swagger-ui"></div>
-        <script src="./swagger-ui-bundle.js"></script>
-        <script src="./swagger-ui-standalone-preset.js"></script>
-        <script>
-            var url = document.createElement('a');
-            url.setAttribute('href', window.location.href);
-            var urlFinal = url.origin + '/openpmo/v2/api-docs';
+        body {
+            margin: 0;
+            background: #fafafa;
+        }
+    </style>
+  </head>
 
-            const ui = SwaggerUIBundle({
-                url: urlFinal,
-                dom_id: '#swagger-ui',
-                docExpansion: 'none',
-                deepLinking: true,
-                validatorUrl: false,
-                presets: [
-                    SwaggerUIBundle.presets.apis,
-                    SwaggerUIStandalonePreset
-                ],
-                plugins: [
-                    SwaggerUIBundle.plugins.DownloadUrl
-                ],
-                layout: "StandaloneLayout"
-            });
-        </script>
-    </body>
+  <body>
+    <div id="swagger-ui"></div>
+    <script src="./swagger-ui-bundle.js"></script>
+    <script src="./swagger-ui-standalone-preset.js"></script>
+    <script>
+      var url = document.createElement('a');
+      url.setAttribute('href', window.location.href);
+      var urlFinal = url.origin + '/openpmo/v2/api-docs';
+
+      const ui = SwaggerUIBundle({
+        url: urlFinal,
+        dom_id: '#swagger-ui',
+        docExpansion: 'none',
+        deepLinking: true,
+        validatorUrl: false,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        plugins: [
+          SwaggerUIBundle.plugins.DownloadUrl
+        ],
+        layout: "StandaloneLayout"
+      });
+    </script>
+  </body>
 </html>

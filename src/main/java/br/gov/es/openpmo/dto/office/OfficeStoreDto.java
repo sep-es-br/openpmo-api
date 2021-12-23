@@ -4,25 +4,25 @@ import javax.validation.constraints.NotBlank;
 
 public class OfficeStoreDto {
 
-	@NotBlank(message = "name.not.blank")
-	private String name;
-	@NotBlank(message = "name.not.blank")
-	private String fullName;
+  @NotBlank(message = "name.not.blank")
+  private String name;
+  @NotBlank(message = "name.not.blank")
+  private String fullName;
 
-	public String getName() {
-		return name;
-	}
+  public String getName() {
+    return this.name;
+  }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+  public void setName(final String name) {
+    this.name = name;
+  }
 
-	public String getFullName() {
-		return fullName;
-	}
+  public String getFullName() {
+    return this.fullName;
+  }
 
-	public void setFullName(String fullName) {
-		this.fullName = fullName;
-	}
+  public void setFullName(final String fullName) {
+    this.fullName = fullName;
+  }
 
 }

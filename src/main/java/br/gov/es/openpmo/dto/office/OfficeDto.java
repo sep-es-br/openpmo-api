@@ -1,55 +1,55 @@
 package br.gov.es.openpmo.dto.office;
 
+import br.gov.es.openpmo.dto.permission.PermissionDto;
+import br.gov.es.openpmo.model.office.Office;
+
 import java.util.List;
 
-import br.gov.es.openpmo.dto.permission.PermissionDto;
-import br.gov.es.openpmo.model.Office;
-
 public class OfficeDto {
-	private Long id;
-	private String name;
-	private String fullName;
-	private List<PermissionDto> permissions;
+  private Long id;
+  private String name;
+  private String fullName;
+  private List<PermissionDto> permissions;
 
-	public OfficeDto() {
+  public OfficeDto() {
 
-	}
+  }
 
-	public OfficeDto(Office office) {
-		this.id = office.getId();
-		this.name = office.getName();
-		this.fullName = office.getFullName();
-	}
+  public OfficeDto(final Office office) {
+    this.id = office.getId();
+    this.name = office.getName();
+    this.fullName = office.getFullName();
+  }
 
-	public Long getId() {
-		return id;
-	}
+  public Long getId() {
+    return this.id;
+  }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+  public void setId(final Long id) {
+    this.id = id;
+  }
 
-	public String getName() {
-		return name;
-	}
+  public String getName() {
+    return this.name;
+  }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+  public void setName(final String name) {
+    this.name = name;
+  }
 
-	public String getFullName() {
-		return fullName;
-	}
+  public String getFullName() {
+    return this.fullName;
+  }
 
-	public void setFullName(String fullName) {
-		this.fullName = fullName;
-	}
+  public void setFullName(final String fullName) {
+    this.fullName = fullName;
+  }
 
-	public List<PermissionDto> getPermissions() {
-		return permissions;
-	}
+  public List<PermissionDto> getPermissions() {
+    return this.permissions;
+  }
 
-	public void setPermissions(List<PermissionDto> permissions) {
-		this.permissions = permissions;
-	}
+  public void setPermissions(final List<PermissionDto> permissions) {
+    this.permissions = permissions;
+  }
 }

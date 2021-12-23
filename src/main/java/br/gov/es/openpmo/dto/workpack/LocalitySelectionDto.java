@@ -4,13 +4,13 @@ import java.util.Set;
 
 public class LocalitySelectionDto extends PropertyDto {
 
-	private Set<Long> selectedValues;
+  private Set<Long> selectedValues;
 
-	public Set<Long> getSelectedValues() {
-		return selectedValues;
-	}
+  public Set<Long> getSelectedValues() {
+    return this.selectedValues;
+  }
 
-	public void setSelectedValues(Set<Long> selectedValues) {
-		this.selectedValues = selectedValues;
-	}
+  public void setSelectedValues(final Set<Long> selectedValues) {
+    this.selectedValues = selectedValues;
+  }
 }

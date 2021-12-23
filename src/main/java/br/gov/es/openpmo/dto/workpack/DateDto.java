@@ -4,13 +4,13 @@ import java.time.LocalDateTime;
 
 public class DateDto extends PropertyDto {
 
-	private LocalDateTime value;
+  private LocalDateTime value;
 
-	public LocalDateTime getValue() {
-		return value;
-	}
+  public LocalDateTime getValue() {
+    return this.value;
+  }
 
-	public void setValue(LocalDateTime value) {
-		this.value = value;
-	}
+  public void setValue(final LocalDateTime value) {
+    this.value = value;
+  }
 }

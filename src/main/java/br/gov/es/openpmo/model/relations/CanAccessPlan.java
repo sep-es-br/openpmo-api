@@ -1,87 +1,114 @@
 package br.gov.es.openpmo.model.relations;
 
+import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
+import br.gov.es.openpmo.model.actors.Person;
+import br.gov.es.openpmo.model.office.plan.Plan;
+import br.gov.es.openpmo.scheduler.HasRole;
 import org.neo4j.ogm.annotation.EndNode;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.Property;
 import org.neo4j.ogm.annotation.RelationshipEntity;
 import org.neo4j.ogm.annotation.StartNode;
+import org.springframework.data.annotation.Transient;
 
-import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
-import br.gov.es.openpmo.model.Person;
-import br.gov.es.openpmo.model.Plan;
 
 @RelationshipEntity(type = "CAN_ACCESS_PLAN")
-public class CanAccessPlan {
+public class CanAccessPlan implements HasRole {
 
-	@Id
-	@GeneratedValue
-	private Long id;
-	private String organization;
-	private String permitedRole;
-	private PermissionLevelEnum permissionLevel;
+  @Id
+  @GeneratedValue
+  private Long id;
+  private String organization;
+  @Property("permitedRole")
+  private String role;
+  private PermissionLevelEnum permissionLevel;
 
-	@StartNode
-	private Person person;
+  @StartNode
+  private Person person;
 
-	@EndNode
-	private Plan plan;
+  @EndNode
+  private Plan plan;
 
-	public CanAccessPlan(Long id, String organization, String permitedRole, PermissionLevelEnum permissionLevel,
-			Person person, Plan plan) {
-		this.id = id;
-		this.organization = organization;
-		this.permitedRole = permitedRole;
-		this.permissionLevel = permissionLevel;
-		this.person = person;
-		this.plan = plan;
-	}
+  public CanAccessPlan(
+    final Long id, final String organization, final String role, final PermissionLevelEnum permissionLevel,
+    final Person person, final Plan plan
+  ) {
+    this.id = id;
+    this.organization = organization;
+    this.role = role;
+    this.permissionLevel = permissionLevel;
+    this.person = person;
+    this.plan = plan;
+  }
 
-	public Long getId() {
-		return this.id;
-	}
+  @Transient
+  public String getPlanName() {
+    if(this.plan == null) {
+      return null;
+    }
+    return this.plan.getName();
+  }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+  @Transient
+  public Long getIdPlan() {
+    if(this.plan == null) {
+      return null;
+    }
+    return this.plan.getId();
+  }
 
-	public String getOrganization() {
-		return this.organization;
-	}
+  public Long getId() {
+    return this.id;
+  }
 
-	public void setOrganization(String organization) {
-		this.organization = organization;
-	}
+  public void setId(final Long id) {
+    this.id = id;
+  }
 
-	public String getPermitedRole() {
-		return this.permitedRole;
-	}
+  public String getOrganization() {
+    return this.organization;
+  }
 
-	public void setPermitedRole(String permitedRole) {
-		this.permitedRole = permitedRole;
-	}
+  public void setOrganization(final String organization) {
+    this.organization = organization;
+  }
 
-	public PermissionLevelEnum getPermissionLevel() {
-		return this.permissionLevel;
-	}
+  public String getRole() {
+    return this.role;
+  }
 
-	public void setPermissionLevel(PermissionLevelEnum permissionLevel) {
-		this.permissionLevel = permissionLevel;
-	}
+  public void setRole(final String role) {
+    this.role = role;
+  }
 
-	public Person getPerson() {
-		return this.person;
-	}
+  public PermissionLevelEnum getPermissionLevel() {
+    return this.permissionLevel;
+  }
 
-	public void setPerson(Person person) {
-		this.person = person;
-	}
+  public void setPermissionLevel(final PermissionLevelEnum permissionLevel) {
+    this.permissionLevel = permissionLevel;
+  }
 
-	public Plan getPlan() {
-		return this.plan;
-	}
+  public Person getPerson() {
+    return this.person;
+  }
 
-	public void setPlan(Plan plan) {
-		this.plan = plan;
-	}
+  public void setPerson(final Person person) {
+    this.person = person;
+  }
 
+  public Plan getPlan() {
+    return this.plan;
+  }
+
+  public void setPlan(final Plan plan) {
+    this.plan = plan;
+  }
+
+  @Transient
+  public boolean hasSameUser(final Long idUser) {
+    if(this.person == null) return false;
+    return this.person.getId().equals(idUser);
+  }
 }

@@ -2,41 +2,41 @@ package br.gov.es.openpmo.dto.workpackmodel;
 
 public class TextAreaModelDto extends PropertyModelDto {
 
-	private String defaultValue;
-	private Integer min;
-	private Integer max;
-	private Integer rows;
+  private String defaultValue;
+  private Integer min;
+  private Integer max;
+  private Integer rows;
 
-	public String getDefaultValue() {
-		return defaultValue;
-	}
+  public String getDefaultValue() {
+    return this.defaultValue;
+  }
 
-	public void setDefaultValue(String defaultValue) {
-		this.defaultValue = defaultValue;
-	}
+  public void setDefaultValue(final String defaultValue) {
+    this.defaultValue = defaultValue;
+  }
 
-	public Integer getMin() {
-		return min;
-	}
+  public Integer getMin() {
+    return this.min;
+  }
 
-	public void setMin(Integer min) {
-		this.min = min;
-	}
+  public void setMin(final Integer min) {
+    this.min = min;
+  }
 
-	public Integer getMax() {
-		return max;
-	}
+  public Integer getMax() {
+    return this.max;
+  }
 
-	public void setMax(Integer max) {
-		this.max = max;
-	}
+  public void setMax(final Integer max) {
+    this.max = max;
+  }
 
-	public Integer getRows() {
-		return rows;
-	}
+  public Integer getRows() {
+    return this.rows;
+  }
 
-	public void setRows(Integer rows) {
-		this.rows = rows;
-	}
+  public void setRows(final Integer rows) {
+    this.rows = rows;
+  }
 
 }

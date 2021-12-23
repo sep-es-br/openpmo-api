@@ -2,41 +2,41 @@ package br.gov.es.openpmo.dto.workpackmodel;
 
 public class NumberModelDto extends PropertyModelDto {
 
-	private Double defaultValue;
-	private Double min;
-	private Double max;
-	private Integer decimals;
+  private Double defaultValue;
+  private Double min;
+  private Double max;
+  private Integer decimals;
 
-	public Double getDefaultValue() {
-		return defaultValue;
-	}
+  public Double getDefaultValue() {
+    return this.defaultValue;
+  }
 
-	public void setDefaultValue(Double defaultValue) {
-		this.defaultValue = defaultValue;
-	}
+  public void setDefaultValue(final Double defaultValue) {
+    this.defaultValue = defaultValue;
+  }
 
-	public Double getMin() {
-		return min;
-	}
+  public Double getMin() {
+    return this.min;
+  }
 
-	public void setMin(Double min) {
-		this.min = min;
-	}
+  public void setMin(final Double min) {
+    this.min = min;
+  }
 
-	public Double getMax() {
-		return max;
-	}
+  public Double getMax() {
+    return this.max;
+  }
 
-	public void setMax(Double max) {
-		this.max = max;
-	}
+  public void setMax(final Double max) {
+    this.max = max;
+  }
 
-	public Integer getDecimals() {
-		return decimals;
-	}
+  public Integer getDecimals() {
+    return this.decimals;
+  }
 
-	public void setDecimals(Integer decimals) {
-		this.decimals = decimals;
-	}
+  public void setDecimals(final Integer decimals) {
+    this.decimals = decimals;
+  }
 
 }

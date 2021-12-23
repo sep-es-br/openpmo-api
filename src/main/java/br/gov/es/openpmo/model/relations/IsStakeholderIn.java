@@ -1,93 +1,99 @@
 package br.gov.es.openpmo.model.relations;
 
-import java.time.LocalDate;
-
+import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
+import br.gov.es.openpmo.model.Entity;
+import br.gov.es.openpmo.model.actors.Actor;
+import br.gov.es.openpmo.model.workpacks.Workpack;
 import org.neo4j.ogm.annotation.EndNode;
 import org.neo4j.ogm.annotation.RelationshipEntity;
 import org.neo4j.ogm.annotation.StartNode;
+import org.springframework.data.annotation.Transient;
 
-import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
-import br.gov.es.openpmo.model.Actor;
-import br.gov.es.openpmo.model.Entity;
-import br.gov.es.openpmo.model.Workpack;
+import java.time.LocalDate;
 
 @RelationshipEntity(type = "IS_STAKEHOLDER_IN")
 public class IsStakeholderIn extends Entity {
 
-	private String role;
-	private LocalDate to;
-	private LocalDate from;
-	private boolean active;
-	private String permitedRole;
-	private PermissionLevelEnum permissionLevel;
+  private String role;
+  private LocalDate to;
+  private LocalDate from;
+  private boolean active;
+  private String permitedRole;
+  private PermissionLevelEnum permissionLevel;
+  @StartNode
+  private Actor actor;
+  @EndNode
+  private Workpack workpack;
 
-	public String getPermitedRole() {
-		return this.permitedRole;
-	}
 
-	public void setPermitedRole(String permitedRole) {
-		this.permitedRole = permitedRole;
-	}
+  @Transient
+  public Long getIdWorkpack() {
+    if(this.workpack == null) return null;
+    return this.workpack.getId();
+  }
 
-	public PermissionLevelEnum getPermissionLevel() {
-		return this.permissionLevel;
-	}
+  public String getPermitedRole() {
+    return this.permitedRole;
+  }
 
-	public void setPermissionLevel(PermissionLevelEnum permissionLevel) {
-		this.permissionLevel = permissionLevel;
-	}
+  public void setPermitedRole(final String permitedRole) {
+    this.permitedRole = permitedRole;
+  }
 
-	@StartNode
-	private Actor actor;
+  public PermissionLevelEnum getPermissionLevel() {
+    return this.permissionLevel;
+  }
 
-	@EndNode
-	private Workpack workpack;
+  public void setPermissionLevel(final PermissionLevelEnum permissionLevel) {
+    this.permissionLevel = permissionLevel;
+  }
 
-	public String getRole() {
-		return role;
-	}
+  public String getRole() {
+    return this.role;
+  }
 
-	public void setRole(String role) {
-		this.role = role;
-	}
+  public void setRole(final String role) {
+    this.role = role;
+  }
 
-	public LocalDate getTo() {
-		return to;
-	}
+  public LocalDate getTo() {
+    return this.to;
+  }
 
-	public void setTo(LocalDate to) {
-		this.to = to;
-	}
+  public void setTo(final LocalDate to) {
+    this.to = to;
+  }
 
-	public LocalDate getFrom() {
-		return from;
-	}
+  public LocalDate getFrom() {
+    return this.from;
+  }
 
-	public void setFrom(LocalDate from) {
-		this.from = from;
-	}
+  public void setFrom(final LocalDate from) {
+    this.from = from;
+  }
 
-	public Actor getActor() {
-		return actor;
-	}
+  public Actor getActor() {
+    return this.actor;
+  }
 
-	public void setActor(Actor actor) {
-		this.actor = actor;
-	}
+  public void setActor(final Actor actor) {
+    this.actor = actor;
+  }
 
-	public Workpack getWorkpack() {
-		return workpack;
-	}
+  public Workpack getWorkpack() {
+    return this.workpack;
+  }
 
-	public void setWorkpack(Workpack workpack) {
-		this.workpack = workpack;
-	}
+  public void setWorkpack(final Workpack workpack) {
+    this.workpack = workpack;
+  }
 
-	public boolean isActive() {
-		return this.active;
-	}
+  public boolean isActive() {
+    return this.active;
+  }
 
-	public void setActive(boolean active) {
-		this.active = active;
-	}
+  public void setActive(final boolean active) {
+    this.active = active;
+  }
+
 }

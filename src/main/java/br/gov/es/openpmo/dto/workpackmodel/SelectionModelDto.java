@@ -4,34 +4,34 @@ import javax.validation.constraints.NotBlank;
 
 public class SelectionModelDto extends PropertyModelDto {
 
-	@NotBlank
-	private String defaultValue;
-	@NotBlank
-	private String possibleValues;
-	private boolean multipleSelection;
+  @NotBlank
+  private String defaultValue;
+  @NotBlank
+  private String possibleValues;
+  private boolean multipleSelection;
 
-	public String getDefaultValue() {
-		return defaultValue;
-	}
+  public String getDefaultValue() {
+    return this.defaultValue;
+  }
 
-	public void setDefaultValue(String defaultValue) {
-		this.defaultValue = defaultValue;
-	}
+  public void setDefaultValue(final String defaultValue) {
+    this.defaultValue = defaultValue;
+  }
 
-	public String getPossibleValues() {
-		return possibleValues;
-	}
+  public String getPossibleValues() {
+    return this.possibleValues;
+  }
 
-	public void setPossibleValues(String possibleValues) {
-		this.possibleValues = possibleValues;
-	}
+  public void setPossibleValues(final String possibleValues) {
+    this.possibleValues = possibleValues;
+  }
 
-	public boolean isMultipleSelection() {
-		return multipleSelection;
-	}
+  public boolean isMultipleSelection() {
+    return this.multipleSelection;
+  }
 
-	public void setMultipleSelection(boolean multipleSelection) {
-		this.multipleSelection = multipleSelection;
-	}
+  public void setMultipleSelection(final boolean multipleSelection) {
+    this.multipleSelection = multipleSelection;
+  }
 
 }

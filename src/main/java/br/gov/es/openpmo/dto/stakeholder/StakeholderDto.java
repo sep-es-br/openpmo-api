@@ -1,46 +1,58 @@
 package br.gov.es.openpmo.dto.stakeholder;
 
+import br.gov.es.openpmo.dto.organization.OrganizationDto;
+import br.gov.es.openpmo.dto.permission.PermissionDto;
+import br.gov.es.openpmo.dto.person.PersonDto;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import java.util.ArrayList;
 import java.util.List;
 
-import br.gov.es.openpmo.dto.organization.OrganizationDto;
-import br.gov.es.openpmo.dto.person.PersonDto;
-
 public class StakeholderDto {
+  private final List<PermissionDto> permissions = new ArrayList<>(0);
+  private final List<RoleDto> roles = new ArrayList<>(0);
+  private Long idWorkpack;
+  private PersonDto person;
+  private OrganizationDto organization;
 
-    private Long idWorkpack;
-    private PersonDto person;
-    private OrganizationDto organization;
-    private List<RoleDto> roles;
+  @JsonIgnore
+  private boolean isPerson;
 
-    public Long getIdWorkpack() {
-        return idWorkpack;
-    }
+  public Long getIdWorkpack() {
+    return this.idWorkpack;
+  }
 
-    public void setIdWorkpack(Long idWorkpack) {
-        this.idWorkpack = idWorkpack;
-    }
+  public void setIdWorkpack(final Long idWorkpack) {
+    this.idWorkpack = idWorkpack;
+  }
 
-    public PersonDto getPerson() {
-        return person;
-    }
+  public PersonDto getPerson() {
+    return this.person;
+  }
 
-    public void setPerson(PersonDto person) {
-        this.person = person;
-    }
+  public List<RoleDto> getRoles() {
+    return this.roles;
+  }
 
-    public List<RoleDto> getRoles() {
-        return roles;
-    }
+  public OrganizationDto getOrganization() {
+    return this.organization;
+  }
 
-    public void setRoles(List<RoleDto> roles) {
-        this.roles = roles;
-    }
+  public void setOrganization(final OrganizationDto organization) {
+    this.isPerson = false;
+    this.organization = organization;
+  }
 
-    public OrganizationDto getOrganization() {
-        return organization;
-    }
+  public boolean isPerson() {
+    return this.isPerson;
+  }
 
-    public void setOrganization(OrganizationDto organization) {
-        this.organization = organization;
-    }
+  public void setPerson(final PersonDto person) {
+    this.isPerson = true;
+    this.person = person;
+  }
+
+  public List<PermissionDto> getPermissions() {
+    return this.permissions;
+  }
 }

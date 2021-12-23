@@ -4,13 +4,13 @@ import java.math.BigDecimal;
 
 public class CurrencyDto extends PropertyDto {
 
-	private BigDecimal value;
+  private BigDecimal value;
 
-	public BigDecimal getValue() {
-		return value;
-	}
+  public BigDecimal getValue() {
+    return this.value;
+  }
 
-	public void setValue(BigDecimal value) {
-		this.value = value;
-	}
+  public void setValue(final BigDecimal value) {
+    this.value = value;
+  }
 }

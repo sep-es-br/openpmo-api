@@ -2,60 +2,74 @@ package br.gov.es.openpmo.dto.menu;
 
 public class BreadcrumbDto {
 
-    private Long id;
-    private String name;
-    private String fullName;
-    private String type;
-    private String modelName;
+  private Long id;
+  private Long idWorkpackModelLinked;
+  private String name;
+  private String fullName;
+  private String type;
+  private String modelName;
 
-    public BreadcrumbDto() {
+  public BreadcrumbDto() {
 
-    }
+  }
 
-    public BreadcrumbDto(Long id, String name, String fullName, String type) {
-        this.id = id;
-        this.name = name;
-        this.type = type;
-        this.fullName = fullName;
-    }
+  public BreadcrumbDto(
+    final Long id,
+    final String name,
+    final String fullName,
+    final String type
+  ) {
+    this.id = id;
+    this.name = name;
+    this.type = type;
+    this.fullName = fullName;
+  }
 
-    public Long getId() {
-        return id;
-    }
+  public Long getIdWorkpackModelLinked() {
+    return this.idWorkpackModelLinked;
+  }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+  public void setIdWorkpackModelLinked(final Long idWorkpackModelLinked) {
+    this.idWorkpackModelLinked = idWorkpackModelLinked;
+  }
 
-    public String getName() {
-        return name;
-    }
+  public Long getId() {
+    return this.id;
+  }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+  public void setId(final Long id) {
+    this.id = id;
+  }
 
-    public String getType() {
-        return type;
-    }
+  public String getName() {
+    return this.name;
+  }
 
-    public void setType(String type) {
-        this.type = type;
-    }
+  public void setName(final String name) {
+    this.name = name;
+  }
 
-    public String getFullName() {
-        return fullName;
-    }
+  public String getType() {
+    return this.type;
+  }
 
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
+  public void setType(final String type) {
+    this.type = type;
+  }
 
-    public String getModelName() {
-        return modelName;
-    }
+  public String getFullName() {
+    return this.fullName;
+  }
 
-    public void setModelName(String modelName) {
-        this.modelName = modelName;
-    }
+  public void setFullName(final String fullName) {
+    this.fullName = fullName;
+  }
+
+  public String getModelName() {
+    return this.modelName;
+  }
+
+  public void setModelName(final String modelName) {
+    this.modelName = modelName;
+  }
 }

@@ -1,30 +1,30 @@
 <!doctype html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+          name="viewport">
+    <meta content="ie=edge" http-equiv="X-UA-Compatible">
     <title>Acesso Cidadao</title>
-</head>
-<body>
-</body>
-<script type="text/javascript">
+  </head>
+  <body>
+  </body>
+  <script type="text/javascript">
     const protocol = window.location.protocol;
     const host = window.location.host;
     const hash = window.location.hash;
 
     let access_token = '';
     if (hash) {
-        const hashItems = hash.split('&');
-        const hashAccessToken = hashItems.find(hashItem => hashItem.startsWith('access_token'));
+      const hashItems = hash.split('&');
+      const hashAccessToken = hashItems.find(hashItem => hashItem.startsWith('access_token'));
 
-        if (hashAccessToken) {
-            access_token = hashAccessToken.split('=')[1];
-        }
+      if (hashAccessToken) {
+        access_token = hashAccessToken.split('=')[1];
+      }
     }
 
     const url = protocol + '//' + host + '/openpmo/signin/acesso-cidadao-response?access_token=' + access_token;
     window.location.href = url;
-</script>
+  </script>
 </html>

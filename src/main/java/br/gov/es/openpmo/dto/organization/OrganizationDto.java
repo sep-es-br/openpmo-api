@@ -1,105 +1,105 @@
 package br.gov.es.openpmo.dto.organization;
 
-import br.gov.es.openpmo.enumerator.OrganizationEnum;
-import br.gov.es.openpmo.model.Organization;
+import br.gov.es.openpmo.model.actors.Organization;
+import br.gov.es.openpmo.model.actors.OrganizationEnum;
 
 public class OrganizationDto {
-	private Long id;
-	private String name;
-	private String address;
-	private String fullName;
-	private String phoneNumber;
-	private String email;
-	private String contactEmail;
-	private OrganizationEnum sector;
-	private String website;
+  private Long id;
+  private String name;
+  private String address;
+  private String fullName;
+  private String phoneNumber;
+  private String email;
+  private String contactEmail;
+  private OrganizationEnum sector;
+  private String website;
 
-	public OrganizationDto() {
+  public OrganizationDto() {
 
-	}
+  }
 
-	public OrganizationDto(Organization organization) {
-		this.id = organization.getId();
-		this.name = organization.getName();
-		this.fullName = organization.getFullName();
-		this.address = organization.getAddress();
-		this.phoneNumber = organization.getPhoneNumber();
-		this.email = organization.getEmail();
-		this.contactEmail = organization.getContactEmail();
-		this.sector = organization.getSector();
-		this.website = organization.getWebsite();
-	}
+  public OrganizationDto(final Organization organization) {
+    this.id = organization.getId();
+    this.name = organization.getName();
+    this.fullName = organization.getFullName();
+    this.address = organization.getAddress();
+    this.phoneNumber = organization.getPhoneNumber();
 
-	public Long getId() {
-		return this.id;
-	}
+    this.contactEmail = organization.getContactEmail();
+    this.sector = organization.getSector();
+    this.website = organization.getWebsite();
+  }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+  public Long getId() {
+    return this.id;
+  }
 
-	public String getName() {
-		return this.name;
-	}
+  public void setId(final Long id) {
+    this.id = id;
+  }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+  public String getName() {
+    return this.name;
+  }
 
-	public String getAddress() {
-		return this.address;
-	}
+  public void setName(final String name) {
+    this.name = name;
+  }
 
-	public void setAddress(String address) {
-		this.address = address;
-	}
+  public String getAddress() {
+    return this.address;
+  }
 
-	public String getFullName() {
-		return this.fullName;
-	}
+  public void setAddress(final String address) {
+    this.address = address;
+  }
 
-	public void setFullName(String fullName) {
-		this.fullName = fullName;
-	}
+  public String getFullName() {
+    return this.fullName;
+  }
 
-	public String getPhoneNumber() {
-		return this.phoneNumber;
-	}
+  public void setFullName(final String fullName) {
+    this.fullName = fullName;
+  }
 
-	public void setPhoneNumber(String phoneNumber) {
-		this.phoneNumber = phoneNumber;
-	}
+  public String getPhoneNumber() {
+    return this.phoneNumber;
+  }
 
-	public String getEmail() {
-		return this.email;
-	}
+  public void setPhoneNumber(final String phoneNumber) {
+    this.phoneNumber = phoneNumber;
+  }
 
-	public void setEmail(String email) {
-		this.email = email;
-	}
+  public String getEmail() {
+    return this.email;
+  }
 
-	public String getContactEmail() {
-		return this.contactEmail;
-	}
+  public void setEmail(final String email) {
+    this.email = email;
+  }
 
-	public void setContactEmail(String contactEmail) {
-		this.contactEmail = contactEmail;
-	}
+  public String getContactEmail() {
+    return this.contactEmail;
+  }
 
-	public OrganizationEnum getSector() {
-		return this.sector;
-	}
+  public void setContactEmail(final String contactEmail) {
+    this.contactEmail = contactEmail;
+  }
 
-	public void setSector(OrganizationEnum sector) {
-		this.sector = sector;
-	}
+  public OrganizationEnum getSector() {
+    return this.sector;
+  }
 
-	public String getWebsite() {
-		return this.website;
-	}
+  public void setSector(final OrganizationEnum sector) {
+    this.sector = sector;
+  }
 
-	public void setWebsite(String website) {
-		this.website = website;
-	}
+  public String getWebsite() {
+    return this.website;
+  }
+
+  public void setWebsite(final String website) {
+    this.website = website;
+  }
 
 }

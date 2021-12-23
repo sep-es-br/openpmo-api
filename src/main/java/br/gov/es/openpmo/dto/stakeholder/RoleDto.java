@@ -4,50 +4,57 @@ import java.time.LocalDate;
 
 public class RoleDto {
 
-    private Long id;
-    private String role;
-    private LocalDate from;
-    private LocalDate to;
-    private boolean active;
+  private Long id;
+  private String role;
+  private LocalDate from;
+  private LocalDate to;
+  private boolean active;
 
-    public Long getId() {
-        return id;
-    }
+  public RoleDto() {
+  }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+  public RoleDto(final String role) {
+    this.role = role;
+  }
 
-    public String getRole() {
-        return this.role;
-    }
+  public Long getId() {
+    return this.id;
+  }
 
-    public void setRole(String role) {
-        this.role = role;
-    }
+  public void setId(final Long id) {
+    this.id = id;
+  }
 
-    public LocalDate getFrom() {
-        return this.from;
-    }
+  public String getRole() {
+    return this.role;
+  }
 
-    public void setFrom(LocalDate from) {
-        this.from = from;
-    }
+  public void setRole(final String role) {
+    this.role = role;
+  }
 
-    public LocalDate getTo() {
-        return this.to;
-    }
+  public LocalDate getFrom() {
+    return this.from;
+  }
 
-    public void setTo(LocalDate to) {
-        this.to = to;
-    }
+  public void setFrom(final LocalDate from) {
+    this.from = from;
+  }
 
-    public boolean isActive() {
-        return this.active;
-    }
+  public LocalDate getTo() {
+    return this.to;
+  }
 
-    public void setActive(boolean active) {
-        this.active = active;
-    }
+  public void setTo(final LocalDate to) {
+    this.to = to;
+  }
+
+  public boolean isActive() {
+    return this.active;
+  }
+
+  public void setActive(final boolean active) {
+    this.active = active;
+  }
 
 }

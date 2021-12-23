@@ -3,24 +3,24 @@ package br.gov.es.openpmo.dto.workpackmodel;
 import java.util.List;
 
 public class OrganizationSelectionModelDto extends PropertyModelDto {
-	
-	private boolean multipleSelection;
 
-	private List<Long> defaults;
+  private boolean multipleSelection;
 
-	public boolean isMultipleSelection() {
-		return multipleSelection;
-	}
+  private List<Long> defaults;
 
-	public void setMultipleSelection(boolean multipleSelection) {
-		this.multipleSelection = multipleSelection;
-	}
+  public boolean isMultipleSelection() {
+    return this.multipleSelection;
+  }
 
-	public List<Long> getDefaults() {
-		return defaults;
-	}
+  public void setMultipleSelection(final boolean multipleSelection) {
+    this.multipleSelection = multipleSelection;
+  }
 
-	public void setDefaults(List<Long> defaults) {
-		this.defaults = defaults;
-	}
+  public List<Long> getDefaults() {
+    return this.defaults;
+  }
+
+  public void setDefaults(final List<Long> defaults) {
+    this.defaults = defaults;
+  }
 }

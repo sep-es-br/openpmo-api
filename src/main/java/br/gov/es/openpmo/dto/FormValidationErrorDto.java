@@ -2,19 +2,19 @@ package br.gov.es.openpmo.dto;
 
 public class FormValidationErrorDto {
 
-    private String field;
-    private String error;
+  private final String field;
+  private final String error;
 
-    public FormValidationErrorDto(String field, String error) {
-        this.field = field;
-        this.error = error;
-    }
+  public FormValidationErrorDto(final String field, final String error) {
+    this.field = field;
+    this.error = error;
+  }
 
-    public String getField() {
-        return field;
-    }
+  public String getField() {
+    return this.field;
+  }
 
-    public String getError() {
-        return error;
-    }
+  public String getError() {
+    return this.error;
+  }
 }
