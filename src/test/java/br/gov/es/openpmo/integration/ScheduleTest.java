@@ -151,13 +151,13 @@ import java.util.List;
     responseFind.getBody().getData().getProperties().stream().filter(
       p -> Session.COST.equals(p.getSession())).forEach(property -> {
       switch(property.getClass().getTypeName()) {
-        case "br.gov.es.openpmo.dto.workpackmodel.TextModelDto":
+        case "br.gov.es.openpmo.dto.workpackmodel.params.properties.TextModelDto":
           final TextDto textDto = new TextDto();
           textDto.setIdPropertyModel(property.getId());
           textDto.setValue("Text cost");
           properties.add(textDto);
           break;
-        case "br.gov.es.openpmo.dto.workpackmodel.DateModelDto":
+        case "br.gov.es.openpmo.dto.workpackmodel.params.properties.DateModelDto":
           final DateDto dateDto = new DateDto();
           dateDto.setIdPropertyModel(property.getId());
           dateDto.setValue(LocalDateTime.now());

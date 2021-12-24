@@ -1,4 +1,4 @@
-package br.gov.es.openpmo.dto.workpackmodel;
+package br.gov.es.openpmo.dto.workpackmodel.params.properties;
 
 public class TextModelDto extends PropertyModelDto {
 

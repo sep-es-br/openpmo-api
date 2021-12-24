@@ -1,7 +1,7 @@
 package br.gov.es.openpmo.dto.costaccount;
 
 import br.gov.es.openpmo.dto.workpack.PropertyDto;
-import br.gov.es.openpmo.dto.workpackmodel.PropertyModelDto;
+import br.gov.es.openpmo.dto.workpackmodel.params.properties.PropertyModelDto;
 
 import java.util.List;
 

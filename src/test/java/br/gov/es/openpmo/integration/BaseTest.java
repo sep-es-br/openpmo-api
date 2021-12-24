@@ -1,10 +1,10 @@
 package br.gov.es.openpmo.integration;
 
 import br.gov.es.openpmo.dto.workpack.*;
-import br.gov.es.openpmo.dto.workpackmodel.*;
 import br.gov.es.openpmo.dto.workpackmodel.details.WorkpackModelDetailDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.ProjectModelParamDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.WorkpackModelParamDto;
+import br.gov.es.openpmo.dto.workpackmodel.params.properties.*;
 import br.gov.es.openpmo.enumerator.Session;
 import br.gov.es.openpmo.enumerator.TokenType;
 import br.gov.es.openpmo.model.actors.Person;
@@ -297,67 +297,67 @@ public abstract class BaseTest {
     if(!CollectionUtils.isEmpty(model.getProperties())) {
       model.getProperties().forEach(property -> {
         switch(property.getClass().getTypeName()) {
-          case "br.gov.es.openpmo.dto.workpackmodel.IntegerModelDto":
+          case "br.gov.es.openpmo.dto.workpackmodel.params.properties.IntegerModelDto":
             final IntegerDto integer = new IntegerDto();
             integer.setIdPropertyModel(property.getId());
             integer.setValue(10L);
             properties.add(integer);
             break;
-          case "br.gov.es.openpmo.dto.workpackmodel.TextModelDto":
+          case "br.gov.es.openpmo.dto.workpackmodel.params.properties.TextModelDto":
             final TextDto textDto = new TextDto();
             textDto.setIdPropertyModel(property.getId());
             textDto.setValue("Text test");
             properties.add(textDto);
             break;
-          case "br.gov.es.openpmo.dto.workpackmodel.DateModelDto":
+          case "br.gov.es.openpmo.dto.workpackmodel.params.properties.DateModelDto":
             final DateDto dateDto = new DateDto();
             dateDto.setIdPropertyModel(property.getId());
             dateDto.setValue(LocalDateTime.now());
             properties.add(dateDto);
             break;
-          case "br.gov.es.openpmo.dto.workpackmodel.ToggleModelDto":
+          case "br.gov.es.openpmo.dto.workpackmodel.params.properties.ToggleModelDto":
             final ToggleDto toggleDto = new ToggleDto();
             toggleDto.setIdPropertyModel(property.getId());
             toggleDto.setValue(false);
             properties.add(toggleDto);
             break;
-          case "br.gov.es.openpmo.dto.workpackmodel.UnitSelectionModelDto":
+          case "br.gov.es.openpmo.dto.workpackmodel.params.properties.UnitSelectionModelDto":
             final UnitSelectionDto unitSelectionDto = new UnitSelectionDto();
             unitSelectionDto.setIdPropertyModel(property.getId());
             unitSelectionDto.setSelectedValue(null);
             properties.add(unitSelectionDto);
             break;
-          case "br.gov.es.openpmo.dto.workpackmodel.SelectionModelDto":
+          case "br.gov.es.openpmo.dto.workpackmodel.params.properties.SelectionModelDto":
             final SelectionDto selectionDto = new SelectionDto();
             selectionDto.setIdPropertyModel(property.getId());
             selectionDto.setValue("Finished");
             properties.add(selectionDto);
             break;
-          case "br.gov.es.openpmo.dto.workpackmodel.TextAreaModelDto":
+          case "br.gov.es.openpmo.dto.workpackmodel.params.properties.TextAreaModelDto":
             final TextAreaDto textAreaDto = new TextAreaDto();
             textAreaDto.setIdPropertyModel(property.getId());
             textAreaDto.setValue("Test input textarea");
             properties.add(textAreaDto);
             break;
-          case "br.gov.es.openpmo.dto.workpackmodel.NumberModelDto":
+          case "br.gov.es.openpmo.dto.workpackmodel.params.properties.NumberModelDto":
             final NumberDto numberDto = new NumberDto();
             numberDto.setIdPropertyModel(property.getId());
             numberDto.setValue(10.0);
             properties.add(numberDto);
             break;
-          case "br.gov.es.openpmo.dto.workpackmodel.CurrencyModelDto":
+          case "br.gov.es.openpmo.dto.workpackmodel.params.properties.CurrencyModelDto":
             final CurrencyDto currencyDto = new CurrencyDto();
             currencyDto.setIdPropertyModel(property.getId());
             currencyDto.setValue(BigDecimal.TEN);
             properties.add(currencyDto);
             break;
-          case "br.gov.es.openpmo.dto.workpackmodel.LocalitySelectionModelDto":
+          case "br.gov.es.openpmo.dto.workpackmodel.params.properties.LocalitySelectionModelDto":
             final LocalitySelectionDto localitySelectionDto = new LocalitySelectionDto();
             localitySelectionDto.setIdPropertyModel(property.getId());
             localitySelectionDto.setSelectedValues(null);
             properties.add(localitySelectionDto);
             break;
-          case "br.gov.es.openpmo.dto.workpackmodel.OrganizationSelectionModelDto":
+          case "br.gov.es.openpmo.dto.workpackmodel.params.properties.OrganizationSelectionModelDto":
             final OrganizationSelectionDto organizationSelectionDto = new OrganizationSelectionDto();
             organizationSelectionDto.setIdPropertyModel(property.getId());
             organizationSelectionDto.setSelectedValues(null);

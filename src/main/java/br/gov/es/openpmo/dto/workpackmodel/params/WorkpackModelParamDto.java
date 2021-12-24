@@ -1,6 +1,6 @@
 package br.gov.es.openpmo.dto.workpackmodel.params;
 
-import br.gov.es.openpmo.dto.workpackmodel.PropertyModelDto;
+import br.gov.es.openpmo.dto.workpackmodel.params.properties.PropertyModelDto;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;

@@ -2,7 +2,7 @@ package br.gov.es.openpmo.dto.workpackmodel.details;
 
 import br.gov.es.openpmo.dto.planmodel.PlanModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.MilestoneModelDto;
-import br.gov.es.openpmo.dto.workpackmodel.PropertyModelDto;
+import br.gov.es.openpmo.dto.workpackmodel.params.properties.PropertyModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.WorkpackModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.DashboardConfiguration;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;

@@ -9,6 +9,7 @@ import br.gov.es.openpmo.dto.workpackmodel.details.ProgramModelDetailDto;
 import br.gov.es.openpmo.dto.workpackmodel.details.ProjectModelDetailDto;
 import br.gov.es.openpmo.dto.workpackmodel.details.WorkpackModelDetailDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.WorkpackModelParamDto;
+import br.gov.es.openpmo.dto.workpackmodel.params.properties.*;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.properties.models.*;
 import br.gov.es.openpmo.model.workpacks.models.DeliverableModel;
@@ -88,6 +89,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
   private static final String TYPE_NAME_MODEL_GROUP = "br.gov.es.openpmo.model.properties.models.GroupModel";
 
   private static final String PACKAGE_DTO = "br.gov.es.openpmo.dto.workpackmodel.params";
+  private static final String PACKAGE_PROPERTIES_DTO = "br.gov.es.openpmo.dto.workpackmodel.params.properties";
 
   private final WorkpackModelRepository workpackModelRepository;
 
@@ -652,19 +654,19 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
 
   private void extractToModel(final Collection<? super PropertyModel> propertyModels, final PropertyModelDto property) {
     switch(property.getClass().getTypeName()) {
-      case PACKAGE_DTO + ".IntegerModelDto":
+      case PACKAGE_PROPERTIES_DTO + ".IntegerModelDto":
         propertyModels.add(this.modelMapper.map(property, IntegerModel.class));
         break;
-      case PACKAGE_DTO + ".TextModelDto":
+      case PACKAGE_PROPERTIES_DTO + ".TextModelDto":
         propertyModels.add(this.modelMapper.map(property, TextModel.class));
         break;
-      case PACKAGE_DTO + ".DateModelDto":
+      case PACKAGE_PROPERTIES_DTO + ".DateModelDto":
         propertyModels.add(this.modelMapper.map(property, DateModel.class));
         break;
-      case PACKAGE_DTO + ".ToggleModelDto":
+      case PACKAGE_PROPERTIES_DTO + ".ToggleModelDto":
         propertyModels.add(this.modelMapper.map(property, ToggleModel.class));
         break;
-      case PACKAGE_DTO + ".UnitSelectionModelDto":
+      case PACKAGE_PROPERTIES_DTO + ".UnitSelectionModelDto":
         final UnitSelectionModel unitSelectionModel = this.modelMapper.map(property, UnitSelectionModel.class);
         final UnitSelectionModelDto unitSelectionDto = (UnitSelectionModelDto) property;
         if(unitSelectionDto.getDefaults() != null) {
@@ -672,19 +674,19 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
         }
         propertyModels.add(unitSelectionModel);
         break;
-      case PACKAGE_DTO + ".SelectionModelDto":
+      case PACKAGE_PROPERTIES_DTO + ".SelectionModelDto":
         propertyModels.add(this.modelMapper.map(property, SelectionModel.class));
         break;
-      case PACKAGE_DTO + ".TextAreaModelDto":
+      case PACKAGE_PROPERTIES_DTO + ".TextAreaModelDto":
         propertyModels.add(this.modelMapper.map(property, TextAreaModel.class));
         break;
-      case PACKAGE_DTO + ".NumberModelDto":
+      case PACKAGE_PROPERTIES_DTO + ".NumberModelDto":
         propertyModels.add(this.modelMapper.map(property, NumberModel.class));
         break;
-      case PACKAGE_DTO + ".CurrencyModelDto":
+      case PACKAGE_PROPERTIES_DTO + ".CurrencyModelDto":
         propertyModels.add(this.modelMapper.map(property, CurrencyModel.class));
         break;
-      case PACKAGE_DTO + ".LocalitySelectionModelDto":
+      case PACKAGE_PROPERTIES_DTO + ".LocalitySelectionModelDto":
         final LocalitySelectionModel localitySelectionModel = this.modelMapper.map(property, LocalitySelectionModel.class);
         final LocalitySelectionModelDto localityDto = (LocalitySelectionModelDto) property;
         if(localityDto.getIdDomain() != null) {
@@ -697,7 +699,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
         }
         propertyModels.add(localitySelectionModel);
         break;
-      case PACKAGE_DTO + ".OrganizationSelectionModelDto":
+      case PACKAGE_PROPERTIES_DTO + ".OrganizationSelectionModelDto":
         final OrganizationSelectionModel organizationSelectionModel = this.modelMapper.map(
           property,
           OrganizationSelectionModel.class
@@ -710,7 +712,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
         }
         propertyModels.add(organizationSelectionModel);
         break;
-      case PACKAGE_DTO + ".GroupModelDto":
+      case PACKAGE_PROPERTIES_DTO + ".GroupModelDto":
         final GroupModel groupModel = this.modelMapper.map(property, GroupModel.class);
         final GroupModelDto groupModelDto = (GroupModelDto) property;
 
