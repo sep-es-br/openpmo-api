@@ -21,7 +21,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.neo4j.ogm.config.Configuration;
-import org.neo4j.ogm.config.Configuration.Builder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -254,7 +253,7 @@ import java.util.List;
 
     @Bean
     public Configuration configuration() {
-      return new Builder().uri(databaseServer.getBoltUrl()).build();
+      return new Configuration.Builder().uri(databaseServer.getBoltUrl()).build();
     }
   }
 

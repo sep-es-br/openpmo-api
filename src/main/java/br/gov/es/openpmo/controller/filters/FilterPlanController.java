@@ -22,12 +22,12 @@ public class FilterPlanController extends CreateAndUpdateUsingCommonFilterOperat
   }
 
   @Override
-  protected CustomFilterService getCustomFilterService() {
-    return this.customFilterService;
+  protected CustomFilterEnum getFilter() {
+    return CustomFilterEnum.PLAN;
   }
 
   @Override
-  protected CustomFilterEnum getFilter() {
-    return CustomFilterEnum.PLAN;
+  protected CustomFilterService getCustomFilterService() {
+    return this.customFilterService;
   }
 }

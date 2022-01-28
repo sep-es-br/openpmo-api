@@ -14,6 +14,7 @@ import br.gov.es.openpmo.controller.workpack.WorkpackModelController;
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.domain.DomainStoreDto;
+import br.gov.es.openpmo.dto.domain.LocalityStoreDto;
 import br.gov.es.openpmo.dto.filter.CustomFilterDto;
 import br.gov.es.openpmo.dto.filter.CustomFilterRulesDto;
 import br.gov.es.openpmo.dto.office.OfficeStoreDto;
@@ -30,11 +31,14 @@ import br.gov.es.openpmo.dto.workpack.WorkpackParamDto;
 import br.gov.es.openpmo.dto.workpackmodel.details.ResponseBaseWorkpackModelDetail;
 import br.gov.es.openpmo.dto.workpackmodel.params.WorkpackModelParamDto;
 import br.gov.es.openpmo.enumerator.GeneralOperatorsEnum;
+import br.gov.es.openpmo.enumerator.LocalityTypesEnum;
 import br.gov.es.openpmo.model.Entity;
+import br.gov.es.openpmo.model.actors.AuthService;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.filter.LogicOperatorEnum;
+import br.gov.es.openpmo.repository.AuthServiceRepository;
 import br.gov.es.openpmo.service.actors.PersonService;
-import org.junit.jupiter.api.Assertions;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.neo4j.ogm.config.Configuration;
@@ -45,6 +49,9 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.ResponseEntity;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -91,6 +98,9 @@ import static java.util.Collections.singletonList;
   private PersonService personService;
 
   @Autowired
+  private AuthServiceRepository authServiceRepository;
+
+  @Autowired
   private FilterStakeholderController filterStakeholderController;
 
   private Long idOffice;
@@ -100,6 +110,8 @@ import static java.util.Collections.singletonList;
   private Long idWorkpack;
   private Long idOrganization;
   private Long idFilter;
+  private Long idWorkpackModel;
+  private AuthService authService;
 
   @BeforeEach void loadOffice() {
     if(this.idOffice == null) {
@@ -107,9 +119,15 @@ import static java.util.Collections.singletonList;
       office.setName("Office Test WorkpackModel");
       office.setFullName("Office Test WorkpackModel ");
       final ResponseEntity<ResponseBase<EntityDto>> response = this.officeController.save(office);
-      Assertions.assertNotNull(response.getBody());
-      Assertions.assertNotNull(response.getBody().getData());
+      assertNotNull(response.getBody());
+      assertNotNull(response.getBody().getData());
       this.idOffice = response.getBody().getData().getId();
+    }
+    if(this.authService == null) {
+      this.authService = new AuthService();
+      this.authService.setServer("AcessoCidadao");
+      this.authService.setEndPoint("");
+      this.authServiceRepository.save(this.authService);
     }
     if(this.idPlanModel == null) {
       final PlanModelStoreDto planModel = new PlanModelStoreDto(
@@ -120,9 +138,9 @@ import static java.util.Collections.singletonList;
         Collections.emptySet()
       );
       final ResponseEntity<ResponseBase<EntityDto>> response = this.planModelController.save(planModel);
-      Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-      Assertions.assertNotNull(response.getBody());
-      Assertions.assertNotNull(response.getBody().getData());
+      assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+      assertNotNull(response.getBody());
+      assertNotNull(response.getBody().getData());
       this.idPlanModel = response.getBody().getData().getId();
     }
     if(this.idDomain == null) {
@@ -130,10 +148,15 @@ import static java.util.Collections.singletonList;
       domain.setName("Domain Test");
       domain.setFullName("Domain Test ADM ");
       domain.setIdOffice(this.idOffice);
+      final LocalityStoreDto localityRoot = new LocalityStoreDto();
+      domain.setLocalityRoot(localityRoot);
+      localityRoot.setName("Locality Root");
+      localityRoot.setType(LocalityTypesEnum.STATE);
+      localityRoot.setFullName("Locality Root");
       final ResponseEntity<ResponseBase<EntityDto>> response = this.domainController.save(domain);
-      Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-      Assertions.assertNotNull(response.getBody());
-      Assertions.assertNotNull(response.getBody().getData());
+      assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+      assertNotNull(response.getBody());
+      assertNotNull(response.getBody().getData());
       this.idDomain = response.getBody().getData().getId();
     }
     if(this.idPlan == null) {
@@ -145,9 +168,9 @@ import static java.util.Collections.singletonList;
       plan.setStart(LocalDate.now().minusMonths(2));
       plan.setFinish(LocalDate.now().plusMonths(2));
       final ResponseEntity<ResponseBase<EntityDto>> response = this.planController.save(plan);
-      Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-      Assertions.assertNotNull(response.getBody());
-      Assertions.assertNotNull(response.getBody().getData());
+      assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+      assertNotNull(response.getBody());
+      assertNotNull(response.getBody().getData());
       this.idPlan = response.getBody().getData().getId();
     }
     if(this.idWorkpack == null) {
@@ -160,9 +183,9 @@ import static java.util.Collections.singletonList;
       organization.setEmail("organization@openpmo.com");
       organization.setIdOffice(this.idOffice);
       final ResponseEntity<ResponseBase<EntityDto>> response = this.organizationController.save(organization);
-      Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-      Assertions.assertNotNull(response.getBody());
-      Assertions.assertNotNull(response.getBody().getData());
+      assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+      assertNotNull(response.getBody());
+      assertNotNull(response.getBody().getData());
       this.idOrganization = response.getBody().getData().getId();
     }
     if(this.idFilter == null) {
@@ -173,90 +196,106 @@ import static java.util.Collections.singletonList;
       filter.setSortByDirection(null);
 
       final CustomFilterRulesDto rule = new CustomFilterRulesDto();
-      rule.setValue("a");
+      rule.setValue("");
       rule.setLogicOperator(LogicOperatorEnum.OR);
-      rule.setOperator(GeneralOperatorsEnum.MAIOR_IGUAL);
+      rule.setOperator(GeneralOperatorsEnum.DIFERENTE);
       rule.setPropertyName("name");
-
       filter.setRules(singletonList(rule));
-
       final ResponseEntity<ResponseBase<CustomFilterDto>> response = this.filterStakeholderController.save(
-        this.idWorkpack,
+        this.idWorkpackModel,
         filter
       );
-      Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-      Assertions.assertNotNull(response.getBody());
-      Assertions.assertNotNull(response.getBody().getData());
+      assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+      assertNotNull(response.getBody());
+      assertNotNull(response.getBody().getData());
 
       this.idFilter = response.getBody().getData().getId();
     }
   }
 
   private Long getIdWorkpack() {
-    final WorkpackModelParamDto workpackModelParam = this.getWorkpackModelParamProject("Project",
-                                                                                       this.idPlanModel, this.idDomain
+    final WorkpackModelParamDto workpackModelParam = this.getWorkpackModelParamProject(
+      "Project",
+      this.idPlanModel,
+      this.idDomain
     );
     ResponseEntity<ResponseBase<EntityDto>> response = this.workpackModelController.save(workpackModelParam);
-    Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-    Assertions.assertNotNull(response.getBody());
-    Assertions.assertNotNull(response.getBody().getData());
+    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+    assertNotNull(response.getBody());
+    assertNotNull(response.getBody().getData());
+    this.idWorkpackModel = response.getBody().getData().getId();
     final ResponseEntity<ResponseBaseWorkpackModelDetail> responseFind = this.workpackModelController.find(
-      response.getBody().getData().getId());
-    Assertions.assertNotNull(responseFind.getBody());
-    Assertions.assertNotNull(responseFind.getBody().getData());
+      this.idWorkpackModel
+    );
+    assertNotNull(responseFind.getBody());
+    assertNotNull(responseFind.getBody().getData());
 
     final WorkpackParamDto workpackParam = this.getWorkpackParamProject(responseFind.getBody().getData());
     workpackParam.setIdPlan(this.idPlan);
     response = this.workpackController.save(workpackParam, this.getToken(true));
-    Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-    Assertions.assertNotNull(response.getBody());
-    Assertions.assertNotNull(response.getBody().getData());
+    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+    assertNotNull(response.getBody());
+    assertNotNull(response.getBody().getData());
     return response.getBody().getData().getId();
   }
 
   @Test void shouldCreateStakeholder() {
     final StakeholderParamDto personStakeholder = new StakeholderParamDto();
     personStakeholder.setIdWorkpack(this.idWorkpack);
-    personStakeholder.setPerson(new PersonStakeholderParamDto(
-      "Stakeholder Test",
-      "user.test@openpmo.com"
-    ));
+    personStakeholder.setIdPlan(this.idPlan);
+    personStakeholder.setPerson(this.getPersonStakeholderParamDto(true, "user.test@openpmo.com"));
     personStakeholder.setRoles(new ArrayList<>());
     final ResponseEntity<ResponseBase<EntityDto>> response = this.stakeholderPersonController.storePerson(
-      personStakeholder);
-    Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+      personStakeholder
+    );
+    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
 
     final OrganizationStakeholderParamDto organizationStakeholder = new OrganizationStakeholderParamDto();
     organizationStakeholder.setIdWorkpack(this.idWorkpack);
     organizationStakeholder.setIdOrganization(this.idOrganization);
     organizationStakeholder.setRoles(new ArrayList<>());
     final ResponseEntity<ResponseBase<Entity>> storeOrganizationResponse = this.stakeholderOrganizationController.storeOrganization(
-      organizationStakeholder);
-    Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+      organizationStakeholder
+    );
+    assertEquals(HTTP_STATUS_OK, storeOrganizationResponse.getStatusCodeValue());
 
+  }
+
+  @NotNull private PersonStakeholderParamDto getPersonStakeholderParamDto(final boolean isUser, String email) {
+    final PersonStakeholderParamDto stakeholderParamDto = new PersonStakeholderParamDto(
+      "Stakeholder Test",
+      "user.test@openpmo.com"
+    );
+    stakeholderParamDto.setIsUser(isUser);
+    stakeholderParamDto.setEmail(email);
+    stakeholderParamDto.setName("Stakeholder Test");
+    return stakeholderParamDto;
   }
 
   @Test void shouldDelete() {
     this.getToken(true);
+
     final StakeholderParamDto personStakeholder = new StakeholderParamDto();
     personStakeholder.setIdWorkpack(this.idWorkpack);
-    personStakeholder.setPerson(new PersonStakeholderParamDto(
-      "Stakeholder Test",
-      "user.test@openpmo.com"
-    ));
+    personStakeholder.setIdPlan(this.idPlan);
+    personStakeholder.setPerson(this.getPersonStakeholderParamDto(true, "user.test@openpmo.com"));
     personStakeholder.setRoles(new ArrayList<>());
+
     final ResponseEntity<ResponseBase<EntityDto>> response = this.stakeholderPersonController.storePerson(
-      personStakeholder);
-    Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+      personStakeholder
+    );
+    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
 
     final Optional<Person> person = this.personService.findByEmail("user.test@openpmo.com");
-    Assertions.assertTrue(person.isPresent());
+
+    assertTrue(person.isPresent());
+
     ResponseEntity<Void> responseDelete = this.stakeholderPersonController.deletePerson(
       this.idWorkpack,
       person.get().getId(),
       this.idPlan
     );
-    Assertions.assertEquals(HTTP_STATUS_OK, responseDelete.getStatusCodeValue());
+    assertEquals(HTTP_STATUS_OK, responseDelete.getStatusCodeValue());
 
     final OrganizationStakeholderParamDto organizationStakeholder = new OrganizationStakeholderParamDto();
     organizationStakeholder.setIdWorkpack(this.idWorkpack);
@@ -264,78 +303,77 @@ import static java.util.Collections.singletonList;
     organizationStakeholder.setRoles(new ArrayList<>());
     final ResponseEntity<ResponseBase<Entity>> storeOrganizationResponse = this.stakeholderOrganizationController.storeOrganization(
       organizationStakeholder);
-    Assertions.assertEquals(HTTP_STATUS_OK, storeOrganizationResponse.getStatusCodeValue());
+    assertEquals(HTTP_STATUS_OK, storeOrganizationResponse.getStatusCodeValue());
     responseDelete = this.stakeholderOrganizationController.deleteOrganization(
       this.idWorkpack,
       this.idOrganization
     );
-    Assertions.assertEquals(HTTP_STATUS_OK, responseDelete.getStatusCodeValue());
+    assertEquals(HTTP_STATUS_OK, responseDelete.getStatusCodeValue());
   }
 
   @Test void shouldListAll() {
     this.getToken(true);
     final StakeholderParamDto personStakeholder = new StakeholderParamDto();
     personStakeholder.setIdWorkpack(this.idWorkpack);
-    personStakeholder.setPerson(new PersonStakeholderParamDto(
-      "Stakeholder Test",
-      "user.test@openpmo.com"
-    ));
+    personStakeholder.setIdPlan(this.idPlan);
+    personStakeholder.setPerson(this.getPersonStakeholderParamDto(true, "user.test2@openpmo.com"));
     personStakeholder.setRoles(new ArrayList<>());
     final ResponseEntity<ResponseBase<EntityDto>> response = this.stakeholderPersonController.storePerson(
       personStakeholder);
-    Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-
-    final ResponseEntity<ResponseBase<StakeholderPersonDto>> responsePerson = this.stakeholderPersonController.index(
-      this.idWorkpack, response.getBody().getData().getId()
-    );
-    Assertions.assertEquals(HTTP_STATUS_OK, responsePerson.getStatusCodeValue());
-    Assertions.assertNotNull(responsePerson.getBody());
-    Assertions.assertNotNull(responsePerson.getBody().getData());
-
-    final OrganizationStakeholderParamDto organizationStakeholder = new OrganizationStakeholderParamDto();
-    organizationStakeholder.setIdWorkpack(this.idWorkpack);
-    organizationStakeholder.setIdOrganization(this.idOrganization);
-    organizationStakeholder.setRoles(new ArrayList<>());
-    final ResponseEntity<ResponseBase<Entity>> storeOrganizationResponse = this.stakeholderOrganizationController.storeOrganization(
-      organizationStakeholder);
-    Assertions.assertEquals(HTTP_STATUS_OK, storeOrganizationResponse.getStatusCodeValue());
-
-    final ResponseEntity<ResponseBase<StakeholderOrganizationDto>> responseOrganization = this.stakeholderOrganizationController.index(
-      this.idWorkpack, this.idOrganization
-    );
-    Assertions.assertEquals(HTTP_STATUS_OK, responseOrganization.getStatusCodeValue());
-    Assertions.assertNotNull(responseOrganization.getBody());
-    Assertions.assertNotNull(responseOrganization.getBody().getData());
-
-    final ResponseEntity<ResponseBase<List<StakeholderDto>>> responseList = this.stakeholderController.index(
-      this.idWorkpack,
-      null
-    );
-    Assertions.assertEquals(HTTP_STATUS_OK, responseList.getStatusCodeValue());
-    Assertions.assertNotNull(responseList.getBody());
-    Assertions.assertNotNull(responseList.getBody().getData());
-  }
-
-  @Test void shouldListAllUsingCustomFilter() {
-    this.getToken(true);
-    final StakeholderParamDto personStakeholder = new StakeholderParamDto();
-    personStakeholder.setIdWorkpack(this.idWorkpack);
-    personStakeholder.setPerson(new PersonStakeholderParamDto(
-      "Stakeholder Test",
-      "user.test@openpmo.com"
-    ));
-    personStakeholder.setRoles(new ArrayList<>());
-    final ResponseEntity<ResponseBase<EntityDto>> response = this.stakeholderPersonController.storePerson(
-      personStakeholder);
-    Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
 
     final ResponseEntity<ResponseBase<StakeholderPersonDto>> responsePerson = this.stakeholderPersonController.index(
       this.idWorkpack,
       response.getBody().getData().getId()
     );
-    Assertions.assertEquals(HTTP_STATUS_OK, responsePerson.getStatusCodeValue());
-    Assertions.assertNotNull(responsePerson.getBody());
-    Assertions.assertNotNull(responsePerson.getBody().getData());
+    assertEquals(HTTP_STATUS_OK, responsePerson.getStatusCodeValue());
+    assertNotNull(responsePerson.getBody());
+    assertNotNull(responsePerson.getBody().getData());
+
+    final OrganizationStakeholderParamDto organizationStakeholder = new OrganizationStakeholderParamDto();
+    organizationStakeholder.setIdWorkpack(this.idWorkpack);
+    organizationStakeholder.setIdOrganization(this.idOrganization);
+    organizationStakeholder.setRoles(new ArrayList<>());
+    final ResponseEntity<ResponseBase<Entity>> storeOrganizationResponse = this.stakeholderOrganizationController.storeOrganization(
+      organizationStakeholder
+    );
+    assertEquals(HTTP_STATUS_OK, storeOrganizationResponse.getStatusCodeValue());
+
+    final ResponseEntity<ResponseBase<StakeholderOrganizationDto>> responseOrganization = this.stakeholderOrganizationController.index(
+      this.idWorkpack, this.idOrganization
+    );
+    assertEquals(HTTP_STATUS_OK, responseOrganization.getStatusCodeValue());
+    assertNotNull(responseOrganization.getBody());
+    assertNotNull(responseOrganization.getBody().getData());
+
+    final ResponseEntity<ResponseBase<List<StakeholderDto>>> responseList = this.stakeholderController.index(
+      this.idWorkpack,
+      null
+    );
+    assertEquals(HTTP_STATUS_OK, responseList.getStatusCodeValue());
+    assertNotNull(responseList.getBody());
+    assertNotNull(responseList.getBody().getData());
+  }
+
+  @Test void shouldListAllUsingCustomFilter() {
+    this.getToken(false);
+    final StakeholderParamDto personStakeholder = new StakeholderParamDto();
+    personStakeholder.setIdWorkpack(this.idWorkpack);
+    personStakeholder.setIdPlan(this.idPlan);
+    personStakeholder.setPerson(this.getPersonStakeholderParamDto(true, "user.test@openpmo.com"));
+    personStakeholder.setRoles(new ArrayList<>());
+    final ResponseEntity<ResponseBase<EntityDto>> response = this.stakeholderPersonController.storePerson(
+      personStakeholder
+    );
+    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+
+    final ResponseEntity<ResponseBase<StakeholderPersonDto>> responsePerson = this.stakeholderPersonController.index(
+      this.idWorkpack,
+      response.getBody().getData().getId()
+    );
+    assertEquals(HTTP_STATUS_OK, responsePerson.getStatusCodeValue());
+    assertNotNull(responsePerson.getBody());
+    assertNotNull(responsePerson.getBody().getData());
 
     final OrganizationStakeholderParamDto organizationStakeholder = new OrganizationStakeholderParamDto();
     organizationStakeholder.setIdWorkpack(this.idWorkpack);
@@ -343,28 +381,27 @@ import static java.util.Collections.singletonList;
     organizationStakeholder.setRoles(new ArrayList<>());
     final ResponseEntity<ResponseBase<Entity>> storeOrganizationResponse = this.stakeholderOrganizationController.storeOrganization(
       organizationStakeholder);
-    Assertions.assertEquals(HTTP_STATUS_OK, storeOrganizationResponse.getStatusCodeValue());
+    assertEquals(HTTP_STATUS_OK, storeOrganizationResponse.getStatusCodeValue());
 
     final ResponseEntity<ResponseBase<StakeholderOrganizationDto>> responseOrganization = this.stakeholderOrganizationController.index(
       this.idWorkpack,
       this.idOrganization
     );
-    Assertions.assertEquals(HTTP_STATUS_OK, responseOrganization.getStatusCodeValue());
-    Assertions.assertNotNull(responseOrganization.getBody());
-    Assertions.assertNotNull(responseOrganization.getBody().getData());
+    assertEquals(HTTP_STATUS_OK, responseOrganization.getStatusCodeValue());
+    assertNotNull(responseOrganization.getBody());
+    assertNotNull(responseOrganization.getBody().getData());
 
     final ResponseEntity<ResponseBase<List<StakeholderDto>>> responseList = this.stakeholderController.index(
       this.idWorkpack,
       this.idFilter
     );
-    Assertions.assertEquals(HTTP_STATUS_OK, responseList.getStatusCodeValue());
-    Assertions.assertNotNull(responseList.getBody());
-    Assertions.assertNotNull(responseList.getBody().getData());
+    assertEquals(HTTP_STATUS_OK, responseList.getStatusCodeValue());
+    assertNotNull(responseList.getBody());
+    assertNotNull(responseList.getBody().getData());
   }
 
   @TestConfiguration
   static class Config {
-
     @Bean
     public Configuration configuration() {
       return new Builder().uri(databaseServer.getBoltUrl()).build();

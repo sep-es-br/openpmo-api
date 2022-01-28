@@ -15,8 +15,8 @@ import br.gov.es.openpmo.repository.ProcessRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllProcessUsingCustomFilter;
 import br.gov.es.openpmo.service.filters.CustomFilterService;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -28,19 +28,31 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Optional;
 
-import static br.gov.es.openpmo.utils.ApplicationMessage.*;
-import static java.util.Arrays.asList;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static br.gov.es.openpmo.utils.ApplicationMessage.ID_WORKPACK_NOT_NULL;
+import static br.gov.es.openpmo.utils.ApplicationMessage.PROCESS_ID_NOT_NULL;
+import static br.gov.es.openpmo.utils.ApplicationMessage.PROCESS_NOT_FOUND;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @Tag("unit")
+@DisplayName("Test Process rules")
 @ExtendWith(MockitoExtension.class)
 class ProcessServiceTest {
 
-  ProcessService service;
+  private ProcessService service;
 
   @Mock
   ProcessRepository repository;
@@ -57,94 +69,97 @@ class ProcessServiceTest {
   @Mock
   CustomFilterService customFilterService;
 
-  @BeforeEach
-  void setUp() {
-    this.service = new ProcessService(
-        this.repository,
-        this.eDocsApi,
-        this.workpackService,
-        this.findAllProcess,
-        this.customFilterService
-    );
-  }
-
-  Workpack workpack() {
+  static Workpack workpack() {
     return new Workpack();
   }
 
-  ProcessCreateDto processCreateDto(final Long idWorkpack) {
+  static ProcessCreateDto processCreateDto(final Long idWorkpack) {
     return new ProcessCreateDto(
-        idWorkpack,
-        "Processo 2021-J8BS5",
-        "Note 2021-J8BS5",
-        "2021-J8BS5",
-        "EmAndamento",
-        "Subject 2021-J8BS5",
-        "J8BS5",
-        3L,
-        false
+      idWorkpack,
+      "Processo 2021-J8BS5",
+      "Note 2021-J8BS5",
+      "2021-J8BS5",
+      "EmAndamento",
+      "Subject 2021-J8BS5",
+      "J8BS5",
+      3L,
+      false
     );
   }
 
-  Process process() {
+  static Process process() {
     return new Process(
-        "",
-        "",
-        "",
-        "",
-        1L,
-        "",
-        false,
-        "",
-        new Workpack()
+      "",
+      "",
+      "",
+      "",
+      1L,
+      "",
+      false,
+      "",
+      new Workpack()
     );
   }
 
-  ProcessUpdateDto processUpdateDto() {
+  static ProcessUpdateDto processUpdateDto() {
     return new ProcessUpdateDto(
-        1L,
-        "name",
-        "note"
+      1L,
+      "name",
+      "note"
     );
   }
 
-  ProcessResponse processResponse() {
+  static ProcessResponse processResponse() {
     final ProcessResponse processResponse = new ProcessResponse(
-        "id",
-        "processNumber",
-        "subject",
-        "status",
-        true
+      "id",
+      "processNumber",
+      "subject",
+      "status",
+      true
     );
     processResponse.addHistory(new ProcessHistoryResponse(
-        LocalDateTime.now(),
-        "name",
-        "abbr"
+      LocalDateTime.now(),
+      "name",
+      "abbr"
     ));
     return processResponse;
   }
 
+  @BeforeEach
+  void setUp() {
+    this.service = new ProcessService(
+      this.repository,
+      this.eDocsApi,
+      this.workpackService,
+      this.findAllProcess,
+      this.customFilterService
+    );
+  }
+
   @Nested
-  class Create {
+  @DisplayName("Test Process creation")
+  class CreateTest {
 
     @Test
+    @DisplayName("Should create process")
     void shouldCreateProcess() {
-      when(ProcessServiceTest.this.repository.save(isA(Process.class))).thenReturn(ProcessServiceTest.this.process());
-      when(ProcessServiceTest.this.workpackService.findById(anyLong())).thenReturn(ProcessServiceTest.this.workpack());
-      final Process process = ProcessServiceTest.this.service.create(ProcessServiceTest.this.processCreateDto(1L));
+      when(ProcessServiceTest.this.repository.save(isA(Process.class))).thenReturn(ProcessServiceTest.process());
+      when(ProcessServiceTest.this.workpackService.findById(anyLong())).thenReturn(ProcessServiceTest.workpack());
+      final Process process = ProcessServiceTest.this.service.create(ProcessServiceTest.processCreateDto(1L));
 
       verify(ProcessServiceTest.this.repository, times(1)).save(isA(Process.class));
       verify(ProcessServiceTest.this.workpackService, times(1)).findById(anyLong());
-      assertNotNull(process);
+      assertNotNull(process, "Process should be not null");
     }
 
     @Test
+    @DisplayName("Should throw exception if workpack id is null")
     void shouldThrowExceptionIfIdWorkpackIsNull() {
       final NegocioException exception = assertThrows(
-          NegocioException.class,
-          () -> ProcessServiceTest.this.service.create(ProcessServiceTest.this.processCreateDto(null))
+        NegocioException.class,
+        () -> ProcessServiceTest.this.service.create(ProcessServiceTest.processCreateDto(null))
       );
-      assertEquals(ID_WORKPACK_NOT_NULL, exception.getMessage());
+      assertEquals(ID_WORKPACK_NOT_NULL, exception.getMessage(), "Should have same exception message");
       verify(ProcessServiceTest.this.repository, never()).save(isA(Process.class));
       verify(ProcessServiceTest.this.workpackService, never()).findById(anyLong());
     }
@@ -152,15 +167,20 @@ class ProcessServiceTest {
   }
 
   @Nested
-  class Update {
+  @DisplayName("Test Process update")
+  class UpdateTest {
 
     @Test
+    @DisplayName("Should update process")
     void shouldUpdateProcess() {
-      when(ProcessServiceTest.this.repository.save(isA(Process.class), anyInt())).thenReturn(ProcessServiceTest.this.process());
-      when(ProcessServiceTest.this.repository.findById(anyLong())).thenReturn(Optional.of(ProcessServiceTest.this.process()));
-      when(ProcessServiceTest.this.eDocsApi.findProcessByProtocol(anyString(), eq(1L))).thenReturn(ProcessServiceTest.this.processResponse());
+      when(ProcessServiceTest.this.repository.save(isA(Process.class), anyInt())).thenReturn(ProcessServiceTest.process());
+      when(ProcessServiceTest.this.repository.findById(anyLong())).thenReturn(Optional.of(ProcessServiceTest.process()));
+      when(ProcessServiceTest.this.eDocsApi.findProcessByProtocol(
+        anyString(),
+        eq(1L)
+      )).thenReturn(ProcessServiceTest.processResponse());
 
-      ProcessServiceTest.this.service.update(ProcessServiceTest.this.processUpdateDto(), 1L);
+      ProcessServiceTest.this.service.update(ProcessServiceTest.processUpdateDto(), 1L);
 
       verify(ProcessServiceTest.this.repository, times(1)).save(isA(Process.class), anyInt());
       verify(ProcessServiceTest.this.repository, times(1)).findById(anyLong());
@@ -168,25 +188,28 @@ class ProcessServiceTest {
     }
 
     @Test
+    @DisplayName("Should throw excpetion if process not found")
     void shouldThrowExceptionIfProcessNotFound() {
 
       final RegistroNaoEncontradoException exception = assertThrows(
-          RegistroNaoEncontradoException.class,
-          () -> ProcessServiceTest.this.service.update(ProcessServiceTest.this.processUpdateDto(), 1L)
+        RegistroNaoEncontradoException.class,
+        () -> ProcessServiceTest.this.service.update(ProcessServiceTest.processUpdateDto(), 1L)
       );
 
       verify(ProcessServiceTest.this.repository, never()).save(isA(Process.class), anyInt());
       verify(ProcessServiceTest.this.eDocsApi, never()).findProcessByProtocol(anyString(), eq(1L));
       verify(ProcessServiceTest.this.repository, times(1)).findById(anyLong());
-      assertEquals(PROCESS_NOT_FOUND, exception.getMessage());
+      assertEquals(PROCESS_NOT_FOUND, exception.getMessage(), "Should have same exception message");
     }
 
   }
 
   @Nested
-  class Delete {
+  @DisplayName("Test Process Delete")
+  class DeleteTest {
 
     @Test
+    @DisplayName("Should delete process by id")
     void shouldDeleteProcessById() {
       doNothing().when(ProcessServiceTest.this.repository).deleteById(anyLong());
 
@@ -196,26 +219,32 @@ class ProcessServiceTest {
     }
 
     @Test
+    @DisplayName("Should throw exception if id is null")
     void shouldThrowExceptionIfIdIsNull() {
 
       final IllegalArgumentException exception = assertThrows(
-          IllegalArgumentException.class,
-          () -> ProcessServiceTest.this.service.deleteById(null)
+        IllegalArgumentException.class,
+        () -> ProcessServiceTest.this.service.deleteById(null)
       );
 
-      assertEquals(PROCESS_ID_NOT_NULL, exception.getMessage());
+      assertEquals(PROCESS_ID_NOT_NULL, exception.getMessage(), "Should have same exception message");
     }
 
   }
 
   @Nested
-  class FindById {
+  @DisplayName("Test Process find by id")
+  class FindByIdTest {
 
     @Test
+    @DisplayName("Should find process by id")
     void shouldFindById() {
-      when(ProcessServiceTest.this.repository.findById(anyLong())).thenReturn(Optional.of(ProcessServiceTest.this.process()));
-      when(ProcessServiceTest.this.eDocsApi.findProcessByProtocol(anyString(), eq(1L))).thenReturn(ProcessServiceTest.this.processResponse());
-      when(ProcessServiceTest.this.repository.save(isA(Process.class), anyInt())).thenReturn(ProcessServiceTest.this.process());
+      when(ProcessServiceTest.this.repository.findById(anyLong())).thenReturn(Optional.of(ProcessServiceTest.process()));
+      when(ProcessServiceTest.this.eDocsApi.findProcessByProtocol(
+        anyString(),
+        eq(1L)
+      )).thenReturn(ProcessServiceTest.processResponse());
+      when(ProcessServiceTest.this.repository.save(isA(Process.class), anyInt())).thenReturn(ProcessServiceTest.process());
 
       final ProcessDetailDto processFromEDocsDto = ProcessServiceTest.this.service.findById(1L, 1L);
 
@@ -225,12 +254,13 @@ class ProcessServiceTest {
     }
 
     @Test
+    @DisplayName("Should throw exception if process not found")
     void shouldThrowExceptionIfProcessNotFound() {
       when(ProcessServiceTest.this.repository.findById(anyLong())).thenReturn(Optional.empty());
 
-      Assertions.assertThatThrownBy(() -> ProcessServiceTest.this.service.findById(1L, 1L))
-          .hasMessage(PROCESS_NOT_FOUND)
-          .isInstanceOf(RegistroNaoEncontradoException.class);
+      assertThatThrownBy(() -> ProcessServiceTest.this.service.findById(1L, 1L))
+        .hasMessage(PROCESS_NOT_FOUND)
+        .isInstanceOf(RegistroNaoEncontradoException.class);
 
       verify(ProcessServiceTest.this.repository, times(1)).findById(anyLong());
       verify(ProcessServiceTest.this.repository, never()).save(isA(Process.class));
@@ -240,11 +270,13 @@ class ProcessServiceTest {
   }
 
   @Nested
-  class FindAll {
+  @DisplayName("Test Process find all")
+  class FindAllTest {
 
     @Test
+    @DisplayName("Should find all process without custom filter")
     void shouldFindAllProcessWithoutCustomFilter() {
-      when(ProcessServiceTest.this.repository.findAllByWorkpack(anyLong())).thenReturn(asList(ProcessServiceTest.this.process()));
+      when(ProcessServiceTest.this.repository.findAllByWorkpack(anyLong())).thenReturn(Collections.singletonList(ProcessServiceTest.process()));
 
       ProcessServiceTest.this.service.findAllAsCardDto(1L, null);
 
@@ -254,12 +286,13 @@ class ProcessServiceTest {
     }
 
     @Test
+    @DisplayName("Should find all process using custom filter")
     void shouldFindAllProcessUsingCustomFilter() {
       when(ProcessServiceTest.this.customFilterService.findById(anyLong())).thenReturn(new CustomFilter());
       when(ProcessServiceTest.this.findAllProcess.execute(
-          isA(CustomFilter.class),
-          anyMap()
-      )).thenReturn(asList(ProcessServiceTest.this.process()));
+        isA(CustomFilter.class),
+        anyMap()
+      )).thenReturn(Collections.singletonList(ProcessServiceTest.process()));
 
       ProcessServiceTest.this.service.findAllAsCardDto(1L, 1L);
 
@@ -269,10 +302,11 @@ class ProcessServiceTest {
     }
 
     @Test
+    @DisplayName("Should throw exception if id workpack is null")
     void shouldThrowExceptionIfIdWorkpackIsNull() {
-      Assertions.assertThatThrownBy(() -> ProcessServiceTest.this.service.findAllAsCardDto(null, 1L))
-          .hasMessage(ID_WORKPACK_NOT_NULL)
-          .isInstanceOf(IllegalArgumentException.class);
+      assertThatThrownBy(() -> ProcessServiceTest.this.service.findAllAsCardDto(null, 1L))
+        .hasMessage(ID_WORKPACK_NOT_NULL)
+        .isInstanceOf(IllegalArgumentException.class);
     }
 
   }

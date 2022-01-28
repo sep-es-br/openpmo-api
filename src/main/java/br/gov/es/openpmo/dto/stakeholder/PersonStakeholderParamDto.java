@@ -5,7 +5,6 @@ import javax.validation.constraints.NotNull;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.CONTACT_EMAIL_NOT_NULL;
 
-
 public class PersonStakeholderParamDto {
 
   private Long id;
@@ -21,7 +20,6 @@ public class PersonStakeholderParamDto {
   @NotEmpty
   @NotNull(message = CONTACT_EMAIL_NOT_NULL)
   private String contactEmail;
-
 
   private String guid;
 
@@ -108,6 +106,4 @@ public class PersonStakeholderParamDto {
   public void setGuid(final String guid) {
     this.guid = guid;
   }
-
-
 }

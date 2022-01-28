@@ -62,21 +62,13 @@ public class AvatarService {
       .orElseThrow(() -> new NegocioException(FILE_NOT_FOUND));
   }
 
-  public AvatarDto update(
-    final MultipartFile multipartFile,
-    final Long idPerson,
-    final UriComponentsBuilder uriComponentsBuilder
-  ) throws IOException {
+  public AvatarDto update(final MultipartFile multipartFile, final Long idPerson, final UriComponentsBuilder uriComponentsBuilder) throws IOException {
     this.deleteAvatarByIdPerson(idPerson);
     return this.save(multipartFile, idPerson, uriComponentsBuilder);
   }
 
   @Transactional
-  public AvatarDto save(
-    final MultipartFile multipartFile,
-    final Long idPerson,
-    final UriComponentsBuilder uriComponentsBuilder
-  ) throws IOException {
+  public AvatarDto save(final MultipartFile multipartFile, final Long idPerson, final UriComponentsBuilder uriComponentsBuilder) throws IOException {
     final Person person = this.personService.findById(idPerson);
 
     final br.gov.es.openpmo.model.actors.File avatar = this.createAvatar(multipartFile, person);

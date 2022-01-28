@@ -8,11 +8,14 @@ import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.domain.DomainDto;
 import br.gov.es.openpmo.dto.domain.DomainStoreDto;
 import br.gov.es.openpmo.dto.domain.DomainUpdateDto;
+import br.gov.es.openpmo.dto.domain.LocalityStoreDto;
 import br.gov.es.openpmo.dto.filter.CustomFilterDto;
 import br.gov.es.openpmo.dto.filter.CustomFilterRulesDto;
 import br.gov.es.openpmo.dto.office.OfficeStoreDto;
 import br.gov.es.openpmo.enumerator.GeneralOperatorsEnum;
+import br.gov.es.openpmo.enumerator.LocalityTypesEnum;
 import br.gov.es.openpmo.model.filter.LogicOperatorEnum;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -79,21 +82,28 @@ import static java.util.Collections.singletonList;
   }
 
   @Test void shouldCreateDomain() {
-    final DomainStoreDto domain = new DomainStoreDto();
-    domain.setName("Domain Test");
-    domain.setFullName("Domain Test ADM ");
-    domain.setIdOffice(this.idOffice);
+    final DomainStoreDto domain = this.getDomainStoreDto();
     final ResponseEntity<ResponseBase<EntityDto>> response = this.domainController.save(domain);
     Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
     Assertions.assertNotNull(response.getBody());
     Assertions.assertNotNull(response.getBody().getData());
   }
 
-  @Test void shouldUpdateDomain() {
+  @NotNull private DomainStoreDto getDomainStoreDto() {
     final DomainStoreDto domain = new DomainStoreDto();
-    domain.setName("Domain Test update");
-    domain.setFullName("Domain Test update ");
+    domain.setName("Domain Test");
+    domain.setFullName("Domain Test");
     domain.setIdOffice(this.idOffice);
+    final LocalityStoreDto localityRoot = new LocalityStoreDto();
+    domain.setLocalityRoot(localityRoot);
+    localityRoot.setName("Locality Root");
+    localityRoot.setType(LocalityTypesEnum.STATE);
+    localityRoot.setFullName("Locality Root");
+    return domain;
+  }
+
+  @Test void shouldUpdateDomain() {
+    final DomainStoreDto domain = this.getDomainStoreDto();
     ResponseEntity<ResponseBase<EntityDto>> response = this.domainController.save(domain);
     Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
     Assertions.assertNotNull(response.getBody());
@@ -108,10 +118,8 @@ import static java.util.Collections.singletonList;
   }
 
   @Test void shouldDelete() {
-    final DomainStoreDto domain = new DomainStoreDto();
-    domain.setName("Domain Test delete");
-    domain.setFullName("Domain Test delete ");
-    domain.setIdOffice(this.idOffice);
+    final DomainStoreDto domain = this.getDomainStoreDto();
+
     final ResponseEntity<ResponseBase<EntityDto>> response = this.domainController.save(domain);
     Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
     Assertions.assertNotNull(response.getBody());
@@ -121,10 +129,7 @@ import static java.util.Collections.singletonList;
   }
 
   @Test void shouldListAll() {
-    final DomainStoreDto domain = new DomainStoreDto();
-    domain.setName("Domain Test list");
-    domain.setFullName("Domain Test list ");
-    domain.setIdOffice(this.idOffice);
+    final DomainStoreDto domain = this.getDomainStoreDto();
     final ResponseEntity<ResponseBase<EntityDto>> response = this.domainController.save(domain);
     Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
     final ResponseEntity<ResponseBase<List<DomainDto>>> responseList = this.domainController.indexBase(
@@ -138,10 +143,7 @@ import static java.util.Collections.singletonList;
   }
 
   @Test void shouldListAllUsingCustomFilter() {
-    final DomainStoreDto domain = new DomainStoreDto();
-    domain.setName("Domain Test list");
-    domain.setFullName("Domain Test list ");
-    domain.setIdOffice(this.idOffice);
+    final DomainStoreDto domain = this.getDomainStoreDto();
     final ResponseEntity<ResponseBase<EntityDto>> response = this.domainController.save(domain);
     Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
     final ResponseEntity<ResponseBase<List<DomainDto>>> responseList = this.domainController.indexBase(
@@ -155,10 +157,7 @@ import static java.util.Collections.singletonList;
   }
 
   @Test void shouldFindOne() {
-    final DomainStoreDto domain = new DomainStoreDto();
-    domain.setName("Domain Test find");
-    domain.setFullName("Domain Test find ");
-    domain.setIdOffice(this.idOffice);
+    final DomainStoreDto domain = this.getDomainStoreDto();
     final ResponseEntity<ResponseBase<EntityDto>> response = this.domainController.save(domain);
     Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
     Assertions.assertNotNull(response.getBody());
@@ -167,7 +166,7 @@ import static java.util.Collections.singletonList;
     Assertions.assertEquals(HTTP_STATUS_OK, responseFind.getStatusCodeValue());
     Assertions.assertNotNull(responseFind.getBody());
     Assertions.assertNotNull(responseFind.getBody().getData());
-    Assertions.assertEquals("Domain Test find", responseFind.getBody().getData().getName());
+    Assertions.assertEquals("Domain Test", responseFind.getBody().getData().getName());
   }
 
   @TestConfiguration

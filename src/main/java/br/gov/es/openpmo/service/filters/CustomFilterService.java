@@ -41,11 +41,7 @@ public class CustomFilterService {
   }
 
   @Transactional
-  public CustomFilterDto create(
-    @Valid final CustomFilterDto request,
-    final CustomFilterEnum customFilterEnum,
-    final Long idWorkPackModel
-  ) {
+  public CustomFilterDto create(@Valid final CustomFilterDto request, final CustomFilterEnum customFilterEnum, final Long idWorkPackModel) {
     WorkpackModel workpackModel = null;
     if(idWorkPackModel != null) {
       workpackModel = this.workpackModelService.findById(idWorkPackModel);

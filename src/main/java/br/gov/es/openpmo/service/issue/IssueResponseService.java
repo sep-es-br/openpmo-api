@@ -32,10 +32,10 @@ public class IssueResponseService {
 
   @Autowired
   public IssueResponseService(
-    final IssueResponseRepository repository,
-    final PersonService personService,
-    final IssueService issueService,
-    final JournalCreator journalCreator
+      final IssueResponseRepository repository,
+      final PersonService personService,
+      final IssueService issueService,
+      final JournalCreator journalCreator
   ) {
     this.repository = repository;
     this.personService = personService;
@@ -68,7 +68,7 @@ public class IssueResponseService {
 
   private IssueResponse findById(final Long id) {
     return this.repository.findById(id)
-      .orElseThrow(() -> new RegistroNaoEncontradoException(ISSUE_RESPONSE_NOT_FOUND));
+        .orElseThrow(() -> new RegistroNaoEncontradoException(ISSUE_RESPONSE_NOT_FOUND));
   }
 
   @Transactional

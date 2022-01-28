@@ -2,7 +2,6 @@ package br.gov.es.openpmo.dto.workpackmodel.params.properties;
 
 import br.gov.es.openpmo.enumerator.Session;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.swagger.annotations.ApiModel;
@@ -11,18 +10,18 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 @JsonTypeInfo(use = Id.NAME, property = "type")
-@JsonSubTypes({@Type(value = IntegerModelDto.class, name = "IntegerModel"),
-  @Type(value = TextModelDto.class, name = "TextModel"),
-  @Type(value = DateModelDto.class, name = "DateModel"),
-  @Type(value = ToggleModelDto.class, name = "ToggleModel"),
-  @Type(value = UnitSelectionModelDto.class, name = "UnitSelectionModel"),
-  @Type(value = SelectionModelDto.class, name = "SelectionModel"),
-  @Type(value = TextAreaModelDto.class, name = "TextAreaModel"),
-  @Type(value = NumberModelDto.class, name = "NumberModel"),
-  @Type(value = CurrencyModelDto.class, name = "CurrencyModel"),
-  @Type(value = LocalitySelectionModelDto.class, name = "LocalitySelectionModel"),
-  @Type(value = GroupModelDto.class, name = "GroupModel"),
-  @Type(value = OrganizationSelectionModelDto.class, name = "OrganizationSelectionModel")})
+@JsonSubTypes({@JsonSubTypes.Type(value = IntegerModelDto.class, name = "IntegerModel"),
+  @JsonSubTypes.Type(value = TextModelDto.class, name = "TextModel"),
+  @JsonSubTypes.Type(value = DateModelDto.class, name = "DateModel"),
+  @JsonSubTypes.Type(value = ToggleModelDto.class, name = "ToggleModel"),
+  @JsonSubTypes.Type(value = UnitSelectionModelDto.class, name = "UnitSelectionModel"),
+  @JsonSubTypes.Type(value = SelectionModelDto.class, name = "SelectionModel"),
+  @JsonSubTypes.Type(value = TextAreaModelDto.class, name = "TextAreaModel"),
+  @JsonSubTypes.Type(value = NumberModelDto.class, name = "NumberModel"),
+  @JsonSubTypes.Type(value = CurrencyModelDto.class, name = "CurrencyModel"),
+  @JsonSubTypes.Type(value = LocalitySelectionModelDto.class, name = "LocalitySelectionModel"),
+  @JsonSubTypes.Type(value = GroupModelDto.class, name = "GroupModel"),
+  @JsonSubTypes.Type(value = OrganizationSelectionModelDto.class, name = "OrganizationSelectionModel")})
 @ApiModel(subTypes = {IntegerModelDto.class, TextModelDto.class, DateModelDto.class, ToggleModelDto.class,
   UnitSelectionModelDto.class, SelectionModelDto.class, TextAreaModelDto.class, NumberModelDto.class, CurrencyModelDto.class,
   LocalitySelectionModelDto.class, GroupModelDto.class,

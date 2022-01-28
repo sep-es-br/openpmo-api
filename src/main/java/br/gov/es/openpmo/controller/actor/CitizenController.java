@@ -38,38 +38,38 @@ public class CitizenController {
 
   @GetMapping("/name")
   public ResponseEntity<ResponseBase<List<CitizenByNameQuery>>> findCitizenNameAndSub(
-    @RequestParam final String name,
-    @RequestHeader(name = "Authorization") final String authorization
+      @RequestParam final String name,
+      @RequestHeader(name = "Authorization") final String authorization
   ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
     final List<CitizenByNameQuery> personDto = this.service.findPersonByName(name, idPerson);
     final ResponseBase<List<CitizenByNameQuery>> response = new ResponseBase<List<CitizenByNameQuery>>()
-      .setData(personDto)
-      .setSuccess(true);
+        .setData(personDto)
+        .setSuccess(true);
     return ResponseEntity.ok(response);
   }
 
   @GetMapping("/{sub}")
   public ResponseEntity<ResponseBase<CitizenDto>> findPersonBySub(
-    @PathVariable final String sub,
-    @RequestParam(required = false) final Long idOffice,
-    @RequestHeader(name = "Authorization") final String authorization
+      @PathVariable final String sub,
+      @RequestParam(required = false) final Long idOffice,
+      @RequestHeader(name = "Authorization") final String authorization
   ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
     final CitizenDto citizenDto = this.service.findCitizenBySub(sub, idOffice, idPerson);
 
     final ResponseBase<CitizenDto> response = new ResponseBase<CitizenDto>()
-      .setData(citizenDto)
-      .setSuccess(true);
+        .setData(citizenDto)
+        .setSuccess(true);
 
     return ResponseEntity.ok(response);
   }
 
   @GetMapping("/cpf")
   public ResponseEntity<CitizenDto> findPersonByCpf(
-    @RequestParam final String cpf,
-    @RequestParam(required = false) final Long idOffice,
-    @RequestHeader(name = "Authorization") final String authorization
+      @RequestParam final String cpf,
+      @RequestParam(required = false) final Long idOffice,
+      @RequestHeader(name = "Authorization") final String authorization
   ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
     final CitizenDto citizen = this.service.findPersonByCpf(cpf, idOffice, idPerson);
@@ -78,7 +78,7 @@ public class CitizenController {
 
   @GetMapping("/load")
   public ResponseEntity<Void> load(
-    @RequestHeader(name = "Authorization") final String authorization
+      @RequestHeader(name = "Authorization") final String authorization
   ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
     this.acessoCidadaoApi.load(idPerson);

@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 import static br.gov.es.openpmo.utils.ApplicationMessage.AUTH_SERVICE_NOT_FOUND;
 
 @Component
-public class RemoteRolesFetcher {
+public class RemoteRolesFetcher implements IRemoteRolesFetcher {
 
   private final IsAuthenticatedByRepository authenticationRepository;
 
@@ -28,8 +28,8 @@ public class RemoteRolesFetcher {
 
   @Autowired
   public RemoteRolesFetcher(
-    final IsAuthenticatedByRepository authenticationRepository,
-    final AcessoCidadaoApi acessoCidadaoApi
+      final IsAuthenticatedByRepository authenticationRepository,
+      final AcessoCidadaoApi acessoCidadaoApi
   ) {
     this.authenticationRepository = authenticationRepository;
     this.acessoCidadaoApi = acessoCidadaoApi;
@@ -40,13 +40,13 @@ public class RemoteRolesFetcher {
 
     final String guid = authentication.getGuid();
 
-    if(guid == null) return Collections.emptyList();
+    if (guid == null) return Collections.emptyList();
 
     final List<PublicAgentRoleResponse> publicAgentRoles = this.acessoCidadaoApi.findRoles(guid, idPerson);
 
     return publicAgentRoles.stream()
-      .map(agentRole -> this.mapToRoleResource(agentRole, idPerson))
-      .collect(Collectors.toList());
+        .map(agentRole -> this.mapToRoleResource(agentRole, idPerson))
+        .collect(Collectors.toList());
   }
 
   private RoleResource mapToRoleResource(final PublicAgentRoleResponse agentRole, final Long idPerson) {
@@ -56,8 +56,8 @@ public class RemoteRolesFetcher {
 
   private IsAuthenticatedBy findAuthenticatedByUsingPersonAndDefaultServerName(final Long idPerson) {
     return this.authenticationRepository.findAuthenticatedByUsingPersonAndDefaultServerName(
-      idPerson,
-      this.serverName
+        idPerson,
+        this.serverName
     ).orElseThrow(() -> new NegocioException(AUTH_SERVICE_NOT_FOUND));
   }
 

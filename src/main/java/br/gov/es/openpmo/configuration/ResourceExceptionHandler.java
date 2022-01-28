@@ -16,34 +16,37 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.text.MessageFormat;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class ResourceExceptionHandler {
 
+  private final Logger log;
+
   @Autowired
-  private Logger log;
+  public ResourceExceptionHandler(final Logger log) {
+    this.log = log;
+  }
 
   @ResponseStatus(code = HttpStatus.BAD_REQUEST)
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public List<FormValidationErrorDto> handle(final MethodArgumentNotValidException exception) {
-    final List<FormValidationErrorDto> errors = new ArrayList<>();
-    final List<FieldError> fieldErrors = exception.getBindingResult().getFieldErrors();
+    return exception.getBindingResult().getFieldErrors().stream()
+        .map(ResourceExceptionHandler::getFormValidationErrorDto)
+        .collect(Collectors.toList());
+  }
 
-    fieldErrors.forEach(error -> {
-      final String message = error.getDefaultMessage();
-      final FormValidationErrorDto formValidationErrorDto = new FormValidationErrorDto(error.getField(), message);
-
-      errors.add(formValidationErrorDto);
-    });
-
-    return errors;
+  private static FormValidationErrorDto getFormValidationErrorDto(final FieldError error) {
+    final String message = error.getDefaultMessage();
+    return new FormValidationErrorDto(error.getField(), message);
   }
 
   @ResponseStatus(code = HttpStatus.BAD_REQUEST)
   @ExceptionHandler(IllegalArgumentException.class)
   public ErroDto handle(final IllegalArgumentException exception) {
+    this.log.error("Error IllegalArgumentException", exception);
     return new ErroDto(exception.getMessage());
   }
 
@@ -57,12 +60,14 @@ public class ResourceExceptionHandler {
   @ResponseStatus(code = HttpStatus.NOT_FOUND)
   @ExceptionHandler(RegistroNaoEncontradoException.class)
   public ErroDto handle(final RegistroNaoEncontradoException exception) {
+    this.log.error("Error RegistroNaoEncontradoException", exception);
     return new ErroDto(exception.getMessage());
   }
 
   @ResponseStatus(code = HttpStatus.UNAUTHORIZED)
   @ExceptionHandler(AutenticacaoException.class)
   public ErroDto handle(final AutenticacaoException exception) {
+    this.log.error("Error AutenticacaoException", exception);
     return new ErroDto(exception.getMessage());
   }
 
@@ -77,21 +82,25 @@ public class ResourceExceptionHandler {
   @ExceptionHandler(RuntimeException.class)
   public ErroDto handle(final RuntimeException exception) {
     this.log.error("Error RuntimeException", exception);
-    return new ErroDto(ApplicationMessage.ERRO_NEGOCIO + "$" + exception.getMessage());
+    return new ErroDto(getFormattedError(exception));
+  }
+
+  private static String getFormattedError(final Exception exception) {
+    return MessageFormat.format("{0}${1}", ApplicationMessage.ERRO_NEGOCIO, exception.getMessage());
   }
 
   @ResponseStatus(code = HttpStatus.INTERNAL_SERVER_ERROR)
   @ExceptionHandler(IOException.class)
   public ErroDto handle(final IOException exception) {
     this.log.error("Error IOException", exception);
-    return new ErroDto(ApplicationMessage.ERRO_NEGOCIO + "$" + exception.getMessage());
+    return new ErroDto(getFormattedError(exception));
   }
 
   @ResponseStatus(code = HttpStatus.INTERNAL_SERVER_ERROR)
   @ExceptionHandler(Exception.class)
   public ErroDto handle(final Exception exception) {
     this.log.error("Error Exception", exception);
-    return new ErroDto(ApplicationMessage.ERRO_NEGOCIO + "$" + exception.getMessage());
+    return new ErroDto(getFormattedError(exception));
   }
 
 }

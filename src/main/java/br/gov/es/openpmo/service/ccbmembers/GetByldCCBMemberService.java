@@ -5,7 +5,7 @@ import br.gov.es.openpmo.dto.ccbmembers.MemberAs;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.relations.IsCCBMember;
 import br.gov.es.openpmo.repository.IsCCBMemberRepository;
-import br.gov.es.openpmo.service.permissions.RemoteRolesFetcher;
+import br.gov.es.openpmo.service.permissions.IRemoteRolesFetcher;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,12 +17,12 @@ import java.util.stream.Collectors;
 public class GetByldCCBMemberService implements IGetByIdCCBMemberService {
 
   private final IsCCBMemberRepository ccbMemberRepository;
-  private final RemoteRolesFetcher remoteRolesFetcher;
+  private final IRemoteRolesFetcher remoteRolesFetcher;
 
   @Autowired
   public GetByldCCBMemberService(
     final IsCCBMemberRepository ccbMemberRepository,
-    final RemoteRolesFetcher remoteRolesFetcher
+    final IRemoteRolesFetcher remoteRolesFetcher
   ) {
     this.ccbMemberRepository = ccbMemberRepository;
     this.remoteRolesFetcher = remoteRolesFetcher;

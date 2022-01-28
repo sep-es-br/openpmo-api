@@ -1,4 +1,4 @@
-package br.gov.es.openpmo.service.journals.evidences;
+package br.gov.es.openpmo.service.journals;
 
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.File;
@@ -41,7 +41,7 @@ public class EvidenceFinder {
 
   private File findEvidenceById(final Long idEvidence) {
     return this.fileRepository.findById(idEvidence)
-      .orElseThrow(() -> new NegocioException(FILE_NOT_FOUND));
+        .orElseThrow(() -> new NegocioException(FILE_NOT_FOUND));
   }
 
 }

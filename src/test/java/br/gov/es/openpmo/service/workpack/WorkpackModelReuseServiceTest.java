@@ -8,6 +8,7 @@ import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -37,6 +38,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @Tag("unit")
+@DisplayName("Test WorkpackModel reuse rules")
 @ExtendWith(MockitoExtension.class)
 class WorkpackModelReuseServiceTest {
 
@@ -99,9 +101,11 @@ class WorkpackModelReuseServiceTest {
 
 
   @Nested
-  class ReusableHierarchy {
+  @DisplayName("Test reusable hierarchy")
+  class ReusableHierarchyTest {
 
     @Test
+    @DisplayName("Should not reuse children of tier 3")
     void shouldNotReuseChildrenOfTier3() {
       when(WorkpackModelReuseServiceTest.this.repository.findAllByIdPlanModelWithChildren(anyLong()))
         .thenReturn(WorkpackModelReuseServiceTest.this.workpackModels);
@@ -125,6 +129,7 @@ class WorkpackModelReuseServiceTest {
     }
 
     @Test
+    @DisplayName("Should not reuse ascending items in hierarchy")
     void shouldNotReuseAscendingItemsInHierarchy() {
       when(WorkpackModelReuseServiceTest.this.repository.findAllByIdPlanModelWithChildren(anyLong()))
         .thenReturn(WorkpackModelReuseServiceTest.this.workpackModels);
@@ -182,6 +187,7 @@ class WorkpackModelReuseServiceTest {
     }
 
     @Test
+    @DisplayName("Should reuse all items descending of children")
     void shouldReuseAllItemsDescendingOfChildren() {
       when(WorkpackModelReuseServiceTest.this.repository.findAllByIdPlanModelWithChildren(anyLong()))
         .thenReturn(WorkpackModelReuseServiceTest.this.workpackModels);
@@ -203,7 +209,7 @@ class WorkpackModelReuseServiceTest {
           "Should not reuse children of target Workpack"
         );
 
-        child.getChildren().forEach(grandChild -> assertTrue(
+        child.getChildren().forEach(grandChild -> Assertions.assertTrue(
           grandChild.getReusable()
         ));
 
@@ -213,6 +219,7 @@ class WorkpackModelReuseServiceTest {
     }
 
     @Test
+    @DisplayName("Should not reuse children of multiple tiers")
     void shouldNotReuseChildrenOfMultipleTiers() {
       // TODO: ajustar criação do ReusableWorkpackModelHierarchyDto para suportar múltiplos parents
       when(WorkpackModelReuseServiceTest.this.repository.findAllByIdPlanModelWithChildren(anyLong()))
@@ -234,9 +241,11 @@ class WorkpackModelReuseServiceTest {
   }
 
   @Nested
-  class Reuse {
+  @DisplayName("Test reuse rules")
+  class ReuseTest {
 
     @Test
+    @DisplayName("Should reuse workpack")
     void shouldReuseWorkpack() {
       when(WorkpackModelReuseServiceTest.this.repository.findById(anyLong()))
         .thenReturn(
@@ -252,6 +261,7 @@ class WorkpackModelReuseServiceTest {
     }
 
     @Test
+    @DisplayName("Should throw exception when parent workpack id is null")
     void shouldThrowExceptionWhenParentWorkpackIdIsNull() {
       final Long PARENT_ID = null;
       final Long CHILDREN_ID = 11L;
@@ -265,6 +275,7 @@ class WorkpackModelReuseServiceTest {
     }
 
     @Test
+    @DisplayName("Should throw exception when children workpack id is null")
     void shouldThrowExceptionWhenChildrenWorkpackIdIsNull() {
       final Long PARENT_ID = 1L;
       final Long CHILDREN_ID = null;

@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.utils;
 
 public class ApplicationMessage {
+
   public static final String PLAN_MODEL_NOT_FOUND = "planModel.not.found";
 
   public static final String CUSTOM_FILTER_NOT_FOUND = "customFilter.not.found";
@@ -228,7 +229,27 @@ public class ApplicationMessage {
   public static final String WORKPACK_PASTE_ERROR = "workpack.paste.error";
 
   public static final String SCHEDULE_IS_NULL = "schedule.is.null";
+
   public static final String SCHEDULE_HAS_ACTIVE_BASELINE = "schedule.has.active.baseline";
+
+  public static final String JOURNAL_NOT_FOUND = "journal.not.found";
+
+  public static final String BASELINE_UNDEFINED_STATUS = "baseline.undefined.status";
+
+  public static final String RISK_UNDEFINED_STATUS = "risk.undefined.status";
+
+  public static final String RISK_RESPONSE_UNDEFINED_STATUS = "risk-response.undefined.status";
+
+  public static final String ISSUE_UNDEFINED_STATUS = "issue.undefined.status";
+
+  public static final String ISSUE_RESPONSE_UNDEFINED_STATUS = "issue-response.undefined.status";
+
+  public static final String COMPLETED_STATUS_MUST_BE_NOT_NULL = "workpackModel.completed-status.is.null";
+
+  public static final String WORKPACK_MODEL_INVALID_TYPE = "workpackModel.invalid-type";
+
+  public static final String WORKPACK_IS_NOT_DELIVERABLE_INVALID_STATE_ERROR = "workpack.is.not.deliverable.invalid-state-error";
+  public static final String INTERVAL_DATE_IN_BASELINE_NOT_FOUND = "baseline.interval-date.invalid-state-error";
 
   private ApplicationMessage() {
   }

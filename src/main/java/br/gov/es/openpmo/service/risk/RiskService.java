@@ -46,12 +46,12 @@ public class RiskService {
   private final JournalCreator journalCreator;
 
   public RiskService(
-    final RiskRepository repository,
-    final RiskResponseRepository riskResponseRepository,
-    final WorkpackService workpackService,
-    final CustomFilterService customFilterService,
-    final FindAllRiskUsingCustomFilter findAllRisk,
-    final JournalCreator journalCreator
+      final RiskRepository repository,
+      final RiskResponseRepository riskResponseRepository,
+      final WorkpackService workpackService,
+      final CustomFilterService customFilterService,
+      final FindAllRiskUsingCustomFilter findAllRisk,
+      final JournalCreator journalCreator
   ) {
     this.repository = repository;
     this.riskResponseRepository = riskResponseRepository;
@@ -62,10 +62,10 @@ public class RiskService {
   }
 
   public List<RiskCardDto> findAllAsCardDto(final Long idWorkpack, final Long idFilter) {
-    if(idWorkpack == null) {
+    if (idWorkpack == null) {
       throw new IllegalArgumentException(ID_WORKPACK_NOT_NULL);
     }
-    if(idFilter == null) {
+    if (idFilter == null) {
       return this.findAllAsCardDto(idWorkpack);
     }
     final CustomFilter customFilter = this.customFilterService.findById(idFilter);
@@ -76,18 +76,18 @@ public class RiskService {
     final List<Risk> risks = this.findAllRisk.execute(customFilter, params);
 
     return risks.stream()
-      .map(RiskCardDto::of)
-      .collect(Collectors.toList());
+        .map(RiskCardDto::of)
+        .collect(Collectors.toList());
   }
 
   private List<RiskCardDto> findAllAsCardDto(final Long idWorkpack) {
     return this.repository.findAll(idWorkpack).stream()
-      .map(RiskCardDto::of)
-      .collect(Collectors.toList());
+        .map(RiskCardDto::of)
+        .collect(Collectors.toList());
   }
 
   public Risk create(final RiskCreateDto request, final Long idPerson) {
-    if(request.getIdWorkpack() == null) {
+    if (request.getIdWorkpack() == null) {
       throw new IllegalStateException(ID_WORKPACK_NOT_NULL);
     }
     final Workpack workpack = this.workpackService.findById(request.getIdWorkpack());
@@ -107,7 +107,7 @@ public class RiskService {
 
   public Risk findById(final Long id) {
     return this.repository.findRiskDetailById(id)
-      .orElseThrow(() -> new NegocioException(RISK_NOT_FOUND));
+        .orElseThrow(() -> new NegocioException(RISK_NOT_FOUND));
   }
 
   public RiskDetailDto findByIdAsRiskDetail(final Long id) {

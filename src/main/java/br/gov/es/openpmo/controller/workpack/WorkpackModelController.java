@@ -3,6 +3,7 @@ package br.gov.es.openpmo.controller.workpack;
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.workpackmodel.ResponseBaseWorkpackModel;
+import br.gov.es.openpmo.dto.workpackmodel.WorkpackModelCompletedUpdateRequest;
 import br.gov.es.openpmo.dto.workpackmodel.WorkpackModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.details.ResponseBaseWorkpackModelDetail;
 import br.gov.es.openpmo.dto.workpackmodel.details.WorkpackModelDetailDto;
@@ -12,6 +13,7 @@ import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.service.workpack.ParentWorkpackTypeVerifier;
 import br.gov.es.openpmo.service.workpack.WorkpackModelDeleteService;
+import br.gov.es.openpmo.service.workpack.WorkpackModelPatchCompletedStatus;
 import br.gov.es.openpmo.service.workpack.WorkpackModelReuseService;
 import br.gov.es.openpmo.service.workpack.WorkpackModelService;
 import io.swagger.annotations.Api;
@@ -27,6 +29,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static br.gov.es.openpmo.dto.workpackmodel.details.ResponseBaseWorkpackModelDetail.success;
 import static br.gov.es.openpmo.utils.WorkpackModelInstanceType.TYPE_NAME_MODEL_PROGRAM;
 
 @Api
@@ -42,18 +45,21 @@ public class WorkpackModelController {
   private final ParentWorkpackTypeVerifier projectParentVerifier;
 
   private final WorkpackModelDeleteService deleteService;
+  private final WorkpackModelPatchCompletedStatus patchCompletedStatus;
 
   @Autowired
   public WorkpackModelController(
     final WorkpackModelService workpackModelService,
     final WorkpackModelReuseService workpackModelReuseService,
     final ParentWorkpackTypeVerifier projectParentVerifier,
-    final WorkpackModelDeleteService deleteService
+    final WorkpackModelDeleteService deleteService,
+    final WorkpackModelPatchCompletedStatus patchCompletedStatus
   ) {
     this.workpackModelService = workpackModelService;
     this.workpackModelReuseService = workpackModelReuseService;
     this.projectParentVerifier = projectParentVerifier;
     this.deleteService = deleteService;
+    this.patchCompletedStatus = patchCompletedStatus;
   }
 
   @GetMapping
@@ -84,9 +90,7 @@ public class WorkpackModelController {
         Collectors.toCollection(LinkedHashSet::new))));
     }
     final WorkpackModelDetailDto modelDetailDto = this.workpackModelService.getWorkpackModelDetailDto(workpackModel);
-    final ResponseBaseWorkpackModelDetail base = new ResponseBaseWorkpackModelDetail().setData(modelDetailDto)
-      .setMessage("Sucesso").setSuccess(true);
-    return ResponseEntity.status(200).body(base);
+    return ResponseEntity.ok(success(modelDetailDto));
   }
 
   @PostMapping
@@ -95,10 +99,7 @@ public class WorkpackModelController {
   ) {
     WorkpackModel workpackModel = this.workpackModelService.getWorkpackModel(workpackModelParamDto);
     workpackModel = this.workpackModelService.save(workpackModel, workpackModelParamDto.getIdParent());
-    final ResponseBase<EntityDto> response = new ResponseBase<EntityDto>()
-      .setData(new EntityDto(workpackModel.getId()))
-      .setSuccess(true);
-    return ResponseEntity.ok(response);
+    return ResponseEntity.ok(ResponseBase.of(new EntityDto(workpackModel.getId())));
   }
 
   @PutMapping
@@ -107,9 +108,7 @@ public class WorkpackModelController {
   ) {
     WorkpackModel workpackModel = this.workpackModelService.getWorkpackModel(workpackModelParamDto);
     workpackModel = this.workpackModelService.update(workpackModel);
-    final ResponseBase<EntityDto> response = new ResponseBase<EntityDto>().setData(new EntityDto(workpackModel.getId()))
-      .setSuccess(true);
-    return ResponseEntity.status(200).body(response);
+    return ResponseEntity.ok(ResponseBase.of(new EntityDto(workpackModel.getId())));
   }
 
   @DeleteMapping("/{id}")
@@ -169,4 +168,12 @@ public class WorkpackModelController {
     return ResponseEntity.ok(ResponseBase.of(workpacks));
   }
 
+  @PatchMapping("/{id-workpack-model}")
+  public ResponseEntity<ResponseBase<Void>> patchCompletedStatus(
+    @PathVariable("id-workpack-model") final Long idWorkpackModel,
+    @Valid @RequestBody final WorkpackModelCompletedUpdateRequest request
+  ) {
+    this.patchCompletedStatus.patch(request, idWorkpackModel);
+    return ResponseEntity.ok(ResponseBase.success());
+  }
 }

@@ -2,9 +2,9 @@ package br.gov.es.openpmo.dto.workpackmodel.details;
 
 import br.gov.es.openpmo.dto.planmodel.PlanModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.MilestoneModelDto;
-import br.gov.es.openpmo.dto.workpackmodel.params.properties.PropertyModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.WorkpackModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.DashboardConfiguration;
+import br.gov.es.openpmo.dto.workpackmodel.params.properties.PropertyModelDto;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
@@ -52,6 +52,7 @@ public abstract class WorkpackModelDetailDto {
 
   private Boolean processesManagementSessionActive;
 
+  private Boolean showCompletedManagement;
   @JsonUnwrapped
   private DashboardConfiguration dashboardConfiguration;
 
@@ -258,4 +259,11 @@ public abstract class WorkpackModelDetailDto {
     this.journalManagementSessionActive = journalManagementSessionActive;
   }
 
+  public Boolean getShowCompletedManagement() {
+    return this.showCompletedManagement;
+  }
+
+  public void setShowCompletedManagement(final Boolean showCompletedManagement) {
+    this.showCompletedManagement = showCompletedManagement;
+  }
 }

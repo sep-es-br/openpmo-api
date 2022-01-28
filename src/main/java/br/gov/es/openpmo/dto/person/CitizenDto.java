@@ -136,10 +136,10 @@ public class CitizenDto {
   }
 
   public List<RoleResource> getRoles() {
-    return this.roles;
+    return roles;
   }
 
-  public void setRoles(final List<RoleResource> roles) {
+  public void setRoles(List<RoleResource> roles) {
     this.roles = roles;
   }
 

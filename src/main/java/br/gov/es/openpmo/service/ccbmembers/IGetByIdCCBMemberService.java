@@ -6,9 +6,9 @@ import br.gov.es.openpmo.dto.ccbmembers.CCBMemberResponse;
 public interface IGetByIdCCBMemberService {
 
   CCBMemberResponse getById(
-    Long idPerson,
-    Long idWorkpack,
-    Long idPlan
+      Long idPerson,
+      Long idWorkpack,
+      Long idPlan
   );
 
 }

@@ -8,14 +8,14 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface BelongsToRepository extends Neo4jRepository<BelongsTo, Long> {
 
-  @Query("MATCH (w:Workpack)-[b:BELONGS_TO]->(p:Plan) " +
-         "WHERE id(w)=$idWorkpack AND id(p)=$idPlan " +
-         "RETURN count(b)>0")
+  @Query("match (w:Workpack)-[b:BELONGS_TO]->(p:Plan) " +
+      "where id(w)=$idWorkpack and id(p)=$idPlan " +
+      "return count(b)>0")
   boolean workpackBelongsToPlan(Long idWorkpack, Long idPlan);
 
   @Query("match (w:Workpack)-[b:BELONGS_TO]->(:Plan) " +
-         "where id(w)=$workpackId " +
-         "detach delete b")
+      "where id(w)=$workpackId " +
+      "detach delete b")
   void deleteByWorkpackId(Long workpackId);
 
 }

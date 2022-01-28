@@ -21,82 +21,82 @@ public class PersonRequest {
   }
 
   public Long getId() {
-    return this.id;
+    return id;
   }
 
-  public void setId(final Long id) {
+  public void setId(Long id) {
     this.id = id;
   }
 
   public String getName() {
-    return this.name;
+    return name;
   }
 
-  public void setName(final String name) {
+  public void setName(String name) {
     this.name = name;
   }
 
   public String getFullName() {
-    return this.fullName;
+    return fullName;
   }
 
-  public void setFullName(final String fullName) {
+  public void setFullName(String fullName) {
     this.fullName = fullName;
   }
 
   public String getEmail() {
-    return this.email;
+    return email;
   }
 
-  public void setEmail(final String email) {
+  public void setEmail(String email) {
     this.email = email;
   }
 
   public String getContactEmail() {
-    return this.contactEmail;
+    return contactEmail;
   }
 
-  public void setContactEmail(final String contactEmail) {
+  public void setContactEmail(String contactEmail) {
     this.contactEmail = contactEmail;
   }
 
   public String getPhoneNumber() {
-    return this.phoneNumber;
+    return phoneNumber;
   }
 
-  public void setPhoneNumber(final String phoneNumber) {
+  public void setPhoneNumber(String phoneNumber) {
     this.phoneNumber = phoneNumber;
   }
 
   public String getAddress() {
-    return this.address;
+    return address;
   }
 
-  public void setAddress(final String address) {
+  public void setAddress(String address) {
     this.address = address;
   }
 
   public boolean isAdministrator() {
-    return this.administrator;
+    return administrator;
   }
 
-  public void setAdministrator(final boolean administrator) {
+  public void setAdministrator(boolean administrator) {
     this.administrator = administrator;
   }
 
   public boolean isUser() {
-    return this.isUser;
+    return isUser;
   }
 
-  public void setUser(final boolean user) {
-    this.isUser = user;
+  public void setUser(boolean user) {
+    isUser = user;
   }
 
   public List<RoleResource> getRoles() {
-    return this.roles;
+    return roles;
   }
 
-  public void setRoles(final List<RoleResource> roles) {
+  public void setRoles(List<RoleResource> roles) {
     this.roles = roles;
   }
 }

@@ -46,9 +46,9 @@ public interface IBaselineController {
   @Transactional
   @PutMapping("/{id-baseline}/submit")
   Response<Void> submit(
-    @PathVariable("id-baseline") Long idBaseline,
-    @RequestBody SubmitBaselineRequest request,
-    String authorization
+      @PathVariable("id-baseline") Long idBaseline,
+      @RequestBody SubmitBaselineRequest request,
+      String authorization
   );
 
   @Transactional

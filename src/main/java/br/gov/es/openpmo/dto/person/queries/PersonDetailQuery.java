@@ -32,8 +32,7 @@ public class PersonDetailQuery {
     final IsInContactBookOf contact,
     final Set<CanAccessPlan> canAccessPlans,
     final Set<IsStakeholderIn> isStakeholderIn,
-    final File avatar
-  ) {
+    final File avatar) {
     this.person = person;
     this.office = office;
     this.authentication = authentication;

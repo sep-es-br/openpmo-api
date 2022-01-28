@@ -29,10 +29,10 @@ public class RiskResponseService {
   private final RiskService riskService;
 
   public RiskResponseService(
-    final JournalCreator journalCreator,
-    final RiskResponseRepository repository,
-    final PersonService personService,
-    final RiskService riskService
+      final JournalCreator journalCreator,
+      final RiskResponseRepository repository,
+      final PersonService personService,
+      final RiskService riskService
   ) {
     this.journalCreator = journalCreator;
     this.repository = repository;
@@ -58,7 +58,7 @@ public class RiskResponseService {
   }
 
   public void deleteById(final Long idRiskResponse) {
-    if(idRiskResponse == null) throw new IllegalArgumentException(RISK_RESPONSE_ID_NULL);
+    if (idRiskResponse == null) throw new IllegalArgumentException(RISK_RESPONSE_ID_NULL);
     this.repository.deleteById(idRiskResponse);
   }
 
@@ -77,7 +77,7 @@ public class RiskResponseService {
 
   private RiskResponse findById(final Long id) {
     return this.repository.findById(id)
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.RISK_RESPONSE_NOT_FOUND));
+        .orElseThrow(() -> new NegocioException(ApplicationMessage.RISK_RESPONSE_NOT_FOUND));
   }
 
   public RiskResponseDetailDto findRiskByIdAsDetailDto(final Long id) {

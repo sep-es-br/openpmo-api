@@ -11,11 +11,13 @@ import br.gov.es.openpmo.dto.office.OfficeStoreDto;
 import br.gov.es.openpmo.dto.officepermission.OfficePermissionDto;
 import br.gov.es.openpmo.dto.officepermission.OfficePermissionParamDto;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
+import br.gov.es.openpmo.dto.person.PersonDto;
 import br.gov.es.openpmo.enumerator.GeneralOperatorsEnum;
 import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.model.Entity;
+import br.gov.es.openpmo.model.actors.AuthService;
 import br.gov.es.openpmo.model.filter.LogicOperatorEnum;
-import org.junit.jupiter.api.Assertions;
+import br.gov.es.openpmo.repository.AuthServiceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.neo4j.ogm.config.Configuration;
@@ -26,6 +28,9 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.ResponseEntity;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,8 +49,12 @@ import static java.util.Collections.singletonList;
   @Autowired
   private FilterOfficePermissionController filterOfficePermissionController;
 
+  @Autowired
+  private AuthServiceRepository authServiceRepository;
+
   private Long idOffice;
   private Long idFilter;
+  private AuthService authService;
 
   @BeforeEach void loadOffice() {
     if(this.idOffice == null) {
@@ -53,9 +62,15 @@ import static java.util.Collections.singletonList;
       office.setName("Office Test OfficePermission");
       office.setFullName("Office Test OfficePermission");
       final ResponseEntity<ResponseBase<EntityDto>> response = this.officeController.save(office);
-      Assertions.assertNotNull(response.getBody());
-      Assertions.assertNotNull(response.getBody().getData());
+      assertNotNull(response.getBody());
+      assertNotNull(response.getBody().getData());
       this.idOffice = response.getBody().getData().getId();
+    }
+    if(this.authService == null) {
+      this.authService = new AuthService();
+      this.authService.setServer("AcessoCidadao");
+      this.authService.setEndPoint("");
+      this.authServiceRepository.save(this.authService);
     }
     if(this.idFilter == null) {
       final CustomFilterDto filter = new CustomFilterDto();
@@ -73,9 +88,9 @@ import static java.util.Collections.singletonList;
       filter.setRules(singletonList(rule));
 
       final ResponseEntity<ResponseBase<CustomFilterDto>> response = this.filterOfficePermissionController.save(filter);
-      Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-      Assertions.assertNotNull(response.getBody());
-      Assertions.assertNotNull(response.getBody().getData());
+      assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+      assertNotNull(response.getBody());
+      assertNotNull(response.getBody().getData());
 
       this.idFilter = response.getBody().getData().getId();
     }
@@ -91,8 +106,8 @@ import static java.util.Collections.singletonList;
     officePermission.getPermissions().add(permissionDto);
     officePermission.setIdOffice(this.idOffice);
     final ResponseEntity<ResponseBase<Entity>> response = this.officePermissionController.store(officePermission);
-    Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-    Assertions.assertNotNull(response.getBody());
+    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+    assertNotNull(response.getBody());
   }
 
   @Test void shouldUpdateOfficePermission() {
@@ -105,14 +120,14 @@ import static java.util.Collections.singletonList;
     officePermission.getPermissions().add(permissionDto);
     officePermission.setIdOffice(this.idOffice);
     ResponseEntity<ResponseBase<Entity>> response = this.officePermissionController.store(officePermission);
-    Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-    Assertions.assertNotNull(response.getBody());
+    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+    assertNotNull(response.getBody());
     final OfficePermissionParamDto officePermissionUpdate = new OfficePermissionParamDto();
     officePermissionUpdate.setEmail("office.test@openpmo.com");
     officePermissionUpdate.setIdOffice(this.idOffice);
     response = this.officePermissionController.update(officePermissionUpdate);
-    Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-    Assertions.assertNotNull(response.getBody());
+    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+    assertNotNull(response.getBody());
   }
 
   @Test void shouldDelete() {
@@ -121,17 +136,22 @@ import static java.util.Collections.singletonList;
     final PermissionDto permissionDto = new PermissionDto();
     permissionDto.setLevel(PermissionLevelEnum.EDIT);
     permissionDto.setRole("roleTest");
+    final PersonDto personDto = new PersonDto();
+    personDto.setName("office.test");
+    personDto.setFullName("office.test");
+    personDto.setContactEmail("office.test@openpmo.com");
+    officePermission.setPerson(personDto);
     officePermission.setPermissions(new ArrayList<>());
     officePermission.getPermissions().add(permissionDto);
     officePermission.setIdOffice(this.idOffice);
     final ResponseEntity<ResponseBase<Entity>> response = this.officePermissionController.store(officePermission);
-    Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-    Assertions.assertNotNull(response.getBody());
+    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+    assertNotNull(response.getBody());
     final ResponseEntity<Void> responseDelete = this.officePermissionController.delete(
       this.idOffice,
       "office.test@openpmo.com"
     );
-    Assertions.assertEquals(HTTP_STATUS_OK, responseDelete.getStatusCodeValue());
+    assertEquals(HTTP_STATUS_OK, responseDelete.getStatusCodeValue());
   }
 
   @Test void shouldListAll() {
@@ -144,26 +164,26 @@ import static java.util.Collections.singletonList;
     officePermission.getPermissions().add(permissionDto);
     officePermission.setIdOffice(this.idOffice);
     final ResponseEntity<ResponseBase<Entity>> response = this.officePermissionController.store(officePermission);
-    Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
     ResponseEntity<ResponseBase<List<OfficePermissionDto>>> responseList = this.officePermissionController.indexBase(
       this.idOffice,
       null,
       null
     );
-    Assertions.assertEquals(HTTP_STATUS_OK, responseList.getStatusCodeValue());
-    Assertions.assertNotNull(responseList.getBody());
-    Assertions.assertNotNull(responseList.getBody().getData());
-    Assertions.assertFalse(responseList.getBody().getData().isEmpty());
+    assertEquals(HTTP_STATUS_OK, responseList.getStatusCodeValue());
+    assertNotNull(responseList.getBody());
+    assertNotNull(responseList.getBody().getData());
+    assertFalse(responseList.getBody().getData().isEmpty());
 
     responseList = this.officePermissionController.indexBase(
       this.idOffice,
       null,
       "office.test@openpmo.com"
     );
-    Assertions.assertEquals(HTTP_STATUS_OK, responseList.getStatusCodeValue());
-    Assertions.assertNotNull(responseList.getBody());
-    Assertions.assertNotNull(responseList.getBody().getData());
-    Assertions.assertFalse(responseList.getBody().getData().isEmpty());
+    assertEquals(HTTP_STATUS_OK, responseList.getStatusCodeValue());
+    assertNotNull(responseList.getBody());
+    assertNotNull(responseList.getBody().getData());
+    assertFalse(responseList.getBody().getData().isEmpty());
   }
 
   @Test void shouldListAllUsingCustomFilter() {
@@ -176,26 +196,26 @@ import static java.util.Collections.singletonList;
     officePermission.getPermissions().add(permissionDto);
     officePermission.setIdOffice(this.idOffice);
     final ResponseEntity<ResponseBase<Entity>> response = this.officePermissionController.store(officePermission);
-    Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
     ResponseEntity<ResponseBase<List<OfficePermissionDto>>> responseList = this.officePermissionController.indexBase(
       this.idOffice,
       this.idFilter,
       null
     );
-    Assertions.assertEquals(HTTP_STATUS_OK, responseList.getStatusCodeValue());
-    Assertions.assertNotNull(responseList.getBody());
-    Assertions.assertNotNull(responseList.getBody().getData());
-    Assertions.assertFalse(responseList.getBody().getData().isEmpty());
+    assertEquals(HTTP_STATUS_OK, responseList.getStatusCodeValue());
+    assertNotNull(responseList.getBody());
+    assertNotNull(responseList.getBody().getData());
+    assertFalse(responseList.getBody().getData().isEmpty());
 
     responseList = this.officePermissionController.indexBase(
       this.idOffice,
       this.idFilter,
       "office.test@openpmo.com"
     );
-    Assertions.assertEquals(HTTP_STATUS_OK, responseList.getStatusCodeValue());
-    Assertions.assertNotNull(responseList.getBody());
-    Assertions.assertNotNull(responseList.getBody().getData());
-    Assertions.assertFalse(responseList.getBody().getData().isEmpty());
+    assertEquals(HTTP_STATUS_OK, responseList.getStatusCodeValue());
+    assertNotNull(responseList.getBody());
+    assertNotNull(responseList.getBody().getData());
+    assertFalse(responseList.getBody().getData().isEmpty());
   }
 
   @TestConfiguration

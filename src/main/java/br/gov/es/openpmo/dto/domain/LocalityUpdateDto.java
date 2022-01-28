@@ -23,7 +23,6 @@ public class LocalityUpdateDto {
   @NotNull(message = ApplicationMessage.LOCALITY_DOMAIN_NOT_NULL)
   private Long idDomain;
 
-  @NotNull(message = ApplicationMessage.LOCALITY_TYPE_NOT_NULL)
   private LocalityTypesEnum type;
 
   private Long idParent;

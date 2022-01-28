@@ -35,6 +35,7 @@ public class ResponseBase<T> {
   public static ResponseBase<Void> success() {
     final ResponseBase<Void> responseBase = new ResponseBase<>();
     responseBase.setSuccess(true);
+    responseBase.setMessage(ApplicationMessage.OPERATION_SUCCESS);
     return responseBase;
   }
 

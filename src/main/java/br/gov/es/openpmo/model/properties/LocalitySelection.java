@@ -39,16 +39,6 @@ public class LocalitySelection extends Property<LocalitySelection, Set<Locality>
   }
 
   @Override
-  public Baseline getBaseline() {
-    return this.baseline;
-  }
-
-  @Override
-  public void setBaseline(final Baseline baseline) {
-    this.baseline = baseline;
-  }
-
-  @Override
   public CategoryEnum getCategory() {
     return this.category;
   }
@@ -56,12 +46,6 @@ public class LocalitySelection extends Property<LocalitySelection, Set<Locality>
   @Override
   public void setCategory(final CategoryEnum category) {
     this.category = category;
-  }
-
-  @Override
-  public boolean hasChanges(final LocalitySelection other) {
-    return (this.value != null || other.value != null)
-           && (this.value != null && other.value == null || this.value == null || !this.value.equals(other.value));
   }
 
   @Override
@@ -83,23 +67,23 @@ public class LocalitySelection extends Property<LocalitySelection, Set<Locality>
   }
 
   @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), this.driver);
-  }
-
-  @Override
   public boolean equals(final Object o) {
-    if(this == o) {
+    if (this == o) {
       return true;
     }
-    if(o == null || this.getClass() != o.getClass()) {
+    if (o == null || this.getClass() != o.getClass()) {
       return false;
     }
-    if(!super.equals(o)) {
+    if (!super.equals(o)) {
       return false;
     }
     final LocalitySelection that = (LocalitySelection) o;
     return Objects.equals(this.driver, that.driver);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), this.driver);
   }
 
   @Override
@@ -110,6 +94,22 @@ public class LocalitySelection extends Property<LocalitySelection, Set<Locality>
   @Override
   public void setWorkpack(final Workpack workpack) {
     this.workpack = workpack;
+  }
+
+  @Override
+  public boolean hasChanges(final LocalitySelection other) {
+    return (this.value != null || other.value != null)
+        && (this.value != null && other.value == null || this.value == null || !this.value.equals(other.value));
+  }
+
+  @Override
+  public Baseline getBaseline() {
+    return this.baseline;
+  }
+
+  @Override
+  public void setBaseline(final Baseline baseline) {
+    this.baseline = baseline;
   }
 
 }

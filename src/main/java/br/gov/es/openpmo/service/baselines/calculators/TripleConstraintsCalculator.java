@@ -5,6 +5,7 @@ import br.gov.es.openpmo.dto.baselines.ccbmemberview.ProposedAndCurrentValue;
 import br.gov.es.openpmo.dto.baselines.ccbmemberview.ScheduleDetailItem;
 import br.gov.es.openpmo.dto.baselines.ccbmemberview.ScheduleInterval;
 import br.gov.es.openpmo.dto.baselines.ccbmemberview.ScopeDetailItem;
+import br.gov.es.openpmo.dto.baselines.ccbmemberview.StepCollectedData;
 import br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintOutput;
 import br.gov.es.openpmo.dto.workpack.WorkpackName;
 import br.gov.es.openpmo.exception.NegocioException;
@@ -36,18 +37,21 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
   private final ConsumesRepository consumesRepository;
   private final WorkpackRepository workpackRepository;
   private final ScheduleRepository scheduleRepository;
+  private final IStepDataCollector stepDataCollector;
 
   @Autowired
   public TripleConstraintsCalculator(
     final BaselineRepository repository,
     final ConsumesRepository consumesRepository,
     final WorkpackRepository workpackRepository,
-    final ScheduleRepository scheduleRepository
+    final ScheduleRepository scheduleRepository,
+    final IStepDataCollector stepDataCollector
   ) {
     this.repository = repository;
     this.consumesRepository = consumesRepository;
     this.workpackRepository = workpackRepository;
     this.scheduleRepository = scheduleRepository;
+    this.stepDataCollector = stepDataCollector;
   }
 
   private static ScopeDetailItem buildScopeItem(
@@ -77,6 +81,18 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
     );
   }
 
+  private static void addStepDataToCollector(
+    final StepCollectedData stepCollectedData,
+    final Collection<? extends Consumes> consumesProposed,
+    final Collection<? extends Consumes> consumesCurrent
+  ) {
+    stepCollectedData.step.addCurrentValue(getTotalPlannedWorkOfStep(consumesCurrent));
+    stepCollectedData.step.addProposedValue(getTotalPlannedWorkOfStep(consumesProposed));
+
+    stepCollectedData.cost.addCurrentValue(getTotalCostOfStep(consumesCurrent));
+    stepCollectedData.cost.addProposedValue(getTotalCostOfStep(consumesProposed));
+  }
+
   private static BigDecimal getTotalPlannedWorkOfStep(final Collection<? extends Consumes> consumesProposed) {
 
     if(consumesProposed.isEmpty()) {
@@ -96,18 +112,6 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
     return consumes.stream()
       .map(Consumes::getPlannedCost)
       .reduce(BigDecimal.ZERO, BigDecimal::add);
-  }
-
-  private static void addStepDataToCollector(
-    final StepCollectedData stepCollectedData,
-    final Collection<? extends Consumes> consumesProposed,
-    final Collection<? extends Consumes> consumesCurrent
-  ) {
-    stepCollectedData.step.addCurrentValue(getTotalPlannedWorkOfStep(consumesCurrent));
-    stepCollectedData.step.addProposedValue(getTotalPlannedWorkOfStep(consumesProposed));
-
-    stepCollectedData.cost.addCurrentValue(getTotalCostOfStep(consumesCurrent));
-    stepCollectedData.cost.addProposedValue(getTotalCostOfStep(consumesProposed));
   }
 
   @Override public TripleConstraintOutput calculate(final Long idBaseline) {
@@ -192,6 +196,13 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
 
     final String name = this.findWorkpackName(master);
 
+    final StepCollectedData stepCollectedData = this.collectStepDataOfMaster(
+      idBaselineReference,
+      schedule.getSteps()
+    );
+
+    if(stepCollectedData.isNull()) return;
+
     final ScheduleInterval proposedInterval = ScheduleInterval.ofSchedule(schedule);
     final ScheduleInterval currentInterval = this.findSnapshotOfScheduleAsScheduleInterval(
       idBaselineReference,
@@ -204,11 +215,6 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
       proposedInterval,
       currentInterval
     ));
-    final StepCollectedData stepCollectedData = this.collectStepDataOfMaster(
-      idBaselineReference,
-      schedule.getSteps()
-    );
-
     this.addCostAndScopeItem(master, tripleConstraint, name, stepCollectedData);
   }
 
@@ -284,6 +290,15 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
   ) {
     final String name = this.findWorkpackName(master);
 
+    final StepCollectedData stepCollectedData = this.stepDataCollector.collect(
+      idBaseline,
+      idBaselineReference,
+      masterSchedule.getSteps()
+    );
+
+    // TODO: verificar o que fazer quando o Deliverable não tiver um snapshot na Baseline
+    if(stepCollectedData.isNull()) return;
+
     final ScheduleDetailItem scheduleItem = this.buildScheduleItemOfBaseline(
       idBaseline,
       idBaselineReference,
@@ -294,23 +309,12 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
 
     tripleConstraint.addScheduleDetail(scheduleItem);
 
-    final StepCollectedData stepCollectedData = this.collectStepData(
-      idBaseline,
-      idBaselineReference,
-      masterSchedule.getSteps()
-    );
-
-    final CostDetailItem costItem = buildCostItem(master, stepCollectedData.cost, name);
-    tripleConstraint.addCostDetail(costItem);
-
-    final String unitName = this.findUnitMeasureOfWorkpack(master);
-    final ScopeDetailItem scopeItem = buildScopeItem(
+    this.addCostAndScopeItem(
       master,
+      tripleConstraint,
       name,
-      stepCollectedData,
-      unitName
+      stepCollectedData
     );
-    tripleConstraint.addScopeDetail(scopeItem);
   }
 
   private ScheduleDetailItem buildScheduleItemOfBaseline(
@@ -336,35 +340,6 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
       proposedInterval,
       currentInterval
     );
-  }
-
-  private StepCollectedData collectStepData(
-    final Long idBaseline,
-    final Long idBaselineReference,
-    final Iterable<? extends Step> steps
-  ) {
-
-    final StepCollectedData stepCollectedData = new StepCollectedData();
-
-    for(final Step stepMaster : steps) {
-
-      final List<Consumes> consumesProposed = this.findConsumesSnapshotByStepMasterAndBaselineId(
-        idBaseline,
-        stepMaster
-      );
-
-      final List<Consumes> consumesCurrent = this.findConsumesSnapshotByStepMasterAndBaselineId(
-        idBaselineReference,
-        stepMaster
-      );
-
-      addStepDataToCollector(
-        stepCollectedData,
-        consumesProposed,
-        consumesCurrent
-      );
-    }
-    return stepCollectedData;
   }
 
 }

@@ -17,7 +17,7 @@ public class JournalResponse {
   @JsonProperty("status")
   private JournalAction action;
 
-  @JsonFormat(pattern = "dd-MM-yyy - HH:mm:ss")
+  @JsonFormat(pattern = "dd/MM/yyyy - HH:mm:ss")
   private LocalDateTime date;
 
   @JsonProperty("workpack")
@@ -26,9 +26,8 @@ public class JournalResponse {
   @JsonProperty("person")
   private PersonField personField;
 
-  private String nameItem;
-
-  private String description;
+  @JsonProperty("information")
+  private InformationField informationField;
 
   @JsonProperty("evidences")
   private Set<EvidenceField> evidenceFieldSet;
@@ -73,26 +72,18 @@ public class JournalResponse {
     this.personField = personField;
   }
 
-  public String getNameItem() {
-    return this.nameItem;
+  public InformationField getInformationField() {
+    return this.informationField;
   }
 
-  public void setNameItem(final String nameItem) {
-    this.nameItem = nameItem;
-  }
-
-  public String getDescription() {
-    return this.description;
-  }
-
-  public void setDescription(final String description) {
-    this.description = description;
+  public void setInformationField(final InformationField informationField) {
+    this.informationField = informationField;
   }
 
   public Set<EvidenceField> getEvidenceFieldSet() {
     return Optional.ofNullable(this.evidenceFieldSet)
-      .map(Collections::unmodifiableSet)
-      .orElse(Collections.emptySet());
+        .map(Collections::unmodifiableSet)
+        .orElse(Collections.emptySet());
   }
 
   public void setEvidenceFieldSet(final Set<? extends EvidenceField> evidenceFieldSet) {

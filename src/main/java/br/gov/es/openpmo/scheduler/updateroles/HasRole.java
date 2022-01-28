@@ -1,4 +1,4 @@
-package br.gov.es.openpmo.scheduler;
+package br.gov.es.openpmo.scheduler.updateroles;
 
 public interface HasRole {
 

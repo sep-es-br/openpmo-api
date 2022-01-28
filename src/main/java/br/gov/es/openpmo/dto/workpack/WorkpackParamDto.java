@@ -1,7 +1,6 @@
 package br.gov.es.openpmo.dto.workpack;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.swagger.annotations.ApiModel;
@@ -10,12 +9,12 @@ import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @JsonTypeInfo(use = Id.NAME, property = "type")
-@JsonSubTypes({@Type(value = PortfolioParamDto.class, name = "Portfolio"),
-  @Type(value = ProgramParamDto.class, name = "Program"),
-  @Type(value = OrganizerParamDto.class, name = "Organizer"),
-  @Type(value = DeliverableParamDto.class, name = "Deliverable"),
-  @Type(value = ProjectParamDto.class, name = "Project"),
-  @Type(value = MilestoneParamDto.class, name = "Milestone")})
+@JsonSubTypes({@JsonSubTypes.Type(value = PortfolioParamDto.class, name = "Portfolio"),
+  @JsonSubTypes.Type(value = ProgramParamDto.class, name = "Program"),
+  @JsonSubTypes.Type(value = OrganizerParamDto.class, name = "Organizer"),
+  @JsonSubTypes.Type(value = DeliverableParamDto.class, name = "Deliverable"),
+  @JsonSubTypes.Type(value = ProjectParamDto.class, name = "Project"),
+  @JsonSubTypes.Type(value = MilestoneParamDto.class, name = "Milestone")})
 @ApiModel(subTypes = {PortfolioParamDto.class, ProgramParamDto.class, OrganizerParamDto.class, DeliverableParamDto.class,
   ProjectParamDto.class,
   MilestoneParamDto.class}, discriminator = "type", description = "Supertype of all Workpack.")

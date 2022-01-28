@@ -34,13 +34,13 @@ public class IssueCreateDto {
 
   @JsonCreator
   public IssueCreateDto(
-    final String name,
-    final String description,
-    final Importance importance,
-    final StatusOfIssue status,
-    final NatureOfIssue nature,
-    final Long idWorkpack,
-    final Long triggeredBy
+      final String name,
+      final String description,
+      final Importance importance,
+      final StatusOfIssue status,
+      final NatureOfIssue nature,
+      final Long idWorkpack,
+      final Long triggeredBy
   ) {
     this.name = name;
     this.description = description;

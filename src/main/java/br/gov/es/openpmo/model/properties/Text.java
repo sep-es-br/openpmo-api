@@ -34,23 +34,23 @@ public class Text extends Property<Text, String> {
   }
 
   @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), this.driver);
-  }
-
-  @Override
   public boolean equals(final Object o) {
-    if(this == o) {
+    if (this == o) {
       return true;
     }
-    if(o == null || this.getClass() != o.getClass()) {
+    if (o == null || this.getClass() != o.getClass()) {
       return false;
     }
-    if(!super.equals(o)) {
+    if (!super.equals(o)) {
       return false;
     }
     final Text text = (Text) o;
     return Objects.equals(this.driver, text.driver);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), this.driver);
   }
 
   @Override
@@ -81,12 +81,6 @@ public class Text extends Property<Text, String> {
   }
 
   @Override
-  public boolean hasChanges(final Text other) {
-    return (this.value != null || other.value != null)
-           && (this.value == null || !this.value.equals(other.value));
-  }
-
-  @Override
   public String getValue() {
     return this.value;
   }
@@ -104,6 +98,12 @@ public class Text extends Property<Text, String> {
   @Override
   public void setWorkpack(final Workpack workpack) {
     this.workpack = workpack;
+  }
+
+  @Override
+  public boolean hasChanges(final Text other) {
+    return (this.value != null || other.value != null)
+        && (this.value == null || !this.value.equals(other.value));
   }
 
 }

@@ -2,12 +2,15 @@ package br.gov.es.openpmo.integration;
 
 import br.gov.es.openpmo.dto.workpack.*;
 import br.gov.es.openpmo.dto.workpackmodel.details.WorkpackModelDetailDto;
+import br.gov.es.openpmo.dto.workpackmodel.params.DashboardConfiguration;
 import br.gov.es.openpmo.dto.workpackmodel.params.ProjectModelParamDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.WorkpackModelParamDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.*;
 import br.gov.es.openpmo.enumerator.Session;
 import br.gov.es.openpmo.enumerator.TokenType;
 import br.gov.es.openpmo.model.actors.Person;
+import br.gov.es.openpmo.repository.AuthServiceRepository;
+import br.gov.es.openpmo.repository.IsAuthenticatedByRepository;
 import br.gov.es.openpmo.repository.PersonRepository;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +21,10 @@ import org.testcontainers.junit.jupiter.Container;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+
+import static java.util.Arrays.asList;
 
 public abstract class BaseTest {
 
@@ -30,6 +35,10 @@ public abstract class BaseTest {
   private PersonRepository personRepository;
   @Autowired
   private TokenService tokenService;
+  @Autowired
+  private AuthServiceRepository authServiceRepository;
+  @Autowired
+  private IsAuthenticatedByRepository isAuthenticatedByRepository;
 
   protected String getToken(final boolean administrator) {
     final Person person = this.getPerson(administrator);
@@ -40,11 +49,22 @@ public abstract class BaseTest {
     Person person = this.personRepository.findByEmail("user.test@openpmo.com").orElse(null);
     if(person == null) {
       person = new Person();
-      //			person.setEmail("user.test@openpmo.com");
       person.setName("Person Teste");
     }
     person.setAdministrator(administrator);
     person = this.personRepository.save(person);
+
+    //    if(this.authService == null) {
+    //      this.authService = new AuthService();
+    //      this.authService.setServer("AcessoCidadao");
+    //      this.authServiceRepository.save(this.authService);
+    //      final IsAuthenticatedBy isAuthenticatedBy = new IsAuthenticatedBy();
+    //      isAuthenticatedBy.setEmail("user.test@openpmo.com");
+    //      isAuthenticatedBy.setAuthService(this.authService);
+    //      isAuthenticatedBy.setPerson(person);
+    //      this.isAuthenticatedByRepository.save(isAuthenticatedBy);
+    //    }
+
     return person;
   }
 
@@ -54,8 +74,14 @@ public abstract class BaseTest {
     workpackModelParam.setModelName(modelName);
     workpackModelParam.setFontIcon("fa fa-edit");
     workpackModelParam.setModelNameInPlural("Models test");
-    workpackModelParam.setOrganizationRoles(Arrays.asList("administrator", "user"));
-    workpackModelParam.setPersonRoles(Arrays.asList("user", "adm"));
+    workpackModelParam.setDashboardConfiguration(new DashboardConfiguration(
+      true,
+      true,
+      true,
+      new HashSet<>(asList("ROLE 1", "ROLE 2"))
+    ));
+    workpackModelParam.setOrganizationRoles(asList("administrator", "user"));
+    workpackModelParam.setPersonRoles(asList("user", "adm"));
     workpackModelParam.setProperties(this.getPropertyModels(idDomain));
     workpackModelParam.setSortBy("Name");
     return workpackModelParam;
@@ -279,6 +305,12 @@ public abstract class BaseTest {
     workpackModelParam.setModelName(name);
     workpackModelParam.setIdPlanModel(idPlanModel);
     workpackModelParam.setFontIcon(icon);
+    workpackModelParam.setDashboardConfiguration(new DashboardConfiguration(
+      true,
+      true,
+      true,
+      new HashSet<>(asList("ROLE 1", "ROLE 2"))
+    ));
     if(idParent != null) {
       workpackModelParam.setIdParent(idParent);
     }

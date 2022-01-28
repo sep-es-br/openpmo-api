@@ -39,9 +39,9 @@ public class PersonController {
 
   @Autowired
   public PersonController(
-    final PersonService personService,
-    final ModelMapper modelMapper,
-    final PersonPermissionsService personPermissionsService
+      final PersonService personService,
+      final ModelMapper modelMapper,
+      final PersonPermissionsService personPermissionsService
   ) {
     this.personService = personService;
     this.modelMapper = modelMapper;
@@ -50,70 +50,70 @@ public class PersonController {
 
   @GetMapping("/{email}")
   public ResponseEntity<ResponseBase<PersonGetByIdDto>> findByEmail(
-    @PathVariable final String email,
-    @RequestParam(required = false) final Long idOffice,
-    final UriComponentsBuilder uriComponentsBuilder
+      @PathVariable final String email,
+      @RequestParam(required = false) final Long idOffice,
+      final UriComponentsBuilder uriComponentsBuilder
   ) {
     final Optional<PersonGetByIdDto> maybePerson = this.personService.maybeFindPersonDataByEmail(
-      email,
-      idOffice,
-      uriComponentsBuilder
+        email,
+        idOffice,
+        uriComponentsBuilder
     );
 
-    if(!maybePerson.isPresent()) {
+    if (!maybePerson.isPresent()) {
       return ResponseEntity.noContent().build();
     }
 
     final ResponseBase<PersonGetByIdDto> response = new ResponseBase<PersonGetByIdDto>()
-      .setData(maybePerson.get())
-      .setSuccess(true);
+        .setData(maybePerson.get())
+        .setSuccess(true);
 
     return ResponseEntity.ok(response);
   }
 
   @GetMapping("/office/{officeScope}")
   public ResponseEntity<ResponseBase<List<PersonListDto>>> findAll(
-    @PathVariable final Long officeScope,
-    @RequestParam(value = "stakeholderStatus", required = false, defaultValue = "ALL") final StakeholderFilterEnum stakeholderStatus,
-    @RequestParam(value = "userStatus", required = false, defaultValue = "ALL") final UserFilterEnum userStatus,
-    @RequestParam(value = "name", required = false) final String name,
-    @RequestParam(value = "planScope", required = false) final Long[] planScope,
-    @RequestParam(value = "workpackScope", required = false) final Long[] workpackScope,
-    final UriComponentsBuilder uriComponentsBuilder
+      @PathVariable final Long officeScope,
+      @RequestParam(value = "stakeholderStatus", required = false, defaultValue = "ALL") final StakeholderFilterEnum stakeholderStatus,
+      @RequestParam(value = "userStatus", required = false, defaultValue = "ALL") final UserFilterEnum userStatus,
+      @RequestParam(value = "name", required = false) final String name,
+      @RequestParam(value = "planScope", required = false) final Long[] planScope,
+      @RequestParam(value = "workpackScope", required = false) final Long[] workpackScope,
+      final UriComponentsBuilder uriComponentsBuilder
   ) {
 
     final List<PersonListDto> persons = this.personService.findAll(
-      stakeholderStatus,
-      userStatus,
-      name,
-      officeScope,
-      planScope,
-      workpackScope,
-      uriComponentsBuilder
+        stakeholderStatus,
+        userStatus,
+        name,
+        officeScope,
+        planScope,
+        workpackScope,
+        uriComponentsBuilder
     );
 
     final ResponseBase<List<PersonListDto>> response = new ResponseBase<List<PersonListDto>>()
-      .setData(persons)
-      .setSuccess(true);
+        .setData(persons)
+        .setSuccess(true);
 
     return ResponseEntity.ok(response);
   }
 
   @GetMapping("/{personId}/office/{officeId}")
   public ResponseEntity<ResponseBase<PersonDetailDto>> findById(
-    @PathVariable("personId") final Long personId,
-    @PathVariable("officeId") final Long officeId,
-    final UriComponentsBuilder uriComponentsBuilder
+      @PathVariable("personId") final Long personId,
+      @PathVariable("officeId") final Long officeId,
+      final UriComponentsBuilder uriComponentsBuilder
   ) {
     final PersonDetailDto personDetailDto = this.personService.findPersonDetailsById(
-      personId,
-      officeId,
-      uriComponentsBuilder
+        personId,
+        officeId,
+        uriComponentsBuilder
     );
 
     final ResponseBase<PersonDetailDto> response = new ResponseBase<PersonDetailDto>()
-      .setData(personDetailDto)
-      .setSuccess(true);
+        .setData(personDetailDto)
+        .setSuccess(true);
 
     return ResponseEntity.ok(response);
   }
@@ -123,16 +123,16 @@ public class PersonController {
     final Person person = this.personService.update(personUpdateDto);
 
     final ResponseBase<EntityDto> entity = new ResponseBase<EntityDto>()
-      .setData(new EntityDto(person.getId()))
-      .setSuccess(true);
+        .setData(new EntityDto(person.getId()))
+        .setSuccess(true);
 
     return ResponseEntity.ok().body(entity);
   }
 
   @DeleteMapping("/{idPerson}/office/{idOffice}/permissions")
   public ResponseEntity<ResponseBase<Void>> deleteAllPermissions(
-    @PathVariable final Long idPerson,
-    @PathVariable final Long idOffice
+      @PathVariable final Long idPerson,
+      @PathVariable final Long idOffice
   ) {
     this.personPermissionsService.deleteAllPermissions(idPerson, idOffice);
     return ResponseEntity.ok().build();
@@ -140,22 +140,22 @@ public class PersonController {
 
   @GetMapping("/fullname")
   public ResponseEntity<ResponseBase<List<PersonDto>>> findPersonByFullname(
-    @RequestParam("fullName") final String partialName,
-    @RequestParam final Long idWorkpack
+      @RequestParam("fullName") final String partialName,
+      @RequestParam final Long idWorkpack
   ) {
 
     final List<PersonDto> persons = this.personService.findPersonsByFullNameAndWorkpack(
-      partialName,
-      idWorkpack
+        partialName,
+        idWorkpack
     );
 
-    if(persons == null) {
+    if (persons == null) {
       return ResponseEntity.noContent().build();
     }
 
     final ResponseBase<List<PersonDto>> response = new ResponseBase<List<PersonDto>>()
-      .setData(persons)
-      .setSuccess(true);
+        .setData(persons)
+        .setSuccess(true);
 
     return ResponseEntity.ok(response);
   }
@@ -164,8 +164,8 @@ public class PersonController {
   public ResponseEntity<ResponseBase<List<ComboDto>>> findAllOfficesByPerson(@PathVariable final Long idPerson) {
     final List<ComboDto> offices = this.personService.findOfficesByPersonId(idPerson);
     final ResponseBase<List<ComboDto>> response = new ResponseBase<List<ComboDto>>()
-      .setData(offices)
-      .setSuccess(true);
+        .setData(offices)
+        .setSuccess(true);
     return ResponseEntity.ok(response);
   }
 
@@ -173,8 +173,8 @@ public class PersonController {
   public ResponseEntity<ResponseBase<EntityDto>> save(@Valid @RequestBody final PersonCreateRequest request) {
     final Person person = this.personService.create(request);
     final ResponseBase<EntityDto> response = new ResponseBase<EntityDto>()
-      .setData(new EntityDto(person.getId()))
-      .setSuccess(true);
+        .setData(new EntityDto(person.getId()))
+        .setSuccess(true);
     return ResponseEntity.ok(response);
   }
 

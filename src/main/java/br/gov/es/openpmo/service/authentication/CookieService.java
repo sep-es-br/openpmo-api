@@ -26,12 +26,7 @@ public class CookieService {
     response.addCookie(cookie);
   }
 
-  public void deleteCookie(
-    final HttpServletRequest request,
-    final HttpServletResponse response,
-    final String name,
-    final String path
-  ) {
+  public void deleteCookie(final HttpServletRequest request, final HttpServletResponse response, final String name, final String path) {
     final Cookie cookie = this.findCookie(request, name);
     cookie.setMaxAge(0);
     cookie.setHttpOnly(true);

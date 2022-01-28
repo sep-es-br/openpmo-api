@@ -34,6 +34,7 @@ public interface StakeholderRepository extends Neo4jRepository<IsStakeholderIn, 
     @Param("idPerson") Long idPerson
   );
 
+
   @Query("MATCH (workpack:Workpack) " +
          "OPTIONAL MATCH (person:Person)-[stakeholderIn:IS_STAKEHOLDER_IN]->(workpack)  " +
          "OPTIONAL MATCH (workpack)-[isIn:IS_IN*]->(parent:Workpack) " +

@@ -36,4 +36,25 @@ public interface RiskRepository extends Neo4jRepository<Risk, Long>, CustomRepos
          "RETURN id(workpack) ")
   Optional<Long> findWorkpackIdByRiskId(Long riskId);
 
+  @Query(
+    "MATCH (workpack:Workpack)<-[:IS_FORSEEN_ON]-(risk:Risk{status:'OPEN'}) " +
+    "WHERE id(workpack)=$idWorkpack AND risk.importance=$importance " +
+    "RETURN count(DISTINCT risk)"
+  )
+  Long countOpenedRiskOfWorkpackByImportance(Long idWorkpack, String importance);
+
+  @Query(
+    "MATCH (workpack:Workpack)<-[:IS_FORSEEN_ON]-(risk:Risk) " +
+    "WHERE id(workpack)=$idWorkpack " +
+    "RETURN count(DISTINCT risk)"
+  )
+  Long countAllRisksOfWorkpack(Long idWorkpack);
+
+  @Query(
+    "MATCH (workpack:Workpack)<-[:IS_FORSEEN_ON]-(risk:Risk) " +
+    "WHERE id(workpack)=$idWorkpack AND risk.status <> 'OPEN' " +
+    "RETURN count(DISTINCT risk)"
+  )
+  Long countClosedRisksOfWorkpack(Long idWorkpack);
+
 }

@@ -22,12 +22,12 @@ public class FilterRiskController extends CreateAndUpdateUsingWorkpackModelFilte
   }
 
   @Override
-  protected CustomFilterService getCustomFilterService() {
-    return this.customFilterService;
+  protected CustomFilterEnum getFilter() {
+    return CustomFilterEnum.RISK;
   }
 
   @Override
-  protected CustomFilterEnum getFilter() {
-    return CustomFilterEnum.RISK;
+  protected CustomFilterService getCustomFilterService() {
+    return this.customFilterService;
   }
 }

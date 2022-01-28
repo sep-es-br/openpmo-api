@@ -7,7 +7,7 @@ import org.neo4j.ogm.annotation.RelationshipEntity;
 public class IsCostAccountSnapshotOf extends IsSnapshotOf<CostAccount> {
 
   public IsCostAccountSnapshotOf(final CostAccount master, final CostAccount snapshot) {
-    super(master, snapshot);
+      super(master, snapshot);
   }
 
 }

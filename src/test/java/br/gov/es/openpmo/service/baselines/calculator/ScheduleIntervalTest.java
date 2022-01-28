@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.service.baselines.calculator;
 
 import br.gov.es.openpmo.dto.baselines.ccbmemberview.ScheduleInterval;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,10 +20,12 @@ import java.util.stream.Stream;
 import static java.time.LocalDate.now;
 
 @Tag("unit")
+@DisplayName("Test Schedule interval rules")
 @ExtendWith(MockitoExtension.class)
 class ScheduleIntervalTest {
 
   @Test
+  @DisplayName("Should return initial date current if change")
   void shouldReturnInitialDateCurrentIfChange() {
     final LocalDate currentInitialDate = now().minusMonths(4);
     final LocalDate endDate = now().minusMonths(2);
@@ -44,6 +47,7 @@ class ScheduleIntervalTest {
   }
 
   @Test
+  @DisplayName("Should return end date current if change")
   void shouldReturnEndDateCurrentIfChange() {
     final LocalDate currentEndDate = now().minusMonths(1);
     final LocalDate initialDate = now().minusMonths(5);
@@ -67,6 +71,7 @@ class ScheduleIntervalTest {
   }
 
   @Test
+  @DisplayName("Should return null if end date not change")
   void shouldReturnNullIfEndDateNotChange() {
 
     final LocalDate currentEndDate = now().minusMonths(1);
@@ -90,6 +95,7 @@ class ScheduleIntervalTest {
 
 
   @Test
+  @DisplayName("Should return null if initial date not change")
   void shouldReturnNullIfInitialDateNotChange() {
     final LocalDate currentInitialDate = now().minusMonths(4);
     final LocalDate endDate = now().minusMonths(2);
@@ -111,6 +117,7 @@ class ScheduleIntervalTest {
   }
 
   @ParameterizedTest
+  @DisplayName("Should create new interval with changed date")
   @ArgumentsSource(IntervalArgumentProvider.class)
   void shouldCreateNewIntervalWithChangedDate(
     final LocalDate currentInitialDate,

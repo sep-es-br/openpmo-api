@@ -52,16 +52,6 @@ public class Group extends Property<Group, Set<Property>> {
   }
 
   @Override
-  public Baseline getBaseline() {
-    return this.baseline;
-  }
-
-  @Override
-  public void setBaseline(final Baseline baseline) {
-    this.baseline = baseline;
-  }
-
-  @Override
   public CategoryEnum getCategory() {
     return this.category;
   }
@@ -72,9 +62,19 @@ public class Group extends Property<Group, Set<Property>> {
   }
 
   @Override
+  public Workpack getWorkpack() {
+    return this.workpack;
+  }
+
+  @Override
+  public void setWorkpack(final Workpack workpack) {
+    this.workpack = workpack;
+  }
+
+  @Override
   public boolean hasChanges(final Group other) {
     return (this.getValue() != null || other.getValue() != null)
-           && (this.getValue() != null && other.getValue() == null || this.getValue() == null || !this.getValue().equals(other.getValue()));
+        && (this.getValue() != null && other.getValue() == null || this.getValue() == null || !this.getValue().equals(other.getValue()));
   }
 
   @Override
@@ -88,13 +88,13 @@ public class Group extends Property<Group, Set<Property>> {
   }
 
   @Override
-  public Workpack getWorkpack() {
-    return this.workpack;
+  public Baseline getBaseline() {
+    return this.baseline;
   }
 
   @Override
-  public void setWorkpack(final Workpack workpack) {
-    this.workpack = workpack;
+  public void setBaseline(final Baseline baseline) {
+    this.baseline = baseline;
   }
 
 }

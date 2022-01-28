@@ -46,13 +46,13 @@ public class Issue extends Entity {
   }
 
   public Issue(
-    final String name,
-    final String description,
-    final Importance importance,
-    final StatusOfIssue status,
-    final NatureOfIssue nature,
-    final Risk risk,
-    final Workpack workpack
+      final String name,
+      final String description,
+      final Importance importance,
+      final StatusOfIssue status,
+      final NatureOfIssue nature,
+      final Risk risk,
+      final Workpack workpack
   ) {
     this.ifWorkpackNullThrowsException(workpack);
     this.name = name;
@@ -65,43 +65,47 @@ public class Issue extends Entity {
   }
 
   private void ifWorkpackNullThrowsException(final Workpack workpack) {
-    if(workpack == null) {
+    if (workpack == null) {
       throw new IllegalStateException(WORKPACK_NOT_NULL);
     }
   }
 
   public static Issue of(final IssueCreateDto request, final Workpack workpack) {
     return new Issue(
-      request.getName(),
-      request.getDescription(),
-      request.getImportance(),
-      request.getStatus(),
-      request.getNature(),
-      null,
-      workpack
+        request.getName(),
+        request.getDescription(),
+        request.getImportance(),
+        request.getStatus(),
+        request.getNature(),
+        null,
+        workpack
     );
   }
 
   public static Issue of(final Risk risk) {
     final Issue issue = new Issue(
-      risk.getName(),
-      risk.getDescription(),
-      risk.getImportance(),
-      StatusOfIssue.OPEN,
-      risk.getNatureAsIssueNature(),
-      risk,
-      risk.getWorkpack()
+        risk.getName(),
+        risk.getDescription(),
+        risk.getImportance(),
+        StatusOfIssue.OPEN,
+        risk.getNatureAsIssueNature(),
+        risk,
+        risk.getWorkpack()
     );
     final Set<IssueResponse> responses = risk.getResponsesPostOccurrenceAsIssueResponse(issue);
     issue.setResponses(responses);
     return issue;
   }
 
+  public void setResponses(final Set<IssueResponse> responses) {
+    this.responses = Collections.unmodifiableSet(responses);
+  }
+
   @Transient
   public Long getWorkpackId() {
     return Optional.ofNullable(this.workpack)
-      .map(Entity::getId)
-      .orElse(null);
+        .map(Entity::getId)
+        .orElse(null);
   }
 
   @Transient
@@ -117,12 +121,28 @@ public class Issue extends Entity {
     ObjectUtils.updateIfPresent(request::getStatus, this::setStatus);
   }
 
+  public void setName(final String name) {
+    this.name = name;
+  }
+
+  public void setDescription(final String description) {
+    this.description = description;
+  }
+
+  public void setStatus(final StatusOfIssue status) {
+    this.status = status;
+  }
+
+  public void setNature(final NatureOfIssue nature) {
+    this.nature = nature;
+  }
+
   @Transient
   public Set<IssueResponseDetailDto> getResponsesAsDetailDto() {
-    if(this.responses == null) return Collections.emptySet();
+    if (this.responses == null) return Collections.emptySet();
     return this.responses.stream()
-      .map(IssueResponseDetailDto::of)
-      .collect(Collectors.toSet());
+        .map(IssueResponseDetailDto::of)
+        .collect(Collectors.toSet());
   }
 
   public Risk getTriggeredBy() {
@@ -137,16 +157,8 @@ public class Issue extends Entity {
     return this.name;
   }
 
-  public void setName(final String name) {
-    this.name = name;
-  }
-
   public String getDescription() {
     return this.description;
-  }
-
-  public void setDescription(final String description) {
-    this.description = description;
   }
 
   public Importance getImportance() {
@@ -161,24 +173,12 @@ public class Issue extends Entity {
     return this.status;
   }
 
-  public void setStatus(final StatusOfIssue status) {
-    this.status = status;
-  }
-
   public NatureOfIssue getNature() {
     return this.nature;
   }
 
-  public void setNature(final NatureOfIssue nature) {
-    this.nature = nature;
-  }
-
   public Set<IssueResponse> getResponses() {
     return Collections.unmodifiableSet(this.responses);
-  }
-
-  public void setResponses(final Set<IssueResponse> responses) {
-    this.responses = Collections.unmodifiableSet(responses);
   }
 
   public Workpack getWorkpack() {

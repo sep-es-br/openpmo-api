@@ -33,14 +33,10 @@ public class PersonGetByIdDto {
 
   private List<String> roles = Collections.singletonList("citizen");
 
-  public static PersonGetByIdDto from(
-    final Person person,
-    final Optional<IsInContactBookOf> maybeContact,
-    final UriComponentsBuilder uriComponentsBuilder
-  ) {
+  public static PersonGetByIdDto from(final Person person, final Optional<IsInContactBookOf> maybeContact, final UriComponentsBuilder uriComponentsBuilder) {
     final PersonGetByIdDto dto = from(person);
     maybeSetContact(maybeContact, dto);
-    if(person.getAvatar() != null) {
+    if (person.getAvatar() != null) {
       dto.setAvatar(new AvatarDto(person.getAvatar(), uriComponentsBuilder));
     }
     return dto;
@@ -54,6 +50,18 @@ public class PersonGetByIdDto {
     });
   }
 
+  public void setAvatar(final AvatarDto avatar) {
+    this.avatar = avatar;
+  }
+
+  public void setPhoneNumber(final String phoneNumber) {
+    this.phoneNumber = phoneNumber;
+  }
+
+  public void setAddress(final String address) {
+    this.address = address;
+  }
+
   private static PersonGetByIdDto from(final Person person) {
     final PersonGetByIdDto dto = new PersonGetByIdDto();
     dto.setId(person.getId());
@@ -62,52 +70,44 @@ public class PersonGetByIdDto {
     return dto;
   }
 
-  public Long getId() {
-    return this.id;
-  }
-
   public void setId(final Long id) {
     this.id = id;
-  }
-
-  public String getName() {
-    return this.name;
   }
 
   public void setName(final String name) {
     this.name = name;
   }
 
-  public String getFullName() {
-    return this.fullName;
-  }
-
   public void setFullName(final String fullName) {
     this.fullName = fullName;
+  }
+
+  public void setContactEmail(final String contactEmail) {
+    this.contactEmail = contactEmail;
+  }
+
+  public Long getId() {
+    return this.id;
+  }
+
+  public String getName() {
+    return this.name;
+  }
+
+  public String getFullName() {
+    return this.fullName;
   }
 
   public String getPhoneNumber() {
     return this.phoneNumber;
   }
 
-  public void setPhoneNumber(final String phoneNumber) {
-    this.phoneNumber = phoneNumber;
-  }
-
   public String getAddress() {
     return this.address;
   }
 
-  public void setAddress(final String address) {
-    this.address = address;
-  }
-
   public String getContactEmail() {
     return this.contactEmail;
-  }
-
-  public void setContactEmail(final String contactEmail) {
-    this.contactEmail = contactEmail;
   }
 
   public boolean isAdministrator() {
@@ -120,10 +120,6 @@ public class PersonGetByIdDto {
 
   public AvatarDto getAvatar() {
     return this.avatar;
-  }
-
-  public void setAvatar(final AvatarDto avatar) {
-    this.avatar = avatar;
   }
 
   public List<String> getRoles() {

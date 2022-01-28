@@ -21,11 +21,7 @@ public class OfficePermissionDetailDto {
     this.accessLevel = canAccessOffice.getPermissionLevel();
   }
 
-  public OfficePermissionDetailDto(
-    final Long id,
-    final PermissionLevelEnum accessLevel,
-    final List<PlanPermissionDetailDto> planPermissions
-  ) {
+  public OfficePermissionDetailDto(final Long id, final PermissionLevelEnum accessLevel, final List<PlanPermissionDetailDto> planPermissions) {
     this.id = id;
     this.accessLevel = accessLevel;
     this.planPermissions = planPermissions;

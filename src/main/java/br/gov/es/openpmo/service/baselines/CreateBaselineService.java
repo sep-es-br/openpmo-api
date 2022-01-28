@@ -41,12 +41,12 @@ public class CreateBaselineService implements ICreateBaselineService {
 
   @Autowired
   public CreateBaselineService(
-    final BaselineRepository baselineRepository,
-    final IsBaselinedByRepository isBaselinedByRepository,
-    final PersonRepository personRepository,
-    final WorkpackRepository workpackRepository,
-    final IsProposedByRepository isProposedByRepository,
-    final JournalCreator journalCreator
+      final BaselineRepository baselineRepository,
+      final IsBaselinedByRepository isBaselinedByRepository,
+      final PersonRepository personRepository,
+      final WorkpackRepository workpackRepository,
+      final IsProposedByRepository isProposedByRepository,
+      final JournalCreator journalCreator
   ) {
     this.baselineRepository = baselineRepository;
     this.isBaselinedByRepository = isBaselinedByRepository;
@@ -58,8 +58,8 @@ public class CreateBaselineService implements ICreateBaselineService {
 
   @Override
   public Long create(
-    final IncludeBaselineRequest request,
-    final Long idPerson
+      final IncludeBaselineRequest request,
+      final Long idPerson
   ) {
     final Workpack workpack = this.getWorkpackProjectById(request.getIdWorkpack());
 
@@ -80,11 +80,10 @@ public class CreateBaselineService implements ICreateBaselineService {
     final Optional<IsStakeholderIn> maybeProposer = this.findProposerById(idWorkpack, idPerson);
     final IsProposedBy isProposedBy = new IsProposedBy();
 
-    if(!maybeProposer.isPresent()) {
+    if (!maybeProposer.isPresent()) {
       final Person person = this.findPersonById(idPerson);
       isProposedBy.fillProposerData(person);
-    }
-    else {
+    } else {
       final IsStakeholderIn proposer = maybeProposer.get();
       isProposedBy.fillProposerData(proposer);
     }
@@ -96,7 +95,7 @@ public class CreateBaselineService implements ICreateBaselineService {
 
   private Person findPersonById(final Long idPerson) {
     return this.personRepository.findById(idPerson)
-      .orElseThrow(() -> new NegocioException(PERSON_NOT_FOUND));
+        .orElseThrow(() -> new NegocioException(PERSON_NOT_FOUND));
   }
 
   private Optional<IsStakeholderIn> findProposerById(final Long idWorkpack, final Long idPerson) {
@@ -105,12 +104,12 @@ public class CreateBaselineService implements ICreateBaselineService {
 
   private Workpack getWorkpackProjectById(final Long idWorkpack) {
     return this.workpackRepository.findById(idWorkpack)
-      .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND))
-      .ifIsNotProjectThrowsException();
+        .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND))
+        .ifIsNotProjectThrowsException();
   }
 
   private void ifWorkpackHasPendingBaselinesThrowsException(final Workpack workpack) {
-    if(this.hasPendingBaselines(workpack)) {
+    if (this.hasPendingBaselines(workpack)) {
       throw new NegocioException(WORKPACK_HAS_PENDING_BASELINES_INVALID_STATE_ERROR);
     }
   }
@@ -120,7 +119,7 @@ public class CreateBaselineService implements ICreateBaselineService {
   }
 
   private void ifWorkpackHasCancelationProposalThrowsException(final Workpack workpack) {
-    if(this.hasCancelationProposal(workpack)) {
+    if (this.hasCancelationProposal(workpack)) {
       throw new NegocioException(WORKPACK_HAS_CANCELATION_PROPOSAL_INVALID_STATE_ERROR);
     }
   }
@@ -134,8 +133,8 @@ public class CreateBaselineService implements ICreateBaselineService {
   }
 
   private void createNewIsBaselinedBy(
-    final Baseline baseline,
-    final Workpack workpack
+      final Baseline baseline,
+      final Workpack workpack
   ) {
     final IsBaselinedBy baselinedBy = new IsBaselinedBy(baseline, workpack);
     this.isBaselinedByRepository.save(baselinedBy, 0);

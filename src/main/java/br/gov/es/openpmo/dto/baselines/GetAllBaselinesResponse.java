@@ -30,16 +30,16 @@ public class GetAllBaselinesResponse {
   private final boolean active;
 
   public GetAllBaselinesResponse(
-    final Long id,
-    final Long idWorkpack,
-    final String name,
-    final Status status,
-    final String description,
-    final LocalDateTime activationDate,
-    final LocalDateTime proposalDate,
-    final String message,
-    final boolean cancelation,
-    final boolean active
+      final Long id,
+      final Long idWorkpack,
+      final String name,
+      final Status status,
+      final String description,
+      final LocalDateTime activationDate,
+      final LocalDateTime proposalDate,
+      final String message,
+      final boolean cancelation,
+      final boolean active
   ) {
     this.id = id;
     this.idWorkpack = idWorkpack;

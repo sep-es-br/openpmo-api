@@ -2,6 +2,7 @@ package br.gov.es.openpmo.model.workpacks.models;
 
 import br.gov.es.openpmo.util.WorkpackHierarchyUtil;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -10,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag("unit")
+@DisplayName("Test interations between WorkpackModel children and parent")
 @ExtendWith(MockitoExtension.class)
 class WorkpackModelTest {
 
@@ -25,7 +27,7 @@ class WorkpackModelTest {
   }
 
   @Nested
-  class AddParent {
+  class AddParentTest {
     @Test
     void shouldAddParent() {
       WorkpackModelTest.this.target.addParent((WorkpackModelTest.this.parent));
@@ -52,7 +54,7 @@ class WorkpackModelTest {
   }
 
   @Nested
-  class AddChild {
+  class AddChildTest {
     @Test
     void shouldAddChildren() {
       WorkpackModelTest.this.target.addChildren((WorkpackModelTest.this.child));

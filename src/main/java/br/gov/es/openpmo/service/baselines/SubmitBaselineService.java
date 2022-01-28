@@ -23,10 +23,10 @@ public class SubmitBaselineService implements ISubmitBaselineService {
 
   @Autowired
   public SubmitBaselineService(
-    final JournalCreator journalCreator,
-    final BaselineRepository baselineRepository,
-    final IFirstTimeSubmitBaselineService firstTimeSubmitBaselineService,
-    final IAnotherTimeSubmitBaselineService anotherTimeSubmitBaselineService
+      final JournalCreator journalCreator,
+      final BaselineRepository baselineRepository,
+      final IFirstTimeSubmitBaselineService firstTimeSubmitBaselineService,
+      final IAnotherTimeSubmitBaselineService anotherTimeSubmitBaselineService
   ) {
     this.journalCreator = journalCreator;
     this.baselineRepository = baselineRepository;
@@ -36,9 +36,9 @@ public class SubmitBaselineService implements ISubmitBaselineService {
 
   @Override
   public void submit(
-    final Long idBaseline,
-    final SubmitBaselineRequest request,
-    final Long idPerson
+      final Long idBaseline,
+      final SubmitBaselineRequest request,
+      final Long idPerson
   ) {
     final Baseline baseline = this.getDraftBaselineById(idBaseline);
     final Workpack workpack = this.getWorkpackByBaseline(baseline);
@@ -53,14 +53,13 @@ public class SubmitBaselineService implements ISubmitBaselineService {
 
   private Workpack getWorkpackByIdBaseline(final Long idBaseline) {
     return this.baselineRepository.findNotDeletedWorkpackWithPropertiesAndModelAndChildrenByBaselineId(idBaseline)
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
+        .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
   }
 
   private void submit(final SubmitBaselineRequest request, final Baseline baseline, final Workpack workpack) {
-    if(this.isFirstTimeSubmittingBaseline(workpack)) {
+    if (this.isFirstTimeSubmittingBaseline(workpack)) {
       this.firstTimeSubmitBaselineService.submit(baseline, workpack, request.getUpdates());
-    }
-    else {
+    } else {
       this.anotherTimeSubmitBaselineService.submit(baseline, workpack, request.getUpdates());
     }
   }
@@ -71,8 +70,8 @@ public class SubmitBaselineService implements ISubmitBaselineService {
 
   private Baseline getDraftBaselineById(final Long idBaseline) {
     return this.baselineRepository.findById(idBaseline)
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.BASELINE_NOT_FOUND))
-      .ifIsNotDraftThrowsException();
+        .orElseThrow(() -> new NegocioException(ApplicationMessage.BASELINE_NOT_FOUND))
+        .ifIsNotDraftThrowsException();
   }
 
 }

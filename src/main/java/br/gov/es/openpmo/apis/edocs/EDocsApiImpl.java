@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -76,9 +75,9 @@ public class EDocsApiImpl implements EDocsApi {
   @Override
   public ProcessResponse findProcessByProtocol(final String protocol, final Long idPerson) {
     final ProcessResponse processResponse = this.fetchProcessByProtocol(
-      protocol,
-      ProcessResponse::new,
-      idPerson
+        protocol,
+        ProcessResponse::new,
+        idPerson
     );
 
     final List<ProcessHistoryResponse> processHistory = this.findProcessHistoryById(processResponse.getId(), idPerson);
@@ -87,24 +86,10 @@ public class EDocsApiImpl implements EDocsApi {
     return processResponse;
   }
 
-  @Override
-  public List<ProcessHistoryResponse> findProcessHistoryById(final String id, final Long idPerson) {
-    return this.getList(
-      "/v2/processos/" + id + "/atos",
-      (array, list) -> array.forEach(element -> {
-        if(element instanceof JSONObject) {
-          final JSONObject obj = (JSONObject) element;
-          list.add(new ProcessHistoryResponse(obj));
-        }
-      }),
-      idPerson
-    );
-  }
-
   private ProcessResponse fetchProcessByProtocol(
-    final String protocol,
-    final Function<JSONObject, ProcessResponse> mapper,
-    final Long idPerson
+      final String protocol,
+      final Function<JSONObject, ProcessResponse> mapper,
+      final Long idPerson
   ) {
     final String token = this.fetchClientToken(idPerson);
 
@@ -120,20 +105,17 @@ public class EDocsApiImpl implements EDocsApi {
     this.logger.info("Body: {}", request);
     postRequest.setEntity(stringEntity);
 
-    try(final CloseableHttpResponse response = HttpClients.createDefault().execute(postRequest)) {
-      if(this.isNotHttp200(response)) {
+    try (final CloseableHttpResponse response = HttpClients.createDefault().execute(postRequest)) {
+      if (this.isNotHttp200(response)) {
         response.getStatusLine().getReasonPhrase();
         throw new IllegalStateException(FAILED_FETCH_STATUS_NOT_OK);
       }
       final JSONObject json = new JSONObject(EntityUtils.toString(response.getEntity()))
-        .getJSONArray("value")
-        .getJSONObject(0);
+          .getJSONArray("value")
+          .getJSONObject(0);
       return mapper.apply(json);
-    }
-    catch(final IOException e) {
-      if(Objects.nonNull(idPerson)) {
-        this.journalCreator.failure(idPerson);
-      }
+    } catch (final IOException e) {
+      this.journalCreator.failure(idPerson);
       throw new IllegalStateException(FAILED_FETCH_EXTERNAL_DATA);
     }
   }
@@ -158,25 +140,22 @@ public class EDocsApiImpl implements EDocsApi {
     parameters.add(new BasicNameValuePair("scope", this.scopes));
 
     postRequest.addHeader(
-      AUTHORIZATION,
-      "Basic " + Base64.getEncoder().encodeToString(basicToken.getBytes())
+        AUTHORIZATION,
+        "Basic " + Base64.getEncoder().encodeToString(basicToken.getBytes())
     );
 
     postRequest.setEntity(new UrlEncodedFormEntity(parameters, Consts.UTF_8));
 
-    try(final CloseableHttpResponse response = HttpClients.createDefault().execute(postRequest)) {
-      if(this.isNotHttp200(response)) {
+    try (final CloseableHttpResponse response = HttpClients.createDefault().execute(postRequest)) {
+      if (this.isNotHttp200(response)) {
         throw new IllegalStateException(FAILED_FETCH_STATUS_NOT_OK);
       }
 
       final JSONObject result = new JSONObject(EntityUtils.toString(response.getEntity()));
       this.logger.info("Token received successfully");
       return result.getString("access_token");
-    }
-    catch(final IOException e) {
-      if(Objects.nonNull(idPerson)) {
-        this.journalCreator.failure(idPerson);
-      }
+    } catch (final IOException e) {
+      this.journalCreator.failure(idPerson);
       throw new NegocioException(FAILED_FETCH_TOKEN_ACESSO_CIDADAO);
     }
   }
@@ -185,11 +164,21 @@ public class EDocsApiImpl implements EDocsApi {
     return response.getStatusLine().getStatusCode() != HTTP_OK;
   }
 
-  private List<ProcessHistoryResponse> getList(
-    final String url,
-    final BiConsumer<JSONArray, List<ProcessHistoryResponse>> mapper,
-    final Long idPerson
-  ) {
+  @Override
+  public List<ProcessHistoryResponse> findProcessHistoryById(final String id, final Long idPerson) {
+    return this.getList(
+        "/v2/processos/" + id + "/atos",
+        (array, list) -> array.forEach(element -> {
+          if (element instanceof JSONObject) {
+            final JSONObject obj = (JSONObject) element;
+            list.add(new ProcessHistoryResponse(obj));
+          }
+        }),
+        idPerson
+    );
+  }
+
+  private List<ProcessHistoryResponse> getList(final String url, final BiConsumer<JSONArray, List<ProcessHistoryResponse>> mapper, final Long idPerson) {
     final String token = this.fetchClientToken(idPerson);
 
     final String uri = this.edocsUriWebApi.concat(url);
@@ -197,9 +186,9 @@ public class EDocsApiImpl implements EDocsApi {
     final HttpUriRequest getRequest = new HttpGet(uri);
     getRequest.addHeader(AUTHORIZATION, BEARER + token);
 
-    try(final CloseableHttpResponse response = HttpClients.createDefault().execute(getRequest)) {
+    try (final CloseableHttpResponse response = HttpClients.createDefault().execute(getRequest)) {
 
-      if(this.isNotHttp200(response)) {
+      if (this.isNotHttp200(response)) {
         throw new IllegalStateException(FAILED_FETCH_STATUS_NOT_OK);
       }
 
@@ -207,11 +196,8 @@ public class EDocsApiImpl implements EDocsApi {
       final List<ProcessHistoryResponse> history = new ArrayList<>();
       mapper.accept(array, history);
       return history;
-    }
-    catch(final IOException e) {
-      if(Objects.nonNull(idPerson)) {
-        this.journalCreator.failure(idPerson);
-      }
+    } catch (final IOException e) {
+      this.journalCreator.failure(idPerson);
       throw new IllegalStateException(FAILED_FETCH_EXTERNAL_DATA);
     }
   }

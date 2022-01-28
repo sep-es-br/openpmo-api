@@ -10,13 +10,13 @@ import static java.math.BigDecimal.valueOf;
 
 public final class TripleConstraintUtils {
 
-  static final BigDecimal ONE_HUNDRED = new BigDecimal(100);
-  static final BigDecimal ONE_MONTH = new BigDecimal(30);
+  public static final BigDecimal ONE_HUNDRED = new BigDecimal(100);
+  public static final BigDecimal ONE_MONTH = new BigDecimal(30);
 
   private TripleConstraintUtils() {
   }
 
-  static BigDecimal daysBetween(final Temporal currentStartDate, final Temporal currentEndDate) {
+  public static BigDecimal daysBetween(final Temporal currentStartDate, final Temporal currentEndDate) {
     if(currentStartDate == null || currentEndDate == null) return null;
     return valueOf(ChronoUnit.DAYS.between(
       currentStartDate,
@@ -24,7 +24,7 @@ public final class TripleConstraintUtils {
     ));
   }
 
-  static BigDecimal roundOneDecimal(final BigDecimal number) {
+  public static BigDecimal roundOneDecimal(final BigDecimal number) {
     if(number == null) return null;
     return number.round(new MathContext(3, RoundingMode.HALF_EVEN));
   }

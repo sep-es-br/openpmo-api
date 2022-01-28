@@ -30,32 +30,32 @@ public class JournalFinder {
   }
 
   public Page<JournalResponse> getAll(
-    final LocalDate from,
-    final LocalDate to,
-    final JournalType journalType,
-    final List<Integer> scope,
-    final UriComponentsBuilder uriComponentsBuilder,
-    final Pageable pageable
+      final LocalDate from,
+      final LocalDate to,
+      final JournalType journalType,
+      final List<Integer> scope,
+      final UriComponentsBuilder uriComponentsBuilder,
+      final Pageable pageable
   ) {
     final List<JournalEntry> journalEntries = this.journalRepository.findAll(
-      from,
-      to,
-      journalType,
-      scope
+        from,
+        to,
+        journalType,
+        scope
     );
 
     return getJournalEntryPage(journalEntries, pageable)
-      .map(journalEntry -> this.getResponse(uriComponentsBuilder, journalEntry));
+        .map(journalEntry -> this.getResponse(uriComponentsBuilder, journalEntry));
   }
 
-  private static PageImpl<JournalEntry> getJournalEntryPage(
-    final Collection<? extends JournalEntry> journalEntries,
-    final Pageable pageable
+  private static Page<JournalEntry> getJournalEntryPage(
+      final Collection<? extends JournalEntry> journalEntries,
+      final Pageable pageable
   ) {
     final List<JournalEntry> pageList = journalEntries.stream()
-      .skip((long) pageable.getPageSize() * pageable.getPageNumber())
-      .limit(pageable.getPageSize())
-      .collect(Collectors.toList());
+        .skip((long) pageable.getPageSize() * pageable.getPageNumber())
+        .limit(pageable.getPageSize())
+        .collect(Collectors.toList());
 
     return new PageImpl<>(pageList, pageable, journalEntries.size());
   }

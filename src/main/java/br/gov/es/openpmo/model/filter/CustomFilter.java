@@ -32,8 +32,7 @@ public class CustomFilter extends Entity {
 
   public CustomFilter(
     final String name, final CustomFilterEnum type, final boolean favorite, final SortByDirectionEnum direction,
-    final String sortBy, final WorkpackModel workpackModel
-  ) {
+    final String sortBy, final WorkpackModel workpackModel) {
     this.name = name;
     this.type = type;
     this.favorite = favorite;

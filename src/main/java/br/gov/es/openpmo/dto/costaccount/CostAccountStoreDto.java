@@ -6,6 +6,7 @@ import br.gov.es.openpmo.utils.ApplicationMessage;
 import javax.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 public class CostAccountStoreDto {
 
@@ -17,7 +18,9 @@ public class CostAccountStoreDto {
 
   public CostAccountStoreDto(final Long idWorkpack, final List<? extends PropertyDto> properties) {
     this.idWorkpack = idWorkpack;
-    this.properties = Collections.unmodifiableList(properties);
+    this.properties = Optional.ofNullable(properties)
+      .map(Collections::unmodifiableList)
+      .orElse(Collections.emptyList());
   }
 
   public Long getIdWorkpack() {

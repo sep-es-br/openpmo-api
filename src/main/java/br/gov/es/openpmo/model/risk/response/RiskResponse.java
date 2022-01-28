@@ -50,16 +50,16 @@ public class RiskResponse extends Entity {
   }
 
   private RiskResponse(
-    final String name,
-    final When when,
-    final LocalDate startDate,
-    final LocalDate endDate,
-    final Strategy strategy,
-    final RiskResponseStatus status,
-    final String trigger,
-    final String plan,
-    final Risk risk,
-    final Set<Person> responsible
+      final String name,
+      final When when,
+      final LocalDate startDate,
+      final LocalDate endDate,
+      final Strategy strategy,
+      final RiskResponseStatus status,
+      final String trigger,
+      final String plan,
+      final Risk risk,
+      final Set<Person> responsible
   ) {
     this.name = name;
     this.when = when;
@@ -75,30 +75,30 @@ public class RiskResponse extends Entity {
   }
 
   private void ifStartDateIsAfterEndDateThrowException(
-    final ChronoLocalDate startDate,
-    final ChronoLocalDate endDate
+      final ChronoLocalDate startDate,
+      final ChronoLocalDate endDate
   ) {
-    if(startDate != null && endDate != null && startDate.isAfter(endDate)) {
+    if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
       throw new NegocioException(START_DATE_AFTER_END_DATE);
     }
   }
 
   public static RiskResponse of(
-    final RiskResponseCreateDto request,
-    final Risk risk,
-    final Set<Person> responsible
+      final RiskResponseCreateDto request,
+      final Risk risk,
+      final Set<Person> responsible
   ) {
     return new RiskResponse(
-      request.getName(),
-      request.getWhen(),
-      request.getStartDate(),
-      request.getEndDate(),
-      request.getStrategy(),
-      request.getStatus(),
-      request.getTrigger(),
-      request.getPlan(),
-      risk,
-      responsible
+        request.getName(),
+        request.getWhen(),
+        request.getStartDate(),
+        request.getEndDate(),
+        request.getStrategy(),
+        request.getStatus(),
+        request.getTrigger(),
+        request.getPlan(),
+        risk,
+        responsible
     );
   }
 
@@ -106,64 +106,32 @@ public class RiskResponse extends Entity {
     return this.name;
   }
 
-  public void setName(final String name) {
-    this.name = name;
-  }
-
   public When getWhen() {
     return this.when;
-  }
-
-  public void setWhen(final When when) {
-    this.when = when;
   }
 
   public LocalDate getStartDate() {
     return this.startDate;
   }
 
-  public void setStartDate(final LocalDate startDate) {
-    this.startDate = startDate;
-  }
-
   public LocalDate getEndDate() {
     return this.endDate;
-  }
-
-  public void setEndDate(final LocalDate endDate) {
-    this.endDate = endDate;
   }
 
   public Strategy getStrategy() {
     return this.strategy;
   }
 
-  public void setStrategy(final Strategy strategy) {
-    this.strategy = strategy;
-  }
-
   public RiskResponseStatus getStatus() {
     return this.status;
-  }
-
-  public void setStatus(final RiskResponseStatus status) {
-    this.status = status;
   }
 
   public String getTrigger() {
     return this.trigger;
   }
 
-  public void setTrigger(final String trigger) {
-    this.trigger = trigger;
-  }
-
   public String getPlan() {
     return this.plan;
-  }
-
-  public void setPlan(final String plan) {
-    this.plan = plan;
   }
 
   public Risk getRisk() {
@@ -175,12 +143,8 @@ public class RiskResponse extends Entity {
   }
 
   public Set<Person> getResponsible() {
-    if(this.responsible == null) return Collections.emptySet();
+    if (this.responsible == null) return Collections.emptySet();
     return Collections.unmodifiableSet(this.responsible);
-  }
-
-  public void setResponsible(final Set<Person> responsible) {
-    this.responsible = responsible;
   }
 
   @Transient
@@ -199,6 +163,42 @@ public class RiskResponse extends Entity {
     ObjectUtils.updateIfPresent(request::getEndDate, this::setEndDate);
   }
 
+  public void setName(final String name) {
+    this.name = name;
+  }
+
+  public void setWhen(final When when) {
+    this.when = when;
+  }
+
+  public void setStartDate(final LocalDate startDate) {
+    this.startDate = startDate;
+  }
+
+  public void setEndDate(final LocalDate endDate) {
+    this.endDate = endDate;
+  }
+
+  public void setStrategy(final Strategy strategy) {
+    this.strategy = strategy;
+  }
+
+  public void setStatus(final RiskResponseStatus status) {
+    this.status = status;
+  }
+
+  public void setTrigger(final String trigger) {
+    this.trigger = trigger;
+  }
+
+  public void setPlan(final String plan) {
+    this.plan = plan;
+  }
+
+  public void setResponsible(final Set<Person> responsible) {
+    this.responsible = responsible;
+  }
+
   @Transient
   public Long getIdRisk() {
     return this.risk.getId();
@@ -206,10 +206,10 @@ public class RiskResponse extends Entity {
 
   @Transient
   public Set<StakeholderCardViewDto> getResponsibleAsStakeholderCardDto() {
-    if(this.responsible == null) return Collections.emptySet();
+    if (this.responsible == null) return Collections.emptySet();
     return this.responsible.stream()
-      .map(StakeholderCardViewDto::of)
-      .collect(Collectors.toSet());
+        .map(StakeholderCardViewDto::of)
+        .collect(Collectors.toSet());
   }
 
   @Transient

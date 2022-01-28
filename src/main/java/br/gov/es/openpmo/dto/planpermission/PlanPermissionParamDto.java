@@ -6,6 +6,7 @@ import br.gov.es.openpmo.dto.person.PersonDto;
 import javax.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 public class PlanPermissionParamDto {
 
@@ -41,7 +42,9 @@ public class PlanPermissionParamDto {
   }
 
   public List<PermissionDto> getPermissions() {
-    return Collections.unmodifiableList(this.permissions);
+    return Optional.ofNullable(this.permissions)
+      .map(Collections::unmodifiableList)
+      .orElse(null);
   }
 
   public void setPermissions(final List<PermissionDto> permissions) {

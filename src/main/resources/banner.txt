@@ -6,7 +6,6 @@ ${AnsiColor.BLUE}  ░███      ░███ ░███░░░░░░
 ${AnsiColor.BLUE}  ░░███     ███  ░███         ░███ ░   █ ░███  ░░█████             ░███         ░███      ░███ ░░███     ███ 
 ${AnsiColor.BLUE}   ░░░███████░   █████        ██████████ █████  ░░█████            █████        █████     █████ ░░░███████░  
 ${AnsiColor.BLUE}     ░░░░░░░    ░░░░░        ░░░░░░░░░░ ░░░░░    ░░░░░            ░░░░░        ░░░░░     ░░░░░    ░░░░░░░    
-                                                                                                           
-                                                                                                           
-${AnsiColor.BRIGHT_GREEN} Gerenciamento de Projetos para a SEP.
 
+${AnsiColor.BRIGHT_GREEN} Gerenciamento de Projetos para a SEP.
+${AnsiColor.BRIGHT_WHITE}

@@ -27,16 +27,6 @@ public class CostDetailItem {
     this.calculateVariation();
   }
 
-  private void calculateVariation() {
-    if(this.currentValue == null || this.proposedValue == null) {
-      return;
-    }
-    this.variation = this.currentValue
-      .subtract(this.proposedValue)
-      .divide(this.currentValue, 6, RoundingMode.HALF_UP)
-      .multiply(ONE_HUNDRED);
-  }
-
   public BigDecimal getVariation() {
     this.calculateVariation();
     return this.variation;
@@ -56,6 +46,16 @@ public class CostDetailItem {
 
   public BigDecimal getProposedValue() {
     return this.proposedValue;
+  }
+
+  private void calculateVariation() {
+    if(this.currentValue == null || this.proposedValue == null) {
+      return;
+    }
+    this.variation = this.currentValue
+      .subtract(this.proposedValue)
+      .divide(this.currentValue, 6, RoundingMode.HALF_UP)
+      .multiply(ONE_HUNDRED);
   }
 
   public void roundData() {

@@ -6,8 +6,8 @@ import br.gov.es.openpmo.dto.baselines.EditDraftBaselineRequest;
 public interface IEditBaselineService {
 
   void edit(
-    Long idBaseline,
-    EditDraftBaselineRequest request
+      Long idBaseline,
+      EditDraftBaselineRequest request
   );
 
 }

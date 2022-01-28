@@ -41,12 +41,12 @@ public class JournalEntry extends Entity {
   }
 
   public JournalEntry(
-    final JournalType type,
-    final JournalAction action,
-    final String nameItem,
-    final String description,
-    final Workpack workpack,
-    final Person person
+      final JournalType type,
+      final JournalAction action,
+      final String nameItem,
+      final String description,
+      final Workpack workpack,
+      final Person person
   ) {
     this.type = type;
     this.action = action;
@@ -59,7 +59,7 @@ public class JournalEntry extends Entity {
 
   @Transient
   public void addFiles(final Iterable<? extends File> files) {
-    if(Objects.isNull(files)) {
+    if (Objects.isNull(files)) {
       return;
     }
     files.forEach(this::addFile);
@@ -67,7 +67,7 @@ public class JournalEntry extends Entity {
 
   @Transient
   public void addFile(final File file) {
-    if(Objects.isNull(this.files)) {
+    if (Objects.isNull(this.files)) {
       this.files = new HashSet<>();
     }
 
@@ -102,21 +102,17 @@ public class JournalEntry extends Entity {
     return this.workpack;
   }
 
-  public void setWorkpack(final Workpack workpack) {
-    this.workpack = workpack;
-  }
-
   @Transient
   public Long getWorkpackId() {
     return Optional.ofNullable(this.workpack).map(Workpack::getId).orElse(null);
   }
 
-  public Person getPerson() {
-    return this.person;
+  public void setWorkpack(final Workpack workpack) {
+    this.workpack = workpack;
   }
 
-  public void setPerson(final Person person) {
-    this.person = person;
+  public Person getPerson() {
+    return this.person;
   }
 
   @Transient
@@ -129,9 +125,12 @@ public class JournalEntry extends Entity {
     return Optional.ofNullable(this.person).map(Person::getName).orElse(null);
   }
 
+  public void setPerson(final Person person) {
+    this.person = person;
+  }
+
   public Set<File> getFiles() {
-    return Optional.ofNullable(this.files)
-      .orElse(Collections.emptySet());
+    return Optional.ofNullable(this.files).orElse(Collections.emptySet());
   }
 
   public void setFiles(final Set<File> files) {

@@ -3,6 +3,7 @@ package br.gov.es.openpmo.controller.workpack;
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
+import br.gov.es.openpmo.dto.workpack.EndDeliverableManagementRequest;
 import br.gov.es.openpmo.dto.workpack.ResponseBaseWorkpack;
 import br.gov.es.openpmo.dto.workpack.ResponseBaseWorkpackDetail;
 import br.gov.es.openpmo.dto.workpack.WorkpackDetailDto;
@@ -12,10 +13,9 @@ import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.journals.JournalCreator;
-import br.gov.es.openpmo.service.workpack.CheckPasteWorkpackService;
+import br.gov.es.openpmo.service.workpack.IDeliverableEndManagement;
 import br.gov.es.openpmo.service.workpack.WorkpackPermissionVerifier;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
-import br.gov.es.openpmo.utils.ResponseHandler;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -43,27 +43,23 @@ public class WorkpackController {
 
   private final WorkpackPermissionVerifier workpackPermissionVerifier;
 
-  private final CheckPasteWorkpackService checkPasteWorkpackService;
-
-  private final ResponseHandler responseHandler;
-
   private final JournalCreator journalCreator;
+
+  private final IDeliverableEndManagement deliverableEndManagement;
 
   @Autowired
   public WorkpackController(
     final WorkpackService workpackService,
     final TokenService tokenService,
     final WorkpackPermissionVerifier workpackPermissionVerifier,
-    final CheckPasteWorkpackService checkPasteWorkpackService,
-    final ResponseHandler responseHandler,
-    final JournalCreator journalCreator
+    final JournalCreator journalCreator,
+    final IDeliverableEndManagement deliverableEndManagement
   ) {
     this.workpackService = workpackService;
     this.tokenService = tokenService;
     this.workpackPermissionVerifier = workpackPermissionVerifier;
-    this.checkPasteWorkpackService = checkPasteWorkpackService;
-    this.responseHandler = responseHandler;
     this.journalCreator = journalCreator;
+    this.deliverableEndManagement = deliverableEndManagement;
   }
 
   @GetMapping
@@ -86,6 +82,7 @@ public class WorkpackController {
     if(workpacks.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
+
     final List<WorkpackDetailDto> workpackDetailDtos = workpacks.stream()
       .map(workpack -> this.mapToWorkpackDetailDto(workpack, idWorkpackModel))
       .collect(Collectors.toList());
@@ -93,25 +90,17 @@ public class WorkpackController {
 
     return verify.isEmpty()
       ? ResponseEntity.noContent().build()
-      : ResponseEntity.ok(getResponseBaseWorkpack(verify));
+      : ResponseEntity.ok(new ResponseBaseWorkpack().setData(verify).setMessage(SUCESSO).setSuccess(true));
   }
 
   private List<Workpack> findAllWorkpacks(final Long idPlan, final Long idPlanModel, final Long idWorkPackModel, final Long idFilter) {
     return this.workpackService.findAll(idPlan, idPlanModel, idWorkPackModel, idFilter);
   }
 
-  private static ResponseBaseWorkpack getResponseBaseWorkpack(final List<WorkpackDetailDto> verify) {
-    return new ResponseBaseWorkpack().setData(verify).setMessage(SUCESSO).setSuccess(true);
-  }
-
   private WorkpackDetailDto mapToWorkpackDetailDto(final Workpack workpack, final Long idWorkpackModel) {
     final WorkpackDetailDto itemDetail = this.workpackService.getWorkpackDetailDto(workpack);
     itemDetail.applyLinkedStatus(workpack, idWorkpackModel);
     return itemDetail;
-  }
-
-  private List<WorkpackDetailDto> getVerify(final Long idPlan, final Long idUser, final List<WorkpackDetailDto> workpackList) {
-    return this.workpackPermissionVerifier.verify(workpackList, idUser, idPlan);
   }
 
   @GetMapping("/parent")
@@ -152,7 +141,7 @@ public class WorkpackController {
 
     return verify.isEmpty()
       ? ResponseEntity.noContent().build()
-      : ResponseEntity.ok(getResponseBaseWorkpack(verify));
+      : ResponseEntity.ok(new ResponseBaseWorkpack().setData(verify).setMessage(SUCESSO).setSuccess(true));
   }
 
   private static <T> boolean isNotNull(final T obj) {
@@ -216,14 +205,10 @@ public class WorkpackController {
     @RequestBody @Valid final WorkpackParamDto workpackParamDto,
     @RequestHeader(name = "Authorization") final String authorization
   ) {
-    final Workpack workpack = this.updateWorkpack(this.workpackService.getWorkpack(workpackParamDto));
+    final Workpack workpack = this.workpackService.update(this.workpackService.getWorkpack(workpackParamDto));
     final Long idPerson = this.tokenService.getUserId(authorization);
     this.journalCreator.edition(workpack, JournalAction.EDITED, idPerson);
     return ResponseEntity.ok(ResponseBase.of(EntityDto.of(workpack)));
-  }
-
-  private Workpack updateWorkpack(final Workpack workpack) {
-    return this.workpackService.update(workpack);
   }
 
   @PatchMapping("/{id}/cancel")
@@ -244,19 +229,24 @@ public class WorkpackController {
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> delete(
-    @PathVariable final Long id,
-    @RequestHeader(name = "Authorization") final String authorization
-  ) {
+  public ResponseEntity<Void> delete(@PathVariable final Long id) {
     final Workpack workpack = this.workpackService.findById(id);
-    final Long idPerson = this.tokenService.getUserId(authorization);
-    this.journalCreator.edition(workpack, JournalAction.REMOVED, idPerson);
-    this.deleteWorkpack(workpack);
+    this.workpackService.delete(workpack);
     return ResponseEntity.ok().build();
   }
 
-  private void deleteWorkpack(final Workpack workpack) {
-    this.workpackService.delete(workpack);
+  @PatchMapping("/end-deliverable-management/{id-deliverable}")
+  public ResponseEntity<ResponseBase<Void>> endDeliverableManagement(
+    @PathVariable("id-deliverable") final Long idDeliverable,
+    @RequestBody final EndDeliverableManagementRequest request
+  ) {
+
+    this.deliverableEndManagement.execute(
+      idDeliverable,
+      request
+    );
+
+    return ResponseEntity.ok(ResponseBase.success());
   }
 
 }

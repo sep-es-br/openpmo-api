@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class StakeholderDto {
+
   private final List<PermissionDto> permissions = new ArrayList<>(0);
   private final List<RoleDto> roles = new ArrayList<>(0);
   private Long idWorkpack;

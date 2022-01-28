@@ -35,11 +35,11 @@ public class CancelBaselineService implements ICancelBaselineService {
   private final IsBaselinedByRepository isBaselinedByRepository;
 
   public CancelBaselineService(
-    final WorkpackRepository workpackRepository,
-    final BaselineRepository baselineRepository,
-    final PersonRepository personRepository,
-    final IsProposedByRepository isProposedByRepository,
-    final IsBaselinedByRepository isBaselinedByRepository
+      final WorkpackRepository workpackRepository,
+      final BaselineRepository baselineRepository,
+      final PersonRepository personRepository,
+      final IsProposedByRepository isProposedByRepository,
+      final IsBaselinedByRepository isBaselinedByRepository
   ) {
     this.workpackRepository = workpackRepository;
     this.baselineRepository = baselineRepository;
@@ -53,14 +53,14 @@ public class CancelBaselineService implements ICancelBaselineService {
     final Baseline baselineCancelled = Baseline.of(request);
 
     this.createBaselinedByRelationship(
-      request,
-      baselineCancelled
+        request,
+        baselineCancelled
     );
 
     this.createProposerRelationship(
-      baselineCancelled,
-      personId,
-      request.getIdWorkpack()
+        baselineCancelled,
+        personId,
+        request.getIdWorkpack()
     );
 
     this.baselineRepository.save(baselineCancelled, 0);
@@ -78,17 +78,16 @@ public class CancelBaselineService implements ICancelBaselineService {
 
   private Workpack findWorkpackById(final SubmitCancellingRequest request) {
     return this.workpackRepository.findByIdWorkpack(request.getIdWorkpack())
-      .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
+        .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
   }
 
   private void createProposerRelationship(final Baseline baselineCancelled, final Long idPerson, final Long idWorkpack) {
     final Optional<IsStakeholderIn> maybeProposer = this.findProposerById(idPerson, idWorkpack);
     final IsProposedBy isProposedBy = new IsProposedBy();
-    if(!maybeProposer.isPresent()) {
+    if (!maybeProposer.isPresent()) {
       final Person person = this.findPersonById(idPerson);
       isProposedBy.fillProposerData(person);
-    }
-    else {
+    } else {
       final IsStakeholderIn proposer = maybeProposer.get();
       isProposedBy.fillProposerData(proposer);
     }
@@ -98,7 +97,7 @@ public class CancelBaselineService implements ICancelBaselineService {
 
   private Person findPersonById(final Long idPerson) {
     return this.personRepository.findById(idPerson)
-      .orElseThrow(() -> new NegocioException(PERSON_NOT_FOUND));
+        .orElseThrow(() -> new NegocioException(PERSON_NOT_FOUND));
   }
 
   private Optional<IsStakeholderIn> findProposerById(final Long personId, final Long idWorkpack) {

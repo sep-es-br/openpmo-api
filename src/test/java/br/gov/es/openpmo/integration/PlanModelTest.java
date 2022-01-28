@@ -13,7 +13,6 @@ import br.gov.es.openpmo.dto.planmodel.PlanModelStoreDto;
 import br.gov.es.openpmo.dto.planmodel.PlanModelUpdateDto;
 import br.gov.es.openpmo.enumerator.GeneralOperatorsEnum;
 import br.gov.es.openpmo.model.filter.LogicOperatorEnum;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.neo4j.ogm.config.Configuration;
@@ -24,6 +23,9 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.ResponseEntity;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.Collections;
 import java.util.List;
@@ -51,8 +53,8 @@ import static java.util.Collections.singletonList;
       office.setName("Office Test PlanModel");
       office.setFullName("Office Test PlanModel ");
       final ResponseEntity<ResponseBase<EntityDto>> response = this.officeController.save(office);
-      Assertions.assertNotNull(response.getBody());
-      Assertions.assertNotNull(response.getBody().getData());
+      assertNotNull(response.getBody());
+      assertNotNull(response.getBody().getData());
       this.idOffice = response.getBody().getData().getId();
     }
     if(this.idFilter == null) {
@@ -71,9 +73,9 @@ import static java.util.Collections.singletonList;
       filter.setRules(singletonList(rule));
 
       final ResponseEntity<ResponseBase<CustomFilterDto>> response = this.filterPlanModelController.save(filter);
-      Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-      Assertions.assertNotNull(response.getBody());
-      Assertions.assertNotNull(response.getBody().getData());
+      assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+      assertNotNull(response.getBody());
+      assertNotNull(response.getBody().getData());
 
       this.idFilter = response.getBody().getData().getId();
     }
@@ -88,9 +90,9 @@ import static java.util.Collections.singletonList;
       Collections.emptySet()
     );
     final ResponseEntity<ResponseBase<EntityDto>> response = this.planModelController.save(planModel);
-    Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-    Assertions.assertNotNull(response.getBody());
-    Assertions.assertNotNull(response.getBody().getData());
+    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+    assertNotNull(response.getBody());
+    assertNotNull(response.getBody().getData());
   }
 
   @Test void shouldUpdatePlanModel() {
@@ -102,16 +104,17 @@ import static java.util.Collections.singletonList;
       Collections.emptySet()
     );
     ResponseEntity<ResponseBase<EntityDto>> response = this.planModelController.save(planModel);
-    Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-    Assertions.assertNotNull(response.getBody());
-    Assertions.assertNotNull(response.getBody().getData());
+    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+    assertNotNull(response.getBody());
+    assertNotNull(response.getBody().getData());
     final PlanModelUpdateDto planModelUpdate = new PlanModelUpdateDto();
     planModelUpdate.setId(response.getBody().getData().getId());
     planModelUpdate.setName("PlanModel updated");
+    planModelUpdate.setIdOffice(this.idOffice);
     response = this.planModelController.update(planModelUpdate);
-    Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-    Assertions.assertNotNull(response.getBody());
-    Assertions.assertNotNull(response.getBody().getData());
+    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+    assertNotNull(response.getBody());
+    assertNotNull(response.getBody().getData());
   }
 
   @Test void shouldDelete() {
@@ -123,11 +126,11 @@ import static java.util.Collections.singletonList;
       Collections.emptySet()
     );
     final ResponseEntity<ResponseBase<EntityDto>> response = this.planModelController.save(planModel);
-    Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-    Assertions.assertNotNull(response.getBody());
-    Assertions.assertNotNull(response.getBody().getData());
+    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+    assertNotNull(response.getBody());
+    assertNotNull(response.getBody().getData());
     final ResponseEntity<Void> responseDelete = this.planModelController.delete(response.getBody().getData().getId());
-    Assertions.assertEquals(HTTP_STATUS_OK, responseDelete.getStatusCodeValue());
+    assertEquals(HTTP_STATUS_OK, responseDelete.getStatusCodeValue());
   }
 
   @Test void shouldListAll() {
@@ -139,15 +142,15 @@ import static java.util.Collections.singletonList;
       Collections.emptySet()
     );
     final ResponseEntity<ResponseBase<EntityDto>> response = this.planModelController.save(planModel);
-    Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
     final ResponseEntity<ResponseBase<List<PlanModelDto>>> responseList = this.planModelController.indexBase(
       this.idOffice,
       null
     );
-    Assertions.assertEquals(HTTP_STATUS_OK, responseList.getStatusCodeValue());
-    Assertions.assertNotNull(responseList.getBody());
-    Assertions.assertNotNull(responseList.getBody().getData());
-    Assertions.assertFalse(responseList.getBody().getData().isEmpty());
+    assertEquals(HTTP_STATUS_OK, responseList.getStatusCodeValue());
+    assertNotNull(responseList.getBody());
+    assertNotNull(responseList.getBody().getData());
+    assertFalse(responseList.getBody().getData().isEmpty());
   }
 
   @Test void shouldListAllUsingCustomFilter() {
@@ -159,15 +162,15 @@ import static java.util.Collections.singletonList;
       Collections.emptySet()
     );
     final ResponseEntity<ResponseBase<EntityDto>> response = this.planModelController.save(planModel);
-    Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
     final ResponseEntity<ResponseBase<List<PlanModelDto>>> responseList = this.planModelController.indexBase(
       this.idOffice,
       this.idFilter
     );
-    Assertions.assertEquals(HTTP_STATUS_OK, responseList.getStatusCodeValue());
-    Assertions.assertNotNull(responseList.getBody());
-    Assertions.assertNotNull(responseList.getBody().getData());
-    Assertions.assertFalse(responseList.getBody().getData().isEmpty());
+    assertEquals(HTTP_STATUS_OK, responseList.getStatusCodeValue());
+    assertNotNull(responseList.getBody());
+    assertNotNull(responseList.getBody().getData());
+    assertFalse(responseList.getBody().getData().isEmpty());
   }
 
   @Test void shouldFindOne() {
@@ -179,14 +182,14 @@ import static java.util.Collections.singletonList;
       Collections.emptySet()
     );
     final ResponseEntity<ResponseBase<EntityDto>> response = this.planModelController.save(planModel);
-    Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-    Assertions.assertNotNull(response.getBody());
-    Assertions.assertNotNull(response.getBody().getData());
+    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
+    assertNotNull(response.getBody());
+    assertNotNull(response.getBody().getData());
     final ResponseEntity<ResponseBase<PlanModelDto>> responseFind = this.planModelController.findById(response.getBody().getData().getId());
-    Assertions.assertEquals(HTTP_STATUS_OK, responseFind.getStatusCodeValue());
-    Assertions.assertNotNull(responseFind.getBody());
-    Assertions.assertNotNull(responseFind.getBody().getData());
-    Assertions.assertEquals("PlanModel Test find", responseFind.getBody().getData().getName());
+    assertEquals(HTTP_STATUS_OK, responseFind.getStatusCodeValue());
+    assertNotNull(responseFind.getBody());
+    assertNotNull(responseFind.getBody().getData());
+    assertEquals("PlanModel Test list", responseFind.getBody().getData().getName());
   }
 
   @TestConfiguration

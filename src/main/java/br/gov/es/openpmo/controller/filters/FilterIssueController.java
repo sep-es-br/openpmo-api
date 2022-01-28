@@ -20,13 +20,14 @@ public class FilterIssueController extends CreateAndUpdateUsingWorkpackModelFilt
     this.customFilterService = customFilterService;
   }
 
-  @Override
-  protected CustomFilterService getCustomFilterService() {
-    return this.customFilterService;
-  }
 
   @Override
   protected CustomFilterEnum getFilter() {
     return CustomFilterEnum.ISSUE;
+  }
+
+  @Override
+  protected CustomFilterService getCustomFilterService() {
+    return this.customFilterService;
   }
 }

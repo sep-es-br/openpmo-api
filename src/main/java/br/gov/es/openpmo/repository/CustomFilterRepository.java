@@ -15,7 +15,7 @@ public interface CustomFilterRepository extends Neo4jRepository<CustomFilter, Lo
 
   List<CustomFilter> findByType(CustomFilterEnum type);
 
-  @Query("MATCH (customFilter:CustomFilter) WHERE id(customFilter)=$idFilter RETURN customFilter, [" +
+  @Query("MATCH (customFilter:CustomFilter) WHERE ID(customFilter)=$idFilter RETURN customFilter, [" +
          "  [ (rules:Rules)-[has:HAS]->(customFilter) | [rules, has] ]," +
          "  [ (customFilter)-[for:FOR]->(workpackModel:WorkpackModel) | [for, workpackModel] ]," +
          "  [ (workpackModel)<-[feat:FEATURES]-(propertyModel:PropertyModel) | [feat, propertyModel] ]," +

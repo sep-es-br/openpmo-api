@@ -63,20 +63,20 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
 
   @Autowired
   public AnotherTimeSubmitBaselineService(
-    final BaselineRepository baselineRepository,
-    final FirstTimeSubmitBaselineService firstTimeSubmitBaselineService,
-    final WorkpackRepository workpackRepository,
-    final IsWorkpackSnapshotOfRepository workpackSnapshotOfRepository,
-    final PropertyRepository propertyRepository,
-    final IsPropertySnapshotOfRepository propertySnapshotOfRepository,
-    final ScheduleRepository scheduleRepository,
-    final IsScheduleSnapshotOfRepository scheduleSnapshotOfRepository,
-    final StepRepository stepRepository,
-    final CostAccountRepository costAccountRepository,
-    final IsCostAccountSnapshotOfRepository costAccountSnapshotOfRepository,
-    final ConsumesRepository consumesRepository,
-    final IsStepSnapshotOfRepository stepSnapshotOfRepository,
-    final BaselineHelper baselineHelper
+      final BaselineRepository baselineRepository,
+      final FirstTimeSubmitBaselineService firstTimeSubmitBaselineService,
+      final WorkpackRepository workpackRepository,
+      final IsWorkpackSnapshotOfRepository workpackSnapshotOfRepository,
+      final PropertyRepository propertyRepository,
+      final IsPropertySnapshotOfRepository propertySnapshotOfRepository,
+      final ScheduleRepository scheduleRepository,
+      final IsScheduleSnapshotOfRepository scheduleSnapshotOfRepository,
+      final StepRepository stepRepository,
+      final CostAccountRepository costAccountRepository,
+      final IsCostAccountSnapshotOfRepository costAccountSnapshotOfRepository,
+      final ConsumesRepository consumesRepository,
+      final IsStepSnapshotOfRepository stepSnapshotOfRepository,
+      final BaselineHelper baselineHelper
   ) {
     this.baselineRepository = baselineRepository;
     this.firstTimeSubmitBaselineService = firstTimeSubmitBaselineService;
@@ -94,12 +94,81 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
     this.baselineHelper = baselineHelper;
   }
 
+  @Override
+  public void submit(
+      final Baseline baseline,
+      final Workpack workpack,
+      final List<UpdateRequest> updates
+  ) {
+    this.checksStructureChanges(baseline, workpack, updates);
+    this.checksNewChanges(baseline, updates);
+    this.checksDeletedChanges(baseline, updates);
+    this.checksChanges(baseline, workpack, updates);
+    this.changeStatusToProposed(baseline);
+  }
+
+  private void checksChanges(
+      final Baseline baseline,
+      final Workpack workpack,
+      final Collection<? extends UpdateRequest> updates
+  ) {
+    final List<UpdateRequest> updateRequests = updates.stream()
+        .filter(AnotherTimeSubmitBaselineService::hasChanges)
+        .collect(Collectors.toList());
+
+    for (final UpdateRequest updateRequest : updateRequests) {
+      final Workpack snapshot = this.getSnapshotWithProperties(baseline, updateRequest);
+
+      if (isIncluded(updateRequest)) {
+        this.updateSnapshotProperties(snapshot, null);
+        this.updateSnapshotSchedule(snapshot, null);
+      } else {
+        final Baseline activeBaseline = this.getActiveBaseline(workpack);
+        this.updateSnapshotProperties(snapshot, activeBaseline);
+        this.updateSnapshotSchedule(snapshot, activeBaseline);
+      }
+    }
+  }
+
   private static boolean hasChanges(final UpdateRequest update) {
     return update.getClassification() == BaselineStatus.CHANGED && !"structure".equals(update.getDescription());
   }
 
+  private void checksDeletedChanges(
+      final Baseline baseline,
+      final Collection<? extends UpdateRequest> updates
+  ) {
+    final List<UpdateRequest> updateRequests = updates.stream()
+        .filter(AnotherTimeSubmitBaselineService::isClassificationDeleted)
+        .collect(Collectors.toList());
+
+    for (final UpdateRequest updateRequest : updateRequests) {
+      if (isIncluded(updateRequest)) {
+        this.getSnapshot(baseline, updateRequest).ifPresent(this.workpackRepository::delete);
+      } else {
+        this.snapshotWorpackIfItHasNoSnapshot(baseline, updateRequest);
+      }
+    }
+  }
+
   private static boolean isClassificationDeleted(final UpdateRequest updateRequest) {
     return updateRequest.getClassification() == BaselineStatus.DELETED;
+  }
+
+  private void checksStructureChanges(
+      final Baseline baseline,
+      final Workpack workpack,
+      final Collection<UpdateRequest> updates
+  ) {
+    final Optional<UpdateRequest> updateRequest = updates.stream()
+        .filter(AnotherTimeSubmitBaselineService::hasStructureChanges)
+        .findFirst();
+
+    if (updateRequest.isPresent() && !isIncluded(updateRequest.get())) {
+      this.snapshotViaActiveBaseline(baseline, workpack);
+    } else {
+      this.firstTimeSubmitBaselineService.submit(baseline, workpack, null);
+    }
   }
 
   private static boolean isIncluded(final UpdateRequest updateRequest) {
@@ -110,89 +179,9 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
     return update.getClassification() == BaselineStatus.CHANGED && "structure".equals(update.getDescription());
   }
 
-  private static boolean isClassificationNew(final UpdateRequest updateRequest) {
-    return updateRequest.getClassification() == BaselineStatus.NEW;
-  }
-
-  private static Set<Property> getProperties(final Workpack workpack) {
-    return Optional.ofNullable(workpack.getProperties()).orElse(Collections.emptySet());
-  }
-
-  @Override
-  public void submit(
-    final Baseline baseline,
-    final Workpack workpack,
-    final List<UpdateRequest> updates
-  ) {
-    this.checksStructureChanges(baseline, workpack, updates);
-    this.checksNewChanges(baseline, updates);
-    this.checksDeletedChanges(baseline, updates);
-    this.checksChanges(baseline, workpack, updates);
-    this.changeStatusToProposed(baseline);
-  }
-
-  private void checksChanges(
-    final Baseline baseline,
-    final Workpack workpack,
-    final Collection<? extends UpdateRequest> updates
-  ) {
-    final List<UpdateRequest> updateRequests = updates.stream()
-      .filter(AnotherTimeSubmitBaselineService::hasChanges)
-      .collect(Collectors.toList());
-
-    for(final UpdateRequest updateRequest : updateRequests) {
-      final Workpack snapshot = this.getSnapshotWithProperties(baseline, updateRequest);
-
-      if(isIncluded(updateRequest)) {
-        this.updateSnapshotProperties(snapshot, null);
-        this.updateSnapshotSchedule(snapshot, null);
-      }
-      else {
-        final Baseline activeBaseline = this.getActiveBaseline(workpack);
-        this.updateSnapshotProperties(snapshot, activeBaseline);
-        this.updateSnapshotSchedule(snapshot, activeBaseline);
-      }
-    }
-  }
-
-  private void checksDeletedChanges(
-    final Baseline baseline,
-    final Collection<? extends UpdateRequest> updates
-  ) {
-    final List<UpdateRequest> updateRequests = updates.stream()
-      .filter(AnotherTimeSubmitBaselineService::isClassificationDeleted)
-      .collect(Collectors.toList());
-
-    for(final UpdateRequest updateRequest : updateRequests) {
-      if(isIncluded(updateRequest)) {
-        this.getSnapshot(baseline, updateRequest).ifPresent(this.workpackRepository::delete);
-      }
-      else {
-        this.snapshotWorpackIfItHasNoSnapshot(baseline, updateRequest);
-      }
-    }
-  }
-
-  private void checksStructureChanges(
-    final Baseline baseline,
-    final Workpack workpack,
-    final Collection<UpdateRequest> updates
-  ) {
-    final Optional<UpdateRequest> updateRequest = updates.stream()
-      .filter(AnotherTimeSubmitBaselineService::hasStructureChanges)
-      .findFirst();
-
-    if(updateRequest.isPresent() && !isIncluded(updateRequest.get())) {
-      this.snapshotViaActiveBaseline(baseline, workpack);
-    }
-    else {
-      this.firstTimeSubmitBaselineService.submit(baseline, workpack, null);
-    }
-  }
-
   private void updateSnapshotSchedule(
-    final Workpack snapshot,
-    final Baseline activeBaseline
+      final Workpack snapshot,
+      final Baseline activeBaseline
   ) {
     this.getSchedule(snapshot).ifPresent(snapshotSchedule -> {
       final Schedule masterSchedule = this.getScheduleMaster(snapshotSchedule);
@@ -207,85 +196,88 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
   }
 
   private Schedule getScheduleToCopy(
-    final Baseline activeBaseline,
-    final Schedule masterSchedule
+      final Baseline activeBaseline,
+      final Schedule masterSchedule
   ) {
     return Optional.ofNullable(activeBaseline)
-      .map(baseline -> this.getSnapshotOfActiveBaseline(masterSchedule, baseline))
-      .orElse(masterSchedule);
+        .map(baseline -> this.getSnapshotOfActiveBaseline(masterSchedule, baseline))
+        .orElse(masterSchedule);
   }
 
   private Schedule getSnapshotOfActiveBaseline(
-    final Schedule masterSchedule,
-    final Baseline baseline
+      final Schedule masterSchedule,
+      final Baseline baseline
   ) {
     return this.scheduleRepository.findSnapshotByMasterIdAndBaselineId(masterSchedule.getId(), baseline.getId())
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.SNAPSHOT_NOT_FOUND));
+        .orElseThrow(() -> new NegocioException(ApplicationMessage.SNAPSHOT_NOT_FOUND));
   }
 
   private void checksNewChanges(
-    final Baseline baseline,
-    final Collection<? extends UpdateRequest> updates
+      final Baseline baseline,
+      final Collection<? extends UpdateRequest> updates
   ) {
     final List<UpdateRequest> updateRequests = updates.stream()
-      .filter(AnotherTimeSubmitBaselineService::isClassificationNew)
-      .collect(Collectors.toList());
+        .filter(AnotherTimeSubmitBaselineService::isClassificationNew)
+        .collect(Collectors.toList());
 
-    for(final UpdateRequest updateRequest : updateRequests) {
-      if(isIncluded(updateRequest)) {
+    for (final UpdateRequest updateRequest : updateRequests) {
+      if (isIncluded(updateRequest)) {
         this.snapshotWorpackIfItHasNoSnapshot(baseline, updateRequest);
-      }
-      else {
+      } else {
         this.getSnapshot(baseline, updateRequest).ifPresent(this.workpackRepository::delete);
       }
     }
   }
 
   private Step getStepToCopy(
-    final Baseline activeBaseline,
-    final Step masterStep
+      final Baseline activeBaseline,
+      final Step masterStep
   ) {
     return Optional.ofNullable(activeBaseline)
-      .map(baseline -> this.getSnapshotOfActiveBaseline(masterStep, baseline))
-      .orElse(masterStep);
+        .map(baseline -> this.getSnapshotOfActiveBaseline(masterStep, baseline))
+        .orElse(masterStep);
   }
 
   private Step getSnapshotOfActiveBaseline(
-    final Step masterStep,
-    final Baseline baseline
+      final Step masterStep,
+      final Baseline baseline
   ) {
     return this.stepRepository.findSnapshotByMasterIdAndBaselineId(masterStep.getId(), baseline.getId())
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.SNAPSHOT_NOT_FOUND));
+        .orElseThrow(() -> new NegocioException(ApplicationMessage.SNAPSHOT_NOT_FOUND));
+  }
+
+  private static boolean isClassificationNew(final UpdateRequest updateRequest) {
+    return updateRequest.getClassification() == BaselineStatus.NEW;
   }
 
   private CostAccount getCostAccountToCopy(
-    final Baseline activeBaseline,
-    final CostAccount masterCostAccount
+      final Baseline activeBaseline,
+      final CostAccount masterCostAccount
   ) {
     return Optional.ofNullable(activeBaseline)
-      .map(baseline -> this.getSnapshotOfActiveBaseline(masterCostAccount, baseline))
-      .orElse(masterCostAccount);
+        .map(baseline -> this.getSnapshotOfActiveBaseline(masterCostAccount, baseline))
+        .orElse(masterCostAccount);
   }
 
   private CostAccount getSnapshotOfActiveBaseline(
-    final CostAccount costAccount,
-    final Baseline baseline
+      final CostAccount costAccount,
+      final Baseline baseline
   ) {
     return this.costAccountRepository.findSnapshotByMasterIdAndBaselineId(costAccount.getId(), baseline.getId())
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.SNAPSHOT_NOT_FOUND));
+        .orElseThrow(() -> new NegocioException(ApplicationMessage.SNAPSHOT_NOT_FOUND));
   }
 
   private Consumes getConsumes(
-    final Step masterStep,
-    final CostAccount masterCostAccount
+      final Step masterStep,
+      final CostAccount masterCostAccount
   ) {
     return this.consumesRepository.findByStepIdAndCostAccountId(masterStep.getId(), masterCostAccount.getId())
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.STEP_DOES_NOT_CONSUME_COST_ACCOUNT_INVALID_STATE_ERROR));
+        .orElseThrow(() -> new NegocioException(ApplicationMessage.STEP_DOES_NOT_CONSUME_COST_ACCOUNT_INVALID_STATE_ERROR));
   }
 
   private CostAccount getCostAccountMaster(final CostAccount costAccount) {
     return this.costAccountRepository.findMasterBySnapshotId(costAccount.getId())
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.COST_ACCOUNT_NOT_FOUND));
+        .orElseThrow(() -> new NegocioException(ApplicationMessage.COST_ACCOUNT_NOT_FOUND));
   }
 
   private List<CostAccount> getCostAccounts(final Step step) {
@@ -294,7 +286,7 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
 
   private Step getStepMaster(final Step step) {
     return this.stepRepository.findMasterBySnapshotId(step.getId())
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.STEP_NOT_FOUND));
+        .orElseThrow(() -> new NegocioException(ApplicationMessage.STEP_NOT_FOUND));
   }
 
   private List<Step> getSteps(final Schedule schedule) {
@@ -306,18 +298,18 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
   }
 
   private void updateSnapshotProperties(
-    final Workpack snapshot,
-    final Baseline activeBaseline
+      final Workpack snapshot,
+      final Baseline activeBaseline
   ) {
-    for(final Property snapshotProperty : snapshot.getProperties()) {
+    for (final Property snapshotProperty : snapshot.getProperties()) {
       this.updateSnapshotProperty(snapshotProperty, activeBaseline);
     }
     this.propertyRepository.saveAll(snapshot.getProperties());
   }
 
   private void updateSnapshotProperty(
-    final Property snapshotProperty,
-    final Baseline activeBaseline
+      final Property snapshotProperty,
+      final Baseline activeBaseline
   ) {
     final Property masterProperty = this.getPropertyMaster(snapshotProperty);
     final Property property = this.getPropertyToCopy(activeBaseline, masterProperty);
@@ -326,34 +318,34 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
   }
 
   private Property getPropertyToCopy(
-    final Baseline activeBaseline,
-    final Property masterProperty
+      final Baseline activeBaseline,
+      final Property masterProperty
   ) {
     return Optional.ofNullable(activeBaseline)
-      .map(baseline -> this.getSnapshotOfActiveBaseline(baseline, masterProperty))
-      .orElse(masterProperty);
+        .map(baseline -> this.getSnapshotOfActiveBaseline(baseline, masterProperty))
+        .orElse(masterProperty);
   }
 
   private Property getSnapshotOfActiveBaseline(
-    final Baseline activeBaseline,
-    final Property masterProperty
+      final Baseline activeBaseline,
+      final Property masterProperty
   ) {
     return this.propertyRepository.findSnapshotByMasterIdAndBaselineId(masterProperty.getId(), activeBaseline.getId())
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.SNAPSHOT_NOT_FOUND));
+        .orElseThrow(() -> new NegocioException(ApplicationMessage.SNAPSHOT_NOT_FOUND));
   }
 
   private Property getPropertyMaster(final Property snapshotProperty) {
     return this.propertyRepository.findMasterBySnapshotId(snapshotProperty.getId())
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.PROPERTY_NOT_FOUND));
+        .orElseThrow(() -> new NegocioException(ApplicationMessage.PROPERTY_NOT_FOUND));
   }
 
   private void updateScheduleSteps(
-    final Schedule schedule,
-    final Baseline activeBaseline
+      final Schedule schedule,
+      final Baseline activeBaseline
   ) {
     final Collection<Step> steps = new ArrayList<>();
 
-    for(final Step snapshotStep : this.getSteps(schedule)) {
+    for (final Step snapshotStep : this.getSteps(schedule)) {
       final Step masterStep = this.getStepMaster(snapshotStep);
       final Step step = this.getStepToCopy(activeBaseline, masterStep);
 
@@ -369,10 +361,10 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
   }
 
   private void snapshotWorpackIfItHasNoSnapshot(
-    final Baseline baseline,
-    final UpdateRequest updateRequest
+      final Baseline baseline,
+      final UpdateRequest updateRequest
   ) {
-    if(this.workpackHasSnapshot(baseline, updateRequest)) {
+    if (this.workpackHasSnapshot(baseline, updateRequest)) {
       return;
     }
 
@@ -380,7 +372,7 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
     final Workpack workpackSnapshot = this.firstTimeSubmitBaselineService.createSnapshot(baseline, workpack);
 
     this.getParentSnapshot(baseline, updateRequest).ifPresent(parentSnapshot ->
-                                                                this.linkChildAndParentSnapshots(workpackSnapshot, parentSnapshot));
+        this.linkChildAndParentSnapshots(workpackSnapshot, parentSnapshot));
   }
 
   private void changeStatusToProposed(final Baseline baseline) {
@@ -390,13 +382,13 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
   }
 
   private void updateStepCostAccounts(
-    final Step snapshotStep,
-    final Step masterStep,
-    final Baseline activeBaseline
+      final Step snapshotStep,
+      final Step masterStep,
+      final Baseline activeBaseline
   ) {
     final Collection<Consumes> consumes = new ArrayList<>();
 
-    for(final CostAccount snapshotCostAccount : this.getCostAccounts(snapshotStep)) {
+    for (final CostAccount snapshotCostAccount : this.getCostAccounts(snapshotStep)) {
       final CostAccount masterCostAccount = this.getCostAccountMaster(snapshotCostAccount);
 
       final Step step = this.getStepToCopy(activeBaseline, masterStep);
@@ -415,55 +407,52 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
   }
 
   private void snapshotProperties(
-    final Workpack workpack,
-    final Workpack workpackSnapshot,
-    final Baseline baseline
+      final Workpack workpack,
+      final Workpack workpackSnapshot,
+      final Baseline baseline
   ) {
-    for(final Property property : getProperties(workpack)) {
+    for (final Property property : getProperties(workpack)) {
       this.snapshotProperty(property, workpackSnapshot, baseline);
     }
   }
 
   private boolean workpackHasSnapshot(
-    final Baseline baseline,
-    final UpdateRequest updateRequest
+      final Baseline baseline,
+      final UpdateRequest updateRequest
   ) {
     return this.baselineRepository.workpackHasSnapshot(updateRequest.getIdWorkpack(), baseline.getId());
   }
 
   private Workpack findWorkpackById(final Long idWorkpack) {
     return this.workpackRepository.findWithPropertiesAndModelAndChildrenById(idWorkpack)
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
+        .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
   }
 
   private Optional<Workpack> getParentSnapshot(
-    final Baseline baseline,
-    final UpdateRequest updateRequest
+      final Baseline baseline,
+      final UpdateRequest updateRequest
   ) {
     return this.baselineRepository.findSnapshotOfParentByChildIdAndBaselineId(updateRequest.getIdWorkpack(), baseline.getId());
   }
 
   private Workpack getSnapshotWithProperties(
-    final Baseline baseline,
-    final UpdateRequest updateRequest
+      final Baseline baseline,
+      final UpdateRequest updateRequest
   ) {
-    return this.baselineRepository.findSnapshotWithChildrenAndPropertiesByWorkpackIdAndBaselineId(
-        updateRequest.getIdWorkpack(),
-        baseline.getId()
-      )
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.SNAPSHOT_NOT_FOUND));
+    return this.baselineRepository.findSnapshotWithChildrenAndPropertiesByWorkpackIdAndBaselineId(updateRequest.getIdWorkpack(), baseline.getId())
+        .orElseThrow(() -> new NegocioException(ApplicationMessage.SNAPSHOT_NOT_FOUND));
   }
 
   private Optional<Workpack> getSnapshot(
-    final Baseline baseline,
-    final UpdateRequest updateRequest
+      final Baseline baseline,
+      final UpdateRequest updateRequest
   ) {
     return this.baselineRepository.findSnapshotByMasterIdAndBaselineId(updateRequest.getIdWorkpack(), baseline.getId());
   }
 
   private void snapshotViaActiveBaseline(
-    final Baseline baseline,
-    final Workpack workpack
+      final Baseline baseline,
+      final Workpack workpack
   ) {
     final Baseline activeBaseline = this.getActiveBaseline(workpack);
     final Workpack snapshot = this.getSnapshot(workpack, activeBaseline);
@@ -478,38 +467,35 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
 
   private Baseline getActiveBaseline(final Workpack workpack) {
     return this.baselineRepository.findActiveBaselineByWorkpackId(workpack.getId())
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_HAS_NO_ACTIVE_BASELINE_INVALID_STATE_ERROR));
+        .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_HAS_NO_ACTIVE_BASELINE_INVALID_STATE_ERROR));
   }
 
   private Workpack getSnapshot(
-    final Workpack workpack,
-    final Baseline activeBaseline
+      final Workpack workpack,
+      final Baseline activeBaseline
   ) {
-    return this.baselineRepository.findSnapshotWithChildrenAndPropertiesByWorkpackIdAndBaselineId(
-        workpack.getId(),
-        activeBaseline.getId()
-      )
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.SNAPSHOT_NOT_FOUND));
+    return this.baselineRepository.findSnapshotWithChildrenAndPropertiesByWorkpackIdAndBaselineId(workpack.getId(), activeBaseline.getId())
+        .orElseThrow(() -> new NegocioException(ApplicationMessage.SNAPSHOT_NOT_FOUND));
   }
 
   private void snapshotChildren(
-    final Baseline baseline,
-    final Workpack snapshot,
-    final Workpack parent
+      final Baseline baseline,
+      final Workpack snapshot,
+      final Workpack parent
   ) {
-    if(snapshot.getChildren() == null) {
+    if (snapshot.getChildren() == null) {
       return;
     }
 
-    for(final Workpack child : snapshot.getChildren()) {
+    for (final Workpack child : snapshot.getChildren()) {
       this.snapshot(baseline, child, parent);
     }
   }
 
   private void snapshot(
-    final Baseline baseline,
-    final Workpack child,
-    final Workpack parent
+      final Baseline baseline,
+      final Workpack child,
+      final Workpack parent
   ) {
     final Workpack newSnapshot = this.baselineHelper.createSnapshot(child, this.workpackRepository);
     this.baselineHelper.createBaselineSnapshotRelationship(baseline, newSnapshot, this.workpackRepository);
@@ -521,33 +507,37 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
   }
 
   private void linkChildAndParentSnapshots(
-    final Workpack childSnapshot,
-    final Workpack parentSnapshot
+      final Workpack childSnapshot,
+      final Workpack parentSnapshot
   ) {
     this.baselineHelper.createIsInRelationship(childSnapshot, parentSnapshot);
   }
 
   private Workpack getWorpackMaster(final Workpack snapshot) {
     return this.baselineRepository.findMasterBySnapshotId(snapshot.getId())
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.SNAPSHOT_NOT_FOUND));
+        .orElseThrow(() -> new NegocioException(ApplicationMessage.SNAPSHOT_NOT_FOUND));
   }
 
   private void createMasterSnapshotRelationship(
-    final Workpack workpack,
-    final Workpack snapshot
+      final Workpack workpack,
+      final Workpack snapshot
   ) {
     this.baselineHelper.createMasterSnapshotRelationship(
-      workpack,
-      snapshot,
-      this.workpackSnapshotOfRepository,
-      IsWorkpackSnapshotOf::new
+        workpack,
+        snapshot,
+        this.workpackSnapshotOfRepository,
+        IsWorkpackSnapshotOf::new
     );
   }
 
+  private static Set<Property> getProperties(final Workpack workpack) {
+    return Optional.ofNullable(workpack.getProperties()).orElse(Collections.emptySet());
+  }
+
   private void createScheduleWorkpackRelationship(
-    final Baseline baseline,
-    final Workpack workpack,
-    final Workpack workpackSnapshot
+      final Baseline baseline,
+      final Workpack workpack,
+      final Workpack workpackSnapshot
   ) {
     this.scheduleRepository.findScheduleByWorkpackId(workpack.getId()).ifPresent(schedule -> {
       final Schedule scheduleSnapshot = this.baselineHelper.createSnapshot(schedule, this.scheduleRepository);
@@ -559,9 +549,9 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
   }
 
   private void snapshotProperty(
-    final Property property,
-    final Workpack workpackSnapshot,
-    final Baseline baseline
+      final Property property,
+      final Workpack workpackSnapshot,
+      final Baseline baseline
   ) {
     final Property snapshot = this.baselineHelper.createSnapshot(property, this.propertyRepository);
     this.baselineHelper.createBaselineSnapshotRelationship(baseline, snapshot, this.propertyRepository);
@@ -571,36 +561,36 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
 
   private Schedule getScheduleMaster(final Schedule snapshot) {
     return this.scheduleRepository.findMasterBySnapshotId(snapshot.getId())
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.SCHEDULE_NOT_FOUND));
+        .orElseThrow(() -> new NegocioException(ApplicationMessage.SCHEDULE_NOT_FOUND));
   }
 
   private void createMasterSnapshotRelationship(
-    final Schedule schedule,
-    final Schedule scheduleSnapshot
+      final Schedule schedule,
+      final Schedule scheduleSnapshot
   ) {
     this.baselineHelper.createMasterSnapshotRelationship(
-      schedule,
-      scheduleSnapshot,
-      this.scheduleSnapshotOfRepository,
-      IsScheduleSnapshotOf::new
+        schedule,
+        scheduleSnapshot,
+        this.scheduleSnapshotOfRepository,
+        IsScheduleSnapshotOf::new
     );
   }
 
   private void createFeatureRelationship(
-    final Workpack workpackSnapshot,
-    final Schedule scheduleSnapshot
+      final Workpack workpackSnapshot,
+      final Schedule scheduleSnapshot
   ) {
     scheduleSnapshot.setWorkpack(workpackSnapshot);
     this.scheduleRepository.save(scheduleSnapshot);
   }
 
   private void createStepScheduleRelationship(
-    final Baseline baseline,
-    final Schedule schedule,
-    final Schedule scheduleSnapshot,
-    final Workpack workpackSnapshot
+      final Baseline baseline,
+      final Schedule schedule,
+      final Schedule scheduleSnapshot,
+      final Workpack workpackSnapshot
   ) {
-    for(final Step step : this.stepRepository.findAllByScheduleId(schedule.getId())) {
+    for (final Step step : this.stepRepository.findAllByScheduleId(schedule.getId())) {
       final Step stepSnapshot = this.baselineHelper.createSnapshot(step, this.stepRepository);
       this.baselineHelper.createBaselineSnapshotRelationship(baseline, stepSnapshot, this.stepRepository);
       this.baselineHelper.createComposesRelationship(scheduleSnapshot, stepSnapshot);
@@ -610,15 +600,15 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
   }
 
   private void createCostAccountStepRelationship(
-    final Baseline baseline,
-    final Step step,
-    final Step stepSnapshot,
-    final Workpack workpackSnapshot
+      final Baseline baseline,
+      final Step step,
+      final Step stepSnapshot,
+      final Workpack workpackSnapshot
   ) {
-    for(final CostAccount costAccount : this.costAccountRepository.findAllByStepId(step.getId())) {
+    for (final CostAccount costAccount : this.costAccountRepository.findAllByStepId(step.getId())) {
       final Optional<CostAccount> account = this.getSnapshot(baseline, costAccount);
 
-      if(account.isPresent()) {
+      if (account.isPresent()) {
         this.firstTimeSubmitBaselineService.createConsumesRelationship(step, costAccount, stepSnapshot, account.get());
         continue;
       }
@@ -636,46 +626,46 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
   }
 
   private void createMasterSnapshotRelationship(
-    final CostAccount costAccount,
-    final CostAccount costAccountSnapshot
+      final CostAccount costAccount,
+      final CostAccount costAccountSnapshot
   ) {
     this.baselineHelper.createMasterSnapshotRelationship(
-      costAccount,
-      costAccountSnapshot,
-      this.costAccountSnapshotOfRepository,
-      IsCostAccountSnapshotOf::new
+        costAccount,
+        costAccountSnapshot,
+        this.costAccountSnapshotOfRepository,
+        IsCostAccountSnapshotOf::new
     );
   }
 
   private void createMasterSnapshotRelationship(
-    final Property property,
-    final Property snapshot
+      final Property property,
+      final Property snapshot
   ) {
     this.baselineHelper.createMasterSnapshotRelationship(
-      property,
-      snapshot,
-      this.propertySnapshotOfRepository,
-      IsPropertySnapshotOf::new
+        property,
+        snapshot,
+        this.propertySnapshotOfRepository,
+        IsPropertySnapshotOf::new
     );
   }
 
   private void createFeatureRelationship(
-    final Workpack workpackSnapshot,
-    final Property propertySnapshot
+      final Workpack workpackSnapshot,
+      final Property propertySnapshot
   ) {
     propertySnapshot.setWorkpack(workpackSnapshot);
     this.propertyRepository.save(propertySnapshot);
   }
 
   private void createMasterSnapshotRelationship(
-    final Step step,
-    final Step stepSnapshot
+      final Step step,
+      final Step stepSnapshot
   ) {
     this.baselineHelper.createMasterSnapshotRelationship(
-      step,
-      stepSnapshot,
-      this.stepSnapshotOfRepository,
-      IsStepSnapshotOf::new
+        step,
+        stepSnapshot,
+        this.stepSnapshotOfRepository,
+        IsStepSnapshotOf::new
     );
   }
 

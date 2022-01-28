@@ -6,9 +6,9 @@ import br.gov.es.openpmo.dto.baselines.SubmitBaselineRequest;
 public interface ISubmitBaselineService {
 
   void submit(
-    Long idBaseline,
-    SubmitBaselineRequest request,
-    Long idPerson
+      Long idBaseline,
+      SubmitBaselineRequest request,
+      Long idPerson
   );
 
 }

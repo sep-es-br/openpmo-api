@@ -17,6 +17,7 @@ import br.gov.es.openpmo.service.baselines.*;
 import br.gov.es.openpmo.utils.ResponseHandler;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -53,18 +54,18 @@ public class BaselineController implements IBaselineController {
 
   @Autowired
   public BaselineController(
-    final IGetAllBaselinesService getAllBaselinesService,
-    final IGetBaselineUpdatesService getBaselineUpdatesService,
-    final ICreateBaselineService createBaselineService,
-    final ISubmitBaselineService submitBaselineService,
-    final IEditBaselineService editBaselineService,
-    final IDeleteBaselineService deleteBaselineService,
-    final ICancelBaselineService cancelBaselineService,
-    final IGetBaselineService getBaselineService,
-    final IGetBaselineAsCCBMemberViewService getBaselineAsCCBMemberViewService,
-    final IEvaluateBaselineService evaluateBaselineService,
-    final ResponseHandler responseHandler,
-    final TokenService tokenService
+      final IGetAllBaselinesService getAllBaselinesService,
+      final IGetBaselineUpdatesService getBaselineUpdatesService,
+      final ICreateBaselineService createBaselineService,
+      final ISubmitBaselineService submitBaselineService,
+      final IEditBaselineService editBaselineService,
+      final IDeleteBaselineService deleteBaselineService,
+      final ICancelBaselineService cancelBaselineService,
+      final IGetBaselineService getBaselineService,
+      final IGetBaselineAsCCBMemberViewService getBaselineAsCCBMemberViewService,
+      final IEvaluateBaselineService evaluateBaselineService,
+      final ResponseHandler responseHandler,
+      final TokenService tokenService
   ) {
     this.getAllBaselinesService = getAllBaselinesService;
     this.getBaselineUpdatesService = getBaselineUpdatesService;
@@ -100,8 +101,8 @@ public class BaselineController implements IBaselineController {
 
   @Override
   public Response<EntityDto> create(
-    final IncludeBaselineRequest request,
-    final String authorization
+      final IncludeBaselineRequest request,
+      @RequestHeader(name = "Authorization") final String authorization
   ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
     final Long idBaseline = this.createBaselineService.create(request, idPerson);
@@ -110,9 +111,9 @@ public class BaselineController implements IBaselineController {
 
   @Override
   public Response<Void> submit(
-    final Long idBaseline,
-    final SubmitBaselineRequest request,
-    final String authorization
+      final Long idBaseline,
+      final SubmitBaselineRequest request,
+      @RequestHeader(name = "Authorization") final String authorization
   ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
     this.submitBaselineService.submit(idBaseline, request, idPerson);
@@ -121,8 +122,8 @@ public class BaselineController implements IBaselineController {
 
   @Override
   public Response<Void> edit(
-    final Long idBaseline,
-    final EditDraftBaselineRequest request
+      final Long idBaseline,
+      final EditDraftBaselineRequest request
   ) {
     this.editBaselineService.edit(idBaseline, request);
     return this.responseHandler.success();
@@ -149,8 +150,8 @@ public class BaselineController implements IBaselineController {
 
   @Override
   public Response<BaselineDetailCCBMemberResponse> getBaselineByIdAsCCBMemberView(
-    final String authorization,
-    final Long idBaseline
+      @RequestHeader(name = "Authorization") final String authorization,
+      final Long idBaseline
   ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
     final BaselineDetailCCBMemberResponse response = this.getBaselineAsCCBMemberViewService.getById(idBaseline, idPerson);
@@ -159,16 +160,16 @@ public class BaselineController implements IBaselineController {
 
   @Override
   public Response<Void> evaluateBaseline(
-    final String authorization,
-    final Long idBaseline,
-    final BaselineEvaluationRequest request
+      @RequestHeader(name = "Authorization") final String authorization,
+      final Long idBaseline,
+      final BaselineEvaluationRequest request
   ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
 
     this.evaluateBaselineService.evaluate(
-      idPerson,
-      idBaseline,
-      request
+        idPerson,
+        idBaseline,
+        request
     );
 
     return this.responseHandler.success();

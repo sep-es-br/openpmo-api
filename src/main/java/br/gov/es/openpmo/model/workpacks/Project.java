@@ -4,11 +4,15 @@ import br.gov.es.openpmo.model.workpacks.models.ProjectModel;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
+import java.time.LocalDate;
+
 @NodeEntity
 public class Project extends Workpack {
 
   @Relationship("IS_INSTANCE_BY")
   private ProjectModel instance;
+  private Boolean completed;
+  private LocalDate endManagementDate;
 
   public ProjectModel getInstance() {
     return this.instance;
@@ -25,4 +29,19 @@ public class Project extends Workpack {
     return project;
   }
 
+  public Boolean getCompleted() {
+    return this.completed;
+  }
+
+  public void setCompleted(final boolean completed) {
+    this.completed = completed;
+  }
+
+  public LocalDate getEndManagementDate() {
+    return this.endManagementDate;
+  }
+
+  public void setEndManagementDate(final LocalDate endManagementDate) {
+    this.endManagementDate = endManagementDate;
+  }
 }

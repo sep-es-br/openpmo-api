@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -34,8 +35,8 @@ public class IssueResponseController {
 
   @PostMapping
   public ResponseEntity<ResponseBase<EntityDto>> create(
-    @RequestBody final IssueResponseCreateDto request,
-    final String authorization
+      @RequestBody final IssueResponseCreateDto request,
+      @RequestHeader(name = "Authorization") final String authorization
   ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
     final EntityDto response = this.service.create(request, idPerson);
@@ -50,8 +51,8 @@ public class IssueResponseController {
 
   @PutMapping
   public ResponseEntity<ResponseBase<IssueResponseDetailDto>> update(
-    @RequestBody final IssueResponseUpdateDto request,
-    final String authorization
+      @RequestBody final IssueResponseUpdateDto request,
+      @RequestHeader(name = "Authorization") final String authorization
   ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
     final IssueResponseDetailDto response = this.service.update(request, idPerson);

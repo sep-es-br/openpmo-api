@@ -17,10 +17,7 @@ public class FindAllCostAccountUsingCustomFilter extends FindAllUsingCustomFilte
   private final PropertyModelRepository propertyModelRepository;
 
   @Autowired
-  public FindAllCostAccountUsingCustomFilter(
-    final CostAccountRepository repository,
-    final PropertyModelRepository propertyModelRepository
-  ) {
+  public FindAllCostAccountUsingCustomFilter(final CostAccountRepository repository, final PropertyModelRepository propertyModelRepository) {
     this.repository = repository;
     this.propertyModelRepository = propertyModelRepository;
   }
@@ -42,7 +39,7 @@ public class FindAllCostAccountUsingCustomFilter extends FindAllUsingCustomFilte
   @Override
   public void buildWhereClause(final CustomFilter filter, final StringBuilder query) {
     query.append("WHERE ID(workpack)=$idWorkpack ")
-      .append("AND belongsTo.linked=false ")
+      .append("AND belongsTo.linked=false " )
       .append(" ");
   }
 

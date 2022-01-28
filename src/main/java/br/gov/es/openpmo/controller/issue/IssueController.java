@@ -11,15 +11,7 @@ import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.issue.IssueService;
 import io.swagger.annotations.Api;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -40,8 +32,8 @@ public class IssueController {
 
   @PostMapping("/create-from-risk")
   public ResponseEntity<ResponseBase<EntityDto>> createIssueFromRisk(
-    @RequestBody final IssueFromRiskDto request,
-    final String authorization
+      @RequestBody final IssueFromRiskDto request,
+      @RequestHeader(name = "Authorization") final String authorization
   ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
     final EntityDto response = this.service.createIssueFromRisk(request.getIdRisk(), idPerson);
@@ -50,8 +42,8 @@ public class IssueController {
 
   @PostMapping
   public ResponseEntity<ResponseBase<EntityDto>> create(
-    @Valid @RequestBody final IssueCreateDto request,
-    final String authorization
+      @Valid @RequestBody final IssueCreateDto request,
+      @RequestHeader(name = "Authorization") final String authorization
   ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
     final EntityDto response = this.service.create(request, idPerson);
@@ -66,9 +58,9 @@ public class IssueController {
 
   @GetMapping
   public ResponseEntity<ResponseBase<List<IssueCardDto>>> findAll(
-    @RequestParam("id-workpack") final Long idWorkpack,
-    @RequestParam(required = false) final Long idRisk,
-    @RequestParam(required = false) final Long idFilter
+      @RequestParam("id-workpack") final Long idWorkpack,
+      @RequestParam(required = false) final Long idRisk,
+      @RequestParam(required = false) final Long idFilter
   ) {
     final List<IssueCardDto> response = this.service.findAllAsCardDto(idWorkpack, idRisk, idFilter);
     return ResponseEntity.ok(ResponseBase.of(response));
@@ -76,8 +68,8 @@ public class IssueController {
 
   @PutMapping
   public ResponseEntity<ResponseBase<IssueDetailDto>> update(
-    @Valid @RequestBody final IssueUpdateDto request,
-    final String authorization
+      @Valid @RequestBody final IssueUpdateDto request,
+      @RequestHeader(name = "Authorization") final String authorization
   ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
     final IssueDetailDto response = this.service.update(request, idPerson);

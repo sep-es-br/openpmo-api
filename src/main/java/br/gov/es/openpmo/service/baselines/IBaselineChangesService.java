@@ -7,9 +7,9 @@ import br.gov.es.openpmo.model.workpacks.Workpack;
 public interface IBaselineChangesService {
 
   boolean hasChanges(
-    final Baseline baseline,
-    final Workpack workpack,
-    final boolean isSnapshot
+      final Baseline baseline,
+      final Workpack workpack,
+      final boolean isSnapshot
   );
 
 }

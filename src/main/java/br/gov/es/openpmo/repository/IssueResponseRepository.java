@@ -13,13 +13,13 @@ import java.util.Optional;
 public interface IssueResponseRepository extends Neo4jRepository<IssueResponse, Long> {
 
   @Query("MATCH (issue:Issue)<-[addresses:ADDRESSES]-(response:IssueResponse) " +
-         "WHERE id(issue)=$idIssue " +
-         "RETURN response")
+      "WHERE id(issue)=$idIssue " +
+      "RETURN response")
   Collection<IssueResponse> findAllByIssueId(Long idIssue);
 
   @Query("match (issue:Issue)<-[addresses:ADDRESSES]-(response:IssueResponse) " +
-         "where id(response)=$issueResponseId " +
-         "return issue ")
+      "where id(response)=$issueResponseId " +
+      "return issue ")
   Optional<Issue> findIssueByIssueResponseId(Long issueResponseId);
 
 }

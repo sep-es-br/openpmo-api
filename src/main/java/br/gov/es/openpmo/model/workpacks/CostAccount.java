@@ -26,7 +26,7 @@ public class CostAccount extends Entity implements Snapshotable<CostAccount> {
   @Relationship(type = "COMPOSES")
   private Baseline baseline;
 
-  @Relationship(type = "FEATURES", direction = INCOMING)
+  @Relationship(type = "FEATURES", direction = Relationship.INCOMING)
   private Set<Property> properties;
 
   @Relationship(type = "APPLIES_TO")
@@ -57,21 +57,6 @@ public class CostAccount extends Entity implements Snapshotable<CostAccount> {
   }
 
   @Override
-  public CostAccount snapshot() {
-    return new CostAccount();
-  }
-
-  @Override
-  public Baseline getBaseline() {
-    return this.baseline;
-  }
-
-  @Override
-  public void setBaseline(final Baseline baseline) {
-    this.baseline = baseline;
-  }
-
-  @Override
   public CategoryEnum getCategory() {
     return this.category;
   }
@@ -84,6 +69,21 @@ public class CostAccount extends Entity implements Snapshotable<CostAccount> {
   @Override
   public boolean hasChanges(final CostAccount other) {
     return false;
+  }
+
+  @Override
+  public CostAccount snapshot() {
+    return new CostAccount();
+  }
+
+  @Override
+  public Baseline getBaseline() {
+    return this.baseline;
+  }
+
+  @Override
+  public void setBaseline(final Baseline baseline) {
+    this.baseline = baseline;
   }
 
   public IsCostAccountSnapshotOf getMaster() {

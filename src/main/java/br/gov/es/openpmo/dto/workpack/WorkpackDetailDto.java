@@ -8,6 +8,7 @@ import br.gov.es.openpmo.dto.workpackmodel.details.WorkpackModelDetailDto;
 import br.gov.es.openpmo.dto.workpackshared.WorkpackSharedDto;
 import br.gov.es.openpmo.model.relations.IsLinkedTo;
 import br.gov.es.openpmo.model.workpacks.Workpack;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -16,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.swagger.annotations.ApiModel;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -34,11 +36,17 @@ import java.util.Set;
 public abstract class WorkpackDetailDto {
 
   private Long id;
+
   private PlanDto plan;
+
   private WorkpackModelDetailDto model;
+
   private Set<WorkpackDetailDto> children;
+
   private List<? extends PropertyDto> properties;
+
   private Set<CostAccountDto> costs;
+
   private List<PermissionDto> permissions;
 
   private WorkpackModelLinkedDto modelLinked;
@@ -58,6 +66,8 @@ public abstract class WorkpackDetailDto {
   private boolean hasActiveBaseline;
   private boolean pendingBaseline;
   private boolean cancelPropose;
+  @JsonFormat(pattern = "dd-MM-yyyy")
+  private LocalDate endManagementDate;
 
   public boolean isHasActiveBaseline() {
     return this.hasActiveBaseline;
@@ -209,5 +219,13 @@ public abstract class WorkpackDetailDto {
 
   public void setCancelPropose(final boolean cancelPropose) {
     this.cancelPropose = cancelPropose;
+  }
+
+  public LocalDate getEndManagementDate() {
+    return this.endManagementDate;
+  }
+
+  public void setEndManagementDate(final LocalDate endManagementDate) {
+    this.endManagementDate = endManagementDate;
   }
 }

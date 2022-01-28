@@ -4,7 +4,7 @@ import br.gov.es.openpmo.dto.ccbmembers.MemberAs;
 import br.gov.es.openpmo.dto.ccbmembers.PersonResponse;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.workpacks.Workpack;
-import br.gov.es.openpmo.scheduler.HasRole;
+import br.gov.es.openpmo.scheduler.updateroles.HasRole;
 import org.neo4j.ogm.annotation.EndNode;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
@@ -82,16 +82,16 @@ public class IsCCBMember implements HasRole {
     return this.role;
   }
 
-  public void setRole(final String role) {
-    this.role = role;
-  }
-
   public String getWorkLocation() {
     return this.workLocation;
   }
 
   public void setWorkLocation(final String workLocation) {
     this.workLocation = workLocation;
+  }
+
+  public void setRole(final String role) {
+    this.role = role;
   }
 
   @Transient

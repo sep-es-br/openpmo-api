@@ -34,4 +34,8 @@ public class ProposedAndCurrentValue {
   public BigDecimal getCurrentValue() {
     return this.currentValue;
   }
+
+  public boolean isNull() {
+    return this.proposedValue == null && this.currentValue == null;
+  }
 }

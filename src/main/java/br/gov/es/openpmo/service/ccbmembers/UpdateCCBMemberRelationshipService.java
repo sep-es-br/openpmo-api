@@ -33,11 +33,11 @@ public class UpdateCCBMemberRelationshipService implements IUpdateCCBMemberRelat
 
   @Autowired
   public UpdateCCBMemberRelationshipService(
-    final IsCCBMemberRepository repository,
-    final IsInContactBookOfRepository isInContactBookOfRepository,
-    final WorkpackService workpackService,
-    final PersonService personService,
-    final OfficeService officeService
+      final IsCCBMemberRepository repository,
+      final IsInContactBookOfRepository isInContactBookOfRepository,
+      final WorkpackService workpackService,
+      final PersonService personService,
+      final OfficeService officeService
   ) {
     this.repository = repository;
     this.isInContactBookOfRepository = isInContactBookOfRepository;
@@ -53,7 +53,7 @@ public class UpdateCCBMemberRelationshipService implements IUpdateCCBMemberRelat
 
     this.deleteAllByPersonIdAndWorkpackId(person, workpack);
 
-    for(final MemberAs memberAs : request.getMemberAs()) {
+    for (final MemberAs memberAs : request.getMemberAs()) {
       this.saveCCBMember(person, workpack, memberAs);
     }
   }
@@ -68,8 +68,8 @@ public class UpdateCCBMemberRelationshipService implements IUpdateCCBMemberRelat
   }
 
   private Person updatePerson(
-    final PersonDto personDto,
-    final Office office
+      final PersonDto personDto,
+      final Office office
   ) {
     final Person person = this.findPersonById(personDto.getId());
     this.updatePersonAndRelationships(person, personDto, office);
@@ -81,26 +81,26 @@ public class UpdateCCBMemberRelationshipService implements IUpdateCCBMemberRelat
   }
 
   private void updatePersonAndRelationships(
-    final Person person,
-    final PersonDto personDto,
-    final Office office
+      final Person person,
+      final PersonDto personDto,
+      final Office office
   ) {
     this.findIsInContactBookOf(person.getId(), office.getId())
-      .ifPresent(inContactBookOf ->
-                   this.updateIsInContactBookOf(inContactBookOf, personDto));
+        .ifPresent(inContactBookOf ->
+            this.updateIsInContactBookOf(inContactBookOf, personDto));
   }
 
   private Optional<IsInContactBookOf> findIsInContactBookOf(
-    final Long idPerson,
-    final Long idOffice
+      final Long idPerson,
+      final Long idOffice
   ) {
     return this.isInContactBookOfRepository
-      .findIsInContactBookOfByPersonIdAndOfficeId(idPerson, idOffice);
+        .findIsInContactBookOfByPersonIdAndOfficeId(idPerson, idOffice);
   }
 
   private void updateIsInContactBookOf(
-    final IsInContactBookOf isInContactBookOf,
-    final PersonDto personDto
+      final IsInContactBookOf isInContactBookOf,
+      final PersonDto personDto
   ) {
     isInContactBookOf.setPhoneNumber(personDto.getPhoneNumber());
     isInContactBookOf.setEmail(personDto.getContactEmail());
@@ -117,8 +117,8 @@ public class UpdateCCBMemberRelationshipService implements IUpdateCCBMemberRelat
   }
 
   private void deleteAllByPersonIdAndWorkpackId(
-    final Person person,
-    final Workpack workpack
+      final Person person,
+      final Workpack workpack
   ) {
     this.repository.deleteAllByPersonIdAndWorkpackId(person.getId(), workpack.getId());
   }

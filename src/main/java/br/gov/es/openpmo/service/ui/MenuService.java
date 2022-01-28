@@ -7,8 +7,8 @@ import br.gov.es.openpmo.dto.menu.WorkpackMenuDto;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.dto.workpack.PropertyDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackDetailDto;
-import br.gov.es.openpmo.dto.workpackmodel.params.properties.PropertyModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.details.WorkpackModelDetailDto;
+import br.gov.es.openpmo.dto.workpackmodel.params.properties.PropertyModelDto;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.office.Office;
@@ -242,7 +242,8 @@ public class MenuService {
     for(final Workpack workpack : workpacks) {
 
       final Set<BelongsTo> workpackBelongsToRelation = workpack.getBelongsTo();
-      final boolean isLinked = workpackBelongsToRelation.stream().anyMatch(belongsTo -> idPlan.equals(belongsTo.getIdPlan()) && belongsTo.getLinked());
+      final boolean isLinked = workpackBelongsToRelation.stream()
+        .anyMatch(belongsTo -> idPlan.equals(belongsTo.getIdPlan()) && Boolean.TRUE.equals(belongsTo.getLinked()));
 
       if(isLinked) {
         final WorkpackModel linkedModel = this.fetchLinkedModel(workpack, idPlan);

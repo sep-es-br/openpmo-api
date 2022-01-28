@@ -35,12 +35,12 @@ public class CCBMemberController implements ICCBMemberController {
 
   @Autowired
   public CCBMemberController(
-    final IGetAllCCBMemberService getAllService,
-    final ICreateCCBMemberRelationshipService createRelationshipService,
-    final IUpdateCCBMemberRelationshipService updateCCBMemberRelationshipService,
-    final IGetByIdCCBMemberService getByIdCCBMemberService,
-    final IDeleteCCBMemberService deleteCCBMemberService,
-    final ResponseHandler controllerHelper
+      final IGetAllCCBMemberService getAllService,
+      final ICreateCCBMemberRelationshipService createRelationshipService,
+      final IUpdateCCBMemberRelationshipService updateCCBMemberRelationshipService,
+      final IGetByIdCCBMemberService getByIdCCBMemberService,
+      final IDeleteCCBMemberService deleteCCBMemberService,
+      final ResponseHandler controllerHelper
   ) {
     this.getAllService = getAllService;
     this.createRelationshipService = createRelationshipService;
@@ -57,9 +57,9 @@ public class CCBMemberController implements ICCBMemberController {
   }
 
   public Response<CCBMemberResponse> getCCBMember(
-    final Long idPerson,
-    final Long idWorkpack,
-    final Long idPlan
+      final Long idPerson,
+      final Long idWorkpack,
+      final Long idPlan
   ) {
     final CCBMemberResponse ccbMemberResponse = this.getByIdCCBMemberService.getById(idPerson, idWorkpack, idPlan);
     return this.controllerHelper.success(ccbMemberResponse);

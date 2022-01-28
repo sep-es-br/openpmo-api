@@ -10,6 +10,7 @@ import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.WorkpackModelRepository;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +30,7 @@ import static org.mockito.Mockito.when;
 
 
 @Tag("unit")
+@DisplayName("Test type of Workpack parent")
 @ExtendWith(MockitoExtension.class)
 class ParentWorkpackTypeVerifierTest {
 
@@ -81,27 +83,31 @@ class ParentWorkpackTypeVerifierTest {
   }
 
   @Test
-  void shouldReturnTrueWhenHasParentTypeOfProject() {
+  @DisplayName("Should return true when match parent type")
+  void shouldReturnTrueWhenHasParentTypeOfProgram() {
     when(this.repository.findByIdWithParents(anyLong())).thenReturn(Optional.of(this.deepTarget));
     final boolean hasParentOfTypeProject = this.verifier.verify(3L, TYPE_NAME_MODEL_PROGRAM::isTypeOf);
-    assertTrue(hasParentOfTypeProject);
+    assertTrue(hasParentOfTypeProject, "Should has parent with type Program");
   }
 
   @Test
+  @DisplayName("Should return false when target not has parent")
   void shouldReturnFalseWhenHasNoParent() {
     when(this.repository.findByIdWithParents(anyLong())).thenReturn(Optional.of(this.root));
     final boolean hasParentOfTypeProject = this.verifier.verify(10L, TYPE_NAME_MODEL_PROGRAM::isTypeOf);
-    assertFalse(hasParentOfTypeProject);
+    assertFalse(hasParentOfTypeProject, "Should not have parent with type Program");
   }
 
   @Test
+  @DisplayName("Should return false when not match parent type")
   void shouldReturnFalseWhenParentTypeNotMatch() {
     when(this.repository.findByIdWithParents(anyLong())).thenReturn(Optional.of(this.targetWithoutParentMatch));
     final boolean hasParentOfTypeProject = this.verifier.verify(6L, TYPE_NAME_MODEL_PROGRAM::isTypeOf);
-    assertFalse(hasParentOfTypeProject);
+    assertFalse(hasParentOfTypeProject, "Should not have parent with type Program");
   }
 
   @Test
+  @DisplayName("Should throw exception when Workpack id is null")
   void shouldThrowExceptionWhenWorkpackIdIsNull() {
     assertThatThrownBy(() -> this.verifier.verify(null, TYPE_NAME_MODEL_PROGRAM::isTypeOf))
       .hasMessage(ApplicationMessage.WORKPACKMODEL_NOT_FOUND)

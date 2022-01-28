@@ -48,13 +48,13 @@ public class IssueService {
   private final JournalCreator journalCreator;
 
   public IssueService(
-    final IssueRepository repository,
-    final IssueResponseRepository issueResponseRepository,
-    final RiskService riskService,
-    final WorkpackService workpackService,
-    final FindAllIssueUsingCustomFilter findAllIssue,
-    final CustomFilterService customFilterService,
-    final JournalCreator journalCreator
+      final IssueRepository repository,
+      final IssueResponseRepository issueResponseRepository,
+      final RiskService riskService,
+      final WorkpackService workpackService,
+      final FindAllIssueUsingCustomFilter findAllIssue,
+      final CustomFilterService customFilterService,
+      final JournalCreator journalCreator
   ) {
     this.repository = repository;
     this.issueResponseRepository = issueResponseRepository;
@@ -66,10 +66,10 @@ public class IssueService {
   }
 
   public List<IssueCardDto> findAllAsCardDto(final Long idWorkpack, final Long idRisk, final Long idFilter) {
-    if(idWorkpack == null) {
+    if (idWorkpack == null) {
       throw new IllegalArgumentException(ID_WORKPACK_NOT_NULL);
     }
-    if(idFilter == null) {
+    if (idFilter == null) {
       return this.findAllAsCardDto(idWorkpack, idRisk);
     }
 
@@ -81,14 +81,14 @@ public class IssueService {
     final List<Issue> issues = this.findAllIssue.execute(customFilter, params);
 
     return issues.stream()
-      .map(IssueCardDto::of)
-      .collect(Collectors.toList());
+        .map(IssueCardDto::of)
+        .collect(Collectors.toList());
   }
 
   private List<IssueCardDto> findAllAsCardDto(final Long idWorkpack, final Long idRisk) {
     return this.repository.findAllAsIssueCardDto(idWorkpack, idRisk).stream()
-      .map(IssueCardDto::of)
-      .collect(Collectors.toList());
+        .map(IssueCardDto::of)
+        .collect(Collectors.toList());
   }
 
   @Transactional
@@ -117,7 +117,7 @@ public class IssueService {
   @Transactional
   public IssueDetailDto update(final IssueUpdateDto request, final Long idPerson) {
     final Issue issue = this.repository.findById(request.getId())
-      .orElseThrow(() -> new RegistroNaoEncontradoException(ISSUE_NOT_FOUND));
+        .orElseThrow(() -> new RegistroNaoEncontradoException(ISSUE_NOT_FOUND));
 
     issue.update(request);
     this.repository.save(issue, 0);
@@ -140,13 +140,13 @@ public class IssueService {
 
   public IssueDetailDto findIssueDetailById(final Long id) {
     return this.repository.findIssueDetailById(id)
-      .map(IssueDetailDto::of)
-      .orElseThrow(() -> new RegistroNaoEncontradoException(ISSUE_NOT_FOUND));
+        .map(IssueDetailDto::of)
+        .orElseThrow(() -> new RegistroNaoEncontradoException(ISSUE_NOT_FOUND));
   }
 
   public Issue findById(final Long issueId) {
     return this.repository.findById(issueId)
-      .orElseThrow(() -> new RegistroNaoEncontradoException(ISSUE_NOT_FOUND));
+        .orElseThrow(() -> new RegistroNaoEncontradoException(ISSUE_NOT_FOUND));
   }
 
 }

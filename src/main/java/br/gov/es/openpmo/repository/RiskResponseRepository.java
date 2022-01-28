@@ -13,13 +13,13 @@ import java.util.Optional;
 public interface RiskResponseRepository extends Neo4jRepository<RiskResponse, Long> {
 
   @Query("MATCH (response:RiskResponse)-[:MITIGATES]->(risk:Risk) " +
-         "WHERE id(risk)=$riskId " +
-         "RETURN response")
+      "WHERE id(risk)=$riskId " +
+      "RETURN response")
   Collection<RiskResponse> findAllByRiskId(Long riskId);
 
   @Query("MATCH (response:RiskResponse)-[:MITIGATES]->(risk:Risk) " +
-         "WHERE id(response)=$riskResponseId " +
-         "RETURN risk")
+      "WHERE id(response)=$riskResponseId " +
+      "RETURN risk")
   Optional<Risk> findRiskByRiskResponseId(Long riskResponseId);
 
 }

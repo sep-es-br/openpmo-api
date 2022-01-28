@@ -7,22 +7,22 @@ import org.neo4j.ogm.annotation.Relationship;
 @NodeEntity
 public class Milestone extends Workpack {
 
-  @Relationship("IS_INSTANCE_BY")
-  private MilestoneModel instance;
+    @Relationship("IS_INSTANCE_BY")
+    private MilestoneModel instance;
 
-  public MilestoneModel getInstance() {
-    return this.instance;
-  }
+    public MilestoneModel getInstance() {
+        return this.instance;
+    }
 
-  public void setInstance(final MilestoneModel instance) {
-    this.instance = instance;
-  }
+    @Override
+    public Workpack snapshot() {
+        final Milestone milestone = new Milestone();
+        //milestone.setInstance(this.instance);
+        return milestone;
+    }
 
-  @Override
-  public Workpack snapshot() {
-    final Milestone milestone = new Milestone();
-    //milestone.setInstance(this.instance);
-    return milestone;
-  }
+    public void setInstance(final MilestoneModel instance) {
+        this.instance = instance;
+    }
 
 }

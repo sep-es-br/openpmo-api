@@ -26,12 +26,12 @@ public class IssueResponseCreateDto {
 
   @JsonCreator
   public IssueResponseCreateDto(
-    final String name,
-    final String plan,
-    final LocalDate date,
-    final IssueResponseStatus status,
-    final Long issueId,
-    final Set<Long> responsible
+      final String name,
+      final String plan,
+      final LocalDate date,
+      final IssueResponseStatus status,
+      final Long issueId,
+      final Set<Long> responsible
   ) {
     this.name = name;
     this.plan = plan;

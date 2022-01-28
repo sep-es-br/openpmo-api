@@ -1,9 +1,7 @@
 package br.gov.es.openpmo.configuration;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonCreator.Mode;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -16,6 +14,7 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
+import org.springframework.format.FormatterRegistry;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -31,29 +30,29 @@ public class WebConfiguration implements WebMvcConfigurer {
     final ObjectMapper mapper = new ObjectMapper();
     mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
     mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    mapper.setSerializationInclusion(Include.NON_NULL);
+    mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     mapper.setDateFormat(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss"));
     mapper.registerModule(new ParameterNamesModule())
-      .registerModule(new Jdk8Module())
-      .registerModule(new JavaTimeModule())
-      .registerModule(new ParameterNamesModule(Mode.PROPERTIES));
+        .registerModule(new Jdk8Module())
+        .registerModule(new JavaTimeModule())
+        .registerModule(new ParameterNamesModule(JsonCreator.Mode.PROPERTIES));
     return new MappingJackson2HttpMessageConverter(mapper);
   }
 
   @Override
   public void addResourceHandlers(final ResourceHandlerRegistry registry) {
-    if(!registry.hasMappingForPattern("/**")) {
-      registry.addResourceHandler("/**").addResourceLocations("classpath:/static/");
+    if (!registry.hasMappingForPattern("/**")) {
+      registry.addResourceHandler("/**")
+          .addResourceLocations("classpath:/static/");
     }
-
-    registry.addResourceHandler("/documentation/**").addResourceLocations("classpath:/documentation/");
+    registry.addResourceHandler("/documentation/**")
+        .addResourceLocations("classpath:/documentation/");
   }
 
   @Override
   public void addCorsMappings(final CorsRegistry registry) {
-    registry.addMapping("/**").allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD", "TRACE",
-                                              "CONNECT"
-    );
+    registry.addMapping("/**")
+        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD", "TRACE", "CONNECT");
   }
 
   @Bean
@@ -61,4 +60,10 @@ public class WebConfiguration implements WebMvcConfigurer {
   public Logger logger() {
     return LoggerFactory.getLogger("br.gov.es.openpmo");
   }
+
+  @Override
+  public void addFormatters(final FormatterRegistry registry) {
+    registry.addConverter(new YearMonthConverter());
+  }
+
 }

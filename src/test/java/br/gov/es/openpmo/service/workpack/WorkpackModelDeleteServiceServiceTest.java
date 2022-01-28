@@ -5,6 +5,7 @@ import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.WorkpackModelRepository;
 import br.gov.es.openpmo.service.properties.PropertyModelService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +23,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @Tag("unit")
+@DisplayName("Test workpack model delete rules")
 @ExtendWith(MockitoExtension.class)
 class WorkpackModelDeleteServiceServiceTest {
 
@@ -44,6 +46,7 @@ class WorkpackModelDeleteServiceServiceTest {
   }
 
   @Test
+  @DisplayName("Should delete workpack without parent")
   void shouldDeleteWorkpackWithoutParent() {
     this.service.delete(this.target, null);
     verify(this.workpackModelRepository, times(1)).deleteCascadeAllNodesRelated(anyLong());
@@ -51,6 +54,7 @@ class WorkpackModelDeleteServiceServiceTest {
   }
 
   @Test
+  @DisplayName("Should delete workpack with one parent")
   void shouldDeleteWorkpackWithOneParent() {
     this.givenWorkpackHasOneParent();
     this.service.delete(this.target, this.parent);
@@ -63,6 +67,7 @@ class WorkpackModelDeleteServiceServiceTest {
   }
 
   @Test
+  @DisplayName("Should delete Workpack with more than one parent")
   void shouldDeleteWorkpackWithMoreThanOneParent() {
     this.givenWorkpackHasMoreThanOneParent();
     this.service.delete(this.target, this.parent);
@@ -79,6 +84,7 @@ class WorkpackModelDeleteServiceServiceTest {
   }
 
   @Test
+  @DisplayName("Should throw exception if Workpack has parent and parent instance is null")
   void shouldThrowExceptionIfWorkpackHasParentAndParentInstanceIsNull() {
     this.givenWorkpackHasOneParent();
     assertThatThrownBy(() -> this.service.delete(this.target, null))
@@ -89,6 +95,7 @@ class WorkpackModelDeleteServiceServiceTest {
   }
 
   @Test
+  @DisplayName("Should throw exception if workpack not has parent and parent instance is not null")
   void shouldThrowExceptionIfWorkpackNotHasParentAndParentInstanceIsNonNull() {
     this.givenWorkpackHasOneParent();
     assertThatThrownBy(() -> this.service.delete(this.target, null))

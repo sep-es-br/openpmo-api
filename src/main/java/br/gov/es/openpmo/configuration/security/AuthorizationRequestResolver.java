@@ -14,10 +14,8 @@ public class AuthorizationRequestResolver implements OAuth2AuthorizationRequestR
 
   private final OAuth2AuthorizationRequestResolver delegatedRequestResolver;
 
-  public AuthorizationRequestResolver(
-    final ClientRegistrationRepository clientRegistrationRepository,
-    final String authorizeUri
-  ) {
+  public AuthorizationRequestResolver(final ClientRegistrationRepository clientRegistrationRepository,
+                                      final String authorizeUri) {
     this.delegatedRequestResolver = new DefaultOAuth2AuthorizationRequestResolver(
       clientRegistrationRepository,
       authorizeUri

@@ -19,11 +19,11 @@ public class UpdateResponse {
 
   @JsonCreator
   public UpdateResponse(
-    final Long idWorkpack,
-    final String icon,
-    final String description,
-    final BaselineStatus classification,
-    final Boolean included
+      final Long idWorkpack,
+      final String icon,
+      final String description,
+      final BaselineStatus classification,
+      final Boolean included
   ) {
     this.idWorkpack = idWorkpack;
     this.icon = icon;

@@ -37,10 +37,10 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
 
   @Autowired
   public EvaluateBaselineService(
-    final BaselineRepository repository,
-    final IsCCBMemberRepository ccbMemberRepository,
-    final IsEvaluatedByRepository evaluatedByRepository,
-    final JournalCreator journalCreator
+      final BaselineRepository repository,
+      final IsCCBMemberRepository ccbMemberRepository,
+      final IsEvaluatedByRepository evaluatedByRepository,
+      final JournalCreator journalCreator
   ) {
     this.repository = repository;
     this.ccbMemberRepository = ccbMemberRepository;
@@ -50,22 +50,22 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
 
   @Override
   public void evaluate(
-    final Long idPerson,
-    final Long idBaseline,
-    final BaselineEvaluationRequest request
+      final Long idPerson,
+      final Long idBaseline,
+      final BaselineEvaluationRequest request
   ) {
     final Baseline baseline = this.findBaselineById(idBaseline);
 
     throwExceptionIfBaselineIsNotProposed(baseline);
 
     this.saveEvaluation(
-      idPerson,
-      idBaseline,
-      request,
-      baseline
+        idPerson,
+        idBaseline,
+        request,
+        baseline
     );
 
-    if(request.getDecision() == REJECTED) {
+    if (request.getDecision() == REJECTED) {
       this.rejectBaseline(baseline);
       this.journalCreator.baseline(baseline, idPerson);
       return;
@@ -73,7 +73,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
 
     final boolean hasEvaluationsRemain = !this.evaluatedByRepository.wasEvaluatedByAllMembers(idBaseline);
 
-    if(hasEvaluationsRemain) {
+    if (hasEvaluationsRemain) {
       return;
     }
 
@@ -82,7 +82,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
   }
 
   private static void throwExceptionIfBaselineIsNotProposed(final Baseline baseline) {
-    if(baseline.getStatus() != PROPOSED) {
+    if (baseline.getStatus() != PROPOSED) {
       throw new NegocioException(BASELINE_IS_NOT_PROPOSED_INVALID_STATE_ERROR);
     }
   }
@@ -101,25 +101,11 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     this.approveBaseline(baseline);
   }
 
-  private void approveBaseline(final Baseline baseline) {
-    baseline.approve();
-    this.saveBaseline(baseline);
-  }
-
-  private void inactivateBaselineIfHasPrevious(final Baseline baseline) {
-    final Optional<Baseline> maybeActiveBaseline = this.repository.findActiveBaselineByWorkpackId(baseline.getIdWorkpack());
-    if(maybeActiveBaseline.isPresent()) {
-      final Baseline activeBaseline = maybeActiveBaseline.get();
-      activeBaseline.setActive(false);
-      this.saveBaseline(activeBaseline);
-    }
-  }
-
   private void saveEvaluation(
-    final Long idPerson,
-    final Long idBaseline,
-    final BaselineEvaluationRequest request,
-    final Baseline baseline
+      final Long idPerson,
+      final Long idBaseline,
+      final BaselineEvaluationRequest request,
+      final Baseline baseline
   ) {
     final List<Person> members = this.findAllActiveMembersOfBaseline(idBaseline);
     final Person member = findCCBMember(idPerson, members);
@@ -128,9 +114,14 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     this.saveEvaluation(evaluation);
   }
 
+  private void approveBaseline(final Baseline baseline) {
+    baseline.approve();
+    this.saveBaseline(baseline);
+  }
+
   private void verifyAlreadyEvaluationOfMember(final Long idPerson, final Long idBaseline) {
     final Optional<IsEvaluatedBy> maybeEvaluation = this.evaluatedByRepository.findEvaluation(idBaseline, idPerson);
-    if(maybeEvaluation.isPresent()) {
+    if (maybeEvaluation.isPresent()) {
       throw new NegocioException(CCB_MEMBER_ALREADY_EVALUATED);
     }
   }
@@ -141,17 +132,26 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
 
   private static Person findCCBMember(final Long idPerson, final Collection<? extends Person> members) {
     return members.stream().filter(person -> person.getId().equals(idPerson))
-      .findFirst()
-      .orElseThrow(() -> new NegocioException(NOT_VALID_CCB_MEMBER));
+        .findFirst()
+        .orElseThrow(() -> new NegocioException(NOT_VALID_CCB_MEMBER));
+  }
+
+  private Baseline findBaselineById(final Long idBaseline) {
+    return this.repository.findById(idBaseline)
+        .orElseThrow(() -> new NegocioException(BASELINE_NOT_FOUND));
   }
 
   private List<Person> findAllActiveMembersOfBaseline(final Long idBaseline) {
     return this.ccbMemberRepository.findAllActiveMembersOfBaseline(idBaseline);
   }
 
-  private Baseline findBaselineById(final Long idBaseline) {
-    return this.repository.findById(idBaseline)
-      .orElseThrow(() -> new NegocioException(BASELINE_NOT_FOUND));
+  private void inactivateBaselineIfHasPrevious(final Baseline baseline) {
+    final Optional<Baseline> maybeActiveBaseline = this.repository.findActiveBaselineByWorkpackId(baseline.getIdWorkpack());
+    if (maybeActiveBaseline.isPresent()) {
+      final Baseline activeBaseline = maybeActiveBaseline.get();
+      activeBaseline.setActive(false);
+      this.saveBaseline(activeBaseline);
+    }
   }
 
 }

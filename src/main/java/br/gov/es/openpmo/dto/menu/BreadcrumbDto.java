@@ -10,7 +10,6 @@ public class BreadcrumbDto {
   private String modelName;
 
   public BreadcrumbDto() {
-
   }
 
   public BreadcrumbDto(

@@ -62,25 +62,19 @@ public class ScheduleService {
     return schedules.stream().map(this::mapsToSheduleDto).collect(Collectors.toList());
   }
 
-  public ScheduleDto mapsToSheduleDto(final Schedule schedule) {
-    final ScheduleDto scheduleDto = this.mapsToScheduleDto(schedule);
-
-    if(has(schedule.getSteps())) {
-      this.setScheduleDtoGroupStep(schedule, scheduleDto);
-    }
-
-    setScheduleDtoWorkpack(schedule, scheduleDto);
-
-    return scheduleDto;
+  private static void sortGroupsByYear(final List<? extends GroupStepDto> groups) {
+    groups.sort(Comparator.comparing(GroupStepDto::getYear));
   }
 
   private <T> ScheduleDto mapsToScheduleDto(final T source) {
     return this.modelMapper.map(source, ScheduleDto.class);
   }
 
-  private void setScheduleDtoGroupStep(final Schedule schedule, final ScheduleDto scheduleDto) {
-    final List<GroupStepDto> groupStep = this.getGroupStep(schedule.getSteps());
-    scheduleDto.setGroupStep(groupStep);
+  private static void addsStepsToMap(final Iterable<? extends Step> steps, final Map<? super Integer, List<Step>> mapsYearToStep) {
+    steps.forEach(step -> {
+      mapsYearToStep.computeIfAbsent(step.getYear(), ifIsMissingStepList -> new ArrayList<>());
+      mapsYearToStep.get(step.getYear()).add(step);
+    });
   }
 
   private List<GroupStepDto> getGroupStep(final Iterable<? extends Step> steps) {
@@ -103,15 +97,12 @@ public class ScheduleService {
     sortGroupsByYear(groups);
   }
 
-  private static void sortGroupsByYear(final List<? extends GroupStepDto> groups) {
-    groups.sort(Comparator.comparing(GroupStepDto::getYear));
+  private static void sortStepsByPeriodFromStart(final List<? extends StepDto> steps) {
+    steps.sort(Comparator.comparing(StepDto::getPeriodFromStart));
   }
 
-  private static void addsStepsToMap(final Iterable<? extends Step> steps, final Map<? super Integer, List<Step>> mapsYearToStep) {
-    steps.forEach(step -> {
-      mapsYearToStep.computeIfAbsent(step.getYear(), ifIsMissingStepList -> new ArrayList<>());
-      mapsYearToStep.get(step.getYear()).add(step);
-    });
+  private static BigDecimal getParts(final long months, final BigDecimal planned) {
+    return planned.divide(new BigDecimal(months), new MathContext(4, RoundingMode.HALF_EVEN));
   }
 
   private void addsStepsFromMapToGroupSteps(
@@ -137,12 +128,29 @@ public class ScheduleService {
     groups.add(group);
   }
 
-  private static void sortStepsByPeriodFromStart(final List<? extends StepDto> steps) {
-    steps.sort(Comparator.comparing(StepDto::getPeriodFromStart));
-  }
-
   private void addsStepsToGroupSteps(final Iterable<? extends Step> stepList, final Collection<? super StepDto> groupSteps) {
     stepList.forEach(step -> this.addsStepToGroupSteps(groupSteps, step));
+  }
+
+  public ScheduleDto mapsToSheduleDto(final Schedule schedule) {
+    final ScheduleDto scheduleDto = this.mapsToScheduleDto(schedule);
+
+    if(has(schedule.getSteps())) {
+      this.setScheduleDtoGroupStep(schedule, scheduleDto);
+    }
+
+    setScheduleDtoWorkpack(schedule, scheduleDto);
+
+    return scheduleDto;
+  }
+
+  private void setScheduleDtoGroupStep(final Schedule schedule, final ScheduleDto scheduleDto) {
+    final List<GroupStepDto> groupStep = this.getGroupStep(schedule.getSteps());
+    scheduleDto.setGroupStep(groupStep);
+  }
+
+  private static <T> boolean has(final T object) {
+    return Objects.nonNull(object);
   }
 
   private void addsStepToGroupSteps(final Collection<? super StepDto> groupSteps, final Step step) {
@@ -175,14 +183,6 @@ public class ScheduleService {
     groupSteps.add(dto);
   }
 
-  private <T> StepDto mapsToStepDto(final T source) {
-    return this.modelMapper.map(source, StepDto.class);
-  }
-
-  private static <T> boolean has(final T object) {
-    return Objects.nonNull(object);
-  }
-
   private static void setScheduleDtoWorkpack(final Schedule schedule, final ScheduleDto scheduleDto) {
     final Workpack workpack = schedule.getWorkpack();
     scheduleDto.setIdWorkpack(getWorkpackId(workpack));
@@ -195,6 +195,41 @@ public class ScheduleService {
   public Schedule save(final ScheduleParamDto scheduleParamDto) {
     this.validatesScheduleParamDto(scheduleParamDto);
     return this.save(this.mapToSchedule(scheduleParamDto));
+  }
+
+  private <T> StepDto mapsToStepDto(final T source) {
+    return this.modelMapper.map(source, StepDto.class);
+  }
+
+  private static void ifEndDateIsBeforeStartDateThrowsException(final ScheduleParamDto scheduleParamDto) {
+    final LocalDate start = getStart(scheduleParamDto);
+    final LocalDate end = getEnd(scheduleParamDto);
+
+    if(end.isBefore(start)) {
+      throw scheduleStartDateAfterEndDateException();
+    }
+  }
+
+  private static LocalDate getStart(final ScheduleParamDto scheduleParamDto) {
+    return scheduleParamDto.getStart();
+  }
+
+  private static LocalDate getEnd(final ScheduleParamDto scheduleParamDto) {
+    return scheduleParamDto.getEnd();
+  }
+
+  private static NegocioException scheduleStartDateAfterEndDateException() {
+    return new NegocioException(SCHEDULE_START_DATE_AFTER_DATE_ERROR);
+  }
+
+  private void ifScheduleAlreadyExistsThrowsException(final ScheduleParamDto scheduleParamDto) {
+    if(!this.scheduleRepository.findAllByWorkpack(scheduleParamDto.getIdWorkpack()).isEmpty()) {
+      throw scheduleAlreadyExistsException();
+    }
+  }
+
+  private static NegocioException scheduleAlreadyExistsException() {
+    return new NegocioException(SCHEDULE_ALREADY_EXISTS);
   }
 
   public Schedule save(final Schedule schedule) {
@@ -224,17 +259,9 @@ public class ScheduleService {
     schedule.setSteps(this.getSteps(scheduleParamDto));
   }
 
-  private Set<Step> getSteps(final ScheduleParamDto scheduleParamDto) {
-    final Set<Step> steps = new HashSet<>();
-
-    final long numberOfMonths = getMonths(scheduleParamDto);
-    final Map<CostAccount, BigDecimal> costsMap = this.getCostsMap(scheduleParamDto, numberOfMonths);
-
-    for(int currentMonth = 0; currentMonth < numberOfMonths; currentMonth++) {
-      addsStepToSteps(costsMap, steps, numberOfMonths, currentMonth, scheduleParamDto);
-    }
-
-    return steps;
+  private void validatesScheduleParamDto(final ScheduleParamDto scheduleParamDto) {
+    this.ifScheduleAlreadyExistsThrowsException(scheduleParamDto);
+    ifEndDateIsBeforeStartDateThrowsException(scheduleParamDto);
   }
 
   private static long getMonths(final ScheduleParamDto scheduleParamDto) {
@@ -295,8 +322,17 @@ public class ScheduleService {
     return mapCostToParts;
   }
 
-  private static BigDecimal getParts(final long months, final BigDecimal planned) {
-    return planned.divide(new BigDecimal(months), new MathContext(4, RoundingMode.HALF_EVEN));
+  private Set<Step> getSteps(final ScheduleParamDto scheduleParamDto) {
+    final Set<Step> steps = new HashSet<>();
+
+    final long numberOfMonths = getMonths(scheduleParamDto);
+    final Map<CostAccount, BigDecimal> costsMap = this.getCostsMap(scheduleParamDto, numberOfMonths);
+
+    for(int currentMonth = 0; currentMonth < numberOfMonths; currentMonth++) {
+      addsStepToSteps(costsMap, steps, numberOfMonths, currentMonth, scheduleParamDto);
+    }
+
+    return steps;
   }
 
   private CostAccount findCostAccountById(final CostSchedule costSchedule) {
@@ -313,42 +349,6 @@ public class ScheduleService {
 
   private Workpack findWorkpackById(final ScheduleParamDto scheduleParamDto) {
     return this.workpackService.findById(scheduleParamDto.getIdWorkpack());
-  }
-
-  private void validatesScheduleParamDto(final ScheduleParamDto scheduleParamDto) {
-    this.ifScheduleAlreadyExistsThrowsException(scheduleParamDto);
-    ifEndDateIsBeforeStartDateThrowsException(scheduleParamDto);
-  }
-
-  private static void ifEndDateIsBeforeStartDateThrowsException(final ScheduleParamDto scheduleParamDto) {
-    final LocalDate start = getStart(scheduleParamDto);
-    final LocalDate end = getEnd(scheduleParamDto);
-
-    if(end.isBefore(start)) {
-      throw scheduleStartDateAfterEndDateException();
-    }
-  }
-
-  private static LocalDate getStart(final ScheduleParamDto scheduleParamDto) {
-    return scheduleParamDto.getStart();
-  }
-
-  private static LocalDate getEnd(final ScheduleParamDto scheduleParamDto) {
-    return scheduleParamDto.getEnd();
-  }
-
-  private static NegocioException scheduleStartDateAfterEndDateException() {
-    return new NegocioException(SCHEDULE_START_DATE_AFTER_DATE_ERROR);
-  }
-
-  private void ifScheduleAlreadyExistsThrowsException(final ScheduleParamDto scheduleParamDto) {
-    if(!this.scheduleRepository.findAllByWorkpack(scheduleParamDto.getIdWorkpack()).isEmpty()) {
-      throw scheduleAlreadyExistsException();
-    }
-  }
-
-  private static NegocioException scheduleAlreadyExistsException() {
-    return new NegocioException(SCHEDULE_ALREADY_EXISTS);
   }
 
   public void delete(final Long idSchedule) {

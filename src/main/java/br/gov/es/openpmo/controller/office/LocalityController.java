@@ -36,14 +36,13 @@ public class LocalityController {
 
   @GetMapping
   public ResponseEntity<ResponseBase<List<LocalityDto>>> indexBase(@RequestParam("id-domain") final Long idDomain) {
-    final List<LocalityDto> localitys = this.localityService.findAll(idDomain).stream()
-      .map(o -> this.modelMapper.map(o, LocalityDto.class)).collect(Collectors.toList());
-    if(localitys.isEmpty()) {
+    final List<LocalityDto> localities = this.localityService.findAll(idDomain).stream()
+      .map(o -> this.modelMapper.map(o, LocalityDto.class))
+      .collect(Collectors.toList());
+    if(localities.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
-    final ResponseBase<List<LocalityDto>> response = new ResponseBase<List<LocalityDto>>().setData(localitys)
-      .setSuccess(true);
-    return ResponseEntity.status(200).body(response);
+    return ResponseEntity.ok(ResponseBase.of(localities));
   }
 
   @GetMapping("/firstLevel")
@@ -51,30 +50,27 @@ public class LocalityController {
     @RequestParam("id-domain") final Long idDomain,
     @RequestParam(required = false) final Long idFilter
   ) {
-    final List<LocalityDto> localitys = this.localityService.findAllFirstLevel(idDomain, idFilter)
+    final List<LocalityDto> localities = this.localityService.findAllFirstLevel(idDomain, idFilter)
       .stream()
       .map(o -> this.modelMapper.map(o, LocalityDto.class))
       .collect(Collectors.toList());
-    if(localitys.isEmpty()) {
+    if(localities.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
-    final ResponseBase<List<LocalityDto>> response = new ResponseBase<List<LocalityDto>>().setData(localitys)
-      .setSuccess(true);
-    return ResponseEntity.status(200).body(response);
+    return ResponseEntity.ok(ResponseBase.of(localities));
   }
 
   @GetMapping("/listProperty")
   public ResponseEntity<ResponseBase<List<LocalityPropertyDto>>> listProperty(
     @RequestParam("id-domain") final Long idDomain
   ) {
-    final List<LocalityPropertyDto> localitys = this.localityService.findAllByDomainProperties(idDomain).stream()
-      .map(o -> this.modelMapper.map(o, LocalityPropertyDto.class)).collect(Collectors.toList());
-    if(localitys.isEmpty()) {
+    final List<LocalityPropertyDto> localities = this.localityService.findAllByDomainProperties(idDomain).stream()
+      .map(locality -> this.modelMapper.map(locality, LocalityPropertyDto.class))
+      .collect(Collectors.toList());
+    if(localities.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
-    final ResponseBase<List<LocalityPropertyDto>> response = new ResponseBase<List<LocalityPropertyDto>>()
-      .setData(localitys).setSuccess(true);
-    return ResponseEntity.status(200).body(response);
+    return ResponseEntity.ok(ResponseBase.of(localities));
   }
 
   @GetMapping("{id}")

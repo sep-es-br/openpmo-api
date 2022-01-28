@@ -33,16 +33,6 @@ public class Integer extends Property<Integer, Long> {
   }
 
   @Override
-  public Baseline getBaseline() {
-    return this.baseline;
-  }
-
-  @Override
-  public void setBaseline(final Baseline baseline) {
-    this.baseline = baseline;
-  }
-
-  @Override
   public CategoryEnum getCategory() {
     return this.category;
   }
@@ -50,12 +40,6 @@ public class Integer extends Property<Integer, Long> {
   @Override
   public void setCategory(final CategoryEnum category) {
     this.category = category;
-  }
-
-  @Override
-  public boolean hasChanges(final Integer other) {
-    return (this.value != null || other.value != null)
-           && (this.value != null && other.value == null || this.value == null || !this.value.equals(other.value));
   }
 
   @Override
@@ -77,23 +61,23 @@ public class Integer extends Property<Integer, Long> {
   }
 
   @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), this.driver);
-  }
-
-  @Override
   public boolean equals(final Object o) {
-    if(this == o) {
+    if (this == o) {
       return true;
     }
-    if(o == null || this.getClass() != o.getClass()) {
+    if (o == null || this.getClass() != o.getClass()) {
       return false;
     }
-    if(!super.equals(o)) {
+    if (!super.equals(o)) {
       return false;
     }
     final Integer integer = (Integer) o;
     return Objects.equals(this.driver, integer.driver);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), this.driver);
   }
 
   @Override
@@ -104,6 +88,22 @@ public class Integer extends Property<Integer, Long> {
   @Override
   public void setWorkpack(final Workpack workpack) {
     this.workpack = workpack;
+  }
+
+  @Override
+  public boolean hasChanges(final Integer other) {
+    return (this.value != null || other.value != null)
+        && (this.value != null && other.value == null || this.value == null || !this.value.equals(other.value));
+  }
+
+  @Override
+  public Baseline getBaseline() {
+    return this.baseline;
+  }
+
+  @Override
+  public void setBaseline(final Baseline baseline) {
+    this.baseline = baseline;
   }
 
 }

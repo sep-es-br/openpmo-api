@@ -21,15 +21,15 @@ import java.util.Set;
 
 @JsonTypeInfo(use = Id.NAME, property = "type")
 @JsonSubTypes({
-  @Type(value = PortfolioModel.class, name = "PortfolioModel"),
-  @Type(value = ProgramModel.class, name = "ProgramModel"),
-  @Type(value = OrganizerModel.class, name = "OrganizerModel"),
-  @Type(value = DeliverableModel.class, name = "DeliverableModel"),
-  @Type(value = ProjectModel.class, name = "ProjectModel"),
-  @Type(value = MilestoneModel.class, name = "MilestoneModel")
+    @Type(value = PortfolioModel.class, name = "PortfolioModel"),
+    @Type(value = ProgramModel.class, name = "ProgramModel"),
+    @Type(value = OrganizerModel.class, name = "OrganizerModel"),
+    @Type(value = DeliverableModel.class, name = "DeliverableModel"),
+    @Type(value = ProjectModel.class, name = "ProjectModel"),
+    @Type(value = MilestoneModel.class, name = "MilestoneModel")
 })
 @ApiModel(subTypes = {PortfolioModel.class, ProgramModel.class, OrganizerModel.class, DeliverableModel.class,
-  ProjectModel.class, MilestoneModel.class}, discriminator = "type", description = "Supertype of all WorkpackModel."
+    ProjectModel.class, MilestoneModel.class}, discriminator = "type", description = "Supertype of all WorkpackModel."
 )
 @NodeEntity
 public class WorkpackModel extends Entity {
@@ -244,35 +244,35 @@ public class WorkpackModel extends Entity {
 
   @Transient
   public void addParent(final Collection<? extends WorkpackModel> parent) {
-    for(final WorkpackModel model : parent) {
+    for (final WorkpackModel model : parent) {
       this.addParent(model);
     }
   }
 
   public boolean containsChild(final WorkpackModel child) {
-    if(this.children == null) return false;
+    if (this.children == null) return false;
     return this.children.contains(child);
   }
 
   public boolean containsParent(final WorkpackModel parent) {
-    if(this.parent == null) return false;
+    if (this.parent == null) return false;
     return this.parent.contains(parent);
   }
 
   @Transient
   public void addParent(final WorkpackModel parent) {
-    if(this.parent == null) this.parent = new HashSet<>();
+    if (this.parent == null) this.parent = new HashSet<>();
     this.parent.add(parent);
-    if(!parent.containsChild(this)) {
+    if (!parent.containsChild(this)) {
       parent.addChildren(this);
     }
   }
 
   @Transient
   public void addChildren(final WorkpackModel child) {
-    if(this.children == null) this.children = new HashSet<>();
+    if (this.children == null) this.children = new HashSet<>();
     this.children.add(child);
-    if(!child.containsParent(this)) {
+    if (!child.containsParent(this)) {
       child.addParent(this);
     }
   }
@@ -287,13 +287,13 @@ public class WorkpackModel extends Entity {
 
   @Transient
   public boolean hasSameType(final WorkpackModel model) {
-    if(model == null) return false;
+    if (model == null) return false;
     return this.getClass().getTypeName().equals(model.getClass().getTypeName());
   }
 
   @Transient
   public boolean hasSameName(final WorkpackModel model) {
-    if(model == null) return false;
+    if (model == null) return false;
     return this.modelName.equals(model.modelName);
   }
 

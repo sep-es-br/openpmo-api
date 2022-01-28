@@ -3,6 +3,7 @@ package br.gov.es.openpmo.dto.process;
 import br.gov.es.openpmo.apis.edocs.response.ProcessHistoryResponse;
 import br.gov.es.openpmo.apis.edocs.response.ProcessResponse;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -16,10 +17,11 @@ import java.util.List;
 import static java.util.Arrays.asList;
 
 @Tag("unit")
+@DisplayName("Test creation of ProcessFromEDocsDto")
 @ExtendWith(MockitoExtension.class)
 class ProcessFromEDocsDtoTest {
 
-  static List<ProcessHistoryResponse> buildHistoryProcess() {
+  private static List<ProcessHistoryResponse> buildHistoryProcess() {
     return asList(
       new ProcessHistoryResponse(LocalDateTime.now().minusDays(10), "name 1", "NM 1"),
       new ProcessHistoryResponse(LocalDateTime.now().minusDays(20), "name 2", "NM 2"),
@@ -29,7 +31,8 @@ class ProcessFromEDocsDtoTest {
   }
 
   @Nested
-  class CreateFromProcessResponse {
+  @DisplayName("Test creation of ProcessFromEDocsDto from ProcessResponse")
+  class CreateFromProcessResponseTest {
 
     private ProcessResponse process;
 
@@ -46,40 +49,66 @@ class ProcessFromEDocsDtoTest {
     }
 
     @Test
+    @DisplayName("Should set process number")
     void shouldSetProcessNumber() {
       final ProcessFromEDocsDto dto = ProcessFromEDocsDto.of(this.process);
-      assertEquals(this.process.getProcessNumber(), dto.getProcessNumber());
+      assertEquals(
+        this.process.getProcessNumber(),
+        dto.getProcessNumber(),
+        "processNumber should be equals"
+      );
 
     }
 
     @Test
+    @DisplayName("Should set subject")
     void shouldSetSubject() {
       final ProcessFromEDocsDto dto = ProcessFromEDocsDto.of(this.process);
-      assertEquals(this.process.getSubject(), dto.getSubject());
+      assertEquals(
+        this.process.getSubject(),
+        dto.getSubject(),
+        "subject should be equals"
+      );
     }
 
     @Test
+    @DisplayName("Should set status")
     void shouldSetStatus() {
       final ProcessFromEDocsDto dto = ProcessFromEDocsDto.of(this.process);
-      assertEquals(this.process.getStatus(), dto.getStatus());
+      assertEquals(
+        this.process.getStatus(),
+        dto.getStatus(),
+        "status should be equals"
+      );
     }
 
     @Test
+    @DisplayName("Should set current organization")
     void shouldSetCurrentOrganization() {
       final ProcessFromEDocsDto dto = ProcessFromEDocsDto.of(this.process);
-      assertEquals(this.process.getCurrentOrganizationAbbreviation(), dto.getCurrentOrganization());
+      assertEquals(
+        this.process.getCurrentOrganizationAbbreviation(),
+        dto.getCurrentOrganization(),
+        "currentOrganization should be equals"
+      );
     }
 
     @Test
+    @DisplayName("Should set length of stay on")
     void shouldSetLengthOfStayOn() {
       final ProcessFromEDocsDto dto = ProcessFromEDocsDto.of(this.process);
-      assertEquals(this.process.lengthOfStayOn(), dto.getLengthOfStayOn());
+      assertEquals(
+        this.process.lengthOfStayOn(),
+        dto.getLengthOfStayOn(),
+        "lengthOfStayOn should be equals"
+      );
     }
 
     @Test
+    @DisplayName("Should set priority")
     void shouldSetPriority() {
       final ProcessFromEDocsDto dto = ProcessFromEDocsDto.of(this.process);
-      assertEquals(this.process.getPriority(), dto.getPriority());
+      assertEquals(this.process.getPriority(), dto.getPriority(), "priority should be equals");
     }
 
   }

@@ -63,11 +63,6 @@ public class TokenService {
     return Jwts.parser().setSigningKey(secretValue).parseClaimsJws(token).getBody();
   }
 
-  public Long getUserId(final String authorization) {
-    final String token = authorization.substring(7);
-    return this.getPersonId(token, TokenType.AUTHENTICATION);
-  }
-
   public Long getPersonId(final String token, final TokenType tokenType) {
     final String secretValue = TokenType.AUTHENTICATION.equals(tokenType) ? this.secret : this.refreshSecret;
 
@@ -77,5 +72,10 @@ public class TokenService {
       .getBody();
 
     return Long.parseLong(claims.getSubject());
+  }
+
+  public Long getUserId(final String authorization) {
+    final String token = authorization.substring(7);
+    return getPersonId(token, TokenType.AUTHENTICATION);
   }
 }

@@ -36,14 +36,14 @@ public class GetFirstTimeBaselineUpdatesService implements IGetFirstTimeBaseline
 
   @Override
   public List<UpdateResponse> getUpdates(final Iterable<? extends Workpack> workpacks, final boolean isSnapshot) {
-    if(workpacks == null) {
+    if (workpacks == null) {
       return Collections.emptyList();
     }
 
     final List<UpdateResponse> updates = new ArrayList<>();
 
-    for(final Workpack workpack : workpacks) {
-      if(workpack.isDeliverable() || workpack.isMilestone()) {
+    for (final Workpack workpack : workpacks) {
+      if (workpack.isDeliverable() || workpack.isMilestone()) {
         Optional.ofNullable(this.getUpdate(workpack, isSnapshot)).ifPresent(updates::add);
       }
       updates.addAll(this.getUpdates(workpack.getChildren(), isSnapshot));
@@ -57,14 +57,13 @@ public class GetFirstTimeBaselineUpdatesService implements IGetFirstTimeBaseline
     UpdateResponse result = null;
     final Workpack master = this.getWorkpack(workpack, isSnapshot);
 
-    if(master != null) {
+    if (master != null) {
       result = new UpdateResponse(
-        master.getId(),
-        getIcon(master),
-        getDescription(master),
-        BaselineStatus.NEW,
-        null
-      );
+          master.getId(),
+          getIcon(master),
+          getDescription(master),
+          BaselineStatus.NEW,
+          null);
     }
 
     return result;
@@ -73,8 +72,8 @@ public class GetFirstTimeBaselineUpdatesService implements IGetFirstTimeBaseline
   @Nullable
   private Workpack getWorkpack(final Workpack workpack, final boolean isSnapshot) {
     return isSnapshot
-      ? this.baselineRepository.findMasterBySnapshotId(workpack.getId()).orElse(null)
-      : workpack;
+        ? this.baselineRepository.findMasterBySnapshotId(workpack.getId()).orElse(null)
+        : workpack;
   }
 
 }

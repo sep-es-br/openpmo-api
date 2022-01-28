@@ -41,7 +41,6 @@ public class PlanModelStoreDto {
     return this.name;
   }
 
-
   public String getFullName() {
     return this.fullName;
   }

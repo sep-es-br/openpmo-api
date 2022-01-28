@@ -10,7 +10,9 @@ import br.gov.es.openpmo.repository.IsCCBMemberRepository;
 import br.gov.es.openpmo.repository.OfficePermissionRepository;
 import br.gov.es.openpmo.repository.PlanPermissionRepository;
 import br.gov.es.openpmo.repository.WorkpackPermissionRepository;
+import br.gov.es.openpmo.scheduler.updateroles.UpdateLocalRolesUsingRemoteRoles;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +33,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @Tag("unit")
+@DisplayName("Test update local roles rules")
 @ExtendWith(MockitoExtension.class)
 class UpdateLocalRolesUsingRemoteRolesTest {
 
@@ -76,6 +79,7 @@ class UpdateLocalRolesUsingRemoteRolesTest {
   }
 
   @Test
+  @DisplayName("Should delete permission")
   void shouldDeletePermission() {
     this.givenPermissionRoleInvalid();
 
@@ -91,7 +95,7 @@ class UpdateLocalRolesUsingRemoteRolesTest {
       UpdateLocalRolesUsingRemoteRolesTest.createPublicAgentRole("role 2"),
       UpdateLocalRolesUsingRemoteRolesTest.createPublicAgentRole("role 3")
     ));
-    when(this.isAuthenticatedByRepository.findAll()).thenReturn(asList(this.authenticatedBy));
+    when(this.isAuthenticatedByRepository.findAll()).thenReturn(singletonList(this.authenticatedBy));
     when(this.authenticatedBy.getGuid()).thenReturn("guid");
     when(this.authenticatedBy.getPerson()).thenReturn(this.person);
     when(this.person.getId()).thenReturn(1L);
@@ -113,6 +117,7 @@ class UpdateLocalRolesUsingRemoteRolesTest {
   }
 
   @Test
+  @DisplayName("Should not delete permissions if valid")
   void shouldNotDeletePermissionsIfValid() {
     this.givenPermissionRoleIsValid();
 
@@ -127,7 +132,7 @@ class UpdateLocalRolesUsingRemoteRolesTest {
       UpdateLocalRolesUsingRemoteRolesTest.createPublicAgentRole("role 2"),
       UpdateLocalRolesUsingRemoteRolesTest.createPublicAgentRole("role 3")
     ));
-    when(this.isAuthenticatedByRepository.findAll()).thenReturn(asList(this.authenticatedBy));
+    when(this.isAuthenticatedByRepository.findAll()).thenReturn(singletonList(this.authenticatedBy));
     when(this.authenticatedBy.getGuid()).thenReturn("guid");
     when(this.authenticatedBy.getPerson()).thenReturn(this.person);
     when(this.person.getId()).thenReturn(1L);

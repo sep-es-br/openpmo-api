@@ -16,14 +16,14 @@ import java.util.List;
 
 @JsonTypeInfo(use = Id.NAME, property = "type")
 @JsonSubTypes({@Type(value = PortfolioModelParamDto.class, name = "PortfolioModel"),
-  @Type(value = ProgramModelParamDto.class, name = "ProgramModel"),
-  @Type(value = OrganizerModelParamDto.class, name = "OrganizerModel"),
-  @Type(value = DeliverableModelParamDto.class, name = "DeliverableModel"),
-  @Type(value = ProjectModelParamDto.class, name = "ProjectModel"),
-  @Type(value = MilestoneModelParamDto.class, name = "MilestoneModel")})
+    @Type(value = ProgramModelParamDto.class, name = "ProgramModel"),
+    @Type(value = OrganizerModelParamDto.class, name = "OrganizerModel"),
+    @Type(value = DeliverableModelParamDto.class, name = "DeliverableModel"),
+    @Type(value = ProjectModelParamDto.class, name = "ProjectModel"),
+    @Type(value = MilestoneModelParamDto.class, name = "MilestoneModel")})
 @ApiModel(subTypes = {PortfolioModelParamDto.class, ProgramModelParamDto.class, OrganizerModelParamDto.class, DeliverableModelParamDto.class,
-  ProjectModelParamDto.class,
-  MilestoneModelParamDto.class}, discriminator = "type", description = "Supertype of all WorkpackModel.")
+    ProjectModelParamDto.class,
+    MilestoneModelParamDto.class}, discriminator = "type", description = "Supertype of all WorkpackModel.")
 public abstract class WorkpackModelParamDto {
 
   private static final String PACKAGE_DTO = "br.gov.es.openpmo.dto.workpackmodel.params";

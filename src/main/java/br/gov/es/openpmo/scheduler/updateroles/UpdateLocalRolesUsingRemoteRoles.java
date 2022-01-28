@@ -1,4 +1,4 @@
-package br.gov.es.openpmo.scheduler;
+package br.gov.es.openpmo.scheduler.updateroles;
 
 import br.gov.es.openpmo.apis.acessocidadao.AcessoCidadaoApi;
 import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentRoleResponse;

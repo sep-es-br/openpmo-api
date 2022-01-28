@@ -1,6 +1,5 @@
 package br.gov.es.openpmo.dto.baselines.ccbmemberview;
 
-import br.gov.es.openpmo.service.baselines.calculators.StepCollectedData;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.math.BigDecimal;
@@ -41,40 +40,13 @@ public class ScopeDetailItem {
     this.costCurrent = stepCollectedData.cost.getCurrentValue();
     this.costProposed = stepCollectedData.cost.getProposedValue();
     this.unitName = unitName;
-    this.calculateUnitCost();
+    this.unitCost = new UnitCostCalculator(
+      this.costCurrent,
+      this.currentValue,
+      this.costProposed,
+      this.proposedValue
+    ).calculate();
     this.calculateVariation();
-  }
-
-  private void calculateUnitCost() {
-
-    if(this.notHasCurrentAndProposedValueToCalculateUnitCost()) {
-      this.unitCost = BigDecimal.ONE;
-      return;
-    }
-
-    if(this.costCurrent == null) {
-      if(this.currentValue == null) {
-        this.unitCost = this.costProposed.divide(this.proposedValue, 6, RoundingMode.HALF_UP);
-      }
-      else {
-        this.unitCost = this.costProposed.divide(this.currentValue, 6, RoundingMode.HALF_UP);
-      }
-      return;
-    }
-
-    this.unitCost = this.costCurrent.divide(this.currentValue, 6, RoundingMode.HALF_UP);
-  }
-
-  private boolean notHasCurrentAndProposedValueToCalculateUnitCost() {
-    return this.hasCurrentValue() && this.hasProposedValue();
-  }
-
-  private boolean hasCurrentValue() {
-    return this.costCurrent != null && this.costCurrent.compareTo(BigDecimal.ZERO) == 0;
-  }
-
-  private boolean hasProposedValue() {
-    return this.costProposed != null && this.costProposed.compareTo(BigDecimal.ZERO) == 0;
   }
 
   private void calculateVariation() {

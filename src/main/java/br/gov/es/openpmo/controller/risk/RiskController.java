@@ -11,15 +11,7 @@ import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.risk.RiskService;
 import io.swagger.annotations.Api;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -40,8 +32,8 @@ public class RiskController {
 
   @GetMapping
   public ResponseEntity<ResponseBase<List<RiskCardDto>>> findAll(
-    @RequestParam("id-workpack") final Long idWorkpack,
-    @RequestParam(required = false) final Long idFilter
+      @RequestParam("id-workpack") final Long idWorkpack,
+      @RequestParam(required = false) final Long idFilter
   ) {
     final List<RiskCardDto> risks = this.service.findAllAsCardDto(idWorkpack, idFilter);
     final ResponseBase<List<RiskCardDto>> response = ResponseBase.of(risks);
@@ -50,7 +42,7 @@ public class RiskController {
 
   @GetMapping("/{idRisk}")
   public ResponseEntity<ResponseBase<RiskDetailDto>> findById(
-    @PathVariable final Long idRisk
+      @PathVariable final Long idRisk
   ) {
     final RiskDetailDto risks = this.service.findByIdAsRiskDetail(idRisk);
     final ResponseBase<RiskDetailDto> response = ResponseBase.of(risks);
@@ -59,8 +51,8 @@ public class RiskController {
 
   @PostMapping
   public ResponseEntity<ResponseBase<EntityDto>> create(
-    @Valid @RequestBody final RiskCreateDto request,
-    final String authorization
+      @Valid @RequestBody final RiskCreateDto request,
+      @RequestHeader(name = "Authorization") final String authorization
   ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
     final Risk risk = this.service.create(request, idPerson);
@@ -70,8 +62,8 @@ public class RiskController {
 
   @PutMapping
   public ResponseEntity<ResponseBase<RiskDetailDto>> update(
-    @Valid @RequestBody final RiskUpdateDto request,
-    final String authorization
+      @Valid @RequestBody final RiskUpdateDto request,
+      @RequestHeader(name = "Authorization") final String authorization
   ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
     final RiskDetailDto risk = this.service.update(request, idPerson);

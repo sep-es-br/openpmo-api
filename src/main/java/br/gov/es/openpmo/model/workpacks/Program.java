@@ -9,6 +9,7 @@ public class Program extends Workpack {
 
   @Relationship("IS_INSTANCE_BY")
   private ProgramModel instance;
+  private Boolean completed;
 
   public ProgramModel getInstance() {
     return this.instance;
@@ -25,4 +26,11 @@ public class Program extends Workpack {
     return program;
   }
 
+  public Boolean getCompleted() {
+    return this.completed;
+  }
+
+  public void setCompleted(final boolean completed) {
+    this.completed = completed;
+  }
 }

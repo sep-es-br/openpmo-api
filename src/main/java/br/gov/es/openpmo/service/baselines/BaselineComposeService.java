@@ -13,7 +13,7 @@ public class BaselineComposeService implements IBaselineComposeService {
 
   @Autowired
   public BaselineComposeService(
-    final BaselineRepository baselineRepository
+      final BaselineRepository baselineRepository
   ) {
     this.baselineRepository = baselineRepository;
   }

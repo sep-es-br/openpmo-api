@@ -1,6 +1,12 @@
 package br.gov.es.openpmo.service.workpack;
 
-import br.gov.es.openpmo.dto.workpackmodel.*;
+import br.gov.es.openpmo.dto.workpackmodel.DeliverableModelDto;
+import br.gov.es.openpmo.dto.workpackmodel.MilestoneModelDto;
+import br.gov.es.openpmo.dto.workpackmodel.OrganizerModelDto;
+import br.gov.es.openpmo.dto.workpackmodel.PortfolioModelDto;
+import br.gov.es.openpmo.dto.workpackmodel.ProgramModelDto;
+import br.gov.es.openpmo.dto.workpackmodel.ProjectModelDto;
+import br.gov.es.openpmo.dto.workpackmodel.WorkpackModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.details.DeliverableModelDetailDto;
 import br.gov.es.openpmo.dto.workpackmodel.details.MilestoneModelDetailDto;
 import br.gov.es.openpmo.dto.workpackmodel.details.OrganizerModelDetailDto;
@@ -138,15 +144,6 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
         .filter(GroupModel.class::isInstance)
         .collect(Collectors.toSet()))
       .orElse(new HashSet<>());
-  }
-
-  private static void ifNotMilestoneDeliverableProgramWorkpackThrowException(
-    final WorkpackModelParamDto workpackModelParamDto,
-    final boolean isChildFromProgramModel
-  ) {
-    if(workpackModelParamDto.hasNoParent() || !isChildFromProgramModel) {
-      throw new NegocioException(WORKPACK_MODEL_MILESTONE_DELIVERABLE_PROGRAM_ERROR);
-    }
   }
 
   public WorkpackModel save(final WorkpackModel workpackModel, final Long idParent) {
@@ -356,7 +353,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
     }
   }
 
-  private boolean hasWorkpackInstanceRelationship(final WorkpackModel workpackModel) {
+  private static boolean hasWorkpackInstanceRelationship(final WorkpackModel workpackModel) {
     switch(workpackModel.getClass().getTypeName()) {
       case TYPE_NAME_MODEL_PORTFOLIO:
         final PortfolioModel portfolioModel = (PortfolioModel) workpackModel;
@@ -429,6 +426,15 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
         WorkpackModelInstanceType.TYPE_NAME_MODEL_PROGRAM::isTypeOf
       );
       ifNotMilestoneDeliverableProgramWorkpackThrowException(workpackModelParamDto, isChildFromProgramModel);
+    }
+  }
+
+  private static void ifNotMilestoneDeliverableProgramWorkpackThrowException(
+    final WorkpackModelParamDto workpackModelParamDto,
+    final boolean isChildFromProgramModel
+  ) {
+    if(workpackModelParamDto.hasNoParent() || !isChildFromProgramModel) {
+      throw new NegocioException(WORKPACK_MODEL_MILESTONE_DELIVERABLE_PROGRAM_ERROR);
     }
   }
 

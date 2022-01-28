@@ -47,5 +47,4 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
   public SecurityFilter securityFilter() {
     return new SecurityFilter(this.tokenService);
   }
-
 }

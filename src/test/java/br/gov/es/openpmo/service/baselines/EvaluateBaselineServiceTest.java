@@ -12,6 +12,7 @@ import br.gov.es.openpmo.repository.IsEvaluatedByRepository;
 import br.gov.es.openpmo.service.journals.JournalCreator;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -23,16 +24,20 @@ import java.util.Optional;
 
 import static br.gov.es.openpmo.model.baselines.Decision.APPROVED;
 import static br.gov.es.openpmo.model.baselines.Decision.REJECTED;
-import static br.gov.es.openpmo.service.baselines.EvaluateBaselineServiceTest.BaselineApprove.*;
 import static br.gov.es.openpmo.utils.ApplicationMessage.NOT_VALID_CCB_MEMBER;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.isA;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @Tag("unit")
+@DisplayName("Test evaluation of baseline")
 @ExtendWith(MockitoExtension.class)
 class EvaluateBaselineServiceTest {
 
@@ -54,14 +59,15 @@ class EvaluateBaselineServiceTest {
   @BeforeEach
   void setUp() {
     this.service = new EvaluateBaselineService(
-        this.repository,
-        this.ccbMemberRepository,
-        this.evaluatedByRepository,
-        this.journalCreator
+      this.repository,
+      this.ccbMemberRepository,
+      this.evaluatedByRepository,
+      this.journalCreator
     );
   }
 
   @Test
+  @DisplayName("Should throw exception if baseline is not proposed")
   void shouldThrowExceptionIfBaselineIsNotProposed() {
     this.givenBaselineIsDraft();
 
@@ -82,6 +88,7 @@ class EvaluateBaselineServiceTest {
   }
 
   @Test
+  @DisplayName("Should not evaluate when user is not ccb member")
   void shouldNotEvaluateWhenNonCCBMember() {
     final BaselineEvaluationRequest request = new BaselineEvaluationRequest("", APPROVED);
 
@@ -105,14 +112,16 @@ class EvaluateBaselineServiceTest {
       this.member1));
   }
 
-  @Nested class BaselineApprove {
+  @Nested
+  @DisplayName("Test approve baseline")
+  class BaselineApproveTest {
 
     static final long ID_MEMBER = 1L;
     static final long ID_BASELINE = 2L;
     static final long ID_WORKPACK = 3L;
 
-
     @Test
+    @DisplayName("Should evaluate baseline with pending evaluations")
     void shouldEvaluateBaselineWithPendingEvaluations() {
 
       final BaselineEvaluationRequest request = new BaselineEvaluationRequest("", APPROVED);
@@ -139,6 +148,7 @@ class EvaluateBaselineServiceTest {
     }
 
     @Test
+    @DisplayName("Should only update status when not has previous baseline")
     void shouldOnlyUpdateStatusWhenNotHasPreviousBaseline() {
       this.givenValidBaselineAndCCBMember();
       this.givenBaselineWasEvaluatedByAllMembers();
@@ -185,6 +195,7 @@ class EvaluateBaselineServiceTest {
     }
 
     @Test
+    @DisplayName("Should not update status when remain evaluations")
     void shouldNotUpdateStatusWhenRemainEvaluations() {
       this.givenValidBaselineAndCCBMember();
       this.givenBaselineHasRemainEvaluation();
@@ -209,6 +220,7 @@ class EvaluateBaselineServiceTest {
     }
 
     @Test
+    @DisplayName("Should update baseline status if is last evaluation")
     void shouldUpdateBaselineStatusIfIsLastEvaluation() {
 
       this.givenValidBaselineAndCCBMember();
@@ -236,13 +248,18 @@ class EvaluateBaselineServiceTest {
       doNothing().when(EvaluateBaselineServiceTest.this.activeBaseline).setActive(false);
       when(EvaluateBaselineServiceTest.this.repository.save(isA(Baseline.class), anyInt())).thenReturn(null);
     }
-
-
   }
 
-  @Nested class BaselineReject {
+  @Nested
+  @DisplayName("Test rejection of baseline")
+  class BaselineRejectTest {
+
+    static final long ID_MEMBER = 1L;
+    static final long ID_BASELINE = 2L;
+    static final long ID_WORKPACK = 3L;
 
     @Test
+    @DisplayName("Should reject baseline")
     void shouldRejectBaseline() {
       final BaselineEvaluationRequest request = new BaselineEvaluationRequest("", REJECTED);
 
@@ -273,7 +290,6 @@ class EvaluateBaselineServiceTest {
         EvaluateBaselineServiceTest.this.member2
       ));
     }
-
   }
 
 

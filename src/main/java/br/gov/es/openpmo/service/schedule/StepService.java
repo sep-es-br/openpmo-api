@@ -160,24 +160,12 @@ public class StepService {
     return isSameStartYear(step, schedule) && isSameStartMonth(step, schedule);
   }
 
-  private static boolean isSameStartYear(final Step step, final Schedule schedule) {
-    return getPeriodFromStart(step).getYear() == getStart(schedule).getYear();
+  private static void setStart(final Schedule schedule, final LocalDate periodFromStart) {
+    schedule.setStart(periodFromStart);
   }
 
   private static LocalDate getPeriodFromStart(final Step step) {
     return step.getPeriodFromStart();
-  }
-
-  private static LocalDate getStart(final Schedule schedule) {
-    return schedule.getStart();
-  }
-
-  private static boolean isSameStartMonth(final Step step, final Schedule schedule) {
-    return getPeriodFromStart(step).getMonthValue() == getStart(schedule).getMonthValue();
-  }
-
-  private static void setStart(final Schedule schedule, final LocalDate periodFromStart) {
-    schedule.setStart(periodFromStart);
   }
 
   private static void setEnd(final Schedule schedule, final LocalDate periodFromStart) {
@@ -186,6 +174,18 @@ public class StepService {
 
   private void saveSchedule(final Schedule schedule) {
     this.scheduleRepository.save(schedule);
+  }
+
+  private static boolean isSameStartYear(final Step step, final Schedule schedule) {
+    return getPeriodFromStart(step).getYear() == getStart(schedule).getYear();
+  }
+
+  private static boolean isSameStartMonth(final Step step, final Schedule schedule) {
+    return getPeriodFromStart(step).getMonthValue() == getStart(schedule).getMonthValue();
+  }
+
+  private static LocalDate getStart(final Schedule schedule) {
+    return schedule.getStart();
   }
 
   public StepDto mapToStepDto(final Step step) {
@@ -343,8 +343,36 @@ public class StepService {
     return step;
   }
 
+  private static <T> boolean isNonNun(final T obj) {
+    return Objects.nonNull(obj);
+  }
+
   private static Set<Consumes> getConsumes(final Step step) {
     return step.getConsumes();
+  }
+
+  private void deleteAllConsumes(final Iterable<? extends Consumes> consumesDelete) {
+    this.consumesRepository.deleteAll(consumesDelete);
+  }
+
+  private CostAccount findCostAccountById(final Long idCostAccount) {
+    return this.costAccountService.findById(idCostAccount);
+  }
+
+  private static void setScheduleStart(final Schedule schedule, final Step stepUpdate) {
+    schedule.setStart(getPeriodFromStart(stepUpdate));
+  }
+
+  private static LocalDate getEnd(final Schedule schedule) {
+    return schedule.getEnd();
+  }
+
+  private static void setScheduleEnd(final Schedule schedule, final Step stepUpdate) {
+    schedule.setEnd(getPeriodFromStart(stepUpdate));
+  }
+
+  public Step save(final Step step) {
+    return this.stepRepository.save(step);
   }
 
   private <T> Step mapsToStep(final T source) {
@@ -384,40 +412,12 @@ public class StepService {
     return this.findCostAccountById(consumesParamDto.getIdCostAccount());
   }
 
-  private CostAccount findCostAccountById(final Long idCostAccount) {
-    return this.costAccountService.findById(idCostAccount);
-  }
-
   private static BigDecimal getActualCost(final ConsumesParamDto consumesParamDto) {
     return consumesParamDto.getActualCost();
   }
 
   private static BigDecimal getPlannedCost(final ConsumesParamDto consumesParamDto) {
     return consumesParamDto.getPlannedCost();
-  }
-
-  private static <T> boolean isNonNun(final T obj) {
-    return Objects.nonNull(obj);
-  }
-
-  private void deleteAllConsumes(final Iterable<? extends Consumes> consumesDelete) {
-    this.consumesRepository.deleteAll(consumesDelete);
-  }
-
-  private static void setScheduleStart(final Schedule schedule, final Step stepUpdate) {
-    schedule.setStart(getPeriodFromStart(stepUpdate));
-  }
-
-  private static LocalDate getEnd(final Schedule schedule) {
-    return schedule.getEnd();
-  }
-
-  private static void setScheduleEnd(final Schedule schedule, final Step stepUpdate) {
-    schedule.setEnd(getPeriodFromStart(stepUpdate));
-  }
-
-  public Step save(final Step step) {
-    return this.stepRepository.save(step);
   }
 
 }

@@ -39,4 +39,5 @@ public class DomainUpdateDto {
   public void setFullName(final String fullName) {
     this.fullName = fullName;
   }
+
 }

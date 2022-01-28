@@ -1,0 +1,3131 @@
+swagger: '2.0'
+info:
+  description: >-
+    Sugestão de documentação para ser utilizada como base para o desenvolvimento
+    da API do projeto OPEN PMO da SEP-ES. 
+  version: 1.0.0
+  title: Open PMO Api
+  termsOfService: 'http://www.totemti.com.br/'
+  contact:
+    email: atendimento@totemti.com.br
+host: localhost
+basePath: /openPmo
+tags:
+  - name: menuController
+    description: Menus
+  - name: officeController
+    description: Everything about your offices
+  - name: officePermissionController
+    description: Access to offices permissions
+  - name: planController
+    description: Everything about your plans
+  - name: workpackController
+    description: Everything about your workpack
+  - name: workpackPermissionController
+    description: Everything about your workpack permissions
+  - name: planModelController
+    description: Everything about your strategies
+  - name: workpackModelController
+    description: Everything about your workpack model
+  - name: measureUnitController
+    description: Everything about your measure Units
+  - name: domainController
+    description: Everything about your domains
+  - name: localityController
+    description: Everything about your domains
+  - name: costAccountConroller
+    description: Everything about your cost
+  - name: scheduleController
+    description: Everything about your schedule
+  - name: organizationController
+    description: Everything about your orgnaizations
+  - name: planPermissionController
+    description: Everything about your plans permissions
+  - name: personController
+    description: Everything about your person
+schemes:
+  - https
+  - http
+paths:
+  /menus/office:
+    get:
+      tags:
+        - menuController
+      summary: Get menu office
+      description: ''
+      operationId: getMenuOffice
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Ok
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/MenuOfficeDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+  /menus/portifolio:
+    get:
+      tags:
+        - menuController
+      summary: Get menu portfolio
+      description: ''
+      operationId: getMenuPortfolio
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Ok
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/MenuPortfolioDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+  /offices:
+    get:
+      tags:
+        - officeController
+      summary: Get all office
+      description: ''
+      operationId: getAllOffice
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Ok
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/OfficeDto'
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+    post:
+      tags:
+        - officeController
+      summary: Add a new office
+      description: ''
+      operationId: addOffice
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/OfficeParamDto'
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/EntityDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+    put:
+      tags:
+        - officeController
+      summary: Update an office
+      description: ''
+      operationId: updateOffice
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/OfficeParamDto'
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error          
+  '/offices/{id}':
+    get:
+      tags:
+        - officeController
+      summary: Get office
+      description: ''
+      operationId: getOffice
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/OfficeDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+    
+    delete:
+      tags:
+        - officeController
+      summary: Delete an office
+      description: ''
+      operationId: deleteOffice
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Invalid input
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+  /office-permissions:
+    get:
+      tags:
+        - officePermissionController
+      summary: Get all office permissions
+      description: ''
+      operationId: getAllPermissionOffice
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: id
+          description: id office
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/OfficePermissionDto'
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+    post:
+      tags:
+        - officePermissionController
+      summary: Add a new office permissions
+      description: ''
+      operationId: postPermissionOffice
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/OfficePermissionParamDto'
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/EntityDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+    put:
+      tags:
+        - officePermissionController
+      summary: Update an office
+      description: ''
+      operationId: officePermissionUpdate
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/OfficePermissionParamDto'
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error          
+  '/office-permissions/{id}':
+    get:
+      tags:
+        - officePermissionController
+      summary: Get office permissions
+      description: ''
+      operationId: getOfficePermisson
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/OfficePermissionDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+
+    delete:
+      tags:
+        - officePermissionController
+      summary: Delete an office
+      description: ''
+      operationId: officePermissionDelete
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Invalid input
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+  /plans:
+    get:
+      tags:
+        - planController
+      summary: Get all plans from an office
+      description: ''
+      operationId: getAllPlan
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: id-office
+          description: id from office
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/PlanDto'
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+    post:
+      tags:
+        - planController
+      summary: Add a new Plan to an office
+      description: ''
+      operationId: addPlan
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/PlanParamDto'
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/EntityDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+
+    put:
+      tags:
+        - planController
+      summary: Update a plan from an office
+      description: ''
+      operationId: updatePlan
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/PlanParamDto'
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+          
+  '/plans/{id}':
+    get:
+      tags:
+        - planController
+      summary: Get plan from an office
+      description: ''
+      operationId: getPlan
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id from plan
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/PlanDetailDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+
+    delete:
+      tags:
+        - planController
+      summary: Delete a Plan from an office
+      description: ''
+      operationId: deletePlan
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id from plan
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Invalid input
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+  /plan-permissions:
+    get:
+      tags:
+        - planPermissionController
+      summary: Get all plan permissions
+      description: ''
+      operationId: getAllPlanPermission
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: id-plan
+          description: id-plan
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/PlanPermissionDto'
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+    post:
+      tags:
+        - planPermissionController
+      summary: Add a new plan permissions
+      description: ''
+      operationId: postPermissionPlan
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/PlanPermissionParamDto'
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/EntityDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+
+    put:
+      tags:
+        - planPermissionController
+      summary: Update an plan Permission
+      description: ''
+      operationId: planPermissionUpdate
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/PlanPermissionParamDto'
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+          
+  '/plan-permissions/{id}':
+    get:
+      tags:
+        - planPermissionController
+      summary: Get plan permissions
+      description: ''
+      operationId: getPlanPermisson
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/OfficePermissionDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+          
+    delete:
+      tags:
+        - planPermissionController
+      summary: Delete an plan
+      description: ''
+      operationId: planPermissionDelete
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Invalid input
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+  /workpacks:
+    get:
+      tags:
+        - workpackController
+      summary: Get all workpack from a plan
+      description: ''
+      operationId: getAllWorkpack
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: id-plan
+          description: id from plan
+          required: true
+          type: integer
+        - in: query
+          name: id-workpack-model
+          description: id from workPackModel
+          required: true
+          type: integer          
+        - in: query
+          name: id-workpack
+          description: id from workpack
+          required: false
+          type: integer          
+      responses:
+        '200':
+          description: Ok
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/WorkpackDto'
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+    post:
+      tags:
+        - workpackController
+      summary: Add a new workpack to a plan
+      description: ''
+      operationId: addWorkpack
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/WorkpackParamDto'
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/EntityDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+
+    put:
+      tags:
+        - workpackController
+      summary: Update a workpack from a plan
+      description: ''
+      operationId: updateWorkpack
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/WorkpackParamDto'
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error          
+  '/workpacks/{id}':
+    get:
+      tags:
+        - workpackController
+      summary: Get workpack from a plan
+      description: ''
+      operationId: getWorkpack
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id from workpack
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/WorkpackDetailDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+
+    delete:
+      tags:
+        - workpackController
+      summary: Delete a workpack from a plan
+      description: ''
+      operationId: deleteWorkpack
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id from workpack
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Invalid input
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+  /schedules:
+    get:
+      tags:
+        - scheduleController
+      summary: Get all workpack from a plan
+      description: ''
+      operationId: getAllSchedule
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: id-workpack
+          description: id from workpack
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ScheduleDto'
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+    post:
+      tags:
+        - scheduleController
+      summary: Add a new workpack to a plan
+      description: ''
+      operationId: addSchedule
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: id-workpack
+          description: id from workpack
+          required: true
+          type: integer
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/ScheduleParamDto'
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/EntityDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+    put:
+      tags:
+        - scheduleController
+      summary: Update a schedule from a workpack
+      description: ''
+      operationId: updateSchedule
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/ScheduleParamDto'
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error          
+  '/schedules/{id}':
+    get:
+      tags:
+        - scheduleController
+      summary: Get a schedule from a workpack
+      description: ''
+      operationId: getSchedule
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id from schedule
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/ScheduleDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+
+    delete:
+      tags:
+        - scheduleController
+      summary: Delete a schedule from a workpack
+      description: ''
+      operationId: deleteSchedule
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id from schedule
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Invalid input
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+  /workpack-permissions:
+    get:
+      tags:
+        - workpackPermissionController
+      summary: Get all workpack permissions
+      description: ''
+      operationId: getAllWorkpackPermission
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: id-workpack
+          description: id from workpack
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/PlanPermissionDto'
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+    post:
+      tags:
+        - workpackPermissionController
+      summary: Add a new plan permissions
+      description: ''
+      operationId: postPermissionWorkpack
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/WorkpackPermissionParamDto'
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/EntityDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+    put:
+      tags:
+        - workpackPermissionController
+      summary: Update a workpack Permission
+      description: ''
+      operationId: workpackPermissionUpdate
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/WorkpackPermissionParamDto'
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error          
+  '/workpack-permissions/{id}':
+    get:
+      tags:
+        - workpackPermissionController
+      summary: Get plan permissions
+      description: ''
+      operationId: getWorkpackPermisson
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/WorkpackPermissionDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+    
+    delete:
+      tags:
+        - workpackPermissionController
+      summary: Delete workpack permission
+      description: ''
+      operationId: workpackPermissionDelete
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Invalid input
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+  /plan-model:
+    get:
+      tags:
+        - planModelController
+      summary: Get all plan models from an office
+      description: ''
+      operationId: getAllPlanModel
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: id-office
+          description: id from office
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/PlanModelDto'
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+    post:
+      tags:
+        - planModelController
+      summary: Add a new plan model to an office
+      description: ''
+      operationId: addStrategy
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/PlanModelParamDto'
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/EntityDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+
+    put:
+      tags:
+        - planModelController
+      summary: Update a plan model from an office
+      description: ''
+      operationId: updateStrategy
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/PlanModelParamDto'
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error          
+  '/plan-model/{id}':
+    get:
+      tags:
+        - planModelController
+      summary: Get plan model from an office
+      description: ''
+      operationId: getPlanModel
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id from plan model
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/PlanModelDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+
+    delete:
+      tags:
+        - planModelController
+      summary: Delete a plan model from an office
+      description: ''
+      operationId: deleteStrategy
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id from plan model
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Invalid input
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+  /workpack-model:
+    get:
+      tags:
+        - workpackModelController
+      summary: Get all workpack model from a plan model
+      description: ''
+      operationId: getAllWorkpackModel
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: id-plan-model
+          description: id from plan model
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/WorkpackModelDto'
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+    post:
+      tags:
+        - workpackModelController
+      summary: Add a new workpack model to a plan model
+      description: ''
+      operationId: addWorkpackModel
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/WorkpackModelParamDto'
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/EntityDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+
+    put:
+      tags:
+        - workpackModelController
+      summary: Update a workpack model from a plan model
+      description: ''
+      operationId: updateWorkpackModel
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/WorkpackModelParamDto'
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error          
+  '/workpack-model/{id}':
+    get:
+      tags:
+        - workpackModelController
+      summary: Get workpack model from a plan model
+      description: ''
+      operationId: getWorkpackModel
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id from workpack model
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/WorkpackModelDetailDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+
+    delete:
+      tags:
+        - workpackModelController
+      summary: Delete a workpack model from a plan model
+      description: ''
+      operationId: deleteWorkpackModel
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id from workpack model
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Invalid input
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+  /measureUnits:
+    get:
+      tags:
+        - measureUnitController
+      summary: Get all measure units from an office
+      description: ''
+      operationId: getAllMeasureUnit
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: id-office
+          description: id from office
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/MeasureUnitDto'
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+    post:
+      tags:
+        - measureUnitController
+      summary: Add a new measure unit to an office
+      description: ''
+      operationId: addMeasureUnit
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/MeasureUnitParamDto'
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/EntityDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+    put:
+      tags:
+        - measureUnitController
+      summary: Update a measure unit from an office
+      description: ''
+      operationId: updateMeasureUnit
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/MeasureUnitParamDto'
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error          
+  '/measureUnits/{id}':
+    get:
+      tags:
+        - measureUnitController
+      summary: Get measure unit from an office
+      description: ''
+      operationId: getMeasureUnit
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/MeasureUnitDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+
+    delete:
+      tags:
+        - measureUnitController
+      summary: Delete a measure unit from an office
+      description: ''
+      operationId: deleteMeasureUnit
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Invalid input
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+  /domains:
+    get:
+      tags:
+        - domainController
+      summary: Get all domains
+      description: ''
+      operationId: getAllDomain
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Ok
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/DomainDto'
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+    post:
+      tags:
+        - domainController
+      summary: Add a new domain
+      description: ''
+      operationId: addDomain
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/DomainParamDto'
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/EntityDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+    put:
+      tags:
+        - domainController
+      summary: Update a domain
+      description: ''
+      operationId: updateDomain
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/DomainParamDto'
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error          
+  '/domains/{id}':
+    get:
+      tags:
+        - domainController
+      summary: Get domain
+      description: ''
+      operationId: getDomain
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/DomainDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+
+    delete:
+      tags:
+        - domainController
+      summary: Delete a domain
+      description: ''
+      operationId: deleteDomain
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Invalid input
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+  /localities:
+    get:
+      tags:
+        - localityController
+      summary: Get all localities from a domain
+      description: ''
+      operationId: getAllLocality
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: id-domain
+          description: id from domain
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/LocalityDto'
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+    post:
+      tags:
+        - localityController
+      summary: Add a new Locality to a domain
+      description: ''
+      operationId: addLocalityDomain
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/LocalityParamDto'
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/EntityDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+
+    put:
+      tags:
+        - localityController
+      summary: Update a locality from a domain
+      description: ''
+      operationId: updateLocality
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/LocalityParamDto'
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+          
+  '/localities/{id}':
+    get:
+      tags:
+        - localityController
+      summary: Get locality from a domain
+      description: ''
+      operationId: getLocality
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id from locality
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/LocalityDetailDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+
+    delete:
+      tags:
+        - localityController
+      summary: Delete a locality from a domain
+      description: ''
+      operationId: deleteLocality
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id from locality
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Invalid input
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+  /costs:
+    get:
+      tags:
+        - costAccountConroller
+      summary: Get all cost
+      description: ''
+      operationId: getAllCost
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Ok
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/CostAccountDto'
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+    post:
+      tags:
+        - costAccountConroller
+      summary: Add a new cost account
+      description: ''
+      operationId: addCost
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/CostAccountParamDto'
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/EntityDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+    put:
+      tags:
+        - costAccountConroller
+      summary: Update a cost account
+      description: ''
+      operationId: updateCost
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/CostAccountParamDto'
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+
+          
+  '/costs/{id}':
+    get:
+      tags:
+        - costAccountConroller
+      summary: Get cost
+      description: ''
+      operationId: getCost
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/CostAccountDetailDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+
+    delete:
+      tags:
+        - costAccountConroller
+      summary: Delete a cost
+      description: ''
+      operationId: deleteCost
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Invalid input
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+  /organizations:
+    get:
+      tags:
+        - organizationController
+      summary: Get all organizations
+      description: ''
+      operationId: getAllOrganization
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Ok
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/OrganizationDto'
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+    post:
+      tags:
+        - organizationController
+      summary: Add a new organization
+      description: ''
+      operationId: addOrganization
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/OrganizationParamDto'
+      responses:
+        '201':
+          description: Created
+          schema:
+            $ref: '#/definitions/EntityDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+
+    put:
+      tags:
+        - organizationController
+      summary: Update an organization
+      description: ''
+      operationId: updateOrganization
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          description: ''
+          required: true
+          schema:
+            $ref: '#/definitions/OrganizationParamDto'
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+          
+  '/organizations/{id}':
+    get:
+      tags:
+        - organizationController
+      summary: Get an organization
+      description: ''
+      operationId: getWorkLocation
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/OrganizationDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+
+    delete:
+      tags:
+        - organizationController
+      summary: Delete an organization
+      description: ''
+      operationId: deleteOrganization
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          description: id
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: Ok
+        '400':
+          description: Invalid input
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+  '/person/{email}':
+    get:
+      tags:
+        - personController
+      summary: Get a person
+      description: ''
+      operationId: getPerson
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: email
+          description: email
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Ok
+          schema:
+            $ref: '#/definitions/PersonDto'
+        '400':
+          description: Bad Request
+        '401':
+          description: Not authenticate
+        '500':
+          description: Internall Server Error
+securityDefinitions:
+  api_key:
+    type: apiKey
+    name: api_key
+    in: header
+definitions:
+  EntityDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+  MenuOfficeDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      name:
+        type: string
+      fullName:
+        type: string
+      workpackModel:
+        type: array
+        items:
+          $ref: '#/definitions/WorkpackModelMenuDto'
+  MenuPortfolioDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      name:
+        type: string
+      fullName:
+        type: string
+      workpacks:
+        type: array
+        items:
+          $ref: '#/definitions/WorkpackMenuDto'
+  OfficeDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      name:
+        type: string
+      fullName:
+        type: string
+  OfficeParamDto:
+    type: object
+    required:
+      - name
+      - fullName
+    properties:
+      id:
+        type: integer
+        format: int64
+      name:
+        type: string
+      fullName:
+        type: string
+  OfficePermissionDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      idPerson:
+        type: integer
+        format: int64
+      permissionLevel:
+        type: string
+      permittedRole:
+        type: string
+      organization:
+        type: string
+  OfficePermissionParamDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      idOffice:
+        type: integer
+        format: int64
+      idPerson:
+        type: integer
+        format: int64
+      permissionLevel:
+        type: string
+      permittedRole:
+        type: string
+      organization:
+        type: string
+  PlanPermissionDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      idPerson:
+        type: integer
+        format: int64
+      permissionLevel:
+        type: string
+      permittedRole:
+        type: string
+      organization:
+        type: string
+  PlanPermissionParamDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      idPlan:
+        type: integer
+        format: int64
+      idPerson:
+        type: integer
+        format: int64
+      permissionLevel:
+        type: string
+      permittedRole:
+        type: string
+      organization:
+        type: string
+  WorkpackPermissionDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      idPerson:
+        type: integer
+        format: int64
+      permissionLevel:
+        type: string
+      permittedRole:
+        type: string
+      organization:
+        type: string
+  WorkpackPermissionParamDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      idWorkpack:
+        type: integer
+        format: int64
+      idPerson:
+        type: integer
+        format: int64
+      permissionLevel:
+        type: string
+      permittedRole:
+        type: string
+      organization:
+        type: string
+  DomainDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      name:
+        type: string
+      fullName:
+        type: string
+  DomainParamDto:
+    type: object
+    required:
+      - name
+      - fullName
+    properties:
+      id:
+        type: integer
+        format: int64
+      name:
+        type: string
+      fullName:
+        type: string
+  LocalityDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      name:
+        type: string
+      fullName:
+        type: string
+      latitude:
+        type: string
+      longitude:
+        type: string
+      domain:
+        $ref: '#/definitions/DomainDto'
+      children:
+        $ref: '#/definitions/LocalityChildrenDto'  
+      type:
+        type: string
+        
+  LocalityChildrenDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      name:
+        type: string
+      fullName:
+        type: string
+      latitude:
+        type: string
+      longitude:
+        type: string
+      type:
+        type: string
+        
+  LocalityDetailDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      idDomain:
+        type: integer
+        format: int64
+      idParent:
+        type: integer
+        format: int64
+      name:
+        type: string
+      fullName:
+        type: string
+      latitude:
+        type: string
+      longitude:
+        type: string
+  LocalityParamDto:
+    type: object
+    required:
+      - name
+      - fullName
+    properties:
+      id:
+        type: integer
+        format: int64
+      idDomain:
+        type: integer
+        format: int64
+      idParent:
+        type: integer
+        format: int64
+      name:
+        type: string
+      fullName:
+        type: string
+      latitude:
+        type: string
+      longitude:
+        type: string
+  PlanParamDto:
+    type: object
+    required:
+      - name
+      - fullName
+      - planModel
+      - start
+      - finish
+    properties:
+      id:
+        type: integer
+        format: int64
+      idOffice:
+        type: integer
+        format: int64
+      idPlanModel:
+        type: integer
+        format: int64
+      name:
+        type: string
+      fullName:
+        type: string
+      start:
+        type: string
+      finish:
+        type: string
+  PlanDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      name:
+        type: string
+      fullName:
+        type: string
+  PlanDetailDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      idOffice:
+        type: integer
+        format: int64
+      idPlanModel:
+        type: integer
+        format: int64
+      name:
+        type: string
+      fullName:
+        type: string
+      start:
+        type: string
+      finish:
+        type: string
+  MeasureUnitDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      name:
+        type: string
+      fullName:
+        type: string
+  MeasureUnitParamDto:
+    type: object
+    required:
+      - name
+      - fullName
+    properties:
+      id:
+        type: integer
+        format: int64
+      idOffice:
+        type: integer
+        format: int64
+      name:
+        type: string
+      fullName:
+        type: string
+  WorkpackDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      type:
+        type: string
+        description: Type of Workpack
+        enum:
+          - Portfolio
+          - Program
+          - Organizer
+          - Deliverable
+          - Project
+          - Milestone
+      model:
+        $ref: '#/definitions/WorkpackModelDto'
+  WorkpackDetailDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      type:
+        type: string
+        description: Type of Workpack
+        enum:
+          - Portfolio
+          - Program
+          - Organizer
+          - Deliverable
+          - Project
+          - Milestone
+      workpackModel:
+        $ref: '#/definitions/WorkpackModelDetailDto'
+      properties:
+        type: array
+        items:
+          $ref: '#/definitions/PropertyDto'
+      children:
+        type: array
+        items:
+          $ref: '#/definitions/WorkpackModelDto'
+  WorkpackMenuDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      type:
+        type: string
+        description: Type of Workpack
+        enum:
+          - Portfolio
+          - Program
+          - Organizer
+          - Deliverable
+          - Project
+          - Milestone
+      idWorkpackModel:
+        $ref: '#/definitions/WorkpackModelDto'
+      children:
+        type: array
+        items:
+          $ref: '#/definitions/WorkpackMenuDto'
+  WorkpackParamDto:
+    type: object
+    required:
+      - type
+      - idPlan
+      - idWorkpackModel
+      - properties
+    properties:
+      id:
+        type: integer
+        format: int64
+      idPlan:
+        type: integer
+        format: int64
+      idWorkpackModel:
+        type: integer
+        format: int64
+      idParent:
+        type: integer
+        format: int64
+      type:
+        type: string
+        description: Type of Workpack
+        enum:
+          - Portfolio
+          - Program
+          - Organizer
+          - Deliverable
+          - Project
+          - Milestone
+      properties:
+        type: array
+        items:
+          $ref: '#/definitions/PropertyDto'
+  PropertyDto:
+    type: object
+    discriminator: type
+    required:
+      - type
+      - idPropertyModel
+    properties:
+      id:
+        type: integer
+        format: int64
+      type:
+        type: string
+        description: Type of Workpack Model
+        enum:
+          - Integer
+          - Text
+          - Date
+          - Toggle
+          - UnitSelection
+          - Selection
+          - TextArea
+          - Number
+          - Currency
+          - LocalitySelection
+          - OrganizationSelection
+      idPropertyModel:
+        type: integer
+        format: int64
+  IntegerDto:
+    type: object
+    properties:
+      value:
+        type: integer
+    allOf:
+      - $ref: '#/definitions/PropertyDto'
+  TextDto:
+    type: object
+    properties:
+      value:
+        type: string
+    allOf:
+      - $ref: '#/definitions/PropertyDto'
+  DateDto:
+    type: object
+    properties:
+      value:
+        description: Date of pattern yyyy/MM/dd
+        type: string
+    allOf:
+      - $ref: '#/definitions/PropertyDto'
+  ToggleDto:
+    type: object
+    properties:
+      value:
+        type: boolean
+    allOf:
+      - $ref: '#/definitions/PropertyDto'
+  UnitSelectionDto:
+    type: object
+    allOf:
+      - $ref: '#/definitions/PropertyDto'
+  SelectionDto:
+    type: object
+    properties:
+      value:
+        type: string
+    allOf:
+      - $ref: '#/definitions/PropertyDto'
+  TextAreaDto:
+    type: object
+    properties:
+      value:
+        type: string
+    allOf:
+      - $ref: '#/definitions/PropertyDto'
+  NumberDto:
+    type: object
+    properties:
+      value:
+        type: number
+    allOf:
+      - $ref: '#/definitions/PropertyDto'
+  CurrencyDto:
+    type: object
+    properties:
+      value:
+        type: number
+    allOf:
+      - $ref: '#/definitions/PropertyDto'
+  LocalitySelectionDto:
+    type: object
+    allOf:
+      - $ref: '#/definitions/PropertyDto'
+  OrganizationSelectionDto:
+    type: object
+    allOf:
+      - $ref: '#/definitions/PropertyDto'
+  WorkpackModelDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      type:
+        type: string
+        description: Type of Workpack Model
+        enum:
+          - PortfolioModel
+          - ProgramModel
+          - OrganizerModel
+          - DeliverableModel
+          - ProjectModel
+          - MilestoneModel
+      modelName:
+        type: string
+      fontIcon:
+        type: string
+  WorkpackModelMenuDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      type:
+        type: string
+        description: Type of Workpack Model
+        enum:
+          - PortfolioModel
+          - ProgramModel
+          - OrganizerModel
+          - DeliverableModel
+          - ProjectModel
+          - MilestoneModel
+      modelName:
+        type: string
+      fontIcon:
+        type: string
+      children:
+        type: array
+        items:
+          $ref: '#/definitions/WorkpackModelMenuDto'
+  WorkpackModelDetailDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      idPlanModel:
+        type: integer
+        format: int64
+      idParent:
+        type: integer
+        format: int64
+      type:
+        type: string
+        description: Type of Workpack Model
+        enum:
+          - PortfolioModel
+          - ProgramModel
+          - OrganizerModel
+          - DeliverableModel
+          - ProjectModel
+          - MilestoneModel
+      modelName:
+        type: string
+      modelNameInPlural:
+        type: string
+      fontIcon:
+        type: string
+      sortBy:
+        type: string
+      costSessionActive:
+        type: boolean
+      stakeholderSessionActive:
+        type: boolean
+      scheduleSessionActive:
+        type: boolean
+      childWorkpackModelSessionActive:
+        type: boolean
+      personRoles:
+        type: array
+        items:
+          type: string
+      organizationRoles:
+        type: array
+        items:
+          type: string
+      properties:
+        type: array
+        items:
+          $ref: '#/definitions/PropertyModelDto'
+  WorkpackModelParamDto:
+    type: object
+    required:
+      - type
+      - model
+      - modelName
+      - modelNameInPlural
+      - childWorkpackModelSessionActive
+      - properties
+      - fontIcon
+      - costSessionActive
+      - stakeholderSessionActive
+    properties:
+      id:
+        type: integer
+        format: int64
+      idPlanModel:
+        type: integer
+        format: int64
+      idParent:
+        type: integer
+        format: int64
+      type:
+        type: string
+        description: Type of Workpack Model
+        enum:
+          - PortfolioModel
+          - ProgramModel
+          - OrganizerModel
+          - DeliverableModel
+          - ProjectModel
+          - MilestoneModel
+      modelName:
+        type: string
+      modelNameInPlural:
+        type: string
+      fontIcon:
+        type: string
+      sortBy:
+        type: string
+      costSessionActive:
+        type: boolean
+      stakeholderSessionActive:
+        type: boolean
+      scheduleSessionActive:
+        type: boolean
+      childWorkpackModelSessionActive:
+        type: boolean
+      personRoles:
+        type: array
+        items:
+          type: string
+      organizationRoles:
+        type: array
+        items:
+          type: string
+      properties:
+        type: array
+        items:
+          $ref: '#/definitions/PropertyModelDto'
+  PropertyModelDto:
+    type: object
+    discriminator: type
+    required:
+      - type
+    properties:
+      id:
+        type: integer
+        format: int64
+      type:
+        type: string
+        description: Type of Workpack Model
+        enum:
+          - IntegerModel
+          - TextModel
+          - DateModel
+          - ToggleModel
+          - UnitSelectionModel
+          - SelectionModel
+          - TextAreaModel
+          - NumberModel
+          - CurrencyModel
+          - LocalitySelectionModel
+          - OrganizationSelectionModel
+      name:
+        type: string
+      label:
+        type: string
+      sortIndex:
+        type: integer
+      fullLine:
+        type: boolean
+      required:
+        type: boolean
+  IntegerModelDto:
+    type: object
+    properties:
+      defaultValue:
+        type: integer
+      min:
+        type: integer
+      max:
+        type: integer
+    allOf:
+      - $ref: '#/definitions/PropertyModelDto'
+  TextModelDto:
+    type: object
+    properties:
+      defaultValue:
+        type: string
+      min:
+        type: integer
+      max:
+        type: integer
+    allOf:
+      - $ref: '#/definitions/PropertyModelDto'
+  DateModelDto:
+    type: object
+    properties:
+      defaultValue:
+        description: Date of pattern yyyy/MM/dd
+        type: string
+      min:
+        description: Date of pattern yyyy/MM/dd
+        type: string
+      max:
+        description: Date of pattern yyyy/MM/dd
+        type: string
+    allOf:
+      - $ref: '#/definitions/PropertyModelDto'
+  ToggleModelDto:
+    type: object
+    properties:
+      defaultValue:
+        type: boolean
+    allOf:
+      - $ref: '#/definitions/PropertyModelDto'
+  UnitSelectionModelDto:
+    type: object
+    allOf:
+      - $ref: '#/definitions/PropertyModelDto'
+  SelectionModelDto:
+    type: object
+    properties:
+      defaultValue:
+        type: string
+      possibleValues:
+        type: string
+      multipleSelection:
+        type: boolean
+    allOf:
+      - $ref: '#/definitions/PropertyModelDto'
+  TextAreaModelDto:
+    type: object
+    properties:
+      defaultValue:
+        type: string
+      min:
+        type: integer
+      max:
+        type: integer
+      rows:
+        type: integer
+    allOf:
+      - $ref: '#/definitions/PropertyModelDto'
+  NumberModelDto:
+    type: object
+    properties:
+      defaultValue:
+        type: number
+      min:
+        type: number
+      max:
+        type: number
+      decimals:
+        type: number
+    allOf:
+      - $ref: '#/definitions/PropertyModelDto'
+  CurrencyModelDto:
+    type: object
+    properties:
+      defaultValue:
+        type: number
+    allOf:
+      - $ref: '#/definitions/PropertyModelDto'
+  LocalitySelectionModelDto:
+    type: object
+    properties:
+      multipleSelection:
+        type: boolean
+    allOf:
+      - $ref: '#/definitions/PropertyModelDto'
+  OrganizationSelectionModelDto:
+    type: object
+    properties:
+      multipleSelection:
+        type: boolean
+    allOf:
+      - $ref: '#/definitions/PropertyModelDto'
+  PlanModelDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      name:
+        type: string
+      fullName:
+        type: string
+  PlanModelParamDto:
+    type: object
+    required:
+      - name
+      - fullName
+    properties:
+      id:
+        type: integer
+        format: int64
+      idOffice:
+        type: integer
+        format: int64
+      name:
+        type: string
+      fullName:
+        type: string
+  OrganizationDto:
+    type: object
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      fullName:
+        type: string
+      phoneNumber:
+        type: string
+      address:
+        type: string
+      contactEmail:
+        type: string
+      website:
+        type: string
+      sector:
+        type: string
+        enum:
+          - public
+          - private
+          - third
+  OrganizationParamDto:
+    type: object
+    required:
+      - name
+      - fullName
+      - phoneNumber
+      - address
+      - contactEmail
+      - sector
+    properties:
+      name:
+        type: string
+      fullName:
+        type: string
+      phoneNumber:
+        type: string
+      address:
+        type: string
+      contactEmail:
+        type: string
+      website:
+        type: string
+      sector:
+        type: string
+        enum:
+          - public
+          - private
+          - third
+  CostAccountDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      name:
+        type: string
+      fullName:
+        type: string
+      limit:
+        type: number
+  CostAccountDetailDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      name:
+        type: string
+      fullName:
+        type: string
+      limit:
+        type: number
+      economicCategory:
+        type: string
+      source:
+        type: string
+  CostAccountParamDto:
+    type: object
+    required:
+      - name
+      - fullName
+      - limit
+      - economicCategory
+      - source
+    properties:
+      id:
+        type: integer
+        format: int64
+      name:
+        type: string
+      fullName:
+        type: string
+      limit:
+        type: number
+      economicCategory:
+        type: string
+      source:
+        type: string
+  ScheduleDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      start:
+        description: Date of pattern yyyy/MM/dd
+        type: string
+      finish:
+        description: Date of pattern yyyy/MM/dd
+        type: string
+      plannedWork:
+        type: number
+      actualWork:
+        type: number
+      costs:
+        type: array
+        items:
+          $ref: '#/definitions/StepCostParamDto'
+  ScheduleParamDto:
+    type: object
+    required:
+      - start
+      - finish
+      - plannedWork
+    properties:
+      start:
+        description: Date of pattern yyyy/MM/dd
+        type: string
+      idWorkpack:
+        type: integer
+        format: int64
+      finish:
+        description: Date of pattern yyyy/MM/dd
+        type: string
+      plannedWork:
+        type: number
+      actualWork:
+        type: number
+      costs:
+        type: array
+        items:
+          $ref: '#/definitions/StepCostParamDto'
+  StepCostDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      plannedCost:
+        type: number
+      actualCost:
+        type: number
+  StepCostParamDto:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      plannedCost:
+        type: number
+      actualCost:
+        type: number
+  PersonDto:
+    type: object
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      fullName:
+        type: string
+      phoneNumber:
+        type: string
+      address:
+        type: string
+      contactEmail:
+        type: string
+      email:
+        type: string
+      administrator:
+        type: boolean

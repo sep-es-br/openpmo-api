@@ -33,16 +33,6 @@ public class Toggle extends Property<Toggle, Boolean> {
   }
 
   @Override
-  public Baseline getBaseline() {
-    return this.baseline;
-  }
-
-  @Override
-  public void setBaseline(final Baseline baseline) {
-    this.baseline = baseline;
-  }
-
-  @Override
   public CategoryEnum getCategory() {
     return this.category;
   }
@@ -50,11 +40,6 @@ public class Toggle extends Property<Toggle, Boolean> {
   @Override
   public void setCategory(final CategoryEnum category) {
     this.category = category;
-  }
-
-  @Override
-  public boolean hasChanges(final Toggle other) {
-    return this.value != other.value;
   }
 
   @Override
@@ -76,23 +61,23 @@ public class Toggle extends Property<Toggle, Boolean> {
   }
 
   @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), this.driver);
-  }
-
-  @Override
   public boolean equals(final Object o) {
-    if(this == o) {
+    if (this == o) {
       return true;
     }
-    if(o == null || this.getClass() != o.getClass()) {
+    if (o == null || this.getClass() != o.getClass()) {
       return false;
     }
-    if(!super.equals(o)) {
+    if (!super.equals(o)) {
       return false;
     }
     final Toggle toggle = (Toggle) o;
     return Objects.equals(this.driver, toggle.driver);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), this.driver);
   }
 
   @Override
@@ -103,6 +88,21 @@ public class Toggle extends Property<Toggle, Boolean> {
   @Override
   public void setWorkpack(final Workpack workpack) {
     this.workpack = workpack;
+  }
+
+  @Override
+  public boolean hasChanges(final Toggle other) {
+    return this.value != other.value;
+  }
+
+  @Override
+  public Baseline getBaseline() {
+    return this.baseline;
+  }
+
+  @Override
+  public void setBaseline(final Baseline baseline) {
+    this.baseline = baseline;
   }
 
 }

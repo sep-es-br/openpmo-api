@@ -15,6 +15,7 @@ import br.gov.es.openpmo.dto.costaccount.CostAccountDto;
 import br.gov.es.openpmo.dto.costaccount.CostAccountStoreDto;
 import br.gov.es.openpmo.dto.costaccount.CostDto;
 import br.gov.es.openpmo.dto.domain.DomainStoreDto;
+import br.gov.es.openpmo.dto.domain.LocalityStoreDto;
 import br.gov.es.openpmo.dto.filter.CustomFilterDto;
 import br.gov.es.openpmo.dto.filter.CustomFilterRulesDto;
 import br.gov.es.openpmo.dto.office.OfficeStoreDto;
@@ -24,6 +25,7 @@ import br.gov.es.openpmo.dto.workpack.*;
 import br.gov.es.openpmo.dto.workpackmodel.details.ResponseBaseWorkpackModelDetail;
 import br.gov.es.openpmo.dto.workpackmodel.params.WorkpackModelParamDto;
 import br.gov.es.openpmo.enumerator.GeneralOperatorsEnum;
+import br.gov.es.openpmo.enumerator.LocalityTypesEnum;
 import br.gov.es.openpmo.enumerator.Session;
 import br.gov.es.openpmo.model.filter.LogicOperatorEnum;
 import org.jetbrains.annotations.NotNull;
@@ -90,8 +92,8 @@ import static java.util.Collections.singletonList;
       office.setName("Office Test WorkpackModel");
       office.setFullName("Office Test WorkpackModel ");
       final ResponseEntity<ResponseBase<EntityDto>> response = this.officeController.save(office);
-      assertNotNull(response.getBody());
-      assertNotNull(response.getBody().getData());
+      assertNotNull(response.getBody(), "Should have body not null");
+      assertNotNull(response.getBody().getData(), "Should have data not null");
       this.idOffice = response.getBody().getData().getId();
     }
     if(this.idPlanModel == null) {
@@ -103,20 +105,17 @@ import static java.util.Collections.singletonList;
         Collections.emptySet()
       );
       final ResponseEntity<ResponseBase<EntityDto>> response = this.planModelController.save(planModel);
-      assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-      assertNotNull(response.getBody());
-      assertNotNull(response.getBody().getData());
+      assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue(), "Should have status code OK");
+      assertNotNull(response.getBody(), "Should have body not null");
+      assertNotNull(response.getBody().getData(), "Should have data not null");
       this.idPlanModel = response.getBody().getData().getId();
     }
     if(this.idDomain == null) {
-      final DomainStoreDto domain = new DomainStoreDto();
-      domain.setName("Domain Test");
-      domain.setFullName("Domain Test ADM ");
-      domain.setIdOffice(this.idOffice);
+      final DomainStoreDto domain = this.getDomainStoreDto();
       final ResponseEntity<ResponseBase<EntityDto>> response = this.domainController.save(domain);
-      assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-      assertNotNull(response.getBody());
-      assertNotNull(response.getBody().getData());
+      assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue(), "Should have status code OK");
+      assertNotNull(response.getBody(), "Should have body not null");
+      assertNotNull(response.getBody().getData(), "Should have data not null");
       this.idDomain = response.getBody().getData().getId();
     }
     if(this.idPlan == null) {
@@ -128,9 +127,9 @@ import static java.util.Collections.singletonList;
       plan.setStart(LocalDate.now().minusMonths(2));
       plan.setFinish(LocalDate.now().plusMonths(2));
       final ResponseEntity<ResponseBase<EntityDto>> response = this.planController.save(plan);
-      assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-      assertNotNull(response.getBody());
-      assertNotNull(response.getBody().getData());
+      assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue(), "Should have status code OK");
+      assertNotNull(response.getBody(), "Should have body not null");
+      assertNotNull(response.getBody().getData(), "Should have data not null");
       this.idPlan = response.getBody().getData().getId();
     }
     if(this.idWorkpack == null) {
@@ -152,36 +151,51 @@ import static java.util.Collections.singletonList;
       filter.setRules(singletonList(rule));
 
       final ResponseEntity<ResponseBase<CustomFilterDto>> response = this.filterCostAccountController.save(
-        this.idWorkpack,
+        this.idWorkpackModel,
         filter
       );
-      assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-      assertNotNull(response.getBody());
-      assertNotNull(response.getBody().getData());
+      assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue(), "Should have status code OK");
+      assertNotNull(response.getBody(), "Should have body not null");
+      assertNotNull(response.getBody().getData(), "Should have data not null");
 
       this.idFilter = response.getBody().getData().getId();
     }
   }
 
+  @NotNull private DomainStoreDto getDomainStoreDto() {
+    final DomainStoreDto domain = new DomainStoreDto();
+    domain.setName("Domain Test");
+    domain.setFullName("Domain Test ADM ");
+    domain.setIdOffice(this.idOffice);
+    final LocalityStoreDto localityRoot = new LocalityStoreDto();
+    localityRoot.setFullName("Locality Root test");
+    localityRoot.setType(LocalityTypesEnum.STATE);
+    localityRoot.setName("Locality Root test");
+    domain.setLocalityRoot(localityRoot);
+    return domain;
+  }
+
   private Long getIdWorkpack() {
-    final WorkpackModelParamDto workpackModelParam = this.getWorkpackModelParamProject("Project",
-                                                                                       this.idPlanModel, this.idDomain
+    final WorkpackModelParamDto workpackModelParam = this.getWorkpackModelParamProject(
+      "Project",
+      this.idPlanModel,
+      this.idDomain
     );
     ResponseEntity<ResponseBase<EntityDto>> response = this.workpackModelController.save(workpackModelParam);
-    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-    assertNotNull(response.getBody());
-    assertNotNull(response.getBody().getData());
+    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue(), "Should have status code OK");
+    assertNotNull(response.getBody(), "Should have body not null");
+    assertNotNull(response.getBody().getData(), "Should have data not null");
     this.idWorkpackModel = response.getBody().getData().getId();
     final ResponseEntity<ResponseBaseWorkpackModelDetail> responseFind = this.workpackModelController.find(this.idWorkpackModel);
-    assertNotNull(responseFind.getBody());
-    assertNotNull(responseFind.getBody().getData());
+    assertNotNull(responseFind.getBody(), "Should have body not null");
+    assertNotNull(responseFind.getBody().getData(), "Should have data not null");
 
     final WorkpackParamDto workpackParam = this.getWorkpackParamProject(responseFind.getBody().getData());
     workpackParam.setIdPlan(this.idPlan);
     response = this.save(workpackParam);
-    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-    assertNotNull(response.getBody());
-    assertNotNull(response.getBody().getData());
+    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue(), "Should have status code OK");
+    assertNotNull(response.getBody(), "Should have body not null");
+    assertNotNull(response.getBody().getData(), "Should have data not null");
     return response.getBody().getData().getId();
   }
 
@@ -192,9 +206,9 @@ import static java.util.Collections.singletonList;
   @Test void shouldCreateCostAccount() {
     final CostAccountStoreDto costAccount = this.createCostAccount();
     final ResponseEntity<ResponseBase<EntityDto>> response = this.costAccountController.save(costAccount);
-    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-    assertNotNull(response.getBody());
-    assertNotNull(response.getBody().getData());
+    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue(), "Should have status code OK");
+    assertNotNull(response.getBody(), "Should have body not null");
+    assertNotNull(response.getBody().getData(), "Should have data not null");
   }
 
   @NotNull private CostAccountStoreDto createCostAccount() {
@@ -205,8 +219,8 @@ import static java.util.Collections.singletonList;
   private List<PropertyDto> getProperties() {
     final List<PropertyDto> properties = new ArrayList<>();
     final ResponseEntity<ResponseBaseWorkpackModelDetail> responseFind = this.workpackModelController.find(this.idWorkpackModel);
-    assertNotNull(responseFind.getBody());
-    assertNotNull(responseFind.getBody().getData());
+    assertNotNull(responseFind.getBody(), "Should have body not null");
+    assertNotNull(responseFind.getBody().getData(), "Should have data not null");
     responseFind.getBody().getData().getProperties().stream().filter(
       p -> Session.COST.equals(p.getSession())).forEach(property -> {
       switch(property.getClass().getTypeName()) {
@@ -287,48 +301,48 @@ import static java.util.Collections.singletonList;
   @Test void shouldDelete() {
     final CostAccountStoreDto costAccount = new CostAccountStoreDto(this.idWorkpack, null);
     final ResponseEntity<ResponseBase<EntityDto>> response = this.costAccountController.save(costAccount);
-    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-    assertNotNull(response.getBody());
-    assertNotNull(response.getBody().getData());
+    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue(), "Should have status code OK");
+    assertNotNull(response.getBody(), "Should have body not null");
+    assertNotNull(response.getBody().getData(), "Should have data not null");
     final ResponseEntity<Void> responseDelete = this.costAccountController.delete(response.getBody().getData().getId());
-    assertEquals(HTTP_STATUS_OK, responseDelete.getStatusCodeValue());
+    assertEquals(HTTP_STATUS_OK, responseDelete.getStatusCodeValue(), "Should have status code OK");
 
   }
 
   @Test void shouldListAll() {
     final CostAccountStoreDto costAccount = new CostAccountStoreDto(this.idWorkpack, null);
     final ResponseEntity<ResponseBase<EntityDto>> response = this.costAccountController.save(costAccount);
-    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-    assertNotNull(response.getBody());
-    assertNotNull(response.getBody().getData());
+    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue(), "Should have status code OK");
+    assertNotNull(response.getBody(), "Should have body not null");
+    assertNotNull(response.getBody().getData(), "Should have data not null");
     final ResponseEntity<ResponseBaseItens<CostAccountDto>> responseList = this.costAccountController.indexBase(
       this.idWorkpack,
       null
     );
-    assertEquals(HTTP_STATUS_OK, responseList.getStatusCodeValue());
-    assertNotNull(responseList.getBody());
-    assertNotNull(responseList.getBody().getData());
+    assertEquals(HTTP_STATUS_OK, responseList.getStatusCodeValue(), "Should have status code OK");
+    assertNotNull(responseList.getBody(), "Should have body not null");
+    assertNotNull(responseList.getBody().getData(), "Should have data not null");
 
     final ResponseEntity<ResponseBase<CostDto>> responseCost = this.costAccountController.getCostsByWorkpack(
       null,
       this.idWorkpack
     );
-    assertEquals(HTTP_STATUS_OK, responseCost.getStatusCodeValue());
-    assertNotNull(responseCost.getBody());
-    assertNotNull(responseCost.getBody().getData());
+    assertEquals(HTTP_STATUS_OK, responseCost.getStatusCodeValue(), "Should have status code OK");
+    assertNotNull(responseCost.getBody(), "Should have body not null");
+    assertNotNull(responseCost.getBody().getData(), "Should have data not null");
   }
 
   @Test void shouldFindOne() {
     final CostAccountStoreDto costAccount = this.createCostAccount();
     final ResponseEntity<ResponseBase<EntityDto>> response = this.costAccountController.save(costAccount);
-    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
-    assertNotNull(response.getBody());
-    assertNotNull(response.getBody().getData());
+    assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue(), "Should have status code OK");
+    assertNotNull(response.getBody(), "Should have body not null");
+    assertNotNull(response.getBody().getData(), "Should have data not null");
 
     final ResponseEntity<ResponseBase<CostAccountDto>> responseFind = this.costAccountController.findById(response.getBody().getData().getId());
-    assertEquals(HTTP_STATUS_OK, responseFind.getStatusCodeValue());
-    assertNotNull(responseFind.getBody());
-    assertNotNull(responseFind.getBody().getData());
+    assertEquals(HTTP_STATUS_OK, responseFind.getStatusCodeValue(), "Should have status code OK");
+    assertNotNull(responseFind.getBody(), "Should have body not null");
+    assertNotNull(responseFind.getBody().getData(), "Should have data not null");
   }
 
   @TestConfiguration

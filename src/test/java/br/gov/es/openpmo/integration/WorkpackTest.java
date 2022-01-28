@@ -10,6 +10,7 @@ import br.gov.es.openpmo.controller.workpack.WorkpackModelController;
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.domain.DomainStoreDto;
+import br.gov.es.openpmo.dto.domain.LocalityStoreDto;
 import br.gov.es.openpmo.dto.filter.CustomFilterDto;
 import br.gov.es.openpmo.dto.filter.CustomFilterRulesDto;
 import br.gov.es.openpmo.dto.office.OfficeStoreDto;
@@ -24,6 +25,7 @@ import br.gov.es.openpmo.dto.workpackmodel.params.PortfolioModelParamDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.ProgramModelParamDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.WorkpackModelParamDto;
 import br.gov.es.openpmo.enumerator.GeneralOperatorsEnum;
+import br.gov.es.openpmo.enumerator.LocalityTypesEnum;
 import br.gov.es.openpmo.enumerator.Session;
 import br.gov.es.openpmo.model.filter.LogicOperatorEnum;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
@@ -116,6 +118,11 @@ class WorkpackTest extends BaseTest {
       domain.setName("Domain Test");
       domain.setFullName("Domain Test ADM ");
       domain.setIdOffice(this.idOffice);
+      final LocalityStoreDto localityRoot = new LocalityStoreDto();
+      domain.setLocalityRoot(localityRoot);
+      localityRoot.setName("Locality Root");
+      localityRoot.setType(LocalityTypesEnum.STATE);
+      localityRoot.setFullName("Locality Root");
       final ResponseEntity<ResponseBase<EntityDto>> response = this.domainController.save(domain);
       Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
       Assertions.assertNotNull(response.getBody());
@@ -288,7 +295,7 @@ class WorkpackTest extends BaseTest {
 
   @Test void shouldDelete() {
     final Long idWorkpackProject = this.getWorkpackProjectId();
-    final ResponseEntity<Void> response = this.workpackController.delete(idWorkpackProject, this.getToken(true));
+    final ResponseEntity<Void> response = this.workpackController.delete(idWorkpackProject);
     Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
   }
 

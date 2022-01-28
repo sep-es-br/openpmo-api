@@ -35,7 +35,7 @@ public class Schedule extends Entity implements Snapshotable<Schedule> {
   @Relationship(type = "IS_SNAPSHOT_OF", direction = INCOMING)
   private Set<IsScheduleSnapshotOf> snapshots;
 
-  @Relationship(type = "COMPOSES", direction = INCOMING)
+  @Relationship(type = "COMPOSES", direction = Relationship.INCOMING)
   private Set<Step> steps;
 
   private CategoryEnum category;
@@ -54,6 +54,27 @@ public class Schedule extends Entity implements Snapshotable<Schedule> {
 
   public void setSteps(final Set<Step> steps) {
     this.steps = steps;
+  }
+
+  @Override
+  public CategoryEnum getCategory() {
+    return this.category;
+  }
+
+  @Override
+  public void setCategory(final CategoryEnum category) {
+    this.category = category;
+  }
+
+  @Override
+  public boolean hasChanges(final Schedule other) {
+    final boolean hasStartChanges = (this.start != null || other.start != null)
+                                    && (this.start != null && other.start == null || this.start == null || !this.start.equals(other.start));
+
+    final boolean hasEndChanges = (this.end != null || other.end != null)
+                                  && (this.end != null && other.end == null || this.end == null || !this.end.equals(other.end));
+
+    return hasStartChanges || hasEndChanges;
   }
 
   @Override
@@ -92,27 +113,6 @@ public class Schedule extends Entity implements Snapshotable<Schedule> {
     this.baseline = baseline;
   }
 
-  @Override
-  public CategoryEnum getCategory() {
-    return this.category;
-  }
-
-  @Override
-  public void setCategory(final CategoryEnum category) {
-    this.category = category;
-  }
-
-  @Override
-  public boolean hasChanges(final Schedule other) {
-    final boolean hasStartChanges = (this.start != null || other.start != null)
-                                    && (this.start != null && other.start == null || this.start == null || !this.start.equals(other.start));
-
-    final boolean hasEndChanges = (this.end != null || other.end != null)
-                                  && (this.end != null && other.end == null || this.end == null || !this.end.equals(other.end));
-
-    return hasStartChanges || hasEndChanges;
-  }
-
   public IsScheduleSnapshotOf getMaster() {
     return this.master;
   }
@@ -131,7 +131,7 @@ public class Schedule extends Entity implements Snapshotable<Schedule> {
 
   @Transient
   public void addStep(final Step step) {
-    if(this.steps == null) {
+    if (this.steps == null) {
       this.steps = new HashSet<>();
     }
     this.steps.add(step);

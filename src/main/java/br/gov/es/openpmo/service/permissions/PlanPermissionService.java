@@ -39,7 +39,7 @@ public class PlanPermissionService {
   private final PersonService personService;
   private final OfficeService officeService;
   private final IsAuthenticatedByService isAuthenticatedByService;
-  private final RemoteRolesFetcher remoteRolesFetcher;
+  private final IRemoteRolesFetcher remoteRolesFetcher;
   private final ModelMapper modelMapper;
 
   @Autowired
@@ -49,7 +49,7 @@ public class PlanPermissionService {
     final PersonService personService,
     final OfficeService officeService,
     final IsAuthenticatedByService isAuthenticatedByService,
-    final RemoteRolesFetcher remoteRolesFetcher,
+    final IRemoteRolesFetcher remoteRolesFetcher,
     final ModelMapper modelMapper
   ) {
     this.repository = repository;

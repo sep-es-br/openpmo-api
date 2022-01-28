@@ -21,14 +21,23 @@ public interface LocalityRepository extends Neo4jRepository<Locality, Long>, Cus
   )
   Optional<Locality> findLocalityRootFromDomain(Long idDomain);
 
-  @Query("MATCH (d:Domain)<-[:BELONGS_TO]-(l:Locality)"
-         + " WHERE id(d) = {0} AND NOT (l)-[:IS_IN]->(:Locality) RETURN l, "
-         + " [ [(l)<-[btl:IS_IN]-(lc:Locality)-[:BELONGS_TO]->(d) | [btl, lc] ] " + "]")
+  @Query(
+    "MATCH (d:Domain)<-[:IS_ROOT_OF]-(root:Locality)" +
+    "MATCH (root)<-[:IS_IN]-(locality:Locality)-[:BELONGS_TO]->(d) " +
+    "WHERE id(d)=$idDomain " +
+    "RETURN locality, [ " +
+    "    [(locality)<-[isIn:IS_IN]-(children:Locality)-[:BELONGS_TO]->(d) | [isIn, children] ] " +
+    "]"
+  )
   Collection<Locality> findAllByDomainFirstLevel(@Param("idDomain") Long idDomain);
 
-  @Query("MATCH (d:Domain)<-[:BELONGS_TO]-(l:Locality)"
-         + " WHERE id(d) = {0} AND NOT (l)-[:IS_IN*1..]->(:Locality) RETURN l, "
-         + " [ [(l)<-[btl:IS_IN*1..]-(lc:Locality)-[:BELONGS_TO]->(d) | [btl, lc] ] " + "]")
+  @Query(
+    "MATCH (d:Domain)<-[:BELONGS_TO]-(l:Locality) " +
+    "WHERE id(d)={0} AND NOT (l)-[:IS_IN*1..]->(:Locality) " +
+    "RETURN l, " +
+    "    [ [(l)<-[btl:IS_IN*1..]-(lc:Locality)-[:BELONGS_TO]->(d) | [btl, lc] ] " +
+    "]"
+  )
   Collection<Locality> findAllByDomainProperties(@Param("idDomain") Long idDomain);
 
   @Query("MATCH (l:Locality) WHERE id(l) = $id RETURN l, [ [(l)-[ii:IS_IN*]->(lc:Locality) | [ii, lc] ]]")

@@ -25,26 +25,24 @@ public class CheckPasteWorkpackService {
   }
 
   private static boolean areWorkpackModelsCompatible(
-    final WorkpackModel model,
-    final WorkpackModel other,
-    final WorkpackPasteResponse response
+      final WorkpackModel model,
+      final WorkpackModel other,
+      final WorkpackPasteResponse response
   ) {
     final boolean areCompatible = model.hasSameType(other)
-                                  && model.hasSameName(other)
-                                  && allAreCompatible(
-      model.getChildren(),
-      other.getChildren(),
-      response,
-      CheckPasteWorkpackService::areWorkpackModelsCompatible
-    );
-
-    if(areCompatible) {
-      allAreCompatible(
-        model.getProperties(),
-        other.getProperties(),
+        && model.hasSameName(other)
+        && allAreCompatible(
+        model.getChildren(),
+        other.getChildren(),
         response,
-        CheckPasteWorkpackService::arePropertyModelsCompatible
-      );
+        CheckPasteWorkpackService::areWorkpackModelsCompatible);
+
+    if (areCompatible) {
+      allAreCompatible(
+          model.getProperties(),
+          other.getProperties(),
+          response,
+          CheckPasteWorkpackService::arePropertyModelsCompatible);
     }
 
     response.setCanPaste(response.getCanPaste() && areCompatible);
@@ -52,20 +50,20 @@ public class CheckPasteWorkpackService {
   }
 
   private static <T> boolean allAreCompatible(
-    final Collection<? extends T> first,
-    final Collection<? extends T> second,
-    final WorkpackPasteResponse response,
-    final TriPredicate<T, T, ? super WorkpackPasteResponse> compatibleComparator
+      final Collection<? extends T> first,
+      final Collection<? extends T> second,
+      final WorkpackPasteResponse response,
+      final TriPredicate<T, T, ? super WorkpackPasteResponse> compatibleComparator
   ) {
-    if(first == null && second == null) {
+    if (first == null && second == null) {
       return true;
     }
 
-    if(first == null || second == null) {
+    if (first == null || second == null) {
       return false;
     }
 
-    if(first.size() != second.size()) {
+    if (first.size() != second.size()) {
       return false;
     }
 
@@ -75,8 +73,8 @@ public class CheckPasteWorkpackService {
     final Iterator<T> fromIterator = fromCopy.iterator();
     final Iterator<T> toIterator = toCopy.iterator();
 
-    while(fromIterator.hasNext() && toIterator.hasNext()) {
-      if(compatibleComparator.test(fromIterator.next(), toIterator.next(), response)) {
+    while (fromIterator.hasNext() && toIterator.hasNext()) {
+      if (compatibleComparator.test(fromIterator.next(), toIterator.next(), response)) {
         fromIterator.remove();
         toIterator.remove();
       }
@@ -90,9 +88,9 @@ public class CheckPasteWorkpackService {
   }
 
   private static boolean arePropertyModelsCompatible(
-    final PropertyModel model,
-    final PropertyModel other,
-    final WorkpackPasteResponse response
+      final PropertyModel model,
+      final PropertyModel other,
+      final WorkpackPasteResponse response
   ) {
     final boolean areCompatible = model.hasSameType(other) && model.hasSameName(other);
     response.setIncompatiblesProperties(response.getIncompatiblesProperties() || !areCompatible);
@@ -100,9 +98,9 @@ public class CheckPasteWorkpackService {
   }
 
   public WorkpackPasteResponse checksIfCanPasteWorkpack(
-    final Long idWorkpack,
-    final Long idWorkpackModelTo,
-    final Long idWorkpackModelFrom
+      final Long idWorkpack,
+      final Long idWorkpackModelTo,
+      final Long idWorkpackModelFrom
   ) {
     this.ifWorkpackIsNotInstantiatedByModelThrowsException(idWorkpack, idWorkpackModelFrom);
 
@@ -116,11 +114,11 @@ public class CheckPasteWorkpackService {
 
   private WorkpackModel getWorkpackModel(final Long idWorkpackModelFrom) {
     return this.workpackModelRepository.findByIdWorkpackWithChildren(idWorkpackModelFrom)
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACKMODEL_NOT_FOUND));
+        .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACKMODEL_NOT_FOUND));
   }
 
   private void ifWorkpackIsNotInstantiatedByModelThrowsException(final Long idWorkpack, final Long idWorkpackModelFrom) {
-    if(!this.isWorkpackInstanceByModel(idWorkpack, idWorkpackModelFrom)) {
+    if (!this.isWorkpackInstanceByModel(idWorkpack, idWorkpackModelFrom)) {
       throw new NegocioException(ApplicationMessage.WORKPACK_PASTE_ERROR);
     }
   }

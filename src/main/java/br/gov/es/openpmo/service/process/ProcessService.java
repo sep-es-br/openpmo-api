@@ -47,11 +47,11 @@ public class ProcessService {
 
   @Autowired
   public ProcessService(
-    final ProcessRepository repository,
-    final EDocsApi eDocsApi,
-    final WorkpackService workpackService,
-    final FindAllProcessUsingCustomFilter findAllProcess,
-    final CustomFilterService customFilterService
+      final ProcessRepository repository,
+      final EDocsApi eDocsApi,
+      final WorkpackService workpackService,
+      final FindAllProcessUsingCustomFilter findAllProcess,
+      final CustomFilterService customFilterService
   ) {
     this.repository = repository;
     this.eDocsApi = eDocsApi;
@@ -67,7 +67,7 @@ public class ProcessService {
 
   @Transactional
   public Process create(@Valid final ProcessCreateDto request) {
-    if(Objects.isNull(request.getIdWorkpack())) {
+    if (Objects.isNull(request.getIdWorkpack())) {
       throw new NegocioException(ID_WORKPACK_NOT_NULL);
     }
     final Workpack workpack = this.workpackService.findById(request.getIdWorkpack());
@@ -80,7 +80,7 @@ public class ProcessService {
   @Transactional
   public ProcessDetailDto update(final ProcessUpdateDto request, final Long idPerson) {
     final Process process = this.maybeFindById(request)
-      .orElseThrow(() -> new RegistroNaoEncontradoException(PROCESS_NOT_FOUND));
+        .orElseThrow(() -> new RegistroNaoEncontradoException(PROCESS_NOT_FOUND));
 
     final ProcessResponse processResponse = this.eDocsApi.findProcessByProtocol(process.getProcessNumber(), idPerson);
 
@@ -95,7 +95,7 @@ public class ProcessService {
   }
 
   public void deleteById(final Long id) {
-    if(Objects.isNull(id)) throw new IllegalArgumentException(PROCESS_ID_NOT_NULL);
+    if (Objects.isNull(id)) throw new IllegalArgumentException(PROCESS_ID_NOT_NULL);
 
     this.repository.deleteById(id);
   }
@@ -103,7 +103,7 @@ public class ProcessService {
   @Transactional
   public ProcessDetailDto findById(final Long idProcess, final Long idPerson) {
     final Process process = this.repository.findById(idProcess)
-      .orElseThrow(() -> new RegistroNaoEncontradoException(PROCESS_NOT_FOUND));
+        .orElseThrow(() -> new RegistroNaoEncontradoException(PROCESS_NOT_FOUND));
     final ProcessResponse processResponse = this.eDocsApi.findProcessByProtocol(process.getProcessNumber(), idPerson);
     this.updateProcessState(process, processResponse);
 
@@ -117,14 +117,14 @@ public class ProcessService {
 
   public List<ProcessCardDto> findAllAsCardDto(final Long idWorkpack, final Long idFilter) {
 
-    if(idWorkpack == null) {
+    if (idWorkpack == null) {
       throw new IllegalArgumentException(ID_WORKPACK_NOT_NULL);
     }
 
-    if(idFilter == null) {
+    if (idFilter == null) {
       return this.repository.findAllByWorkpack(idWorkpack).stream()
-        .map(ProcessCardDto::of)
-        .collect(Collectors.toList());
+          .map(ProcessCardDto::of)
+          .collect(Collectors.toList());
     }
     return this.findUsingCustomFilter(idWorkpack, idFilter);
   }
@@ -135,8 +135,8 @@ public class ProcessService {
     params.put("idWorkpack", idWorkpack);
     final List<Process> processes = this.findAllProcess.execute(filter, params);
     return processes.stream()
-      .map(ProcessCardDto::of)
-      .collect(Collectors.toList());
+        .map(ProcessCardDto::of)
+        .collect(Collectors.toList());
   }
 
 }

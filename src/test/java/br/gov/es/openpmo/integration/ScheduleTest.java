@@ -12,6 +12,7 @@ import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.costaccount.CostAccountStoreDto;
 import br.gov.es.openpmo.dto.domain.DomainStoreDto;
+import br.gov.es.openpmo.dto.domain.LocalityStoreDto;
 import br.gov.es.openpmo.dto.office.OfficeStoreDto;
 import br.gov.es.openpmo.dto.plan.PlanStoreDto;
 import br.gov.es.openpmo.dto.planmodel.PlanModelStoreDto;
@@ -24,7 +25,9 @@ import br.gov.es.openpmo.dto.workpack.TextDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackParamDto;
 import br.gov.es.openpmo.dto.workpackmodel.details.ResponseBaseWorkpackModelDetail;
 import br.gov.es.openpmo.dto.workpackmodel.params.WorkpackModelParamDto;
+import br.gov.es.openpmo.enumerator.LocalityTypesEnum;
 import br.gov.es.openpmo.enumerator.Session;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.neo4j.ogm.config.Configuration;
@@ -45,6 +48,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+
+import static java.util.Collections.singletonList;
 
 @Testcontainers
 @SpringBootTest class ScheduleTest extends BaseTest {
@@ -110,6 +115,11 @@ import java.util.List;
       domain.setName("Domain Test");
       domain.setFullName("Domain Test ADM ");
       domain.setIdOffice(this.idOffice);
+      final LocalityStoreDto localityRoot = new LocalityStoreDto();
+      domain.setLocalityRoot(localityRoot);
+      localityRoot.setName("Locality Root");
+      localityRoot.setType(LocalityTypesEnum.STATE);
+      localityRoot.setFullName("Locality Root");
       final ResponseEntity<ResponseBase<EntityDto>> response = this.domainController.save(domain);
       assertEquals(200, response.getStatusCodeValue());
       assertNotNull(response.getBody());
@@ -200,16 +210,21 @@ import java.util.List;
     schedule.setPlannedWork(new BigDecimal("120000"));
     schedule.setStart(LocalDate.of(2021, 1, 1));
     schedule.setEnd(LocalDate.of(2021, 12, 31));
-    final CostSchedule costSchedule = new CostSchedule();
-    costSchedule.setId(this.idCostAccount);
-    costSchedule.setPlannedCost(new BigDecimal("10000"));
-    costSchedule.setActualCost(BigDecimal.ZERO);
+    final CostSchedule costSchedule = this.getCostSchedule();
     schedule.setCosts(new HashSet<>());
     schedule.getCosts().add(costSchedule);
     final ResponseEntity<ResponseBase<EntityDto>> response = this.scheduleController.save(schedule);
     assertEquals(200, response.getStatusCodeValue());
     assertNotNull(response.getBody());
     assertNotNull(response.getBody().getData());
+  }
+
+  @NotNull private CostSchedule getCostSchedule() {
+    final CostSchedule costSchedule = new CostSchedule();
+    costSchedule.setId(this.idCostAccount);
+    costSchedule.setPlannedCost(new BigDecimal("10000"));
+    costSchedule.setActualCost(BigDecimal.ZERO);
+    return costSchedule;
   }
 
   @Test void shouldDelete() {
@@ -219,6 +234,7 @@ import java.util.List;
     schedule.setPlannedWork(new BigDecimal("120000"));
     schedule.setStart(LocalDate.of(2021, 1, 1));
     schedule.setEnd(LocalDate.of(2021, 12, 31));
+    schedule.setCosts(new HashSet<>(singletonList(this.getCostSchedule())));
     final ResponseEntity<ResponseBase<EntityDto>> response = this.scheduleController.save(schedule);
     assertEquals(200, response.getStatusCodeValue());
     assertNotNull(response.getBody());
@@ -235,6 +251,7 @@ import java.util.List;
     schedule.setPlannedWork(new BigDecimal("120000"));
     schedule.setStart(LocalDate.of(2020, 1, 1));
     schedule.setEnd(LocalDate.of(2020, 12, 31));
+    schedule.setCosts(new HashSet<>(singletonList(this.getCostSchedule())));
     final ResponseEntity<ResponseBase<EntityDto>> response = this.scheduleController.save(schedule);
     assertEquals(200, response.getStatusCodeValue());
     assertNotNull(response.getBody());
@@ -252,6 +269,7 @@ import java.util.List;
     schedule.setPlannedWork(new BigDecimal("120000"));
     schedule.setStart(LocalDate.of(2022, 1, 1));
     schedule.setEnd(LocalDate.of(2022, 12, 31));
+    schedule.setCosts(new HashSet<>(singletonList(this.getCostSchedule())));
     final ResponseEntity<ResponseBase<EntityDto>> response = this.scheduleController.save(schedule);
     assertEquals(200, response.getStatusCodeValue());
     assertNotNull(response.getBody());

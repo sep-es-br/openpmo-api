@@ -37,9 +37,9 @@ import br.gov.es.openpmo.service.actors.IsInContactBookOfService;
 import br.gov.es.openpmo.service.actors.OrganizationService;
 import br.gov.es.openpmo.service.actors.PersonService;
 import br.gov.es.openpmo.service.office.OfficeService;
+import br.gov.es.openpmo.service.permissions.IRemoteRolesFetcher;
 import br.gov.es.openpmo.service.permissions.OfficePermissionService;
 import br.gov.es.openpmo.service.permissions.PlanPermissionService;
-import br.gov.es.openpmo.service.permissions.RemoteRolesFetcher;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,7 +84,7 @@ public class StakeholderService {
   private final OfficePermissionService officePermissionService;
   private final IsAuthenticatedByRepository authenticationRepository;
   private final AcessoCidadaoApi acessoCidadaoApi;
-  private final RemoteRolesFetcher remoteRolesFetcher;
+  private final IRemoteRolesFetcher remoteRolesFetcher;
   @Value("${users.administrators}")
   private List<String> administrators;
   @Value("${app.login.server.name}")
@@ -106,7 +106,7 @@ public class StakeholderService {
     final OfficePermissionService officePermissionService,
     final IsAuthenticatedByRepository authenticationRepository,
     final AcessoCidadaoApi acessoCidadaoApi,
-    final RemoteRolesFetcher remoteRolesFetcher
+    final IRemoteRolesFetcher remoteRolesFetcher
   ) {
     this.personService = personService;
     this.serviceOrganization = serviceOrganization;

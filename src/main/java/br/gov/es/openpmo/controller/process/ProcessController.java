@@ -35,8 +35,8 @@ public class ProcessController {
 
   @GetMapping
   public ResponseEntity<ResponseBase<List<ProcessCardDto>>> findAll(
-    @RequestParam("id-workpack") final Long idWorkpack,
-    @RequestParam(value = "idFilter", required = false) final Long idFilter
+      @RequestParam("id-workpack") final Long idWorkpack,
+      @RequestParam(value = "idFilter", required = false) final Long idFilter
   ) {
     final List<ProcessCardDto> processes = this.service.findAllAsCardDto(idWorkpack, idFilter);
     final ResponseBase<List<ProcessCardDto>> response = ResponseBase.of(processes);
@@ -45,8 +45,8 @@ public class ProcessController {
 
   @GetMapping("/edocs")
   public ResponseEntity<ResponseBase<ProcessFromEDocsDto>> findProcessByProtocol(
-    @RequestParam(name = "process-number") final String protocol,
-    @RequestHeader(name = "Authorization") final String authorization
+      @RequestParam(name = "process-number") final String protocol,
+      @RequestHeader(name = "Authorization") final String authorization
   ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
     final ProcessFromEDocsDto processByProtocol = this.service.findProcessByProtocol(protocol, idPerson);
@@ -56,8 +56,8 @@ public class ProcessController {
 
   @GetMapping("/{id}")
   public ResponseEntity<ResponseBase<ProcessDetailDto>> findById(
-    @PathVariable final Long id,
-    @RequestHeader(name = "Authorization") final String authorization
+      @PathVariable final Long id,
+      @RequestHeader(name = "Authorization") final String authorization
   ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
     final ProcessDetailDto process = this.service.findById(id, idPerson);
@@ -74,8 +74,8 @@ public class ProcessController {
 
   @PutMapping
   public ResponseEntity<ResponseBase<ProcessDetailDto>> update(
-    @Valid @RequestBody final ProcessUpdateDto request,
-    @RequestHeader(name = "Authorization") final String authorization
+      @Valid @RequestBody final ProcessUpdateDto request,
+      @RequestHeader(name = "Authorization") final String authorization
   ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
     final ProcessDetailDto process = this.service.update(request, idPerson);

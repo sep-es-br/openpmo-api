@@ -2,28 +2,31 @@ package br.gov.es.openpmo.dto.workpackmodel;
 
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.PropertyModelDto;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.swagger.annotations.ApiModel;
 
-@JsonTypeInfo(use = Id.NAME, property = "type")
-@JsonSubTypes({@Type(value = PortfolioModelDto.class, name = "PortfolioModel"),
-  @Type(value = ProgramModelDto.class, name = "ProgramModel"),
-  @Type(value = OrganizerModelDto.class, name = "OrganizerModel"),
-  @Type(value = DeliverableModelDto.class, name = "DeliverableModel"),
-  @Type(value = ProjectModelDto.class, name = "ProjectModel"),
-  @Type(value = MilestoneModelDto.class, name = "MilestoneModel")})
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@JsonSubTypes({@JsonSubTypes.Type(value = PortfolioModelDto.class, name = "PortfolioModel"),
+    @JsonSubTypes.Type(value = ProgramModelDto.class, name = "ProgramModel"),
+    @JsonSubTypes.Type(value = OrganizerModelDto.class, name = "OrganizerModel"),
+    @JsonSubTypes.Type(value = DeliverableModelDto.class, name = "DeliverableModel"),
+    @JsonSubTypes.Type(value = ProjectModelDto.class, name = "ProjectModel"),
+    @JsonSubTypes.Type(value = MilestoneModelDto.class, name = "MilestoneModel")})
 @ApiModel(subTypes = {PortfolioModelDto.class, ProgramModelDto.class, OrganizerModelDto.class,
-  DeliverableModelDto.class, ProjectModelDto.class,
-  MilestoneModelDto.class}, discriminator = "type", description = "Supertype of all WorkpackModel.")
+    DeliverableModelDto.class, ProjectModelDto.class,
+    MilestoneModelDto.class}, discriminator = "type", description = "Supertype of all WorkpackModel.")
 public abstract class WorkpackModelDto {
 
   private Long id;
+
   private String type;
+
   private String modelName;
+
   private String modelNameInPlural;
+
   private String fontIcon;
+
   private PropertyModelDto sortBy;
 
   public Long getId() {
@@ -73,4 +76,5 @@ public abstract class WorkpackModelDto {
   public void setSortBy(final PropertyModelDto sortBy) {
     this.sortBy = sortBy;
   }
+
 }

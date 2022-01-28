@@ -9,46 +9,37 @@ import br.gov.es.openpmo.model.schedule.Schedule;
 import br.gov.es.openpmo.model.schedule.Step;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
 import br.gov.es.openpmo.model.workpacks.Workpack;
-import br.gov.es.openpmo.repository.CostAccountRepository;
-import br.gov.es.openpmo.repository.ScheduleRepository;
-import br.gov.es.openpmo.repository.StepRepository;
-import br.gov.es.openpmo.repository.WorkpackRepository;
+import br.gov.es.openpmo.repository.baselines.BaselineHelperScheduleRepository;
+import br.gov.es.openpmo.repository.baselines.BaselineHelperWorkpackRepository;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
 import java.util.function.BiFunction;
 
 @Component
 public class BaselineHelper {
 
-  private final WorkpackRepository workpackRepository;
+  private final BaselineHelperWorkpackRepository baselineHelperWorkpackRepository;
 
-  private final CostAccountRepository costAccountRepository;
-
-  private final StepRepository stepRepository;
-
-  private final ScheduleRepository scheduleRepository;
+  private final BaselineHelperScheduleRepository baselineHelperScheduleRepository;
 
   @Autowired
   public BaselineHelper(
-    final WorkpackRepository workpackRepository,
-    final CostAccountRepository costAccountRepository,
-    final StepRepository stepRepository,
-    final ScheduleRepository scheduleRepository
+      final BaselineHelperWorkpackRepository baselineHelperWorkpackRepository,
+      final BaselineHelperScheduleRepository baselineHelperScheduleRepository
   ) {
-    this.workpackRepository = workpackRepository;
-    this.costAccountRepository = costAccountRepository;
-    this.stepRepository = stepRepository;
-    this.scheduleRepository = scheduleRepository;
+    this.baselineHelperWorkpackRepository = baselineHelperWorkpackRepository;
+    this.baselineHelperScheduleRepository = baselineHelperScheduleRepository;
   }
 
   public <T extends Snapshotable<T>, R extends IsSnapshotOf<T>> void createMasterSnapshotRelationship(
-    final T master,
-    final T snapshot,
-    final Neo4jRepository<? super R, Long> repository,
-    final BiFunction<T, T, R> constructor
+      final T master,
+      final T snapshot,
+      final Neo4jRepository<? super R, Long> repository,
+      final BiFunction<T, T, R> constructor
   ) {
     master.setCategory(CategoryEnum.MASTER);
     snapshot.setCategory(CategoryEnum.SNAPSHOT);
@@ -58,60 +49,70 @@ public class BaselineHelper {
   }
 
   public <T extends Snapshotable<T>> T createSnapshot(
-    final T snapshotable,
-    final Neo4jRepository<? super T, Long> repository
+      final T snapshotable,
+      final Neo4jRepository<? super T, Long> repository
   ) {
     final T snapshot = snapshotable.snapshot();
     return repository.save(snapshot);
   }
 
   public <T extends Snapshotable<T>> void createBaselineSnapshotRelationship(
-    final Baseline baseline,
-    final T snapshot,
-    final Neo4jRepository<T, Long> repository
+      final Baseline baseline,
+      final T snapshot,
+      final Neo4jRepository<T, Long> repository
   ) {
     snapshot.setBaseline(baseline);
     repository.save(snapshot);
   }
 
   public void createIsInRelationship(
-    final Workpack child,
-    final Workpack parent
+      final Workpack child,
+      final Workpack parent
   ) {
-    child.addParent(parent);
-    this.workpackRepository.save(child);
+    ifIsNullThrowsException(child, ApplicationMessage.WORKPACK_IS_NULL);
+    ifIsNullThrowsException(parent, ApplicationMessage.COST_ACCOUNT_NOT_FOUND);
+    final Long childId = child.getId();
+    final Long parentId = parent.getId();
+    this.baselineHelperWorkpackRepository.createIsInRelationship(childId, parentId);
+  }
+
+  private static <T> void ifIsNullThrowsException(final T obj, final String message) {
+    if (Objects.isNull(obj)) {
+      throw new NegocioException(message);
+    }
   }
 
   public void createAppliesToRelationship(
-    final Workpack workpack,
-    final CostAccount costAccount
+      final Workpack workpack,
+      final CostAccount costAccount
   ) {
-    if(workpack == null) {
-      throw new NegocioException(ApplicationMessage.WORKPACK_IS_NULL);
-    }
-
-    workpack.addCost(costAccount);
-    this.workpackRepository.save(workpack);
+    ifIsNullThrowsException(workpack, ApplicationMessage.WORKPACK_IS_NULL);
+    ifIsNullThrowsException(costAccount, ApplicationMessage.COST_ACCOUNT_NOT_FOUND);
+    final Long workpackId = workpack.getId();
+    final Long costAccountId = costAccount.getId();
+    this.baselineHelperWorkpackRepository.createAppliesToRelationship(workpackId, costAccountId);
   }
 
   public void createFeatureRelationship(
-    final Workpack workpack,
-    final Schedule schedule
+      final Workpack workpack,
+      final Schedule schedule
   ) {
-    schedule.setWorkpack(workpack);
-    this.scheduleRepository.save(schedule);
+    ifIsNullThrowsException(workpack, ApplicationMessage.WORKPACK_IS_NULL);
+    ifIsNullThrowsException(schedule, ApplicationMessage.SCHEDULE_IS_NULL);
+    final Long workpackId = workpack.getId();
+    final Long scheduleId = schedule.getId();
+    this.baselineHelperWorkpackRepository.createFeaturesRelationship(workpackId, scheduleId);
   }
 
   public void createComposesRelationship(
-    final Schedule schedule,
-    final Step step
+      final Schedule schedule,
+      final Step step
   ) {
-    if(schedule == null) {
-      throw new NegocioException(ApplicationMessage.SCHEDULE_IS_NULL);
-    }
-
-    schedule.addStep(step);
-    this.scheduleRepository.save(schedule);
+    ifIsNullThrowsException(schedule, ApplicationMessage.SCHEDULE_IS_NULL);
+    ifIsNullThrowsException(step, ApplicationMessage.STEP_NOT_FOUND);
+    final Long scheduleId = schedule.getId();
+    final Long stepId = step.getId();
+    this.baselineHelperScheduleRepository.createComposesRelationship(scheduleId, stepId);
   }
 
 }

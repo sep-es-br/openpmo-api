@@ -23,7 +23,7 @@ public class DeleteCCBMemberService implements IDeleteCCBMemberService {
   public void delete(final Long idPerson, final Long idWorkpack) {
     final List<IsCCBMember> ccbMembers = this.getAllByPersonIdAndWorkpackId(idPerson, idWorkpack);
 
-    if(ccbMembers.isEmpty()) {
+    if (ccbMembers.isEmpty()) {
       throw new NegocioException(ApplicationMessage.CCB_MEMBER_NOT_FOUND);
     }
 

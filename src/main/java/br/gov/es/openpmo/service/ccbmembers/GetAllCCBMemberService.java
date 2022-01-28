@@ -27,10 +27,10 @@ public class GetAllCCBMemberService implements IGetAllCCBMemberService {
   @Override
   public List<CCBMemberResponse> getAll(final Long workpackId) {
     return this.findAllCCBMmembersByWorkpackId(workpackId)
-      .stream()
-      .map(this::getCCBMemberResponse)
-      .filter(distinctByKey(CCBMemberResponse::getPersonId))
-      .collect(Collectors.toList());
+        .stream()
+        .map(this::getCCBMemberResponse)
+        .filter(distinctByKey(CCBMemberResponse::getPersonId))
+        .collect(Collectors.toList());
   }
 
   private static <T> Predicate<T> distinctByKey(final Function<? super T, ?> keyExtractor) {
@@ -46,23 +46,23 @@ public class GetAllCCBMemberService implements IGetAllCCBMemberService {
     final List<MemberAs> memberAs = this.getMemberAs(ccbMember);
 
     return new CCBMemberResponse(
-      ccbMember.getPersonResponse(),
-      memberAs,
-      memberAs.stream().anyMatch(MemberAs::getActive)
+        ccbMember.getPersonResponse(),
+        memberAs,
+        memberAs.stream().anyMatch(MemberAs::getActive)
     );
   }
 
   private List<MemberAs> getMemberAs(final IsCCBMember ccbMember) {
     return this.findByPersonIdAndWorkpackId(ccbMember)
-      .stream()
-      .map(IsCCBMember::getMemberAs)
-      .collect(Collectors.toList());
+        .stream()
+        .map(IsCCBMember::getMemberAs)
+        .collect(Collectors.toList());
   }
 
   private List<IsCCBMember> findByPersonIdAndWorkpackId(final IsCCBMember ccbMember) {
     return this.ccbMemberRepository.findByPersonIdAndWorkpackId(
-      ccbMember.getIdPerson(),
-      ccbMember.getWorkpackId()
+        ccbMember.getIdPerson(),
+        ccbMember.getWorkpackId()
     );
   }
 

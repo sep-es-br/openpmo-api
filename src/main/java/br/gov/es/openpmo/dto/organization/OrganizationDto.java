@@ -24,7 +24,6 @@ public class OrganizationDto {
     this.fullName = organization.getFullName();
     this.address = organization.getAddress();
     this.phoneNumber = organization.getPhoneNumber();
-
     this.contactEmail = organization.getContactEmail();
     this.sector = organization.getSector();
     this.website = organization.getWebsite();

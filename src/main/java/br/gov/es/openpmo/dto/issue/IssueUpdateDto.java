@@ -31,12 +31,12 @@ public class IssueUpdateDto {
 
   @JsonCreator
   public IssueUpdateDto(
-    final String name,
-    final String description,
-    final Importance importance,
-    final StatusOfIssue status,
-    final NatureOfIssue nature,
-    final Long id
+      final String name,
+      final String description,
+      final Importance importance,
+      final StatusOfIssue status,
+      final NatureOfIssue nature,
+      final Long id
   ) {
     this.name = name;
     this.description = description;

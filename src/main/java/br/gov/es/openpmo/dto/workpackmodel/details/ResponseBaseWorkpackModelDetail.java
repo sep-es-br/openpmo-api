@@ -13,6 +13,13 @@ public class ResponseBaseWorkpackModelDetail {
   @ApiModelProperty(position = 3)
   private WorkpackModelDetailDto data;
 
+  public static ResponseBaseWorkpackModelDetail success(final WorkpackModelDetailDto data) {
+    return new ResponseBaseWorkpackModelDetail()
+      .setData(data)
+      .setSuccess(true)
+      .setMessage("Sucesso");
+  }
+
   public String getMessage() {
     return this.message;
   }

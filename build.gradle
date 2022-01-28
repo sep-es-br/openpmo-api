@@ -27,8 +27,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.modelmapper:modelmapper:2.3.6'
 	implementation 'org.apache.commons:commons-lang3:3.9'
-	implementation 'org.apache.httpcomponents:httpclient:4.5.12';
-	implementation 'org.json:json:20190722';
+	implementation 'org.apache.httpcomponents:httpclient:4.5.12'
+	implementation 'org.json:json:20190722'
 	implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 	implementation 'io.jsonwebtoken:jjwt:0.7.0'
 	implementation 'javax.xml.bind:jaxb-api:2.3.1'
@@ -45,9 +45,9 @@ dependencies {
 	testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$junitJupiterVersion"
 	testCompile "org.junit.jupiter:junit-jupiter-api:$junitJupiterVersion"
 	testCompile "org.junit.jupiter:junit-jupiter-params:$junitJupiterVersion"
-	testCompile "org.testcontainers:testcontainers:1.12.5"
-	testCompile "org.testcontainers:junit-jupiter:1.12.5"
-	testCompile "org.testcontainers:neo4j:1.12.5"
+	testCompile 'org.testcontainers:testcontainers:1.16.2'
+	testCompile 'org.testcontainers:junit-jupiter:1.16.2'
+	testCompile 'org.testcontainers:neo4j:1.16.2'
 }
 
 test {

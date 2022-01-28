@@ -39,9 +39,9 @@ public class CitizenService {
 
   @Autowired
   public CitizenService(
-    final AcessoCidadaoApi acessoCidadaoApi,
-    final PersonService personService,
-    final IsInContactBookOfService contactService
+      final AcessoCidadaoApi acessoCidadaoApi,
+      final PersonService personService,
+      final IsInContactBookOfService contactService
   ) {
     this.acessoCidadaoApi = acessoCidadaoApi;
     this.personService = personService;
@@ -51,16 +51,16 @@ public class CitizenService {
   @Transactional
   public List<CitizenByNameQuery> findPersonByName(final String name, final Long idPerson) {
     final List<PublicAgentResponse> publicAgentResponses = this.acessoCidadaoApi
-      .findAllPublicAgents(idPerson)
-      .stream()
-      .filter(agent -> isAgentNameContainedInQueryName(name, agent))
-      .collect(Collectors.toList());
+        .findAllPublicAgents(idPerson)
+        .stream()
+        .filter(agent -> isAgentNameContainedInQueryName(name, agent))
+        .collect(Collectors.toList());
 
     return publicAgentResponses.stream()
-      .map(agent -> new CitizenByNameQuery(agent.getName(), agent.getSub()))
-      .filter(Objects::nonNull)
-      .sorted(CitizenService::orderByAgentName)
-      .collect(Collectors.toList());
+        .map(agent -> new CitizenByNameQuery(agent.getName(), agent.getSub()))
+        .filter(Objects::nonNull)
+        .sorted(CitizenService::orderByAgentName)
+        .collect(Collectors.toList());
   }
 
   private static int orderByAgentName(final CitizenByNameQuery agent1, final CitizenByNameQuery agent2) {
@@ -77,14 +77,14 @@ public class CitizenService {
     final Optional<PublicAgentResponse> maybeAgent = this.acessoCidadaoApi.findPublicAgentBySub(sub, idPerson);
 
     return maybeAgent.isPresent() ?
-      this.processPublicAgent(maybeAgent.get(), idOffice, idPerson) :
-      this.processNonPublicAgent(sub, idOffice, idPerson);
+        this.processPublicAgent(maybeAgent.get(), idOffice, idPerson) :
+        this.processNonPublicAgent(sub, idOffice, idPerson);
   }
 
   private String findSubByCpf(final String cpf, final Long idPerson) {
     return this.acessoCidadaoApi
-      .findSubByCpf(cpf, idPerson)
-      .orElseThrow(() -> new NegocioException(CITIZEN_NOT_FOUND));
+        .findSubByCpf(cpf, idPerson)
+        .orElseThrow(() -> new NegocioException(CITIZEN_NOT_FOUND));
   }
 
   private CitizenDto processPublicAgent(final PublicAgentResponse agent, final Long idOffice, final Long idPerson) {
@@ -95,11 +95,11 @@ public class CitizenService {
     final Optional<PublicAgentEmailResponse> maybeAgentEmail = this.acessoCidadaoApi.findAgentEmail(agent.getSub(), idPerson);
 
     final List<RoleResource> roles = this.acessoCidadaoApi.findRoles(agent.getSub(), idPerson)
-      .stream()
-      .map(roleResponse -> this.getRoleDto(roleResponse, idPerson))
-      .collect(Collectors.toList());
+        .stream()
+        .map(roleResponse -> this.getRoleDto(roleResponse, idPerson))
+        .collect(Collectors.toList());
 
-    if(!maybeAgentEmail.isPresent()) {
+    if (!maybeAgentEmail.isPresent()) {
       return null;
     }
 
@@ -121,61 +121,61 @@ public class CitizenService {
   }
 
   private CitizenDto buildCitizenDto(
-    final PublicAgentResponse agent, final List<RoleResource> roles,
-    final PublicAgentEmailResponse publicAgentEmailResponse, final Optional<Person> maybePerson, final Long idOffice
+      final PublicAgentResponse agent, final List<RoleResource> roles,
+      final PublicAgentEmailResponse publicAgentEmailResponse, final Optional<Person> maybePerson, final Long idOffice
   ) {
-    if(!maybePerson.isPresent()) {
+    if (!maybePerson.isPresent()) {
       return buildDtoFromPublicAgent(
-        publicAgentEmailResponse,
-        agent,
-        roles
+          publicAgentEmailResponse,
+          agent,
+          roles
       );
     }
     final Person person = maybePerson.get();
     return this.buildDtoFromCitizenAlreadyRegistered(
-      roles,
-      person,
-      idOffice
+        roles,
+        person,
+        idOffice
     );
   }
 
   private CitizenDto buildDtoFromCitizenAlreadyRegistered(final List<RoleResource> roles, final Person person, final Long idOffice) {
     final CitizenDtoBuilder builder = CitizenDtoBuilder.aCitizenDto()
-      .withId(person.getId())
-      .withName(person.getName())
-      .withFullName(person.getFullName())
-      .withRoles(roles);
+        .withId(person.getId())
+        .withName(person.getName())
+        .withFullName(person.getFullName())
+        .withRoles(roles);
 
-    if(idOffice != null) {
+    if (idOffice != null) {
       final Optional<IsInContactBookOf> maybeContactInformation = this.contactService.findContactInformationUsingPersonIdAndOffice(
-        person.getId(),
-        idOffice
+          person.getId(),
+          idOffice
       );
       maybeContactInformation.ifPresent(contact -> {
         builder.withContactEmail(contact.getEmail())
-          .withAddress(contact.getAddress())
-          .withPhoneNumber(contact.getPhoneNumber());
+            .withAddress(contact.getAddress())
+            .withPhoneNumber(contact.getPhoneNumber());
       });
     }
 
     person.findAuthenticationDataBy(this.serverName)
-      .ifPresent(auth -> builder.withEmail(auth.getEmail()));
+        .ifPresent(auth -> builder.withEmail(auth.getEmail()));
 
     return builder.build();
   }
 
   private static CitizenDto buildDtoFromPublicAgent(
-    final PublicAgentEmailResponse publicAgentEmailResponse,
-    final PublicAgentResponse agent, final List<RoleResource> roles
+      final PublicAgentEmailResponse publicAgentEmailResponse,
+      final PublicAgentResponse agent, final List<RoleResource> roles
   ) {
     final String[] nameSplited = agent.getName().split(" ");
     return CitizenDtoBuilder.aCitizenDto()
-      .withName(nameSplited.length == 0 ? agent.getName() : nameSplited[0])
-      .withEmail(publicAgentEmailResponse.getEmail())
-      .withContactEmail(publicAgentEmailResponse.getCorporateEmail())
-      .withFullName(agent.getName())
-      .withRoles(roles)
-      .build();
+        .withName(nameSplited.length == 0 ? agent.getName() : nameSplited[0])
+        .withEmail(publicAgentEmailResponse.getEmail())
+        .withContactEmail(publicAgentEmailResponse.getCorporateEmail())
+        .withFullName(agent.getName())
+        .withRoles(roles)
+        .build();
   }
 
   private CitizenDto processNonPublicAgent(final String sub, final Long idOffice, final Long idPerson) {
@@ -183,34 +183,34 @@ public class CitizenService {
     final Optional<Person> maybePerson = this.personService.findByEmail(agentEmail.getEmail());
 
     final List<RoleResource> roles = this.acessoCidadaoApi.findRoles(sub, idPerson)
-      .stream()
-      .map(roleResponse -> this.getRoleDto(roleResponse, idPerson))
-      .collect(Collectors.toList());
+        .stream()
+        .map(roleResponse -> this.getRoleDto(roleResponse, idPerson))
+        .collect(Collectors.toList());
 
-    if(maybePerson.isPresent()) {
+    if (maybePerson.isPresent()) {
       return this.buildDtoFromCitizenAlreadyRegistered(roles, maybePerson.get(), idOffice);
     }
 
     final String[] parsedName = agentEmail.getEmail().split("@");
     return CitizenDtoBuilder.aCitizenDto()
-      .withName(parsedName.length == 0 ? agentEmail.getEmail() : parsedName[0])
-      .withFullName(parsedName.length == 0 ? agentEmail.getEmail() : parsedName[0])
-      .withEmail(agentEmail.getEmail())
-      .withContactEmail(agentEmail.getCorporateEmail())
-      .withIsUser(false)
-      .withRoles(roles)
-      .build();
+        .withName(parsedName.length == 0 ? agentEmail.getEmail() : parsedName[0])
+        .withFullName(parsedName.length == 0 ? agentEmail.getEmail() : parsedName[0])
+        .withEmail(agentEmail.getEmail())
+        .withContactEmail(agentEmail.getCorporateEmail())
+        .withIsUser(false)
+        .withRoles(roles)
+        .build();
   }
 
   private PublicAgentEmailResponse findAgentEmail(final String sub, final Long idPerson) {
     return this.acessoCidadaoApi
-      .findAgentEmail(sub, idPerson)
-      .orElseThrow(() -> new NegocioException(CITIZEN_EMAIL_NOT_FOUND));
+        .findAgentEmail(sub, idPerson)
+        .orElseThrow(() -> new NegocioException(CITIZEN_EMAIL_NOT_FOUND));
   }
 
   public CitizenDto findCitizenBySub(final String sub, final Long idOffice, final Long idPerson) {
     final PublicAgentResponse agent = this.acessoCidadaoApi.findPublicAgentBySub(sub, idPerson)
-      .orElseThrow(() -> new NegocioException(CITIZEN_NOT_FOUND));
+        .orElseThrow(() -> new NegocioException(CITIZEN_NOT_FOUND));
 
     return this.toCitizenDto(agent, idOffice, idPerson);
   }

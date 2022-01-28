@@ -168,5 +168,4 @@ public class PersonDto {
   public void setGuid(final String guid) {
     this.guid = guid;
   }
-
 }

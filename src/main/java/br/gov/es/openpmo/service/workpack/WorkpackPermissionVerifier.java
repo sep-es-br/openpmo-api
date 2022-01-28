@@ -78,10 +78,6 @@ public class WorkpackPermissionVerifier {
     return permissions;
   }
 
-  private static boolean hasEditLevel(final PermissionDto permission) {
-    return EDIT == permission.getLevel();
-  }
-
   public List<PermissionDto> fetchPermissions(final WorkpackDetailDto workpackDetailDto, final Long idUser, final Long idPlan) {
     final Person person = this.personService.findById(idUser);
     final Plan plan = this.findPlanById(idPlan);
@@ -259,6 +255,10 @@ public class WorkpackPermissionVerifier {
       .filter(canAccessPlan -> canAccessPlan.hasSameUser(idUser))
       .map(PermissionDto::of)
       .collect(Collectors.toList());
+  }
+
+  private static boolean hasEditLevel(final PermissionDto permission) {
+    return EDIT == permission.getLevel();
   }
 
   private Plan findPlanById(final Long idPlan) {

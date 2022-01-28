@@ -49,6 +49,14 @@ public class IsInContactBookOf {
     this.phoneNumber = personDto.getPhoneNumber();
   }
 
+  public void setPerson(final Person person) {
+    this.person = person;
+  }
+
+  public void setOffice(final Office office) {
+    this.office = office;
+  }
+
   @Transient
   public Long getPersonId() {
     return this.getPerson().getId();
@@ -58,10 +66,6 @@ public class IsInContactBookOf {
     return this.person;
   }
 
-  public void setPerson(final Person person) {
-    this.person = person;
-  }
-
   @Transient
   public Long getOfficeId() {
     return this.office.getId();
@@ -69,10 +73,6 @@ public class IsInContactBookOf {
 
   public Office getOffice() {
     return this.office;
-  }
-
-  public void setOffice(final Office office) {
-    this.office = office;
   }
 
   public Long getId() {
@@ -87,24 +87,12 @@ public class IsInContactBookOf {
     return this.email;
   }
 
-  public void setEmail(final String email) {
-    this.email = email;
-  }
-
   public String getAddress() {
     return this.address;
   }
 
-  public void setAddress(final String address) {
-    this.address = address;
-  }
-
   public String getPhoneNumber() {
     return this.phoneNumber;
-  }
-
-  public void setPhoneNumber(final String phoneNumber) {
-    this.phoneNumber = phoneNumber;
   }
 
   @Override
@@ -114,8 +102,8 @@ public class IsInContactBookOf {
 
   @Override
   public boolean equals(final Object o) {
-    if(this == o) return true;
-    if(o == null || this.getClass() != o.getClass()) return false;
+    if (this == o) return true;
+    if (o == null || this.getClass() != o.getClass()) return false;
     final IsInContactBookOf isInContactBookOf = (IsInContactBookOf) o;
     return this.id.equals(isInContactBookOf.id);
   }
@@ -124,6 +112,18 @@ public class IsInContactBookOf {
     this.email = personUpdateDto.getContactEmail();
     this.address = personUpdateDto.getAddress();
     this.phoneNumber = personUpdateDto.getPhoneNumber();
+  }
+
+  public void setEmail(final String email) {
+    this.email = email;
+  }
+
+  public void setAddress(final String address) {
+    this.address = address;
+  }
+
+  public void setPhoneNumber(final String phoneNumber) {
+    this.phoneNumber = phoneNumber;
   }
 
 }

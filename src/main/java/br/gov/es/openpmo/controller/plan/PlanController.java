@@ -36,8 +36,7 @@ public class PlanController {
   @Autowired
   public PlanController(
     final PlanService planService, final OfficeService officeService,
-    final PlanModelService planModelService, final ModelMapper modelMapper, final TokenService tokenService
-  ) {
+    final PlanModelService planModelService, final ModelMapper modelMapper, final TokenService tokenService) {
     this.planService = planService;
     this.officeService = officeService;
     this.planModelService = planModelService;

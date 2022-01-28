@@ -21,9 +21,9 @@ public interface ICCBMemberController {
 
   @GetMapping
   Response<CCBMemberResponse> getCCBMember(
-    @RequestParam("id-person") Long idPerson,
-    @RequestParam("id-workpack") Long idWorkpack,
-    @RequestParam("id-plan") Long idPlan
+      @RequestParam("id-person") Long idPerson,
+      @RequestParam("id-workpack") Long idWorkpack,
+      @RequestParam("id-plan") Long idPlan
   );
 
   @Transactional
@@ -37,8 +37,8 @@ public interface ICCBMemberController {
   @Transactional
   @DeleteMapping
   Response<Void> delete(
-    @RequestParam("id-person") Long idPerson,
-    @RequestParam("id-workpack") Long idWorkpack
+      @RequestParam("id-person") Long idPerson,
+      @RequestParam("id-workpack") Long idWorkpack
   );
 
 }

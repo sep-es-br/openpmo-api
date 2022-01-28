@@ -8,13 +8,16 @@ import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.office.OfficeStoreDto;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
+import br.gov.es.openpmo.dto.person.PersonDto;
 import br.gov.es.openpmo.dto.plan.PlanStoreDto;
 import br.gov.es.openpmo.dto.planmodel.PlanModelStoreDto;
 import br.gov.es.openpmo.dto.planpermission.PlanPermissionDto;
 import br.gov.es.openpmo.dto.planpermission.PlanPermissionParamDto;
 import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.model.Entity;
-import org.junit.jupiter.api.Assertions;
+import br.gov.es.openpmo.model.actors.AuthService;
+import br.gov.es.openpmo.repository.AuthServiceRepository;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.neo4j.ogm.config.Configuration;
@@ -25,11 +28,15 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.ResponseEntity;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import static java.util.Collections.singletonList;
 
 @Testcontainers
 @SpringBootTest class PlanPermissionTest extends BaseTest {
@@ -45,10 +52,14 @@ import java.util.List;
 
   @Autowired
   private PlanModelController planModelController;
+  @Autowired
+  private AuthServiceRepository authServiceRepository;
 
   private Long idOffice;
   private Long idPlanModel;
   private Long idPlan;
+  private AuthService authService;
+
 
   @BeforeEach void loadPlan() {
     if(this.idOffice == null) {
@@ -56,9 +67,15 @@ import java.util.List;
       office.setName("Office Test Plan");
       office.setFullName("Office Test Plan ");
       final ResponseEntity<ResponseBase<EntityDto>> response = this.officeController.save(office);
-      Assertions.assertNotNull(response.getBody());
-      Assertions.assertNotNull(response.getBody().getData());
+      assertNotNull(response.getBody());
+      assertNotNull(response.getBody().getData());
       this.idOffice = response.getBody().getData().getId();
+    }
+    if(this.authService == null) {
+      this.authService = new AuthService();
+      this.authService.setServer("AcessoCidadao");
+      this.authService.setEndPoint("");
+      this.authServiceRepository.save(this.authService);
     }
     if(this.idPlanModel == null) {
       final PlanModelStoreDto planModel = new PlanModelStoreDto(
@@ -69,9 +86,9 @@ import java.util.List;
         Collections.emptySet()
       );
       final ResponseEntity<ResponseBase<EntityDto>> response = this.planModelController.save(planModel);
-      Assertions.assertEquals(200, response.getStatusCodeValue());
-      Assertions.assertNotNull(response.getBody());
-      Assertions.assertNotNull(response.getBody().getData());
+      assertEquals(200, response.getStatusCodeValue());
+      assertNotNull(response.getBody());
+      assertNotNull(response.getBody().getData());
       this.idPlanModel = response.getBody().getData().getId();
     }
     if(this.idPlan == null) {
@@ -83,8 +100,8 @@ import java.util.List;
       plan.setStart(LocalDate.now().minusMonths(2));
       plan.setFinish(LocalDate.now().plusMonths(2));
       final ResponseEntity<ResponseBase<EntityDto>> response = this.planController.save(plan);
-      Assertions.assertNotNull(response.getBody());
-      Assertions.assertNotNull(response.getBody().getData());
+      assertNotNull(response.getBody());
+      assertNotNull(response.getBody().getData());
       this.idPlan = response.getBody().getData().getId();
     }
   }
@@ -92,15 +109,24 @@ import java.util.List;
   @Test void shouldCreatePlanPermission() {
     final PlanPermissionParamDto planPermission = new PlanPermissionParamDto();
     planPermission.setEmail("plan.test@openpmo.com");
+    final PersonDto personDto = this.getPersonDto();
+    planPermission.setPerson(personDto);
     final PermissionDto permissionDto = new PermissionDto();
     permissionDto.setLevel(PermissionLevelEnum.EDIT);
     permissionDto.setRole("roleTest");
-    planPermission.setPermissions(new ArrayList<>());
-    planPermission.getPermissions().add(permissionDto);
+    planPermission.setPermissions(singletonList(permissionDto));
     planPermission.setIdPlan(this.idPlan);
     final ResponseEntity<ResponseBase<Entity>> response = this.planPermissionController.store(planPermission);
-    Assertions.assertEquals(200, response.getStatusCodeValue());
-    Assertions.assertNotNull(response.getBody());
+    assertEquals(200, response.getStatusCodeValue());
+    assertNotNull(response.getBody());
+  }
+
+  @NotNull private PersonDto getPersonDto() {
+    final PersonDto personDto = new PersonDto();
+    personDto.setName("plan.test");
+    personDto.setFullName("plan.test");
+    personDto.setContactEmail("plan.test@openpmo.com");
+    return personDto;
   }
 
   @Test void shouldUpdatePlanPermission() {
@@ -109,18 +135,18 @@ import java.util.List;
     final PermissionDto permissionDto = new PermissionDto();
     permissionDto.setLevel(PermissionLevelEnum.EDIT);
     permissionDto.setRole("roleTest");
-    planPermission.setPermissions(new ArrayList<>());
-    planPermission.getPermissions().add(permissionDto);
+    planPermission.setPermissions(singletonList(permissionDto));
+    planPermission.setPerson(this.getPersonDto());
     planPermission.setIdPlan(this.idPlan);
     ResponseEntity<ResponseBase<Entity>> response = this.planPermissionController.store(planPermission);
-    Assertions.assertEquals(200, response.getStatusCodeValue());
-    Assertions.assertNotNull(response.getBody());
+    assertEquals(200, response.getStatusCodeValue());
+    assertNotNull(response.getBody());
     final PlanPermissionParamDto planPermissionUpdate = new PlanPermissionParamDto();
     planPermissionUpdate.setEmail("plan.test@openpmo.com");
     planPermissionUpdate.setIdPlan(this.idPlan);
     response = this.planPermissionController.update(planPermissionUpdate);
-    Assertions.assertEquals(200, response.getStatusCodeValue());
-    Assertions.assertNotNull(response.getBody());
+    assertEquals(200, response.getStatusCodeValue());
+    assertNotNull(response.getBody());
   }
 
   @Test void shouldDelete() {
@@ -129,14 +155,14 @@ import java.util.List;
     final PermissionDto permissionDto = new PermissionDto();
     permissionDto.setLevel(PermissionLevelEnum.EDIT);
     permissionDto.setRole("roleTest");
-    planPermission.setPermissions(new ArrayList<>());
-    planPermission.getPermissions().add(permissionDto);
+    planPermission.setPermissions(singletonList(permissionDto));
+    planPermission.setPerson(this.getPersonDto());
     planPermission.setIdPlan(this.idPlan);
     final ResponseEntity<ResponseBase<Entity>> response = this.planPermissionController.store(planPermission);
-    Assertions.assertEquals(200, response.getStatusCodeValue());
-    Assertions.assertNotNull(response.getBody());
+    assertEquals(200, response.getStatusCodeValue());
+    assertNotNull(response.getBody());
     final ResponseEntity<Void> responseDelete = this.planPermissionController.delete(this.idPlan, "plan.test@openpmo.com");
-    Assertions.assertEquals(200, responseDelete.getStatusCodeValue());
+    assertEquals(200, responseDelete.getStatusCodeValue());
   }
 
   @Test void shouldListAll() {
@@ -145,19 +171,19 @@ import java.util.List;
     final PermissionDto permissionDto = new PermissionDto();
     permissionDto.setLevel(PermissionLevelEnum.EDIT);
     permissionDto.setRole("roleTest");
-    planPermission.setPermissions(new ArrayList<>());
-    planPermission.getPermissions().add(permissionDto);
+    planPermission.setPerson(this.getPersonDto());
+    planPermission.setPermissions(singletonList(permissionDto));
     planPermission.setIdPlan(this.idPlan);
     final ResponseEntity<ResponseBase<Entity>> response = this.planPermissionController.store(planPermission);
-    Assertions.assertEquals(200, response.getStatusCodeValue());
+    assertEquals(200, response.getStatusCodeValue());
     final ResponseEntity<ResponseBase<List<PlanPermissionDto>>> responseList = this.planPermissionController.indexBase(
       this.idPlan,
       null
     );
-    Assertions.assertEquals(200, responseList.getStatusCodeValue());
-    Assertions.assertNotNull(responseList.getBody());
-    Assertions.assertNotNull(responseList.getBody().getData());
-    Assertions.assertFalse(responseList.getBody().getData().isEmpty());
+    assertEquals(200, responseList.getStatusCodeValue());
+    assertNotNull(responseList.getBody());
+    assertNotNull(responseList.getBody().getData());
+    assertFalse(responseList.getBody().getData().isEmpty());
   }
 
   @TestConfiguration

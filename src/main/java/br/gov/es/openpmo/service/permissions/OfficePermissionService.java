@@ -48,7 +48,7 @@ public class OfficePermissionService {
   private final FindAllOfficePermissionByIdPersonUsingCustomFilter findAllOfficePermissionByIdPerson;
   private final IsInContactBookOfService isInContactBookOfService;
   private final IsAuthenticatedByService isAuthenticatedByService;
-  private final RemoteRolesFetcher remoteRolesFetcher;
+  private final IRemoteRolesFetcher remoteRolesFetcher;
 
   @Autowired
   public OfficePermissionService(
@@ -60,7 +60,7 @@ public class OfficePermissionService {
     final FindAllOfficePermissionByIdPersonUsingCustomFilter findAllOfficePermissionByIdPerson,
     final IsInContactBookOfService isInContactBookOfService,
     final IsAuthenticatedByService isAuthenticatedByService,
-    final RemoteRolesFetcher remoteRolesFetcher
+    final IRemoteRolesFetcher remoteRolesFetcher
   ) {
     this.repository = repository;
     this.customFilterRepository = customFilterRepository;

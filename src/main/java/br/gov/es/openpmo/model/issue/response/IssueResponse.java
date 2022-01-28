@@ -39,12 +39,12 @@ public class IssueResponse extends Entity {
   }
 
   public IssueResponse(
-    final String name,
-    final String plan,
-    final LocalDate date,
-    final IssueResponseStatus status,
-    final Issue issue,
-    final Set<Person> responsible
+      final String name,
+      final String plan,
+      final LocalDate date,
+      final IssueResponseStatus status,
+      final Issue issue,
+      final Set<Person> responsible
   ) {
     this.name = name;
     this.plan = plan;
@@ -56,27 +56,27 @@ public class IssueResponse extends Entity {
 
   public static IssueResponse of(final RiskResponse response, final Issue issue) {
     return new IssueResponse(
-      response.getName(),
-      response.getPlan(),
-      LocalDate.now(),
-      IssueResponseStatus.RUNNING,
-      issue,
-      response.getResponsible()
+        response.getName(),
+        response.getPlan(),
+        LocalDate.now(),
+        IssueResponseStatus.RUNNING,
+        issue,
+        response.getResponsible()
     );
   }
 
   public static IssueResponse of(
-    final IssueResponseCreateDto request,
-    final Issue issue,
-    final Set<Person> responsible
+      final IssueResponseCreateDto request,
+      final Issue issue,
+      final Set<Person> responsible
   ) {
     return new IssueResponse(
-      request.getName(),
-      request.getPlan(),
-      request.getDate(),
-      request.getStatus(),
-      issue,
-      responsible
+        request.getName(),
+        request.getPlan(),
+        request.getDate(),
+        request.getStatus(),
+        issue,
+        responsible
     );
   }
 
@@ -87,10 +87,6 @@ public class IssueResponse extends Entity {
 
   public String getName() {
     return this.name;
-  }
-
-  public void setName(final String name) {
-    this.name = name;
   }
 
   public String getPlan() {
@@ -105,16 +101,8 @@ public class IssueResponse extends Entity {
     return this.date;
   }
 
-  public void setDate(final LocalDate date) {
-    this.date = date;
-  }
-
   public IssueResponseStatus getStatus() {
     return this.status;
-  }
-
-  public void setStatus(final IssueResponseStatus status) {
-    this.status = status;
   }
 
   public Issue getIssue() {
@@ -135,10 +123,10 @@ public class IssueResponse extends Entity {
 
   @Transient
   public Set<StakeholderCardViewDto> getResponsibleAsCardView() {
-    if(this.responsible == null) return Collections.emptySet();
+    if (this.responsible == null) return Collections.emptySet();
     return this.responsible.stream()
-      .map(StakeholderCardViewDto::of)
-      .collect(Collectors.toSet());
+        .map(StakeholderCardViewDto::of)
+        .collect(Collectors.toSet());
   }
 
   @Transient
@@ -147,6 +135,18 @@ public class IssueResponse extends Entity {
     ObjectUtils.updateIfPresent(request::getPlan, this::setName);
     ObjectUtils.updateIfPresent(request::getStatus, this::setStatus);
     ObjectUtils.updateIfPresent(request::getDate, this::setDate);
+  }
+
+  public void setName(final String name) {
+    this.name = name;
+  }
+
+  public void setDate(final LocalDate date) {
+    this.date = date;
+  }
+
+  public void setStatus(final IssueResponseStatus status) {
+    this.status = status;
   }
 
   @Transient

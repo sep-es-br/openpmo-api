@@ -3,7 +3,7 @@ package br.gov.es.openpmo.model.relations;
 import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.office.Office;
-import br.gov.es.openpmo.scheduler.HasRole;
+import br.gov.es.openpmo.scheduler.updateroles.HasRole;
 import org.neo4j.ogm.annotation.EndNode;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;

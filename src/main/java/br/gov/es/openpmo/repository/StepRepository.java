@@ -52,4 +52,31 @@ public interface StepRepository extends Neo4jRepository<Step, Long> {
     "]"
   )
   Optional<Step> findSnapshotOfActiveBaseline(Long idStep);
+
+
+  @Query(
+    "MATCH (deliverable:Deliverable) " +
+    "WHERE id(deliverable)=$idDeliverable  " +
+    "MATCH (deliverable)<-[:FEATURES]-(:Schedule)<-[:COMPOSES]-(step:Step)  " +
+    "WITH step,  " +
+    "   toFloat(step.plannedWork) AS estimedWork,  " +
+    "   toFloat(step.actualWork) AS actualWork  " +
+    "WHERE actualWork < estimedWork  " +
+    "WITH step, estimedWork " +
+    "RETURN count(DISTINCT step) > 0"
+  )
+  boolean hasWorkToCompleteComparingWithMaster(Long idDeliverable);
+
+
+  @Query(
+    "MATCH (deliverable:Deliverable)<-[:FEATURES]-(:Schedule)<-[:COMPOSES]-(step:Step) " +
+    "MATCH (step)<-[:IS_SNAPSHOT_OF]-(snapshot:Step)-[:COMPOSES]->(baseline:Baseline{active:true}) " +
+    "WITH step, snapshot, baseline, " +
+    "    toFloat(step.actualWork) AS actualWork, " +
+    "    toFloat(snapshot.plannedWork) AS plannedWork  " +
+    "WHERE id(deliverable)=$idDeliverable AND actualWork < plannedWork " +
+    "WITH step, actualWork, plannedWork, snapshot, baseline " +
+    "RETURN count(DISTINCT step) > 0"
+  )
+  boolean hasWorkToCompleteComparingWithActiveBaseline(Long idDeliverable);
 }
