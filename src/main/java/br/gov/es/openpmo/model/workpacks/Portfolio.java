@@ -16,9 +16,7 @@ public class Portfolio extends Workpack {
 
     @Override
     public Workpack snapshot() {
-        final Portfolio portfolio = new Portfolio();
-        //portfolio.setInstance(this.instance);
-        return portfolio;
+        return new Portfolio();
     }
 
     public void setInstance(final PortfolioModel instance) {

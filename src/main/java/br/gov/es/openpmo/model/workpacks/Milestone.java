@@ -16,9 +16,7 @@ public class Milestone extends Workpack {
 
     @Override
     public Workpack snapshot() {
-        final Milestone milestone = new Milestone();
-        //milestone.setInstance(this.instance);
-        return milestone;
+        return new Milestone();
     }
 
     public void setInstance(final MilestoneModel instance) {

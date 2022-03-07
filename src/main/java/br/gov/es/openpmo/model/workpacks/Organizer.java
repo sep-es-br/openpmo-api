@@ -16,9 +16,7 @@ public class Organizer extends Workpack {
 
     @Override
     public Workpack snapshot() {
-        final Organizer organizer = new Organizer();
-        //organizer.setInstance(this.instance);
-        return organizer;
+        return new Organizer();
     }
 
     public void setInstance(final OrganizerModel instance) {

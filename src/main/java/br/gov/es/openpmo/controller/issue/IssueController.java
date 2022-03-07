@@ -2,11 +2,7 @@ package br.gov.es.openpmo.controller.issue;
 
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.ResponseBase;
-import br.gov.es.openpmo.dto.issue.IssueCardDto;
-import br.gov.es.openpmo.dto.issue.IssueCreateDto;
-import br.gov.es.openpmo.dto.issue.IssueDetailDto;
-import br.gov.es.openpmo.dto.issue.IssueFromRiskDto;
-import br.gov.es.openpmo.dto.issue.IssueUpdateDto;
+import br.gov.es.openpmo.dto.issue.*;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.issue.IssueService;
 import io.swagger.annotations.Api;

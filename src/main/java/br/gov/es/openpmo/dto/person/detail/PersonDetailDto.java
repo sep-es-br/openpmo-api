@@ -15,127 +15,135 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.PERSON_NOT_FOUND;
 
 public class PersonDetailDto {
 
-  private Long id;
-  private String name;
-  private String fullName;
-  private String email;
-  private String contactEmail;
-  private String phone;
-  private String address;
-  private Boolean isUser;
-  private AvatarDto avatar;
-  private OfficePermissionDetailDto officePermission;
+    private Long id;
+    private String name;
+    private String fullName;
+    private String email;
+    private String contactEmail;
+    private String phoneNumber;
+    private String address;
+    private Boolean isUser;
+    private AvatarDto avatar;
+    private OfficePermissionDetailDto officePermission;
 
-  public PersonDetailDto() {
-  }
-
-  public PersonDetailDto(final PersonDetailQuery query, final UriComponentsBuilder uriComponentsBuilder) {
-    this.setPersonData(query);
-    this.setContactData(query);
-    this.setUserAuthenticationData(query);
-    this.setUserAvatar(query, uriComponentsBuilder);
-  }
-
-  private void setUserAvatar(final PersonDetailQuery query, final UriComponentsBuilder uriComponentsBuilder) {
-    if(query.getAvatar() != null) {
-      this.avatar = new AvatarDto(query.getAvatar(), uriComponentsBuilder);
+    public PersonDetailDto() {
     }
-  }
 
-  private void setUserAuthenticationData(final PersonDetailQuery query) {
-    final IsAuthenticatedBy authentication = query.getAuthentication();
-    this.isUser = authentication != null;
-    if(authentication != null) {
-      this.email = authentication.getEmail();
+    public PersonDetailDto(final PersonDetailQuery query, final UriComponentsBuilder uriComponentsBuilder) {
+        this.setPersonData(query);
+        this.setContactData(query);
+        this.setUserAuthenticationData(query);
+        this.setUserAvatar(query, uriComponentsBuilder);
     }
-  }
 
-  private void setPersonData(final PersonDetailQuery query) {
-    final Person person = query.getPerson();
-    Objects.requireNonNull(person, PERSON_NOT_FOUND);
-    this.id = person.getId();
-    this.name = person.getName();
-    this.fullName = person.getFullName();
-  }
+    private void setUserAvatar(final PersonDetailQuery query, final UriComponentsBuilder uriComponentsBuilder) {
+        if (query.getAvatar() != null) {
+            this.avatar = new AvatarDto(query.getAvatar(), uriComponentsBuilder);
+        }
+    }
 
-  private void setContactData(final PersonDetailQuery query) {
-    final IsInContactBookOf contact = query.getContact();
-    Objects.requireNonNull(contact, CONTACT_DATA_NOT_FOUND);
+    private void setUserAuthenticationData(final PersonDetailQuery query) {
+        final IsAuthenticatedBy authentication = query.getAuthentication();
+        this.isUser = authentication != null;
+        if (authentication != null) {
+            this.email = authentication.getEmail();
+        }
+    }
 
-    this.phone = contact.getPhoneNumber();
-    this.address = contact.getAddress();
-    this.contactEmail = contact.getEmail();
-  }
+    private void setPersonData(final PersonDetailQuery query) {
+        final Person person = query.getPerson();
+        Objects.requireNonNull(person, PERSON_NOT_FOUND);
+        this.id = person.getId();
+        this.name = person.getName();
+        this.fullName = person.getFullName();
+    }
 
-  public Long getId() {
-    return this.id;
-  }
+    private void setContactData(final PersonDetailQuery query) {
+        final IsInContactBookOf contact = query.getContact();
+        Objects.requireNonNull(contact, CONTACT_DATA_NOT_FOUND);
 
-  public void setId(final Long id) {
-    this.id = id;
-  }
+        this.phoneNumber = contact.getPhoneNumber();
+        this.address = contact.getAddress();
+        this.contactEmail = contact.getEmail();
+    }
 
-  public String getName() {
-    return this.name;
-  }
+    public Long getId() {
+        return this.id;
+    }
 
-  public void setName(final String name) {
-    this.name = name;
-  }
+    public void setId(final Long id) {
+        this.id = id;
+    }
 
-  public String getFullName() {
-    return this.fullName;
-  }
+    public String getName() {
+        return this.name;
+    }
 
-  public void setFullName(final String fullName) {
-    this.fullName = fullName;
-  }
+    public void setName(final String name) {
+        this.name = name;
+    }
 
-  public String getEmail() {
-    return this.email;
-  }
+    public String getFullName() {
+        return this.fullName;
+    }
 
-  public void setEmail(final String email) {
-    this.email = email;
-  }
+    public void setFullName(final String fullName) {
+        this.fullName = fullName;
+    }
 
-  public OfficePermissionDetailDto getOfficePermission() {
-    return this.officePermission;
-  }
+    public String getEmail() {
+        return this.email;
+    }
 
-  public void setOfficePermission(final OfficePermissionDetailDto officePermission) {
-    this.officePermission = officePermission;
-  }
+    public void setEmail(final String email) {
+        this.email = email;
+    }
 
-  public String getContactEmail() {
-    return this.contactEmail;
-  }
+    public OfficePermissionDetailDto getOfficePermission() {
+        return this.officePermission;
+    }
 
-  public void setContactEmail(final String contactEmail) {
-    this.contactEmail = contactEmail;
-  }
+    public void setOfficePermission(final OfficePermissionDetailDto officePermission) {
+        this.officePermission = officePermission;
+    }
 
-  public String getPhone() {
-    return this.phone;
-  }
+    public String getContactEmail() {
+        return this.contactEmail;
+    }
 
-  public void setPhone(final String phone) {
-    this.phone = phone;
-  }
+    public void setContactEmail(final String contactEmail) {
+        this.contactEmail = contactEmail;
+    }
 
-  public String getAddress() {
-    return this.address;
-  }
+    public String getPhoneNumber() {
+        return this.phoneNumber;
+    }
 
-  public void setAddress(final String address) {
-    this.address = address;
-  }
+    public void setPhoneNumber(final String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
 
-  public Boolean getIsUser() {
-    return this.isUser;
-  }
+    public String getAddress() {
+        return this.address;
+    }
 
-  public void setIsUser(final Boolean user) {
-    this.isUser = user;
-  }
+    public void setAddress(final String address) {
+        this.address = address;
+    }
+
+    public Boolean getIsUser() {
+        return this.isUser;
+    }
+
+    public void setIsUser(final Boolean user) {
+        this.isUser = user;
+    }
+
+    public AvatarDto getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(AvatarDto avatar) {
+        this.avatar = avatar;
+    }
 }

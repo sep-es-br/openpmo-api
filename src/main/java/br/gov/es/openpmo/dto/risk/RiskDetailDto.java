@@ -6,6 +6,7 @@ import br.gov.es.openpmo.model.risk.Importance;
 import br.gov.es.openpmo.model.risk.NatureOfRisk;
 import br.gov.es.openpmo.model.risk.Risk;
 import br.gov.es.openpmo.model.risk.StatusOfRisk;
+import br.gov.es.openpmo.utils.ApplicationMessage;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import javax.validation.constraints.NotEmpty;
@@ -15,7 +16,7 @@ import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 
-import static br.gov.es.openpmo.utils.ApplicationMessage.RISK_NOT_NULL;
+import static br.gov.es.openpmo.utils.ApplicationMessage.*;
 
 public class RiskDetailDto {
 

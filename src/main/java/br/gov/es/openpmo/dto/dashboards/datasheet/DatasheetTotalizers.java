@@ -1,29 +1,17 @@
 package br.gov.es.openpmo.dto.dashboards.datasheet;
 
+import java.util.List;
+
 public class DatasheetTotalizers {
 
-  private final Long projectsQuantity;
+    private final List<ChildrenByTypeResponse> childrensByType;
 
-  private final Long deliverablesQuantity;
 
-  private final Long milestoneQuantity;
+    public DatasheetTotalizers(List<ChildrenByTypeResponse> childrensByType) {
+        this.childrensByType = childrensByType;
+    }
 
-  public DatasheetTotalizers(final Long projectsQuantity, final Long deliverablesQuantity, final Long milestoneQuantity) {
-    this.projectsQuantity = projectsQuantity;
-    this.deliverablesQuantity = deliverablesQuantity;
-    this.milestoneQuantity = milestoneQuantity;
-  }
-
-  public Long getProjectsQuantity() {
-    return this.projectsQuantity;
-  }
-
-  public Long getDeliverablesQuantity() {
-    return this.deliverablesQuantity;
-  }
-
-  public Long getMilestoneQuantity() {
-    return this.milestoneQuantity;
-  }
-
+    public List<ChildrenByTypeResponse> getChildrensByType() {
+        return childrensByType;
+    }
 }

@@ -12,34 +12,27 @@ import javax.validation.Valid;
 
 public abstract class CreateAndUpdateUsingCommonFilterOperations extends CommonFilterOperations {
 
+    @PostMapping
+    public ResponseEntity<ResponseBase<CustomFilterDto>> save(@Valid @RequestBody final CustomFilterDto request) {
+        final CustomFilterDto customFilterCreated =
+                this.getCustomFilterService().create(request, this.getFilter(), null);
 
-  @PostMapping
-  public ResponseEntity<ResponseBase<CustomFilterDto>> save(@Valid @RequestBody final CustomFilterDto request) {
-    final CustomFilterDto customFilterCreated = this.getCustomFilterService().create(
-      request,
-      this.getFilter(),
-      null
-    );
+        final ResponseBase<CustomFilterDto> response = new ResponseBase<CustomFilterDto>()
+                .setData(customFilterCreated)
+                .setSuccess(true);
 
-    final ResponseBase<CustomFilterDto> response = new ResponseBase<CustomFilterDto>()
-      .setData(customFilterCreated)
-      .setSuccess(true);
+        return ResponseEntity.ok(response);
+    }
 
-    return ResponseEntity.ok(response);
-  }
+    @PutMapping
+    public ResponseEntity<ResponseBase<CustomFilterDto>> update(@Valid @RequestBody final CustomFilterDto request) {
+        final CustomFilterDto customFilterUpdated =
+                this.getCustomFilterService().update(request, this.getFilter(), null);
 
-  @PutMapping
-  public ResponseEntity<ResponseBase<CustomFilterDto>> update(@Valid @RequestBody final CustomFilterDto request) {
-    final CustomFilterDto customFilterUpdated = this.getCustomFilterService().update(
-      request,
-      this.getFilter(),
-      null
-    );
+        final ResponseBase<CustomFilterDto> response = new ResponseBase<CustomFilterDto>()
+                .setData(customFilterUpdated)
+                .setSuccess(true);
 
-    final ResponseBase<CustomFilterDto> response = new ResponseBase<CustomFilterDto>()
-      .setData(customFilterUpdated)
-      .setSuccess(true);
-
-    return ResponseEntity.ok(response);
-  }
+        return ResponseEntity.ok(response);
+    }
 }

@@ -16,100 +16,103 @@ import java.util.Set;
 @NodeEntity
 public class LocalitySelection extends Property<LocalitySelection, Set<Locality>> {
 
-  @Relationship("VALUES")
-  private Set<Locality> value;
+    @Relationship("VALUES")
+    private Set<Locality> value;
 
-  private CategoryEnum category;
+    private CategoryEnum category;
 
-  @Relationship(type = "COMPOSES")
-  private Baseline baseline;
+    @Relationship(type = "COMPOSES")
+    private Baseline baseline;
 
-  @Relationship("FEATURES")
-  private Workpack workpack;
+    @Relationship("FEATURES")
+    private Workpack workpack;
 
-  @Relationship("IS_DRIVEN_BY")
-  private LocalitySelectionModel driver;
+    @Relationship("IS_DRIVEN_BY")
+    private LocalitySelectionModel driver;
 
-  @Override
-  public LocalitySelection snapshot() {
-    final LocalitySelection localitySelection = new LocalitySelection();
-    final HashSet<Locality> value = Optional.ofNullable(this.value).map(HashSet::new).orElse(null);
-    localitySelection.setValue(value);
-    return localitySelection;
-  }
-
-  @Override
-  public CategoryEnum getCategory() {
-    return this.category;
-  }
-
-  @Override
-  public void setCategory(final CategoryEnum category) {
-    this.category = category;
-  }
-
-  @Override
-  public Set<Locality> getValue() {
-    return this.value;
-  }
-
-  @Override
-  public void setValue(final Set<Locality> value) {
-    this.value = value;
-  }
-
-  public LocalitySelectionModel getDriver() {
-    return this.driver;
-  }
-
-  public void setDriver(final LocalitySelectionModel driver) {
-    this.driver = driver;
-  }
-
-  @Override
-  public boolean equals(final Object o) {
-    if (this == o) {
-      return true;
+    public LocalitySelection() {
     }
-    if (o == null || this.getClass() != o.getClass()) {
-      return false;
+
+    @Override
+    public LocalitySelection snapshot() {
+        final LocalitySelection localitySelection = new LocalitySelection();
+        final HashSet<Locality> value = Optional.ofNullable(this.value).map(HashSet::new).orElse(null);
+        localitySelection.setValue(value);
+        return localitySelection;
     }
-    if (!super.equals(o)) {
-      return false;
+
+    @Override
+    public void setValue(final Set<Locality> value) {
+        this.value = value;
     }
-    final LocalitySelection that = (LocalitySelection) o;
-    return Objects.equals(this.driver, that.driver);
-  }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), this.driver);
-  }
+    @Override
+    public CategoryEnum getCategory() {
+        return this.category;
+    }
 
-  @Override
-  public Workpack getWorkpack() {
-    return this.workpack;
-  }
+    @Override
+    public void setCategory(final CategoryEnum category) {
+        this.category = category;
+    }
 
-  @Override
-  public void setWorkpack(final Workpack workpack) {
-    this.workpack = workpack;
-  }
+    @Override
+    public Set<Locality> getValue() {
+        return this.value;
+    }
 
-  @Override
-  public boolean hasChanges(final LocalitySelection other) {
-    return (this.value != null || other.value != null)
-        && (this.value != null && other.value == null || this.value == null || !this.value.equals(other.value));
-  }
+    public LocalitySelectionModel getDriver() {
+        return this.driver;
+    }
 
-  @Override
-  public Baseline getBaseline() {
-    return this.baseline;
-  }
+    public void setDriver(final LocalitySelectionModel driver) {
+        this.driver = driver;
+    }
 
-  @Override
-  public void setBaseline(final Baseline baseline) {
-    this.baseline = baseline;
-  }
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || this.getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        final LocalitySelection that = (LocalitySelection) o;
+        return Objects.equals(this.driver, that.driver);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), this.driver);
+    }
+
+    @Override
+    public Workpack getWorkpack() {
+        return this.workpack;
+    }
+
+    @Override
+    public void setWorkpack(final Workpack workpack) {
+        this.workpack = workpack;
+    }
+
+    @Override
+    public boolean hasChanges(final LocalitySelection other) {
+        return (this.value != null || other.value != null)
+                && (this.value != null && other.value == null || this.value == null || !this.value.equals(other.value));
+    }
+
+    @Override
+    public Baseline getBaseline() {
+        return this.baseline;
+    }
+
+    @Override
+    public void setBaseline(final Baseline baseline) {
+        this.baseline = baseline;
+    }
 
 }

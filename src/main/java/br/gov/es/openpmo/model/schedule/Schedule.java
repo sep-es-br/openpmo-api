@@ -19,123 +19,126 @@ import static org.neo4j.ogm.annotation.Relationship.INCOMING;
 @NodeEntity
 public class Schedule extends Entity implements Snapshotable<Schedule> {
 
-  private LocalDate end;
+    private LocalDate end;
 
-  private LocalDate start;
+    private LocalDate start;
 
-  @Relationship(type = "COMPOSES")
-  private Baseline baseline;
+    @Relationship(type = "COMPOSES")
+    private Baseline baseline;
 
-  @Relationship(type = "FEATURES")
-  private Workpack workpack;
+    @Relationship(type = "FEATURES")
+    private Workpack workpack;
 
-  @Relationship(type = "IS_SNAPSHOT_OF")
-  private IsScheduleSnapshotOf master;
+    @Relationship(type = "IS_SNAPSHOT_OF")
+    private IsScheduleSnapshotOf master;
 
-  @Relationship(type = "IS_SNAPSHOT_OF", direction = INCOMING)
-  private Set<IsScheduleSnapshotOf> snapshots;
+    @Relationship(type = "IS_SNAPSHOT_OF", direction = INCOMING)
+    private Set<IsScheduleSnapshotOf> snapshots;
 
-  @Relationship(type = "COMPOSES", direction = Relationship.INCOMING)
-  private Set<Step> steps;
+    @Relationship(type = "COMPOSES", direction = Relationship.INCOMING)
+    private Set<Step> steps;
 
-  private CategoryEnum category;
+    private CategoryEnum category;
 
-  public Workpack getWorkpack() {
-    return this.workpack;
-  }
-
-  public void setWorkpack(final Workpack workpack) {
-    this.workpack = workpack;
-  }
-
-  public Set<Step> getSteps() {
-    return this.steps;
-  }
-
-  public void setSteps(final Set<Step> steps) {
-    this.steps = steps;
-  }
-
-  @Override
-  public CategoryEnum getCategory() {
-    return this.category;
-  }
-
-  @Override
-  public void setCategory(final CategoryEnum category) {
-    this.category = category;
-  }
-
-  @Override
-  public boolean hasChanges(final Schedule other) {
-    final boolean hasStartChanges = (this.start != null || other.start != null)
-                                    && (this.start != null && other.start == null || this.start == null || !this.start.equals(other.start));
-
-    final boolean hasEndChanges = (this.end != null || other.end != null)
-                                  && (this.end != null && other.end == null || this.end == null || !this.end.equals(other.end));
-
-    return hasStartChanges || hasEndChanges;
-  }
-
-  @Override
-  public Schedule snapshot() {
-    final Schedule snapshot = new Schedule();
-
-    snapshot.setStart(this.getStart());
-    snapshot.setEnd(this.getEnd());
-
-    return snapshot;
-  }
-
-  public LocalDate getStart() {
-    return this.start;
-  }
-
-  public void setStart(final LocalDate start) {
-    this.start = start;
-  }
-
-  public LocalDate getEnd() {
-    return this.end;
-  }
-
-  public void setEnd(final LocalDate end) {
-    this.end = end;
-  }
-
-  @Override
-  public Baseline getBaseline() {
-    return this.baseline;
-  }
-
-  @Override
-  public void setBaseline(final Baseline baseline) {
-    this.baseline = baseline;
-  }
-
-  public IsScheduleSnapshotOf getMaster() {
-    return this.master;
-  }
-
-  public void setMaster(final IsScheduleSnapshotOf master) {
-    this.master = master;
-  }
-
-  public Set<IsScheduleSnapshotOf> getSnapshots() {
-    return this.snapshots;
-  }
-
-  public void setSnapshots(final Set<IsScheduleSnapshotOf> snapshots) {
-    this.snapshots = snapshots;
-  }
-
-  @Transient
-  public void addStep(final Step step) {
-    if (this.steps == null) {
-      this.steps = new HashSet<>();
+    public Schedule() {
     }
-    this.steps.add(step);
-    step.setSchedule(this);
-  }
+
+    public Workpack getWorkpack() {
+        return this.workpack;
+    }
+
+    public void setWorkpack(final Workpack workpack) {
+        this.workpack = workpack;
+    }
+
+    public Set<Step> getSteps() {
+        return this.steps;
+    }
+
+    public void setSteps(final Set<Step> steps) {
+        this.steps = steps;
+    }
+
+    @Override
+    public CategoryEnum getCategory() {
+        return this.category;
+    }
+
+    @Override
+    public void setCategory(final CategoryEnum category) {
+        this.category = category;
+    }
+
+    @Override
+    public boolean hasChanges(final Schedule other) {
+        final boolean hasStartChanges = (this.start != null || other.start != null)
+                && (this.start != null && other.start == null || this.start == null || !this.start.equals(other.start));
+
+        final boolean hasEndChanges = (this.end != null || other.end != null)
+                && (this.end != null && other.end == null || this.end == null || !this.end.equals(other.end));
+
+        return hasStartChanges || hasEndChanges;
+    }
+
+    @Override
+    public Schedule snapshot() {
+        final Schedule snapshot = new Schedule();
+
+        snapshot.setStart(this.getStart());
+        snapshot.setEnd(this.getEnd());
+
+        return snapshot;
+    }
+
+    public void setStart(final LocalDate start) {
+        this.start = start;
+    }
+
+    public LocalDate getStart() {
+        return this.start;
+    }
+
+    public void setEnd(final LocalDate end) {
+        this.end = end;
+    }
+
+    public LocalDate getEnd() {
+        return this.end;
+    }
+
+    @Override
+    public Baseline getBaseline() {
+        return this.baseline;
+    }
+
+    @Override
+    public void setBaseline(final Baseline baseline) {
+        this.baseline = baseline;
+    }
+
+    public IsScheduleSnapshotOf getMaster() {
+        return this.master;
+    }
+
+    public void setMaster(final IsScheduleSnapshotOf master) {
+        this.master = master;
+    }
+
+    public Set<IsScheduleSnapshotOf> getSnapshots() {
+        return this.snapshots;
+    }
+
+    public void setSnapshots(final Set<IsScheduleSnapshotOf> snapshots) {
+        this.snapshots = snapshots;
+    }
+
+    @Transient
+    public void addStep(final Step step) {
+        if (this.steps == null) {
+            this.steps = new HashSet<>();
+        }
+        this.steps.add(step);
+        step.setSchedule(this);
+    }
 
 }

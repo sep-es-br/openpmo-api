@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.service.authentication;
 
+import br.gov.es.openpmo.controller.workpack.WorkpackController;
 import br.gov.es.openpmo.enumerator.TokenType;
 import br.gov.es.openpmo.model.actors.Person;
 import io.jsonwebtoken.Claims;

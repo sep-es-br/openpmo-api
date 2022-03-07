@@ -39,7 +39,7 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
   @Override
   public List<UpdateResponse> getUpdates(final Long idWorkpack) {
     final Workpack workpack = this.findProjectWorkpackById(idWorkpack);
-    final Baseline baseline = this.baselineRepository.findActiveBaselineByWorkpackId(idWorkpack).orElse(null);
+      final Baseline baseline = this.baselineRepository.findActiveBaseline(idWorkpack).orElse(null);
 
     return baseline == null
         ? this.getFirstTimeBaselineUpdatesService.getUpdates(workpack.getChildren(), false)

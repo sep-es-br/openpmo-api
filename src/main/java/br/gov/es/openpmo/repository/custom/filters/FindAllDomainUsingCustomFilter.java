@@ -31,7 +31,7 @@ public class FindAllDomainUsingCustomFilter extends FindAllUsingCustomFilterBuil
 
   @Override
   public void buildWhereClause(final CustomFilter filter, final StringBuilder query) {
-    query.append("WHERE ID(o) = $idOffice OR $idOffice IS NULL ");
+    query.append("WHERE ( ID(o) = $idOffice OR $idOffice IS NULL ) ");
   }
 
   @Override

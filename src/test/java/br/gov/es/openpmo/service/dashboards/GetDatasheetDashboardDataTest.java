@@ -1,6 +1,6 @@
 package br.gov.es.openpmo.service.dashboards;
 
-import br.gov.es.openpmo.dto.dashboards.DashboardDataParameters;
+import br.gov.es.openpmo.dto.dashboards.DashboardParameters;
 import br.gov.es.openpmo.dto.dashboards.datasheet.DatasheetResponse;
 import br.gov.es.openpmo.dto.dashboards.datasheet.DatasheetTotalizers;
 import br.gov.es.openpmo.repository.dashboards.DashboardDatasheetRepository;
@@ -12,13 +12,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.util.UriComponentsBuilder;
-import static org.junit.jupiter.api.Assertions.assertSame;
 
 import java.security.SecureRandom;
 
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.mockito.Mockito.*;
 
 @Tag("unit")
 @ExtendWith(MockitoExtension.class)
@@ -55,12 +53,12 @@ class GetDatasheetDashboardDataTest {
     doReturn(qtyMilestones).when(this.repository).quantityOfMilestones(workpackId);
 
     // when
-    final DatasheetResponse datasheet = this.underTest.get(new DashboardDataParameters(
-      true,
-      workpackId,
-      null,
-      null,
-      this.uriComponentsBuilder
+    final DatasheetResponse datasheet = this.underTest.get(new DashboardParameters(
+            true,
+            workpackId,
+            null,
+            null,
+            this.uriComponentsBuilder
     ));
     final DatasheetTotalizers totalizers = datasheet.getDatasheetTotalizers();
 

@@ -5,7 +5,7 @@ import br.gov.es.openpmo.dto.ccbmembers.MemberAs;
 import br.gov.es.openpmo.dto.person.PersonDto;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.office.Office;
-import br.gov.es.openpmo.model.relations.IsCCBMember;
+import br.gov.es.openpmo.model.relations.IsCCBMemberFor;
 import br.gov.es.openpmo.model.relations.IsInContactBookOf;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.IsCCBMemberRepository;
@@ -57,7 +57,7 @@ public class CreateCCBMemberRelationshipService implements ICreateCCBMemberRelat
   }
 
   private void saveCCBMember(final Person person, final Workpack workpack, final MemberAs memberAs) {
-    this.repository.save(new IsCCBMember(memberAs, person, workpack), 0);
+    this.repository.save(new IsCCBMemberFor(memberAs, person, workpack), 0);
   }
 
   private Person createOrUpdatePersonAndRelationships(final CCBMemberRequest request) {

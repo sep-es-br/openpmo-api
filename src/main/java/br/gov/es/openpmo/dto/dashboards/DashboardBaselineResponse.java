@@ -7,48 +7,48 @@ import org.springframework.data.neo4j.annotation.QueryResult;
 @QueryResult
 public class DashboardBaselineResponse {
 
-  private Long id;
+    private Long id;
 
-  private String name;
+    private String name;
 
-  private Status status;
+    private Status status;
 
-  @JsonProperty("default")
-  private Boolean defaultBaseline;
+    @JsonProperty("default")
+    private Boolean defaultBaseline;
 
-  public DashboardBaselineResponse() {
-  }
+    public DashboardBaselineResponse() {
+    }
 
-  public void setId(final Long id) {
-    this.id = id;
-  }
+    public void setId(final Long id) {
+        this.id = id;
+    }
 
-  public Long getId() {
-    return this.id;
-  }
+    public Long getId() {
+        return this.id;
+    }
 
-  public void setName(final String name) {
-    this.name = name;
-  }
+    public void setName(final String name) {
+        this.name = name;
+    }
 
-  public String getName() {
-    return this.name;
-  }
+    public String getName() {
+        return this.name;
+    }
 
-  public void setStatus(final Status status) {
-    this.status = status;
-  }
+    public void setStatus(final Status status) {
+        this.status = status;
+    }
 
-  public Status getStatus() {
-    return this.status;
-  }
+    public Status getStatus() {
+        return this.status;
+    }
 
-  public Boolean getDefaultBaseline() {
-    return this.defaultBaseline;
-  }
+    public Boolean getDefaultBaseline() {
+        return this.defaultBaseline;
+    }
 
-  public void setDefaultBaseline(final Boolean defaultBaseline) {
-    this.defaultBaseline = defaultBaseline;
-  }
+    public void setDefaultBaseline(final Boolean defaultBaseline) {
+        this.defaultBaseline = defaultBaseline;
+    }
 
 }

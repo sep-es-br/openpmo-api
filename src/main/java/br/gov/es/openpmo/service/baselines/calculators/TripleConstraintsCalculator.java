@@ -1,12 +1,6 @@
 package br.gov.es.openpmo.service.baselines.calculators;
 
-import br.gov.es.openpmo.dto.baselines.ccbmemberview.CostDetailItem;
-import br.gov.es.openpmo.dto.baselines.ccbmemberview.ProposedAndCurrentValue;
-import br.gov.es.openpmo.dto.baselines.ccbmemberview.ScheduleDetailItem;
-import br.gov.es.openpmo.dto.baselines.ccbmemberview.ScheduleInterval;
-import br.gov.es.openpmo.dto.baselines.ccbmemberview.ScopeDetailItem;
-import br.gov.es.openpmo.dto.baselines.ccbmemberview.StepCollectedData;
-import br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintOutput;
+import br.gov.es.openpmo.dto.baselines.ccbmemberview.*;
 import br.gov.es.openpmo.dto.workpack.WorkpackName;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
@@ -23,7 +17,6 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -265,19 +258,19 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
 
       final Set<Consumes> consumesProposed = stepMaster.getConsumes();
 
-      final List<Consumes> consumesCurrent = this.findConsumesSnapshotByStepMasterAndBaselineId(
-        idBaselineReference,
-        stepMaster
+      final Set<Consumes> consumesCurrent = this.findConsumesSnapshotByStepMasterAndBaselineId(
+              idBaselineReference,
+              stepMaster
       );
       addStepDataToCollector(stepCollectedData, consumesProposed, consumesCurrent);
     }
     return stepCollectedData;
   }
 
-  private List<Consumes> findConsumesSnapshotByStepMasterAndBaselineId(final Long idBaseline, final Step stepMaster) {
+  private Set<Consumes> findConsumesSnapshotByStepMasterAndBaselineId(final Long idBaseline, final Step stepMaster) {
     return this.consumesRepository.findAllSnapshotConsumesOfStepMaster(
-      idBaseline,
-      stepMaster.getId()
+            idBaseline,
+            stepMaster.getId()
     );
   }
 
@@ -296,7 +289,6 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
       masterSchedule.getSteps()
     );
 
-    // TODO: verificar o que fazer quando o Deliverable não tiver um snapshot na Baseline
     if(stepCollectedData.isNull()) return;
 
     final ScheduleDetailItem scheduleItem = this.buildScheduleItemOfBaseline(

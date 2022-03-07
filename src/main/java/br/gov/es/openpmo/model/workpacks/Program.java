@@ -7,30 +7,20 @@ import org.neo4j.ogm.annotation.Relationship;
 @NodeEntity
 public class Program extends Workpack {
 
-  @Relationship("IS_INSTANCE_BY")
-  private ProgramModel instance;
-  private Boolean completed;
+    @Relationship("IS_INSTANCE_BY")
+    private ProgramModel instance;
 
-  public ProgramModel getInstance() {
-    return this.instance;
-  }
+    public ProgramModel getInstance() {
+        return this.instance;
+    }
 
-  public void setInstance(final ProgramModel instance) {
-    this.instance = instance;
-  }
+    public void setInstance(final ProgramModel instance) {
+        this.instance = instance;
+    }
 
-  @Override
-  public Workpack snapshot() {
-    final Program program = new Program();
-    //program.setInstance(this.instance);
-    return program;
-  }
+    @Override
+    public Workpack snapshot() {
+        return new Program();
+    }
 
-  public Boolean getCompleted() {
-    return this.completed;
-  }
-
-  public void setCompleted(final boolean completed) {
-    this.completed = completed;
-  }
 }

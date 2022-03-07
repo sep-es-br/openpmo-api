@@ -2,53 +2,53 @@ package br.gov.es.openpmo.model.relations;
 
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
-import org.neo4j.ogm.annotation.EndNode;
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.RelationshipEntity;
-import org.neo4j.ogm.annotation.StartNode;
+import org.neo4j.ogm.annotation.*;
 
 import java.beans.Transient;
 
 @RelationshipEntity(type = "IS_LINKED_TO")
 public class IsLinkedTo {
 
-  @Id
-  @GeneratedValue
-  private Long id;
+    @Id
+    @GeneratedValue
+    private Long id;
 
-  @StartNode
-  private Workpack workpack;
+    @StartNode
+    private Workpack workpack;
 
-  @EndNode
-  private WorkpackModel workpackModel;
+    @EndNode
+    private WorkpackModel workpackModel;
 
-  public Long getId() {
-    return this.id;
-  }
+    public IsLinkedTo() {
+    }
 
-  public void setId(final Long id) {
-    this.id = id;
-  }
+    public Long getId() {
+        return this.id;
+    }
 
-  public Workpack getWorkpack() {
-    return this.workpack;
-  }
+    public void setId(final Long id) {
+        this.id = id;
+    }
 
-  public void setWorkpack(final Workpack workpack) {
-    this.workpack = workpack;
-  }
+    public Workpack getWorkpack() {
+        return this.workpack;
+    }
 
-  public WorkpackModel getWorkpackModel() {
-    return this.workpackModel;
-  }
+    public void setWorkpack(final Workpack workpack) {
+        this.workpack = workpack;
+    }
 
-  public void setWorkpackModel(final WorkpackModel workpackModel) {
-    this.workpackModel = workpackModel;
-  }
+    public WorkpackModel getWorkpackModel() {
+        return this.workpackModel;
+    }
 
-  @Transient
-  public Long getWorkpackModelId() {
-    return this.workpackModel.getId();
-  }
+    public void setWorkpackModel(final WorkpackModel workpackModel) {
+        this.workpackModel = workpackModel;
+    }
+
+    @Transient
+    public Long getWorkpackModelId() {
+        return this.workpackModel.getId();
+    }
+
 }

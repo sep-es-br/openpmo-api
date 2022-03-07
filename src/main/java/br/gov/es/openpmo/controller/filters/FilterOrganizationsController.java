@@ -14,20 +14,21 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/filter/organizations")
 public class FilterOrganizationsController extends CreateAndUpdateUsingCommonFilterOperations {
 
-  private final CustomFilterService customFilterService;
+    private final CustomFilterService customFilterService;
 
-  @Autowired
-  public FilterOrganizationsController(final CustomFilterService customFilterService) {
-    this.customFilterService = customFilterService;
-  }
+    @Autowired
+    public FilterOrganizationsController(final CustomFilterService customFilterService) {
+        this.customFilterService = customFilterService;
+    }
 
-  @Override
-  protected CustomFilterService getCustomFilterService() {
-    return this.customFilterService;
-  }
+    @Override
+    protected CustomFilterService getCustomFilterService() {
+        return this.customFilterService;
+    }
 
-  @Override
-  protected CustomFilterEnum getFilter() {
-    return CustomFilterEnum.ORGANIZATION;
-  }
+    @Override
+    protected CustomFilterEnum getFilter() {
+        return CustomFilterEnum.ORGANIZATION;
+    }
+
 }

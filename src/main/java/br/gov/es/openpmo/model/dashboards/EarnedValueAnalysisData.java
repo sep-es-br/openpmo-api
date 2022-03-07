@@ -1,0 +1,68 @@
+package br.gov.es.openpmo.model.dashboards;
+
+import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.DashboardEarnedValueAnalysis;
+import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.EarnedValueByStep;
+import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.PerformanceIndexes;
+
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static br.gov.es.openpmo.model.dashboards.DashboardUtils.apply;
+
+public class EarnedValueAnalysisData {
+
+    private Set<EarnedValueByStepData> earnedValueByStep;
+
+    private Set<PerformanceIndexesData> performanceIndexes;
+
+    public static EarnedValueAnalysisData of(DashboardEarnedValueAnalysis from) {
+        if (from == null) {
+            return null;
+        }
+
+        final EarnedValueAnalysisData to = new EarnedValueAnalysisData();
+
+        apply(from.getEarnedValueByStep(), EarnedValueByStepData::of, to::setEarnedValueByStep, HashSet::new);
+        apply(from.getPerformanceIndexes(), PerformanceIndexesData::of, to::setPerformanceIndexes, HashSet::new);
+
+        return to;
+    }
+
+    public DashboardEarnedValueAnalysis getResponse() {
+        final List<EarnedValueByStep> earnedValueByStep = this.getEarnedValueByStep()
+                .stream()
+                .map(EarnedValueByStepData::getResponse)
+                .sorted(Comparator.comparing(EarnedValueByStep::getDate))
+                .collect(Collectors.toList());
+
+        final List<PerformanceIndexes> performanceIndexes = this.getPerformanceIndexes()
+                .stream()
+                .map(PerformanceIndexesData::getResponse)
+                .sorted(Comparator.comparing(PerformanceIndexes::getDate))
+                .collect(Collectors.toList());
+
+        return new DashboardEarnedValueAnalysis(
+                earnedValueByStep,
+                performanceIndexes
+        );
+    }
+
+    public Set<EarnedValueByStepData> getEarnedValueByStep() {
+        return earnedValueByStep;
+    }
+
+    public void setEarnedValueByStep(Set<EarnedValueByStepData> earnedValueByStep) {
+        this.earnedValueByStep = earnedValueByStep;
+    }
+
+    public Set<PerformanceIndexesData> getPerformanceIndexes() {
+        return performanceIndexes;
+    }
+
+    public void setPerformanceIndexes(Set<PerformanceIndexesData> performanceIndexes) {
+        this.performanceIndexes = performanceIndexes;
+    }
+}

@@ -12,98 +12,101 @@ import java.util.Objects;
 @NodeEntity
 public class Integer extends Property<Integer, Long> {
 
-  private Long value;
+    private Long value;
 
-  private CategoryEnum category;
+    private CategoryEnum category;
 
-  @Relationship("FEATURES")
-  private Workpack workpack;
+    @Relationship("FEATURES")
+    private Workpack workpack;
 
-  @Relationship(type = "COMPOSES")
-  private Baseline baseline;
+    @Relationship(type = "COMPOSES")
+    private Baseline baseline;
 
-  @Relationship("IS_DRIVEN_BY")
-  private IntegerModel driver;
+    @Relationship("IS_DRIVEN_BY")
+    private IntegerModel driver;
 
-  @Override
-  public Integer snapshot() {
-    final Integer integer = new Integer();
-    integer.setValue(this.value);
-    return integer;
-  }
-
-  @Override
-  public CategoryEnum getCategory() {
-    return this.category;
-  }
-
-  @Override
-  public void setCategory(final CategoryEnum category) {
-    this.category = category;
-  }
-
-  @Override
-  public Long getValue() {
-    return this.value;
-  }
-
-  @Override
-  public void setValue(final Long value) {
-    this.value = value;
-  }
-
-  public IntegerModel getDriver() {
-    return this.driver;
-  }
-
-  public void setDriver(final IntegerModel driver) {
-    this.driver = driver;
-  }
-
-  @Override
-  public boolean equals(final Object o) {
-    if (this == o) {
-      return true;
+    public Integer() {
     }
-    if (o == null || this.getClass() != o.getClass()) {
-      return false;
+
+    @Override
+    public Integer snapshot() {
+        final Integer integer = new Integer();
+        integer.setValue(this.value);
+        return integer;
     }
-    if (!super.equals(o)) {
-      return false;
+
+    @Override
+    public void setValue(final Long value) {
+        this.value = value;
     }
-    final Integer integer = (Integer) o;
-    return Objects.equals(this.driver, integer.driver);
-  }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), this.driver);
-  }
+    @Override
+    public CategoryEnum getCategory() {
+        return this.category;
+    }
 
-  @Override
-  public Workpack getWorkpack() {
-    return this.workpack;
-  }
+    @Override
+    public void setCategory(final CategoryEnum category) {
+        this.category = category;
+    }
 
-  @Override
-  public void setWorkpack(final Workpack workpack) {
-    this.workpack = workpack;
-  }
+    @Override
+    public Long getValue() {
+        return this.value;
+    }
 
-  @Override
-  public boolean hasChanges(final Integer other) {
-    return (this.value != null || other.value != null)
-        && (this.value != null && other.value == null || this.value == null || !this.value.equals(other.value));
-  }
+    public IntegerModel getDriver() {
+        return this.driver;
+    }
 
-  @Override
-  public Baseline getBaseline() {
-    return this.baseline;
-  }
+    public void setDriver(final IntegerModel driver) {
+        this.driver = driver;
+    }
 
-  @Override
-  public void setBaseline(final Baseline baseline) {
-    this.baseline = baseline;
-  }
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || this.getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+        final Integer integer = (Integer) o;
+        return Objects.equals(this.driver, integer.driver);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), this.driver);
+    }
+
+    @Override
+    public Workpack getWorkpack() {
+        return this.workpack;
+    }
+
+    @Override
+    public void setWorkpack(final Workpack workpack) {
+        this.workpack = workpack;
+    }
+
+    @Override
+    public boolean hasChanges(final Integer other) {
+        return (this.value != null || other.value != null)
+                && (this.value != null && other.value == null || this.value == null || !this.value.equals(other.value));
+    }
+
+    @Override
+    public Baseline getBaseline() {
+        return this.baseline;
+    }
+
+    @Override
+    public void setBaseline(final Baseline baseline) {
+        this.baseline = baseline;
+    }
 
 }

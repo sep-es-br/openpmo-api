@@ -1,6 +1,8 @@
 package br.gov.es.openpmo.service.workpack;
 
 import br.gov.es.openpmo.exception.NegocioException;
+import br.gov.es.openpmo.model.properties.models.GroupModel;
+import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.workpacks.models.DeliverableModel;
 import br.gov.es.openpmo.model.workpacks.models.MilestoneModel;
 import br.gov.es.openpmo.model.workpacks.models.OrganizerModel;
@@ -13,6 +15,10 @@ import br.gov.es.openpmo.service.properties.PropertyModelService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collection;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_MODEL_DELETE_RELATIONSHIP_ERROR;
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_MODEL_INVALID_STATE_DELETE_RELATIONSHIP_ERROR;

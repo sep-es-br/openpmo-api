@@ -45,6 +45,10 @@ public class OfficeTreeViewService {
   public OfficeTreeViewDto findOfficeTreeViewById(final Long idOffice) {
     final OfficeTreeViewQuery officeTreeViewQuery = this.findOfficeAsTreeViewQuery(idOffice);
 
+    if (officeTreeViewQuery == null) {
+      return null;
+    }
+
     final OfficeTreeViewDto treeView = new OfficeTreeViewDto(officeTreeViewQuery.getOffice());
 
     final Set<PlanTreeViewDto> plans = officeTreeViewQuery.getPlans().stream()

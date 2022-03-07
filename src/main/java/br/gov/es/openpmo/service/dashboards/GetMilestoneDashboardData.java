@@ -1,6 +1,6 @@
 package br.gov.es.openpmo.service.dashboards;
 
-import br.gov.es.openpmo.dto.dashboards.DashboardDataParameters;
+import br.gov.es.openpmo.dto.dashboards.DashboardParameters;
 import br.gov.es.openpmo.dto.dashboards.MilestoneDataChart;
 import br.gov.es.openpmo.repository.dashboards.DashboardMilestoneRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,9 +21,9 @@ public class GetMilestoneDashboardData implements IGetMilestoneDashboardData {
   }
 
   @Override
-  public MilestoneDataChart get(final DashboardDataParameters parameters) {
-    final Long idBaseline = parameters.getIdBaseline();
-    final Long idWorkpack = parameters.getIdWorkpack();
+  public MilestoneDataChart get(final DashboardParameters parameters) {
+    final Long idBaseline = parameters.getBaselineId();
+    final Long idWorkpack = parameters.getWorkpackId();
     final YearMonth yearMonth = parameters.getYearMonth();
 
     final LocalDate minDate = getMinOfNowAnd(yearMonth);

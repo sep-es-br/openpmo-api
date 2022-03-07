@@ -17,12 +17,8 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import static br.gov.es.openpmo.model.risk.Importance.HIGH;
-import static br.gov.es.openpmo.model.risk.Importance.LOW;
-import static br.gov.es.openpmo.model.risk.Importance.MEDIUM;
-import static br.gov.es.openpmo.model.risk.StatusOfRisk.HAPPENED;
-import static br.gov.es.openpmo.model.risk.StatusOfRisk.NOT_GONNA_HAPPEN;
-import static br.gov.es.openpmo.model.risk.StatusOfRisk.OPEN;
+import static br.gov.es.openpmo.model.risk.Importance.*;
+import static br.gov.es.openpmo.model.risk.StatusOfRisk.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @Tag("database")

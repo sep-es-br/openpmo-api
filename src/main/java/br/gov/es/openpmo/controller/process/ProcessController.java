@@ -2,11 +2,7 @@ package br.gov.es.openpmo.controller.process;
 
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.ResponseBase;
-import br.gov.es.openpmo.dto.process.ProcessCardDto;
-import br.gov.es.openpmo.dto.process.ProcessCreateDto;
-import br.gov.es.openpmo.dto.process.ProcessDetailDto;
-import br.gov.es.openpmo.dto.process.ProcessFromEDocsDto;
-import br.gov.es.openpmo.dto.process.ProcessUpdateDto;
+import br.gov.es.openpmo.dto.process.*;
 import br.gov.es.openpmo.model.process.Process;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.process.ProcessService;

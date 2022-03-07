@@ -2,7 +2,6 @@ package br.gov.es.openpmo.scheduler.updatestatus;
 
 import org.springframework.data.neo4j.annotation.QueryResult;
 
-// TODO: verificar se será necessário utilizar
 @QueryResult
 public class ProjectAndProgramParentResult {
   private final Long idProgram;

@@ -25,45 +25,48 @@ import java.text.SimpleDateFormat;
 @Configuration
 public class WebConfiguration implements WebMvcConfigurer {
 
-  @Bean
-  public MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter() {
-    final ObjectMapper mapper = new ObjectMapper();
-    mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-    mapper.setDateFormat(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss"));
-    mapper.registerModule(new ParameterNamesModule())
-        .registerModule(new Jdk8Module())
-        .registerModule(new JavaTimeModule())
-        .registerModule(new ParameterNamesModule(JsonCreator.Mode.PROPERTIES));
-    return new MappingJackson2HttpMessageConverter(mapper);
-  }
+    @Bean
+    public MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter() {
+        final ObjectMapper mapper = new ObjectMapper();
 
-  @Override
-  public void addResourceHandlers(final ResourceHandlerRegistry registry) {
-    if (!registry.hasMappingForPattern("/**")) {
-      registry.addResourceHandler("/**")
-          .addResourceLocations("classpath:/static/");
+        mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        mapper.setSerializationInclusion(JsonInclude.Include.ALWAYS);
+        mapper.setDateFormat(new SimpleDateFormat("dd/MM/yyyy HH:mm:ss"));
+
+        mapper.registerModule(new ParameterNamesModule())
+                .registerModule(new Jdk8Module())
+                .registerModule(new JavaTimeModule())
+                .registerModule(new ParameterNamesModule(JsonCreator.Mode.PROPERTIES));
+
+        return new MappingJackson2HttpMessageConverter(mapper);
     }
-    registry.addResourceHandler("/documentation/**")
-        .addResourceLocations("classpath:/documentation/");
-  }
 
-  @Override
-  public void addCorsMappings(final CorsRegistry registry) {
-    registry.addMapping("/**")
-        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD", "TRACE", "CONNECT");
-  }
+    @Override
+    public void addResourceHandlers(final ResourceHandlerRegistry registry) {
+        if (!registry.hasMappingForPattern("/**")) {
+            registry.addResourceHandler("/**")
+                    .addResourceLocations("classpath:/static/");
+        }
+        registry.addResourceHandler("/documentation/**")
+                .addResourceLocations("classpath:/documentation/");
+    }
 
-  @Bean
-  @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
-  public Logger logger() {
-    return LoggerFactory.getLogger("br.gov.es.openpmo");
-  }
+    @Override
+    public void addCorsMappings(final CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD", "TRACE", "CONNECT");
+    }
 
-  @Override
-  public void addFormatters(final FormatterRegistry registry) {
-    registry.addConverter(new YearMonthConverter());
-  }
+    @Bean
+    @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+    public Logger logger() {
+        return LoggerFactory.getLogger("br.gov.es.openpmo");
+    }
+
+    @Override
+    public void addFormatters(final FormatterRegistry registry) {
+        registry.addConverter(new YearMonthConverter());
+    }
 
 }

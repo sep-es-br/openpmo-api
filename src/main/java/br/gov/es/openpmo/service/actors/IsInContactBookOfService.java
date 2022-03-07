@@ -12,32 +12,32 @@ import java.util.Optional;
 @Service
 public class IsInContactBookOfService {
 
-  private final IsInContactBookOfRepository repository;
+    private final IsInContactBookOfRepository repository;
 
-  @Autowired
-  public IsInContactBookOfService(final IsInContactBookOfRepository repository) {
-    this.repository = repository;
-  }
+    @Autowired
+    public IsInContactBookOfService(final IsInContactBookOfRepository repository) {
+        this.repository = repository;
+    }
 
-  public IsInContactBookOf save(final IsInContactBookOf isInContactBookOf) {
-    return this.repository.save(isInContactBookOf);
-  }
+    public IsInContactBookOf save(final IsInContactBookOf isInContactBookOf) {
+        return this.repository.save(isInContactBookOf, 0);
+    }
 
-  public IsInContactBookOf saveZeroDepth(final IsInContactBookOf isInContactBookOf) {
-    return this.repository.save(isInContactBookOf, 0);
-  }
+    public Optional<IsInContactBookOf> findContactInformationUsingPersonIdAndWorkpackId(final Long personId, final Long workpackId) {
+        return this.repository.findIsInContactBookOfUsingPersonIdAndWorkpackId(personId, workpackId);
+    }
 
-  public Optional<IsInContactBookOf> findContactInformationUsingPersonIdAndWorkpackId(final Long personId, final Long workpackId) {
-    return this.repository.findIsInContactBookOfUsingPersonIdAndWorkpackId(personId, workpackId);
-  }
+    @Cacheable("contactInformationByPersonAndOffice")
+    public Optional<IsInContactBookOf> findContactInformationUsingPersonIdAndOffice(final Long personId, final Long officeId) {
+        return this.repository.findIsInContactBookOfByPersonIdAndOfficeId(personId, officeId);
+    }
 
-  @Cacheable("contactInformationByPersonAndOffice")
-  public Optional<IsInContactBookOf> findContactInformationUsingPersonIdAndOffice(final Long personId, final Long officeId) {
-    return this.repository.findIsInContactBookOfByPersonIdAndOfficeId(personId, officeId);
-  }
+    public void saveAll(final Collection<IsInContactBookOf> contactInformation) {
+        this.repository.saveAll(contactInformation);
+    }
 
-  public void saveAll(final Collection<IsInContactBookOf> contactInformation) {
-    this.repository.saveAll(contactInformation);
-  }
+    public boolean existsByPersonIdAndOfficeId(Long personId, Long officeId) {
+        return this.repository.existsByPersonIdAndOfficeId(personId, officeId);
+    }
 
 }

@@ -5,12 +5,7 @@ import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.baselines.Status;
 import br.gov.es.openpmo.model.properties.Property;
-import br.gov.es.openpmo.model.relations.Consumes;
-import br.gov.es.openpmo.model.relations.IsCostAccountSnapshotOf;
-import br.gov.es.openpmo.model.relations.IsPropertySnapshotOf;
-import br.gov.es.openpmo.model.relations.IsScheduleSnapshotOf;
-import br.gov.es.openpmo.model.relations.IsStepSnapshotOf;
-import br.gov.es.openpmo.model.relations.IsWorkpackSnapshotOf;
+import br.gov.es.openpmo.model.relations.*;
 import br.gov.es.openpmo.model.schedule.Schedule;
 import br.gov.es.openpmo.model.schedule.Step;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
@@ -21,11 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineService {

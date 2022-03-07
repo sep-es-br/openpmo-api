@@ -190,7 +190,8 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
     final WorkpackModel modelLinked,
     final Collection<WorkpackModel> childrenOriginalModel
   ) {
-    final Iterable<WorkpackModel> modelChildrenLinked = new ArrayList<>(modelLinked.getChildren());
+    final Set<WorkpackModel> linkedChildren = Optional.ofNullable(modelLinked.getChildren()).orElse(Collections.emptySet());
+    final Iterable<WorkpackModel> modelChildrenLinked = new ArrayList<>(linkedChildren);
     final List<WorkpackModelLinkedDetailDto> childrenDetail = new ArrayList<>();
     for(final WorkpackModel children : modelChildrenLinked) {
       final Optional<WorkpackModel> maybeOriginalEquivalent = findOriginalModelEquivalence(children, childrenOriginalModel);

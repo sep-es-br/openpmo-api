@@ -7,7 +7,7 @@ import br.gov.es.openpmo.model.relations.CanAccessOffice;
 import br.gov.es.openpmo.model.relations.CanAccessPlan;
 import br.gov.es.openpmo.model.relations.CanAccessWorkpack;
 import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
-import br.gov.es.openpmo.model.relations.IsCCBMember;
+import br.gov.es.openpmo.model.relations.IsCCBMemberFor;
 import br.gov.es.openpmo.repository.IsAuthenticatedByRepository;
 import br.gov.es.openpmo.repository.IsCCBMemberRepository;
 import br.gov.es.openpmo.repository.OfficePermissionRepository;
@@ -105,7 +105,7 @@ public class UpdateLocalRolesUsingRemoteRoles {
     LOGGER.info("Finalizing update using remote roles");
   }
 
-  private Set<IsCCBMember> findAllCCBMemberRelations(final Person person) {
+  private Set<IsCCBMemberFor> findAllCCBMemberRelations(final Person person) {
     return this.ccbMemberRepository.findAllCCBMemberOfPerson(person.getId());
   }
 

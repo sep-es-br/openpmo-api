@@ -1,99 +1,111 @@
 package br.gov.es.openpmo.model.relations;
 
 import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
-import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.actors.Actor;
 import br.gov.es.openpmo.model.workpacks.Workpack;
-import org.neo4j.ogm.annotation.EndNode;
-import org.neo4j.ogm.annotation.RelationshipEntity;
-import org.neo4j.ogm.annotation.StartNode;
+import br.gov.es.openpmo.scheduler.updateroles.HasRole;
+import org.neo4j.ogm.annotation.*;
 import org.springframework.data.annotation.Transient;
 
 import java.time.LocalDate;
 
 @RelationshipEntity(type = "IS_STAKEHOLDER_IN")
-public class IsStakeholderIn extends Entity {
+public class IsStakeholderIn implements HasRole {
 
-  private String role;
-  private LocalDate to;
-  private LocalDate from;
-  private boolean active;
-  private String permitedRole;
-  private PermissionLevelEnum permissionLevel;
-  @StartNode
-  private Actor actor;
-  @EndNode
-  private Workpack workpack;
+    @Id
+    @GeneratedValue
+    private Long id;
+    private String role;
+    private LocalDate to;
+    private LocalDate from;
+    private boolean active;
+    private String permitedRole;
+    private PermissionLevelEnum permissionLevel;
+    @StartNode
+    private Actor actor;
+    @EndNode
+    private Workpack workpack;
+
+    public IsStakeholderIn() {
+    }
 
 
-  @Transient
-  public Long getIdWorkpack() {
-    if(this.workpack == null) return null;
-    return this.workpack.getId();
-  }
 
-  public String getPermitedRole() {
-    return this.permitedRole;
-  }
+    @Transient
+    public Long getIdWorkpack() {
+        if (this.workpack == null) return null;
+        return this.workpack.getId();
+    }
 
-  public void setPermitedRole(final String permitedRole) {
-    this.permitedRole = permitedRole;
-  }
+    public String getPermitedRole() {
+        return this.permitedRole;
+    }
 
-  public PermissionLevelEnum getPermissionLevel() {
-    return this.permissionLevel;
-  }
+    public void setPermitedRole(final String permitedRole) {
+        this.permitedRole = permitedRole;
+    }
 
-  public void setPermissionLevel(final PermissionLevelEnum permissionLevel) {
-    this.permissionLevel = permissionLevel;
-  }
+    public PermissionLevelEnum getPermissionLevel() {
+        return this.permissionLevel;
+    }
 
-  public String getRole() {
-    return this.role;
-  }
+    public void setPermissionLevel(final PermissionLevelEnum permissionLevel) {
+        this.permissionLevel = permissionLevel;
+    }
 
-  public void setRole(final String role) {
-    this.role = role;
-  }
+    public String getRole() {
+        return this.role;
+    }
 
-  public LocalDate getTo() {
-    return this.to;
-  }
+    public void setRole(final String role) {
+        this.role = role;
+    }
 
-  public void setTo(final LocalDate to) {
-    this.to = to;
-  }
+    public LocalDate getTo() {
+        return this.to;
+    }
 
-  public LocalDate getFrom() {
-    return this.from;
-  }
+    public void setTo(final LocalDate to) {
+        this.to = to;
+    }
 
-  public void setFrom(final LocalDate from) {
-    this.from = from;
-  }
+    public LocalDate getFrom() {
+        return this.from;
+    }
 
-  public Actor getActor() {
-    return this.actor;
-  }
+    public void setFrom(final LocalDate from) {
+        this.from = from;
+    }
 
-  public void setActor(final Actor actor) {
-    this.actor = actor;
-  }
+    public Actor getActor() {
+        return this.actor;
+    }
 
-  public Workpack getWorkpack() {
-    return this.workpack;
-  }
+    public void setActor(final Actor actor) {
+        this.actor = actor;
+    }
 
-  public void setWorkpack(final Workpack workpack) {
-    this.workpack = workpack;
-  }
+    public Workpack getWorkpack() {
+        return this.workpack;
+    }
 
-  public boolean isActive() {
-    return this.active;
-  }
+    public void setWorkpack(final Workpack workpack) {
+        this.workpack = workpack;
+    }
 
-  public void setActive(final boolean active) {
-    this.active = active;
-  }
+    public boolean isActive() {
+        return this.active;
+    }
 
+    public void setActive(final boolean active) {
+        this.active = active;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 }

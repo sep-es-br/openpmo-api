@@ -2,13 +2,7 @@ package br.gov.es.openpmo.repository.dashboards;
 
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.workpacks.Workpack;
-import br.gov.es.openpmo.repository.BaselineRepository;
-import br.gov.es.openpmo.repository.IsPropertySnapshotOfRepository;
-import br.gov.es.openpmo.repository.IsWorkpackSnapshotOfRepository;
-import br.gov.es.openpmo.repository.PropertyModelRepository;
-import br.gov.es.openpmo.repository.PropertyRepository;
-import br.gov.es.openpmo.repository.WorkpackModelRepository;
-import br.gov.es.openpmo.repository.WorkpackRepository;
+import br.gov.es.openpmo.repository.*;
 import br.gov.es.openpmo.util.DashboardMilestoneUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,10 +14,11 @@ import org.springframework.boot.test.autoconfigure.data.neo4j.DataNeo4jTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import static org.junit.jupiter.api.Assertions.assertSame;
 
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
+
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 @Tag("database")
 @DataNeo4jTest

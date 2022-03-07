@@ -10,66 +10,66 @@ import java.util.List;
 
 @JsonTypeInfo(use = Id.NAME, property = "type")
 @JsonSubTypes({@JsonSubTypes.Type(value = PortfolioParamDto.class, name = "Portfolio"),
-  @JsonSubTypes.Type(value = ProgramParamDto.class, name = "Program"),
-  @JsonSubTypes.Type(value = OrganizerParamDto.class, name = "Organizer"),
-  @JsonSubTypes.Type(value = DeliverableParamDto.class, name = "Deliverable"),
-  @JsonSubTypes.Type(value = ProjectParamDto.class, name = "Project"),
-  @JsonSubTypes.Type(value = MilestoneParamDto.class, name = "Milestone")})
+        @JsonSubTypes.Type(value = ProgramParamDto.class, name = "Program"),
+        @JsonSubTypes.Type(value = OrganizerParamDto.class, name = "Organizer"),
+        @JsonSubTypes.Type(value = DeliverableParamDto.class, name = "Deliverable"),
+        @JsonSubTypes.Type(value = ProjectParamDto.class, name = "Project"),
+        @JsonSubTypes.Type(value = MilestoneParamDto.class, name = "Milestone")})
 @ApiModel(subTypes = {PortfolioParamDto.class, ProgramParamDto.class, OrganizerParamDto.class, DeliverableParamDto.class,
-  ProjectParamDto.class,
-  MilestoneParamDto.class}, discriminator = "type", description = "Supertype of all Workpack.")
+        ProjectParamDto.class,
+        MilestoneParamDto.class}, discriminator = "type", description = "Supertype of all Workpack.")
 public abstract class WorkpackParamDto {
 
-  private Long id;
+    private Long id;
 
-  private Long idParent;
+    private Long idParent;
 
-  @NotNull
-  private Long idWorkpackModel;
+    @NotNull
+    private Long idWorkpackModel;
 
-  @NotNull
-  private Long idPlan;
+    @NotNull
+    private Long idPlan;
 
-  private List<? extends PropertyDto> properties;
+    private List<? extends PropertyDto> properties;
 
-  public Long getId() {
-    return this.id;
-  }
+    public Long getId() {
+        return this.id;
+    }
 
-  public void setId(final Long id) {
-    this.id = id;
-  }
+    public void setId(final Long id) {
+        this.id = id;
+    }
 
-  public Long getIdParent() {
-    return this.idParent;
-  }
+    public Long getIdParent() {
+        return this.idParent;
+    }
 
-  public void setIdParent(final Long idParent) {
-    this.idParent = idParent;
-  }
+    public void setIdParent(final Long idParent) {
+        this.idParent = idParent;
+    }
 
-  public Long getIdWorkpackModel() {
-    return this.idWorkpackModel;
-  }
+    public Long getIdWorkpackModel() {
+        return this.idWorkpackModel;
+    }
 
-  public void setIdWorkpackModel(final Long idWorkpackModel) {
-    this.idWorkpackModel = idWorkpackModel;
-  }
+    public void setIdWorkpackModel(final Long idWorkpackModel) {
+        this.idWorkpackModel = idWorkpackModel;
+    }
 
-  public Long getIdPlan() {
-    return this.idPlan;
-  }
+    public Long getIdPlan() {
+        return this.idPlan;
+    }
 
-  public void setIdPlan(final Long idPlan) {
-    this.idPlan = idPlan;
-  }
+    public void setIdPlan(final Long idPlan) {
+        this.idPlan = idPlan;
+    }
 
-  public List<? extends PropertyDto> getProperties() {
-    return this.properties;
-  }
+    public List<? extends PropertyDto> getProperties() {
+        return this.properties;
+    }
 
-  public void setProperties(final List<? extends PropertyDto> properties) {
-    this.properties = properties;
-  }
+    public void setProperties(final List<? extends PropertyDto> properties) {
+        this.properties = properties;
+    }
 
 }

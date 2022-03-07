@@ -7,35 +7,44 @@ import java.time.LocalDate;
 
 public class MilestoneDetailDto extends WorkpackDetailDto {
 
-  private MilestoneStatus status;
+    private MilestoneStatus status;
 
-  @JsonFormat(pattern = "dd/MM/yyyy")
-  private LocalDate expirationDate;
+    private LocalDate milestoneDate;
 
-  private boolean isWithinAWeek;
+    @JsonFormat(pattern = "dd/MM/yyyy")
+    private LocalDate expirationDate;
 
-  public MilestoneStatus getStatus() {
-    return this.status;
-  }
+    private boolean isWithinAWeek;
 
-  public void setStatus(final MilestoneStatus status) {
-    this.status = status;
-  }
+    public MilestoneStatus getStatus() {
+        return this.status;
+    }
 
-  public LocalDate getExpirationDate() {
-    return this.expirationDate;
-  }
+    public void setStatus(final MilestoneStatus status) {
+        this.status = status;
+    }
 
-  public void setExpirationDate(final LocalDate expirationDate) {
-    this.expirationDate = expirationDate;
-  }
+    public LocalDate getExpirationDate() {
+        return this.expirationDate;
+    }
 
-  public boolean isWithinAWeek() {
-    return this.isWithinAWeek;
-  }
+    public void setExpirationDate(final LocalDate expirationDate) {
+        this.expirationDate = expirationDate;
+    }
 
-  public void setWithinAWeek(final boolean withinAWeek) {
-    this.isWithinAWeek = withinAWeek;
-  }
+    public boolean isWithinAWeek() {
+        return this.isWithinAWeek;
+    }
 
+    public void setWithinAWeek(final boolean withinAWeek) {
+        this.isWithinAWeek = withinAWeek;
+    }
+
+    public LocalDate getMilestoneDate() {
+        return milestoneDate;
+    }
+
+    public void setMilestoneDate(LocalDate milestoneDate) {
+        this.milestoneDate = milestoneDate;
+    }
 }

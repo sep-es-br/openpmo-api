@@ -1,25 +1,22 @@
 package br.gov.es.openpmo.dto.dashboards.datasheet;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public class DatasheetStakeholderResponse {
 
-  @JsonProperty("person")
-  private final DatasheetActor actor;
+    private final DatasheetActor actor;
 
-  private final String role;
+    private final String role;
 
-  public DatasheetStakeholderResponse(final DatasheetActor actor, final String role) {
-    this.actor = actor;
-    this.role = role;
-  }
+    public DatasheetStakeholderResponse(final DatasheetActor actor, final String role) {
+        this.actor = actor;
+        this.role = role;
+    }
 
-  public DatasheetActor getActor() {
-    return this.actor;
-  }
+    public DatasheetActor getActor() {
+        return actor;
+    }
 
-  public String getRole() {
-    return this.role;
-  }
+    public String getRole() {
+        return role;
+    }
 
 }

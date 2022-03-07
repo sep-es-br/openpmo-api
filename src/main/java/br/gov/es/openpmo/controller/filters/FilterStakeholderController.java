@@ -14,20 +14,20 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/filter/workpackModels/{idWorkpackModel}/stakeholders")
 public class FilterStakeholderController extends CreateAndUpdateUsingWorkpackModelFilterOperations {
 
-  private final CustomFilterService customFilterService;
+    private final CustomFilterService customFilterService;
 
-  @Autowired
-  public FilterStakeholderController(final CustomFilterService customFilterService) {
-    this.customFilterService = customFilterService;
-  }
+    @Autowired
+    public FilterStakeholderController(final CustomFilterService customFilterService) {
+        this.customFilterService = customFilterService;
+    }
 
-  @Override
-  protected CustomFilterService getCustomFilterService() {
-    return this.customFilterService;
-  }
+    @Override
+    protected CustomFilterService getCustomFilterService() {
+        return this.customFilterService;
+    }
 
-  @Override
-  protected CustomFilterEnum getFilter() {
-    return CustomFilterEnum.STAKEHOLDER;
-  }
+    @Override
+    protected CustomFilterEnum getFilter() {
+        return CustomFilterEnum.STAKEHOLDER;
+    }
 }

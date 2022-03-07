@@ -2,11 +2,7 @@ package br.gov.es.openpmo.service.process;
 
 import br.gov.es.openpmo.apis.edocs.EDocsApi;
 import br.gov.es.openpmo.apis.edocs.response.ProcessResponse;
-import br.gov.es.openpmo.dto.process.ProcessCardDto;
-import br.gov.es.openpmo.dto.process.ProcessCreateDto;
-import br.gov.es.openpmo.dto.process.ProcessDetailDto;
-import br.gov.es.openpmo.dto.process.ProcessFromEDocsDto;
-import br.gov.es.openpmo.dto.process.ProcessUpdateDto;
+import br.gov.es.openpmo.dto.process.*;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.exception.RegistroNaoEncontradoException;
 import br.gov.es.openpmo.model.filter.CustomFilter;
@@ -21,16 +17,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.Valid;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import static br.gov.es.openpmo.utils.ApplicationMessage.ID_WORKPACK_NOT_NULL;
-import static br.gov.es.openpmo.utils.ApplicationMessage.PROCESS_ID_NOT_NULL;
-import static br.gov.es.openpmo.utils.ApplicationMessage.PROCESS_NOT_FOUND;
+import static br.gov.es.openpmo.utils.ApplicationMessage.*;
 
 @Service
 public class ProcessService {

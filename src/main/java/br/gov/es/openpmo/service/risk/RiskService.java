@@ -19,16 +19,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.Valid;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import static br.gov.es.openpmo.utils.ApplicationMessage.HAS_ISSUE_RELATIONSHIP;
-import static br.gov.es.openpmo.utils.ApplicationMessage.ID_WORKPACK_NOT_NULL;
-import static br.gov.es.openpmo.utils.ApplicationMessage.RISK_NOT_FOUND;
+import static br.gov.es.openpmo.utils.ApplicationMessage.*;
 
 @Service
 public class RiskService {

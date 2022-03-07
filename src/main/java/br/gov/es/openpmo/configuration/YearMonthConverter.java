@@ -7,9 +7,9 @@ import java.time.format.DateTimeFormatter;
 
 public class YearMonthConverter implements Converter<String, YearMonth> {
 
-  @Override
-  public YearMonth convert(final String text) {
-    return YearMonth.parse(text, DateTimeFormatter.ofPattern("MM/yyyy"));
-  }
+    @Override
+    public YearMonth convert(final String text) {
+        return YearMonth.parse(text, DateTimeFormatter.ofPattern("MM-yyyy"));
+    }
 
 }

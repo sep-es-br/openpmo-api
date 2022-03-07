@@ -45,7 +45,7 @@ public class WorkpackModelPatchCompletedStatus {
   }
 
   private void saveOnlyWorkpackModel(final WorkpackModel workpackModel) {
-    this.repository.save(workpackModel, 1);
+    this.repository.save(workpackModel, 0);
   }
 
   private WorkpackModel findWorkpackModelById(final Long idWorkpackModel) {

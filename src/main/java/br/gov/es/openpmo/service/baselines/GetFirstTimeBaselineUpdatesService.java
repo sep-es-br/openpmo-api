@@ -1,10 +1,12 @@
 package br.gov.es.openpmo.service.baselines;
 
 import br.gov.es.openpmo.dto.baselines.UpdateResponse;
+import br.gov.es.openpmo.dto.workpack.WorkpackName;
 import br.gov.es.openpmo.enumerator.BaselineStatus;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.BaselineRepository;
+import br.gov.es.openpmo.repository.WorkpackRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
@@ -19,9 +21,15 @@ public class GetFirstTimeBaselineUpdatesService implements IGetFirstTimeBaseline
 
   private final BaselineRepository baselineRepository;
 
+  private final WorkpackRepository workpackRepository;
+
   @Autowired
-  public GetFirstTimeBaselineUpdatesService(final BaselineRepository baselineRepository) {
+  public GetFirstTimeBaselineUpdatesService(
+      final BaselineRepository baselineRepository,
+      final WorkpackRepository workpackRepository
+  ) {
     this.baselineRepository = baselineRepository;
+    this.workpackRepository = workpackRepository;
   }
 
   private static String getIcon(final Workpack workpack) {
@@ -29,9 +37,25 @@ public class GetFirstTimeBaselineUpdatesService implements IGetFirstTimeBaseline
     return Optional.ofNullable(workpackModel).map(WorkpackModel::getFontIcon).orElse("");
   }
 
-  private static String getDescription(final Workpack workpack) {
-    final WorkpackModel workpackModel = workpack.getWorkpackModelInstance();
-    return Optional.ofNullable(workpackModel).map(WorkpackModel::getModelName).orElse("");
+  @Nullable
+  private UpdateResponse getUpdate(final Workpack workpack, final boolean isSnapshot) {
+    UpdateResponse result = null;
+    final Workpack master = this.getWorkpack(workpack, isSnapshot);
+
+    if (master != null) {
+      result = new UpdateResponse(
+          master.getId(),
+          getIcon(master),
+          this.getDescription(master),
+          BaselineStatus.NEW,
+          null);
+    }
+
+    return result;
+  }
+
+  private String getDescription(final Workpack workpack) {
+    return Optional.ofNullable(workpack).map(this::getWorkpackName).orElse("");
   }
 
   @Override
@@ -52,21 +76,10 @@ public class GetFirstTimeBaselineUpdatesService implements IGetFirstTimeBaseline
     return updates;
   }
 
-  @Nullable
-  private UpdateResponse getUpdate(final Workpack workpack, final boolean isSnapshot) {
-    UpdateResponse result = null;
-    final Workpack master = this.getWorkpack(workpack, isSnapshot);
-
-    if (master != null) {
-      result = new UpdateResponse(
-          master.getId(),
-          getIcon(master),
-          getDescription(master),
-          BaselineStatus.NEW,
-          null);
-    }
-
-    return result;
+  private String getWorkpackName(final Workpack workpack) {
+    return this.workpackRepository.findWorkpackNameAndFullname(workpack.getId())
+        .map(WorkpackName::getName)
+        .orElse(null);
   }
 
   @Nullable

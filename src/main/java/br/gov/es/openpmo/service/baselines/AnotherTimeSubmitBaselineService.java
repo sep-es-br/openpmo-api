@@ -6,12 +6,7 @@ import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.baselines.Status;
 import br.gov.es.openpmo.model.properties.Property;
-import br.gov.es.openpmo.model.relations.Consumes;
-import br.gov.es.openpmo.model.relations.IsCostAccountSnapshotOf;
-import br.gov.es.openpmo.model.relations.IsPropertySnapshotOf;
-import br.gov.es.openpmo.model.relations.IsScheduleSnapshotOf;
-import br.gov.es.openpmo.model.relations.IsStepSnapshotOf;
-import br.gov.es.openpmo.model.relations.IsWorkpackSnapshotOf;
+import br.gov.es.openpmo.model.relations.*;
 import br.gov.es.openpmo.model.schedule.Schedule;
 import br.gov.es.openpmo.model.schedule.Step;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
@@ -22,12 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -466,8 +456,8 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
   }
 
   private Baseline getActiveBaseline(final Workpack workpack) {
-    return this.baselineRepository.findActiveBaselineByWorkpackId(workpack.getId())
-        .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_HAS_NO_ACTIVE_BASELINE_INVALID_STATE_ERROR));
+    return this.baselineRepository.findActiveBaseline(workpack.getId())
+            .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_HAS_NO_ACTIVE_BASELINE_INVALID_STATE_ERROR));
   }
 
   private Workpack getSnapshot(

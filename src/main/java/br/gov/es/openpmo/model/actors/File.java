@@ -12,66 +12,69 @@ import java.util.regex.Pattern;
 @NodeEntity
 public class File extends Entity {
 
-  public static final char DOT = '.';
+    public static final char DOT = '.';
 
-  private static final Pattern SPACE_CHAR = Pattern.compile(" ", Pattern.LITERAL);
+    private static final Pattern SPACE_CHAR = Pattern.compile(" ", Pattern.LITERAL);
 
-  private String mimeType;
+    private String mimeType;
 
-  private String userGivenName;
+    private String userGivenName;
 
-  private String uniqueNameKey;
+    private String uniqueNameKey;
 
-  @Relationship(type = "IS_A_PORTRAIT_OF")
-  private Person person;
+    @Relationship(type = "IS_A_PORTRAIT_OF")
+    private Person person;
 
-  @Relationship("IS_EVIDENCE_OF")
-  private JournalEntry journalEntry;
+    @Relationship("IS_EVIDENCE_OF")
+    private JournalEntry journalEntry;
 
-  public Person getPerson() {
-    return this.person;
-  }
+    public File() {
+    }
 
-  public void setPerson(final Person person) {
-    this.person = person;
-  }
+    public Person getPerson() {
+        return this.person;
+    }
 
-  public String getMimeType() {
-    return this.mimeType;
-  }
+    public void setPerson(final Person person) {
+        this.person = person;
+    }
 
-  public void setMimeType(final String mimeType) {
-    this.mimeType = mimeType;
-  }
+    public String getMimeType() {
+        return this.mimeType;
+    }
 
-  public String getUniqueNameKey() {
-    return this.uniqueNameKey;
-  }
+    public void setMimeType(final String mimeType) {
+        this.mimeType = mimeType;
+    }
 
-  public void setUniqueNameKey(final CharSequence uniqueNameKey) {
-    this.uniqueNameKey = SPACE_CHAR.matcher(uniqueNameKey).replaceAll(Matcher.quoteReplacement("-"));
-  }
+    public String getUniqueNameKey() {
+        return this.uniqueNameKey;
+    }
 
-  @Transient
-  public String getExtension() {
-    final int index = this.userGivenName.lastIndexOf(DOT);
-    return index == -1 ? "" : this.userGivenName.substring(index);
-  }
+    public void setUniqueNameKey(final CharSequence uniqueNameKey) {
+        this.uniqueNameKey = SPACE_CHAR.matcher(uniqueNameKey).replaceAll(Matcher.quoteReplacement("-"));
+    }
 
-  public String getUserGivenName() {
-    return this.userGivenName;
-  }
+    @Transient
+    public String getExtension() {
+        final int index = this.userGivenName.lastIndexOf(DOT);
+        return index == -1 ? "" : this.userGivenName.substring(index);
+    }
 
-  public void setUserGivenName(final String userGivenName) {
-    this.userGivenName = userGivenName;
-  }
+    public String getUserGivenName() {
+        return this.userGivenName;
+    }
 
-  public JournalEntry getJournalEntry() {
-    return this.journalEntry;
-  }
+    public void setUserGivenName(final String userGivenName) {
+        this.userGivenName = userGivenName;
+    }
 
-  public void setJournalEntry(final JournalEntry journalEntry) {
-    this.journalEntry = journalEntry;
-  }
+    public JournalEntry getJournalEntry() {
+        return this.journalEntry;
+    }
+
+    public void setJournalEntry(final JournalEntry journalEntry) {
+        this.journalEntry = journalEntry;
+    }
 
 }

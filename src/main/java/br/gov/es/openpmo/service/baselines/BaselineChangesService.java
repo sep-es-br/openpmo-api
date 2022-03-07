@@ -8,11 +8,7 @@ import br.gov.es.openpmo.model.schedule.Schedule;
 import br.gov.es.openpmo.model.schedule.Step;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
 import br.gov.es.openpmo.model.workpacks.Workpack;
-import br.gov.es.openpmo.repository.ConsumesRepository;
-import br.gov.es.openpmo.repository.CostAccountRepository;
-import br.gov.es.openpmo.repository.PropertyRepository;
-import br.gov.es.openpmo.repository.ScheduleRepository;
-import br.gov.es.openpmo.repository.StepRepository;
+import br.gov.es.openpmo.repository.*;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -62,7 +58,7 @@ public class BaselineChangesService implements IBaselineChangesService {
       final boolean isSnapshot
   ) {
     return this.hasPropertiesChanges(baseline, workpack, isSnapshot)
-           || this.hasRelationshipsChanges(baseline, workpack, isSnapshot);
+        || this.hasRelationshipsChanges(baseline, workpack, isSnapshot);
   }
 
   private boolean hasRelationshipsChanges(
@@ -71,16 +67,7 @@ public class BaselineChangesService implements IBaselineChangesService {
       final boolean isSnapshot
   ) {
     return this.getSchedule(workpack).map(schedule -> this.hasScheduleChanges(baseline, schedule, isSnapshot)).orElse(false)
-           || getChildren(workpack).stream().anyMatch(child -> this.hasRelationshipsChanges(baseline, child, isSnapshot));
-  }
-
-  private boolean hasRelationshipsChanges(
-      final Baseline baseline,
-      final Schedule schedule,
-      final boolean isSnapshot
-  ) {
-    return this.findAllStepByScheduleId(schedule).stream()
-        .anyMatch(step -> this.hasStepChanges(baseline, step, isSnapshot));
+        || getChildren(workpack).stream().anyMatch(child -> this.hasRelationshipsChanges(baseline, child, isSnapshot));
   }
 
   private boolean hasRelationshipsChanges(
@@ -93,7 +80,35 @@ public class BaselineChangesService implements IBaselineChangesService {
     final Consumes consumesSnapshot = this.findConsumesByStepIdAndCostAccountId(costAccountSnapshot, stepSnapshot);
 
     return consumes.hasActualCostChanges(consumesSnapshot)
-           || consumes.hasPlannedCostChanges(consumesSnapshot);
+        || consumes.hasPlannedCostChanges(consumesSnapshot);
+  }
+
+  private boolean hasRelationshipsChanges(
+      final Baseline baseline,
+      final Schedule schedule,
+      final boolean isSnapshot
+  ) {
+    return this.findAllStepByScheduleId(schedule).stream()
+        .anyMatch(step -> this.hasStepChanges(baseline, step, isSnapshot));
+  }
+
+  private boolean hasScheduleChanges(
+      final Baseline baseline,
+      final Schedule schedule,
+      final boolean isSnapshot
+  ) {
+    final Optional<Schedule> maybeSnapshot = this.getScheduleSnapshot(baseline, schedule, isSnapshot);
+
+    if (maybeSnapshot.isPresent()) {
+      return schedule.hasChanges(maybeSnapshot.get())
+          || this.hasRelationshipsChanges(baseline, schedule, isSnapshot);
+    }
+
+    if (isSnapshot) {
+      return false;
+    }
+
+    throw new NegocioException(ApplicationMessage.SCHEDULE_HAS_NO_SNAPSHOT_INVALID_STATE_ERROR);
   }
 
   private Consumes findConsumesByStepIdAndCostAccountId(
@@ -148,14 +163,18 @@ public class BaselineChangesService implements IBaselineChangesService {
     return this.scheduleRepository.findScheduleByWorkpackId(workpack.getId());
   }
 
-  private boolean hasScheduleChanges(
+  private boolean hasPropertyChanges(
       final Baseline baseline,
-      final Schedule schedule,
+      final Property property,
       final boolean isSnapshot
   ) {
-    return this.getScheduleSnapshot(baseline, schedule, isSnapshot)
-        .map(snapshot -> schedule.hasChanges(snapshot) || this.hasRelationshipsChanges(baseline, schedule, isSnapshot))
-        .orElseThrow(() -> new NegocioException(ApplicationMessage.SCHEDULE_HAS_NO_SNAPSHOT_INVALID_STATE_ERROR));
+    if (!isDate(property)) {
+      return false;
+    }
+
+    return this.getPropertySnapshot(baseline, property, isSnapshot)
+        .map(snapshot -> property.hasChanges(snapshot))
+        .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_HAS_NO_SNAPSHOT_INVALID_STATE_ERROR));
   }
 
   private Optional<CostAccount> findSnapshotByMasterIdAndBaselineId(
@@ -168,18 +187,8 @@ public class BaselineChangesService implements IBaselineChangesService {
         : this.costAccountRepository.findSnapshotByMasterIdAndBaselineId(costAccount.getId(), baseline.getId());
   }
 
-  private boolean hasPropertyChanges(
-      final Baseline baseline,
-      final Property property,
-      final boolean isSnapshot
-  ) {
-    if (!this.isDate(property)) {
-      return false;
-    }
-
-    return this.getPropertySnapshot(baseline, property, isSnapshot)
-        .map(snapshot -> property.hasChanges(snapshot))
-        .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_HAS_NO_SNAPSHOT_INVALID_STATE_ERROR));
+  private static boolean isDate(final Property property) {
+    return TYPE_MODEL_NAME_DATE.equals(property.getClass().getTypeName());
   }
 
   private Optional<Property> getPropertySnapshot(
@@ -220,10 +229,6 @@ public class BaselineChangesService implements IBaselineChangesService {
     return workpack.getProperties()
         .stream()
         .anyMatch(property -> this.hasPropertyChanges(baseline, property, isSnapshot));
-  }
-
-  private boolean isDate(final Property property) {
-    return TYPE_MODEL_NAME_DATE.equals(property.getClass().getTypeName());
   }
 
 }

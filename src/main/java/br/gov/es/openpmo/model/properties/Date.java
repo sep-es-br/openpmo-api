@@ -26,6 +26,9 @@ public class Date extends Property<Date, LocalDateTime> {
     @Relationship("IS_DRIVEN_BY")
     private DateModel driver;
 
+    public Date() {
+    }
+
     @Override
     public Date snapshot() {
         final Date date = new Date();
@@ -94,7 +97,7 @@ public class Date extends Property<Date, LocalDateTime> {
     @Override
     public boolean hasChanges(final Date other) {
         return (this.value != null || other.value != null)
-            && (this.value != null && other.value == null || this.value == null || !this.value.equals(other.value));
+                && (this.value != null && other.value == null || this.value == null || !this.value.equals(other.value));
     }
 
     @Override

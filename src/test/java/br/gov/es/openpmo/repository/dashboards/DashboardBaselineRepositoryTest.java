@@ -63,11 +63,11 @@ class DashboardBaselineRepositoryTest extends BaseRepositoryTest {
     this.linkBaselineWithWorkpack(rejected, this.workpack);
 
     // when
-    final List<DashboardBaselineResponse> baselineResponses =
-        this.underTest.findAllByWorkpackId(this.workpack.getId());
+    final List<DashboardBaselineResponse> DashboardBaselineResponses =
+            this.underTest.findAllByWorkpackId(this.workpack.getId());
 
     // then
-    assertThat(baselineResponses)
+      assertThat(DashboardBaselineResponses)
         .hasSize(2)
         .allMatch(DashboardBaselineRepositoryTest::isApprovedOrProposed);
   }
@@ -83,33 +83,33 @@ class DashboardBaselineRepositoryTest extends BaseRepositoryTest {
     baseline.setStatus(status);
     baseline.setProposalDate(proposalDate);
     baseline.setActive(active);
-    return this.underTest.save(baseline);
+      return this.underTest.save(baseline);
   }
 
-  void linkBaselineWithWorkpack(final Baseline baseline, final Workpack workpack) {
-    final IsBaselinedBy isBaselinedBy = new IsBaselinedBy();
-    isBaselinedBy.setBaseline(baseline);
-    isBaselinedBy.setWorkpack(workpack);
-    this.isBaselinedByRepository.save(isBaselinedBy);
-  }
+    void linkBaselineWithWorkpack(final Baseline baseline, final Workpack workpack) {
+        final IsBaselinedBy isBaselinedBy = new IsBaselinedBy();
+        isBaselinedBy.setBaseline(baseline);
+        isBaselinedBy.setWorkpack(workpack);
+        this.isBaselinedByRepository.save(isBaselinedBy);
+    }
 
-  static boolean isApprovedOrProposed(final DashboardBaselineResponse baselineResponse) {
-    return baselineResponse.getStatus() == Status.APPROVED
-        || baselineResponse.getStatus() == Status.PROPOSED;
-  }
+    static boolean isApprovedOrProposed(final DashboardBaselineResponse DashboardBaselineResponse) {
+        return DashboardBaselineResponse.getStatus() == Status.APPROVED
+                || DashboardBaselineResponse.getStatus() == Status.PROPOSED;
+    }
 
-  @Test
-  @DisplayName("Should not find any baseline if workpack does not have any")
-  void test2() {
-    // given
-    // workpack does not have baslines
+    @Test
+    @DisplayName("Should not find any baseline if workpack does not have any")
+    void test2() {
+        // given
+        // workpack does not have baslines
 
-    //when
-    final List<DashboardBaselineResponse> baselineResponses =
-        this.underTest.findAllByWorkpackId(this.workpack.getId());
+        //when
+        final List<DashboardBaselineResponse> DashboardBaselineResponses =
+                this.underTest.findAllByWorkpackId(this.workpack.getId());
 
     // then
-    assertThat(baselineResponses)
+        assertThat(DashboardBaselineResponses)
         .hasSize(0)
         .noneMatch(DashboardBaselineRepositoryTest::isApprovedOrProposed);
   }
@@ -125,11 +125,11 @@ class DashboardBaselineRepositoryTest extends BaseRepositoryTest {
     this.linkBaselineWithWorkpack(rejected, this.workpack);
 
     // when
-    final List<DashboardBaselineResponse> baselineResponses =
-        this.underTest.findAllByWorkpackId(this.workpack.getId());
+      final List<DashboardBaselineResponse> DashboardBaselineResponses =
+              this.underTest.findAllByWorkpackId(this.workpack.getId());
 
     // then
-    assertThat(baselineResponses)
+      assertThat(DashboardBaselineResponses)
         .hasSize(0)
         .noneMatch(DashboardBaselineRepositoryTest::isApprovedOrProposed);
   }
@@ -149,31 +149,31 @@ class DashboardBaselineRepositoryTest extends BaseRepositoryTest {
     this.linkBaselineWithWorkpack(rejected, this.workpack);
 
     // when
-    final List<DashboardBaselineResponse> baselineResponses =
-        this.underTest.findAllByWorkpackId(this.workpack.getId());
+      final List<DashboardBaselineResponse> DashboardBaselineResponses =
+              this.underTest.findAllByWorkpackId(this.workpack.getId());
 
-    // then
-    final Condition<DashboardBaselineResponse> defaultBaseline =
-        new Condition<>(response -> isDefaultBaseline(response, approved), "Default Baseline");
+      // then
+      final Condition<DashboardBaselineResponse> defaultBaseline =
+              new Condition<>(response -> isDefaultBaseline(response, approved), "Default Baseline");
 
-    assertThat(baselineResponses)
-        .hasSize(2)
-        .haveExactly(1, defaultBaseline);
+      assertThat(DashboardBaselineResponses)
+              .hasSize(2)
+              .haveExactly(1, defaultBaseline);
   }
 
-  private static boolean isDefaultBaseline(final DashboardBaselineResponse baselineResponse, final Baseline baseline) {
-    return baselineResponse.getDefaultBaseline() == Boolean.TRUE
-        && Objects.equals(baselineResponse.getId(), baseline.getId());
-  }
+    private static boolean isDefaultBaseline(final DashboardBaselineResponse DashboardBaselineResponse, final Baseline baseline) {
+        return DashboardBaselineResponse.getDefaultBaseline() == Boolean.TRUE
+                && Objects.equals(DashboardBaselineResponse.getId(), baseline.getId());
+    }
 
-  @Test
-  @DisplayName("Should retrieve default value as workpack have proposed baselines")
-  void test5() {
-    // given
-    final LocalDateTime date1 = LocalDateTime.of(2006, 10, 10, 10, 10, 10);
-    final LocalDateTime date2 = LocalDateTime.of(2004, 10, 10, 10, 10, 10);
-    final LocalDateTime date3 = LocalDateTime.of(2002, 10, 10, 10, 10, 10);
-    final LocalDateTime date4 = LocalDateTime.of(2000, 10, 10, 10, 10, 10);
+    @Test
+    @DisplayName("Should retrieve default value as workpack have proposed baselines")
+    void test5() {
+        // given
+        final LocalDateTime date1 = LocalDateTime.of(2006, 10, 10, 10, 10, 10);
+        final LocalDateTime date2 = LocalDateTime.of(2004, 10, 10, 10, 10, 10);
+        final LocalDateTime date3 = LocalDateTime.of(2002, 10, 10, 10, 10, 10);
+        final LocalDateTime date4 = LocalDateTime.of(2000, 10, 10, 10, 10, 10);
 
     final Baseline draft = this.createBaseline("DRAFT", Status.DRAFT, date1, false);
     final Baseline proposed = this.createBaseline("PROPOSED", Status.PROPOSED, date2, false);
@@ -186,14 +186,14 @@ class DashboardBaselineRepositoryTest extends BaseRepositoryTest {
     this.linkBaselineWithWorkpack(rejected, this.workpack);
 
     // when
-    final List<DashboardBaselineResponse> baselineResponses =
-        this.underTest.findAllByWorkpackId(this.workpack.getId());
+        final List<DashboardBaselineResponse> DashboardBaselineResponses =
+                this.underTest.findAllByWorkpackId(this.workpack.getId());
 
     // then
     final Condition<DashboardBaselineResponse> defaultBaseline =
         new Condition<>(response -> isDefaultBaseline(response, proposed), "Default Baseline");
 
-    assertThat(baselineResponses)
+        assertThat(DashboardBaselineResponses)
         .hasSize(2)
         .haveExactly(1, defaultBaseline);
   }

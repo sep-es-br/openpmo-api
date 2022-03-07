@@ -30,9 +30,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import static br.gov.es.openpmo.utils.ApplicationMessage.FAILED_FETCH_EXTERNAL_DATA;
-import static br.gov.es.openpmo.utils.ApplicationMessage.FAILED_FETCH_STATUS_NOT_OK;
-import static br.gov.es.openpmo.utils.ApplicationMessage.FAILED_FETCH_TOKEN_ACESSO_CIDADAO;
+import static br.gov.es.openpmo.utils.ApplicationMessage.*;
 import static org.apache.http.entity.ContentType.APPLICATION_JSON;
 
 @Component

@@ -57,10 +57,9 @@ public class OfficePermissionController {
 
   @PostMapping
   public ResponseEntity<ResponseBase<Entity>> store(@Valid @RequestBody final OfficePermissionParamDto request) {
-    final Entity entity = this.service.store(request);
+    this.service.store(request);
     final ResponseBase<Entity> response = new ResponseBase<Entity>()
       .setSuccess(true)
-      .setData(entity)
       .setMessage(ApplicationMessage.OPERATION_SUCCESS);
     return ResponseEntity.ok(response);
   }

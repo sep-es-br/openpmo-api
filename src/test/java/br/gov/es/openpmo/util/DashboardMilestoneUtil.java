@@ -13,13 +13,7 @@ import br.gov.es.openpmo.model.workpacks.Milestone;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.MilestoneModel;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
-import br.gov.es.openpmo.repository.BaselineRepository;
-import br.gov.es.openpmo.repository.IsPropertySnapshotOfRepository;
-import br.gov.es.openpmo.repository.IsWorkpackSnapshotOfRepository;
-import br.gov.es.openpmo.repository.PropertyModelRepository;
-import br.gov.es.openpmo.repository.PropertyRepository;
-import br.gov.es.openpmo.repository.WorkpackModelRepository;
-import br.gov.es.openpmo.repository.WorkpackRepository;
+import br.gov.es.openpmo.repository.*;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;

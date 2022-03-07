@@ -2,10 +2,10 @@ package br.gov.es.openpmo.controller.ui;
 
 import br.gov.es.openpmo.dto.ResponseBaseItens;
 import br.gov.es.openpmo.dto.menu.MenuOfficeDto;
-import br.gov.es.openpmo.dto.menu.PortfolioMenuRequest;
 import br.gov.es.openpmo.dto.menu.WorkpackMenuDto;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.ui.MenuService;
+import br.gov.es.openpmo.dto.menu.PortfolioMenuRequest;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

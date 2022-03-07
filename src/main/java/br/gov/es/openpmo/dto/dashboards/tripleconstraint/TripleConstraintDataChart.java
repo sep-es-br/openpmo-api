@@ -1,48 +1,79 @@
 package br.gov.es.openpmo.dto.dashboards.tripleconstraint;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
+import java.time.LocalDate;
+
 public class TripleConstraintDataChart {
 
-  private CostDataChart cost;
-  private ScheduleDataChart schedule;
-  private ScopeDataChart scope;
+    private Long idBaseline;
 
-  public CostDataChart getCost() {
-    return this.cost;
-  }
+    @JsonFormat(pattern = "MM-yyyy")
+    private LocalDate mesAno;
 
-  public void setCost(final CostDataChart cost) {
-    this.cost = cost;
-  }
+    private CostDataChart cost;
 
-  public ScheduleDataChart getSchedule() {
-    return this.schedule;
-  }
+    private ScheduleDataChart schedule;
 
-  public void setSchedule(final ScheduleDataChart schedule) {
-    this.schedule = schedule;
-  }
+    private ScopeDataChart scope;
 
-  public ScopeDataChart getScope() {
-    return this.scope;
-  }
+    public CostDataChart getCost() {
+        return this.cost;
+    }
 
-  public void setScope(final ScopeDataChart scope) {
-    this.scope = scope;
-  }
+    public void setCost(final CostDataChart cost) {
+        this.cost = cost;
+    }
 
-  public void sumCostData(final CostDataChart cost) {
-    if(this.cost == null) this.cost = new CostDataChart();
-    this.cost.sumCostData(cost);
-  }
+    public ScheduleDataChart getSchedule() {
+        return this.schedule;
+    }
 
-  public void sumScopeData(final ScopeDataChart scopeData) {
-    if(this.scope == null) this.scope = new ScopeDataChart();
-    this.scope.sumScopeData(scopeData);
-  }
+    public void setSchedule(final ScheduleDataChart schedule) {
+        this.schedule = schedule;
+    }
 
-  public void round() {
-    this.cost.round();
-    this.schedule.round();
-    this.scope.round();
-  }
+    public ScopeDataChart getScope() {
+        return this.scope;
+    }
+
+    public void setScope(final ScopeDataChart scope) {
+        this.scope = scope;
+    }
+
+    public void sumCostData(final CostDataChart cost) {
+        if (this.cost == null) {
+            this.cost = new CostDataChart();
+        }
+        this.cost.sumCostData(cost);
+    }
+
+    public void sumScopeData(final ScopeDataChart scopeData) {
+        if (this.scope == null) {
+            this.scope = new ScopeDataChart();
+        }
+        this.scope.sumScopeData(scopeData);
+    }
+
+    public void round() {
+        this.cost.round();
+        this.schedule.round();
+        this.scope.round();
+    }
+
+    public Long getIdBaseline() {
+        return idBaseline;
+    }
+
+    public void setIdBaseline(Long idBaseline) {
+        this.idBaseline = idBaseline;
+    }
+
+    public LocalDate getMesAno() {
+        return mesAno;
+    }
+
+    public void setMesAno(LocalDate mesAno) {
+        this.mesAno = mesAno;
+    }
 }

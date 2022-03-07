@@ -5,28 +5,27 @@ import java.math.MathContext;
 import java.math.RoundingMode;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
-
-import static java.math.BigDecimal.valueOf;
+import java.util.Optional;
 
 public final class TripleConstraintUtils {
 
-  public static final BigDecimal ONE_HUNDRED = new BigDecimal(100);
-  public static final BigDecimal ONE_MONTH = new BigDecimal(30);
+    public static final BigDecimal ONE_HUNDRED = new BigDecimal(100);
+    public static final BigDecimal ONE_MONTH = new BigDecimal(30);
 
-  private TripleConstraintUtils() {
-  }
+    private TripleConstraintUtils() {
+    }
 
-  public static BigDecimal daysBetween(final Temporal currentStartDate, final Temporal currentEndDate) {
-    if(currentStartDate == null || currentEndDate == null) return null;
-    return valueOf(ChronoUnit.DAYS.between(
-      currentStartDate,
-      currentEndDate
-    ));
-  }
+    public static BigDecimal daysBetween(final Temporal first, final Temporal second) {
+        if (first == null || second == null) {
+            return null;
+        }
+        return BigDecimal.valueOf(ChronoUnit.DAYS.between(first, second));
+    }
 
-  public static BigDecimal roundOneDecimal(final BigDecimal number) {
-    if(number == null) return null;
-    return number.round(new MathContext(3, RoundingMode.HALF_EVEN));
-  }
+    public static BigDecimal roundOneDecimal(final BigDecimal number) {
+        return Optional.ofNullable(number)
+                .map(bigDecimal -> bigDecimal.round(new MathContext(3, RoundingMode.HALF_EVEN)))
+                .orElse(null);
+    }
 
 }

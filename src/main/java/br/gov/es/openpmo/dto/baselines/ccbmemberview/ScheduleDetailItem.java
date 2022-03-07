@@ -77,6 +77,14 @@ public class ScheduleDetailItem {
       .orElse(null);
   }
 
+  public ScheduleInterval getProposedIntervalDate() {
+    return this.proposedIntervalDate;
+  }
+
+  public ScheduleInterval getCurrentIntervalDate() {
+    return this.currentIntervalDate;
+  }
+
   public String getIcon() {
     return this.icon;
   }

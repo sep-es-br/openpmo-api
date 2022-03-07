@@ -51,7 +51,7 @@ public class AvatarService {
       .getAvatar();
 
     if(avatar == null) {
-      return new AvatarDto();
+      return null;
     }
 
     return new AvatarDto(avatar, uriComponentsBuilder);

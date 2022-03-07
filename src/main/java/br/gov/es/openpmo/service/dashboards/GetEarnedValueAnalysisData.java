@@ -1,12 +1,7 @@
 package br.gov.es.openpmo.service.dashboards;
 
-import br.gov.es.openpmo.dto.dashboards.DashboardDataParameters;
-import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.CostPerformanceIndex;
-import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.DashboardEarnedValueAnalysis;
-import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.EarnedValueAnalysisDerivedVariables;
-import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.EarnedValueAnalysisVariables;
-import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.EarnedValueByStep;
-import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.SchedulePerformanceIndex;
+import br.gov.es.openpmo.dto.dashboards.DashboardParameters;
+import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.*;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
@@ -24,31 +19,24 @@ public class GetEarnedValueAnalysisData implements IGetEarnedValueAnalysisData {
     this.getEarnedValueBySteps = getEarnedValueBySteps;
   }
 
-  @Override
-  public DashboardEarnedValueAnalysis get(final DashboardDataParameters parameters) {
-    final List<EarnedValueByStep> earnedValueByStep = this.getEarnedValueByStep(parameters);
-    final EarnedValueAnalysisVariables variables = getVariables(earnedValueByStep);
-    final EarnedValueAnalysisDerivedVariables derivedVariables = getDerivedVariables(variables);
+    @Override
+    public DashboardEarnedValueAnalysis get(final DashboardParameters parameters) {
+        final List<EarnedValueByStep> earnedValueByStep = this.getEarnedValueByStep(parameters);
+        final EarnedValueAnalysisVariables variables = getVariables(earnedValueByStep);
+        final EarnedValueAnalysisDerivedVariables derivedVariables = getDerivedVariables(variables);
 
-    final CostPerformanceIndex costPerformanceIndex = getCostPerformanceIndex(derivedVariables);
-    final SchedulePerformanceIndex schedulePerformanceIndex = getSchedulePerformanceIndex(derivedVariables);
-    final BigDecimal estimatesAtCompletion = getEstimatesAtCompletion(derivedVariables);
-    final BigDecimal estimateToComplete = getEstimateToComplete(derivedVariables);
+        final CostPerformanceIndex costPerformanceIndex = getCostPerformanceIndex(derivedVariables);
+        final SchedulePerformanceIndex schedulePerformanceIndex = getSchedulePerformanceIndex(derivedVariables);
+        final BigDecimal estimatesAtCompletion = getEstimatesAtCompletion(derivedVariables);
+        final BigDecimal estimateToComplete = getEstimateToComplete(derivedVariables);
 
-    return new DashboardEarnedValueAnalysis(
-        earnedValueByStep,
-        costPerformanceIndex,
-        schedulePerformanceIndex,
-        variables,
-        estimatesAtCompletion,
-        estimateToComplete
-    );
+        return null;
   }
 
-  @Nullable
-  private List<EarnedValueByStep> getEarnedValueByStep(final DashboardDataParameters parameters) {
-    return this.getEarnedValueBySteps.get(parameters);
-  }
+    @Nullable
+    private List<EarnedValueByStep> getEarnedValueByStep(final DashboardParameters parameters) {
+        return this.getEarnedValueBySteps.get(parameters);
+    }
 
   @Nullable
   private static EarnedValueAnalysisVariables getVariables(final Iterable<? extends EarnedValueByStep> earnedValueBySteps) {
@@ -87,12 +75,12 @@ public class GetEarnedValueAnalysisData implements IGetEarnedValueAnalysisData {
 
   @Nullable
   private static BigDecimal getEstimatesAtCompletion(final EarnedValueAnalysisDerivedVariables variables) {
-    return variables.getEstimateAtCompletion();
+    return variables.getEstimateAtCompletion(null);
   }
 
   @Nullable
   private static BigDecimal getEstimateToComplete(final EarnedValueAnalysisDerivedVariables variables) {
-    return variables.getEstimateAtComplete();
+    return variables.getEstimateToComplete(null);
 
   }
 

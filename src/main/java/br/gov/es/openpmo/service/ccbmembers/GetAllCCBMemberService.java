@@ -2,7 +2,7 @@ package br.gov.es.openpmo.service.ccbmembers;
 
 import br.gov.es.openpmo.dto.ccbmembers.CCBMemberResponse;
 import br.gov.es.openpmo.dto.ccbmembers.MemberAs;
-import br.gov.es.openpmo.model.relations.IsCCBMember;
+import br.gov.es.openpmo.model.relations.IsCCBMemberFor;
 import br.gov.es.openpmo.repository.IsCCBMemberRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,11 +38,11 @@ public class GetAllCCBMemberService implements IGetAllCCBMemberService {
     return t -> seen.add(keyExtractor.apply(t));
   }
 
-  private List<IsCCBMember> findAllCCBMmembersByWorkpackId(final Long workpackId) {
+  private List<IsCCBMemberFor> findAllCCBMmembersByWorkpackId(final Long workpackId) {
     return this.ccbMemberRepository.findAllByWorkpackId(workpackId);
   }
 
-  private CCBMemberResponse getCCBMemberResponse(final IsCCBMember ccbMember) {
+  private CCBMemberResponse getCCBMemberResponse(final IsCCBMemberFor ccbMember) {
     final List<MemberAs> memberAs = this.getMemberAs(ccbMember);
 
     return new CCBMemberResponse(
@@ -52,14 +52,14 @@ public class GetAllCCBMemberService implements IGetAllCCBMemberService {
     );
   }
 
-  private List<MemberAs> getMemberAs(final IsCCBMember ccbMember) {
+  private List<MemberAs> getMemberAs(final IsCCBMemberFor ccbMember) {
     return this.findByPersonIdAndWorkpackId(ccbMember)
         .stream()
-        .map(IsCCBMember::getMemberAs)
+        .map(IsCCBMemberFor::getMemberAs)
         .collect(Collectors.toList());
   }
 
-  private List<IsCCBMember> findByPersonIdAndWorkpackId(final IsCCBMember ccbMember) {
+  private List<IsCCBMemberFor> findByPersonIdAndWorkpackId(final IsCCBMemberFor ccbMember) {
     return this.ccbMemberRepository.findByPersonIdAndWorkpackId(
         ccbMember.getIdPerson(),
         ccbMember.getWorkpackId()

@@ -16,217 +16,227 @@ import java.util.List;
 
 @JsonTypeInfo(use = Id.NAME, property = "type")
 @JsonSubTypes({@Type(value = PortfolioModelParamDto.class, name = "PortfolioModel"),
-    @Type(value = ProgramModelParamDto.class, name = "ProgramModel"),
-    @Type(value = OrganizerModelParamDto.class, name = "OrganizerModel"),
-    @Type(value = DeliverableModelParamDto.class, name = "DeliverableModel"),
-    @Type(value = ProjectModelParamDto.class, name = "ProjectModel"),
-    @Type(value = MilestoneModelParamDto.class, name = "MilestoneModel")})
+        @Type(value = ProgramModelParamDto.class, name = "ProgramModel"),
+        @Type(value = OrganizerModelParamDto.class, name = "OrganizerModel"),
+        @Type(value = DeliverableModelParamDto.class, name = "DeliverableModel"),
+        @Type(value = ProjectModelParamDto.class, name = "ProjectModel"),
+        @Type(value = MilestoneModelParamDto.class, name = "MilestoneModel")})
 @ApiModel(subTypes = {PortfolioModelParamDto.class, ProgramModelParamDto.class, OrganizerModelParamDto.class, DeliverableModelParamDto.class,
-    ProjectModelParamDto.class,
-    MilestoneModelParamDto.class}, discriminator = "type", description = "Supertype of all WorkpackModel.")
+        ProjectModelParamDto.class,
+        MilestoneModelParamDto.class}, discriminator = "type", description = "Supertype of all WorkpackModel.")
 public abstract class WorkpackModelParamDto {
 
-  private static final String PACKAGE_DTO = "br.gov.es.openpmo.dto.workpackmodel.params";
+    private static final String PACKAGE_DTO = "br.gov.es.openpmo.dto.workpackmodel.params";
 
-  private Long id;
+    private Long id;
 
-  @NotBlank(message = "fontIcon.not.blank")
-  private String fontIcon;
+    @NotBlank(message = "fontIcon.not.blank")
+    private String fontIcon;
 
-  @NotBlank(message = "modelName.not.blank")
-  private String modelName;
+    @NotBlank(message = "modelName.not.blank")
+    private String modelName;
 
-  private String modelNameInPlural;
+    private String modelNameInPlural;
 
-  private boolean costSessionActive;
+    private boolean costSessionActive;
 
-  private boolean stakeholderSessionActive;
+    private boolean stakeholderSessionActive;
 
-  private boolean childWorkpackModelSessionActive;
+    private boolean childWorkpackModelSessionActive;
 
-  private boolean scheduleSessionActive;
+    private boolean scheduleSessionActive;
 
-  private boolean riskAndIssueManagementSessionActive;
+    private boolean riskAndIssueManagementSessionActive;
 
-  private boolean processesManagementSessionActive;
+    private boolean processesManagementSessionActive;
 
-  private Boolean journalManagementSessionActive;
+    private Boolean journalManagementSessionActive;
 
-  private List<String> personRoles;
+    private Boolean dashboardSessionActive;
 
-  private List<String> organizationRoles;
+    private List<String> personRoles;
 
-  @Valid
-  private List<? extends PropertyModelDto> properties;
+    private List<String> organizationRoles;
 
-  private Long idParent;
+    @Valid
+    private List<? extends PropertyModelDto> properties;
 
-  private String sortBy;
+    private Long idParent;
 
-  @JsonUnwrapped
-  private DashboardConfiguration dashboardConfiguration;
+    private String sortBy;
 
-  @NotNull
-  private Long idPlanModel;
+    @JsonUnwrapped
+    private DashboardConfiguration dashboardConfiguration;
 
-  public Long getId() {
-    return this.id;
-  }
+    @NotNull
+    private Long idPlanModel;
 
-  public void setId(final Long id) {
-    this.id = id;
-  }
+    public Long getId() {
+        return this.id;
+    }
 
-  public String getFontIcon() {
-    return this.fontIcon;
-  }
+    public void setId(final Long id) {
+        this.id = id;
+    }
 
-  public void setFontIcon(final String fontIcon) {
-    this.fontIcon = fontIcon;
-  }
+    public String getFontIcon() {
+        return this.fontIcon;
+    }
 
-  public String getModelName() {
-    return this.modelName;
-  }
+    public void setFontIcon(final String fontIcon) {
+        this.fontIcon = fontIcon;
+    }
 
-  public void setModelName(final String modelName) {
-    this.modelName = modelName;
-  }
+    public String getModelName() {
+        return this.modelName;
+    }
 
-  public String getModelNameInPlural() {
-    return this.modelNameInPlural;
-  }
+    public void setModelName(final String modelName) {
+        this.modelName = modelName;
+    }
 
-  public void setModelNameInPlural(final String modelNameInPlural) {
-    this.modelNameInPlural = modelNameInPlural;
-  }
+    public String getModelNameInPlural() {
+        return this.modelNameInPlural;
+    }
 
-  public boolean isCostSessionActive() {
-    return this.costSessionActive;
-  }
+    public void setModelNameInPlural(final String modelNameInPlural) {
+        this.modelNameInPlural = modelNameInPlural;
+    }
 
-  public void setCostSessionActive(final boolean costSessionActive) {
-    this.costSessionActive = costSessionActive;
-  }
+    public boolean isCostSessionActive() {
+        return this.costSessionActive;
+    }
 
-  public boolean isStakeholderSessionActive() {
-    return this.stakeholderSessionActive;
-  }
+    public void setCostSessionActive(final boolean costSessionActive) {
+        this.costSessionActive = costSessionActive;
+    }
 
-  public void setStakeholderSessionActive(final boolean stakeholderSessionActive) {
-    this.stakeholderSessionActive = stakeholderSessionActive;
-  }
+    public boolean isStakeholderSessionActive() {
+        return this.stakeholderSessionActive;
+    }
 
-  public boolean isChildWorkpackModelSessionActive() {
-    return this.childWorkpackModelSessionActive;
-  }
+    public void setStakeholderSessionActive(final boolean stakeholderSessionActive) {
+        this.stakeholderSessionActive = stakeholderSessionActive;
+    }
 
-  public void setChildWorkpackModelSessionActive(final boolean childWorkpackModelSessionActive) {
-    this.childWorkpackModelSessionActive = childWorkpackModelSessionActive;
-  }
+    public boolean isChildWorkpackModelSessionActive() {
+        return this.childWorkpackModelSessionActive;
+    }
 
-  public boolean isScheduleSessionActive() {
-    return this.scheduleSessionActive;
-  }
+    public void setChildWorkpackModelSessionActive(final boolean childWorkpackModelSessionActive) {
+        this.childWorkpackModelSessionActive = childWorkpackModelSessionActive;
+    }
 
-  public void setScheduleSessionActive(final boolean scheduleSessionActive) {
-    this.scheduleSessionActive = scheduleSessionActive;
-  }
+    public boolean isScheduleSessionActive() {
+        return this.scheduleSessionActive;
+    }
 
-  public List<String> getPersonRoles() {
-    return this.personRoles;
-  }
+    public void setScheduleSessionActive(final boolean scheduleSessionActive) {
+        this.scheduleSessionActive = scheduleSessionActive;
+    }
 
-  public void setPersonRoles(final List<String> personRoles) {
-    this.personRoles = personRoles;
-  }
+    public List<String> getPersonRoles() {
+        return this.personRoles;
+    }
 
-  public List<String> getOrganizationRoles() {
-    return this.organizationRoles;
-  }
+    public void setPersonRoles(final List<String> personRoles) {
+        this.personRoles = personRoles;
+    }
 
-  public void setOrganizationRoles(final List<String> organizationRoles) {
-    this.organizationRoles = organizationRoles;
-  }
+    public List<String> getOrganizationRoles() {
+        return this.organizationRoles;
+    }
 
-  public Long getIdPlanModel() {
-    return this.idPlanModel;
-  }
+    public void setOrganizationRoles(final List<String> organizationRoles) {
+        this.organizationRoles = organizationRoles;
+    }
 
-  public void setIdPlanModel(final Long idPlanModel) {
-    this.idPlanModel = idPlanModel;
-  }
+    public Long getIdPlanModel() {
+        return this.idPlanModel;
+    }
 
-  public List<? extends PropertyModelDto> getProperties() {
-    return Collections.unmodifiableList(this.properties);
-  }
+    public void setIdPlanModel(final Long idPlanModel) {
+        this.idPlanModel = idPlanModel;
+    }
 
-  public void setProperties(final List<? extends PropertyModelDto> properties) {
-    this.properties = properties;
-  }
+    public List<? extends PropertyModelDto> getProperties() {
+        return Collections.unmodifiableList(this.properties);
+    }
 
-  public String getSortBy() {
-    return this.sortBy;
-  }
+    public void setProperties(final List<? extends PropertyModelDto> properties) {
+        this.properties = properties;
+    }
 
-  public void setSortBy(final String sortBy) {
-    this.sortBy = sortBy;
-  }
+    public String getSortBy() {
+        return this.sortBy;
+    }
 
-  public boolean isRiskAndIssueManagementSessionActive() {
-    return this.riskAndIssueManagementSessionActive;
-  }
+    public void setSortBy(final String sortBy) {
+        this.sortBy = sortBy;
+    }
 
-  public void setRiskAndIssueManagementSessionActive(final boolean riskAndIssueManagementSessionActive) {
-    this.riskAndIssueManagementSessionActive = riskAndIssueManagementSessionActive;
-  }
+    public boolean isRiskAndIssueManagementSessionActive() {
+        return this.riskAndIssueManagementSessionActive;
+    }
 
-  public boolean isProcessesManagementSessionActive() {
-    return this.processesManagementSessionActive;
-  }
+    public void setRiskAndIssueManagementSessionActive(final boolean riskAndIssueManagementSessionActive) {
+        this.riskAndIssueManagementSessionActive = riskAndIssueManagementSessionActive;
+    }
 
-  public void setProcessesManagementSessionActive(final boolean processesManagementSessionActive) {
-    this.processesManagementSessionActive = processesManagementSessionActive;
-  }
+    public boolean isProcessesManagementSessionActive() {
+        return this.processesManagementSessionActive;
+    }
 
-  public boolean isDeliverableDtoOrMilestoneDto() {
-    return this.isDeliverableDto() || this.isMilestoneDto();
-  }
+    public void setProcessesManagementSessionActive(final boolean processesManagementSessionActive) {
+        this.processesManagementSessionActive = processesManagementSessionActive;
+    }
 
-  public boolean isDeliverableDto() {
-    return this.getClass().getTypeName().equals(PACKAGE_DTO + ".DeliverableModelDto");
-  }
+    public boolean isDeliverableDtoOrMilestoneDto() {
+        return this.isDeliverableDto() || this.isMilestoneDto();
+    }
 
-  public boolean isMilestoneDto() {
-    return this.getClass().getTypeName().equals(PACKAGE_DTO + ".MilestoneModelDto");
-  }
+    public boolean isDeliverableDto() {
+        return this.getClass().getTypeName().equals(PACKAGE_DTO + ".DeliverableModelDto");
+    }
 
-  public boolean hasNoParent() {
-    return this.getIdParent() == null;
-  }
+    public boolean isMilestoneDto() {
+        return this.getClass().getTypeName().equals(PACKAGE_DTO + ".MilestoneModelDto");
+    }
 
-  public Long getIdParent() {
-    return this.idParent;
-  }
+    public boolean hasNoParent() {
+        return this.getIdParent() == null;
+    }
 
-  public void setIdParent(final Long idParent) {
-    this.idParent = idParent;
-  }
+    public Long getIdParent() {
+        return this.idParent;
+    }
 
-  public Boolean isJournalManagementSessionActive() {
-    return this.journalManagementSessionActive;
-  }
+    public void setIdParent(final Long idParent) {
+        this.idParent = idParent;
+    }
 
-  public void setJournalManagementSessionActive(final Boolean journalManagementSessionActive) {
-    this.journalManagementSessionActive = journalManagementSessionActive;
-  }
+    public Boolean isJournalManagementSessionActive() {
+        return this.journalManagementSessionActive;
+    }
 
-  public DashboardConfiguration getDashboardConfiguration() {
-    return this.dashboardConfiguration;
-  }
+    public void setJournalManagementSessionActive(final Boolean journalManagementSessionActive) {
+        this.journalManagementSessionActive = journalManagementSessionActive;
+    }
 
-  public void setDashboardConfiguration(final DashboardConfiguration dashboardConfiguration) {
-    this.dashboardConfiguration = dashboardConfiguration;
-  }
+    public DashboardConfiguration getDashboardConfiguration() {
+        return this.dashboardConfiguration;
+    }
+
+    public void setDashboardConfiguration(final DashboardConfiguration dashboardConfiguration) {
+        this.dashboardConfiguration = dashboardConfiguration;
+    }
+
+    public Boolean getDashboardSessionActive() {
+        return dashboardSessionActive;
+    }
+
+    public void setDashboardSessionActive(Boolean dashboardSessionActive) {
+        this.dashboardSessionActive = dashboardSessionActive;
+    }
 
 }

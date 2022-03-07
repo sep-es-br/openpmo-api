@@ -1,10 +1,6 @@
 package br.gov.es.openpmo.service.journals;
 
-import br.gov.es.openpmo.dto.journals.EvidenceField;
-import br.gov.es.openpmo.dto.journals.InformationField;
-import br.gov.es.openpmo.dto.journals.JournalResponse;
-import br.gov.es.openpmo.dto.journals.PersonField;
-import br.gov.es.openpmo.dto.journals.WorkpackField;
+import br.gov.es.openpmo.dto.journals.*;
 import br.gov.es.openpmo.dto.workpack.WorkpackName;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.File;

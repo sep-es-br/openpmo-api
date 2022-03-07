@@ -13,9 +13,10 @@ import org.springframework.boot.test.autoconfigure.data.neo4j.DataNeo4jTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import static org.junit.jupiter.api.Assertions.assertSame;
 
 import java.text.MessageFormat;
+
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 @Tag("database")
 @DataNeo4jTest

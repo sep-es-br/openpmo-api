@@ -9,167 +9,213 @@ import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.OfficeRepository;
 import br.gov.es.openpmo.repository.PlanModelRepository;
+import br.gov.es.openpmo.repository.PropertyModelRepository;
 import br.gov.es.openpmo.repository.WorkpackModelRepository;
 import br.gov.es.openpmo.utils.ApplicationMessage;
-import br.gov.es.openpmo.utils.WorkpackModelInstanceType;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.*;
+
+import static br.gov.es.openpmo.utils.WorkpackModelInstanceType.createFrom;
 
 @Service
 public class SharedPlanModelService {
 
-  private final PlanModelRepository planModelRepository;
-  private final WorkpackModelRepository workpackModelRepository;
-  private final OfficeRepository officeRepository;
+    private final PlanModelRepository planModelRepository;
+    private final WorkpackModelRepository workpackModelRepository;
+    private final OfficeRepository officeRepository;
+    private final PropertyModelRepository propertyModelRepository;
 
-  @Autowired
-  public SharedPlanModelService(
-    final PlanModelRepository planModelRepository,
-    final WorkpackModelRepository workpackModelRepository,
-    final OfficeRepository officeRepository
-  ) {
-    this.planModelRepository = planModelRepository;
-    this.workpackModelRepository = workpackModelRepository;
-    this.officeRepository = officeRepository;
-  }
-
-  private static void copyPropertiesToPlanModel(final PlanModel source, final PlanModel target) {
-    BeanUtils.copyProperties(source, target);
-    target.setId(null);
-    target.setPublicShared(false);
-  }
-
-  private static void clearShared(final PlanModel planModel) {
-    Optional.ofNullable(planModel.getSharedWith()).ifPresent(Set::clear);
-  }
-
-  private static WorkpackModel copyPropertiesToWorkpackModel(final WorkpackModel workpackModel) {
-    final WorkpackModel newModel = WorkpackModelInstanceType.createFrom(workpackModel);
-
-    copyBeanProperties(workpackModel, newModel);
-    copyChildren(workpackModel, newModel);
-
-    return newModel;
-  }
-
-  private static void copyChildren(final WorkpackModel workpackModel, final WorkpackModel newModel) {
-    final Set<WorkpackModel> child = workpackModel.getChildren();
-
-    if(child != null) {
-      child.stream()
-        .map(SharedPlanModelService::copyPropertiesToWorkpackModel)
-        .forEach(model -> copyWorkpackModelChild(newModel, model));
+    @Autowired
+    public SharedPlanModelService(
+            final PlanModelRepository planModelRepository,
+            final WorkpackModelRepository workpackModelRepository,
+            final OfficeRepository officeRepository,
+            final PropertyModelRepository propertyModelRepository
+    ) {
+        this.planModelRepository = planModelRepository;
+        this.workpackModelRepository = workpackModelRepository;
+        this.officeRepository = officeRepository;
+        this.propertyModelRepository = propertyModelRepository;
     }
-  }
 
-  private static void copyBeanProperties(final WorkpackModel workpackModel, final WorkpackModel newModel) {
-    BeanUtils.copyProperties(workpackModel, newModel);
-    newModel.setId(null);
-    newModel.setIdPlanModel(null);
-    newModel.setPlanModel(null);
-    newModel.setChildren(new HashSet<>());
-    cleanUpPropertiesModel(newModel);
-  }
+    private static void copyPropertiesToPlanModel(final PlanModel source, final PlanModel target) {
+        BeanUtils.copyProperties(source, target);
 
-  private static void cleanUpPropertiesModel(final WorkpackModel newModel) {
-    newModel.getProperties().forEach(property -> {
-      property.setId(null);
-      if(property instanceof GroupModel) {
-        cleanUpGroupedProperty(((GroupModel) property).getGroupedProperties());
-      }
-    });
-  }
+        target.setId(null);
+        target.setPublicShared(false);
 
-  private static void cleanUpGroupedProperty(final Iterable<? extends PropertyModel> groupedProperties) {
-    for(final PropertyModel property : groupedProperties) {
-      property.setId(null);
+        Set<Office> sharedWith = target.getSharedWith();
+        if (sharedWith != null) {
+            sharedWith.clear();
+        }
     }
-  }
 
-  private static void copyWorkpackModelChild(final WorkpackModel newModel, final WorkpackModel model) {
-    model.setParent(new HashSet<>(Collections.singletonList(newModel)));
-    newModel.getChildren().add(model);
-  }
+    private static void cleanUpProperty(PropertyModel property) {
+        property.setId(null);
 
-  public EntityDto createFromShared(final Long idOffice, final Long idPlanModelShared) {
-    final PlanModel planModel = new PlanModel();
-    final PlanModel sharingPlanModel = this.findById(idPlanModelShared);
+        if (property instanceof GroupModel) {
+            cleanUpGroupedProperty(((GroupModel) property).getGroupedProperties());
+        }
+    }
 
-    copyPropertiesToPlanModel(sharingPlanModel, planModel);
-    clearShared(planModel);
+    private static void cleanUpGroupedProperty(final Iterable<? extends PropertyModel> groupedProperties) {
+        for (final PropertyModel property : groupedProperties) {
+            property.setId(null);
+        }
+    }
 
-    final Office office = this.findOffice(idOffice);
-    planModel.setOffice(office);
+    private static void copyWorkpackModelChild(final WorkpackModel newModel, final WorkpackModel model) {
+        model.getParent().add(newModel);
+        newModel.getChildren().add(model);
+    }
 
-    final Long idPlanModel = this.savePlanModel(planModel);
+    private void copyBeanProperties(final WorkpackModel workpackModel, final WorkpackModel newModel) {
+        BeanUtils.copyProperties(workpackModel, newModel);
+        cleanUp(newModel);
+    }
 
-    final List<WorkpackModel> workpacks = this.copyWorkpackModels(sharingPlanModel);
-    this.setPlanModelToWorkpackModels(planModel, workpacks);
+    private void cleanUp(WorkpackModel newModel) {
+        newModel.setId(null);
+        newModel.setIdPlanModel(null);
+        newModel.setPlanModel(null);
+        newModel.setChildren(new HashSet<>());
+        newModel.setParent(new HashSet<>());
+        cleanUpPropertiesModel(newModel);
+    }
 
-    return new EntityDto(idPlanModel);
-  }
+    private void cleanUpPropertiesModel(final WorkpackModel newModel) {
+        final Set<PropertyModel> properties = newModel.getProperties();
 
-  public PlanModel findById(final Long id) {
-    return this.maybeFind(id)
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.PLAN_MODEL_NOT_FOUND));
-  }
+        if (properties == null) {
+            newModel.setProperties(new HashSet<>());
+            return;
+        }
 
-  public Office findOffice(final Long idOffice) {
-    return this.maybeFindOffice(idOffice)
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.OFFICE_NOT_FOUND));
-  }
+        final Set<PropertyModel> newProperties = new HashSet<>();
 
-  public Long savePlanModel(final PlanModel planModel) {
-    final PlanModel save = this.save(planModel);
-    return save.getId();
-  }
+        for (PropertyModel property : properties) {
+            cleanUpProperty(property);
+            newProperties.add(this.propertyModelRepository.save(property));
+        }
 
-  private List<WorkpackModel> copyWorkpackModels(final PlanModel other) {
-    final Set<WorkpackModel> workpackModels = this.findWorkPackModelsByIdPlanModel(other.getId());
+        newModel.setProperties(newProperties);
+    }
 
-    return workpackModels.stream()
-      .map(SharedPlanModelService::copyPropertiesToWorkpackModel)
-      .collect(Collectors.toList());
-  }
+    private void copyChildren(
+            final WorkpackModel workpackModel,
+            final WorkpackModel newModel,
+            final Map<Long, WorkpackModel> cache
+    ) {
+        final Set<WorkpackModel> children = workpackModel.getChildren();
 
-  private void setPlanModelToWorkpackModels(final PlanModel planModel, final Iterable<? extends WorkpackModel> workpackModels) {
-    workpackModels.forEach(workpackModel -> this.setPlanModelToWorkpackModel(planModel, workpackModel));
-  }
+        if (children == null || children.isEmpty()) {
+            return;
+        }
 
-  private Optional<PlanModel> maybeFind(final Long idPlanModel) {
-    return this.planModelRepository.findById(idPlanModel);
-  }
+        for (WorkpackModel child : children) {
+            WorkpackModel newChild = copyPropertiesToWorkpackModel(child, cache);
+            copyWorkpackModelChild(newModel, newChild);
+        }
+    }
 
-  private Optional<Office> maybeFindOffice(final Long idOffice) {
-    return this.officeRepository.findById(idOffice);
-  }
+    private WorkpackModel copyPropertiesToWorkpackModel(
+            final WorkpackModel workpackModel,
+            final Map<Long, WorkpackModel> cache
+    ) {
+        final Long workpackModelId = workpackModel.getId();
 
-  private PlanModel save(final PlanModel planModel) {
-    return this.planModelRepository.save(planModel);
-  }
+        if (cache.containsKey(workpackModelId)) {
+            return cache.get(workpackModelId);
+        }
 
-  private Set<WorkpackModel> findWorkPackModelsByIdPlanModel(final Long idPlanModel) {
-    return this.workpackModelRepository.findAllByIdPlanModelWithChildren(idPlanModel);
-  }
+        final WorkpackModel newModel = copyWorkpackModel(workpackModel);
+        copyChildren(workpackModel, newModel, cache);
 
-  private void setPlanModelToWorkpackModel(final PlanModel planModel, final WorkpackModel workpackModel) {
-    workpackModel.setId(null);
-    workpackModel.setIdPlanModel(planModel.getId());
-    workpackModel.setPlanModel(planModel);
-    workpackModel.getChildren().forEach(child -> this.setPlanModelToWorkpackModel(planModel, child));
+        cache.put(workpackModelId, newModel);
+        return newModel;
+    }
 
-    this.saveWorkpackModel(workpackModel);
-  }
+    private WorkpackModel copyWorkpackModel(WorkpackModel workpackModel) {
+        final WorkpackModel newModel = createFrom(workpackModel);
+        copyBeanProperties(workpackModel, newModel);
+        return this.workpackModelRepository.save(newModel);
+    }
 
-  private void saveWorkpackModel(final WorkpackModel workpackModel) {
-    this.workpackModelRepository.save(workpackModel);
-  }
+    public EntityDto createFromShared(final Long idOffice, final Long idPlanModelShared) {
+        final PlanModel planModel = new PlanModel();
+        final PlanModel sharingPlanModel = this.findById(idPlanModelShared);
+
+        copyPropertiesToPlanModel(sharingPlanModel, planModel);
+        this.setOffice(idOffice, planModel);
+
+        final PlanModel savedPlanModel = this.planModelRepository.save(planModel);
+
+        final Map<Long, WorkpackModel> cache = new HashMap<>();
+        final List<WorkpackModel> workpacks = this.copyWorkpackModels(sharingPlanModel, cache);
+
+        this.setPlanModelToWorkpackModels(savedPlanModel, workpacks);
+        return new EntityDto(savedPlanModel.getId());
+    }
+
+    private void setOffice(Long idOffice, PlanModel planModel) {
+        final Office office = this.findOffice(idOffice);
+        planModel.setOffice(office);
+    }
+
+    public PlanModel findById(final Long id) {
+        return this.planModelRepository.findById(id)
+                .orElseThrow(() -> new NegocioException(ApplicationMessage.PLAN_MODEL_NOT_FOUND));
+    }
+
+    public Office findOffice(final Long idOffice) {
+        return this.officeRepository.findById(idOffice)
+                .orElseThrow(() -> new NegocioException(ApplicationMessage.OFFICE_NOT_FOUND));
+    }
+
+    private List<WorkpackModel> copyWorkpackModels(
+            final PlanModel other,
+            final Map<Long, WorkpackModel> cache
+    ) {
+        final Set<WorkpackModel> models =
+                this.workpackModelRepository.findAllByIdPlanModelWithChildren(other.getId());
+
+        List<WorkpackModel> list = new ArrayList<>();
+
+        for (WorkpackModel model : models) {
+            WorkpackModel workpackModel = copyPropertiesToWorkpackModel(model, cache);
+            list.add(workpackModel);
+        }
+
+        return list;
+    }
+
+    private void setPlanModelToWorkpackModels(
+            final PlanModel planModel,
+            final Iterable<? extends WorkpackModel> workpackModels
+    ) {
+        for (WorkpackModel workpackModel : workpackModels) {
+            this.setPlanModelToWorkpackModel(planModel, workpackModel);
+        }
+    }
+
+    private void setPlanModelToWorkpackModel(
+            final PlanModel planModel,
+            final WorkpackModel workpackModel
+    ) {
+        if (workpackModel == null) {
+            return;
+        }
+
+        workpackModel.setIdPlanModel(planModel.getId());
+        workpackModel.setPlanModel(planModel);
+        this.workpackModelRepository.save(workpackModel);
+
+        for (WorkpackModel child : workpackModel.getChildren()) {
+            this.setPlanModelToWorkpackModel(planModel, child);
+        }
+    }
+
 }

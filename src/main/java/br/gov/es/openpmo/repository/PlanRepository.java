@@ -18,9 +18,9 @@ public interface PlanRepository extends Neo4jRepository<Plan, Long>, CustomRepos
   List<Plan> findAllInOffice(@Param("id") Long id);
 
   @Query("MATCH (workpack:Workpack)-[belongsTo:BELONGS_TO]->(plan:Plan) " +
-         "MATCH (plan)-[adoptedBy:IS_ADOPTED_BY]->(office:Office) " +
-         "WHERE id(workpack)=$id AND belongsTo.linked=false " +
-         "RETURN plan, workpack, belongsTo, adoptedBy, office"
+          "MATCH (plan)-[adoptedBy:IS_ADOPTED_BY]->(office:Office) " +
+          "WHERE id(workpack)=$id AND (belongsTo.linked=null or belongsTo.linked=false) " +
+          "RETURN plan, workpack, belongsTo, adoptedBy, office"
   )
   Optional<Plan> findPlanWithNotLinkedBelongsToRelationship(Long id);
 

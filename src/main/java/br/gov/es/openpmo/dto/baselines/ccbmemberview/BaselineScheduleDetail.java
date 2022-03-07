@@ -41,13 +41,17 @@ public class BaselineScheduleDetail {
 
   private void updateCurrentDate() {
     this.currentStartDate = this.scheduleDetails.stream()
-      .map(ScheduleDetailItem::getCurrentDate)
+      .map(ScheduleDetailItem::getCurrentIntervalDate)
+      .filter(Objects::nonNull)
+      .map(ScheduleInterval::getInitialDate)
       .filter(Objects::nonNull)
       .min(Comparator.comparing(LocalDate::toEpochDay))
       .orElse(null);
 
     this.currentEndDate = this.scheduleDetails.stream()
-      .map(ScheduleDetailItem::getCurrentDate)
+      .map(ScheduleDetailItem::getCurrentIntervalDate)
+      .filter(Objects::nonNull)
+      .map(ScheduleInterval::getEndDate)
       .filter(Objects::nonNull)
       .max(Comparator.comparing(LocalDate::toEpochDay))
       .orElse(null);
@@ -94,13 +98,17 @@ public class BaselineScheduleDetail {
 
   private void updateProposedDate() {
     this.proposedStartDate = this.scheduleDetails.stream()
-      .map(ScheduleDetailItem::getProposedDate)
+      .map(ScheduleDetailItem::getProposedIntervalDate)
+      .filter(Objects::nonNull)
+      .map(ScheduleInterval::getInitialDate)
       .filter(Objects::nonNull)
       .min(Comparator.comparing(LocalDate::toEpochDay))
       .orElse(null);
 
     this.proposedEndDate = this.scheduleDetails.stream()
-      .map(ScheduleDetailItem::getProposedDate)
+      .map(ScheduleDetailItem::getProposedIntervalDate)
+      .filter(Objects::nonNull)
+      .map(ScheduleInterval::getEndDate)
       .filter(Objects::nonNull)
       .max(Comparator.comparing(LocalDate::toEpochDay))
       .orElse(null);

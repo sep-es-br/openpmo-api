@@ -12,13 +12,11 @@ import java.util.Optional;
 public interface IsAuthenticatedByRepository extends Neo4jRepository<IsAuthenticatedBy, Long> {
 
 
-  @Query(
-    "MATCH (authService:AuthService) " +
-    "WHERE toLower(authService.server)=toLower($authenticationServiceName)" +
-    "OPTIONAL MATCH (person:Person)-[authenticatedBY:IS_AUTHENTICATED_BY]->(authService) " +
-    "WITH person, authenticatedBY, authService " +
-    "WHERE id(person)=$idPerson " +
-    "RETURN person, authenticatedBY, authService"
-  )
-  Optional<IsAuthenticatedBy> findAuthenticatedByUsingPersonAndDefaultServerName(Long idPerson, String authenticationServiceName);
+    @Query("MATCH (authService:AuthService) " +
+            "WHERE toLower(authService.server)=toLower($authenticationServiceName)" +
+            "OPTIONAL MATCH (person:Person)-[authenticatedBY:IS_AUTHENTICATED_BY]->(authService) " +
+            "WITH person, authenticatedBY, authService " +
+            "WHERE id(person)=$idPerson " +
+            "RETURN person, authenticatedBY, authService")
+    Optional<IsAuthenticatedBy> findAuthenticatedByUsingPersonAndDefaultServerName(Long idPerson, String authenticationServiceName);
 }
