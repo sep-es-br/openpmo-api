@@ -172,30 +172,19 @@ public class StakeholderService {
 
             if (maybePerson.isPresent()) {
                 final Person person = this.buildPerson(maybePerson.get(), request);
-
-                this.createOrUpdateContactInformation(
-                        request,
-                        personId,
-                        workpackId,
-                        person
-                );
-
+                this.createOrUpdateContactInformation(request, personId, workpackId, person);
                 return person;
             }
         }
 
         final Person person = this.buildPerson(new Person(), request);
         this.throwExceptionIfFullNameAlreadyExists(person, workpackId);
-
         this.personService.save(person);
 
         final String email = personDto.getEmail();
+
         if (TRUE.equals(personDto.getIsUser()) && this.authenticationNotExists(email)) {
-            this.personService.createAuthenticationRelationship(
-                    email,
-                    request.getPerson().getGuid(),
-                    person
-            );
+            this.personService.createAuthenticationRelationship(email, request.getPerson().getGuid(), person);
         }
 
         this.createContactRelationshipWithOffice(person, request, new IsInContactBookOf());
@@ -214,7 +203,11 @@ public class StakeholderService {
     private Person buildPerson(final Person person, final StakeholderParamDto request) {
         final PersonStakeholderParamDto personDto = request.getPerson();
 
-        person.setAdministrator(this.administrators.contains(personDto.getEmail()));
+        Optional.of(request)
+                .map(StakeholderParamDto::getPerson)
+                .map(PersonStakeholderParamDto::getAdministrator)
+                .ifPresent(person::setAdministrator);
+
         person.setFullName(personDto.getFullName());
 
         final String name = personDto.getName() != null ? personDto.getName() : personDto.firstNameFromFullName();
@@ -229,24 +222,10 @@ public class StakeholderService {
             final Long workpackId,
             final Person person
     ) {
-        final Optional<IsInContactBookOf> maybeContactInformation = this.isInContactBookOfService.findContactInformationUsingPersonIdAndWorkpackId(
-                personId,
-                workpackId
-        );
+        final Optional<IsInContactBookOf> maybeContactInformation =
+                this.isInContactBookOfService.findContactInformationUsingPersonIdAndWorkpackId(personId, workpackId);
 
-        if (maybeContactInformation.isPresent()) {
-            this.createContactRelationshipWithOffice(
-                    person,
-                    request,
-                    maybeContactInformation.get()
-            );
-        } else {
-            this.createContactRelationshipWithOffice(
-                    person,
-                    request,
-                    new IsInContactBookOf()
-            );
-        }
+        this.createContactRelationshipWithOffice(person, request, maybeContactInformation.orElse(new IsInContactBookOf()));
     }
 
     private void createContactRelationshipWithOffice(

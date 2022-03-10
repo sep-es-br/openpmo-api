@@ -477,4 +477,9 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "where id(w)=$workpackId " +
             "return id(v)")
     List<Long> findAscendentsId(Long workpackId);
+
+    @Query("match (w:Workpack)-[:BELONGS_TO]->(p:Plan) " +
+            "where id(p)=$id " +
+            "return count(w)>0")
+    boolean existsByPlanId(Long id);
 }

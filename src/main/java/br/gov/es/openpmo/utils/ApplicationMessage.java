@@ -246,11 +246,11 @@ public class ApplicationMessage {
 
     public static final String PROPERTY_MODEL_INVALID_TYPE = "propertyModel.invalid-type";
 
-    public static final String WORKPACK_IS_NOT_DELIVERABLE_INVALID_STATE_ERROR = "workpack.is.not.deliverable.invalid-state-error";
-
     public static final String INTERVAL_DATE_IN_BASELINE_NOT_FOUND = "baseline.interval-date.invalid-state-error";
 
     public static final String SCHEDULE_SESSION_ACTIVE_INVALID_STATE_ERROR = "schedule.session.active.invalid-state-error";
+
+    public static final String PLAN_DELETE_RELATIONSHIP_ERROR = "plan.delete.relationship.error";
 
     private ApplicationMessage() {
     }
