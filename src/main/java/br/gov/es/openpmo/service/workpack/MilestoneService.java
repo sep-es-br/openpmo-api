@@ -29,19 +29,19 @@ public class MilestoneService {
         final boolean concluded = this.repository.isConcluded(milestoneId).orElse(false);
 
         if (late) {
-            milestoneDetailDto.setStatus(MilestoneStatus.LATE);
+            milestoneDetailDto.setMilestoneStatus(MilestoneStatus.LATE);
             return;
         }
         if (lateConcluded) {
-            milestoneDetailDto.setStatus(MilestoneStatus.LATE_CONCLUDED);
+            milestoneDetailDto.setMilestoneStatus(MilestoneStatus.LATE_CONCLUDED);
             return;
         }
         if (onTime) {
-            milestoneDetailDto.setStatus(MilestoneStatus.ON_TIME);
+            milestoneDetailDto.setMilestoneStatus(MilestoneStatus.ON_TIME);
             return;
         }
         if (concluded) {
-            milestoneDetailDto.setStatus(MilestoneStatus.CONCLUDED);
+            milestoneDetailDto.setMilestoneStatus(MilestoneStatus.CONCLUDED);
         }
     }
 

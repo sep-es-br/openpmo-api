@@ -7,7 +7,7 @@ import java.time.LocalDate;
 
 public class MilestoneDetailDto extends WorkpackDetailDto {
 
-    private MilestoneStatus status;
+    private MilestoneStatus milestoneStatus;
 
     private LocalDate milestoneDate;
 
@@ -16,12 +16,12 @@ public class MilestoneDetailDto extends WorkpackDetailDto {
 
     private boolean isWithinAWeek;
 
-    public MilestoneStatus getStatus() {
-        return this.status;
+    public MilestoneStatus getMilestoneStatus() {
+        return this.milestoneStatus;
     }
 
-    public void setStatus(final MilestoneStatus status) {
-        this.status = status;
+    public void setMilestoneStatus(final MilestoneStatus milestoneStatus) {
+        this.milestoneStatus = milestoneStatus;
     }
 
     public LocalDate getExpirationDate() {
