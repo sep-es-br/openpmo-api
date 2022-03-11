@@ -594,4 +594,11 @@ public class PersonService {
                 .collect(Collectors.toSet());
     }
 
+    public void updateName(Long idPerson, String name) {
+        final Person person = this.repository.findById(idPerson)
+                .orElseThrow(() -> new NegocioException(ApplicationMessage.PERSON_NOT_FOUND));
+
+        person.setName(name);
+        this.repository.save(person, 0);
+    }
 }

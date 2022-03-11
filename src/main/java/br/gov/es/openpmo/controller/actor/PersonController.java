@@ -2,6 +2,7 @@ package br.gov.es.openpmo.controller.actor;
 
 import br.gov.es.openpmo.dto.ComboDto;
 import br.gov.es.openpmo.dto.EntityDto;
+import br.gov.es.openpmo.dto.Response;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.person.*;
 import br.gov.es.openpmo.dto.person.detail.PersonDetailDto;
@@ -11,9 +12,11 @@ import br.gov.es.openpmo.enumerator.UserFilterEnum;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.service.actors.PersonService;
 import br.gov.es.openpmo.service.permissions.PersonPermissionsService;
+import br.gov.es.openpmo.utils.ResponseHandler;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -29,14 +32,17 @@ public class PersonController {
 
     private final PersonService personService;
     private final PersonPermissionsService personPermissionsService;
+    private final ResponseHandler responseHandler;
 
     @Autowired
     public PersonController(
             final PersonService personService,
-            final PersonPermissionsService personPermissionsService
+            final PersonPermissionsService personPermissionsService,
+            ResponseHandler responseHandler
     ) {
         this.personService = personService;
         this.personPermissionsService = personPermissionsService;
+        this.responseHandler = responseHandler;
     }
 
     @GetMapping("/{email}")
@@ -166,6 +172,16 @@ public class PersonController {
                 .setData(new EntityDto(person.getId()))
                 .setSuccess(true);
         return ResponseEntity.ok(response);
+    }
+
+    @Transactional
+    @PatchMapping("/{id-person}")
+    public Response<Void> updateName(
+            @PathVariable("id-person") Long idPerson,
+            @RequestBody NameRequest nameRequest
+    ) {
+        this.personService.updateName(idPerson, nameRequest.getName());
+        return responseHandler.success();
     }
 
 }
