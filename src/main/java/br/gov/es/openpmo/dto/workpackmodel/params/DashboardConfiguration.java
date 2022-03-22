@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.dto.workpackmodel.params;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Set;
 
@@ -13,11 +14,10 @@ public class DashboardConfiguration {
 
   @JsonCreator
   public DashboardConfiguration(
-    final Boolean dashboardShowRisks,
-    final Boolean dashboardShowEva,
-    final Boolean dashboardShowMilestones,
-    final Set<String> dashboardShowStakeholders
-  ) {
+      @JsonProperty("dashboardShowRisks") final Boolean dashboardShowRisks,
+      @JsonProperty("dashboardShowEva") final Boolean dashboardShowEva,
+      @JsonProperty("dashboardShowMilestones") final Boolean dashboardShowMilestones,
+      @JsonProperty("dashboardShowStakeholders") final Set<String> dashboardShowStakeholders) {
     this.dashboardShowRisks = dashboardShowRisks;
     this.dashboardShowEva = dashboardShowEva;
     this.dashboardShowMilestones = dashboardShowMilestones;
