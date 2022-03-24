@@ -16,7 +16,7 @@ import java.util.Set;
 
 import static org.neo4j.ogm.annotation.Relationship.INCOMING;
 
-@JsonTypeInfo(use = Id.NAME, include = As.PROPERTY, property = "type")
+@JsonTypeInfo(use = Id.NAME, property = "type")
 @JsonSubTypes({
         @JsonSubTypes.Type(value = Integer.class, name = "Integer"),
         @JsonSubTypes.Type(value = Text.class, name = "Text"),

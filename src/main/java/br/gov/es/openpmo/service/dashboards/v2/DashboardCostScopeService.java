@@ -112,7 +112,7 @@ public class DashboardCostScopeService implements IDashboardCostScopeService {
             final Set<? extends T> itens,
             final Function<? super T, BigDecimal> mapper
     ) {
-        if (itens.isEmpty()) {
+        if (itens == null || itens.isEmpty()) {
             return null;
         }
 

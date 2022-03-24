@@ -22,21 +22,7 @@ public final class UnitCostCalculator {
         this.plannedWork = plannedWork;
     }
 
-    public BigDecimal calculate() {
-        if (notHasCurrentAndProposedValueToCalculateUnitCost(this.foreseenCost, this.plannedCost)) {
-            return BigDecimal.ONE;
-        }
-
-        if (this.foreseenCost != null) {
-            return this.foreseenCost.divide(this.foreseenWork, 6, RoundingMode.HALF_UP);
-        }
-
-        return this.foreseenWork == null
-                ? this.plannedCost.divide(this.plannedWork, 6, RoundingMode.HALF_UP)
-                : this.plannedCost.divide(this.foreseenWork, 6, RoundingMode.HALF_UP);
-    }
-
-    private static boolean notHasCurrentAndProposedValueToCalculateUnitCost(
+    private static boolean HasNoCurrentNorProposedValueToCalculateUnitCost(
             final Comparable<? super BigDecimal> forseenCost,
             final Comparable<? super BigDecimal> plannedCost
     ) {
@@ -45,6 +31,26 @@ public final class UnitCostCalculator {
 
     private static boolean hasValue(final Comparable<? super BigDecimal> value) {
         return value != null && value.compareTo(BigDecimal.ZERO) == 0;
+    }
+
+    public BigDecimal calculate() {
+        if (HasNoCurrentNorProposedValueToCalculateUnitCost(this.foreseenCost, this.plannedCost)) {
+            return BigDecimal.ONE;
+        }
+
+        if (this.foreseenCost != null) {
+            return this.foreseenCost.divide(this.foreseenWork, 6, RoundingMode.HALF_UP);
+        }
+
+        if (this.foreseenWork == null) {
+            return this.plannedCost.divide(this.plannedWork, 6, RoundingMode.HALF_UP);
+        }
+
+        if (this.plannedCost == null) {
+            return BigDecimal.ZERO;
+        }
+
+        return this.plannedCost.divide(this.foreseenWork, 6, RoundingMode.HALF_UP);
     }
 
 }

@@ -4,7 +4,6 @@ import javax.validation.constraints.NotBlank;
 
 public class SelectionModelDto extends PropertyModelDto {
 
-  @NotBlank
   private String defaultValue;
   @NotBlank
   private String possibleValues;

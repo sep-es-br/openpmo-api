@@ -1324,16 +1324,19 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
                 properties.add(organizationSelection);
                 break;
             case "br.gov.es.openpmo.dto.workpack.GroupDto":
-                final Group groupModel = this.modelMapper.map(propertyDto, Group.class);
-                groupModel.setDriver((GroupModel) propertyModel);
+                final GroupDto groupDto = (GroupDto) propertyDto;
+                final GroupModel groupModel = (GroupModel) propertyModel;
 
-                final GroupDto groupModelDto = (GroupDto) propertyDto;
+                final Group group = new Group();
+                group.setId(groupDto.getId());
+                group.setDriver(groupModel);
+
                 final Set<Property> groupedProperties = new HashSet<>();
 
-                groupModelDto.getGroupedProperties().forEach(dto -> this.extractProperty(groupedProperties, dto));
-                groupModel.setGroupedProperties(groupedProperties);
+                groupDto.getGroupedProperties().forEach(dto -> this.extractProperty(groupedProperties, dto));
+                group.setGroupedProperties(groupedProperties);
 
-                properties.add(groupModel);
+                properties.add(group);
                 break;
         }
     }

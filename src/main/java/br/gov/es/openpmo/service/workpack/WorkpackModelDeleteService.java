@@ -50,13 +50,13 @@ public class WorkpackModelDeleteService {
       throw new NegocioException(WORKPACK_MODEL_INVALID_STATE_DELETE_RELATIONSHIP_ERROR);
     }
 
-    if(!hasWorkpackInstanceRelationship(workpackModel)) {
-      throw new NegocioException(WORKPACK_MODEL_DELETE_RELATIONSHIP_ERROR);
-    }
-
     if(workpackModel.hasMoreThanOneParent()) {
       this.workpackModelRepository.deleteRelationshipBetween(workpackModel.getId(), parent.getId());
       return;
+    }
+
+    if(!hasWorkpackInstanceRelationship(workpackModel)) {
+      throw new NegocioException(WORKPACK_MODEL_DELETE_RELATIONSHIP_ERROR);
     }
 
     this.workpackModelRepository.deleteCascadeAllNodesRelated(workpackModel.getId());
