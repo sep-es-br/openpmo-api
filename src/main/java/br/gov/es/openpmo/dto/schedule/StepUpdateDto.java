@@ -1,34 +1,24 @@
 package br.gov.es.openpmo.dto.schedule;
 
-import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Set;
 
-public class StepStoreParamDto {
+public class StepUpdateDto {
 
-    @NotNull
-    private Long idSchedule;
-
+    private Long id;
     private BigDecimal actualWork;
-
     private BigDecimal plannedWork;
-
-    @NotNull
-    private Boolean endStep;
-
+    private LocalDate scheduleEnd;
+    private LocalDate scheduleStart;
     private Set<ConsumesParamDto> consumes;
 
-    private LocalDate scheduleEnd;
-
-    private LocalDate scheduleStart;
-
-    public Long getIdSchedule() {
-        return this.idSchedule;
+    public Long getId() {
+        return this.id;
     }
 
-    public void setIdSchedule(final Long idSchedule) {
-        this.idSchedule = idSchedule;
+    public void setId(final Long id) {
+        this.id = id;
     }
 
     public BigDecimal getActualWork() {
@@ -45,14 +35,6 @@ public class StepStoreParamDto {
 
     public void setPlannedWork(final BigDecimal plannedWork) {
         this.plannedWork = plannedWork;
-    }
-
-    public Boolean getEndStep() {
-        return this.endStep;
-    }
-
-    public void setEndStep(final Boolean endStep) {
-        this.endStep = endStep;
     }
 
     public Set<ConsumesParamDto> getConsumes() {

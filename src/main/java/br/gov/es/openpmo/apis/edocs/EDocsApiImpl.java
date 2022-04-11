@@ -196,8 +196,8 @@ public class EDocsApiImpl implements EDocsApi {
       return history;
     } catch (final IOException e) {
       this.journalCreator.failure(idPerson);
-      throw new IllegalStateException(FAILED_FETCH_EXTERNAL_DATA);
     }
+    return new ArrayList<>();
   }
 
 }

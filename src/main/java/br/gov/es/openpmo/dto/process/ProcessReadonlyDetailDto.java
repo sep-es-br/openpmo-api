@@ -30,7 +30,7 @@ public class ProcessReadonlyDetailDto {
     final String status,
     final String subject,
     final String currentOrganization,
-    final long lengthOfStayOn,
+    final Long lengthOfStayOn,
     final boolean priority
   ) {
     this.processNumber = processNumber;

@@ -3,9 +3,8 @@ package br.gov.es.openpmo.controller.schedule;
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.schedule.StepDto;
-import br.gov.es.openpmo.dto.schedule.StepParamDto;
 import br.gov.es.openpmo.dto.schedule.StepStoreParamDto;
-import br.gov.es.openpmo.model.Entity;
+import br.gov.es.openpmo.dto.schedule.StepUpdateDto;
 import br.gov.es.openpmo.model.schedule.Step;
 import br.gov.es.openpmo.model.workpacks.Deliverable;
 import br.gov.es.openpmo.service.schedule.StepService;
@@ -34,15 +33,6 @@ public class StepController {
         this.status = status;
     }
 
-    private static EntityDto getEntityDto(final Entity schedule) {
-        final Long idSchedule = getId(schedule);
-        return new EntityDto(idSchedule);
-    }
-
-    public static Long getId(final Entity entity) {
-        return entity.getId();
-    }
-
     @GetMapping("/{id}")
     public ResponseEntity<ResponseBase<StepDto>> findById(@PathVariable final Long id) {
         final Step step = this.stepService.findById(id);
@@ -51,11 +41,12 @@ public class StepController {
     }
 
     @PutMapping
-    public ResponseEntity<ResponseBase<EntityDto>> update(@RequestBody @Valid final StepParamDto stepParamDto) {
-        final Step step = this.stepService.update(stepParamDto);
+    public ResponseEntity<ResponseBase<EntityDto>> update(@RequestBody @Valid final StepUpdateDto stepUpdateDto) {
+        final Step step = this.stepService.update(stepUpdateDto);
         final List<Deliverable> deliverables = this.status.getDeliverablesByStepId(step.getId());
         this.status.update(deliverables);
-        final EntityDto entityDto = getEntityDto(step);
+        final Long idSchedule = step.getId();
+        final EntityDto entityDto = new EntityDto(idSchedule);
         return ResponseEntity.ok(ResponseBase.of(entityDto));
     }
 

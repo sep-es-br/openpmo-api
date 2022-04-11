@@ -1,7 +1,7 @@
 package br.gov.es.openpmo.repository.dashboards;
 
-import br.gov.es.openpmo.dto.dashboards.datasheet.ChildrenByTypeQueryResult;
 import br.gov.es.openpmo.dto.dashboards.datasheet.DatasheetStakeholderQueryResult;
+import br.gov.es.openpmo.dto.dashboards.datasheet.WorkpackByModelQueryResult;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
@@ -13,12 +13,17 @@ import java.util.Set;
 @Repository
 public interface DashboardDatasheetRepository extends Neo4jRepository<Workpack, Long> {
 
-    @Query("match (w:Workpack)<-[:IS_IN*]-(v:Workpack) " +
+    @Query("match (w:Workpack)<-[:IS_IN*]-(v:Workpack)-[:IS_INSTANCE_BY]->(m:WorkpackModel) " +
             "where id(w)=$workpackId " +
-            "with v, collect([x in labels(v) where x<>'Workpack'][0]) as label " +
-            "unwind label as type " +
-            "return count(v) as quantity, type")
-    List<ChildrenByTypeQueryResult> childrenByType(Long workpackId);
+            "with v, collect(distinct m) as modelList " +
+            "with v, collect([n in modelList where id(n)=v.idWorkpackModel][0]) as modelGroup " +
+            "unwind modelGroup as models " +
+            "return id(models), " +
+            "    count(v) as quantity, " +
+            "    models.modelName as singularName, " +
+            "    models.modelNameInPlural as pluralName, " +
+            "    models.fontIcon as icon")
+    List<WorkpackByModelQueryResult> workpackByModel(Long workpackId);
 
     @Query("match (a:Actor)-[s:IS_STAKEHOLDER_IN]->(w:Workpack) " +
             "optional match (w)-[:IS_IN*]->(v:Workpack) " +

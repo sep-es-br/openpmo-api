@@ -34,13 +34,13 @@ public class GetDatasheetDashboardData implements IGetDatasheetDashboardData {
         return new DatasheetTotalizers(getChildrenByType(workpackId));
     }
 
-    private List<ChildrenByTypeResponse> getChildrenByType(Long workpackId) {
-        final List<ChildrenByTypeQueryResult> queryResults = Optional.ofNullable(workpackId)
-                .map(this.repository::childrenByType)
+    private List<WorkpacksByModelResponse> getChildrenByType(Long workpackId) {
+        final List<WorkpackByModelQueryResult> queryResults = Optional.ofNullable(workpackId)
+                .map(this.repository::workpackByModel)
                 .orElse(Collections.emptyList());
 
         return queryResults.stream()
-                .map(ChildrenByTypeResponse::from)
+                .map(WorkpacksByModelResponse::from)
                 .collect(Collectors.toList());
     }
 

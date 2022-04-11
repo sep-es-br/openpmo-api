@@ -12,8 +12,7 @@ public class ProcessCreateDto {
   @NotNull
   @NotEmpty
   private final String name;
-  @NotNull
-  @NotEmpty
+
   private final String note;
 
   private final ProcessReadonlyDetailDto readonlyDetail;

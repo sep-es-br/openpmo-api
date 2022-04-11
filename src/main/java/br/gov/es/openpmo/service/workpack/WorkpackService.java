@@ -7,8 +7,10 @@ import br.gov.es.openpmo.dto.workpack.*;
 import br.gov.es.openpmo.dto.workpackshared.WorkpackSharedDto;
 import br.gov.es.openpmo.enumerator.Session;
 import br.gov.es.openpmo.exception.NegocioException;
+import br.gov.es.openpmo.model.actors.Organization;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.filter.CustomFilter;
+import br.gov.es.openpmo.model.office.Locality;
 import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.properties.Currency;
 import br.gov.es.openpmo.model.properties.Date;
@@ -682,69 +684,6 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
                 properties
         );
 
-        if (!CollectionUtils.isEmpty(workpackUpdate.getCosts())) {
-            final Set<CostAccount> costsDelete = workpackUpdate.getCosts().stream()
-                    .filter(cost -> workpack.getCosts() == null || workpack.getCosts().stream()
-                            .noneMatch(p -> p.getId() != null && p.getId().equals(cost.getId())))
-                    .collect(Collectors.toSet());
-            if (!costsDelete.isEmpty()) {
-                this.costAccountService.delete(costsDelete);
-            }
-            workpackUpdate.getCosts().removeAll(costsDelete);
-            if (!CollectionUtils.isEmpty(workpackUpdate.getCosts())) {
-                for (final CostAccount cost : workpackUpdate.getCosts()) {
-                    if (!CollectionUtils.isEmpty(cost.getProperties())) {
-                        final CostAccount costAccountParam = workpack.getCosts().stream()
-                                .filter(c -> c.getId() != null && c.getId().equals(cost.getId())).findFirst()
-                                .orElse(null);
-                        if (costAccountParam != null) {
-                            final Set<Property> propertyDelete = cost.getProperties().stream()
-                                    .filter(property -> costAccountParam.getProperties() == null
-                                            || costAccountParam.getProperties().stream().noneMatch(
-                                            p -> p.getId() != null && p.getId().equals(property.getId())))
-                                    .collect(Collectors.toSet());
-                            if (!propertyDelete.isEmpty()) {
-                                this.propertyService.delete(propertyDelete);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        if (!CollectionUtils.isEmpty(workpack.getCosts())) {
-            for (final CostAccount cost : workpack.getCosts()) {
-                if (cost.getId() == null) {
-                    if (workpackUpdate.getCosts() == null) {
-                        workpackUpdate.setCosts(new HashSet<>());
-                    }
-                    workpackUpdate.getCosts().add(cost);
-                    continue;
-                }
-                if (!CollectionUtils.isEmpty(cost.getProperties())) {
-                    final CostAccount costAccountUpdate = workpackUpdate.getCosts().stream()
-                            .filter(c -> c.getId().equals(cost.getId())).findFirst().orElse(null);
-                    if (costAccountUpdate != null) {
-                        for (final Property property : cost.getProperties()) {
-                            if (property.getId() == null) {
-                                if (cost.getProperties() == null) {
-                                    cost.setProperties(new HashSet<>());
-                                }
-                                costAccountUpdate.getProperties().add(property);
-                                continue;
-                            }
-                            if (costAccountUpdate.getProperties() != null) {
-                                costAccountUpdate.getProperties().stream()
-                                        .filter(p -> p.getId().equals(property.getId())).findFirst()
-                                        .ifPresent(propertyUpdate -> this.loadPropertyUpdate(propertyUpdate, property));
-                            }
-                        }
-
-                    }
-                }
-            }
-        }
-
         validateWorkpack(workpackUpdate);
         return this.save(workpackUpdate);
     }
@@ -1164,10 +1103,10 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
                         if (((LocalitySelection) property).getDriver() != null) {
                             localitySelectionDto.setIdPropertyModel(((LocalitySelection) property).getDriver().getId());
                         }
-                        if (((LocalitySelection) property).getValue() != null) {
+                        Set<Locality> localities = ((LocalitySelection) property).getValue();
+                        if (localities != null) {
                             localitySelectionDto.setSelectedValues(new HashSet<>());
-                            ((LocalitySelection) property).getValue()
-                                    .forEach(o -> localitySelectionDto.getSelectedValues().add(o.getId()));
+                            localities.forEach(o -> localitySelectionDto.getSelectedValues().add(o.getId()));
                         }
                         list.add(localitySelectionDto);
                         break;
@@ -1180,10 +1119,10 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
                             organizationSelectionDto
                                     .setIdPropertyModel(((OrganizationSelection) property).getDriver().getId());
                         }
-                        if (((OrganizationSelection) property).getValue() != null) {
+                        Set<Organization> organizations = ((OrganizationSelection) property).getValue();
+                        if (organizations != null) {
                             organizationSelectionDto.setSelectedValues(new HashSet<>());
-                            ((OrganizationSelection) property).getValue()
-                                    .forEach(o -> organizationSelectionDto.getSelectedValues().add(o.getId()));
+                            organizations.forEach(o -> organizationSelectionDto.getSelectedValues().add(o.getId()));
                         }
                         list.add(organizationSelectionDto);
                         break;
@@ -1273,9 +1212,9 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
             case "br.gov.es.openpmo.dto.workpack.UnitSelectionDto":
                 final UnitSelection unitSelection = this.modelMapper.map(propertyDto, UnitSelection.class);
                 unitSelection.setDriver((UnitSelectionModel) propertyModel);
-                if (((UnitSelectionDto) propertyDto).getSelectedValue() != null) {
-                    unitSelection.setValue(
-                            this.unitMeasureService.findById(((UnitSelectionDto) propertyDto).getSelectedValue()));
+                Long selectedValue = ((UnitSelectionDto) propertyDto).getSelectedValue();
+                if (selectedValue != null) {
+                    unitSelection.setValue(this.unitMeasureService.findById(selectedValue));
                 }
                 properties.add(unitSelection);
                 break;
@@ -1283,7 +1222,6 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
                 final Selection selection = this.modelMapper.map(propertyDto, Selection.class);
                 selection.setDriver((SelectionModel) propertyModel);
                 properties.add(selection);
-
                 break;
             case "br.gov.es.openpmo.dto.workpack.TextAreaDto":
                 final TextArea textArea = this.modelMapper.map(propertyDto, TextArea.class);
@@ -1303,9 +1241,11 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
             case "br.gov.es.openpmo.dto.workpack.LocalitySelectionDto":
                 final LocalitySelection localitySelection = this.modelMapper.map(propertyDto, LocalitySelection.class);
                 localitySelection.setDriver((LocalitySelectionModel) propertyModel);
-                if (((LocalitySelectionDto) propertyDto).getSelectedValues() != null) {
+                Set<Long> localitySelectedValues = ((LocalitySelectionDto) propertyDto).getSelectedValues();
+                if (localitySelectedValues != null && localitySelectedValues.stream().anyMatch(Objects::nonNull)) {
                     localitySelection.setValue(new HashSet<>());
-                    ((LocalitySelectionDto) propertyDto).getSelectedValues()
+                    localitySelectedValues.stream()
+                            .filter(Objects::nonNull)
                             .forEach(id -> localitySelection.getValue().add(this.localityService.findById(id)));
                 }
                 properties.add(localitySelection);
@@ -1316,9 +1256,11 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
                         OrganizationSelection.class
                 );
                 organizationSelection.setDriver((OrganizationSelectionModel) propertyModel);
-                if (((OrganizationSelectionDto) propertyDto).getSelectedValues() != null) {
+                Set<Long> organizationSelectedValues = ((OrganizationSelectionDto) propertyDto).getSelectedValues();
+                if (organizationSelectedValues != null && organizationSelectedValues.stream().anyMatch(Objects::nonNull)) {
                     organizationSelection.setValue(new HashSet<>());
-                    ((OrganizationSelectionDto) propertyDto).getSelectedValues()
+                    organizationSelectedValues.stream()
+                            .filter(Objects::nonNull)
                             .forEach(id -> organizationSelection.getValue().add(this.organizationService.findById(id)));
                 }
                 properties.add(organizationSelection);

@@ -29,7 +29,7 @@ public interface IDashboardController {
             @RequestParam(name = "show-header", defaultValue = "true") Boolean showHeader,
             @RequestParam(name = "id-workpack") Long workpackId,
             @RequestParam(name = "id-baseline", required = false) Long baselineId,
-            @RequestParam(name = "date-reference") @DateTimeFormat(pattern = "MM/yyyy") YearMonth yearMonth,
+            @RequestParam(name = "date-reference", required = false) @DateTimeFormat(pattern = "MM/yyyy") YearMonth yearMonth,
             UriComponentsBuilder uriComponentsBuilder
     );
 

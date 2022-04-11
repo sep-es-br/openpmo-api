@@ -29,7 +29,7 @@ public interface ScheduleRepository extends Neo4jRepository<Schedule, Long> {
             "WHERE id(w)=$idWorkpack " +
             "RETURN s, [" +
             "  [(s)<-[c:COMPOSES]-(st:Step) | [c, st] ]," +
-            "  [(st)-[c1:CONSUMES]->(ca:CostAccount) | [c1, ca] ] " +
+            "  [(s)<-[:COMPOSES]-(:Step)-[c1:CONSUMES]->(ca:CostAccount) | [c1, ca] ]  " +
             "]")
     Optional<Schedule> findScheduleByWorkpackId(Long idWorkpack);
 

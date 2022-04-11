@@ -120,7 +120,7 @@ public class GetCostAndScope implements IGetCostAndScope {
     }
 
     private static YearMonth asYearMonth(final Step step) {
-        return step.getPeriodFromStart().query(YearMonth::from);
+        return step.getYearMonth();
     }
 
     private static <T> BigDecimal sumValuesOf(

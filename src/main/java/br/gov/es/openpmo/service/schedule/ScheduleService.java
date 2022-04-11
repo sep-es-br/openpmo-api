@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.service.schedule;
 
+import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.schedule.*;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.relations.Consumes;
@@ -41,7 +42,7 @@ public class ScheduleService {
     public ScheduleService(
             final StepRepository stepRepository,
             final ScheduleRepository scheduleRepository,
-            IAsyncDashboardService dashboardService,
+            final IAsyncDashboardService dashboardService,
             final CostAccountService costAccountService,
             final WorkpackService workpackService,
             final ModelMapper modelMapper
@@ -118,7 +119,6 @@ public class ScheduleService {
     private static long getMonths(final ScheduleParamDto scheduleParamDto) {
         final LocalDate first = getStart(scheduleParamDto).withDayOfMonth(1);
         final LocalDate second = getEnd(scheduleParamDto).withDayOfMonth(1);
-
         return ChronoUnit.MONTHS.between(first, second) + 1L;
     }
 
@@ -126,14 +126,12 @@ public class ScheduleService {
             final Map<? extends CostAccount, ? extends BigDecimal> mapCostToParts,
             final Collection<? super Step> steps,
             final long numberOfMonths,
-            final int currentMonth,
+            final long currentMonth,
             final ScheduleParamDto scheduleParamDto
     ) {
         final Step step = new Step();
 
-        final LocalDate periodFromStart = getStart(scheduleParamDto).plusMonths(currentMonth);
-        step.setPeriodFromStart(periodFromStart);
-
+        step.setPeriodFromStart(currentMonth);
         setPlannedWork(numberOfMonths, scheduleParamDto, step);
         addsConsumesToStep(mapCostToParts, step);
 
@@ -247,9 +245,7 @@ public class ScheduleService {
     private void addsStepToGroupSteps(final Collection<? super StepDto> groupSteps, final Step step) {
         final StepDto dto = this.mapsToStepDto(step);
 
-        final Step snapshotStep = this.stepRepository.findSnapshotOfActiveBaseline(
-                step.getId()
-        ).orElse(null);
+        final Step snapshotStep = this.stepRepository.findSnapshotOfActiveBaseline(step.getId()).orElse(null);
 
         dto.setBaselinePlannedWork(Optional.ofNullable(snapshotStep).map(Step::getPlannedWork).orElse(null));
 
@@ -271,8 +267,28 @@ public class ScheduleService {
         groupSteps.add(dto);
     }
 
-    private <T> StepDto mapsToStepDto(final T source) {
-        return this.modelMapper.map(source, StepDto.class);
+    private StepDto mapsToStepDto(final Step step) {
+        final StepDto stepDto = new StepDto();
+        stepDto.setId(step.getId());
+        Schedule schedule = step.getSchedule();
+        stepDto.setIdSchedule(schedule.getId());
+        stepDto.setScheduleStart(schedule.getStart());
+        stepDto.setScheduleEnd(schedule.getEnd());
+        stepDto.setActualWork(step.getActualWork());
+        stepDto.setPlannedWork(step.getPlannedWork());
+        stepDto.setPeriodFromStart(step.getPeriodFromStartDate());
+        stepDto.setConsumes(new HashSet<>());
+
+        for (Consumes consumes : step.getConsumes()) {
+            ConsumesDto consumesDto = new ConsumesDto();
+            consumesDto.setId(consumes.getId());
+            consumesDto.setActualCost(consumes.getActualCost());
+            consumesDto.setPlannedCost(consumes.getPlannedCost());
+            consumesDto.setCostAccount(EntityDto.of(consumes.getCostAccount()));
+            stepDto.getConsumes().add(consumesDto);
+        }
+
+        return stepDto;
     }
 
     public Schedule save(final ScheduleParamDto scheduleParamDto) {
@@ -338,7 +354,7 @@ public class ScheduleService {
         final long numberOfMonths = getMonths(scheduleParamDto);
         final Map<CostAccount, BigDecimal> costsMap = this.getCostsMap(scheduleParamDto, numberOfMonths);
 
-        for (int currentMonth = 0; currentMonth < numberOfMonths; currentMonth++) {
+        for (long currentMonth = 0; currentMonth < numberOfMonths; currentMonth++) {
             addsStepToSteps(costsMap, steps, numberOfMonths, currentMonth, scheduleParamDto);
         }
 

@@ -11,6 +11,7 @@ import org.neo4j.ogm.annotation.Relationship;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.Objects;
 import java.util.Set;
 
@@ -23,7 +24,7 @@ public class Step extends Entity implements Snapshotable<Step> {
 
     private BigDecimal plannedWork;
 
-    private LocalDate periodFromStart;
+    private Long periodFromStart;
 
     @Relationship(type = "COMPOSES")
     private Baseline baseline;
@@ -43,7 +44,15 @@ public class Step extends Entity implements Snapshotable<Step> {
     private CategoryEnum category;
 
     public int getYear() {
-        return this.periodFromStart.getYear();
+        return getPeriodFromStartDate().getYear();
+    }
+
+    public LocalDate getPeriodFromStartDate() {
+        return this.schedule.getStart().plusMonths(this.periodFromStart);
+    }
+
+    public YearMonth getYearMonth() {
+        return YearMonth.from(getPeriodFromStartDate());
     }
 
     public Schedule getSchedule() {
@@ -79,43 +88,42 @@ public class Step extends Entity implements Snapshotable<Step> {
             return false;
         }
         final Step step = (Step) o;
-        return Objects.equals(this.actualWork, step.actualWork) && Objects.equals(this.plannedWork, step.plannedWork)
+        return Objects.equals(this.actualWork, step.actualWork)
+                && Objects.equals(this.plannedWork, step.plannedWork)
                 && Objects.equals(this.periodFromStart, step.periodFromStart);
     }
 
     @Override
     public Step snapshot() {
         final Step snapshot = new Step();
-
         snapshot.setActualWork(this.getActualWork());
         snapshot.setPlannedWork(this.getPlannedWork());
         snapshot.setPeriodFromStart(this.getPeriodFromStart());
-
         return snapshot;
-    }
-
-    public void setActualWork(final BigDecimal actualWork) {
-        this.actualWork = actualWork;
     }
 
     public BigDecimal getActualWork() {
         return this.actualWork;
     }
 
-    public void setPlannedWork(final BigDecimal plannedWork) {
-        this.plannedWork = plannedWork;
+    public void setActualWork(final BigDecimal actualWork) {
+        this.actualWork = actualWork;
     }
 
     public BigDecimal getPlannedWork() {
         return this.plannedWork;
     }
 
-    public void setPeriodFromStart(final LocalDate periodFromStart) {
-        this.periodFromStart = periodFromStart;
+    public void setPlannedWork(final BigDecimal plannedWork) {
+        this.plannedWork = plannedWork;
     }
 
-    public LocalDate getPeriodFromStart() {
+    public Long getPeriodFromStart() {
         return this.periodFromStart;
+    }
+
+    public void setPeriodFromStart(final Long periodFromStart) {
+        this.periodFromStart = periodFromStart;
     }
 
     @Override
@@ -140,19 +148,33 @@ public class Step extends Entity implements Snapshotable<Step> {
 
     @Override
     public boolean hasChanges(final Step other) {
-        final boolean hasActualWorkChanges = (this.actualWork != null || other.actualWork != null)
-                && (this.actualWork != null && other.actualWork == null || this.actualWork == null || !this.actualWork.equals(
-                other.actualWork));
+        final boolean hasActualWorkChanges =
+                (this.actualWork != null
+                        || other.actualWork != null)
+                        && (this.actualWork != null &&
+                        other.actualWork == null
+                        || this.actualWork == null
+                        || !this.actualWork.equals(other.actualWork));
 
-        final boolean hasPlannedWorkChanges = (this.plannedWork != null || other.plannedWork != null)
-                && (this.plannedWork != null && other.plannedWork == null || this.plannedWork == null || !this.plannedWork.equals(
-                other.plannedWork));
+        final boolean hasPlannedWorkChanges =
+                (this.plannedWork != null
+                        || other.plannedWork != null)
+                        && (this.plannedWork != null
+                        && other.plannedWork == null
+                        || this.plannedWork == null
+                        || !this.plannedWork.equals(other.plannedWork));
 
-        final boolean hasPeriodFromStartChanges = (this.periodFromStart != null || other.periodFromStart != null)
-                && (this.periodFromStart != null && other.periodFromStart == null || this.periodFromStart == null || !this.periodFromStart.equals(
-                other.periodFromStart));
+        final boolean hasPeriodFromStartChanges =
+                (this.periodFromStart != null
+                        || other.periodFromStart != null)
+                        && (this.periodFromStart != null
+                        && other.periodFromStart == null
+                        || this.periodFromStart == null
+                        || !this.periodFromStart.equals(other.periodFromStart));
 
-        return hasActualWorkChanges || hasPlannedWorkChanges || hasPeriodFromStartChanges;
+        return hasActualWorkChanges
+                || hasPlannedWorkChanges
+                || hasPeriodFromStartChanges;
     }
 
     public IsStepSnapshotOf getMaster() {

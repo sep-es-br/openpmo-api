@@ -47,9 +47,14 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
 
     @Override
     public TripleConstraintDataChart build(DashboardParameters parameters) {
+        final YearMonth yearMonth = parameters.getYearMonth();
+
+        if (yearMonth == null) {
+            return null;
+        }
+
         final Long workpackId = parameters.getWorkpackId();
         final Long baselineId = parameters.getBaselineId();
-        final YearMonth yearMonth = parameters.getYearMonth();
 
         final Set<Long> deliverablesId = getDeliverablesId(workpackId);
         return calculateForMonth(workpackId, baselineId, yearMonth, deliverablesId);
@@ -184,11 +189,11 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
     }
 
     private void sumCostAndWorkOfSteps(
-            Long deliverableId,
+            final Long deliverableId,
             final Long baselineId,
             final TripleConstraintDataChart tripleConstraint,
             final Set<? extends Step> steps,
-            YearMonth yearMonth
+            final YearMonth yearMonth
     ) {
         final CostAndScopeData costAndScopeData = this.costScopeService.build(deliverableId, baselineId, yearMonth, steps);
         tripleConstraint.sumCostData(costAndScopeData.getCostDataChart());

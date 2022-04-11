@@ -139,7 +139,7 @@ public class DashboardCostScopeService implements IDashboardCostScopeService {
     }
 
     private static YearMonth asYearMonth(final Step step) {
-        return YearMonth.from(step.getPeriodFromStart());
+        return step.getYearMonth();
     }
 
     private Long getActiveBaselineIdOrNull(Step step) {

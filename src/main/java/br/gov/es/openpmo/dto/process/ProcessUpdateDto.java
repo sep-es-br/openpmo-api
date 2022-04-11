@@ -11,8 +11,7 @@ public class ProcessUpdateDto {
   @NotNull
   @NotEmpty
   private final String name;
-  @NotNull
-  @NotEmpty
+
   private final String note;
 
   @JsonCreator

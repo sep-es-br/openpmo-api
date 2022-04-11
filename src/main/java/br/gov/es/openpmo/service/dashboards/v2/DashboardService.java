@@ -84,9 +84,9 @@ public class DashboardService implements IDashboardService {
         return new DashboardResponse(
                 getRisk(parameters),
                 getMilestone(parameters),
-                getTripleConstraintList(parameters),
+                parameters.getYearMonth() == null ? null : getTripleConstraintList(parameters),
                 getDatasheet(parameters),
-                getEarnedValueAnalysis(parameters)
+                parameters.getYearMonth() == null ? null : getEarnedValueAnalysis(parameters)
         );
     }
 
@@ -94,18 +94,19 @@ public class DashboardService implements IDashboardService {
     @Transactional
     public SimpleDashboard buildSimple(Long workpackId) {
         final Interval interval = intervalService.calculateFor(workpackId);
+        YearMonth date;
 
         if (interval.getStartDate() == null || interval.getEndDate() == null) {
-            return null;
+            date = null;
+        } else {
+            final YearMonth previousMonth = YearMonth.now().minusMonths(1);
+            final YearMonth startMonth = YearMonth.from(interval.getStartDate());
+            final YearMonth endMonth = YearMonth.from(interval.getEndDate());
+            date = clampDate(previousMonth, startMonth, endMonth);
         }
 
-        final YearMonth previousMonth = YearMonth.now().minusMonths(1);
-        final YearMonth startMonth = YearMonth.from(interval.getStartDate());
-        final YearMonth endMonth = YearMonth.from(interval.getEndDate());
-        final YearMonth clampDate = clampDate(previousMonth, startMonth, endMonth);
-
         final DashboardParameters parameters =
-                new DashboardParameters(false, workpackId, null, clampDate, null);
+                new DashboardParameters(false, workpackId, null, date, null);
 
         final Optional<PerformanceIndexes> performanceIndexes = Optional.of(parameters)
                 .map(this::getEarnedValueAnalysis)
@@ -115,10 +116,10 @@ public class DashboardService implements IDashboardService {
         return new SimpleDashboard(
                 getRisk(parameters),
                 getMilestone(parameters),
-                getTripleConstraint(parameters),
-                getCostPerformanceIndex(performanceIndexes),
-                getSchedulePerformanceIndex(performanceIndexes),
-                getEarnedValue(performanceIndexes)
+                date == null ? null : getTripleConstraint(parameters),
+                date == null ? null : getCostPerformanceIndex(performanceIndexes),
+                date == null ? null : getSchedulePerformanceIndex(performanceIndexes),
+                date == null ? null : getEarnedValue(performanceIndexes)
         );
     }
 
@@ -127,7 +128,8 @@ public class DashboardService implements IDashboardService {
     }
 
     private BigDecimal getEarnedValue(Optional<PerformanceIndexes> indexes) {
-        return indexes.map(PerformanceIndexes::getEarnedValue).orElse(null);
+        return indexes.map(PerformanceIndexes::getEarnedValue)
+                .orElse(null);
     }
 
     private SchedulePerformanceIndex getSchedulePerformanceIndex(Optional<PerformanceIndexes> indexes) {
@@ -151,9 +153,14 @@ public class DashboardService implements IDashboardService {
     }
 
     private List<TripleConstraintDataChart> getTripleConstraintList(DashboardParameters parameters) {
+        final YearMonth yearMonth = parameters.getYearMonth();
+
+        if (yearMonth == null) {
+            return new ArrayList<>();
+        }
+
         final Long workpackId = parameters.getWorkpackId();
         final Long baselineId = parameters.getBaselineId();
-        final YearMonth yearMonth = parameters.getYearMonth();
 
         return Optional.of(parameters)
                 .map(this::getTripleConstraintData)

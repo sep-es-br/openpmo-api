@@ -4,14 +4,13 @@ import java.util.List;
 
 public class DatasheetTotalizers {
 
-    private final List<ChildrenByTypeResponse> childrensByType;
+    private final List<WorkpacksByModelResponse> workpacksByModel;
 
-
-    public DatasheetTotalizers(List<ChildrenByTypeResponse> childrensByType) {
-        this.childrensByType = childrensByType;
+    public DatasheetTotalizers(List<WorkpacksByModelResponse> workpacksByModel) {
+        this.workpacksByModel = workpacksByModel;
     }
 
-    public List<ChildrenByTypeResponse> getChildrensByType() {
-        return childrensByType;
+    public List<WorkpacksByModelResponse> getWorkpacksByModel() {
+        return workpacksByModel;
     }
 }

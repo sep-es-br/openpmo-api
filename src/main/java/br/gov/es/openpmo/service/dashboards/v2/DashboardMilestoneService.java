@@ -22,6 +22,11 @@ public class DashboardMilestoneService implements IDashboardMilestoneService {
 
     private static LocalDate getMinOfNowAnd(final YearMonth date) {
         final LocalDate now = LocalDate.now();
+
+        if (date == null) {
+            return now;
+        }
+
         final LocalDate endOfMonth = date.atEndOfMonth();
         return now.isBefore(endOfMonth) ? now : endOfMonth;
     }
@@ -31,14 +36,14 @@ public class DashboardMilestoneService implements IDashboardMilestoneService {
         final Long idBaseline = parameters.getBaselineId();
         final Long idWorkpack = parameters.getWorkpackId();
         final YearMonth yearMonth = parameters.getYearMonth();
-        final LocalDate minDate = getMinOfNowAnd(yearMonth);
+        final LocalDate refDate = getMinOfNowAnd(yearMonth);
 
         return new MilestoneDataChart(
                 this.getQuantity(idBaseline, idWorkpack),
                 this.getConcluded(idBaseline, idWorkpack),
                 this.getLateConcluded(idBaseline, idWorkpack),
-                this.getLate(idBaseline, idWorkpack, minDate),
-                this.getOnTime(idBaseline, idWorkpack, minDate)
+                this.getLate(idBaseline, idWorkpack, refDate),
+                this.getOnTime(idBaseline, idWorkpack, refDate)
         );
     }
 
@@ -74,12 +79,20 @@ public class DashboardMilestoneService implements IDashboardMilestoneService {
     }
 
     private Long getLate(final Long baselineId, final Long idWorkpack, final LocalDate refDate) {
+        if (refDate == null) {
+            return null;
+        }
+
         return Optional.ofNullable(baselineId)
                 .map(id -> this.repository.late(id, idWorkpack, refDate))
                 .orElseGet(() -> this.repository.late(idWorkpack, refDate));
     }
 
     private Long getOnTime(final Long baselineId, final Long idWorkpack, final LocalDate refDate) {
+        if (refDate == null) {
+            return null;
+        }
+
         return Optional.ofNullable(baselineId)
                 .map(id -> this.repository.onTime(id, idWorkpack, refDate))
                 .orElseGet(() -> this.repository.onTime(idWorkpack, refDate));

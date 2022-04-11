@@ -52,23 +52,17 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             @Param("idWorkPackModel") Long idWorkPackModel
     );
 
-    @Query("match (pl:Plan) " +
-            "where id(pl)=$idPlan " +
-            "match (wm:WorkpackModel) " +
-            "where id(wm)=$idWorkpackModel " +
-            "match (p:Workpack) " +
-            "where id(p)=$idWorkpackParent " +
+    @Query("match (pl:Plan), (wm:WorkpackModel), (p:Workpack) " +
+            "where id(pl)=$idPlan and id(wm)=$idWorkpackModel and id(p)=$idWorkpackParent " +
             "optional match " +
-            "    (w:Workpack)-[:IS_IN]->(p), " +
-            "    (w)-[:IS_INSTANCE_BY]->(wm), " +
-            "    (w)-[bt1:BELONGS_TO]->(pl) " +
+            "    (w:Workpack)-[:IS_IN]->(p), (w)-[:IS_INSTANCE_BY]->(wm), (w)-[bt1:BELONGS_TO]->(pl) " +
             "where bt1.linked=null or bt1.linked=false " +
-            "with w,p,wm,bt1 " +
+            "with w,p,wm,bt1,pl " +
             "optional match " +
             "    (v:Workpack)-[:IS_LINKED_TO]->(wm), " +
             "    (v)-[bt2:BELONGS_TO]->(pl) " +
             "where bt2.linked=true " +
-            "with w,v,p,wm,bt1,bt2 " +
+            "with w,v,p,wm,bt1,bt2,pl " +
             "with collect(w)+collect(v) as workpackList " +
             "unwind workpackList as workpacks " +
             "return workpacks, [ " +
