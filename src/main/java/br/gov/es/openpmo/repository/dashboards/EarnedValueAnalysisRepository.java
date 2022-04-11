@@ -53,8 +53,8 @@ public interface EarnedValueAnalysisRepository extends Neo4jRepository<Workpack,
 
     @Query("match (b:Baseline)<-[:IS_BASELINED_BY]-(:Workpack)<-[:IS_SNAPSHOT_OF]-(:Workpack) " +
             "where id(b) in $baselineId " +
-            "match (b)<-[:COMPOSES]-(:Step)-[:IS_SNAPSHOT_OF]->(m:Step)-[:COMPOSES]->(:Schedule)-[:FEATURES]->(w:Workpack)-[:IS_IN*]->(v:Workpack) " +
-            "where $workpackId in [ id(w), id(v) ] and date($startOfMonth) <= date(m.periodFromStart) <= date($endOfMonth) " +
+            "match (b)<-[:COMPOSES]-(:Step)-[:IS_SNAPSHOT_OF]->(m:Step)-[:COMPOSES]->(sch:Schedule)-[:FEATURES]->(w:Workpack)-[:IS_IN*]->(v:Workpack) " +
+            "where $workpackId in [ id(w), id(v) ] and date($startOfMonth) <= date(sch.start) + duration({months: m.periodFromStart}) <= date($endOfMonth) " +
             "match (m)<-[:IS_SNAPSHOT_OF]-(s:Step)-[:COMPOSES]->(b) " +
             "match (s)-[cs:CONSUMES]->(:CostAccount) " +
             "match (m)-[cm:CONSUMES]->(:CostAccount) " +
