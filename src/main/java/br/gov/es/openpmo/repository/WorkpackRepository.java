@@ -287,10 +287,15 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "RETURN baseline ")
     Optional<Baseline> findActiveBaseline(Long idWorkpack);
 
-    @Query("MATCH (w:Workpack)-[:IS_IN*]->(v:Workpack)-[:IS_BASELINED_BY]->(baseline:Baseline{active: true}) " +
+    @Query("MATCH (w:Workpack)-[:IS_IN*]->(v:Project)-[:IS_BASELINED_BY]->(baseline:Baseline{active: true}) " +
             "WHERE id(w)=$idWorkpack " +
             "RETURN baseline ")
     Optional<Baseline> findActiveBaselineFromProjectChildren(Long idWorkpack);
+
+    @Query("MATCH (w:Workpack)<-[:IS_IN*]-(v:Project)-[:IS_BASELINED_BY]->(baseline:Baseline{active: true}) " +
+            "WHERE id(w)=$idWorkpack " +
+            "RETURN baseline ")
+    Optional<Baseline> findActiveBaselineFromProjectParent(Long idWorkpack);
 
     @Query("MATCH (workpack:Workpack) " +
             "OPTIONAL MATCH (workpack)-[isBaselinedBy:IS_BASELINED_BY]->(baseline:Baseline{status:'PROPOSED'}) " +

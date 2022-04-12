@@ -917,17 +917,19 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
                         .map(Baseline::getName)
                         .ifPresent(workpackDetailDto::setActiveBaselineName);
             }
+
+            return;
         }
 
-        if (type.equals(TYPE_NAME_DELIVERABLE) || type.equals(TYPE_NAME_MILESTONE)) {
-            final Optional<Baseline> maybeActiveBaseline =
-                    this.workpackRepository.findActiveBaselineFromProjectChildren(idWorkpack);
+        final Optional<Baseline> maybeActiveBaseline =
+                type.equals(TYPE_NAME_DELIVERABLE) || type.equals(TYPE_NAME_MILESTONE)
+                        ? this.workpackRepository.findActiveBaselineFromProjectChildren(idWorkpack)
+                        : this.workpackRepository.findActiveBaselineFromProjectParent(idWorkpack);
 
-            maybeActiveBaseline.ifPresent(activeBaseline -> {
-                workpackDetailDto.setActiveBaselineName(activeBaseline.getName());
-                workpackDetailDto.setHasActiveBaseline(true);
-            });
-        }
+        maybeActiveBaseline.ifPresent(activeBaseline -> {
+            workpackDetailDto.setActiveBaselineName(activeBaseline.getName());
+            workpackDetailDto.setHasActiveBaseline(true);
+        });
     }
 
     public void delete(final Workpack workpack) {
