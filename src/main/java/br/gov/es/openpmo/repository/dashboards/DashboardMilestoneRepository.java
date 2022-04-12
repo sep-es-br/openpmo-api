@@ -18,11 +18,11 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
             "where " +
             "    ( " +
             "        id(w)=$workpackId " +
-            "    )" +
-            "    and" +
-            "    (" +
+            "    ) " +
+            "    and " +
+            "    ( " +
             "        tm.name in ['Status Completed', 'Concluído'] " +
-            "    )" +
+            "    ) " +
             "return count(distinct m)")
     Long quantity(Long workpackId);
 
@@ -34,11 +34,11 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
             "where " +
             "    ( " +
             "        id(w)=$workpackId and id(b)=$baselineId " +
-            "    )" +
-            "    and" +
-            "    (" +
+            "    ) " +
+            "    and " +
+            "    ( " +
             "        tm.name in ['Status Completed', 'Concluído'] " +
-            "    )" +
+            "    ) " +
             "return count(distinct m)")
     Long quantity(Long baselineId, Long workpackId);
 
@@ -57,7 +57,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
             "    ) " +
             "    and " +
             "    ( " +
-            "        date($refDate) <= date(datetime(d.value)) " +
+            "        d.value is null or date($refDate) <= date(datetime(d.value)) " +
             "    ) " +
             "return count(distinct m)")
     Long onTime(Long workpackId, LocalDate refDate);
@@ -78,6 +78,8 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
             "    ) " +
             "    and " +
             "    ( " +
+            "        d.value is null " +
+            "        or " +
             "        ( " +
             "            date(datetime(d.value)) <= date($refDate) and date($refDate) <= date(datetime(planDate.value)) " +
             "        ) " +

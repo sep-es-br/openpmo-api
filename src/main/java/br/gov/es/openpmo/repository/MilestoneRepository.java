@@ -53,6 +53,10 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
             "    and " +
             "    ( " +
             "        ( " +
+            "            d.value is null " +
+            "        ) " +
+            "        or " +
+            "        ( " +
             "            planDate is null and now <= date(datetime(d.value)) " +
             "        ) " +
             "        or " +
