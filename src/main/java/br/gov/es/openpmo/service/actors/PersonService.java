@@ -362,7 +362,12 @@ public class PersonService {
             item.setId(plan.getId());
             item.setName(plan.getName());
             item.setWorkpacksPermission(workpackDetail);
-            result.add(item);
+
+            boolean skip = item.getAccessLevel() == PermissionLevelEnum.NONE && workpackDetail.isEmpty();
+
+            if (!skip) {
+                result.add(item);
+            }
         }
 
         return result;
