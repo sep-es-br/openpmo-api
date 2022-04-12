@@ -34,7 +34,7 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
             "where id(m)=$milestoneId " +
             "with collect(concluded) as list " +
             "return all(x in list where x=true) ")
-    Optional<Boolean> isConcluded(Long milestoneId);
+    boolean isConcluded(Long milestoneId);
 
     @Query("match " +
             "    (m:Milestone)-[:IS_IN*]->(w:Workpack), " +
@@ -52,21 +52,29 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
             "    ) " +
             "    and " +
             "    ( " +
-            "        planDate is null " +
-            "        or " +
             "        ( " +
-            "            date(datetime(d.value)) <= now and now <= date(datetime(planDate.value)) " +
+            "            planDate is null and now <= date(datetime(d.value)) " +
             "        ) " +
             "        or " +
             "        ( " +
-            "            date(datetime(d.value)) > now and date(datetime(d.value)) <= date(datetime(planDate.value)) " +
+            "            planDate is not null " +
+            "            and " +
+            "            ( " +
+            "                ( " +
+            "                    date(datetime(d.value)) <= now and now <= date(datetime(planDate.value)) " +
+            "                ) " +
+            "                or " +
+            "                ( " +
+            "                    date(datetime(d.value)) > now and date(datetime(d.value)) <= date(datetime(planDate.value)) " +
+            "                ) " +
+            "            ) " +
             "        ) " +
             "    ) " +
             "    as onTime " +
             "where id(m)=$milestoneId " +
             "with collect(onTime) as list " +
             "return all(x in list where x=true) ")
-    Optional<Boolean> isOnTime(Long milestoneId);
+    boolean isOnTime(Long milestoneId);
 
     @Query("match " +
             "    (m:Milestone)-[:IS_IN*]->(w:Workpack), " +
@@ -99,10 +107,10 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
             "        ) " +
             "    ) " +
             "    as onLate " +
-            "where id(m)=16643 " +
+            "where id(m)=$milestoneId " +
             "with collect(onLate) as list " +
             "return all(x in list where x=true) ")
-    Optional<Boolean> isLate(Long milestoneId);
+    boolean isLate(Long milestoneId);
 
     @Query("match " +
             "    (m:Milestone)-[:IS_IN*]->(w:Workpack), " +
@@ -126,7 +134,7 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
             "where id(m)=$milestoneId " +
             "with collect(onLateConcluded) as list " +
             "return all(x in list where x=true) ")
-    Optional<Boolean> isLateConcluded(Long milestoneId);
+    boolean isLateConcluded(Long milestoneId);
 
     @Query("match (m:Milestone)<-[:FEATURES]-(d:Date) " +
             "where " +

@@ -23,24 +23,19 @@ public class MilestoneService {
     }
 
     public void addStatus(final Long milestoneId, final MilestoneDetailDto milestoneDetailDto) {
-        final boolean late = this.repository.isLate(milestoneId).orElse(false);
-        final boolean lateConcluded = this.repository.isLateConcluded(milestoneId).orElse(false);
-        final boolean onTime = this.repository.isOnTime(milestoneId).orElse(false);
-        final boolean concluded = this.repository.isConcluded(milestoneId).orElse(false);
-
-        if (late) {
+        if (this.repository.isLate(milestoneId)) {
             milestoneDetailDto.setMilestoneStatus(MilestoneStatus.LATE);
             return;
         }
-        if (lateConcluded) {
+        if (this.repository.isLateConcluded(milestoneId)) {
             milestoneDetailDto.setMilestoneStatus(MilestoneStatus.LATE_CONCLUDED);
             return;
         }
-        if (onTime) {
+        if (this.repository.isOnTime(milestoneId)) {
             milestoneDetailDto.setMilestoneStatus(MilestoneStatus.ON_TIME);
             return;
         }
-        if (concluded) {
+        if (this.repository.isConcluded(milestoneId)) {
             milestoneDetailDto.setMilestoneStatus(MilestoneStatus.CONCLUDED);
         }
     }
