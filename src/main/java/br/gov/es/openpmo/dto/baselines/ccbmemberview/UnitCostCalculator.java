@@ -38,19 +38,15 @@ public final class UnitCostCalculator {
             return BigDecimal.ONE;
         }
 
+        if (this.plannedCost != null) {
+            return this.plannedCost.divide(this.plannedWork, 6, RoundingMode.HALF_UP);
+        }
+
         if (this.foreseenCost != null) {
             return this.foreseenCost.divide(this.foreseenWork, 6, RoundingMode.HALF_UP);
         }
 
-        if (this.foreseenWork == null) {
-            return this.plannedCost.divide(this.plannedWork, 6, RoundingMode.HALF_UP);
-        }
-
-        if (this.plannedCost == null) {
-            return BigDecimal.ZERO;
-        }
-
-        return this.plannedCost.divide(this.foreseenWork, 6, RoundingMode.HALF_UP);
+        return null;
     }
 
 }

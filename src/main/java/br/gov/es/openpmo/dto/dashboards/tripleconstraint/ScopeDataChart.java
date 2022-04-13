@@ -160,27 +160,35 @@ public class ScopeDataChart {
     }
 
     private void calculateVariation() {
-        if (this.costDataChart.getPlannedValue() == null
-                || Objects.equals(this.costDataChart.getPlannedValue(), BigDecimal.ZERO)
-        ) {
+        BigDecimal plannedValue = this.costDataChart.getPlannedValue();
+        BigDecimal foreseenValue = this.costDataChart.getForeseenValue();
+
+        boolean hasPlannedValue = plannedValue != null
+                && !Objects.equals(plannedValue, BigDecimal.ZERO);
+
+        if (hasPlannedValue) {
+            this.variation = this.variationCostBetweenPlannedAndForeseen
+                    .divide(plannedValue, 6, RoundingMode.HALF_UP)
+                    .multiply(ONE_HUNDRED);
+
+            this.plannedVariationPercent = ONE_HUNDRED;
+            this.foreseenVariationPercent = this.plannedVariationPercent.subtract(this.variation);
+
+            final BigDecimal actualVariation = this.variationCostBetweenPlannedAndActual
+                    .divide(this.costDataChart.getPlannedValue(), 2, RoundingMode.HALF_UP)
+                    .multiply(ONE_HUNDRED);
+
+            this.actualVariationPercent = this.plannedVariationPercent.subtract(actualVariation);
+        } else {
+            this.variation = null;
+
             this.plannedVariationPercent = null;
             this.foreseenVariationPercent = ONE_HUNDRED;
-            this.actualVariationPercent = null;
-            return;
+
+            this.actualVariationPercent = this.variationCostBetweenPlannedAndActual
+                    .divide(foreseenValue, 2, RoundingMode.HALF_UP)
+                    .multiply(ONE_HUNDRED);
         }
-
-        this.variation = this.variationCostBetweenPlannedAndForeseen
-                .divide(this.costDataChart.getPlannedValue(), 6, RoundingMode.HALF_UP)
-                .multiply(ONE_HUNDRED);
-
-        this.plannedVariationPercent = ONE_HUNDRED;
-        this.foreseenVariationPercent = this.plannedVariationPercent.subtract(this.variation);
-
-        final BigDecimal actualVariation = this.variationCostBetweenPlannedAndActual
-                .divide(this.costDataChart.getPlannedValue(), 6, RoundingMode.HALF_UP)
-                .multiply(ONE_HUNDRED);
-
-        this.actualVariationPercent = this.plannedVariationPercent.subtract(actualVariation);
     }
 
     private BigDecimal calculateDeltaBetweenPlannedAndForeseen() {
@@ -188,7 +196,6 @@ public class ScopeDataChart {
         final BigDecimal difference;
         if (this.plannedWork == null) {
             difference = Optional.ofNullable(this.foreseenWork)
-                    .map(BigDecimal::negate)
                     .orElse(BigDecimal.ZERO);
         } else {
             difference = this.plannedWork.subtract(this.foreseenWork);
@@ -201,7 +208,6 @@ public class ScopeDataChart {
         final BigDecimal difference;
         if (this.plannedWork == null) {
             difference = Optional.ofNullable(this.actualWork)
-                    .map(BigDecimal::negate)
                     .orElse(BigDecimal.ZERO);
         } else {
             difference = this.plannedWork.subtract(Optional.ofNullable(this.actualWork).orElse(BigDecimal.ZERO));
