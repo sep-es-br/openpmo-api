@@ -2,10 +2,12 @@ package br.gov.es.openpmo.repository;
 
 import br.gov.es.openpmo.dto.treeview.query.OfficeTreeViewQuery;
 import br.gov.es.openpmo.model.office.Office;
+import br.gov.es.openpmo.model.office.plan.PlanModel;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface OfficeRepository extends Neo4jRepository<Office, Long>, CustomRepository {
@@ -24,7 +26,6 @@ public interface OfficeRepository extends Neo4jRepository<Office, Long>, CustomR
             "RETURN office")
     Optional<Office> findOfficeByPlanId(Long planId);
 
-
     @Query("MATCH (plan:Plan)-[isAdoptedBy:IS_ADOPTED_BY]->(office:Office) " +
             "MATCH (workpack:Workpack) " +
             "OPTIONAL MATCH (workpack)-[isIn:IS_IN]->(parent:Workpack)  " +
@@ -34,5 +35,10 @@ public interface OfficeRepository extends Neo4jRepository<Office, Long>, CustomR
             "WHERE id(workpack)=$idWorkpack AND id(plan)=$idPlan " +
             "RETURN office")
     Optional<Office> findOfficeByWorkpackId(Long idWorkpack, Long idPlan);
+
+    @Query("match (o:Office)<-[:IS_ADOPTED_BY]-(pm:PlanModel) " +
+            "where id(o)=$idOffice " +
+            "return pm")
+    List<PlanModel> findAllPlanModelsByOfficeId(Long idOffice);
 
 }
