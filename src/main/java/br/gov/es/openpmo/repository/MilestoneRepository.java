@@ -15,16 +15,16 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
     @Query("match " +
             "    (m:Milestone)-[:IS_IN*]->(w:Workpack), " +
             "    (m)-[:IS_INSTANCE_BY]->(mm:MilestoneModel), " +
-            "    (mm)<-[:FEATURES]-(dm:DateModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m), " +
-            "    (mm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m) " +
+            "    (mm)<-[:FEATURES]-(dm:DateModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m) " +
             "optional match " +
+            "    (mm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m), " +
             "    (w)-[:IS_BASELINED_BY]->(b:Baseline{active: true}), " +
             "    (b)<-[:COMPOSES]-(s:Milestone)<-[:FEATURES]-(planDate:Date)-[:IS_SNAPSHOT_OF]->(d) " +
             "with " +
             "    distinct m, tm, t, planDate, d " +
             "with " +
             "    ( " +
-            "        tm.name in ['Status Completed', 'Concluído'] and t.value=true " +
+            "        tm is not null and t is not null and tm.name in ['Status Completed', 'Concluído'] and t.value=true " +
             "    ) " +
             "    and " +
             "    ( " +
@@ -33,22 +33,22 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
             "    as concluded " +
             "where id(m)=$milestoneId " +
             "with collect(concluded) as list " +
-            "return all(x in list where x=true) ")
+            "return all(x in list where x=true)")
     boolean isConcluded(Long milestoneId);
 
     @Query("match " +
             "    (m:Milestone)-[:IS_IN*]->(w:Workpack), " +
             "    (m)-[:IS_INSTANCE_BY]->(mm:MilestoneModel), " +
-            "    (mm)<-[:FEATURES]-(dm:DateModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m), " +
-            "    (mm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m) " +
+            "    (mm)<-[:FEATURES]-(dm:DateModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m) " +
             "optional match " +
+            "    (mm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m), " +
             "    (w)-[:IS_BASELINED_BY]->(b:Baseline{active: true}), " +
             "    (b)<-[:COMPOSES]-(s:Milestone)<-[:FEATURES]-(planDate:Date)-[:IS_SNAPSHOT_OF]->(d) " +
             "with " +
             "    distinct m, tm, t, planDate, d, date() as now " +
             "with " +
             "    ( " +
-            "        tm.name in ['Status Completed', 'Concluído'] and t.value=false " +
+            "        tm is null or t is null or (tm.name in ['Status Completed', 'Concluído'] and t.value=false) " +
             "    ) " +
             "    and " +
             "    ( " +
@@ -77,22 +77,22 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
             "    as onTime " +
             "where id(m)=$milestoneId " +
             "with collect(onTime) as list " +
-            "return all(x in list where x=true) ")
+            "return all(x in list where x=true)")
     boolean isOnTime(Long milestoneId);
 
     @Query("match " +
             "    (m:Milestone)-[:IS_IN*]->(w:Workpack), " +
             "    (m)-[:IS_INSTANCE_BY]->(mm:MilestoneModel), " +
-            "    (mm)<-[:FEATURES]-(dm:DateModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m), " +
-            "    (mm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m) " +
+            "    (mm)<-[:FEATURES]-(dm:DateModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m) " +
             "optional match " +
+            "    (mm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m), " +
             "    (w)-[:IS_BASELINED_BY]->(b:Baseline{active: true}), " +
             "    (b)<-[:COMPOSES]-(s:Milestone)<-[:FEATURES]-(planDate:Date)-[:IS_SNAPSHOT_OF]->(d) " +
             "with " +
             "    distinct m, tm, t, planDate, d, date() as now " +
             "with " +
             "    ( " +
-            "        tm.name in ['Status Completed', 'Concluído'] and t.value=false " +
+            "        tm is null or t is null or (tm.name in ['Status Completed', 'Concluído'] and t.value=false) " +
             "    ) " +
             "    and " +
             "    ( " +
@@ -113,22 +113,22 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
             "    as onLate " +
             "where id(m)=$milestoneId " +
             "with collect(onLate) as list " +
-            "return all(x in list where x=true) ")
+            "return all(x in list where x=true)")
     boolean isLate(Long milestoneId);
 
     @Query("match " +
             "    (m:Milestone)-[:IS_IN*]->(w:Workpack), " +
             "    (m)-[:IS_INSTANCE_BY]->(mm:MilestoneModel), " +
-            "    (mm)<-[:FEATURES]-(dm:DateModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m), " +
-            "    (mm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m) " +
+            "    (mm)<-[:FEATURES]-(dm:DateModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m) " +
             "optional match " +
+            "    (mm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m), " +
             "    (w)-[:IS_BASELINED_BY]->(b:Baseline{active: true}), " +
             "    (b)<-[:COMPOSES]-(s:Milestone)<-[:FEATURES]-(planDate:Date)-[:IS_SNAPSHOT_OF]->(d) " +
             "with " +
             "    distinct m, tm, t, planDate, d " +
             "with " +
             "    ( " +
-            "        tm.name in ['Status Completed', 'Concluído'] and t.value=true " +
+            "        tm is not null and t is not null and tm.name in ['Status Completed', 'Concluído'] and t.value=true " +
             "    ) " +
             "    and " +
             "    ( " +
@@ -137,7 +137,7 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
             "    as onLateConcluded " +
             "where id(m)=$milestoneId " +
             "with collect(onLateConcluded) as list " +
-            "return all(x in list where x=true) ")
+            "return all(x in list where x=true)")
     boolean isLateConcluded(Long milestoneId);
 
     @Query("match (m:Milestone)<-[:FEATURES]-(d:Date) " +

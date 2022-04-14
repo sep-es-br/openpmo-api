@@ -45,15 +45,18 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
     @Query("match " +
             "    (m:Milestone{deleted:false})-[:IS_IN*]->(w:Workpack{deleted:false}), " +
             "    (m)-[:IS_INSTANCE_BY]->(mm:MilestoneModel), " +
-            "    (mm)<-[:FEATURES]-(:PropertyModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m), " +
+            "    (mm)<-[:FEATURES]-(:PropertyModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m) " +
+            "optional match " +
             "    (mm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m) " +
+            "with " +
+            "    m, w, mm, d, tm, t " +
             "where " +
             "    ( " +
             "        id(w)=$workpackId " +
             "    ) " +
             "    and " +
             "    ( " +
-            "        tm.name in ['Status Completed', 'Concluído'] and t.value=false " +
+            "        tm is null or t is null or (tm.name in ['Status Completed', 'Concluído'] and t.value=false) " +
             "    ) " +
             "    and " +
             "    ( " +
@@ -66,15 +69,18 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
             "    (b:Baseline)<-[:COMPOSES]-(s:Milestone)-[:IS_SNAPSHOT_OF]->(m:Milestone{deleted:false})-[:IS_IN*]->(w:Workpack{deleted:false})-[:IS_BASELINED_BY]->(b), " +
             "    (m)-[:IS_INSTANCE_BY]->(wm:MilestoneModel), " +
             "    (wm)<-[:FEATURES]-(dm:DateModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m), " +
-            "    (wm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m), " +
             "    (s)<-[:FEATURES]-(planDate:Date)-[:IS_SNAPSHOT_OF]->(d) " +
+            "optional match " +
+            "    (wm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m) " +
+            "with " +
+            "    b, s, m, w, wm, dm, d, planDate, tm, t " +
             "where " +
             "    ( " +
             "        id(w)=$workpackId and id(b)=$baselineId " +
             "    ) " +
             "    and " +
             "    ( " +
-            "        tm.name in ['Status Completed', 'Concluído'] and t.value=false " +
+            "        tm is null or t is null or (tm.name in ['Status Completed', 'Concluído'] and t.value=false) " +
             "    ) " +
             "    and " +
             "    ( " +
@@ -94,15 +100,18 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
     @Query("match " +
             "    (m:Milestone{deleted:false})-[:IS_IN*]->(w:Workpack{deleted:false}), " +
             "    (m)-[:IS_INSTANCE_BY]->(mm:MilestoneModel), " +
-            "    (mm)<-[:FEATURES]-(:PropertyModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m), " +
+            "    (mm)<-[:FEATURES]-(:PropertyModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m) " +
+            "optional match " +
             "    (mm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m) " +
+            "with " +
+            "    m, w, mm, d, tm, t " +
             "where " +
             "    ( " +
             "       id(w)=$workpackId " +
             "    ) " +
             "    and " +
             "    ( " +
-            "        tm.name in ['Status Completed', 'Concluído'] and t.value=false " +
+            "        tm is null or t is null or (tm.name in ['Status Completed', 'Concluído'] and t.value=false) " +
             "    ) " +
             "    and " +
             "    ( " +
@@ -115,15 +124,18 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
             "    (b:Baseline)<-[:COMPOSES]-(s:Milestone)-[:IS_SNAPSHOT_OF]->(m:Milestone{deleted:false})-[:IS_IN*]->(w:Workpack{deleted:false})-[:IS_BASELINED_BY]->(b), " +
             "    (m)-[:IS_INSTANCE_BY]->(wm:MilestoneModel), " +
             "    (wm)<-[:FEATURES]-(dm:DateModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m), " +
-            "    (wm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m), " +
             "    (s)<-[:FEATURES]-(planDate:Date)-[:IS_SNAPSHOT_OF]->(d) " +
+            "optional match " +
+            "    (wm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m) " +
+            "with " +
+            "    b, s, m, w, wm, dm, d, planDate, tm, t " +
             "where " +
             "    ( " +
             "        id(w)=$workpackId and id(b)=$baselineId " +
             "    ) " +
             "    and " +
             "    ( " +
-            "        tm.name in ['Status Completed', 'Concluído'] and t.value=false " +
+            "        tm is null or t is null or (tm.name in ['Status Completed', 'Concluído'] and t.value=false) " +
             "    ) " +
             "    and " +
             "    ( " +
@@ -141,15 +153,18 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
     @Query("match " +
             "    (m:Milestone{deleted:false})-[:IS_IN*]->(w:Workpack{deleted:false}), " +
             "    (m)-[:IS_INSTANCE_BY]->(mm:MilestoneModel), " +
-            "    (mm)<-[:FEATURES]-(:PropertyModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m), " +
+            "    (mm)<-[:FEATURES]-(:PropertyModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m) " +
+            "optional match " +
             "    (mm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m) " +
+            "with " +
+            "    m, w, mm, d, tm, t " +
             "where " +
             "    ( " +
             "       id(w)=$workpackId " +
             "    ) " +
             "    and " +
             "    ( " +
-            "        tm.name in ['Status Completed', 'Concluído'] and t.value=true " +
+            "        tm is not null and t is not null and tm.name in ['Status Completed', 'Concluído'] and t.value=true " +
             "    ) " +
             "return count(distinct m)")
     Long concluded(Long workpackId);
@@ -158,15 +173,18 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
             "    (b:Baseline)<-[:COMPOSES]-(s:Milestone)-[:IS_SNAPSHOT_OF]->(m:Milestone{deleted:false})-[:IS_IN*]->(w:Workpack{deleted:false})-[:IS_BASELINED_BY]->(b), " +
             "    (m)-[:IS_INSTANCE_BY]->(wm:MilestoneModel), " +
             "    (wm)<-[:FEATURES]-(dm:DateModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m), " +
-            "    (wm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m), " +
             "    (s)<-[:FEATURES]-(planDate:Date)-[:IS_SNAPSHOT_OF]->(d) " +
+            "optional match " +
+            "    (wm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m) " +
+            "with " +
+            "    b, s, m, w, wm, dm, d, planDate, tm, t " +
             "where " +
             "    ( " +
             "        id(w)=$workpackId and id(b)=$baselineId " +
             "    ) " +
             "    and " +
             "    ( " +
-            "        tm.name in ['Status Completed', 'Concluído'] and t.value=true " +
+            "        tm is not null and t is not null and tm.name in ['Status Completed', 'Concluído'] and t.value=true " +
             "    ) " +
             "    and " +
             "    ( " +
@@ -179,15 +197,18 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
             "    (b:Baseline)<-[:COMPOSES]-(s:Milestone)-[:IS_SNAPSHOT_OF]->(m:Milestone{deleted:false})-[:IS_IN*]->(w:Workpack{deleted:false})-[:IS_BASELINED_BY]->(b), " +
             "    (m)-[:IS_INSTANCE_BY]->(wm:MilestoneModel), " +
             "    (wm)<-[:FEATURES]-(dm:DateModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m), " +
-            "    (wm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m), " +
             "    (s)<-[:FEATURES]-(planDate:Date)-[:IS_SNAPSHOT_OF]->(d) " +
+            "optional match " +
+            "    (wm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m) " +
+            "with " +
+            "    b, s, m, w, wm, dm, d, planDate, tm, t " +
             "where " +
             "    ( " +
             "        id(w)=$workpackId and id(b)=$baselineId " +
             "    ) " +
             "    and " +
             "    ( " +
-            "        tm.name in ['Status Completed', 'Concluído'] and t.value=true " +
+            "        tm is not null and t is not null and tm.name in ['Status Completed', 'Concluído'] and t.value=true " +
             "    ) " +
             "    and " +
             "    ( " +
