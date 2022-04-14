@@ -38,32 +38,38 @@ public class DashboardMilestoneService implements IDashboardMilestoneService {
         final YearMonth yearMonth = parameters.getYearMonth();
         final LocalDate refDate = getMinOfNowAnd(yearMonth);
 
+        Long concluded = this.getConcluded(idBaseline, idWorkpack);
+        Long lateConcluded = this.getLateConcluded(idBaseline, idWorkpack);
+        Long late = this.getLate(idBaseline, idWorkpack, refDate);
+        Long onTime = this.getOnTime(idBaseline, idWorkpack, refDate);
+        Long quantity = concluded + lateConcluded + late + onTime;
+
         return new MilestoneDataChart(
-                this.getQuantity(idBaseline, idWorkpack),
-                this.getConcluded(idBaseline, idWorkpack),
-                this.getLateConcluded(idBaseline, idWorkpack),
-                this.getLate(idBaseline, idWorkpack, refDate),
-                this.getOnTime(idBaseline, idWorkpack, refDate)
+                quantity,
+                concluded,
+                lateConcluded,
+                late,
+                onTime
         );
     }
 
     @Override
     public MilestoneDataChart build(final Long worpackId, final YearMonth yearMonth) {
-        final LocalDate minDate = getMinOfNowAnd(yearMonth);
+        final LocalDate refDate = getMinOfNowAnd(yearMonth);
+
+        Long concluded = this.getConcluded(null, worpackId);
+        Long lateConcluded = this.getLateConcluded(null, worpackId);
+        Long late = this.getLate(null, worpackId, refDate);
+        Long onTime = this.getOnTime(null, worpackId, refDate);
+        Long quantity = concluded + lateConcluded + late + onTime;
 
         return new MilestoneDataChart(
-                this.getQuantity(null, worpackId),
-                this.getConcluded(null, worpackId),
-                this.getLateConcluded(null, worpackId),
-                this.getLate(null, worpackId, minDate),
-                this.getOnTime(null, worpackId, minDate)
+                quantity,
+                concluded,
+                lateConcluded,
+                late,
+                onTime
         );
-    }
-
-    private Long getQuantity(final Long baselineId, final Long idWorkpack) {
-        return Optional.ofNullable(baselineId)
-                .map(id -> this.repository.quantity(id, idWorkpack))
-                .orElseGet(() -> this.repository.quantity(idWorkpack));
     }
 
     private Long getConcluded(final Long baselineId, final Long idWorkpack) {
