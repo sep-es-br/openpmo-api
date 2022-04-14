@@ -11,7 +11,7 @@ import java.time.LocalDate;
 public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone, Long> {
 
     @Query("match " +
-            "    (m:Milestone)-[:IS_IN*]->(w:Workpack), " +
+            "    (m:Milestone{deleted:false})-[:IS_IN*]->(w:Workpack{deleted:false}), " +
             "    (m)-[:IS_INSTANCE_BY]->(mm:MilestoneModel), " +
             "    (mm)<-[:FEATURES]-(:PropertyModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m), " +
             "    (mm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m) " +
@@ -27,7 +27,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
     Long quantity(Long workpackId);
 
     @Query("match " +
-            "    (b:Baseline)<-[:COMPOSES]-(:Milestone)-[:IS_SNAPSHOT_OF]->(m:Milestone)-[:IS_IN*]->(w:Workpack)-[:IS_BASELINED_BY]->(b), " +
+            "    (b:Baseline)<-[:COMPOSES]-(:Milestone)-[:IS_SNAPSHOT_OF]->(m:Milestone{deleted:false})-[:IS_IN*]->(w:Workpack{deleted:false})-[:IS_BASELINED_BY]->(b), " +
             "    (m)-[:IS_INSTANCE_BY]->(wm:MilestoneModel), " +
             "    (wm)<-[:FEATURES]-(dm:DateModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m), " +
             "    (wm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m) " +
@@ -43,7 +43,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
     Long quantity(Long baselineId, Long workpackId);
 
     @Query("match " +
-            "    (m:Milestone)-[:IS_IN*]->(w:Workpack), " +
+            "    (m:Milestone{deleted:false})-[:IS_IN*]->(w:Workpack{deleted:false}), " +
             "    (m)-[:IS_INSTANCE_BY]->(mm:MilestoneModel), " +
             "    (mm)<-[:FEATURES]-(:PropertyModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m), " +
             "    (mm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m) " +
@@ -63,7 +63,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
     Long onTime(Long workpackId, LocalDate refDate);
 
     @Query("match " +
-            "    (b:Baseline)<-[:COMPOSES]-(s:Milestone)-[:IS_SNAPSHOT_OF]->(m:Milestone)-[:IS_IN*]->(w:Workpack)-[:IS_BASELINED_BY]->(b), " +
+            "    (b:Baseline)<-[:COMPOSES]-(s:Milestone)-[:IS_SNAPSHOT_OF]->(m:Milestone{deleted:false})-[:IS_IN*]->(w:Workpack{deleted:false})-[:IS_BASELINED_BY]->(b), " +
             "    (m)-[:IS_INSTANCE_BY]->(wm:MilestoneModel), " +
             "    (wm)<-[:FEATURES]-(dm:DateModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m), " +
             "    (wm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m), " +
@@ -92,7 +92,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
     Long onTime(Long baselineId, Long workpackId, LocalDate refDate);
 
     @Query("match " +
-            "    (m:Milestone)-[:IS_IN*]->(w:Workpack), " +
+            "    (m:Milestone{deleted:false})-[:IS_IN*]->(w:Workpack{deleted:false}), " +
             "    (m)-[:IS_INSTANCE_BY]->(mm:MilestoneModel), " +
             "    (mm)<-[:FEATURES]-(:PropertyModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m), " +
             "    (mm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m) " +
@@ -112,7 +112,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
     Long late(Long workpackId, LocalDate refDate);
 
     @Query("match " +
-            "    (b:Baseline)<-[:COMPOSES]-(s:Milestone)-[:IS_SNAPSHOT_OF]->(m:Milestone)-[:IS_IN*]->(w:Workpack)-[:IS_BASELINED_BY]->(b), " +
+            "    (b:Baseline)<-[:COMPOSES]-(s:Milestone)-[:IS_SNAPSHOT_OF]->(m:Milestone{deleted:false})-[:IS_IN*]->(w:Workpack{deleted:false})-[:IS_BASELINED_BY]->(b), " +
             "    (m)-[:IS_INSTANCE_BY]->(wm:MilestoneModel), " +
             "    (wm)<-[:FEATURES]-(dm:DateModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m), " +
             "    (wm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m), " +
@@ -139,7 +139,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
     Long late(Long baselineId, Long workpackId, LocalDate refDate);
 
     @Query("match " +
-            "    (m:Milestone)-[:IS_IN*]->(w:Workpack), " +
+            "    (m:Milestone{deleted:false})-[:IS_IN*]->(w:Workpack{deleted:false}), " +
             "    (m)-[:IS_INSTANCE_BY]->(mm:MilestoneModel), " +
             "    (mm)<-[:FEATURES]-(:PropertyModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m), " +
             "    (mm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m) " +
@@ -155,7 +155,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
     Long concluded(Long workpackId);
 
     @Query("match " +
-            "    (b:Baseline)<-[:COMPOSES]-(s:Milestone)-[:IS_SNAPSHOT_OF]->(m:Milestone)-[:IS_IN*]->(w:Workpack)-[:IS_BASELINED_BY]->(b), " +
+            "    (b:Baseline)<-[:COMPOSES]-(s:Milestone)-[:IS_SNAPSHOT_OF]->(m:Milestone{deleted:false})-[:IS_IN*]->(w:Workpack{deleted:false})-[:IS_BASELINED_BY]->(b), " +
             "    (m)-[:IS_INSTANCE_BY]->(wm:MilestoneModel), " +
             "    (wm)<-[:FEATURES]-(dm:DateModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m), " +
             "    (wm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m), " +
@@ -176,7 +176,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
     Long concluded(Long baselineId, Long workpackId);
 
     @Query("match " +
-            "    (b:Baseline)<-[:COMPOSES]-(s:Milestone)-[:IS_SNAPSHOT_OF]->(m:Milestone)-[:IS_IN*]->(w:Workpack)-[:IS_BASELINED_BY]->(b), " +
+            "    (b:Baseline)<-[:COMPOSES]-(s:Milestone)-[:IS_SNAPSHOT_OF]->(m:Milestone{deleted:false})-[:IS_IN*]->(w:Workpack{deleted:false})-[:IS_BASELINED_BY]->(b), " +
             "    (m)-[:IS_INSTANCE_BY]->(wm:MilestoneModel), " +
             "    (wm)<-[:FEATURES]-(dm:DateModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m), " +
             "    (wm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m), " +
