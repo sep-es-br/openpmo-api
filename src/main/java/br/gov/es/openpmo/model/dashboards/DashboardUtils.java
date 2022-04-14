@@ -3,7 +3,6 @@ package br.gov.es.openpmo.model.dashboards;
 import org.springframework.lang.NonNull;
 
 import java.util.Collection;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -11,13 +10,15 @@ import java.util.function.Supplier;
 public class DashboardUtils {
 
     public static <T, R, S extends Collection<R>> void apply(
-            @NonNull Collection<T> objectCollection,
+            @NonNull Collection<T> objects,
             @NonNull Function<T, R> mapper,
             @NonNull Consumer<S> consumer,
-            @NonNull Supplier<S> constructorSupplier
+            @NonNull Supplier<S> supplier
     ) {
-        final S collection = constructorSupplier.get();
-        objectCollection.forEach(object -> apply(object, mapper, collection::add));
+        final S collection = supplier.get();
+        for (T object : objects) {
+            apply(object, mapper, collection::add);
+        }
         consumer.accept(collection);
     }
 
@@ -26,7 +27,10 @@ public class DashboardUtils {
             @NonNull Function<T, R> mapper,
             @NonNull Consumer<R> consumer
     ) {
-        Optional.ofNullable(object).map(mapper).ifPresent(consumer);
+        if (object != null) {
+            R r = mapper.apply(object);
+            if (r != null) consumer.accept(r);
+        }
     }
 
 }

@@ -36,6 +36,7 @@ public class TripleConstraintData {
         apply(from.getCost(), CostData::of, to::setCost);
         apply(from.getSchedule(), ScheduleData::of, to::setSchedule);
         apply(from.getScope(), ScopeData::of, to::setScope);
+
         return to;
     }
 
