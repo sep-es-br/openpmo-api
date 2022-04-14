@@ -24,7 +24,8 @@ public class FindAllProcessUsingCustomFilter extends FindAllUsingCustomFilterBui
 
   @Override
   protected void buildMatchClause(final CustomFilter filter, final StringBuilder query) {
-    query.append("MATCH (" + this.nodeName + ":Process)-[isReportedFor:IS_BELONG_TO]->(workpack:Workpack)\n");
+    query.append("MATCH (").append(this.nodeName)
+            .append(":Process)-[isReportedFor:IS_BELONG_TO]->(workpack:Workpack{deleted:false})\n");
   }
 
   @Override
@@ -34,7 +35,7 @@ public class FindAllProcessUsingCustomFilter extends FindAllUsingCustomFilterBui
 
   @Override
   protected void buildReturnClause(final StringBuilder query) {
-    query.append("RETURN " + this.nodeName).append("\n");
+    query.append("RETURN ").append(this.nodeName).append("\n");
   }
 
   @Override

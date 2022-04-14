@@ -33,7 +33,7 @@ public class FindAllWorkpackByParentUsingCustomFilter extends FindAllUsingCustom
     @Override
     public void buildMatchClause(final CustomFilter filter, final StringBuilder query) {
         query.append("" +
-                "MATCH (node:Workpack)-[rf:BELONGS_TO]->(p:Plan)-[is:IS_STRUCTURED_BY]->(pm:PlanModel), " +
+                "MATCH (node:Workpack{deleted:false})-[rf:BELONGS_TO]->(p:Plan)-[is:IS_STRUCTURED_BY]->(pm:PlanModel), " +
                 "(node)-[ii:IS_INSTANCE_BY]->(wm:WorkpackModel)<-[:FEATURES]-(propertyModel:PropertyModel), " +
                 "(node)-[wc:IS_IN]->(wp:Workpack), " +
                 "(node)<-[:FEATURES]-(property:Property)-[:IS_DRIVEN_BY]->(propertyModel) " +

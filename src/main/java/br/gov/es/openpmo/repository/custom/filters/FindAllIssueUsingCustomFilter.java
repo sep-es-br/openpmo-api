@@ -25,7 +25,7 @@ public class FindAllIssueUsingCustomFilter extends FindAllUsingCustomFilterBuild
   @Override
   protected void buildMatchClause(final CustomFilter filter, final StringBuilder query) {
     query.append("MATCH (issue:").append(this.nodeName)
-      .append(")-[reported:IS_REPORTED_FOR]->(workpack:Workpack)").append(" ");
+      .append(")-[reported:IS_REPORTED_FOR]->(workpack:Workpack{deleted:false})").append(" ");
   }
 
   @Override

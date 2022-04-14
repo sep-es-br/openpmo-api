@@ -25,7 +25,7 @@ public class FindStakeholderAndPermissionUsingCustomFilter extends FindStakehold
 
   @Override
   public void buildMatchClause(final CustomFilter filter, final StringBuilder query) {
-    query.append("MATCH (actor:Actor)-[isStakeholderIn:IS_STAKEHOLDER_IN]->(workpack:Workpack) ")
+    query.append("MATCH (actor:Actor)-[isStakeholderIn:IS_STAKEHOLDER_IN]->(workpack:Workpack{deleted:false}) ")
       .append("OPTIONAL MATCH (workpack)-[belongsTo:BELONGS_TO]->(plan:Plan)\n")
       .append("OPTIONAL MATCH (person:Person)-[canAccessWorkpack:CAN_ACCESS_WORKPACK]->(workpack)\n")
       .append("OPTIONAL MATCH (person)-[contact:IS_IN_CONTACT_BOOK_OF]->(office:Office)\n")

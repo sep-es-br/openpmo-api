@@ -55,11 +55,11 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
     @Query("match (pl:Plan), (wm:WorkpackModel), (p:Workpack) " +
             "where id(pl)=$idPlan and id(wm)=$idWorkpackModel and id(p)=$idWorkpackParent " +
             "optional match " +
-            "    (w:Workpack)-[:IS_IN]->(p), (w)-[:IS_INSTANCE_BY]->(wm), (w)-[bt1:BELONGS_TO]->(pl) " +
+            "    (w:Workpack{deleted:false})-[:IS_IN]->(p), (w)-[:IS_INSTANCE_BY]->(wm), (w)-[bt1:BELONGS_TO]->(pl) " +
             "where bt1.linked=null or bt1.linked=false " +
             "with w,p,wm,bt1,pl " +
             "optional match " +
-            "    (v:Workpack)-[:IS_LINKED_TO]->(wm), " +
+            "    (v:Workpack{deleted:false})-[:IS_LINKED_TO]->(wm), " +
             "    (v)-[bt2:BELONGS_TO]->(pl) " +
             "where bt2.linked=true " +
             "with w,v,p,wm,bt1,bt2,pl " +
@@ -81,7 +81,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             Long idPlan
     );
 
-    @Query("match (w:Workpack)-[:IS_IN]->(p:Workpack) " +
+    @Query("match (w:Workpack{deleted:false})-[:IS_IN]->(p:Workpack) " +
             "match (w)-[:IS_INSTANCE_BY]->(wm:WorkpackModel) " +
             "match (w)-[:IS_IN*]->(:Workpack)-[:BELONGS_TO{linked: true}]->(pl:Plan) " +
             "where id(p)=$idWorkpackParent and id(wm)=$idWorkpackModel and id(pl)=$idPlan " +

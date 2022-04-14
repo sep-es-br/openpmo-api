@@ -24,7 +24,8 @@ public class FindAllRiskUsingCustomFilter extends FindAllUsingCustomFilterBuilde
 
   @Override
   protected void buildMatchClause(final CustomFilter filter, final StringBuilder query) {
-    query.append("MATCH (" + this.nodeName + ":Risk)-[isReportedFor:IS_FORSEEN_ON]->(workpack:Workpack)\n");
+    query.append("MATCH (").append(this.nodeName)
+            .append(":Risk)-[isReportedFor:IS_FORSEEN_ON]->(workpack:Workpack{deleted:false})\n");
   }
 
   @Override
@@ -34,7 +35,7 @@ public class FindAllRiskUsingCustomFilter extends FindAllUsingCustomFilterBuilde
 
   @Override
   protected void buildReturnClause(final StringBuilder query) {
-    query.append("RETURN " + this.nodeName + ", isReportedFor, workpack\n");
+    query.append("RETURN ").append(this.nodeName).append(", isReportedFor, workpack\n");
   }
 
   @Override
