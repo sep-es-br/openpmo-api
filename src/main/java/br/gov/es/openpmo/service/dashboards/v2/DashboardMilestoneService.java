@@ -42,7 +42,7 @@ public class DashboardMilestoneService implements IDashboardMilestoneService {
         Long lateConcluded = this.getLateConcluded(idBaseline, idWorkpack);
         Long late = this.getLate(idBaseline, idWorkpack, refDate);
         Long onTime = this.getOnTime(idBaseline, idWorkpack, refDate);
-        Long quantity = concluded + lateConcluded + late + onTime;
+        Long quantity = getQuantity(concluded, lateConcluded, late, onTime);
 
         return new MilestoneDataChart(
                 quantity,
@@ -61,7 +61,7 @@ public class DashboardMilestoneService implements IDashboardMilestoneService {
         Long lateConcluded = this.getLateConcluded(null, worpackId);
         Long late = this.getLate(null, worpackId, refDate);
         Long onTime = this.getOnTime(null, worpackId, refDate);
-        Long quantity = concluded + lateConcluded + late + onTime;
+        Long quantity = getQuantity(concluded, lateConcluded, late, onTime);
 
         return new MilestoneDataChart(
                 quantity,
@@ -70,6 +70,13 @@ public class DashboardMilestoneService implements IDashboardMilestoneService {
                 late,
                 onTime
         );
+    }
+
+    private Long getQuantity(Long concluded, Long lateConcluded, Long late, Long onTime) {
+        return Optional.ofNullable(concluded).orElse(0L)
+                + Optional.ofNullable(lateConcluded).orElse(0L)
+                + Optional.ofNullable(late).orElse(0L)
+                + Optional.ofNullable(onTime).orElse(0L);
     }
 
     private Long getConcluded(final Long baselineId, final Long idWorkpack) {
