@@ -6,6 +6,8 @@ import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.WorkpackModelRepository;
 import br.gov.es.openpmo.utils.ApplicationMessage;
+import br.gov.es.openpmo.utils.MutableBoolean;
+import br.gov.es.openpmo.utils.TetraPredicate;
 import br.gov.es.openpmo.utils.TriPredicate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,13 +29,15 @@ public class CheckPasteWorkpackService {
     private static boolean areWorkpackModelsCompatible(
             final WorkpackModel model,
             final WorkpackModel other,
-            final WorkpackPasteResponse response
+            final WorkpackPasteResponse response,
+            final MutableBoolean entered
     ) {
         final boolean areCompatible = model.hasSameType(other)
                 && allAreWokpackModelsCompatible(
                 model.getChildren(),
                 other.getChildren(),
                 response,
+                entered,
                 CheckPasteWorkpackService::areWorkpackModelsCompatible);
 
         if (areCompatible) {
@@ -85,17 +89,22 @@ public class CheckPasteWorkpackService {
             final Collection<WorkpackModel> first,
             final Collection<WorkpackModel> second,
             final WorkpackPasteResponse response,
-            final TriPredicate<WorkpackModel, WorkpackModel, ? super WorkpackPasteResponse> compatibleComparator
+            final MutableBoolean entered,
+            final TetraPredicate<WorkpackModel, WorkpackModel, WorkpackPasteResponse, MutableBoolean> compatibleComparator
     ) {
+        entered.setValue(true);
+
         if (first == null && second == null) {
             return true;
         }
 
         if (first == null || second == null) {
+            response.setCanPaste(false);
             return false;
         }
 
         if (first.size() > second.size()) {
+            response.setCanPaste(false);
             return false;
         }
 
@@ -107,7 +116,7 @@ public class CheckPasteWorkpackService {
             Collection<WorkpackModel> toCopy = new HashSet<>(second);
 
             for (WorkpackModel to : toCopy) {
-                if (compatibleComparator.test(from, to, response)) {
+                if (compatibleComparator.test(from, to, response, entered)) {
                     fromIterator.remove();
                     break;
                 }
@@ -140,7 +149,16 @@ public class CheckPasteWorkpackService {
         final WorkpackModel workpackModelFrom = this.getWorkpackModel(idWorkpackModelFrom);
         final WorkpackModel workpackModelTo = this.getWorkpackModel(idWorkpackModelTo);
         final WorkpackPasteResponse response = new WorkpackPasteResponse(true, false);
-        areWorkpackModelsCompatible(workpackModelFrom, workpackModelTo, response);
+
+        MutableBoolean entered = new MutableBoolean();
+        entered.setValue(false);
+
+        areWorkpackModelsCompatible(workpackModelFrom, workpackModelTo, response, entered);
+
+        if (response.getCanPaste() && !entered.isValue()) {
+            response.setCanPaste(false);
+        }
+
         return response;
     }
 
