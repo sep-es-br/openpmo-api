@@ -17,114 +17,101 @@ import java.util.Iterator;
 @Service
 public class CheckPasteWorkpackService {
 
-  private final WorkpackModelRepository workpackModelRepository;
+    private final WorkpackModelRepository workpackModelRepository;
 
-  @Autowired
-  public CheckPasteWorkpackService(final WorkpackModelRepository workpackModelRepository) {
-    this.workpackModelRepository = workpackModelRepository;
-  }
-
-  private static boolean areWorkpackModelsCompatible(
-      final WorkpackModel model,
-      final WorkpackModel other,
-      final WorkpackPasteResponse response
-  ) {
-    final boolean areCompatible = model.hasSameType(other)
-        && model.hasSameName(other)
-        && allAreCompatible(
-        model.getChildren(),
-        other.getChildren(),
-        response,
-        CheckPasteWorkpackService::areWorkpackModelsCompatible);
-
-    if (areCompatible) {
-      allAreCompatible(
-          model.getProperties(),
-          other.getProperties(),
-          response,
-          CheckPasteWorkpackService::arePropertyModelsCompatible);
+    @Autowired
+    public CheckPasteWorkpackService(final WorkpackModelRepository workpackModelRepository) {
+        this.workpackModelRepository = workpackModelRepository;
     }
 
-    response.setCanPaste(response.getCanPaste() && areCompatible);
-    return areCompatible;
-  }
+    private static boolean areWorkpackModelsCompatible(
+            final WorkpackModel model,
+            final WorkpackModel other,
+            final WorkpackPasteResponse response
+    ) {
+        final boolean areCompatible = model.hasSameType(other)
+                && allAreCompatible(
+                model.getChildren(),
+                other.getChildren(),
+                response,
+                CheckPasteWorkpackService::areWorkpackModelsCompatible);
 
-  private static <T> boolean allAreCompatible(
-      final Collection<? extends T> first,
-      final Collection<? extends T> second,
-      final WorkpackPasteResponse response,
-      final TriPredicate<T, T, ? super WorkpackPasteResponse> compatibleComparator
-  ) {
-    if (first == null && second == null) {
-      return true;
+        if (areCompatible) {
+            allAreCompatible(
+                    model.getProperties(),
+                    other.getProperties(),
+                    response,
+                    CheckPasteWorkpackService::arePropertyModelsCompatible);
+        }
+
+        response.setCanPaste(response.getCanPaste() && areCompatible);
+        return areCompatible;
     }
 
-    if (first == null || second == null) {
-      return false;
+    private static <T> boolean allAreCompatible(
+            final Collection<? extends T> first,
+            final Collection<? extends T> second,
+            final WorkpackPasteResponse response,
+            final TriPredicate<T, T, ? super WorkpackPasteResponse> compatibleComparator
+    ) {
+        if (first == null && second == null) {
+            return true;
+        }
+
+        if (first == null || second == null) {
+            return false;
+        }
+
+        if (first.size() > second.size()) {
+            return false;
+        }
+
+        Collection<T> fromCopy = new HashSet<>(first);
+        Iterator<T> fromIterator = fromCopy.iterator();
+
+        while (fromIterator.hasNext()) {
+            T from = fromIterator.next();
+            Collection<T> toCopy = new HashSet<>(second);
+
+            for (T to : toCopy) {
+                if (compatibleComparator.test(from, to, response)) {
+                    fromIterator.remove();
+                    break;
+                }
+            }
+        }
+
+        return fromCopy.isEmpty();
     }
 
-    if (first.size() != second.size()) {
-      return false;
+    private static boolean arePropertyModelsCompatible(
+            final PropertyModel model,
+            final PropertyModel other,
+            final WorkpackPasteResponse response
+    ) {
+        final boolean areCompatible = model.hasSameType(other) && model.hasSameName(other);
+        response.setIncompatiblesProperties(response.getIncompatiblesProperties() || !areCompatible);
+        return areCompatible;
     }
 
-    final Collection<T> fromCopy = copySet(first);
-    final Collection<T> toCopy = copySet(second);
-
-    final Iterator<T> fromIterator = fromCopy.iterator();
-    final Iterator<T> toIterator = toCopy.iterator();
-
-    while (fromIterator.hasNext() && toIterator.hasNext()) {
-      if (compatibleComparator.test(fromIterator.next(), toIterator.next(), response)) {
-        fromIterator.remove();
-        toIterator.remove();
-      }
+    public WorkpackPasteResponse checksIfCanPasteWorkpack(
+            final Long idWorkpack,
+            final Long idWorkpackModelTo,
+            final Long idWorkpackModelFrom
+    ) {
+        if (!this.workpackModelRepository.isWorkpackInstanceByModel(idWorkpack, idWorkpackModelFrom)) {
+            throw new NegocioException(ApplicationMessage.WORKPACK_PASTE_ERROR);
+        }
+        final WorkpackModel workpackModelFrom = this.getWorkpackModel(idWorkpackModelFrom);
+        final WorkpackModel workpackModelTo = this.getWorkpackModel(idWorkpackModelTo);
+        final WorkpackPasteResponse response = new WorkpackPasteResponse(true, false);
+        areWorkpackModelsCompatible(workpackModelFrom, workpackModelTo, response);
+        return response;
     }
 
-    return fromCopy.isEmpty();
-  }
-
-  private static <T> Collection<T> copySet(final Collection<? extends T> collection) {
-    return new HashSet<>(collection);
-  }
-
-  private static boolean arePropertyModelsCompatible(
-      final PropertyModel model,
-      final PropertyModel other,
-      final WorkpackPasteResponse response
-  ) {
-    final boolean areCompatible = model.hasSameType(other) && model.hasSameName(other);
-    response.setIncompatiblesProperties(response.getIncompatiblesProperties() || !areCompatible);
-    return areCompatible;
-  }
-
-  public WorkpackPasteResponse checksIfCanPasteWorkpack(
-      final Long idWorkpack,
-      final Long idWorkpackModelTo,
-      final Long idWorkpackModelFrom
-  ) {
-    this.ifWorkpackIsNotInstantiatedByModelThrowsException(idWorkpack, idWorkpackModelFrom);
-
-    final WorkpackModel workpackModelFrom = this.getWorkpackModel(idWorkpackModelFrom);
-    final WorkpackModel workpackModelTo = this.getWorkpackModel(idWorkpackModelTo);
-
-    final WorkpackPasteResponse response = new WorkpackPasteResponse(true, false);
-    areWorkpackModelsCompatible(workpackModelFrom, workpackModelTo, response);
-    return response;
-  }
-
-  private WorkpackModel getWorkpackModel(final Long idWorkpackModelFrom) {
-    return this.workpackModelRepository.findByIdWorkpackWithChildren(idWorkpackModelFrom)
-        .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACKMODEL_NOT_FOUND));
-  }
-
-  private void ifWorkpackIsNotInstantiatedByModelThrowsException(final Long idWorkpack, final Long idWorkpackModelFrom) {
-    if (!this.isWorkpackInstanceByModel(idWorkpack, idWorkpackModelFrom)) {
-      throw new NegocioException(ApplicationMessage.WORKPACK_PASTE_ERROR);
+    private WorkpackModel getWorkpackModel(final Long idWorkpackModelFrom) {
+        return this.workpackModelRepository.findByIdWorkpackWithChildren(idWorkpackModelFrom)
+                .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACKMODEL_NOT_FOUND));
     }
-  }
-
-  private boolean isWorkpackInstanceByModel(final Long idWorkpack, final Long idWorkpackModelFrom) {
-    return this.workpackModelRepository.isWorkpackInstanceByModel(idWorkpack, idWorkpackModelFrom);
-  }
 
 }

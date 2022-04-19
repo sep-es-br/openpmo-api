@@ -1,7 +1,6 @@
 package br.gov.es.openpmo.repository;
 
 import br.gov.es.openpmo.dto.dashboards.tripleconstraint.DateIntervalQuery;
-import br.gov.es.openpmo.dto.person.queries.WorkpackPermissionAndStakeholderQuery;
 import br.gov.es.openpmo.dto.workpack.WorkpackName;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.workpacks.Deliverable;
@@ -10,7 +9,6 @@ import br.gov.es.openpmo.model.workpacks.Project;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
-import br.gov.es.openpmo.scheduler.updatestatus.ProjectAndProgramParentResult;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
@@ -209,22 +207,6 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             @Param("idPerson") Long idPerson
     );
 
-    @Query("MATCH (plan:Plan)<-[belongsTo:BELONGS_TO]-(workpack:Workpack{deleted:false})-[instance:IS_INSTANCE_BY]->(model:WorkpackModel) " +
-            "OPTIONAL MATCH (workpack)<-[stakeholder:IS_STAKEHOLDER_IN]-(person:Person) " +
-            "OPTIONAL MATCH (workpack)<-[canAccessWorkpack:CAN_ACCESS_WORKPACK]-(person) " +
-            "WITH workpack, plan, belongsTo, stakeholder, canAccessWorkpack, person, instance, model " +
-            "WHERE id(person)=$idPerson AND id(plan)=$idPlan " +
-            "RETURN collect(workpack) AS workpacks, " +
-            "collect(canAccessWorkpack) AS canAccess, " +
-            "collect(stakeholder) AS isStakeholderIn, " +
-            "collect(belongsTo), " +
-            "collect(instance), " +
-            "collect(model) ")
-    WorkpackPermissionAndStakeholderQuery findAllByPersonAndPlan(
-            Long idPerson,
-            Long idPlan
-    );
-
     @Query("MATCH (workpack:Workpack{deleted:false}) " +
             "MATCH (workpack)-[belongsTo:BELONGS_TO]->(plan:Plan)-[structuredBy:IS_STRUCTURED_BY]->(planModel:PlanModel) " +
             "MATCH (workpack)-[isLinkedTo:IS_LINKED_TO]->(model:WorkpackModel)-[modelBelongsTo:BELONGS_TO]->(planModel) " +
@@ -269,13 +251,6 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "WHERE id(workpack)=$idWorkpack " +
             "RETURN count(snapshotOf)>0 ")
     boolean hasSnapshot(Long idWorkpack);
-
-    @Query("MATCH (workpack:Workpack) " +
-            "OPTIONAL MATCH (workpack)-[isBaselinedBy:IS_BASELINED_BY]->(baseline:Baseline{active:true}) " +
-            "WITH workpack, isBaselinedBy, baseline " +
-            "WHERE id(workpack)=$idProject " +
-            "RETURN count(baseline)>0 ")
-    boolean hasProjectWithActiveBaseline(Long idProject);
 
     @Query("MATCH (workpack:Workpack)-[:IS_BASELINED_BY]->(baseline:Baseline{active: true}) " +
             "WHERE id(workpack)=$idWorkpack " +
@@ -357,28 +332,6 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "RETURN deliverable")
     Set<Deliverable> findAllDeliverables();
 
-    @Query("MATCH (deliverable:Deliverable)-[:BELONGS_TO{linked:false}]->(plan:Plan) " +
-            "WHERE id(deliverable)=$idDeliverable " +
-            "OPTIONAL MATCH (deliverable)-[:IS_IN*0..]->(project:Project)-[:BELONGS_TO{linked:false}]->(plan) " +
-            "OPTIONAL MATCH (deliverable)-[:IS_IN*0..]->(program:Program)-[:BELONGS_TO{linked:false}]->(plan) " +
-            "WITH deliverable, project, program, plan " +
-            "WHERE " +
-            "    program.category IN ['NONE', 'MASTER'] AND " +
-            "    project.category IN ['NONE', 'MASTER'] AND " +
-            "    deliverable.category IN ['NONE', 'MASTER'] " +
-            "RETURN id(project) AS idProject, id(program) AS idProgram")
-    Optional<ProjectAndProgramParentResult> findProjectAndProgramParents(Long idDeliverable);
-
-    @Query("MATCH (deliverable:Deliverable)-[:BELONGS_TO{linked:false}]->(plan:Plan) " +
-            "WHERE id(deliverable)=$idDeliverable " +
-            "OPTIONAL MATCH (deliverable)-[:IS_IN*0..]->(project:Project)-[:BELONGS_TO{linked:false}]->(plan) " +
-            "WITH deliverable, project, plan " +
-            "WHERE " +
-            "    project.category IN ['NONE', 'MASTER'] AND " +
-            "    deliverable.category IN ['NONE', 'MASTER'] " +
-            "RETURN project")
-    Optional<Project> findProjectParentOf(Long idDeliverable);
-
     @Query("MATCH (project:Project)-[:BELONGS_TO{linked:false}]->(plan:Plan) " +
             "WHERE id(project)=$idProject " +
             "MATCH (project)<-[:IS_IN*]-(deliverable:Deliverable{deleted:false})-[:BELONGS_TO{linked:false}]->(plan) " +
@@ -407,13 +360,6 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "WHERE project.completed=false " +
             "RETURN count(DISTINCT project) > 0")
     boolean hasRemainProjectsToComplete(Long idProgram);
-
-    @Query("MATCH (project:Project)-[:BELONGS_TO{linked:false}]->(plan:Plan) " +
-            "WHERE id(project)=$idProject " +
-            "MATCH (project)<-[:IS_IN*]-(deliverable:Deliverable{deleted:false})-[:BELONGS_TO{linked:false}]->(plan) " +
-            "WHERE deliverable.endManagementDate IS NULL " +
-            "RETURN count(DISTINCT deliverable) > 0")
-    boolean hasRemainDeliveriesToManage(Long idProject);
 
     @Query("MATCH (workpack:Workpack)-[:BELONGS_TO{linked:false}]->(plan:Plan) " +
             "WHERE id(workpack)=$idWorkpack " +
@@ -461,11 +407,6 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "return id(d)")
     Set<Long> getDeliverablesId(Long workpackId);
 
-    @Query("match (w:Workpack)<-[:FEATURES]-(s:Schedule) " +
-            "where id(w)=$workpackId " +
-            "return id(s)")
-    Long findScheduleId(Long workpackId);
-
     @Query("match (p:Project) where id(p)=$workpackId return count(p)>0")
     boolean isProject(Long workpackId);
 
@@ -481,4 +422,9 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "where id(p)=$id " +
             "return count(w)>0")
     boolean existsByPlanId(Long id);
+
+    @Query("MATCH (w:Workpack)-[i:IS_IN]->(:Workpack) " +
+            "WHERE id(w)=$workpackId " +
+            "DETACH DELETE i")
+    void deleteIsInRelationshipByWorkpackId(Long workpackId);
 }
