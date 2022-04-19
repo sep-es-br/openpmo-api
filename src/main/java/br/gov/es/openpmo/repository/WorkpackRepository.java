@@ -297,7 +297,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
     Optional<WorkpackModel> findWorkpackModelBySnapshotId(Long idWorkpack);
 
     @Query("MATCH (w:Workpack)-[i:IS_IN]->(p:Workpack) " +
-            "WHERE id(w)=1126 AND id(p)=39 " +
+            "WHERE id(w)=$idWorkpack AND id(p)=$idParent " +
             "RETURN count(i)>0")
     boolean isWorkpackInParent(Long idWorkpack, Long idParent);
 

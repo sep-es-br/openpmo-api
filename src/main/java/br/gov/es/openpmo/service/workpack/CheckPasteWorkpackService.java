@@ -30,29 +30,62 @@ public class CheckPasteWorkpackService {
             final WorkpackPasteResponse response
     ) {
         final boolean areCompatible = model.hasSameType(other)
-                && allAreCompatible(
+                && allAreWokpackModelsCompatible(
                 model.getChildren(),
                 other.getChildren(),
                 response,
                 CheckPasteWorkpackService::areWorkpackModelsCompatible);
 
         if (areCompatible) {
-            allAreCompatible(
+            allArePropertyModelsCompatible(
                     model.getProperties(),
                     other.getProperties(),
                     response,
                     CheckPasteWorkpackService::arePropertyModelsCompatible);
         }
 
-        response.setCanPaste(response.getCanPaste() && areCompatible);
         return areCompatible;
     }
 
-    private static <T> boolean allAreCompatible(
-            final Collection<? extends T> first,
-            final Collection<? extends T> second,
+    private static void allArePropertyModelsCompatible(
+            final Collection<PropertyModel> first,
+            final Collection<PropertyModel> second,
             final WorkpackPasteResponse response,
-            final TriPredicate<T, T, ? super WorkpackPasteResponse> compatibleComparator
+            final TriPredicate<PropertyModel, PropertyModel, ? super WorkpackPasteResponse> compatibleComparator
+    ) {
+        if (first == null && second == null) {
+            return;
+        }
+
+        if (first == null || second == null) {
+            return;
+        }
+
+        if (first.size() > second.size()) {
+            return;
+        }
+
+        Collection<PropertyModel> fromCopy = new HashSet<>(first);
+        Iterator<PropertyModel> fromIterator = fromCopy.iterator();
+
+        while (fromIterator.hasNext()) {
+            PropertyModel from = fromIterator.next();
+            Collection<PropertyModel> toCopy = new HashSet<>(second);
+
+            for (PropertyModel to : toCopy) {
+                if (compatibleComparator.test(from, to, response)) {
+                    fromIterator.remove();
+                    break;
+                }
+            }
+        }
+    }
+
+    private static boolean allAreWokpackModelsCompatible(
+            final Collection<WorkpackModel> first,
+            final Collection<WorkpackModel> second,
+            final WorkpackPasteResponse response,
+            final TriPredicate<WorkpackModel, WorkpackModel, ? super WorkpackPasteResponse> compatibleComparator
     ) {
         if (first == null && second == null) {
             return true;
@@ -66,14 +99,14 @@ public class CheckPasteWorkpackService {
             return false;
         }
 
-        Collection<T> fromCopy = new HashSet<>(first);
-        Iterator<T> fromIterator = fromCopy.iterator();
+        Collection<WorkpackModel> fromCopy = new HashSet<>(first);
+        Iterator<WorkpackModel> fromIterator = fromCopy.iterator();
 
         while (fromIterator.hasNext()) {
-            T from = fromIterator.next();
-            Collection<T> toCopy = new HashSet<>(second);
+            WorkpackModel from = fromIterator.next();
+            Collection<WorkpackModel> toCopy = new HashSet<>(second);
 
-            for (T to : toCopy) {
+            for (WorkpackModel to : toCopy) {
                 if (compatibleComparator.test(from, to, response)) {
                     fromIterator.remove();
                     break;
@@ -81,7 +114,9 @@ public class CheckPasteWorkpackService {
             }
         }
 
-        return fromCopy.isEmpty();
+        boolean fromCopyEmpty = fromCopy.isEmpty();
+        response.setCanPaste(response.getCanPaste() && fromCopyEmpty);
+        return fromCopyEmpty;
     }
 
     private static boolean arePropertyModelsCompatible(
