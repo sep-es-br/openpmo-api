@@ -921,12 +921,12 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
             return;
         }
 
-        final Optional<Baseline> maybeActiveBaseline =
+        final List<Baseline> activeBaselines =
                 type.equals(TYPE_NAME_DELIVERABLE) || type.equals(TYPE_NAME_MILESTONE)
                         ? this.workpackRepository.findActiveBaselineFromProjectChildren(idWorkpack)
                         : this.workpackRepository.findActiveBaselineFromProjectParent(idWorkpack);
 
-        maybeActiveBaseline.ifPresent(activeBaseline -> {
+        activeBaselines.stream().findFirst().ifPresent(activeBaseline -> {
             workpackDetailDto.setActiveBaselineName(activeBaseline.getName());
             workpackDetailDto.setHasActiveBaseline(true);
         });
