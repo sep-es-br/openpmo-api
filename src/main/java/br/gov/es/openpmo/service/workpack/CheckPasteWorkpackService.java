@@ -8,13 +8,13 @@ import br.gov.es.openpmo.repository.WorkpackModelRepository;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import br.gov.es.openpmo.utils.MutableBoolean;
 import br.gov.es.openpmo.utils.TetraPredicate;
-import br.gov.es.openpmo.utils.TriPredicate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.function.BiPredicate;
 
 @Service
 public class CheckPasteWorkpackService {
@@ -45,7 +45,7 @@ public class CheckPasteWorkpackService {
                     model.getProperties(),
                     other.getProperties(),
                     response,
-                    CheckPasteWorkpackService::arePropertyModelsCompatible);
+                    (m, o) -> m.hasSameType(o) && m.hasSameName(o));
         }
 
         return areCompatible;
@@ -55,9 +55,10 @@ public class CheckPasteWorkpackService {
             final Collection<PropertyModel> first,
             final Collection<PropertyModel> second,
             final WorkpackPasteResponse response,
-            final TriPredicate<PropertyModel, PropertyModel, ? super WorkpackPasteResponse> compatibleComparator
+            final BiPredicate<PropertyModel, PropertyModel> compatibleComparator
     ) {
         if (first == null && second == null) {
+            response.setIncompatiblesProperties(true);
             return;
         }
 
@@ -77,12 +78,15 @@ public class CheckPasteWorkpackService {
             Collection<PropertyModel> toCopy = new HashSet<>(second);
 
             for (PropertyModel to : toCopy) {
-                if (compatibleComparator.test(from, to, response)) {
+                if (compatibleComparator.test(from, to)) {
                     fromIterator.remove();
                     break;
                 }
             }
         }
+
+        boolean fromCopyEmpty = fromCopy.isEmpty();
+        response.setIncompatiblesProperties(response.getIncompatiblesProperties() || !fromCopyEmpty);
     }
 
     private static boolean allAreWokpackModelsCompatible(
@@ -126,16 +130,6 @@ public class CheckPasteWorkpackService {
         boolean fromCopyEmpty = fromCopy.isEmpty();
         response.setCanPaste(response.getCanPaste() && fromCopyEmpty);
         return fromCopyEmpty;
-    }
-
-    private static boolean arePropertyModelsCompatible(
-            final PropertyModel model,
-            final PropertyModel other,
-            final WorkpackPasteResponse response
-    ) {
-        final boolean areCompatible = model.hasSameType(other) && model.hasSameName(other);
-        response.setIncompatiblesProperties(response.getIncompatiblesProperties() || !areCompatible);
-        return areCompatible;
     }
 
     public WorkpackPasteResponse checksIfCanPasteWorkpack(

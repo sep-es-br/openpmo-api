@@ -245,7 +245,7 @@ public class PasteToWorkpackService {
     }
 
     private void saveBelongsTo(final BelongsTo belongsTo) {
-        this.belongsToRepository.save(belongsTo);
+        this.belongsToRepository.save(belongsTo, 0);
     }
 
     private void deleteBelongsToByWorkpackId(final Workpack workpack) {
