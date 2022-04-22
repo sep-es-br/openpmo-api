@@ -17,11 +17,17 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
             "    (m)-[:IS_INSTANCE_BY]->(mm:MilestoneModel), " +
             "    (mm)<-[:FEATURES]-(dm:DateModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m) " +
             "optional match " +
-            "    (mm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m), " +
-            "    (w)-[:IS_BASELINED_BY]->(b:Baseline{active: true}), " +
+            "    (m)<-[:FEATURES]-(t:Toggle)-[:IS_DRIVEN_BY]->(tm:ToggleModel) " +
+            "with " +
+            "    distinct m, w, mm, dm, d, t, tm " +
+            "optional match " +
+            "    (w)-[:IS_BASELINED_BY]->(b:Baseline{active: true}) " +
+            "with " +
+            "    distinct m, w, mm, dm, d, t, tm, b " +
+            "optional match " +
             "    (b)<-[:COMPOSES]-(s:Milestone)<-[:FEATURES]-(planDate:Date)-[:IS_SNAPSHOT_OF]->(d) " +
             "with " +
-            "    distinct m, tm, t, planDate, d " +
+            "    distinct m, w, mm, dm, d, t, tm, b, planDate, date() as now " +
             "with " +
             "    ( " +
             "        tm is not null and t is not null and tm.name in ['Status Completed', 'Concluído'] and t.value=true " +
@@ -41,11 +47,17 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
             "    (m)-[:IS_INSTANCE_BY]->(mm:MilestoneModel), " +
             "    (mm)<-[:FEATURES]-(dm:DateModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m) " +
             "optional match " +
-            "    (mm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m), " +
-            "    (w)-[:IS_BASELINED_BY]->(b:Baseline{active: true}), " +
+            "    (m)<-[:FEATURES]-(t:Toggle)-[:IS_DRIVEN_BY]->(tm:ToggleModel) " +
+            "with " +
+            "    distinct m, w, mm, dm, d, t, tm " +
+            "optional match " +
+            "    (w)-[:IS_BASELINED_BY]->(b:Baseline{active: true}) " +
+            "with " +
+            "    distinct m, w, mm, dm, d, t, tm, b " +
+            "optional match " +
             "    (b)<-[:COMPOSES]-(s:Milestone)<-[:FEATURES]-(planDate:Date)-[:IS_SNAPSHOT_OF]->(d) " +
             "with " +
-            "    distinct m, tm, t, planDate, d, date() as now " +
+            "    distinct m, w, mm, dm, d, t, tm, b, planDate, date() as now " +
             "with " +
             "    ( " +
             "        tm is null or t is null or (tm.name in ['Status Completed', 'Concluído'] and t.value=false) " +
@@ -85,11 +97,17 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
             "    (m)-[:IS_INSTANCE_BY]->(mm:MilestoneModel), " +
             "    (mm)<-[:FEATURES]-(dm:DateModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m) " +
             "optional match " +
-            "    (mm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m), " +
-            "    (w)-[:IS_BASELINED_BY]->(b:Baseline{active: true}), " +
+            "    (m)<-[:FEATURES]-(t:Toggle)-[:IS_DRIVEN_BY]->(tm:ToggleModel) " +
+            "with " +
+            "    distinct m, w, mm, dm, d, t, tm " +
+            "optional match " +
+            "    (w)-[:IS_BASELINED_BY]->(b:Baseline{active: true}) " +
+            "with " +
+            "    distinct m, w, mm, dm, d, t, tm, b " +
+            "optional match " +
             "    (b)<-[:COMPOSES]-(s:Milestone)<-[:FEATURES]-(planDate:Date)-[:IS_SNAPSHOT_OF]->(d) " +
             "with " +
-            "    distinct m, tm, t, planDate, d, date() as now " +
+            "    distinct m, w, mm, dm, d, t, tm, b, planDate, date() as now " +
             "with " +
             "    ( " +
             "        tm is null or t is null or (tm.name in ['Status Completed', 'Concluído'] and t.value=false) " +
@@ -121,11 +139,17 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
             "    (m)-[:IS_INSTANCE_BY]->(mm:MilestoneModel), " +
             "    (mm)<-[:FEATURES]-(dm:DateModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m) " +
             "optional match " +
-            "    (mm)<-[:FEATURES]-(tm:ToggleModel)<-[:IS_DRIVEN_BY]-(t:Toggle)-[:FEATURES]->(m), " +
-            "    (w)-[:IS_BASELINED_BY]->(b:Baseline{active: true}), " +
+            "    (m)<-[:FEATURES]-(t:Toggle)-[:IS_DRIVEN_BY]->(tm:ToggleModel) " +
+            "with " +
+            "    distinct m, w, mm, dm, d, t, tm " +
+            "optional match " +
+            "    (w)-[:IS_BASELINED_BY]->(b:Baseline{active: true}) " +
+            "with " +
+            "    distinct m, w, mm, dm, d, t, tm, b " +
+            "optional match " +
             "    (b)<-[:COMPOSES]-(s:Milestone)<-[:FEATURES]-(planDate:Date)-[:IS_SNAPSHOT_OF]->(d) " +
             "with " +
-            "    distinct m, tm, t, planDate, d " +
+            "    distinct m, w, mm, dm, d, t, tm, b, planDate, date() as now " +
             "with " +
             "    ( " +
             "        tm is not null and t is not null and tm.name in ['Status Completed', 'Concluído'] and t.value=true " +
