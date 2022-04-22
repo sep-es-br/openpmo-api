@@ -59,13 +59,6 @@ public class PasteToWorkpackService {
         }
     }
 
-    private static boolean arePropertyModelsCompatible(
-            final PropertyModel model,
-            final PropertyModel other
-    ) {
-        return model.hasSameType(other) && model.hasSameName(other);
-    }
-
     private void handleProperties(
             final Workpack workpack,
             final Collection<? extends Property> properties,
@@ -92,7 +85,7 @@ public class PasteToWorkpackService {
 
             Set<PropertyModel> toCopy = new HashSet<>(propertyModels);
             for (PropertyModel propertyModelTo : toCopy) {
-                if (arePropertyModelsCompatible(propertyModelFrom, propertyModelTo)) {
+                if (propertyModelFrom.isCompatibleWith(propertyModelTo)) {
                     this.handlePasteProperty(property, propertyModelTo);
                     fromIterator.remove();
                     break;
@@ -101,7 +94,7 @@ public class PasteToWorkpackService {
         }
 
         for (Property property : fromCopy) {
-            this.deleteFeaturesRelationship(workpack, property);
+            this.propertyRepository.deleteFeaturesRelationshipByPropertyIdAndWorkpackId(workpack.getId(), property.getId());
         }
     }
 
@@ -127,23 +120,15 @@ public class PasteToWorkpackService {
         final WorkpackModel workpackModel = this.getWorkpackModel(idWorkpackModelTo);
 
         if (idParentTo != null) {
-            this.deleteIsInRelationship(idParentFrom, workpack);
-            this.createIsInRelationship(idParentTo, workpack);
+            if (idParentFrom == null) {
+                this.workpackRepository.deleteIsInRelationshipByWorkpackId(workpack.getId());
+            } else {
+                this.workpackRepository.deleteIsInRelationshipByWorkpackIdAndParentId(workpack.getId(), idParentFrom);
+            }
+            this.workpackRepository.createIsInRelationship(workpack.getId(), idParentTo);
         }
 
         this.handlePasteWorkpack(workpack, workpackModel, plan);
-    }
-
-    private void createIsInRelationship(final Long idParentTo, final Workpack workpack) {
-        this.workpackRepository.createIsInRelationship(workpack.getId(), idParentTo);
-    }
-
-    private void deleteIsInRelationship(final Long idParentFrom, final Workpack workpack) {
-        if (idParentFrom == null) {
-            this.workpackRepository.deleteIsInRelationshipByWorkpackId(workpack.getId());
-        } else {
-            this.workpackRepository.deleteIsInRelationshipByWorkpackIdAndParentId(workpack.getId(), idParentFrom);
-        }
     }
 
     private Plan getPlan(final Long idPlan) {
@@ -159,24 +144,8 @@ public class PasteToWorkpackService {
     }
 
     private void handlePasteProperty(final Property property, final PropertyModel propertyModel) {
-        this.deletePropertyModelRelationshipByPropertyId(property);
-        this.createRelationshipByPropertyIdAndModelId(property, propertyModel);
-    }
-
-    private void createRelationshipByPropertyIdAndModelId(final Property property, final PropertyModel propertyModel) {
-        this.propertyModelRepository.createRelationshipByPropertyIdAndModelId(property.getId(), propertyModel.getId());
-    }
-
-    private void deletePropertyModelRelationshipByPropertyId(final Property property) {
         this.propertyModelRepository.deleteRelationshipByPropertyId(property.getId());
-    }
-
-    private void deleteWorkpackModelRelationshipByWorkpackId(final Workpack workpack) {
-        this.workpackModelRepository.deleteRelationshipByWorkpackId(workpack.getId());
-    }
-
-    private void deleteFeaturesRelationship(final Workpack workpack, final Property property) {
-        this.propertyRepository.deleteFeaturesRelationshipByPropertyIdAndWorkpackId(property.getId(), workpack.getId());
+        this.propertyModelRepository.createRelationshipByPropertyIdAndModelId(property.getId(), propertyModel.getId());
     }
 
     private void handleChildren(
@@ -227,29 +196,17 @@ public class PasteToWorkpackService {
     }
 
     private void handleWorkpackModel(final Workpack workpack, final WorkpackModel workpackModel) {
-        this.deleteWorkpackModelRelationshipByWorkpackId(workpack);
-        this.createRelationshipByWorkpackIdAndModelId(workpack, workpackModel);
-    }
-
-    private void createRelationshipByWorkpackIdAndModelId(final Workpack workpack, final WorkpackModel workpackModel) {
+        this.workpackModelRepository.deleteRelationshipByWorkpackId(workpack.getId());
         this.workpackModelRepository.createRelationshipByWorkpackIdAndModelId(workpack.getId(), workpackModel.getId());
     }
 
     private void handlePlan(final Workpack workpack, final Plan plan) {
-        this.deleteBelongsToByWorkpackId(workpack);
+        this.belongsToRepository.deleteByWorkpackId(workpack.getId());
         final BelongsTo belongsTo = new BelongsTo();
         belongsTo.setWorkpack(workpack);
         belongsTo.setPlan(plan);
         belongsTo.setLinked(false);
-        this.saveBelongsTo(belongsTo);
-    }
-
-    private void saveBelongsTo(final BelongsTo belongsTo) {
         this.belongsToRepository.save(belongsTo, 0);
-    }
-
-    private void deleteBelongsToByWorkpackId(final Workpack workpack) {
-        this.belongsToRepository.deleteByWorkpackId(workpack.getId());
     }
 
     private Workpack getWorkpack(final Long idWorkpack) {
@@ -258,33 +215,21 @@ public class PasteToWorkpackService {
     }
 
     private void validateParent(final Long idWorkpack, final Long idParentFrom) {
-        if (idParentFrom != null && !this.isWorkpackInParent(idWorkpack, idParentFrom)) {
+        if (idParentFrom != null && !this.workpackRepository.isWorkpackInParent(idWorkpack, idParentFrom)) {
             throw new NegocioException(ApplicationMessage.WORKPACK_PASTE_ERROR);
         }
-    }
-
-    private boolean isWorkpackInParent(final Long idWorkpack, final Long idParentFrom) {
-        return this.workpackRepository.isWorkpackInParent(idWorkpack, idParentFrom);
     }
 
     private void validateModel(final Long idWorkpack, final Long idWorkpackModelFrom) {
-        if (!this.isWorkpackInstanceByModel(idWorkpack, idWorkpackModelFrom)) {
+        if (!this.workpackModelRepository.isWorkpackInstanceByModel(idWorkpack, idWorkpackModelFrom)) {
             throw new NegocioException(ApplicationMessage.WORKPACK_PASTE_ERROR);
         }
-    }
-
-    private boolean isWorkpackInstanceByModel(final Long idWorkpack, final Long idWorkpackModelFrom) {
-        return this.workpackModelRepository.isWorkpackInstanceByModel(idWorkpack, idWorkpackModelFrom);
     }
 
     private void validatePlan(final Long idWorkpack, final Long idPlanFrom) {
-        if (!this.workpackBelongsToPlan(idWorkpack, idPlanFrom)) {
+        if (!this.belongsToRepository.workpackBelongsToPlan(idWorkpack, idPlanFrom)) {
             throw new NegocioException(ApplicationMessage.WORKPACK_PASTE_ERROR);
         }
-    }
-
-    private boolean workpackBelongsToPlan(final Long idWorkpack, final Long idPlanFrom) {
-        return this.belongsToRepository.workpackBelongsToPlan(idWorkpack, idPlanFrom);
     }
 
     private WorkpackModel getWorkpackModel(final Long idWorkpackModel) {
