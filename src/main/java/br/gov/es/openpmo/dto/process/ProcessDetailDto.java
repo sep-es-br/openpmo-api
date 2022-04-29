@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.dto.process;
 
+import br.gov.es.openpmo.apis.edocs.ProcessTimeline;
 import br.gov.es.openpmo.apis.edocs.response.ProcessResponse;
 import br.gov.es.openpmo.model.process.Process;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
@@ -32,6 +33,9 @@ public class ProcessDetailDto {
   }
 
   public static ProcessDetailDto of(final ProcessResponse processResponse, final Process process) {
+    List<ProcessTimeline> timeline = processResponse.timeline();
+    Long stayUpToNow = timeline.stream().map(ProcessTimeline::daysDuration).reduce(Long::sum).orElse(0L);
+
     return new ProcessDetailDto(
       process.getId(),
       process.getName(),
@@ -41,9 +45,9 @@ public class ProcessDetailDto {
         processResponse.getStatus(),
         process.getSubject(),
         processResponse.getCurrentOrganizationAbbreviation(),
-        processResponse.lengthOfStayOn(),
+        processResponse.lengthOfStayOn() + stayUpToNow,
         process.getPriority()
-      ), ProcessTimelineDto.of(processResponse.timeline())
+      ), ProcessTimelineDto.of(timeline)
     );
   }
 
