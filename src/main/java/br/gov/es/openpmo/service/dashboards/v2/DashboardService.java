@@ -256,6 +256,10 @@ public class DashboardService implements IDashboardService {
     }
 
     private boolean sameBaseline(TripleConstraintDataChart dataChart, Long baselineId, List<Baseline> baselines) {
+        if (baselines == null) {
+            return false;
+        }
+
         if (Objects.equals(dataChart.getIdBaseline(), baselineId)) {
             return true;
         }
