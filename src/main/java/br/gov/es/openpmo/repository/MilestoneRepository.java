@@ -30,7 +30,7 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
             "    distinct m, w, mm, dm, d, t, tm, b, planDate, date() as now " +
             "with " +
             "    ( " +
-            "        tm is not null and t is not null and tm.name in ['Status Completed', 'Concluído'] and t.value=true " +
+            "          m.completed is not null and m.completed=true " +
             "    ) " +
             "    and " +
             "    ( " +
@@ -60,7 +60,7 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
             "    distinct m, w, mm, dm, d, t, tm, b, planDate, date() as now " +
             "with " +
             "    ( " +
-            "        tm is null or t is null or (tm.name in ['Status Completed', 'Concluído'] and t.value=false) " +
+            "          m.completed is null or m.completed=false " +
             "    ) " +
             "    and " +
             "    ( " +
@@ -110,7 +110,7 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
             "    distinct m, w, mm, dm, d, t, tm, b, planDate, date() as now " +
             "with " +
             "    ( " +
-            "        tm is null or t is null or (tm.name in ['Status Completed', 'Concluído'] and t.value=false) " +
+            "          m.completed is null or m.completed=false " +
             "    ) " +
             "    and " +
             "    ( " +
@@ -152,7 +152,7 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
             "    distinct m, w, mm, dm, d, t, tm, b, planDate, date() as now " +
             "with " +
             "    ( " +
-            "        tm is not null and t is not null and tm.name in ['Status Completed', 'Concluído'] and t.value=true " +
+            "          m.completed is not null and m.completed=true " +
             "    ) " +
             "    and " +
             "    ( " +

@@ -98,7 +98,10 @@ public class JournalResponseMapper {
   private static String getUrl(final File file, final UriComponentsBuilder uriComponentsBuilder) {
     return uriComponentsBuilder.cloneBuilder()
         .path(getEndpoint(file))
-        .build().toUri().toString();
+        .build()
+        .toUri()
+        .toString()
+        .replace("http://", "https://");
   }
 
   private static String getEndpoint(final File file) {

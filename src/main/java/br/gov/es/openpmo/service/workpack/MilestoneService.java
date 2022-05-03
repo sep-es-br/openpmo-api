@@ -29,15 +29,15 @@ public class MilestoneService {
             return;
         }
 
-        boolean lateConcluded = this.repository.isLateConcluded(milestoneId);
-        if (lateConcluded) {
-            milestoneDetailDto.setMilestoneStatus(MilestoneStatus.LATE_CONCLUDED);
-            return;
-        }
-
         boolean onTime = this.repository.isOnTime(milestoneId);
         if (onTime) {
             milestoneDetailDto.setMilestoneStatus(MilestoneStatus.ON_TIME);
+            return;
+        }
+
+        boolean lateConcluded = this.repository.isLateConcluded(milestoneId);
+        if (lateConcluded) {
+            milestoneDetailDto.setMilestoneStatus(MilestoneStatus.LATE_CONCLUDED);
             return;
         }
 
