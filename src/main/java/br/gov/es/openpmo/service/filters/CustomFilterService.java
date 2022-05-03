@@ -78,6 +78,10 @@ public class CustomFilterService {
     private List<CustomFilterRulesDto> buildCustomFilterRulesDto(final Set<Rules> rules) {
         final List<CustomFilterRulesDto> listCustomFilterRulesDto = new ArrayList<>();
 
+        if (rules == null) {
+            return listCustomFilterRulesDto;
+        }
+
         for (final Rules rule : rules) {
             final CustomFilterRulesDto dto = new CustomFilterRulesDto();
             dto.setPropertyName(rule.getPropertyName());
