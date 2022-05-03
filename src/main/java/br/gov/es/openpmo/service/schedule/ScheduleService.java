@@ -107,45 +107,83 @@ public class ScheduleService {
         return scheduleParamDto.getEnd();
     }
 
-    private static long getMonths(final ScheduleParamDto scheduleParamDto) {
+    private static long getPlannedWorkMonths(final ScheduleParamDto scheduleParamDto) {
         final LocalDate first = getStart(scheduleParamDto).withDayOfMonth(1);
         final LocalDate second = getEnd(scheduleParamDto).withDayOfMonth(1);
 
         return ChronoUnit.MONTHS.between(first, second) + 1L;
     }
 
+    private static long getActualWorkMonths(final ScheduleParamDto scheduleParamDto) {
+        final LocalDate start = getStart(scheduleParamDto).withDayOfMonth(1);
+        final LocalDate end = getEnd(scheduleParamDto).withDayOfMonth(1);
+        final LocalDate now = LocalDate.now();
+
+        if (now.isBefore(start)) {
+            return 0L;
+        }
+
+        if (now.isAfter(end)) {
+            return ChronoUnit.MONTHS.between(start, end) + 1L;
+        }
+
+        return ChronoUnit.MONTHS.between(start, now) + 1L;
+    }
+
     private static void addsStepToSteps(
             final Map<CostAccount, Pair<BigDecimal, BigDecimal>> map,
             final Collection<? super Step> steps,
-            final long numberOfMonths,
+            final long plannedWorkMonths,
+            final long actualWorkMonths,
             final long currentMonth,
             final ScheduleParamDto scheduleParamDto
     ) {
         final Step step = new Step();
 
-        setPlannedWork(numberOfMonths, scheduleParamDto, step);
-        addsConsumesToStep(map, step);
+        setPlannedWork(plannedWorkMonths, scheduleParamDto, step);
+        addsConsumesToStep(currentMonth, actualWorkMonths, map, step);
 
         step.setPeriodFromStart(currentMonth);
         step.setActualWork(BigDecimal.ZERO);
+
+        if (currentMonth < actualWorkMonths) {
+            setActualWork(actualWorkMonths, scheduleParamDto, step);
+        }
+
         steps.add(step);
     }
 
-    private static BigDecimal getParts(final long months, final BigDecimal planned) {
-        return planned.divide(new BigDecimal(months), 2, RoundingMode.HALF_UP);
+    private static BigDecimal getParts(final long months, final BigDecimal decimal) {
+        if (decimal == null) {
+            return BigDecimal.ZERO;
+        }
+        return decimal.divide(new BigDecimal(months), 2, RoundingMode.HALF_UP);
     }
 
     private static void setPlannedWork(final long numberOfMonths, final ScheduleParamDto scheduleParamDto, final Step step) {
         final BigDecimal plannedWork = scheduleParamDto.getPlannedWork();
+        step.setPlannedWork(BigDecimal.ZERO);
 
         if (Objects.nonNull(plannedWork)) {
             step.setPlannedWork(getParts(numberOfMonths, plannedWork));
-        } else {
-            step.setPlannedWork(BigDecimal.ZERO);
         }
     }
 
-    private static void addsConsumesToStep(final Map<CostAccount, Pair<BigDecimal, BigDecimal>> mapCostToParts, final Step step) {
+    private static void setActualWork(final long numberOfMonths, final ScheduleParamDto scheduleParamDto, final Step step) {
+        final BigDecimal actualWork = scheduleParamDto.getActualWork();
+        step.setActualWork(BigDecimal.ZERO);
+
+        if (Objects.nonNull(actualWork)) {
+            step.setActualWork(getParts(numberOfMonths, actualWork));
+        }
+    }
+
+    private static void addsConsumesToStep(
+            final long currentMonth,
+            final long actualWorkMonths,
+            final Map<CostAccount, Pair<BigDecimal, BigDecimal>> mapCostToParts,
+            final Step step
+    ) {
         if (mapCostToParts.isEmpty()) {
             return;
         }
@@ -155,12 +193,30 @@ public class ScheduleService {
         for (Map.Entry<CostAccount, Pair<BigDecimal, BigDecimal>> entry : mapCostToParts.entrySet()) {
             CostAccount costAccount = entry.getKey();
             Pair<BigDecimal, BigDecimal> pair = entry.getValue();
-            addsConsumesToStep(step, costAccount, pair);
+            addsConsumesToStep(step, costAccount, pair, currentMonth < actualWorkMonths);
         }
     }
 
-    private static void addsConsumesToStep(final Step step, final CostAccount costAccount, final Pair<BigDecimal, BigDecimal> pair) {
-        final Consumes consumes = new Consumes(null, pair.getFirst(), pair.getSecond(), costAccount, step);
+    private static void addsConsumesToStep(
+            final Step step,
+            final CostAccount costAccount,
+            final Pair<BigDecimal, BigDecimal> pair,
+            final boolean includeActualCost
+    ) {
+        BigDecimal actualCost = BigDecimal.ZERO;
+
+        if (includeActualCost) {
+            actualCost = pair.getFirst();
+        }
+
+        final Consumes consumes = new Consumes(
+                null,
+                actualCost,
+                pair.getSecond(),
+                costAccount,
+                step
+        );
+
         step.getConsumes().add(consumes);
     }
 
@@ -359,11 +415,15 @@ public class ScheduleService {
 
     private Set<Step> getSteps(final ScheduleParamDto scheduleParamDto) {
         final Set<Step> steps = new HashSet<>();
-        final long numberOfMonths = getMonths(scheduleParamDto);
-        final Map<CostAccount, Pair<BigDecimal, BigDecimal>> costsMap = this.getCostsMap(scheduleParamDto, numberOfMonths);
 
-        for (long currentMonth = 0; currentMonth < numberOfMonths; currentMonth++) {
-            addsStepToSteps(costsMap, steps, numberOfMonths, currentMonth, scheduleParamDto);
+        final long plannedWorkMonths = getPlannedWorkMonths(scheduleParamDto);
+        final long actualWorkMonths = getActualWorkMonths(scheduleParamDto);
+
+        final Map<CostAccount, Pair<BigDecimal, BigDecimal>> costsMap =
+                this.getCostsMap(scheduleParamDto, plannedWorkMonths, actualWorkMonths);
+
+        for (long currentMonth = 0; currentMonth < plannedWorkMonths; currentMonth++) {
+            addsStepToSteps(costsMap, steps, plannedWorkMonths, actualWorkMonths, currentMonth, scheduleParamDto);
         }
 
         return steps;
@@ -375,14 +435,16 @@ public class ScheduleService {
 
     private Map<CostAccount, Pair<BigDecimal, BigDecimal>> getCostsMap(
             final ScheduleParamDto scheduleParamDto,
-            final long numberOfMonths
+            final long plannedWorkMonths,
+            final long actualWorkMonths
     ) {
         final Map<CostAccount, Pair<BigDecimal, BigDecimal>> mapCostToParts = new HashMap<>();
 
         for (CostSchedule costSchedule : scheduleParamDto.getCosts()) {
             final CostAccount costAccount = this.findCostAccountById(costSchedule);
-            final BigDecimal parts = getParts(numberOfMonths, costSchedule.getPlannedCost());
-            mapCostToParts.put(costAccount, Pair.of(costSchedule.getActualCost(), parts));
+            final BigDecimal plannedCostParts = getParts(plannedWorkMonths, costSchedule.getPlannedCost());
+            final BigDecimal actualCostParts = getParts(actualWorkMonths, costSchedule.getActualCost());
+            mapCostToParts.put(costAccount, Pair.of(actualCostParts, plannedCostParts));
         }
 
         return mapCostToParts;
