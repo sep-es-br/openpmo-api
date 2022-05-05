@@ -428,4 +428,9 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "WHERE id(w)=$workpackId " +
             "DETACH DELETE i")
     void deleteIsInRelationshipByWorkpackId(Long workpackId);
+
+    @Query("match (w:Workpack)<-[:IS_IN*]->(v:Workpack) " +
+            "where id(w)=$workpackId " +
+            "return id(v)")
+    List<Long> findAllInHierarchy(Long workpackId);
 }

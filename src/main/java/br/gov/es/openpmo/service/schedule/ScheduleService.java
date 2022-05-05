@@ -146,7 +146,7 @@ public class ScheduleService {
         step.setPeriodFromStart(currentMonth);
         step.setActualWork(BigDecimal.ZERO);
 
-        if (currentMonth < actualWorkMonths) {
+        if (currentMonth < actualWorkMonths && actualWorkMonths > 0) {
             setActualWork(actualWorkMonths, scheduleParamDto, step);
         }
 

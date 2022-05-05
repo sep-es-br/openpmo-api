@@ -8,6 +8,7 @@ import br.gov.es.openpmo.model.relations.BelongsTo;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.*;
+import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,8 @@ public class PasteToWorkpackService {
 
     private final PropertyModelRepository propertyModelRepository;
 
+    private final IAsyncDashboardService dashboardService;
+
     @Autowired
     public PasteToWorkpackService(
             final WorkpackRepository workpackRepository,
@@ -36,7 +39,8 @@ public class PasteToWorkpackService {
             final PlanRepository planRepository,
             final WorkpackModelRepository workpackModelRepository,
             final PropertyRepository propertyRepository,
-            final PropertyModelRepository propertyModelRepository
+            final PropertyModelRepository propertyModelRepository,
+            IAsyncDashboardService dashboardService
     ) {
         this.workpackRepository = workpackRepository;
         this.belongsToRepository = belongsToRepository;
@@ -44,6 +48,7 @@ public class PasteToWorkpackService {
         this.workpackModelRepository = workpackModelRepository;
         this.propertyRepository = propertyRepository;
         this.propertyModelRepository = propertyModelRepository;
+        this.dashboardService = dashboardService;
     }
 
     private static boolean areWorkpackModelsCompatible(
@@ -94,7 +99,8 @@ public class PasteToWorkpackService {
         }
 
         for (Property property : fromCopy) {
-            this.propertyRepository.deleteFeaturesRelationshipByPropertyIdAndWorkpackId(workpack.getId(), property.getId());
+            this.propertyRepository
+                    .deleteFeaturesRelationshipByPropertyIdAndWorkpackId(workpack.getId(), property.getId());
         }
     }
 
@@ -119,16 +125,20 @@ public class PasteToWorkpackService {
         final Plan plan = this.getPlan(idPlanTo);
         final WorkpackModel workpackModel = this.getWorkpackModel(idWorkpackModelTo);
 
-        if (idParentTo != null) {
-            if (idParentFrom == null) {
-                this.workpackRepository.deleteIsInRelationshipByWorkpackId(workpack.getId());
-            } else {
-                this.workpackRepository.deleteIsInRelationshipByWorkpackIdAndParentId(workpack.getId(), idParentFrom);
-            }
-            this.workpackRepository.createIsInRelationship(workpack.getId(), idParentTo);
-        }
+        this.workpackRepository.deleteIsInRelationshipByWorkpackIdAndParentId(idWorkpack, idParentFrom);
+        this.workpackRepository.createIsInRelationship(idWorkpack, idParentTo);
 
         this.handlePasteWorkpack(workpack, workpackModel, plan);
+        this.calculateDashboard(idPlanFrom);
+
+        if (!Objects.equals(idParentFrom, idParentTo)) {
+            this.calculateDashboard(idParentTo);
+        }
+    }
+
+    private void calculateDashboard(Long workpackId) {
+        this.workpackRepository.findAllInHierarchy(workpackId)
+                .forEach(dashboardService::calculate);
     }
 
     private Plan getPlan(final Long idPlan) {

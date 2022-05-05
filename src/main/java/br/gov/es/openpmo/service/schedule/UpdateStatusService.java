@@ -104,12 +104,10 @@ public class UpdateStatusService {
                 .map(Deliverable::getId)
                 .collect(Collectors.toList());
 
-        final List<Long> workpacksId = this.stepRepository.findAllDeliverablesAndAscendents(deliverablesId)
+        this.stepRepository.findAllDeliverablesAndAscendents(deliverablesId)
                 .stream()
                 .map(Workpack::getId)
-                .collect(Collectors.toList());
-
-        workpacksId.forEach(this.dashboardService::calculate);
+                .forEach(this.dashboardService::calculate);
     }
 
 }
