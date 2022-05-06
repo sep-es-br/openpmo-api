@@ -30,16 +30,16 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
             "    distinct m, w, mm, dm, d, t, tm, b, planDate, date() as now " +
             "with " +
             "    ( " +
-            "          m.completed is not null and m.completed=true " +
+            "        m.completed is not null and m.completed=true " +
             "    ) " +
             "    and " +
             "    ( " +
             "        planDate is null or date(datetime(d.value)) <= date(datetime(planDate.value)) " +
             "    ) " +
-            "    as concluded " +
+            "    as onConcluded " +
             "where id(m)=$milestoneId " +
-            "with collect(concluded) as list " +
-            "return all(x in list where x=true)")
+            "with collect(onConcluded) as list " +
+            "return all(x in list where x=true) ")
     boolean isConcluded(Long milestoneId);
 
     @Query("match " +
@@ -60,7 +60,7 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
             "    distinct m, w, mm, dm, d, t, tm, b, planDate, date() as now " +
             "with " +
             "    ( " +
-            "          m.completed is null or m.completed=false " +
+            "        m.completed is null or m.completed=false " +
             "    ) " +
             "    and " +
             "    ( " +
@@ -89,7 +89,7 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
             "    as onTime " +
             "where id(m)=$milestoneId " +
             "with collect(onTime) as list " +
-            "return all(x in list where x=true)")
+            "return all(x in list where x=true) ")
     boolean isOnTime(Long milestoneId);
 
     @Query("match " +
@@ -110,7 +110,7 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
             "    distinct m, w, mm, dm, d, t, tm, b, planDate, date() as now " +
             "with " +
             "    ( " +
-            "          m.completed is null or m.completed=false " +
+            "        m.completed is null or m.completed=false " +
             "    ) " +
             "    and " +
             "    ( " +
@@ -131,7 +131,7 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
             "    as onLate " +
             "where id(m)=$milestoneId " +
             "with collect(onLate) as list " +
-            "return all(x in list where x=true)")
+            "return all(x in list where x=true) ")
     boolean isLate(Long milestoneId);
 
     @Query("match " +
@@ -152,16 +152,22 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
             "    distinct m, w, mm, dm, d, t, tm, b, planDate, date() as now " +
             "with " +
             "    ( " +
-            "          m.completed is not null and m.completed=true " +
+            "        planDate is null " +
             "    ) " +
-            "    and " +
+            "    or " +
             "    ( " +
-            "        planDate is not null and date(datetime(d.value)) > date(datetime(planDate.value)) " +
+            "        ( " +
+            "            m.completed is not null and m.completed=true " +
+            "        ) " +
+            "        and " +
+            "        ( " +
+            "            date(datetime(d.value)) > date(datetime(planDate.value)) " +
+            "        ) " +
             "    ) " +
             "    as onLateConcluded " +
             "where id(m)=$milestoneId " +
             "with collect(onLateConcluded) as list " +
-            "return all(x in list where x=true)")
+            "return all(x in list where x=true) ")
     boolean isLateConcluded(Long milestoneId);
 
     @Query("match (m:Milestone)<-[:FEATURES]-(d:Date) " +
