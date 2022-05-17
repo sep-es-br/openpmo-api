@@ -34,7 +34,7 @@ class MilestoneServiceTest {
 
     @BeforeEach
     void setUp() {
-        this.underTest = new DashboardMilestoneService(this.repository);
+        this.underTest = new DashboardMilestoneService(this.repository, milestoneRepository);
     }
 
     @Test

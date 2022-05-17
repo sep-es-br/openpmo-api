@@ -8,7 +8,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.LongStream;
 
 @Service
 public class DashboardMilestoneService implements IDashboardMilestoneService {
@@ -73,10 +75,9 @@ public class DashboardMilestoneService implements IDashboardMilestoneService {
     }
 
     private Long getQuantity(Long concluded, Long lateConcluded, Long late, Long onTime) {
-        return Optional.ofNullable(concluded).orElse(0L)
-                + Optional.ofNullable(lateConcluded).orElse(0L)
-                + Optional.ofNullable(late).orElse(0L)
-                + Optional.ofNullable(onTime).orElse(0L);
+        return LongStream.of(concluded, lateConcluded, late, onTime)
+                .filter(Objects::nonNull)
+                .sum();
     }
 
     private Long getConcluded(final Long baselineId, final Long idWorkpack) {

@@ -56,7 +56,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
             "    ) " +
             "    and " +
             "    ( " +
-            "        tm is null or t is null or (tm.name in ['Status Completed', 'Concluído'] and t.value=false) " +
+            "        m.completed is null or m.completed=false " +
             "    ) " +
             "    and " +
             "    ( " +
@@ -80,7 +80,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
             "    ) " +
             "    and " +
             "    ( " +
-            "        tm is null or t is null or (tm.name in ['Status Completed', 'Concluído'] and t.value=false) " +
+            "        m.completed is null or m.completed=false " +
             "    ) " +
             "    and " +
             "    ( " +
@@ -111,7 +111,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
             "    ) " +
             "    and " +
             "    ( " +
-            "        tm is null or t is null or (tm.name in ['Status Completed', 'Concluído'] and t.value=false) " +
+            "        m.completed is null or m.completed=false " +
             "    ) " +
             "    and " +
             "    ( " +
@@ -135,7 +135,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
             "    ) " +
             "    and " +
             "    ( " +
-            "        tm is null or t is null or (tm.name in ['Status Completed', 'Concluído'] and t.value=false) " +
+            "        m.completed is null or m.completed=false " +
             "    ) " +
             "    and " +
             "    ( " +
@@ -164,7 +164,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
             "    ) " +
             "    and " +
             "    ( " +
-            "        tm is not null and t is not null and tm.name in ['Status Completed', 'Concluído'] and t.value=true " +
+            "        m.completed is not null and m.completed=true " +
             "    ) " +
             "return count(distinct m)")
     Long concluded(Long workpackId);
@@ -184,7 +184,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
             "    ) " +
             "    and " +
             "    ( " +
-            "        tm is not null and t is not null and tm.name in ['Status Completed', 'Concluído'] and t.value=true " +
+            "        m.completed is not null and m.completed=true " +
             "    ) " +
             "    and " +
             "    ( " +
@@ -208,7 +208,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
             "    ) " +
             "    and " +
             "    ( " +
-            "        tm is not null and t is not null and tm.name in ['Status Completed', 'Concluído'] and t.value=true " +
+            "        m.completed is not null and m.completed=true " +
             "    ) " +
             "    and " +
             "    ( " +
