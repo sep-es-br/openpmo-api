@@ -61,8 +61,6 @@ public class StakeholderService {
     private final IsAuthenticatedByRepository authenticationRepository;
     private final AcessoCidadaoApi acessoCidadaoApi;
     private final IRemoteRolesFetcher remoteRolesFetcher;
-    @Value("${users.administrators}")
-    private List<String> administrators;
     @Value("${app.login.server.name}")
     private String authenticationServer;
 

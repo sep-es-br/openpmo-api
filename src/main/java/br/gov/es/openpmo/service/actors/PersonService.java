@@ -29,7 +29,6 @@ import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -58,9 +57,6 @@ public class PersonService {
     private final WorkpackRepository workpackRepository;
 
     private final IsCCBMemberRepository ccbMemberRepository;
-
-    @Value("${users.administrators}")
-    private List<String> administrators;
 
     @Autowired
     public PersonService(
@@ -136,7 +132,6 @@ public class PersonService {
         final String[] name = email.split("@");
         final Person person = new Person();
 
-        person.setAdministrator(this.administrators.contains(email));
         person.setName(name.length == 0 ? email : name[0]);
         person.setFullName(name.length == 0 ? email : name[0]);
         this.save(person);
@@ -189,7 +184,6 @@ public class PersonService {
         final String name = dto.getName() == null ? this.extractName(email) : dto.getName();
         final String fullName = dto.getName() == null ? this.extractName(email) : dto.getFullName();
 
-        person.setAdministrator(this.administrators.contains(email));
         person.setName(name);
         person.setFullName(fullName);
 
