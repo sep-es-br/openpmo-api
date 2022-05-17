@@ -119,6 +119,7 @@ public class Issue extends Entity {
     ObjectUtils.updateIfPresent(request::getDescription, this::setDescription);
     ObjectUtils.updateIfPresent(request::getNature, this::setNature);
     ObjectUtils.updateIfPresent(request::getStatus, this::setStatus);
+    ObjectUtils.updateIfPresent(request::getImportance, this::setImportance);
   }
 
   public void setName(final String name) {
