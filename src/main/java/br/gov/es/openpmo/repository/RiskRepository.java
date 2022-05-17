@@ -12,14 +12,11 @@ import java.util.Set;
 @Repository
 public interface RiskRepository extends Neo4jRepository<Risk, Long>, CustomRepository {
 
-    @Query("match (w:Workpack) " +
+    @Query("match (w:Workpack{deleted: false}) " +
             "where id(w)=$workpackId " +
-            "optional match (w)<-[:IS_FORSEEN_ON]-(r1:Risk) " +
-            "with w,r1 " +
-            "optional match (w)<-[:IS_IN*]-(v:Workpack)<-[:IS_FORSEEN_ON]-(r2:Risk) " +
-            "with collect(r1) + collect(r2) as riskList " +
-            "unwind riskList as risks " +
-            "return risks")
+            "optional match (w)<-[:IS_FORSEEN_ON]-(r:Risk) " +
+            "with w,r " +
+            "return r")
     Set<Risk> findAll(Long workpackId);
 
     @Query("match (risk:Risk)<-[triggeredBy:IS_TRIGGERED_BY]-(:Issue) " +
