@@ -52,13 +52,13 @@ public interface RiskRepository extends Neo4jRepository<Risk, Long>, CustomRepos
 
     @Query("match (w:Workpack) " +
             "where id(w)=$workpackId " +
-            "optional match (w)<-[:IS_FORSEEN_ON]-(r1:Risk) " +
+            "optional match (w)<-[:IS_FORSEEN_ON]-(r1:Risk{status:'OPEN'}) " +
             "with w,r1 " +
-            "optional match (w)<-[:IS_IN*]-(v:Workpack)<-[:IS_FORSEEN_ON]-(r2:Risk) " +
+            "optional match (w)<-[:IS_IN*]-(v:Workpack)<-[:IS_FORSEEN_ON]-(r2:Risk{status:'OPEN'}) " +
             "with collect(r1) + collect(r2) as riskList " +
             "unwind riskList as risks " +
             "return count(distinct risks)")
-    Long countAllRisksOfWorkpack(Long workpackId);
+    Long countAllOpenedRisksOfWorkpack(Long workpackId);
 
     @Query("match (w:Workpack) " +
             "where id(w)=$workpackId " +

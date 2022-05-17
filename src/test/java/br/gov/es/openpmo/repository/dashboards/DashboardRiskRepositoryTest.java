@@ -76,7 +76,7 @@ class DashboardRiskRepositoryTest extends BaseRepositoryTest {
   @Test
   @DisplayName("Should count 0 when Workpack not has Risk")
   void test2() {
-    final long allRisksTotal = this.riskRepository.countAllRisksOfWorkpack(this.workpack.getId());
+    final long allRisksTotal = this.riskRepository.countAllOpenedRisksOfWorkpack(this.workpack.getId());
     assertThat(allRisksTotal).isEqualTo(0);
   }
 
@@ -84,7 +84,7 @@ class DashboardRiskRepositoryTest extends BaseRepositoryTest {
   @DisplayName("Should count total Risks of Workpack")
   void test3() {
     this.givenWorkpackHasRelatedRisk();
-    final Long allRisksTotal = this.riskRepository.countAllRisksOfWorkpack(this.workpack.getId());
+    final Long allRisksTotal = this.riskRepository.countAllOpenedRisksOfWorkpack(this.workpack.getId());
     assertThat(allRisksTotal).isEqualTo(9);
   }
 

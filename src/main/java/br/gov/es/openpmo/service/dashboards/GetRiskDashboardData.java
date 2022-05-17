@@ -40,7 +40,7 @@ public class GetRiskDashboardData implements IGetRiskDashboardData {
   }
 
   private Long countTotalAllRisks(final Long idWorkpack) {
-    return this.repository.countAllRisksOfWorkpack(idWorkpack);
+    return this.repository.countAllOpenedRisksOfWorkpack(idWorkpack);
   }
 
 }

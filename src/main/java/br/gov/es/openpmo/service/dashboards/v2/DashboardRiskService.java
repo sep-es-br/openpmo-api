@@ -28,7 +28,7 @@ public class DashboardRiskService implements IDashboardRiskService {
     @Override
     public RiskDataChart build(Long workpackId) {
         return new RiskDataChart(
-                this.countTotalAllRisks(workpackId),
+                this.countTotalOpenedRisks(workpackId),
                 this.countRisksByImportance(workpackId, HIGH),
                 this.countRisksByImportance(workpackId, LOW),
                 this.countRisksByImportance(workpackId, MEDIUM),
@@ -36,8 +36,8 @@ public class DashboardRiskService implements IDashboardRiskService {
         );
     }
 
-    private Long countTotalAllRisks(final Long workpackId) {
-        return this.repository.countAllRisksOfWorkpack(workpackId);
+    private Long countTotalOpenedRisks(final Long workpackId) {
+        return this.repository.countAllOpenedRisksOfWorkpack(workpackId);
     }
 
     private Long countRisksByImportance(final Long workpackId, final Importance importance) {
