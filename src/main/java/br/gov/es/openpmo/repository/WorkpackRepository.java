@@ -431,6 +431,8 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
 
     @Query("match (w:Workpack)<-[:IS_IN*]->(v:Workpack) " +
             "where id(w)=$workpackId " +
-            "return id(v)")
-    List<Long> findAllInHierarchy(Long workpackId);
+            "with [ id(w) ] + collect( id(v) ) as list " +
+            "unwind list as l " +
+            "return l")
+    Set<Long> findAllInHierarchy(Long workpackId);
 }
