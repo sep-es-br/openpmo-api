@@ -5,69 +5,88 @@ import br.gov.es.openpmo.apis.edocs.response.ProcessResponse;
 import br.gov.es.openpmo.model.process.Process;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class ProcessDetailDto {
-  private final Long id;
-  private final String name;
-  private final String note;
-  @JsonUnwrapped
-  private final ProcessReadonlyDetailDto readonlyDetail;
-  private final List<ProcessTimelineDto> history;
+    private final Long id;
+    private final String name;
+    private final String note;
+    @JsonUnwrapped
+    private final ProcessReadonlyDetailDto readonlyDetail;
+    private final List<ProcessTimelineDto> history;
 
-  public ProcessDetailDto(
-    final Long id,
-    final String name,
-    final String note,
-    final ProcessReadonlyDetailDto readonlyDetail,
-    final List<ProcessTimelineDto> history
-  ) {
-    this.id = id;
-    this.name = name;
-    this.note = note;
-    this.readonlyDetail = readonlyDetail;
-    this.history = Collections.unmodifiableList(history);
-    history.sort(Comparator.comparing(ProcessTimelineDto::getUpdateDate).reversed());
-  }
+    public ProcessDetailDto(
+            final Long id,
+            final String name,
+            final String note,
+            final ProcessReadonlyDetailDto readonlyDetail,
+            final List<ProcessTimelineDto> history
+    ) {
+        this.id = id;
+        this.name = name;
+        this.note = note;
+        this.readonlyDetail = readonlyDetail;
+        this.history = Collections.unmodifiableList(history);
+        history.sort(Comparator.comparing(ProcessTimelineDto::getUpdateDate).reversed());
+    }
 
-  public static ProcessDetailDto of(final ProcessResponse processResponse, final Process process) {
-    List<ProcessTimeline> timeline = processResponse.timeline();
-    Long stayUpToNow = timeline.stream().map(ProcessTimeline::daysDuration).reduce(Long::sum).orElse(0L);
+    public static ProcessDetailDto of(final ProcessResponse processResponse, final Process process) {
+        List<ProcessTimeline> timeline = processResponse.timeline().stream()
+                .sorted(Comparator.comparing(ProcessDetailDto::getDate).reversed())
+                .collect(Collectors.toList());
 
-    return new ProcessDetailDto(
-      process.getId(),
-      process.getName(),
-      process.getNote(),
-      new ProcessReadonlyDetailDto(
-        process.getProcessNumber(),
-        processResponse.getStatus(),
-        process.getSubject(),
-        processResponse.getCurrentOrganizationAbbreviation(),
-        processResponse.lengthOfStayOn() + stayUpToNow,
-        process.getPriority()
-      ), ProcessTimelineDto.of(timeline)
-    );
-  }
+        String currentOrganization = processResponse.getCurrentOrganizationAbbreviation();
 
-  public Long getId() {
-    return this.id;
-  }
+        Long lengthOfStayOn = 0L;
+        for (ProcessTimeline processTimeline : timeline) {
+            if (!Objects.equals(processTimeline.detail().getAbbreviation(), currentOrganization)) {
+                break;
+            }
+            lengthOfStayOn += processTimeline.daysDuration();
+        }
 
-  public String getName() {
-    return this.name;
-  }
+        return new ProcessDetailDto(
+                process.getId(),
+                process.getName(),
+                process.getNote(),
+                new ProcessReadonlyDetailDto(
+                        process.getProcessNumber(),
+                        processResponse.getStatus(),
+                        process.getSubject(),
+                        currentOrganization,
+                        lengthOfStayOn,
+                        process.getPriority()
+                ),
+                ProcessTimelineDto.of(timeline)
+        );
+    }
 
-  public String getNote() {
-    return this.note;
-  }
+    private static LocalDateTime getDate(ProcessTimeline processTimeline) {
+        return processTimeline.detail().getDate();
+    }
 
-  public ProcessReadonlyDetailDto getReadonlyDetail() {
-    return this.readonlyDetail;
-  }
+    public Long getId() {
+        return this.id;
+    }
 
-  public List<ProcessTimelineDto> getHistory() {
-    return this.history;
-  }
+    public String getName() {
+        return this.name;
+    }
+
+    public String getNote() {
+        return this.note;
+    }
+
+    public ProcessReadonlyDetailDto getReadonlyDetail() {
+        return this.readonlyDetail;
+    }
+
+    public List<ProcessTimelineDto> getHistory() {
+        return this.history;
+    }
 }

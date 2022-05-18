@@ -9,50 +9,44 @@ import java.util.stream.Collectors;
 
 public class ProcessTimelineDto {
 
-  private final long daysDuration;
-  @JsonFormat(pattern = "dd/MM/yyyy")
-  private final LocalDateTime updateDate;
-  private final String organizationName;
-  private final String sector;
+    private final long daysDuration;
+    @JsonFormat(pattern = "dd/MM/yyyy")
+    private final LocalDateTime updateDate;
+    private final String organizationName;
+    private final String sector;
+    private final String descricaoTipo;
 
-  public ProcessTimelineDto(
-    final long daysDuration,
-    final LocalDateTime updateDate,
-    final String organizationName,
-    final String sector
-  ) {
-    this.daysDuration = daysDuration;
-    this.updateDate = updateDate;
-    this.organizationName = organizationName;
-    this.sector = sector;
-  }
+    private ProcessTimelineDto(final ProcessTimeline item) {
+        this.daysDuration = item.daysDuration();
+        this.updateDate = item.detail().getDate();
+        this.organizationName = item.detail().getAbbreviation();
+        this.sector = item.detail().getName();
+        this.descricaoTipo = item.detail().getDescricaoTipo();
+    }
 
-  public static List<ProcessTimelineDto> of(final List<ProcessTimeline> timeline) {
-    return timeline.stream()
-      .map(ProcessTimelineDto::new)
-      .collect(Collectors.toList());
-  }
+    public static List<ProcessTimelineDto> of(final List<ProcessTimeline> timeline) {
+        return timeline.stream()
+                .map(ProcessTimelineDto::new)
+                .collect(Collectors.toList());
+    }
 
-  private ProcessTimelineDto(final ProcessTimeline item) {
-    this.daysDuration = item.daysDuration();
-    this.updateDate = item.detail().getDate();
-    this.organizationName = item.detail().getAbbreviation();
-    this.sector = item.detail().getName();
-  }
+    public long getDaysDuration() {
+        return this.daysDuration;
+    }
 
-  public long getDaysDuration() {
-    return this.daysDuration;
-  }
+    public LocalDateTime getUpdateDate() {
+        return this.updateDate;
+    }
 
-  public LocalDateTime getUpdateDate() {
-    return this.updateDate;
-  }
+    public String getOrganizationName() {
+        return this.organizationName;
+    }
 
-  public String getOrganizationName() {
-    return this.organizationName;
-  }
+    public String getSector() {
+        return this.sector;
+    }
 
-  public String getSector() {
-    return this.sector;
-  }
+    public String getDescricaoTipo() {
+        return descricaoTipo;
+    }
 }
