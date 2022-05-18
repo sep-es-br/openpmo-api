@@ -37,7 +37,6 @@ import javax.validation.constraints.NotNull;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.OFFICE_NOT_FOUND;
 
@@ -588,9 +587,15 @@ public class PersonService {
     }
 
     public Set<Person> findAllById(final Iterable<Long> responsible) {
+        Set<Person> set = new HashSet<>();
+        if (responsible == null) {
+            return set;
+        }
         final Iterable<Person> personIterable = this.repository.findAllById(responsible);
-        return StreamSupport.stream(personIterable.spliterator(), false)
-                .collect(Collectors.toSet());
+        for (Person person : personIterable) {
+            set.add(person);
+        }
+        return set;
     }
 
     public void updateName(Long idPerson, String name) {

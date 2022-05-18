@@ -28,11 +28,7 @@ public class RiskResponseCreateDto {
   private final Strategy strategy;
   @NotNull
   private final RiskResponseStatus status;
-  @NotNull
-  @NotEmpty
   private final String trigger;
-  @NotNull
-  @NotEmpty
   private final String plan;
   private final Set<Long> responsible;
   @NotNull
