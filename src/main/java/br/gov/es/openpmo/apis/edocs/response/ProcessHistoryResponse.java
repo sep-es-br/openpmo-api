@@ -15,7 +15,7 @@ public class ProcessHistoryResponse {
 
     public ProcessHistoryResponse(final JSONObject json) {
         this.date = this.getDate(json).orElse(null);
-        this.name = this.getDestinoNome(json).orElse(null);
+        this.name = this.getSetor(json).orElse(null);
         this.abbreviation = this.getSigla(json).orElse(null);
         this.descricaoTipo = this.getDescricaoTipo(json).orElse(null);
     }
@@ -50,7 +50,33 @@ public class ProcessHistoryResponse {
         Optional<JSONObject> destino = optionalJson
                 .map(j -> j.optJSONObject("destino"));
 
-        Optional<String> papelSigla = destino.map(d -> d.optJSONObject("papel"))
+        Optional<String> destinoPapelSigla = destino.map(d -> d.optJSONObject("papel"))
+                .map(p -> p.optJSONObject("setor"))
+                .map(s -> s.optJSONObject("organizacao"))
+                .map(o -> o.optString("sigla"));
+
+        if (destinoPapelSigla.isPresent()) {
+            return destinoPapelSigla;
+        }
+
+        Optional<String> destinoGrupoSigla = destino.map(d -> d.optJSONObject("grupo"))
+                .map(p -> p.optJSONObject("setor"))
+                .map(s -> s.optJSONObject("organizacao"))
+                .map(o -> o.optString("sigla"));
+
+        if (destinoGrupoSigla.isPresent()) {
+            return destinoGrupoSigla;
+        }
+
+        Optional<String> destinoSigla = destino.map(p -> p.optJSONObject("setor"))
+                .map(s -> s.optJSONObject("organizacao"))
+                .map(o -> o.optString("sigla"));
+
+        if (destinoSigla.isPresent()) {
+            return destinoSigla;
+        }
+
+        Optional<String> papelSigla = optionalJson.map(d -> d.optJSONObject("papel"))
                 .map(p -> p.optJSONObject("setor"))
                 .map(s -> s.optJSONObject("organizacao"))
                 .map(o -> o.optString("sigla"));
@@ -59,24 +85,60 @@ public class ProcessHistoryResponse {
             return papelSigla;
         }
 
-        Optional<String> grupoSigla = destino.map(d -> d.optJSONObject("grupo"))
+        return optionalJson.map(d -> d.optJSONObject("grupo"))
                 .map(p -> p.optJSONObject("setor"))
-                .map(s -> s.optJSONObject("organizacao"))
-                .map(o -> o.optString("sigla"));
-
-        if (grupoSigla.isPresent()) {
-            return grupoSigla;
-        }
-
-        return destino.map(p -> p.optJSONObject("setor"))
                 .map(s -> s.optJSONObject("organizacao"))
                 .map(o -> o.optString("sigla"));
     }
 
-    private Optional<String> getDestinoNome(JSONObject json) {
-        return Optional.of(json)
-                .map(j -> j.optJSONObject("destino"))
-                .map(d -> d.optString("nome"));
+    private Optional<String> getSetor(JSONObject json) {
+        Optional<JSONObject> optionalJson = Optional.of(json);
+
+        Optional<String> localizacaoSetor = optionalJson
+                .map(j -> j.optJSONObject("localizacao"))
+                .map(l -> l.optString("nome"));
+
+        if (localizacaoSetor.isPresent()) {
+            return localizacaoSetor;
+        }
+
+        Optional<JSONObject> destino = optionalJson
+                .map(j -> j.optJSONObject("destino"));
+
+        Optional<String> destinoPapelSetor = destino.map(d -> d.optJSONObject("papel"))
+                .map(p -> p.optJSONObject("setor"))
+                .map(s -> s.optString("nome"));
+
+        if (destinoPapelSetor.isPresent()) {
+            return destinoPapelSetor;
+        }
+
+        Optional<String> destinoGrupoSetor = destino.map(d -> d.optJSONObject("grupo"))
+                .map(p -> p.optJSONObject("setor"))
+                .map(s -> s.optString("nome"));
+
+        if (destinoGrupoSetor.isPresent()) {
+            return destinoGrupoSetor;
+        }
+
+        Optional<String> destinoSetor = destino.map(p -> p.optJSONObject("setor"))
+                .map(o -> o.optString("nome"));
+
+        if (destinoSetor.isPresent()) {
+            return destinoSetor;
+        }
+
+        Optional<String> papelSetor = optionalJson.map(d -> d.optJSONObject("papel"))
+                .map(p -> p.optJSONObject("setor"))
+                .map(s -> s.optString("nome"));
+
+        if (papelSetor.isPresent()) {
+            return papelSetor;
+        }
+
+        return optionalJson.map(d -> d.optJSONObject("grupo"))
+                .map(p -> p.optJSONObject("setor"))
+                .map(o -> o.optString("nome"));
     }
 
     private Optional<String> getDescricaoTipo(final JSONObject json) {
