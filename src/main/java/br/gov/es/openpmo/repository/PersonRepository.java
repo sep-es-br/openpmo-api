@@ -93,8 +93,11 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
             "    and " +
             "    ( " +
             "        ( " +
-            "            (person)-[:IS_STAKEHOLDER_IN]->(workpack) or " +
-            "            (person)-[:IS_CCB_MEMBER_FOR]->(workpack) " +
+            "            $workpackScope is not null " +
+            "            and " +
+            "            ((person)-[:IS_STAKEHOLDER_IN]->(workpack) or (person)-[:IS_CCB_MEMBER_FOR]->(workpack)) " +
+            "            and " +
+            "            id(workpack) in $workpackScope " +
             "        ) " +
             "        or " +
             "        ( " +
