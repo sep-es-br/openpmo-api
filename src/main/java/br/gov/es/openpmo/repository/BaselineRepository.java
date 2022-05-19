@@ -51,7 +51,8 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long> {
             "where id(w)=$workpackId " +
             "optional match (w)<-[:IS_IN*]-(p1:Project)-[:IS_BASELINED_BY]->(b1:Baseline{active:true}) " +
             "with w,b1 " +
-            "optional match (w)-[:IS_IN*]->(p2:Project)-[:IS_BASELINED_BY]->(b2:Baseline{active:true}) " +
+            "optional match (w)-[:IS_IN*]->(p2:Project)-[:IS_BASELINED_BY]->(b2:Baseline{active:true}), " +
+            "   (w)<-[:IS_SNAPSHOT_OF]-(:Workpack)-[:COMPOSES]->(b2) " +
             "with b1,b2 " +
             "return b1,b2")
     List<Baseline> findAllActiveBaselines(Long workpackId);
