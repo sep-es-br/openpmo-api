@@ -5,7 +5,9 @@ import br.gov.es.openpmo.apis.edocs.response.ProcessResponse;
 import br.gov.es.openpmo.model.process.Process;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -42,13 +44,14 @@ public class ProcessDetailDto {
 
         String currentOrganization = processResponse.getCurrentOrganizationAbbreviation();
 
-        Long lengthOfStayOn = 0L;
+        LocalDateTime date = LocalDateTime.now();
         for (ProcessTimeline processTimeline : timeline) {
             if (!Objects.equals(processTimeline.detail().getAbbreviation(), currentOrganization)) {
                 break;
             }
-            lengthOfStayOn += processTimeline.daysDuration();
+            date = processTimeline.detail().getDate();
         }
+        long lengthOfStayOn = LocalDate.from(date).until(LocalDate.now(), ChronoUnit.DAYS);
 
         return new ProcessDetailDto(
                 process.getId(),
