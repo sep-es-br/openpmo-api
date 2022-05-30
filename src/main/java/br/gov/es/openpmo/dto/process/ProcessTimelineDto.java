@@ -12,7 +12,7 @@ public class ProcessTimelineDto {
     private final long daysDuration;
     @JsonFormat(pattern = "dd/MM/yyyy")
     private final LocalDateTime updateDate;
-    private final String organizationName;
+    private final Object organizationName;
     private final String sector;
     private final String descricaoTipo;
 
@@ -38,7 +38,7 @@ public class ProcessTimelineDto {
         return this.updateDate;
     }
 
-    public String getOrganizationName() {
+    public Object getOrganizationName() {
         return this.organizationName;
     }
 

@@ -4,6 +4,7 @@ import br.gov.es.openpmo.apis.edocs.ProcessTimeline;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.json.JSONObject;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -86,7 +87,6 @@ public class ProcessResponse {
     }
 
     public List<ProcessTimeline> timeline() {
-
         if (this.history.isEmpty()) {
             return Collections.emptyList();
         }
@@ -140,8 +140,10 @@ public class ProcessResponse {
         return this.calculateDurationInDays(processHistoryResponse.getDate(), LocalDateTime.now());
     }
 
-    private long calculateDurationInDays(final LocalDateTime initialDate, final LocalDateTime finalDate) {
-        return ChronoUnit.DAYS.between(initialDate, finalDate);
+    private long calculateDurationInDays(final LocalDateTime initialDateTime, final LocalDateTime finalDateTime) {
+        LocalDate initialDate = LocalDate.from(initialDateTime);
+        LocalDate finalDate = LocalDate.from(finalDateTime);
+        return initialDate.until(finalDate, ChronoUnit.DAYS);
     }
 
     private ProcessTimeline createTimeline(final long daysDuration, final ProcessHistoryResponse detail) {
