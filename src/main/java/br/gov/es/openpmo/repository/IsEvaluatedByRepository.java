@@ -6,8 +6,8 @@ import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface IsEvaluatedByRepository extends Neo4jRepository<IsEvaluatedBy, Long> {
@@ -21,7 +21,7 @@ public interface IsEvaluatedByRepository extends Neo4jRepository<IsEvaluatedBy, 
             "<-[isBaselinedBy:IS_BASELINED_BY]-(workpack:Workpack) " +
             "WHERE id(baseline)=$idBaseline " +
             "RETURN person, isEvaluatedBy, baseline, isBaselinedBy, workpack")
-    List<Person> findEvaluators(Long idBaseline);
+    Set<Person> findEvaluators(Long idBaseline);
 
     @Query("MATCH (workpack:Workpack)-[:IS_BASELINED_BY]->(baseline:Baseline) " +
             "WHERE id(baseline)=$idBaseline " +

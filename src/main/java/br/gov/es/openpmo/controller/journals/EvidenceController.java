@@ -1,7 +1,6 @@
 package br.gov.es.openpmo.controller.journals;
 
 import br.gov.es.openpmo.dto.Response;
-import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.journals.EvidenceCreator;
 import br.gov.es.openpmo.service.journals.EvidenceFinder;
 import br.gov.es.openpmo.utils.ResponseHandler;
@@ -27,20 +26,16 @@ public class EvidenceController {
 
     private final EvidenceCreator evidenceCreator;
 
-    private final TokenService tokenService;
-
     private final ResponseHandler responseHandler;
 
     @Autowired
     public EvidenceController(
             final EvidenceFinder evidenceFinder,
             final EvidenceCreator evidenceCreator,
-            final TokenService tokenService,
             final ResponseHandler responseHandler
     ) {
         this.evidenceFinder = evidenceFinder;
         this.evidenceCreator = evidenceCreator;
-        this.tokenService = tokenService;
         this.responseHandler = responseHandler;
     }
 
@@ -62,11 +57,9 @@ public class EvidenceController {
     @PostMapping("/{id-journal}")
     public Response<Void> create(
             @PathVariable("id-journal") final Long idJournal,
-            @RequestParam final MultipartFile file,
-            @RequestHeader(name = "Authorization") final String authorization
+            @RequestParam final MultipartFile file
     ) throws IOException {
-        final Long idPerson = this.tokenService.getUserId(authorization);
-        this.evidenceCreator.create(idJournal, idPerson, file);
+        this.evidenceCreator.create(idJournal, file);
         return this.responseHandler.success();
     }
 

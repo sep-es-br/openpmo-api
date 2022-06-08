@@ -47,7 +47,7 @@ public interface IsCCBMemberRepository extends Neo4jRepository<IsCCBMemberFor, L
             "(workpack:Workpack)-[isBaselinedBy:IS_BASELINED_BY]->(baseline:Baseline) " +
             "WHERE id(baseline)=$idBaseline " +
             "RETURN person, ccbMember, workpack, isBaselinedBy, baseline")
-    List<Person> findAllActiveMembersOfBaseline(Long idBaseline);
+    Set<Person> findAllActiveMembersOfBaseline(Long idBaseline);
 
     @Query("MATCH (person:Person)-[ccbMember:IS_CCB_MEMBER_FOR]->(workpack:Workpack) " +
             "WHERE id(person)=$idPerson AND id(workpack)=$idWorkpack " +

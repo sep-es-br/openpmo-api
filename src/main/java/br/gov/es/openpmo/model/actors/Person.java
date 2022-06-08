@@ -15,7 +15,7 @@ import java.util.Set;
 @NodeEntity
 public class Person extends Actor {
 
-    private Boolean administrator;
+    private boolean administrator;
 
     @Relationship(type = "IS_AUTHENTICATED_BY")
     private Set<IsAuthenticatedBy> authentications;
@@ -47,7 +47,7 @@ public class Person extends Actor {
                 .findFirst();
     }
 
-    public Boolean getAdministrator() {
+    public boolean getAdministrator() {
         return this.administrator;
     }
 

@@ -13,7 +13,7 @@ import java.util.Set;
 @Repository
 public interface DashboardDatasheetRepository extends Neo4jRepository<Workpack, Long> {
 
-    @Query("match (w:Workpack{deleted:false})<-[:IS_IN*]-(v:Workpack{deleted:false})-[:IS_INSTANCE_BY]->(m:WorkpackModel) " +
+    @Query("match (w:Workpack{deleted:false,canceled:false})<-[:IS_IN*]-(v:Workpack{deleted:false,canceled:false})-[:IS_INSTANCE_BY]->(m:WorkpackModel) " +
             "where id(w)=$workpackId " +
             "with v, collect(distinct m) as modelList " +
             "with v, collect([n in modelList where id(n)=v.idWorkpackModel][0]) as modelGroup " +
@@ -25,8 +25,8 @@ public interface DashboardDatasheetRepository extends Neo4jRepository<Workpack, 
             "    models.fontIcon as icon")
     List<WorkpackByModelQueryResult> workpackByModel(Long workpackId);
 
-    @Query("match (a:Actor)-[s:IS_STAKEHOLDER_IN]->(w:Workpack{deleted:false}) " +
-            "optional match (w)-[:IS_IN*]->(v:Workpack{deleted:false}) " +
+    @Query("match (a:Actor)-[s:IS_STAKEHOLDER_IN]->(w:Workpack{deleted:false,canceled:false}) " +
+            "optional match (w)-[:IS_IN*]->(v:Workpack{deleted:false,canceled:false}) " +
             "optional match (a)<-[:IS_A_PORTRAIT_OF]-(file:File) " +
             "with a,s,w,v,file " +
             "where " +
@@ -35,7 +35,7 @@ public interface DashboardDatasheetRepository extends Neo4jRepository<Workpack, 
             "    ) " +
             "    or " +
             "    ( " +
-            "        (a)-[s]->(w)-[:IS_IN*]->(v:Workpack{deleted:false}) and id(v)=$workpackId " +
+            "        (a)-[s]->(w)-[:IS_IN*]->(v:Workpack{deleted:false,canceled:false}) and id(v)=$workpackId " +
             "    ) " +
             "return " +
             "    distinct id(a) as id, " +

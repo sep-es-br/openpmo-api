@@ -14,8 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static br.gov.es.openpmo.model.baselines.Decision.REJECTED;
 import static br.gov.es.openpmo.model.baselines.Status.PROPOSED;
@@ -118,7 +118,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
             final BaselineEvaluationRequest request,
             final Baseline baseline
     ) {
-        final List<Person> members = this.findAllActiveMembersOfBaseline(idBaseline);
+        final Set<Person> members = this.findAllActiveMembersOfBaseline(idBaseline);
         final Person member = findCCBMember(idPerson, members);
         this.verifyAlreadyEvaluationOfMember(idPerson, idBaseline);
         final IsEvaluatedBy evaluation = fromMemberEvaluation(member, baseline, request);
@@ -146,7 +146,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
                 .orElseThrow(() -> new NegocioException(BASELINE_NOT_FOUND));
     }
 
-    private List<Person> findAllActiveMembersOfBaseline(final Long idBaseline) {
+    private Set<Person> findAllActiveMembersOfBaseline(final Long idBaseline) {
         return this.ccbMemberRepository.findAllActiveMembersOfBaseline(idBaseline);
     }
 

@@ -66,7 +66,7 @@ public abstract class AbstractCustomFilterBuilder {
             params.put(label, getValue(rule));
         }
 
-        builder.append(cache);
+        builder.append("AND ").append(cache);
     }
 
     private String getValue(Rules rule) {

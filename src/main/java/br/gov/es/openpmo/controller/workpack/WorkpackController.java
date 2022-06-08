@@ -114,6 +114,13 @@ public class WorkpackController {
             return ResponseEntity.noContent().build();
         }
 
+        if (isNotNull(idWorkpackModel)) {
+            final WorkpackModel workpackModel = this.workpackService.getWorkpackModelById(idWorkpackModel);
+            if (workpackModelHasSortBy(workpackModel)) {
+                sortWorkpacks(workpacks, workpackModel);
+            }
+        }
+
         final List<WorkpackDetailDto> workpackDetailDtos = workpacks.stream()
                 .map(workpack -> this.mapToWorkpackDetailDto(workpack, idWorkpackModel))
                 .collect(Collectors.toList());
