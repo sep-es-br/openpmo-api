@@ -63,7 +63,7 @@ public class DashboardIntervalService implements IDashboardIntervalService {
                     .orElse(null);
         }
 
-        return this.dashboardRepository.fetchIntervalOfSchedules(workpackId, baselineIds)
+        return this.baselineRepository.fetchIntervalOfSchedules(workpackId, baselineIds)
                 .map(Interval::new)
                 .orElse(null);
     }

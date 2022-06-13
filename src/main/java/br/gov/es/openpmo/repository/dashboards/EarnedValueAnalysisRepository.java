@@ -10,9 +10,9 @@ import java.util.List;
 
 public interface EarnedValueAnalysisRepository extends Neo4jRepository<Workpack, Long> {
 
-    @Query("match (b:Baseline)<-[:IS_BASELINED_BY]-(w:Workpack)<-[:IS_SNAPSHOT_OF]-(:Project) " +
+    @Query("match (b:Baseline)<-[:IS_BASELINED_BY]-(w:Workpack{deleted:false,canceled:false})<-[:IS_SNAPSHOT_OF]-(:Project{deleted:false,canceled:false}) " +
             "where id(w)=$workpackId and id(b)=$baselineId " +
-            "match (w)<-[:IS_IN*]-(:Workpack)<-[:FEATURES]-(:Schedule)<-[:COMPOSES]-(m:Step) " +
+            "match (w)<-[:IS_IN*]-(:Workpack{deleted:false,canceled:false})<-[:FEATURES]-(:Schedule)<-[:COMPOSES]-(m:Step) " +
             "where date($startOfMonth) <= date(m.periodFromStart) <= date($endOfMonth) " +
             "match (m)<-[:IS_SNAPSHOT_OF]-(s:Step)-[:COMPOSES]->(b) " +
             "match (s)-[cs:CONSUMES]->(:CostAccount) " +
@@ -51,9 +51,9 @@ public interface EarnedValueAnalysisRepository extends Neo4jRepository<Workpack,
             LocalDate referenceDate
     );
 
-    @Query("match (b:Baseline)<-[:IS_BASELINED_BY]-(:Workpack)<-[:IS_SNAPSHOT_OF]-(:Workpack) " +
+    @Query("match (b:Baseline)<-[:IS_BASELINED_BY]-(:Workpack{deleted:false,canceled:false})<-[:IS_SNAPSHOT_OF]-(:Workpack{deleted:false,canceled:false}) " +
             "where id(b) in $baselineId " +
-            "match (b)<-[:COMPOSES]-(:Step)-[:IS_SNAPSHOT_OF]->(m:Step)-[:COMPOSES]->(sch:Schedule)-[:FEATURES]->(w:Workpack)-[:IS_IN*]->(v:Workpack) " +
+            "match (b)<-[:COMPOSES]-(:Step)-[:IS_SNAPSHOT_OF]->(m:Step)-[:COMPOSES]->(sch:Schedule)-[:FEATURES]->(w:Workpack{deleted:false,canceled:false})-[:IS_IN*]->(v:Workpack{deleted:false,canceled:false}) " +
             "where $workpackId in [ id(w), id(v) ] and date($startOfMonth) <= date(sch.start) + duration({months: m.periodFromStart}) <= date($endOfMonth) " +
             "match (m)<-[:IS_SNAPSHOT_OF]-(s:Step)-[:COMPOSES]->(b) " +
             "match (s)-[cs:CONSUMES]->(:CostAccount) " +

@@ -11,18 +11,18 @@ import java.util.Set;
 @Repository
 public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone, Long> {
 
-    @Query("match (m:Milestone)-[IS_IN]->(w:Workpack) " +
+    @Query("match (m:Milestone{deleted:false,canceled:false})-[IS_IN]->(w:Workpack{deleted:false,canceled:false}) " +
             "where id(m)=$milestoneId " +
             "return id(w)")
     Long findParentIdByMilestoneId(Long milestoneId);
 
-    @Query("match (m:Milestone)-[IS_IN*]->(w:Workpack)-[:IS_BASELINED_BY]->(b:Baseline{active: true}) " +
+    @Query("match (m:Milestone{deleted:false,canceled:false})-[IS_IN*]->(w:Workpack{deleted:false,canceled:false})-[:IS_BASELINED_BY]->(b:Baseline{active: true}) " +
             "where id(m)=$milestoneId " +
             "return id(w) " +
             "limit 1")
     Long findWorkpackIdByMilestoneId(Long milestoneId);
 
-    @Query("match (m:Milestone)-[IS_IN*]->(w:Workpack)-[:IS_BASELINED_BY]->(b:Baseline{active: true}) " +
+    @Query("match (m:Milestone{deleted:false,canceled:false})-[IS_IN*]->(w:Workpack{deleted:false,canceled:false})-[:IS_BASELINED_BY]->(b:Baseline{active: true}) " +
             "where id(m)=$milestoneId " +
             "return id(b) " +
             "limit 1")
@@ -52,7 +52,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
     Set<Long> onTime(Long workpackId, LocalDate refDate);
 
     @Query("match " +
-            "    (b:Baseline)<-[:COMPOSES]-(s:Milestone)-[:IS_SNAPSHOT_OF]->(m:Milestone{deleted:false,canceled:false})-[:IS_IN*]->(w:Workpack{deleted:false,canceled:false})-[:IS_BASELINED_BY]->(b), " +
+            "    (b:Baseline)<-[:COMPOSES]-(s:Milestone{deleted:false,canceled:false})-[:IS_SNAPSHOT_OF]->(m:Milestone{deleted:false,canceled:false})-[:IS_IN*]->(w:Workpack{deleted:false,canceled:false})-[:IS_BASELINED_BY]->(b), " +
             "    (m)-[:IS_INSTANCE_BY]->(wm:MilestoneModel), " +
             "    (wm)<-[:FEATURES]-(dm:DateModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m), " +
             "    (s)<-[:FEATURES]-(planDate:Date)-[:IS_SNAPSHOT_OF]->(d) " +
@@ -107,7 +107,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
     Set<Long> late(Long workpackId, LocalDate refDate);
 
     @Query("match " +
-            "    (b:Baseline)<-[:COMPOSES]-(s:Milestone)-[:IS_SNAPSHOT_OF]->(m:Milestone{deleted:false,canceled:false})-[:IS_IN*]->(w:Workpack{deleted:false,canceled:false})-[:IS_BASELINED_BY]->(b), " +
+            "    (b:Baseline)<-[:COMPOSES]-(s:Milestone{deleted:false,canceled:false})-[:IS_SNAPSHOT_OF]->(m:Milestone{deleted:false,canceled:false})-[:IS_IN*]->(w:Workpack{deleted:false,canceled:false})-[:IS_BASELINED_BY]->(b), " +
             "    (m)-[:IS_INSTANCE_BY]->(wm:MilestoneModel), " +
             "    (wm)<-[:FEATURES]-(dm:DateModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m), " +
             "    (s)<-[:FEATURES]-(planDate:Date)-[:IS_SNAPSHOT_OF]->(d) " +
@@ -156,7 +156,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
     Set<Long> concluded(Long workpackId);
 
     @Query("match " +
-            "    (b:Baseline)<-[:COMPOSES]-(s:Milestone)-[:IS_SNAPSHOT_OF]->(m:Milestone{deleted:false,canceled:false})-[:IS_IN*]->(w:Workpack{deleted:false,canceled:false})-[:IS_BASELINED_BY]->(b), " +
+            "    (b:Baseline)<-[:COMPOSES]-(s:Milestone{deleted:false,canceled:false})-[:IS_SNAPSHOT_OF]->(m:Milestone{deleted:false,canceled:false})-[:IS_IN*]->(w:Workpack{deleted:false,canceled:false})-[:IS_BASELINED_BY]->(b), " +
             "    (m)-[:IS_INSTANCE_BY]->(wm:MilestoneModel), " +
             "    (wm)<-[:FEATURES]-(dm:DateModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m), " +
             "    (s)<-[:FEATURES]-(planDate:Date)-[:IS_SNAPSHOT_OF]->(d) " +
@@ -180,7 +180,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
     Set<Long> concluded(Long baselineId, Long workpackId);
 
     @Query("match " +
-            "    (b:Baseline)<-[:COMPOSES]-(s:Milestone)-[:IS_SNAPSHOT_OF]->(m:Milestone{deleted:false,canceled:false})-[:IS_IN*]->(w:Workpack{deleted:false,canceled:false})-[:IS_BASELINED_BY]->(b), " +
+            "    (b:Baseline)<-[:COMPOSES]-(s:Milestone{deleted:false,canceled:false})-[:IS_SNAPSHOT_OF]->(m:Milestone{deleted:false,canceled:false})-[:IS_IN*]->(w:Workpack{deleted:false,canceled:false})-[:IS_BASELINED_BY]->(b), " +
             "    (m)-[:IS_INSTANCE_BY]->(wm:MilestoneModel), " +
             "    (wm)<-[:FEATURES]-(dm:DateModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m), " +
             "    (s)<-[:FEATURES]-(planDate:Date)-[:IS_SNAPSHOT_OF]->(d) " +
@@ -204,7 +204,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
     Set<Long> lateConcluded(Long baselineId, Long workpackId);
 
     @Query("match " +
-            "    (b:Baseline)<-[:COMPOSES]-(s:Milestone)-[:IS_SNAPSHOT_OF]->(m:Milestone{deleted:false,canceled:false})-[:IS_IN*]->(w:Workpack{deleted:false,canceled:false}), " +
+            "    (b:Baseline)<-[:COMPOSES]-(s:Milestone{deleted:false,canceled:false})-[:IS_SNAPSHOT_OF]->(m:Milestone{deleted:false,canceled:false})-[:IS_IN*]->(w:Workpack{deleted:false,canceled:false}), " +
             "    (m)-[:IS_INSTANCE_BY]->(wm:MilestoneModel), " +
             "    (wm)<-[:FEATURES]-(dm:DateModel)<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m), " +
             "    (s)<-[:FEATURES]-(planDate:Date)-[:IS_SNAPSHOT_OF]->(d) " +

@@ -118,7 +118,7 @@ public class DashboardEarnedValueByStepsService implements IDashboardEarnedValue
     }
 
     private DateIntervalQuery findIntervalInSnapshots(final Long workpackId, final List<Long> idBaseline) {
-        return this.baselineRepository.findScheduleIntervalInSnapshotsOfBaselines(workpackId, idBaseline)
+        return this.baselineRepository.fetchIntervalOfSchedules(workpackId, idBaseline)
                 .orElseThrow(() -> new NegocioException(INTERVAL_DATE_IN_BASELINE_NOT_FOUND));
     }
 

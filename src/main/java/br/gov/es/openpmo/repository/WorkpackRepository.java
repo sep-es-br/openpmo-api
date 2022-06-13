@@ -20,6 +20,18 @@ import java.util.Set;
 
 public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, CustomRepository {
 
+    @Query("match (w:Workpack) " +
+            "where id(w)=$id " +
+            "return w, [ " +
+            "   [(w)<-[ii:IS_IN*]-(v:Workpack) | [ii,v]] " +
+            "]")
+    Optional<Workpack> findByIdWithChildren(Long id);
+
+    @Query("match (w:Workpack)-[ii:IS_IN*]->(v:Workpack) " +
+            "where id(w)=$id " +
+            "return v")
+    Set<Workpack> findParentsById(Long id);
+
     @Query("MATCH (w:Workpack)-[rf:BELONGS_TO]->(p:Plan), "
             + "(p)-[is:IS_STRUCTURED_BY]->(pm:PlanModel) "
             + "OPTIONAL MATCH (w)-[ii:IS_INSTANCE_BY]->(wm:WorkpackModel) "
@@ -140,14 +152,14 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
     Set<Workpack> findAllUsingPlan(@Param("idPlan") Long idPlan);
 
     @Query("MATCH (plan:Plan) " +
-            "MATCH (plan)<-[belongsTo:BELONGS_TO]-(w:Workpack{deleted:false}) " +
+            "MATCH (plan)<-[belongsTo:BELONGS_TO]-(w:Workpack{deleted:false,canceled:false}) " +
             "MATCH (plan)-[isStructuredBy:IS_STRUCTURED_BY]->(planModel:PlanModel) " +
             "MATCH (w)-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
-            "WHERE id(plan) = $idPlan AND NOT (w)-[:IS_IN]->(:Workpack) " +
+            "WHERE id(plan) = $idPlan AND NOT (w)-[:IS_IN]->(:Workpack{deleted:false,canceled:false}) " +
             "RETURN w, belongsTo, isStructuredBy, plan, instanceBy, planModel, model, [ " +
             " [(w)-[isLinkedTo:IS_LINKED_TO]-(modelLinked:WorkpackModel) | [isLinkedTo, modelLinked] ], " +
             " [(w)<-[f1:FEATURES]-(p1:Property)-[d1:IS_DRIVEN_BY]->(pm1:PropertyModel) | [f1, p1, d1, pm1] ], " +
-            " [(w)<-[wi:IS_IN*]-(w2:Workpack{deleted:false})<-[f2:FEATURES]-(p2:Property)-[d2:IS_DRIVEN_BY]->(pm2:PropertyModel) | [wi,w2,f2, p2, d2, pm2] ], " +
+            " [(w)<-[wi:IS_IN*]-(w2:Workpack{deleted:false,canceled:false})<-[f2:FEATURES]-(p2:Property)-[d2:IS_DRIVEN_BY]->(pm2:PropertyModel) | [wi,w2,f2, p2, d2, pm2] ], " +
             " [(w2)-[bt:BELONGS_TO]->(p:Plan) | [bt, p]], " +
             " [(w2)-[ib2:IS_INSTANCE_BY]->(wm2:WorkpackModel)<-[f5:FEATURES]-(pm5:PropertyModel) | [ib2, wm2, f5, pm5] ], " +
             " [(model)<-[f4:FEATURES]-(pm4:PropertyModel) | [f4, pm4] ], " +
@@ -369,15 +381,15 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "RETURN project")
     Optional<Project> findProjectInParentsOf(Long idWorkpack);
 
-    @Query("match (workpack:Workpack) " +
+    @Query("match (workpack:Workpack{deleted:false,canceled:false}) " +
             "where id(workpack)=$workpackId " +
             "optional match (workpack)<-[:FEATURES]-(schedule1:Schedule) " +
             "with workpack, schedule1 " +
-            "optional match (workpack)<-[:IS_IN*]-(:Workpack)<-[:FEATURES]-(schedule2:Schedule) " +
+            "optional match (workpack)<-[:IS_IN*]-(:Workpack{deleted:false,canceled:false})<-[:FEATURES]-(schedule2:Schedule) " +
             "with workpack, schedule1, schedule2 " +
             "optional match (workpack)<-[:FEATURES]-(date1:Date) " +
             "with workpack, schedule1, schedule2, date1 " +
-            "optional match (workpack)<-[:IS_IN*]-(:Milestone)<-[:FEATURES]-(date2:Date) " +
+            "optional match (workpack)<-[:IS_IN*]-(:Milestone{deleted:false,canceled:false})<-[:FEATURES]-(date2:Date) " +
             "with workpack, schedule1, schedule2, date1, date2 " +
             "with " +
             "    collect(distinct datetime(schedule1.end)) + " +
@@ -403,7 +415,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "return p")
     Optional<Program> findProgram(Long idDeliverable);
 
-    @Query("match (w:Workpack)<-[:IS_IN*]-(d:Deliverable) " +
+    @Query("match (w:Workpack{deleted:false,canceled:false})<-[:IS_IN*]-(d:Deliverable{deleted:false,canceled:false}) " +
             "where id(w)=$workpackId " +
             "return id(d)")
     Set<Long> getDeliverablesId(Long workpackId);

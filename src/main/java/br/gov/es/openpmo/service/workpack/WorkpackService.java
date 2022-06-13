@@ -7,6 +7,7 @@ import br.gov.es.openpmo.dto.workpack.*;
 import br.gov.es.openpmo.dto.workpackshared.WorkpackSharedDto;
 import br.gov.es.openpmo.enumerator.Session;
 import br.gov.es.openpmo.exception.NegocioException;
+import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.actors.Organization;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.filter.CustomFilter;
@@ -76,8 +77,6 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
 
     private final PropertyService propertyService;
 
-    private final CostAccountService costAccountService;
-
     private final OrganizationService organizationService;
 
     private final LocalityService localityService;
@@ -108,7 +107,6 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
             final WorkpackRepository workpackRepository,
             final CustomFilterRepository customFilterRepository,
             final FindAllWorkpackByParentUsingCustomFilter findAllWorkpackByParent,
-            final CostAccountService costAccountService,
             final OrganizationService organizationService,
             final LocalityService localityService,
             final UnitMeasureService unitMeasureService,
@@ -126,7 +124,6 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
         this.propertyModelService = propertyModelService;
         this.customFilterRepository = customFilterRepository;
         this.findAllWorkpackByParent = findAllWorkpackByParent;
-        this.costAccountService = costAccountService;
         this.organizationService = organizationService;
         this.localityService = localityService;
         this.unitMeasureService = unitMeasureService;
@@ -1285,48 +1282,57 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
         }
     }
 
-    public Set<Workpack> findAllByPlanWithProperties(final Long idPlan) {
-        return this.workpackRepository.findAllByPlanWithProperties(idPlan);
-    }
-
     public Set<Long> findAllWorkpacksWithPermissions(final Long idPlan, final Long idUser) {
         return this.workpackRepository.findAllWorkpacksWithPermissions(idPlan, idUser);
     }
 
     public Workpack cancel(final Long idWorkpack) {
-        final Workpack workpack = this.findById(idWorkpack);
+        final Workpack workpack = this.workpackRepository.findByIdWithChildren(idWorkpack)
+                .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
 
-        if (this.isCancelable(workpack)) {
-            this.cancelWorkpack(workpack);
+        if (!workpack.isCancelable()) {
+            return workpack;
         }
 
-        return this.save(workpack);
+        Set<Workpack> workpacks = new HashSet<>();
+        this.addWorkpackRecursively(workpack, workpacks);
+        workpacks.forEach(w -> w.setCanceled(true));
+        this.workpackRepository.saveAll(workpacks);
+
+        Set<Workpack> parents = new HashSet<>();
+        workpacks.stream().map(Entity::getId).map(this.workpackRepository::findParentsById).forEach(parents::addAll);
+        parents.stream().map(Entity::getId).forEach(this.dashboardService::calculate);
+
+        return workpack;
     }
 
-    private boolean isCancelable(final Workpack workpack) {
-        return workpack.isCancelable();
-    }
-
-    private void cancelWorkpack(final Workpack workpack) {
-        workpack.setCanceled(true);
+    void addWorkpackRecursively(Workpack workpack, Set<Workpack> workpacks) {
+        workpacks.add(workpack);
+        Set<Workpack> children = workpack.getChildren();
+        if (children == null || children.isEmpty()) {
+            return;
+        }
+        for (Workpack child : children) {
+            addWorkpackRecursively(child, workpacks);
+        }
     }
 
     public void restore(final Long idWorkpack) {
-        final Workpack workpack = this.findById(idWorkpack);
+        final Workpack workpack = this.workpackRepository.findByIdWithChildren(idWorkpack)
+                .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
 
-        if (this.isRestaurable(workpack)) {
-            this.restoreWorkpack(workpack);
+        if (!workpack.isRestaurable()) {
+            return;
         }
 
-        this.save(workpack);
-    }
+        Set<Workpack> workpacks = new HashSet<>();
+        this.addWorkpackRecursively(workpack, workpacks);
+        workpacks.forEach(w -> w.setCanceled(false));
+        this.workpackRepository.saveAll(workpacks);
 
-    private boolean isRestaurable(final Workpack workpack) {
-        return workpack.isRestaurable();
-    }
-
-    private void restoreWorkpack(final Workpack workpack) {
-        workpack.setCanceled(false);
+        Set<Workpack> parents = new HashSet<>();
+        workpacks.stream().map(Entity::getId).map(this.workpackRepository::findParentsById).forEach(parents::addAll);
+        parents.stream().map(Entity::getId).forEach(this.dashboardService::calculate);
     }
 
     public WorkpackModel findWorkpackModelLinked(final Long idWorkpack, final Long idPlan) {
@@ -1339,7 +1345,8 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     }
 
     public void calculateDashboard(Workpack workpack) {
-        this.workpackRepository.findAscendentsId(workpack.getId())
-                .forEach(this.dashboardService::calculate);
+        Long id = workpack.getId();
+        Set<Workpack> parents = this.workpackRepository.findParentsById(id);
+        parents.stream().map(Entity::getId).forEach(this.dashboardService::calculate);
     }
 }
