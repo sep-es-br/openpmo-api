@@ -335,10 +335,6 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
     public void setCanceled(final boolean canceled) {
         this.isCanceled = canceled;
         this.isCancelable = this.canBeCanceled();
-
-        if (this.children != null) {
-            this.children.forEach(child -> child.setCanceled(canceled));
-        }
     }
 
     @Transient

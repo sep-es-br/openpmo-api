@@ -11,10 +11,10 @@ import br.gov.es.openpmo.model.schedule.Step;
 import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.ScheduleRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
-import br.gov.es.openpmo.repository.dashboards.DashboardRepository;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -28,20 +28,17 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
     private final WorkpackRepository workpackRepository;
     private final BaselineRepository baselineRepository;
     private final ScheduleRepository scheduleRepository;
-    private final DashboardRepository dashboardRepository;
     private final IDashboardCostScopeService costScopeService;
 
     public DashboardTripleConstraintService(
             WorkpackRepository workpackRepository,
             BaselineRepository baselineRepository,
             ScheduleRepository scheduleRepository,
-            DashboardRepository dashboardRepository,
             IDashboardCostScopeService costScopeService
     ) {
         this.workpackRepository = workpackRepository;
         this.baselineRepository = baselineRepository;
         this.scheduleRepository = scheduleRepository;
-        this.dashboardRepository = dashboardRepository;
         this.costScopeService = costScopeService;
     }
 
@@ -79,7 +76,7 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
         final TripleConstraintDataChart tripleConstraint = new TripleConstraintDataChart();
 
         tripleConstraint.setIdBaseline(baselineId);
-        tripleConstraint.setMesAno(yearMonth.atEndOfMonth());
+        tripleConstraint.setMesAno(getMesAno(yearMonth));
 
         this.buildScheduleDataChart(baselineId, workpackId, tripleConstraint, yearMonth);
 
@@ -90,12 +87,24 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
         return tripleConstraint;
     }
 
+    public LocalDate getMesAno(YearMonth yearMonth) {
+        LocalDate now = LocalDate.now();
+        if (yearMonth == null) {
+            return now;
+        }
+        LocalDate endOfMonth = yearMonth.atEndOfMonth();
+        if (now.isBefore(endOfMonth)) {
+            return now;
+        }
+        return endOfMonth;
+    }
+
     @Override
     @NonNull
     public Optional<List<TripleConstraintDataChart>> calculate(@NonNull Long workpackId) {
         final List<Long> baselineIds = getActiveBaselineIds(workpackId);
 
-        return this.dashboardRepository.fetchIntervalOfSchedules(workpackId, baselineIds)
+        return this.baselineRepository.fetchIntervalOfSchedules(workpackId, baselineIds)
                 .filter(DateIntervalQuery::isValid)
                 .map(DateIntervalQuery::toYearMonths)
                 .map(months -> this.calculateForAllMonths(workpackId, months));
@@ -169,8 +178,9 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
             Long deliverableId,
             YearMonth yearMonth
     ) {
+        boolean canceled = this.workpackRepository.isCanceled(deliverableId);
         this.scheduleRepository.findScheduleByWorkpackId(deliverableId).ifPresent(schedule ->
-                this.sumCostAndWorkOfSteps(deliverableId, baselineId, tripleConstraint, schedule.getSteps(), yearMonth));
+                this.sumCostAndWorkOfSteps(baselineId, tripleConstraint, schedule.getSteps(), yearMonth, canceled));
     }
 
     private List<Long> getActiveBaselineIds(Long workpackId) {
@@ -184,18 +194,18 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
     }
 
     private DateIntervalQuery findIntervalInSnapshots(final Long workpackId, final List<Long> baselineIds) {
-        return this.baselineRepository.findScheduleIntervalInSnapshotsOfBaselines(workpackId, baselineIds)
+        return this.baselineRepository.fetchIntervalOfSchedules(workpackId, baselineIds)
                 .orElseThrow(() -> new NegocioException(INTERVAL_DATE_IN_BASELINE_NOT_FOUND));
     }
 
     private void sumCostAndWorkOfSteps(
-            final Long deliverableId,
             final Long baselineId,
             final TripleConstraintDataChart tripleConstraint,
             final Set<? extends Step> steps,
-            final YearMonth yearMonth
+            final YearMonth yearMonth,
+            boolean canceled
     ) {
-        final CostAndScopeData costAndScopeData = this.costScopeService.build(deliverableId, baselineId, yearMonth, steps);
+        final CostAndScopeData costAndScopeData = this.costScopeService.build(baselineId, yearMonth, steps, canceled);
         tripleConstraint.sumCostData(costAndScopeData.getCostDataChart());
         tripleConstraint.sumScopeData(costAndScopeData.getScopeDataChart());
     }

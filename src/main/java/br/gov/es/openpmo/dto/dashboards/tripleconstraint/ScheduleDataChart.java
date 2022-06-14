@@ -73,13 +73,26 @@ public class ScheduleDataChart {
             final DateIntervalQuery foreseenInterval,
             final YearMonth referenceDate
     ) {
+        LocalDate mesAno = getMesAno(referenceDate);
         return new ScheduleDataChart(
                 plannedInterval.getInitialDate(),
                 plannedInterval.getEndDate(),
                 foreseenInterval.getInitialDate(),
                 foreseenInterval.getEndDate(),
-                referenceDate.atEndOfMonth()
+                mesAno
         );
+    }
+
+    public static LocalDate getMesAno(YearMonth yearMonth) {
+        LocalDate now = LocalDate.now();
+        if (yearMonth == null) {
+            return now;
+        }
+        LocalDate endOfMonth = yearMonth.atEndOfMonth();
+        if (now.isBefore(endOfMonth)) {
+            return now;
+        }
+        return endOfMonth;
     }
 
     private void calculateValue(final Temporal startDate, final Temporal endDate, final Consumer<? super BigDecimal> updateValue) {

@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.Objects;
 import java.util.Optional;
@@ -32,17 +33,17 @@ public class DashboardCostScopeService implements IDashboardCostScopeService {
 
     @Override
     public CostAndScopeData build(
-            Long deliverableId,
             final Long baselineId,
             final YearMonth referenceDate,
-            final Set<? extends Step> steps
+            final Set<? extends Step> steps,
+            boolean canceled
     ) {
         final CostDataChart costDataChart = new CostDataChart();
         final ScopeDataChart scopeDataChart = new ScopeDataChart();
 
-        totalActualCost(referenceDate, costDataChart, scopeDataChart, steps);
+        totalActualCost(referenceDate, costDataChart, scopeDataChart, steps, canceled);
         totalPlannedCost(baselineId, costDataChart, scopeDataChart, steps);
-        totalForeseenCost(costDataChart, scopeDataChart, steps);
+        totalForeseenCost(costDataChart, scopeDataChart, steps, canceled);
 
         scopeDataChart.setCostDataChart(costDataChart);
         return new CostAndScopeData(costDataChart, scopeDataChart);
@@ -52,8 +53,13 @@ public class DashboardCostScopeService implements IDashboardCostScopeService {
             final YearMonth referenceDate,
             final CostDataChart costDataChart,
             final ScopeDataChart scopeDataChart,
-            final Set<? extends Step> steps
+            final Set<? extends Step> steps,
+            boolean canceled
     ) {
+        if (canceled) {
+            return;
+        }
+
         final Set<Step> filteredSteps = steps.stream()
                 .filter(step -> isBeforeOrEquals(step, referenceDate))
                 .collect(Collectors.toSet());
@@ -93,8 +99,13 @@ public class DashboardCostScopeService implements IDashboardCostScopeService {
     private static void totalForeseenCost(
             final CostDataChart costDataChart,
             final ScopeDataChart scopeDataChart,
-            final Set<? extends Step> steps
+            final Set<? extends Step> steps,
+            boolean canceled
     ) {
+        if (canceled) {
+            return;
+        }
+
         final BigDecimal sumOfPlannedWork = sumValuesOf(steps, Step::getPlannedWork);
         scopeDataChart.sumForeseenValue(sumOfPlannedWork);
 
@@ -105,7 +116,20 @@ public class DashboardCostScopeService implements IDashboardCostScopeService {
     }
 
     private static boolean isBeforeOrEquals(Step step, YearMonth referenceDate) {
-        return !asYearMonth(step).isAfter(referenceDate);
+        LocalDate mesAno = getMesAno(referenceDate);
+        return !asYearMonth(step).isAfter(YearMonth.from(mesAno));
+    }
+
+    public static LocalDate getMesAno(YearMonth yearMonth) {
+        LocalDate now = LocalDate.now();
+        if (yearMonth == null) {
+            return now;
+        }
+        LocalDate endOfMonth = yearMonth.atEndOfMonth();
+        if (now.isBefore(endOfMonth)) {
+            return now;
+        }
+        return endOfMonth;
     }
 
     private static <T> BigDecimal sumValuesOf(

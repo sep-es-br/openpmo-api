@@ -198,7 +198,8 @@ public class ScopeDataChart {
             difference = Optional.ofNullable(this.foreseenWork)
                     .orElse(BigDecimal.ZERO);
         } else {
-            difference = this.plannedWork.subtract(this.foreseenWork);
+            BigDecimal foreseenWork = Optional.ofNullable(this.foreseenWork).orElse(BigDecimal.ZERO);
+            difference = this.plannedWork.subtract(foreseenWork);
         }
         return difference.multiply(this.unitCost);
     }

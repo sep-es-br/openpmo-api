@@ -5,9 +5,11 @@ import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.relations.IsEvaluatedBy;
+import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.IsCCBMemberRepository;
 import br.gov.es.openpmo.repository.IsEvaluatedByRepository;
+import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
 import br.gov.es.openpmo.service.journals.JournalCreator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,8 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
 
     private final BaselineRepository repository;
 
+    private final WorkpackRepository workpackRepository;
+
     private final IsCCBMemberRepository ccbMemberRepository;
 
     private final IsEvaluatedByRepository evaluatedByRepository;
@@ -38,12 +42,14 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     @Autowired
     public EvaluateBaselineService(
             final BaselineRepository repository,
+            final WorkpackRepository workpackRepository,
             final IsCCBMemberRepository ccbMemberRepository,
             final IsEvaluatedByRepository evaluatedByRepository,
             final IAsyncDashboardService dashboardService,
             final JournalCreator journalCreator
     ) {
         this.repository = repository;
+        this.workpackRepository = workpackRepository;
         this.ccbMemberRepository = ccbMemberRepository;
         this.evaluatedByRepository = evaluatedByRepository;
         this.dashboardService = dashboardService;
@@ -128,6 +134,16 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     private void approveBaseline(final Baseline baseline) {
         baseline.approve();
         this.saveBaseline(baseline);
+        if (baseline.isCancelation()) {
+            cancelWorkpackByBaseline(baseline);
+        }
+    }
+
+    private void cancelWorkpackByBaseline(Baseline baseline) {
+        Workpack workpack = this.repository.findWorkpackByBaselineId(baseline.getId())
+                .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
+        workpack.setCanceled(true);
+        this.workpackRepository.save(workpack);
     }
 
     private void verifyAlreadyEvaluationOfMember(final Long idPerson, final Long idBaseline) {

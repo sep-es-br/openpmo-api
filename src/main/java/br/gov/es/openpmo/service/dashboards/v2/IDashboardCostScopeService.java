@@ -9,9 +9,10 @@ import java.util.Set;
 public interface IDashboardCostScopeService {
 
     CostAndScopeData build(
-            Long deliverableId, Long baselineId,
+            Long baselineId,
             YearMonth referenceDate,
-            Set<? extends Step> steps
+            Set<? extends Step> steps,
+            boolean canceled
     );
 
 }

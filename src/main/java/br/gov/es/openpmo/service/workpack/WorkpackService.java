@@ -42,6 +42,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
+import java.text.Collator;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -151,7 +152,9 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
 
     public static int compare(final Object a, final Object b) {
         if (a instanceof String && b instanceof String) {
-            return ((String) a).compareTo((String) b);
+            Collator collator = Collator.getInstance();
+            collator.setStrength(Collator.PRIMARY);
+            return collator.compare((String) a, (String) b);
         }
         if (a instanceof LocalDateTime && b instanceof LocalDateTime) {
             return ((LocalDateTime) a).compareTo((LocalDateTime) b);
@@ -886,12 +889,27 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
         }
         if (workpackDetailDto != null) {
             this.applyBaselineStatus(typeName, workpackDetailDto);
+            workpackDetailDto.setCanceled(workpack.isCanceled());
+            workpackDetailDto.setCancelable(isCancelable(workpack));
             if (workpackModel != null) {
                 workpackDetailDto.setModel(this.workpackModelService.getWorkpackModelDetailDto(workpackModel));
             }
             return workpackDetailDto;
         }
         return null;
+    }
+
+    private boolean isCancelable(Workpack workpack) {
+        if (workpack.isProject()) {
+            return false;
+        }
+        if (workpack.isCanceled()) {
+            return false;
+        }
+        if (this.workpackRepository.hasChildrenWithActiveBaseline(workpack.getId())) {
+            return false;
+        }
+        return this.workpackRepository.isPresentInBaseline(workpack.getId());
     }
 
     private void applyBaselineStatus(final String type, final WorkpackDetailDto workpackDetailDto) {

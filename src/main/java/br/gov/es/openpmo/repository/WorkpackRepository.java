@@ -269,6 +269,17 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "RETURN count(baseline)>0 ")
     boolean hasActiveBaseline(Long idWorkpack);
 
+    @Query("MATCH (w:Workpack)<-[:IS_IN*]-(:Project{deleted:false,canceled:false})-[:IS_BASELINED_BY]->(b:Baseline{active: true}) " +
+            "WHERE id(w)=$idWorkpack " +
+            "RETURN count(b)>0 ")
+    boolean hasChildrenWithActiveBaseline(Long idWorkpack);
+
+    @Query("match (w:Workpack)-[:IS_IN*]->(:Project{deleted:false,canceled:false})-[:IS_BASELINED_BY]->(b:Baseline{active:true}), " +
+            "   (w)<-[:IS_SNAPSHOT_OF]-(s)-[:COMPOSES]->(b) " +
+            "where id(w)=$idWorkpack " +
+            "return count(s)>0")
+    boolean isPresentInBaseline(Long idWorkpack);
+
     @Query("MATCH (workpack:Workpack)-[:IS_BASELINED_BY]->(baseline:Baseline{active: true}) " +
             "WHERE id(workpack)=$idWorkpack " +
             "RETURN baseline ")
@@ -293,10 +304,10 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
     boolean hasProposedBaseline(Long idWorkpack);
 
     @Query("MATCH (workpack:Workpack) " +
-            "OPTIONAL MATCH (workpack)-[isBaselinedBy:IS_BASELINED_BY]->(baseline:Baseline{status:'PROPOSED', cancelation:true}) " +
+            "OPTIONAL MATCH (workpack)-[isBaselinedBy:IS_BASELINED_BY]->(baseline:Baseline{cancelation:true}) " +
             "WITH workpack, isBaselinedBy, baseline " +
             "WHERE id(workpack)=$idWorkpack " +
-            "RETURN count(baseline)>0 ")
+            "RETURN count(baseline)>0 and baseline.status <> 'DRAFT' ")
     boolean hasCancelPropose(Long idWorkpack);
 
     @Query("MATCH (w:Workpack)-[:IS_INSTANCE_BY]->(m:WorkpackModel) " +
@@ -415,7 +426,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "return p")
     Optional<Program> findProgram(Long idDeliverable);
 
-    @Query("match (w:Workpack{deleted:false,canceled:false})<-[:IS_IN*]-(d:Deliverable{deleted:false,canceled:false}) " +
+    @Query("match (w:Workpack)<-[:IS_IN*]-(d:Deliverable{deleted:false}) " +
             "where id(w)=$workpackId " +
             "return id(d)")
     Set<Long> getDeliverablesId(Long workpackId);
@@ -447,4 +458,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "unwind list as l " +
             "return l")
     Set<Long> findAllInHierarchy(Long workpackId);
+
+    @Query("match (w:Workpack) where id(w)=$id return w.canceled=true and w.deleted=false")
+    boolean isCanceled(Long id);
 }

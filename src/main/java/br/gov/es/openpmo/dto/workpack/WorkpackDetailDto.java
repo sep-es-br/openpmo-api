@@ -103,12 +103,10 @@ public abstract class WorkpackDetailDto {
 
     public void applyLinkedStatus(final Workpack workpack, final Long idWorkpackModel) {
         this.linkedModel = Optional.ofNullable(workpack.getLinkedTo())
-                .map(linkeds -> linkeds.stream()
+                .flatMap(linkeds -> linkeds.stream()
                         .map(IsLinkedTo::getWorkpackModelId)
                         .filter(id -> Objects.equals(id, idWorkpackModel))
-                        .findFirst()
-                        .orElse(null)
-                ).orElse(null);
+                        .findFirst()).orElse(null);
         this.linked = this.linkedModel != null;
     }
 

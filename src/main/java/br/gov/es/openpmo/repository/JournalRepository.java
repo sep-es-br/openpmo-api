@@ -25,7 +25,9 @@ public interface JournalRepository extends Neo4jRepository<JournalEntry, Long> {
             " and ( " +
             " (w)<-[:SCOPE_TO]-(j) or (w)<-[:IS_IN*]-(:Workpack)<-[:SCOPE_TO]-(j) or j.type='FAIL' " +
             ") and ( " +
-            " (($from is null or (datetime($from) < datetime(j.date))) and ($to is null or datetime(j.date) < datetime($to))) " +
+            " (($from is null or (date(datetime($from)) <= date(datetime(j.date)))) " +
+            " and " +
+            " ($to is null or date(datetime(j.date)) <= date(datetime($to)))) " +
             " and " +
             " (j.type in $journalType or 'ALL' in $journalType) " +
             ") and ( " +
