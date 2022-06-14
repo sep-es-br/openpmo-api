@@ -134,15 +134,13 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
 
     @Query("MATCH (person:Person)-[isInContactBookOf:IS_IN_CONTACT_BOOK_OF]->(office:Office) " +
             "OPTIONAL MATCH (person)-[isAuthenticatedBy:IS_AUTHENTICATED_BY]->(authService:AuthService) " +
-            "OPTIONAL MATCH (person)-[canAccessOffice:CAN_ACCESS_OFFICE]->(office) " +
             "OPTIONAL MATCH (person)<-[isPortraitOf:IS_A_PORTRAIT_OF]-(avatar:File)" +
             "OPTIONAL MATCH (person)-[canAccessPlan:CAN_ACCESS_PLAN]->(plan:Plan)-[isAdoptedBy:IS_ADOPTED_BY]->(office) " +
-            "WITH person, canAccessOffice, office, canAccessPlan, plan, isInContactBookOf, " +
+            "WITH person, office, canAccessPlan, plan, isInContactBookOf, " +
             "isAdoptedBy, isAuthenticatedBy, authService, isPortraitOf, avatar " +
             "WHERE id(person)=$personId AND id(office)=$officeId " +
             "RETURN person, office, authService, " +
             "isInContactBookOf AS contact, " +
-            "canAccessOffice AS canAccessOffice, " +
             "isAuthenticatedBy AS authentication, " +
             "avatar AS avatar, " +
             "isPortraitOf, " +
@@ -155,24 +153,6 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
             "WHERE id(person)=$idPerson AND id(office)=$idOffice " +
             "RETURN isInContactBookOf")
     Optional<IsInContactBookOf> findContactBookBy(Long idPerson, Long idOffice);
-
-    @Query("MATCH (person:Person)-[canAccessOffice:CAN_ACCESS_OFFICE]->(office:Office) " +
-            "OPTIONAL MATCH (person)-[canAccessPlan:CAN_ACCESS_PLAN]->(plan:Plan)-[isAdoptedBy:IS_ADOPTED_BY]->(office) " +
-            "OPTIONAL MATCH (person)-[canAccessWorkpack:CAN_ACCESS_WORKPACK]->(workpack:Workpack)-[belongsTo:BELONGS_TO]->(plan) " +
-            "WITH person, canAccessOffice, office, canAccessPlan, plan, " +
-            "isAdoptedBy, canAccessWorkpack, workpack, belongsTo " +
-            "WHERE id(person)=$idPerson AND id(office)=$idOffice " +
-            "RETURN " +
-            "collect(canAccessOffice) AS canAccessOffice, " +
-            "collect(canAccessPlan) AS canAccessPlan, " +
-            "collect(canAccessWorkpack) AS canAccessWorkpack, " +
-            "office, " +
-            "person," +
-            "collect(plan), " +
-            "collect(isAdoptedBy), " +
-            "collect(workpack), " +
-            "collect(belongsTo)")
-    AllPersonPermissionQuery findAllPermissionBy(Long idPerson, Long idOffice);
 
     @Query("match (p:Person), (o:Office)<-[]-(pl:Plan)<-[]-(w:Workpack) " +
             "where id(p)=$idPerson and id(o)=$idOffice " +
@@ -222,10 +202,6 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
             "RETURN proposer, workpack, person " +
             "LIMIT 1")
     Optional<IsStakeholderIn> findProposerById(Long idPerson, Long idWorkpack);
-
-    @Query("MATCH (person:Person)-[isAuthenticatedBy:IS_AUTHENTICATED_BY]->(authServer:AuthServer) " +
-            "return person, isAuthenticatedBy, authServer")
-    List<Person> findAllUsers();
 
     @Query("match (person:Person), (office:Office)<-[]-(plan:Plan)<-[]-(workpack:Workpack) " +
             "where id(person)=$personId and id(office)=$officeId " +
