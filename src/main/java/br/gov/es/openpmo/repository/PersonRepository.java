@@ -203,7 +203,10 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
             "LIMIT 1")
     Optional<IsStakeholderIn> findProposerById(Long idPerson, Long idWorkpack);
 
-    @Query("match (person:Person), (office:Office)<-[]-(plan:Plan)<-[]-(workpack:Workpack) " +
+    @Query("match (person:Person), (office:Office) " +
+            "optional match (office)<-[]-(plan:Plan) " +
+            "optional match (plan)<-[]-(workpack:Workpack) " +
+            "with person, office, plan, workpack " +
             "where id(person)=$personId and id(office)=$officeId " +
             "optional match (person)-[canAccessOffice:CAN_ACCESS_OFFICE]->(office) " +
             "optional match (person)-[canAccessPlan:CAN_ACCESS_PLAN]->(plan) " +

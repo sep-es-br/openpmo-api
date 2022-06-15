@@ -2,6 +2,7 @@ package br.gov.es.openpmo.apis.edocs;
 
 import br.gov.es.openpmo.apis.edocs.response.ProcessHistoryResponse;
 import br.gov.es.openpmo.apis.edocs.response.ProcessResponse;
+import br.gov.es.openpmo.apis.organograma.OrganogramaApi;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.service.journals.JournalCreator;
 import org.apache.http.Consts;
@@ -13,6 +14,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
@@ -46,6 +48,8 @@ public class EDocsApiImpl implements EDocsApi {
 
   private final Logger logger;
 
+  private final OrganogramaApi organogramaApi;
+
   @Value("${api.e-docs.grant_type}")
   private String grantType;
 
@@ -65,9 +69,10 @@ public class EDocsApiImpl implements EDocsApi {
   private String edocsUriToken;
 
   @Autowired
-  public EDocsApiImpl(final JournalCreator journalCreator, final Logger logger) {
+  public EDocsApiImpl(final JournalCreator journalCreator, final Logger logger, OrganogramaApi organogramaApi) {
     this.journalCreator = journalCreator;
     this.logger = logger;
+      this.organogramaApi = organogramaApi;
   }
 
   @Override
@@ -103,7 +108,8 @@ public class EDocsApiImpl implements EDocsApi {
     this.logger.info("Body: {}", request);
     postRequest.setEntity(stringEntity);
 
-    try (final CloseableHttpResponse response = HttpClients.createDefault().execute(postRequest)) {
+    try (CloseableHttpClient httpClient = HttpClients.createDefault();
+         CloseableHttpResponse response = httpClient.execute(postRequest)) {
       if (this.isNotHttp200(response)) {
         response.getStatusLine().getReasonPhrase();
         throw new IllegalStateException(FAILED_FETCH_STATUS_NOT_OK);
@@ -144,7 +150,8 @@ public class EDocsApiImpl implements EDocsApi {
 
     postRequest.setEntity(new UrlEncodedFormEntity(parameters, Consts.UTF_8));
 
-    try (final CloseableHttpResponse response = HttpClients.createDefault().execute(postRequest)) {
+    try (CloseableHttpClient httpClient = HttpClients.createDefault();
+         CloseableHttpResponse response = httpClient.execute(postRequest)) {
       if (this.isNotHttp200(response)) {
         throw new IllegalStateException(FAILED_FETCH_STATUS_NOT_OK);
       }
@@ -169,7 +176,7 @@ public class EDocsApiImpl implements EDocsApi {
         (array, list) -> array.forEach(element -> {
           if (element instanceof JSONObject) {
             final JSONObject obj = (JSONObject) element;
-            list.add(new ProcessHistoryResponse(obj));
+            list.add(new ProcessHistoryResponse(obj, this.organogramaApi));
           }
         }),
         idPerson
@@ -184,7 +191,8 @@ public class EDocsApiImpl implements EDocsApi {
     final HttpUriRequest getRequest = new HttpGet(uri);
     getRequest.addHeader(AUTHORIZATION, BEARER + token);
 
-    try (final CloseableHttpResponse response = HttpClients.createDefault().execute(getRequest)) {
+    try (CloseableHttpClient httpClient = HttpClients.createDefault();
+         CloseableHttpResponse response = httpClient.execute(getRequest)) {
 
       if (this.isNotHttp200(response)) {
         throw new IllegalStateException(FAILED_FETCH_STATUS_NOT_OK);

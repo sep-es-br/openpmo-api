@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.apis.edocs.response;
 
+import br.gov.es.openpmo.apis.organograma.OrganogramaApi;
 import org.json.JSONObject;
 
 import java.time.LocalDateTime;
@@ -13,8 +14,10 @@ public class ProcessHistoryResponse {
     private final String name;
     private final String abbreviation;
     private final String descricaoTipo;
+    private final OrganogramaApi api;
 
-    public ProcessHistoryResponse(final JSONObject json) {
+    public ProcessHistoryResponse(final JSONObject json, OrganogramaApi api) {
+        this.api = api;
         this.date = this.getDate(json).orElse(null);
         this.name = this.getSetor(json).orElse(null);
         this.abbreviation = this.getSigla(json).orElse(null);
@@ -93,8 +96,8 @@ public class ProcessHistoryResponse {
         Optional<String> destinoPapelSigla = destino
                 .map(d -> d.optJSONObject("papel"))
                 .map(p -> p.optJSONObject("setor"))
-                .map(s -> s.optJSONObject("organizacao"))
-                .map(o -> o.optString("sigla"));
+                .map(s -> s.optString("id"))
+                .flatMap(api::findSiglaByUnidade);
 
         if (destinoPapelSigla.isPresent()) {
             return destinoPapelSigla;
@@ -103,7 +106,8 @@ public class ProcessHistoryResponse {
         Optional<String> destinoGrupoSigla = destino
                 .map(d -> d.optJSONObject("grupo"))
                 .map(p -> p.optJSONObject("localizacao"))
-                .map(s -> s.optString("sigla"));
+                .map(s -> s.optString("id"))
+                .flatMap(api::findSiglaByUnidade);
 
         if (destinoGrupoSigla.isPresent()) {
             return destinoGrupoSigla;
@@ -111,8 +115,8 @@ public class ProcessHistoryResponse {
 
         Optional<String> destinoSetorOrganizacaoSigla = destino
                 .map(p -> p.optJSONObject("setor"))
-                .map(s -> s.optJSONObject("organizacao"))
-                .map(o -> o.optString("sigla"));
+                .map(s -> s.optString("id"))
+                .flatMap(api::findSiglaByUnidade);
 
         if (destinoSetorOrganizacaoSigla.isPresent()) {
             return destinoSetorOrganizacaoSigla;

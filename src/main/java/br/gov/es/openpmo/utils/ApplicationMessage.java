@@ -22,8 +22,6 @@ public class ApplicationMessage {
 
     public static final String TOKEN_NOT_FOUND = "token.not.found";
 
-    public static final String AUTHENTICATION_ERROR = "authentication.error";
-
     public static final String ERROR_UNAUTHORIZED = "error.unauthorized";
 
     public static final String ERRO_NEGOCIO = "erro.negocio";

@@ -111,6 +111,7 @@ public class CitizenService {
         final List<RoleResource> roles = this.acessoCidadaoApi.findRoles(agent.getSub(), idPerson)
                 .stream()
                 .map(roleResponse -> this.getRoleDto(roleResponse, idPerson))
+                .sorted((a, b) -> a.getRole().compareToIgnoreCase(b.getRole()))
                 .collect(Collectors.toList());
 
         if (!maybeAgentEmail.isPresent()) {

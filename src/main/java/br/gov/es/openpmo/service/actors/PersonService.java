@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
+import springfox.documentation.annotations.Cacheable;
 
 import javax.validation.constraints.NotNull;
 import java.util.*;
@@ -241,6 +242,7 @@ public class PersonService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable("findPersonDetailsById")
     public PersonDetailDto findPersonDetailsById(
             final Long personId,
             final Long officeId,
