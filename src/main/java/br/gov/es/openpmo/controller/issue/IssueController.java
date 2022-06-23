@@ -2,7 +2,11 @@ package br.gov.es.openpmo.controller.issue;
 
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.ResponseBase;
-import br.gov.es.openpmo.dto.issue.*;
+import br.gov.es.openpmo.dto.issue.IssueCardDto;
+import br.gov.es.openpmo.dto.issue.IssueCreateDto;
+import br.gov.es.openpmo.dto.issue.IssueDetailDto;
+import br.gov.es.openpmo.dto.issue.IssueFromRiskDto;
+import br.gov.es.openpmo.dto.issue.IssueUpdateDto;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.issue.IssueService;
 import io.swagger.annotations.Api;
@@ -54,11 +58,13 @@ public class IssueController {
 
   @GetMapping
   public ResponseEntity<ResponseBase<List<IssueCardDto>>> findAll(
-      @RequestParam("id-workpack") final Long idWorkpack,
-      @RequestParam(required = false) final Long idRisk,
-      @RequestParam(required = false) final Long idFilter
+    @RequestParam("id-workpack") final Long idWorkpack,
+    @RequestParam(required = false) final Long idRisk,
+    @RequestParam(required = false) final Long idFilter,
+    @RequestHeader("Authorization") final String authorization
   ) {
-    final List<IssueCardDto> response = this.service.findAllAsCardDto(idWorkpack, idRisk, idFilter);
+    final Long idPerson = this.tokenService.getUserId(authorization);
+    final List<IssueCardDto> response = this.service.findAllAsCardDto(idWorkpack, idRisk, idFilter, idPerson);
     return ResponseEntity.ok(ResponseBase.of(response));
   }
 

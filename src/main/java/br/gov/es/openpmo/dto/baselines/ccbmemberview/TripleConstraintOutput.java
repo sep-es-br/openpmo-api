@@ -3,9 +3,10 @@ package br.gov.es.openpmo.dto.baselines.ccbmemberview;
 public class TripleConstraintOutput {
 
   private final BaselineCostDetail costDetail;
-  private final BaselineScheduleDetail scheduleDetail;
-  private final BaselineScopeDetail scopeDetail;
 
+  private final BaselineScheduleDetail scheduleDetail;
+
+  private final BaselineScopeDetail scopeDetail;
 
   public TripleConstraintOutput(
     final BaselineCostDetail costDetail,
@@ -40,14 +41,11 @@ public class TripleConstraintOutput {
   }
 
   public void addScheduleDetail(final ScheduleDetailItem item) {
-    this.scheduleDetail.addScheduleItem(
-      item
-    );
+    this.scheduleDetail.addScheduleItem(item);
   }
 
   public void addScopeDetail(final ScopeDetailItem scopeItem) {
-    this.scopeDetail.addDetail(
-      scopeItem
-    );
+    this.scopeDetail.addDetail(scopeItem);
   }
+
 }

@@ -1,11 +1,18 @@
 package br.gov.es.openpmo.service.stakeholder;
 
-import br.gov.es.openpmo.apis.acessocidadao.AcessoCidadaoApi;
 import br.gov.es.openpmo.dto.organization.OrganizationDto;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.dto.person.PersonDto;
 import br.gov.es.openpmo.dto.person.RoleResource;
-import br.gov.es.openpmo.dto.stakeholder.*;
+import br.gov.es.openpmo.dto.stakeholder.OrganizationStakeholderParamDto;
+import br.gov.es.openpmo.dto.stakeholder.PersonStakeholderParamDto;
+import br.gov.es.openpmo.dto.stakeholder.RoleDto;
+import br.gov.es.openpmo.dto.stakeholder.StakeholderAndPermissionQuery;
+import br.gov.es.openpmo.dto.stakeholder.StakeholderCardViewDto;
+import br.gov.es.openpmo.dto.stakeholder.StakeholderDto;
+import br.gov.es.openpmo.dto.stakeholder.StakeholderOrganizationDto;
+import br.gov.es.openpmo.dto.stakeholder.StakeholderParamDto;
+import br.gov.es.openpmo.dto.stakeholder.StakeholderPersonDto;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Actor;
 import br.gov.es.openpmo.model.actors.Organization;
@@ -13,20 +20,25 @@ import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.model.filter.SortByDirectionEnum;
 import br.gov.es.openpmo.model.office.Office;
-import br.gov.es.openpmo.model.relations.*;
+import br.gov.es.openpmo.model.relations.CanAccessOffice;
+import br.gov.es.openpmo.model.relations.CanAccessPlan;
+import br.gov.es.openpmo.model.relations.CanAccessWorkpack;
+import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
+import br.gov.es.openpmo.model.relations.IsInContactBookOf;
+import br.gov.es.openpmo.model.relations.IsStakeholderIn;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.CustomFilterRepository;
-import br.gov.es.openpmo.repository.IsAuthenticatedByRepository;
 import br.gov.es.openpmo.repository.StakeholderRepository;
 import br.gov.es.openpmo.repository.WorkpackPermissionRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindStakeholderAndPermissionUsingCustomFilter;
+import br.gov.es.openpmo.scheduler.updateroles.HasRole;
 import br.gov.es.openpmo.service.actors.IsInContactBookOfService;
 import br.gov.es.openpmo.service.actors.OrganizationService;
 import br.gov.es.openpmo.service.actors.PersonService;
 import br.gov.es.openpmo.service.office.OfficeService;
-import br.gov.es.openpmo.service.permissions.IRemoteRolesFetcher;
 import br.gov.es.openpmo.service.permissions.OfficePermissionService;
 import br.gov.es.openpmo.service.permissions.PlanPermissionService;
+import br.gov.es.openpmo.service.permissions.RoleService;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +52,10 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static br.gov.es.openpmo.utils.ApplicationMessage.*;
+import static br.gov.es.openpmo.utils.ApplicationMessage.CUSTOM_FILTER_NOT_FOUND;
+import static br.gov.es.openpmo.utils.ApplicationMessage.EMAIL_NOT_NULL;
+import static br.gov.es.openpmo.utils.ApplicationMessage.FILTER_SHOULD_BE_PERSON_OR_ORGANIZATION;
+import static br.gov.es.openpmo.utils.ApplicationMessage.OFFICE_NOT_FOUND;
 import static java.lang.Boolean.TRUE;
 
 @Service
@@ -58,29 +73,25 @@ public class StakeholderService {
     private final CustomFilterRepository customFilterRepository;
     private final PlanPermissionService planPermissionService;
     private final OfficePermissionService officePermissionService;
-    private final IsAuthenticatedByRepository authenticationRepository;
-    private final AcessoCidadaoApi acessoCidadaoApi;
-    private final IRemoteRolesFetcher remoteRolesFetcher;
+    private final RoleService roleService;
     @Value("${app.login.server.name}")
     private String authenticationServer;
 
     @Autowired
     public StakeholderService(
-            final PersonService personService,
-            final OrganizationService serviceOrganization,
-            final WorkpackService serviceWorkpack,
-            final ModelMapper modelMapper,
-            final OfficeService officeService,
-            final FindStakeholderAndPermissionUsingCustomFilter findStakeHolderAndPermission,
-            final IsInContactBookOfService isInContactBookOfService,
-            final StakeholderRepository repository,
-            final WorkpackPermissionRepository workpackPermissionRepository,
-            final CustomFilterRepository customFilterRepository,
-            final PlanPermissionService planPermissionService,
-            final OfficePermissionService officePermissionService,
-            final IsAuthenticatedByRepository authenticationRepository,
-            final AcessoCidadaoApi acessoCidadaoApi,
-            final IRemoteRolesFetcher remoteRolesFetcher
+            PersonService personService,
+            OrganizationService serviceOrganization,
+            WorkpackService serviceWorkpack,
+            ModelMapper modelMapper,
+            OfficeService officeService,
+            FindStakeholderAndPermissionUsingCustomFilter findStakeHolderAndPermission,
+            IsInContactBookOfService isInContactBookOfService,
+            StakeholderRepository repository,
+            WorkpackPermissionRepository workpackPermissionRepository,
+            CustomFilterRepository customFilterRepository,
+            PlanPermissionService planPermissionService,
+            OfficePermissionService officePermissionService,
+            RoleService roleService
     ) {
         this.personService = personService;
         this.serviceOrganization = serviceOrganization;
@@ -94,9 +105,7 @@ public class StakeholderService {
         this.isInContactBookOfService = isInContactBookOfService;
         this.planPermissionService = planPermissionService;
         this.officePermissionService = officePermissionService;
-        this.authenticationRepository = authenticationRepository;
-        this.acessoCidadaoApi = acessoCidadaoApi;
-        this.remoteRolesFetcher = remoteRolesFetcher;
+        this.roleService = roleService;
     }
 
     private static Map<Person, List<PermissionDto>> mapAndExtractPermissions(final StakeholderAndPermissionQuery query) {
@@ -290,31 +299,25 @@ public class StakeholderService {
 
         final Workpack workpack = this.serviceWorkpack.findById(request.getIdWorkpack());
 
-        final List<IsStakeholderIn> stakeholderIns = this.returnListStakeholderIn(
-                workpack.getId(),
-                null,
-                person.getId()
-        );
+        final List<IsStakeholderIn> stakeholderIns =
+                this.returnListStakeholderIn(workpack.getId(), null, person.getId());
 
-        final List<CanAccessWorkpack> canAccessWorkpacks = this.workpackPermissionRepository.findByIdWorkpackAndIdPerson(
-                workpack.getId(),
-                person.getId()
-        );
+        final List<CanAccessWorkpack> canAccessWorkpacks =
+                this.workpackPermissionRepository.findByIdWorkpackAndIdPerson(workpack.getId(), person.getId());
 
-        stakeholderIns.forEach(stakeholderDatabase -> {
+        for (IsStakeholderIn stakeholderDatabase : stakeholderIns) {
             if (request.getRoles() == null || request.getRoles().stream().noneMatch(
                     r -> r.getRole() != null && r.getRole().equals(stakeholderDatabase.getRole()))) {
                 this.repository.delete(stakeholderDatabase);
             }
-        });
+        }
+
         if (!CollectionUtils.isEmpty(request.getRoles())) {
             request.getRoles().forEach(role -> {
                 if (stakeholderIns.stream().noneMatch(
                         rb -> rb.getRole() != null && rb.getRole().equals(role.getRole()))) {
-                    this.repository.save(
-                            this.buildIsStakeholderIn(person, null, workpack, role.getRole(), role.getFrom(), role.getTo(),
-                                    role.isActive()
-                            ));
+                    this.repository.save(this.buildIsStakeholderIn(
+                            person, null, workpack, role.getRole(), role.getFrom(), role.getTo(), role.isActive()));
                 } else {
                     final IsStakeholderIn isStakeholderIn = stakeholderIns.stream().filter(
                             s -> s.getId().equals(role.getId())).findFirst().orElse(null);
@@ -334,11 +337,11 @@ public class StakeholderService {
                 this.workpackPermissionRepository.delete(canAccessWorkpack);
             }
         });
+
         if (!CollectionUtils.isEmpty(request.getPermissions())) {
             request.getPermissions().forEach(permission -> {
                 if (this.isNewWorkpackPermission(canAccessWorkpacks, permission)) {
                     saveIsInContactBook(request, person);
-
                     this.workpackPermissionRepository.save(
                             this.buildCanAccessWorkpack(
                                     person,
@@ -379,34 +382,31 @@ public class StakeholderService {
     }
 
     private boolean isNewWorkpackPermission(
-            final Collection<? extends CanAccessWorkpack> canAccessWorkpacks,
-            final PermissionDto permission
+      final Collection<? extends CanAccessWorkpack> canAccessWorkpacks,
+      final PermissionDto permission
     ) {
         return canAccessWorkpacks.stream().noneMatch(ca -> ca.getRole() != null && ca.getRole().equals(permission.getRole()));
     }
 
-    private boolean hasSameRole(final PermissionDto permission, final CanAccessWorkpack ca) {
-        return ca.getRole() != null && ca.getRole().equals(permission.getRole());
+    private boolean hasSameRole(final PermissionDto permission, final HasRole canAccessWorkpack) {
+        return canAccessWorkpack.getRole() != null && canAccessWorkpack.getRole().equals(permission.getRole());
     }
 
     private List<IsStakeholderIn> returnListStakeholderIn(
-            final Long idWorkpack,
-            final Long idOrganization,
-            final Long idPerson
+      final Long idWorkpack,
+      final Long idOrganization,
+      final Long idPerson
     ) {
         Long id = null;
-
         if ((idOrganization != null) && (idPerson != null)) {
             throw new NegocioException(FILTER_SHOULD_BE_PERSON_OR_ORGANIZATION);
         }
         if (idOrganization != null) {
             id = idOrganization;
         }
-
         if (idPerson != null) {
             id = idPerson;
         }
-
         return this.repository.findByIdWorkpackAndIdActor(idWorkpack, id);
     }
 
@@ -472,43 +472,36 @@ public class StakeholderService {
         this.repository.deleteAll(stakeholders);
     }
 
-    public void deletePerson(final Long idWorkpack, final Long idPerson, final Long idPlan) {
+    public void deletePerson(final Long idWorkpack, final Long idPerson) {
         final Workpack workpack = this.serviceWorkpack.findById(idWorkpack);
         final Person person = this.personService.findById(idPerson);
-        final List<IsStakeholderIn> stakeholders = this.repository.findByIdWorkpackAndIdPerson(
-                workpack.getId(),
-                person.getId()
-        );
+        final List<IsStakeholderIn> stakeholders =
+                this.repository.findByIdWorkpackAndIdPerson(workpack.getId(), person.getId());
         this.repository.deleteAll(stakeholders);
-        final List<CanAccessWorkpack> canAccessWorkpacks = this.workpackPermissionRepository.findByIdWorkpackAndIdPerson(
-                workpack.getId(),
-                person.getId()
-        );
+        final List<CanAccessWorkpack> canAccessWorkpacks =
+                this.workpackPermissionRepository.findByIdWorkpackAndIdPerson(workpack.getId(), person.getId());
         this.workpackPermissionRepository.deleteAll(canAccessWorkpacks);
     }
 
-    public StakeholderPersonDto findPerson(final Long workpackId, final Long personId) {
-        final Workpack workpack = this.serviceWorkpack.findById(workpackId);
-
-        final Optional<Person> maybePerson = this.personService.maybeFindPersonById(personId);
+    public StakeholderPersonDto findPerson(final Long workpackId, final Long personId, Long idPerson) {
+        Workpack workpack = this.serviceWorkpack.findById(workpackId);
+        Optional<Person> maybePerson = this.personService.maybeFindPersonById(personId);
         if (!maybePerson.isPresent()) {
             return null;
         }
-        final Person person = maybePerson.get();
-
-        final StakeholderPersonDto stakeholderPersonDto = new StakeholderPersonDto(workpackId);
-
-        this.fillPerson(workpack.getId(), person, stakeholderPersonDto);
+        Person person = maybePerson.get();
+        StakeholderPersonDto stakeholderPersonDto = new StakeholderPersonDto(workpackId);
+        this.fillPerson(workpack.getId(), person, stakeholderPersonDto, idPerson);
         this.fillRoles(stakeholderPersonDto, workpack.getId(), person.getId());
         this.fillPermissions(workpack.getId(), person.getId(), stakeholderPersonDto);
-
         return stakeholderPersonDto;
     }
 
     private void fillPerson(
             final Long workpackId,
             final Person person,
-            final StakeholderPersonDto stakeholderPersonDto
+            final StakeholderPersonDto stakeholderPersonDto,
+            Long idPerson
     ) {
         final Optional<IsAuthenticatedBy> maybeAuthentication = person.getAuthentications().stream()
                 .filter(p -> p.getAuthService().getServer().equals(this.authenticationServer))
@@ -517,7 +510,10 @@ public class StakeholderService {
         final Optional<IsInContactBookOf> maybeContactInformation =
                 this.isInContactBookOfService.findContactInformationUsingPersonIdAndWorkpackId(person.getId(), workpackId);
 
-        stakeholderPersonDto.setPerson(PersonDto.from(person, maybeContactInformation, maybeAuthentication));
+        PersonDto personDto = PersonDto.from(person, maybeContactInformation, maybeAuthentication);
+        List<RoleResource> roles = this.roleService.getRolesByEmail(idPerson, personDto.getEmail());
+        personDto.addAllRoles(roles);
+        stakeholderPersonDto.setPerson(personDto);
     }
 
     private void fillRoles(
@@ -525,19 +521,8 @@ public class StakeholderService {
             final Long workpackId,
             final Long personId
     ) {
-        final List<IsStakeholderIn> stakeholderIns = this.repository.findByIdWorkpackAndIdActor(
-                workpackId,
-                personId
-        );
-
-
-        stakeholderIns.forEach(s -> stakeholderPersonDto.getRoles().add(
-                this.modelMapper.map(s, RoleDto.class))
-        );
-
-        final List<RoleResource> remoteRoles = this.remoteRolesFetcher.fetch(personId);
-
-        stakeholderPersonDto.getPerson().addAllRoles(remoteRoles);
+        final List<IsStakeholderIn> stakeholderIns = this.repository.findByIdWorkpackAndIdActor(workpackId, personId);
+        stakeholderIns.forEach(s -> stakeholderPersonDto.getRoles().add(this.modelMapper.map(s, RoleDto.class)));
     }
 
     private void fillPermissions(
@@ -545,31 +530,25 @@ public class StakeholderService {
             final Long personId,
             final StakeholderPersonDto stakeholderPersonDto
     ) {
-
         stakeholderPersonDto.getPermissions().addAll(this.fillInheritedOfficePermissions(workpackId, personId));
         stakeholderPersonDto.getPermissions().addAll(this.fillInheritedPlanPermissions(workpackId, personId));
         stakeholderPersonDto.getPermissions().addAll(this.fillInheritedWorkpackPermissions(workpackId, personId));
 
-        final List<CanAccessWorkpack> permissionWorkpack = this.workpackPermissionRepository.findByIdWorkpackAndIdPerson(
-                workpackId,
-                personId
-        );
+        final List<CanAccessWorkpack> permissionWorkpack =
+                this.workpackPermissionRepository.findByIdWorkpackAndIdPerson(workpackId, personId);
 
-        permissionWorkpack.forEach(permission -> {
+        for (CanAccessWorkpack permission : permissionWorkpack) {
             final PermissionDto dto = this.modelMapper.map(permission, PermissionDto.class);
             dto.setRole(permission.getRole());
             dto.setLevel(permission.getPermissionLevel());
             dto.setIdPlan(permission.getIdPlan());
             stakeholderPersonDto.getPermissions().add(dto);
-        });
-
+        }
     }
 
     private List<PermissionDto> fillInheritedOfficePermissions(final Long workpackId, final Long personId) {
-        final Set<CanAccessOffice> permissions = this.officePermissionService.findInheritedPermission(
-                workpackId,
-                personId
-        );
+        final Set<CanAccessOffice> permissions =
+                this.officePermissionService.findInheritedPermission(workpackId, personId);
 
         return permissions.stream().map(permission -> {
             final PermissionDto dto = this.modelMapper.map(permission, PermissionDto.class);
@@ -581,10 +560,8 @@ public class StakeholderService {
     }
 
     private List<PermissionDto> fillInheritedPlanPermissions(final Long workpackId, final Long personId) {
-        final Set<CanAccessPlan> inheritedPlanPermission = this.planPermissionService.findInheritedPermission(
-                workpackId,
-                personId
-        );
+        final Set<CanAccessPlan> inheritedPlanPermission =
+                this.planPermissionService.findInheritedPermission(workpackId, personId);
 
         return inheritedPlanPermission.stream().map(permission -> {
             final PermissionDto dto = this.modelMapper.map(permission, PermissionDto.class);
@@ -596,10 +573,8 @@ public class StakeholderService {
     }
 
     private List<PermissionDto> fillInheritedWorkpackPermissions(final Long workpackId, final Long personId) {
-        final Set<CanAccessWorkpack> inheritedWorkpackPermissions = this.workpackPermissionRepository.findInheritedPermission(
-                workpackId,
-                personId
-        );
+        final Set<CanAccessWorkpack> inheritedWorkpackPermissions =
+                this.workpackPermissionRepository.findInheritedPermission(workpackId, personId);
 
         return inheritedWorkpackPermissions.stream().map(permission -> {
             final PermissionDto dto = this.modelMapper.map(permission, PermissionDto.class);
@@ -614,10 +589,8 @@ public class StakeholderService {
     public StakeholderOrganizationDto findOrganization(final Long idWorkpack, final Long idOrganization) {
         final Workpack workpack = this.serviceWorkpack.findById(idWorkpack);
         final Organization organization = this.serviceOrganization.findById(idOrganization);
-        final List<IsStakeholderIn> stakeholderIns = this.repository.findByIdWorkpackAndIdActor(
-                workpack.getId(),
-                idOrganization
-        );
+        final List<IsStakeholderIn> stakeholderIns =
+                this.repository.findByIdWorkpackAndIdActor(workpack.getId(), idOrganization);
         final StakeholderOrganizationDto stakeholderOrganizationDto = new StakeholderOrganizationDto();
         stakeholderOrganizationDto.setIdWorkpack(idWorkpack);
         stakeholderOrganizationDto.setOrganization(this.modelMapper.map(organization, OrganizationDto.class));
@@ -627,19 +600,12 @@ public class StakeholderService {
 
     public List<StakeholderDto> findAll(final Long idWorkpack, final Long idFilter) {
         final Workpack workpack = this.serviceWorkpack.findById(idWorkpack);
-        return this.findStakeholderAndPermissions(
-                workpack.getId(),
-                idFilter
-        );
+        return this.findStakeholderAndPermissions(workpack.getId(), idFilter);
     }
 
     private List<StakeholderDto> findStakeholderAndPermissions(final Long idWorkpack, final Long idFilter) {
-
         if (idFilter == null) {
-            return this.createDto(
-                    idWorkpack,
-                    this.repository.findByIdWorkpack(idWorkpack)
-            );
+            return this.createDto(idWorkpack, this.repository.findByIdWorkpack(idWorkpack));
         }
 
         final CustomFilter filter = this.customFilterRepository
@@ -649,10 +615,8 @@ public class StakeholderService {
         final Map<String, Object> params = new HashMap<>();
         params.put("idWorkpack", idWorkpack);
 
-        final Optional<StakeholderAndPermissionQuery> query = this.findStakeHolderAndPermission.execute(
-                filter,
-                params
-        );
+        final Optional<StakeholderAndPermissionQuery> query =
+                this.findStakeHolderAndPermission.execute(filter, params);
 
         if (!query.isPresent()) {
             return new ArrayList<>();
@@ -664,7 +628,6 @@ public class StakeholderService {
         );
 
         StakeholderService.applyOrdering(dto, filter);
-
         return dto;
     }
 

@@ -49,6 +49,14 @@ public class FindStakeholderAndPermissionUsingCustomFilter extends FindStakehold
       .append(" ");
   }
 
+  @Override protected boolean hasAppendedBooleanBlock() {
+    return true;
+  }
+
+  @Override protected boolean hasToCloseAppendedBooleanBlock() {
+    return true;
+  }
+
   @Override
   public String[] getDefinedExternalParams() {
     return new String[]{"idWorkpack"};

@@ -13,19 +13,32 @@ import java.util.Optional;
 @Repository
 public interface CustomFilterRepository extends Neo4jRepository<CustomFilter, Long> {
 
-    List<CustomFilter> findByType(CustomFilterEnum type);
+  @Query("MATCH (person:Person)-[has1:HAS]->(customFilter:CustomFilter)<-[has2:HAS]-(rules:Rules) " +
+         "WHERE ID(person)=$idPerson and customFilter.type=$type " +
+         "RETURN person, has1, customFilter, has2, rules")
+  List<CustomFilter> findByType(@Param("type") CustomFilterEnum type, @Param("idPerson") Long idPerson);
 
-    @Query("match (w:WorkpackModel)<-[f:FOR]-(c:CustomFilter)<-[h:HAS]-(r:Rules) " +
-            "where id(w)=$workpackModelId and c.type=$filter " +
-            "return w,c,r,f,h")
-    List<CustomFilter> findByWorkpackModelIdAndType(Long workpackModelId, CustomFilterEnum filter);
+  @Query("MATCH (workpackModel:WorkpackModel)<-[for:FOR]-(customFilter:CustomFilter)<-[has:HAS]-(rules:Rules) " +
+         "MATCH (customFilter)<-[:HAS]-(person:Person) " +
+         "WHERE ID(workpackModel)=$workpackModelId and customFilter.type=$filter and ID(person)=$idPerson" +
+         "RETURN workpackModel,customFilter,rules,for,has")
+  List<CustomFilter> findByWorkpackModelIdAndType(
+    @Param("workpackModelId") Long workpackModelId,
+    @Param("filter") CustomFilterEnum filter,
+    @Param("idPerson") Long idPerson
+  );
 
-    @Query("MATCH (customFilter:CustomFilter) WHERE ID(customFilter)=$idFilter RETURN customFilter, [" +
-            "  [ (rules:Rules)-[has:HAS]->(customFilter) | [rules, has] ]," +
-            "  [ (customFilter)-[for:FOR]->(workpackModel:WorkpackModel) | [for, workpackModel] ]," +
-            "  [ (workpackModel)<-[feat:FEATURES]-(propertyModel:PropertyModel) | [feat, propertyModel] ]," +
-            "  [ (workpackModel)<-[featGroup:FEATURES]-(groupModel:GroupModel) | [featGroup, groupModel] ]," +
-            "  [ (groupModel)-[groups:GROUPS]->(groupedProperty:PropertyModel) | [groups, groupedProperty] ]" +
-            "]")
-    Optional<CustomFilter> findByIdWithRelationships(@Param("idFilter") Long idFilter);
+  @Query("MATCH (customFilter:CustomFilter) WHERE ID(customFilter)=$idFilter RETURN customFilter, [" +
+         "  [ (rules:Rules)-[has:HAS]->(customFilter) | [rules, has] ]," +
+         "  [ (customFilter)-[for:FOR]->(workpackModel:WorkpackModel) | [for, workpackModel] ]," +
+         "  [ (workpackModel)<-[feat:FEATURES]-(propertyModel:PropertyModel) | [feat, propertyModel] ]," +
+         "  [ (workpackModel)<-[featGroup:FEATURES]-(groupModel:GroupModel) | [featGroup, groupModel] ]," +
+         "  [ (groupModel)-[groups:GROUPS]->(groupedProperty:PropertyModel) | [groups, groupedProperty] ]" +
+         "]")
+  Optional<CustomFilter> findByIdWithRelationships(@Param("idFilter") Long idFilter);
+
+  @Query("MATCH (person:Person)-[has1:HAS]->(customFilter:CustomFilter)<-[has2:HAS]-(rules:Rules) " +
+         "WHERE ID(person)=$idPerson and ID(customFilter)=$id " +
+         "RETURN person, has1, customFilter, has2, rules")
+  Optional<CustomFilter> findByIdAndPersonId(@Param("id") Long id, @Param("idPerson") Long idPerson);
 }

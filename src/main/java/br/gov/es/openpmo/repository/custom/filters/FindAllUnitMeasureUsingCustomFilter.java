@@ -40,6 +40,14 @@ public class FindAllUnitMeasureUsingCustomFilter extends FindAllUsingCustomFilte
     query.append("RETURN ").append(this.nodeName).append(",a,o");
   }
 
+  @Override protected boolean hasAppendedBooleanBlock() {
+    return true;
+  }
+
+  @Override protected boolean hasToCloseAppendedBooleanBlock() {
+    return true;
+  }
+
   @Override
   public String[] getDefinedExternalParams() {
     return new String[]{

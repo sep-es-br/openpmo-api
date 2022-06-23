@@ -1,7 +1,11 @@
 package br.gov.es.openpmo.service.actors;
 
 import br.gov.es.openpmo.dto.ComboDto;
-import br.gov.es.openpmo.dto.person.*;
+import br.gov.es.openpmo.dto.person.PersonCreateRequest;
+import br.gov.es.openpmo.dto.person.PersonDto;
+import br.gov.es.openpmo.dto.person.PersonGetByIdDto;
+import br.gov.es.openpmo.dto.person.PersonListDto;
+import br.gov.es.openpmo.dto.person.PersonUpdateDto;
 import br.gov.es.openpmo.dto.person.detail.PersonDetailDto;
 import br.gov.es.openpmo.dto.person.detail.permissions.OfficePermissionDetailDto;
 import br.gov.es.openpmo.dto.person.detail.permissions.PlanPermissionDetailDto;
@@ -11,31 +15,44 @@ import br.gov.es.openpmo.dto.person.queries.PersonByFullNameQuery;
 import br.gov.es.openpmo.dto.person.queries.PersonDetailQuery;
 import br.gov.es.openpmo.dto.person.queries.PersonPermissionDetailQuery;
 import br.gov.es.openpmo.dto.workpack.WorkpackName;
-import br.gov.es.openpmo.enumerator.*;
+import br.gov.es.openpmo.enumerator.CcbMemberFilterEnum;
+import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
+import br.gov.es.openpmo.enumerator.StakeholderFilterEnum;
+import br.gov.es.openpmo.enumerator.UserFilterEnum;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.actors.AuthService;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.office.plan.Plan;
-import br.gov.es.openpmo.model.relations.*;
+import br.gov.es.openpmo.model.relations.CanAccessOffice;
+import br.gov.es.openpmo.model.relations.CanAccessPlan;
+import br.gov.es.openpmo.model.relations.CanAccessWorkpack;
+import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
+import br.gov.es.openpmo.model.relations.IsCCBMemberFor;
+import br.gov.es.openpmo.model.relations.IsInContactBookOf;
+import br.gov.es.openpmo.model.relations.IsStakeholderIn;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.IsCCBMemberRepository;
 import br.gov.es.openpmo.repository.OfficeRepository;
 import br.gov.es.openpmo.repository.PersonRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
-import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
-import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
-import springfox.documentation.annotations.Cacheable;
 
 import javax.validation.constraints.NotNull;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -43,8 +60,6 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.OFFICE_NOT_FOUND;
 
 @Service
 public class PersonService {
-
-    private final TokenService tokenService;
 
     private final IsAuthenticatedByService isAuthenticatedByService;
 
@@ -58,33 +73,30 @@ public class PersonService {
 
     private final IsCCBMemberRepository ccbMemberRepository;
 
+    private final HashMap<Long, Boolean> containsCache;
+
+    private final HashMap<Long, String> fontIconCache;
+
+    private final HashMap<Long, String> nameCache;
+
     @Autowired
     public PersonService(
-            final PersonRepository repository,
-            final TokenService tokenService,
-            final IsAuthenticatedByService isAuthenticatedByService,
-            final OfficeRepository officeRepository,
-            final IsInContactBookOfService isInContactBookOfService,
-            final WorkpackRepository workpackRepository,
-            final IsCCBMemberRepository ccbMemberRepository
+      final PersonRepository repository,
+      final IsAuthenticatedByService isAuthenticatedByService,
+      final OfficeRepository officeRepository,
+      final IsInContactBookOfService isInContactBookOfService,
+      final WorkpackRepository workpackRepository,
+      final IsCCBMemberRepository ccbMemberRepository
     ) {
-        this.tokenService = tokenService;
         this.repository = repository;
         this.isAuthenticatedByService = isAuthenticatedByService;
         this.officeRepository = officeRepository;
         this.isInContactBookOfService = isInContactBookOfService;
         this.workpackRepository = workpackRepository;
         this.ccbMemberRepository = ccbMemberRepository;
-    }
-
-    public Person findByAuthorizationHeader(final String authorizationHeader) {
-
-        final Claims user = this.tokenService.getUser(authorizationHeader.split(" ")[1], TokenType.AUTHENTICATION);
-
-        final String email = (String) user.get("email");
-
-        return this.repository.findByEmail(email)
-                .orElseThrow(() -> new NegocioException(ApplicationMessage.PERSON_NOT_FOUND));
+        this.containsCache = new HashMap<>();
+        this.fontIconCache = new HashMap<>();
+        this.nameCache = new HashMap<>();
     }
 
     public Optional<Person> findByEmail(final String email) {
@@ -118,29 +130,6 @@ public class PersonService {
 
     public List<Person> personInCanAccessOffice(final Long idOffice) {
         return this.repository.findByIdOfficeReturnDistinctPerson(idOffice);
-    }
-
-    public List<Person> personInCanAccessPlan(final Long idPlan) {
-        return this.repository.findByIdPlanReturnDistinctPerson(idPlan);
-    }
-
-    public List<Person> personInIsStakeholderIn(final Long idWorkpack) {
-        return this.repository.findByIdWorkpackReturnDistinctPerson(idWorkpack);
-    }
-
-    public Person savePersonByEmail(final String email, final Long idOffice) {
-        final String[] name = email.split("@");
-        final Person person = new Person();
-
-        person.setName(name.length == 0 ? email : name[0]);
-        person.setFullName(name.length == 0 ? email : name[0]);
-        this.save(person);
-        this.createAuthenticationRelationship(email, null, person);
-
-        if (idOffice != null) {
-            this.createContactRelationshipUsingEmail(email, idOffice, person);
-        }
-        return person;
     }
 
     public Person save(final Person person) {
@@ -242,7 +231,6 @@ public class PersonService {
                 .collect(Collectors.toList());
     }
 
-    @Cacheable("findPersonDetailsById")
     public PersonDetailDto findPersonDetailsById(
             final Long personId,
             final Long officeId,
@@ -271,13 +259,17 @@ public class PersonService {
     }
 
     private OfficePermissionDetailDto createOfficeDetail(final List<PersonPermissionDetailQuery> permissions) {
+        this.containsCache.clear();
+        this.fontIconCache.clear();
+        this.nameCache.clear();
+
         final PersonPermissionDetailQuery permission = permissions.get(0);
         final OfficePermissionDetailDto result = new OfficePermissionDetailDto();
 
         final List<CanAccessOffice> canAccessOffices = permissions.stream()
-                .map(PersonPermissionDetailQuery::getCanAccessOffice)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+          .map(PersonPermissionDetailQuery::getCanAccessOffice)
+          .filter(Objects::nonNull)
+          .collect(Collectors.toList());
 
         final List<PlanPermissionDetailDto> planDetail = createPlanDetail(permissions);
 
@@ -315,10 +307,11 @@ public class PersonService {
 
         result.setId(permission.getOffice().getId());
         result.setPlanPermissions(planDetail);
+
         return result;
     }
 
-    private List<PlanPermissionDetailDto> createPlanDetail(final List<PersonPermissionDetailQuery> permissions) {
+    private List<PlanPermissionDetailDto> createPlanDetail(Iterable<PersonPermissionDetailQuery> permissions) {
         List<PlanPermissionDetailDto> result = new ArrayList<>();
 
         for (PersonPermissionDetailQuery permission : permissions) {
@@ -368,17 +361,18 @@ public class PersonService {
         return result;
     }
 
-    private List<WorkpackPermissionDetailDto> createWorkpackDetail(Plan plan, List<PersonPermissionDetailQuery> permissions) {
+    private List<WorkpackPermissionDetailDto> createWorkpackDetail(Plan plan, Iterable<PersonPermissionDetailQuery> permissions) {
         List<WorkpackPermissionDetailDto> result = new ArrayList<>();
 
         final List<Workpack> workpacks = extractFrom(plan, permissions,
-                PersonPermissionDetailQuery::getPlan, PersonPermissionDetailQuery::getWorkpack);
+                                                     PersonPermissionDetailQuery::getPlan, PersonPermissionDetailQuery::getWorkpack
+        );
 
         for (PersonPermissionDetailQuery permission : permissions) {
             final Workpack workpack = permission.getWorkpack();
 
             if (workpack == null
-                    || contains(workpack, result, WorkpackPermissionDetailDto::getId)
+                || contains(workpack, result, WorkpackPermissionDetailDto::getId)
                     || !workpacks.contains(workpack)
             ) {
                 continue;
@@ -431,47 +425,69 @@ public class PersonService {
     }
 
     private String getFontIcon(Workpack workpack) {
-        return this.workpackRepository.findWorkpackModelByWorkpackId(workpack.getId())
-                .map(WorkpackModel::getFontIcon)
-                .orElse(null);
+        Long id = workpack.getId();
+        String fontIconCache = this.fontIconCache.get(id);
+        if (fontIconCache != null) {
+            return fontIconCache;
+        }
+        String fontIcon = this.workpackRepository.findWorkpackModelByWorkpackId(id)
+          .map(WorkpackModel::getFontIcon)
+          .orElse(null);
+        this.fontIconCache.put(id, fontIcon);
+        return fontIcon;
     }
 
-    private List<String> getRoles(List<IsStakeholderIn> isStakeholderIns) {
+    private List<String> getRoles(Collection<IsStakeholderIn> isStakeholderIns) {
         return isStakeholderIns.stream()
-                .map(IsStakeholderIn::getRole)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+          .map(IsStakeholderIn::getRole)
+          .filter(Objects::nonNull)
+          .collect(Collectors.toList());
     }
 
     private String getName(Workpack workpack) {
-        return this.workpackRepository.findWorkpackNameAndFullname(workpack.getId())
-                .map(WorkpackName::getName)
-                .orElse(null);
+        Long id = workpack.getId();
+        String nameCache = this.nameCache.get(id);
+        if (nameCache != null) {
+            return nameCache;
+        }
+        String name = this.workpackRepository.findWorkpackNameAndFullname(id)
+          .map(WorkpackName::getName)
+          .orElse(null);
+        this.nameCache.put(id, name);
+        return name;
     }
 
-    private <T> boolean contains(Entity entity, List<T> collection, Function<T, Long> longFunction) {
-        return collection.stream()
-                .anyMatch(element -> Objects.equals(entity.getId(), longFunction.apply(element)));
+    private <T> boolean contains(Entity entity, Iterable<T> collection, Function<T, Long> longFunction) {
+        Long id = entity.getId();
+        Boolean containsCache = this.containsCache.get(id);
+        if (containsCache != null) {
+            return true;
+        }
+        for (T element : collection) {
+            if (Objects.equals(id, longFunction.apply(element))) {
+                this.containsCache.put(id, true);
+                return true;
+            }
+        }
+        return false;
     }
 
     private <R> List<R> extractFrom(
-            @NotNull Entity entity,
-            List<PersonPermissionDetailQuery> permissions,
-            Function<PersonPermissionDetailQuery, Entity> entitySupplier,
-            Function<PersonPermissionDetailQuery, R> relationshipSupplier
+      @NotNull Entity entity,
+      Iterable<PersonPermissionDetailQuery> permissions,
+      Function<PersonPermissionDetailQuery, Entity> entitySupplier,
+      Function<PersonPermissionDetailQuery, R> relationshipSupplier
     ) {
+        Long id = entity.getId();
         List<R> result = new ArrayList<>();
 
         for (PersonPermissionDetailQuery permission : permissions) {
-            final Entity other = entitySupplier.apply(permission);
-
+            Entity other = entitySupplier.apply(permission);
             if (other == null) {
                 continue;
             }
-
-            final boolean isSame = Objects.equals(entity.getId(), other.getId());
-            final R relationship = relationshipSupplier.apply(permission);
-
+            boolean isSame = Objects.equals(id, other.getId());
+            R relationship = relationshipSupplier.apply(permission);
             if (isSame && relationship != null) {
                 result.add(relationship);
             }
@@ -539,26 +555,29 @@ public class PersonService {
         if (maybeQueryResult.isPresent()) {
             final PersonByFullNameQuery query = maybeQueryResult.get();
             return query.getPersons()
-                    .stream()
-                    .map(person -> PersonDto.from(person, query.getContacts()))
-                    .collect(java.util.stream.Collectors.toList());
+              .stream()
+              .map(person -> PersonDto.from(person, query.getContacts()))
+              .collect(java.util.stream.Collectors.toList());
         }
 
         return null;
     }
 
-    public Optional<Person> findPersonByFullName(final String fullName, final Long idWorkpack) {
-        return this.repository.findPersonByFullName(fullName, idWorkpack);
+    public void findPersonByFullName(final String fullName, final Long idWorkpack) {
+        Optional<Person> personByFullName = this.repository.findPersonByFullName(fullName, idWorkpack);
+        if (personByFullName.isPresent()) {
+            throw new NegocioException(ApplicationMessage.PERSON_ALREADY_EXISTS);
+        }
     }
 
     public Optional<PersonGetByIdDto> maybeFindPersonDataByEmail(
-            final String email,
-            final Long idOffice,
-            final UriComponentsBuilder uriComponentsBuilder
+      final String email,
+      final Long idOffice,
+      final UriComponentsBuilder uriComponentsBuilder
     ) {
         return this.repository.findByEmail(email)
-                .map(person -> {
-                    final Optional<IsInContactBookOf> maybeContact = this.isInContactBookOfService.findContactInformationUsingPersonIdAndOffice(
+          .map(person -> {
+              final Optional<IsInContactBookOf> maybeContact = this.isInContactBookOfService.findContactInformationUsingPersonIdAndOffice(
                             person.getId(),
                             idOffice
                     );

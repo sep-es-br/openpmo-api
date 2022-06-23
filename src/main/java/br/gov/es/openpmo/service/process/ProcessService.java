@@ -2,7 +2,11 @@ package br.gov.es.openpmo.service.process;
 
 import br.gov.es.openpmo.apis.edocs.EDocsApi;
 import br.gov.es.openpmo.apis.edocs.response.ProcessResponse;
-import br.gov.es.openpmo.dto.process.*;
+import br.gov.es.openpmo.dto.process.ProcessCardDto;
+import br.gov.es.openpmo.dto.process.ProcessCreateDto;
+import br.gov.es.openpmo.dto.process.ProcessDetailDto;
+import br.gov.es.openpmo.dto.process.ProcessFromEDocsDto;
+import br.gov.es.openpmo.dto.process.ProcessUpdateDto;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.exception.RegistroNaoEncontradoException;
 import br.gov.es.openpmo.model.filter.CustomFilter;
@@ -17,10 +21,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.Valid;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static br.gov.es.openpmo.utils.ApplicationMessage.*;
+import static br.gov.es.openpmo.utils.ApplicationMessage.ID_WORKPACK_NOT_NULL;
+import static br.gov.es.openpmo.utils.ApplicationMessage.PROCESS_ID_NOT_NULL;
+import static br.gov.es.openpmo.utils.ApplicationMessage.PROCESS_NOT_FOUND;
 
 @Service
 public class ProcessService {
@@ -37,11 +47,11 @@ public class ProcessService {
 
   @Autowired
   public ProcessService(
-      final ProcessRepository repository,
-      final EDocsApi eDocsApi,
-      final WorkpackService workpackService,
-      final FindAllProcessUsingCustomFilter findAllProcess,
-      final CustomFilterService customFilterService
+    final ProcessRepository repository,
+    final EDocsApi eDocsApi,
+    final WorkpackService workpackService,
+    final FindAllProcessUsingCustomFilter findAllProcess,
+    final CustomFilterService customFilterService
   ) {
     this.repository = repository;
     this.eDocsApi = eDocsApi;
@@ -57,7 +67,7 @@ public class ProcessService {
 
   @Transactional
   public Process create(@Valid final ProcessCreateDto request) {
-    if (Objects.isNull(request.getIdWorkpack())) {
+    if(Objects.isNull(request.getIdWorkpack())) {
       throw new NegocioException(ID_WORKPACK_NOT_NULL);
     }
     final Workpack workpack = this.workpackService.findById(request.getIdWorkpack());
@@ -70,7 +80,7 @@ public class ProcessService {
   @Transactional
   public ProcessDetailDto update(final ProcessUpdateDto request, final Long idPerson) {
     final Process process = this.maybeFindById(request)
-        .orElseThrow(() -> new RegistroNaoEncontradoException(PROCESS_NOT_FOUND));
+      .orElseThrow(() -> new RegistroNaoEncontradoException(PROCESS_NOT_FOUND));
 
     final ProcessResponse processResponse = this.eDocsApi.findProcessByProtocol(process.getProcessNumber(), idPerson);
 
@@ -85,7 +95,7 @@ public class ProcessService {
   }
 
   public void deleteById(final Long id) {
-    if (Objects.isNull(id)) throw new IllegalArgumentException(PROCESS_ID_NOT_NULL);
+    if(Objects.isNull(id)) throw new IllegalArgumentException(PROCESS_ID_NOT_NULL);
 
     this.repository.deleteById(id);
   }
@@ -93,7 +103,7 @@ public class ProcessService {
   @Transactional
   public ProcessDetailDto findById(final Long idProcess, final Long idPerson) {
     final Process process = this.repository.findById(idProcess)
-        .orElseThrow(() -> new RegistroNaoEncontradoException(PROCESS_NOT_FOUND));
+      .orElseThrow(() -> new RegistroNaoEncontradoException(PROCESS_NOT_FOUND));
     final ProcessResponse processResponse = this.eDocsApi.findProcessByProtocol(process.getProcessNumber(), idPerson);
     this.updateProcessState(process, processResponse);
 
@@ -105,28 +115,28 @@ public class ProcessService {
     this.repository.save(process, 0);
   }
 
-  public List<ProcessCardDto> findAllAsCardDto(final Long idWorkpack, final Long idFilter) {
+  public List<ProcessCardDto> findAllAsCardDto(final Long idWorkpack, final Long idFilter, final Long idPerson) {
 
-    if (idWorkpack == null) {
+    if(idWorkpack == null) {
       throw new IllegalArgumentException(ID_WORKPACK_NOT_NULL);
     }
 
-    if (idFilter == null) {
+    if(idFilter == null) {
       return this.repository.findAllByWorkpack(idWorkpack).stream()
-          .map(ProcessCardDto::of)
-          .collect(Collectors.toList());
+        .map(ProcessCardDto::of)
+        .collect(Collectors.toList());
     }
-    return this.findUsingCustomFilter(idWorkpack, idFilter);
+    return this.findUsingCustomFilter(idWorkpack, idFilter, idPerson);
   }
 
-  private List<ProcessCardDto> findUsingCustomFilter(final Long idWorkpack, final Long idFilter) {
-    final CustomFilter filter = this.customFilterService.findById(idFilter);
+  private List<ProcessCardDto> findUsingCustomFilter(final Long idWorkpack, final Long idFilter, final Long idPerson) {
+    final CustomFilter filter = this.customFilterService.findById(idFilter, idPerson);
     final Map<String, Object> params = new HashMap<>();
     params.put("idWorkpack", idWorkpack);
     final List<Process> processes = this.findAllProcess.execute(filter, params);
     return processes.stream()
-        .map(ProcessCardDto::of)
-        .collect(Collectors.toList());
+      .map(ProcessCardDto::of)
+      .collect(Collectors.toList());
   }
 
 }

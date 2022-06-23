@@ -16,7 +16,12 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_NOT_FOUND;
@@ -68,10 +73,10 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
     }
 
     private TripleConstraintDataChart calculateForMonth(
-            Long workpackId,
-            Long baselineId,
-            YearMonth yearMonth,
-            Set<Long> deliverablesId
+      Long workpackId,
+      Long baselineId,
+      YearMonth yearMonth,
+      Set<Long> deliverablesId
     ) {
         final TripleConstraintDataChart tripleConstraint = new TripleConstraintDataChart();
 
@@ -105,14 +110,14 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
         final List<Long> baselineIds = getActiveBaselineIds(workpackId);
 
         return this.baselineRepository.fetchIntervalOfSchedules(workpackId, baselineIds)
-                .filter(DateIntervalQuery::isValid)
-                .map(DateIntervalQuery::toYearMonths)
-                .map(months -> this.calculateForAllMonths(workpackId, months));
+          .filter(DateIntervalQuery::isValid)
+          .map(DateIntervalQuery::toYearMonths)
+          .map(months -> this.calculateForAllMonths(workpackId, months));
     }
 
     private List<TripleConstraintDataChart> calculateForAllMonths(
-            @NonNull Long workpackId,
-            @NonNull List<YearMonth> months
+      @NonNull Long workpackId,
+      @NonNull List<YearMonth> months
     ) {
         final ArrayList<TripleConstraintDataChart> charts = new ArrayList<>();
         final Set<Long> deliverablesId = getDeliverablesId(workpackId);
@@ -126,7 +131,7 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
 
     private List<Baseline> getBaselines(Long workpackId) {
         final List<Baseline> baselines =
-                this.baselineRepository.findApprovedOrProposedBaselinesByAnyWorkpackId(workpackId);
+          this.baselineRepository.findApprovedOrProposedBaselinesByAnyWorkpackId(workpackId);
 
         if (this.workpackRepository.isProject(workpackId)) {
             return baselines;
@@ -139,17 +144,17 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
         }
 
         return baselines.stream()
-                .max(Comparator.comparing(Baseline::getProposalDate))
-                .map(Collections::singletonList)
-                .orElse(null);
+          .max(Comparator.comparing(Baseline::getProposalDate))
+          .map(Collections::singletonList)
+          .orElse(null);
     }
 
     private void calculateForBaseline(
-            Long workpackId,
-            Long baselineId,
-            List<YearMonth> months,
-            Set<Long> deliverablesId,
-            List<TripleConstraintDataChart> charts
+      Long workpackId,
+      Long baselineId,
+      List<YearMonth> months,
+      Set<Long> deliverablesId,
+      List<TripleConstraintDataChart> charts
     ) {
         for (YearMonth month : months) {
             charts.add(calculateForMonth(workpackId, baselineId, month, deliverablesId));
@@ -157,9 +162,9 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
     }
 
     private void buildScheduleDataChart(
-            final Long baselineId,
-            final Long workpackId,
-            final TripleConstraintDataChart tripleConstraint,
+      final Long baselineId,
+      final Long workpackId,
+      final TripleConstraintDataChart tripleConstraint,
             final YearMonth yearMonth
     ) {
         final List<Long> baselineIds = Optional.ofNullable(baselineId)

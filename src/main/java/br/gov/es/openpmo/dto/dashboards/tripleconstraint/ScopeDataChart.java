@@ -179,16 +179,20 @@ public class ScopeDataChart {
                     .multiply(ONE_HUNDRED);
 
             this.actualVariationPercent = this.plannedVariationPercent.subtract(actualVariation);
-        } else {
-            this.variation = null;
-
-            this.plannedVariationPercent = null;
-            this.foreseenVariationPercent = ONE_HUNDRED;
-
-            this.actualVariationPercent = this.variationCostBetweenPlannedAndActual
-                    .divide(foreseenValue, 2, RoundingMode.HALF_UP)
-                    .multiply(ONE_HUNDRED);
+            return;
         }
+
+        if (Objects.equals(foreseenValue, BigDecimal.ZERO)) {
+            this.actualVariationPercent = null;
+            return;
+        }
+
+        this.variation = null;
+        this.plannedVariationPercent = null;
+        this.foreseenVariationPercent = ONE_HUNDRED;
+        this.actualVariationPercent = this.variationCostBetweenPlannedAndActual
+                .divide(foreseenValue, 2, RoundingMode.HALF_UP)
+                .multiply(ONE_HUNDRED);
     }
 
     private BigDecimal calculateDeltaBetweenPlannedAndForeseen() {

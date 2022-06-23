@@ -39,6 +39,14 @@ public class FindAllOrganizationUsingCustomFilter extends FindAllUsingCustomFilt
     query.append("RETURN ").append(this.nodeName).append(", office");
   }
 
+  @Override protected boolean hasAppendedBooleanBlock() {
+    return true;
+  }
+
+  @Override protected boolean hasToCloseAppendedBooleanBlock() {
+    return true;
+  }
+
   @Override
   public String[] getDefinedExternalParams() {
     return new String[]{"idOffice"};

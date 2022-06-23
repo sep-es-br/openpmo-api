@@ -19,10 +19,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.Valid;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static br.gov.es.openpmo.utils.ApplicationMessage.*;
+import static br.gov.es.openpmo.utils.ApplicationMessage.HAS_ISSUE_RELATIONSHIP;
+import static br.gov.es.openpmo.utils.ApplicationMessage.ID_WORKPACK_NOT_NULL;
+import static br.gov.es.openpmo.utils.ApplicationMessage.RISK_NOT_FOUND;
 
 @Service
 public class RiskService {
@@ -55,14 +61,14 @@ public class RiskService {
     this.journalCreator = journalCreator;
   }
 
-  public List<RiskCardDto> findAllAsCardDto(final Long idWorkpack, final Long idFilter) {
-    if (idWorkpack == null) {
+  public List<RiskCardDto> findAllAsCardDto(final Long idWorkpack, final Long idFilter, Long idPerson) {
+    if(idWorkpack == null) {
       throw new IllegalArgumentException(ID_WORKPACK_NOT_NULL);
     }
-    if (idFilter == null) {
+    if(idFilter == null) {
       return this.findAllAsCardDto(idWorkpack);
     }
-    final CustomFilter customFilter = this.customFilterService.findById(idFilter);
+    final CustomFilter customFilter = this.customFilterService.findById(idFilter, idPerson);
     final Map<String, Object> params = new HashMap<>();
 
     params.put("idWorkpack", idWorkpack);

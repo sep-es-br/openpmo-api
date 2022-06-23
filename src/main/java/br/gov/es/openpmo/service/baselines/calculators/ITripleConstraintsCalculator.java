@@ -7,5 +7,4 @@ public interface ITripleConstraintsCalculator {
 
   TripleConstraintOutput calculate(Long idBaseline);
 
-
 }

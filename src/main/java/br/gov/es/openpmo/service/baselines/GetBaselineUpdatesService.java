@@ -25,10 +25,10 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
 
   @Autowired
   public GetBaselineUpdatesService(
-      final BaselineRepository baselineRepository,
-      final WorkpackRepository workpackRepository,
-      final IGetFirstTimeBaselineUpdatesService getFirstTimeBaselineUpdatesService,
-      final IGetAnotherTimeBaselineUpdatesService getAnotherTimeBaselineUpdatesService
+    final BaselineRepository baselineRepository,
+    final WorkpackRepository workpackRepository,
+    final IGetFirstTimeBaselineUpdatesService getFirstTimeBaselineUpdatesService,
+    final IGetAnotherTimeBaselineUpdatesService getAnotherTimeBaselineUpdatesService
   ) {
     this.baselineRepository = baselineRepository;
     this.workpackRepository = workpackRepository;
@@ -39,17 +39,17 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
   @Override
   public List<UpdateResponse> getUpdates(final Long idWorkpack) {
     final Workpack workpack = this.findProjectWorkpackById(idWorkpack);
-      final Baseline baseline = this.baselineRepository.findActiveBaseline(idWorkpack).orElse(null);
+    final Baseline baseline = this.baselineRepository.findActiveBaseline(idWorkpack).orElse(null);
 
     return baseline == null
-        ? this.getFirstTimeBaselineUpdatesService.getUpdates(workpack.getChildren(), false)
-        : this.getAnotherTimeBaselineUpdatesService.getUpdates(baseline, workpack);
+      ? this.getFirstTimeBaselineUpdatesService.getUpdates(workpack.getChildren(), false)
+      : this.getAnotherTimeBaselineUpdatesService.getUpdates(baseline, workpack);
   }
 
   private Workpack findProjectWorkpackById(final Long idWorkpack) {
     return this.workpackRepository.findWithPropertiesAndModelAndChildrenById(idWorkpack)
-        .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND))
-        .ifIsNotProjectThrowsException();
+      .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND))
+      .ifIsNotProjectThrowsException();
   }
 
 }

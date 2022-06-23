@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.controller.filters;
 
 import br.gov.es.openpmo.model.filter.CustomFilterEnum;
+import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.filters.CustomFilterService;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,10 @@ public class FilterCostAccountController extends CreateAndUpdateUsingWorkpackMod
   @Override
   protected CustomFilterService getCustomFilterService() {
     return this.customFilterService;
+  }
+
+  @Override protected TokenService getTokenService() {
+    return null;
   }
 
   @Override

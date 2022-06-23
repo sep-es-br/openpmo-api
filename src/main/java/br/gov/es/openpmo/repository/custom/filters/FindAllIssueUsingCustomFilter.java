@@ -38,6 +38,15 @@ public class FindAllIssueUsingCustomFilter extends FindAllUsingCustomFilterBuild
     query.append("RETURN issue");
   }
 
+
+  @Override protected boolean hasAppendedBooleanBlock() {
+    return true;
+  }
+
+  @Override protected boolean hasToCloseAppendedBooleanBlock() {
+    return true;
+  }
+
   @Override
   protected String[] getDefinedExternalParams() {
     return new String[]{

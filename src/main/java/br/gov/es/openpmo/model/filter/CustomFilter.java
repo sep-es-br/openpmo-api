@@ -2,10 +2,13 @@ package br.gov.es.openpmo.model.filter;
 
 import br.gov.es.openpmo.dto.filter.CustomFilterDto;
 import br.gov.es.openpmo.model.Entity;
+import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
+import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 @NodeEntity
@@ -22,23 +25,31 @@ public class CustomFilter extends Entity {
   private SortByDirectionEnum direction;
 
   @Relationship(value = "HAS", direction = Relationship.INCOMING)
+  private Person person;
+
+  @Relationship(value = "HAS", direction = Relationship.INCOMING)
   private Set<Rules> rules;
 
   @Relationship("FOR")
   private WorkpackModel workpackModel;
 
-  public CustomFilter() {
-  }
 
   public CustomFilter(
-    final String name, final CustomFilterEnum type, final boolean favorite, final SortByDirectionEnum direction,
-    final String sortBy, final WorkpackModel workpackModel) {
+    final String name,
+    final CustomFilterEnum type,
+    final boolean favorite,
+    final SortByDirectionEnum direction,
+    final String sortBy,
+    final WorkpackModel workpackModel,
+    final Person person
+  ) {
     this.name = name;
     this.type = type;
     this.favorite = favorite;
     this.direction = direction;
     this.sortBy = sortBy;
     this.workpackModel = workpackModel;
+    this.person = person;
   }
 
   public WorkpackModel getWorkpackModel() {
@@ -58,7 +69,8 @@ public class CustomFilter extends Entity {
   }
 
   public Set<Rules> getRules() {
-    return this.rules;
+    return Optional.ofNullable(this.rules)
+      .orElse(new HashSet<>());
   }
 
   public void setRules(final Set<Rules> rules) {
@@ -97,10 +109,17 @@ public class CustomFilter extends Entity {
     this.type = type;
   }
 
+  public Person getPerson() {
+    return this.person;
+  }
+
+  public void setPerson(final Person person) {
+    this.person = person;
+  }
+
   public void update(
     final CustomFilterDto request,
     final CustomFilterEnum customFilterEnum,
-    final CustomFilter customFilter,
     final WorkpackModel workpackModel
   ) {
     this.setDirection(request.getSortByDirection());

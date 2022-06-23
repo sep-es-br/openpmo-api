@@ -3,6 +3,7 @@ package br.gov.es.openpmo.model.properties;
 import br.gov.es.openpmo.enumerator.CategoryEnum;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.office.UnitMeasure;
+import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.properties.models.UnitSelectionModel;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import org.neo4j.ogm.annotation.NodeEntity;
@@ -85,25 +86,30 @@ public class UnitSelection extends Property<UnitSelection, UnitMeasure> {
         return Objects.hash(super.hashCode(), this.driver);
     }
 
-    @Override
-    public Workpack getWorkpack() {
-        return this.workpack;
-    }
+  @Override
+  public Workpack getWorkpack() {
+    return this.workpack;
+  }
 
-    @Override
-    public void setWorkpack(final Workpack workpack) {
-        this.workpack = workpack;
-    }
+  @Override
+  public void setWorkpack(final Workpack workpack) {
+    this.workpack = workpack;
+  }
 
-    @Override
-    public boolean hasChanges(final UnitSelection other) {
-        return (this.value != null || other.value != null)
-                && (this.value != null && other.value == null || this.value == null || this.hasChangesSafe(this.value, other.value));
-    }
+  @Override public PropertyModel getPropertyModel() {
+    return this.getDriver();
+  }
 
-    private boolean hasChangesSafe(final UnitMeasure value, final UnitMeasure otherValue) {
-        final boolean hasNameChanges = (value.getName() != null || otherValue.getName() != null)
-                && (value.getName() != null && otherValue.getName() == null || value.getName() == null || !value.getName().equals(otherValue.getName()));
+  @Override
+  public boolean hasChanges(final UnitSelection other) {
+    return (this.value != null || other.value != null)
+           && (this.value != null && other.value == null || this.value == null || this.hasChangesSafe(this.value, other.value));
+  }
+
+  private boolean hasChangesSafe(final UnitMeasure value, final UnitMeasure otherValue) {
+    final boolean hasNameChanges = (value.getName() != null || otherValue.getName() != null)
+                                   && (value.getName() != null && otherValue.getName() == null || value.getName() == null || !value.getName().equals(
+      otherValue.getName()));
 
         final boolean hasFullNameChanges = (value.getFullName() != null || otherValue.getFullName() != null)
                 && (value.getFullName() != null && otherValue.getFullName() == null || value.getFullName() == null || !value.getFullName().equals(otherValue.getFullName()));

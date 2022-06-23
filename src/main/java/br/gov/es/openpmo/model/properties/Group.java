@@ -3,6 +3,7 @@ package br.gov.es.openpmo.model.properties;
 import br.gov.es.openpmo.enumerator.CategoryEnum;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.properties.models.GroupModel;
+import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
@@ -69,25 +70,29 @@ public class Group extends Property<Group, Set<Property>> {
         this.category = category;
     }
 
-    @Override
-    public Workpack getWorkpack() {
-        return this.workpack;
-    }
+  @Override
+  public Workpack getWorkpack() {
+    return this.workpack;
+  }
 
-    @Override
-    public void setWorkpack(final Workpack workpack) {
-        this.workpack = workpack;
-    }
+  @Override
+  public void setWorkpack(final Workpack workpack) {
+    this.workpack = workpack;
+  }
 
-    @Override
-    public boolean hasChanges(final Group other) {
-        return (this.getValue() != null || other.getValue() != null)
-                && (this.getValue() != null && other.getValue() == null || this.getValue() == null || !this.getValue().equals(other.getValue()));
-    }
+  @Override public PropertyModel getPropertyModel() {
+    return this.getDriver();
+  }
 
-    @Override
-    public Set<Property> getValue() {
-        return this.groupedProperties;
+  @Override
+  public boolean hasChanges(final Group other) {
+    return (this.getValue() != null || other.getValue() != null)
+           && (this.getValue() != null && other.getValue() == null || this.getValue() == null || !this.getValue().equals(other.getValue()));
+  }
+
+  @Override
+  public Set<Property> getValue() {
+    return this.groupedProperties;
     }
 
     @Override

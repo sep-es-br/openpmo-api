@@ -7,7 +7,6 @@ import br.gov.es.openpmo.dto.workpack.WorkpackName;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.repository.BaselineRepository;
-import br.gov.es.openpmo.repository.IsEvaluatedByRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.baselines.calculators.ITripleConstraintsCalculator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,8 +21,11 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_NOT_FOUND;
 public class GetBaselineAsCCBMemberViewService implements IGetBaselineAsCCBMemberViewService {
 
   private final WorkpackRepository workpackRepository;
+
   private final BaselineRepository repository;
+
   private final ITripleConstraintsCalculator tripleConstraintsCalculator;
+
   private final IGetAllBaselineEvaluations getAllBaselineEvaluations;
 
   @Autowired
@@ -31,7 +33,6 @@ public class GetBaselineAsCCBMemberViewService implements IGetBaselineAsCCBMembe
     final WorkpackRepository workpackRepository,
     final BaselineRepository repository,
     final ITripleConstraintsCalculator tripleConstraintsCalculator,
-    final IsEvaluatedByRepository isEvaluatedByRepository,
     final IGetAllBaselineEvaluations getAllBaselineEvaluations
   ) {
     this.workpackRepository = workpackRepository;
@@ -40,13 +41,11 @@ public class GetBaselineAsCCBMemberViewService implements IGetBaselineAsCCBMembe
     this.getAllBaselineEvaluations = getAllBaselineEvaluations;
   }
 
-  @Override public BaselineDetailCCBMemberResponse getById(final Long idBaseline, final Long idPerson) {
+  @Override
+  public BaselineDetailCCBMemberResponse getById(final Long idBaseline, final Long idPerson) {
     final Baseline baseline = this.findBaselineById(idBaseline);
-
     final WorkpackName workpackName = this.findWorkpackNameById(baseline);
-
     final TripleConstraintOutput output = this.tripleConstraintsCalculator.calculate(idBaseline);
-
     final List<EvaluationItem> evaluations = this.getAllEvaluations(idBaseline, idPerson);
 
     return BaselineDetailCCBMemberResponse.of(
@@ -72,6 +71,5 @@ public class GetBaselineAsCCBMemberViewService implements IGetBaselineAsCCBMembe
     return this.repository.findBaselineDetailById(idBaseline)
       .orElseThrow(() -> new NegocioException(BASELINE_NOT_FOUND));
   }
-
 
 }

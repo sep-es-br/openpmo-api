@@ -15,21 +15,27 @@ public class IsStakeholderIn implements HasRole {
     @Id
     @GeneratedValue
     private Long id;
+
     private String role;
+
     private LocalDate to;
+
     private LocalDate from;
+
     private boolean active;
+
     private String permitedRole;
+
     private PermissionLevelEnum permissionLevel;
+
     @StartNode
     private Actor actor;
+
     @EndNode
     private Workpack workpack;
 
     public IsStakeholderIn() {
     }
-
-
 
     @Transient
     public Long getIdWorkpack() {
@@ -108,4 +114,5 @@ public class IsStakeholderIn implements HasRole {
     public void setId(Long id) {
         this.id = id;
     }
+
 }

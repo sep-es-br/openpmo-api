@@ -41,6 +41,14 @@ public class FindAllPlanUsingCustomFilter extends FindAllUsingCustomFilterBuilde
     query.append("RETURN ").append(this.nodeName).append(", r, o, sb, pm");
   }
 
+  @Override protected boolean hasAppendedBooleanBlock() {
+    return true;
+  }
+
+  @Override protected boolean hasToCloseAppendedBooleanBlock() {
+    return true;
+  }
+
   @Override
   public String[] getDefinedExternalParams() {
     return new String[]{"idOffice"};

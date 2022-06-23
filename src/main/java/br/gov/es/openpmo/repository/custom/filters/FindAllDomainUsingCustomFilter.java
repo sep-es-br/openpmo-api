@@ -46,6 +46,7 @@ public class FindAllDomainUsingCustomFilter extends FindAllUsingCustomFilterBuil
       .append("]");
   }
 
+
   @Override
   public void buildOrderingAndDirectionClause(final CustomFilter filter, final StringBuilder query) {
     this.appendStringIfTrue(
@@ -56,6 +57,14 @@ public class FindAllDomainUsingCustomFilter extends FindAllUsingCustomFilterBuil
         .append(" ").append(filter.getDirection()),
       query
     );
+  }
+
+  @Override protected boolean hasAppendedBooleanBlock() {
+    return true;
+  }
+
+  @Override protected boolean hasToCloseAppendedBooleanBlock() {
+    return true;
   }
 
   @Override

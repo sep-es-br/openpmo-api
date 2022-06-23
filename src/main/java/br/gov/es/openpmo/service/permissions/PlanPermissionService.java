@@ -1,8 +1,5 @@
 package br.gov.es.openpmo.service.permissions;
 
-import br.gov.es.openpmo.apis.acessocidadao.AcessoCidadaoApi;
-import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentResponse;
-import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentRoleResponse;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.dto.person.PersonDto;
 import br.gov.es.openpmo.dto.person.RoleResource;
@@ -26,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.OFFICE_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PLAN_PERMISSION_NOT_FOUND;
@@ -39,9 +35,8 @@ public class PlanPermissionService {
     private final PersonService personService;
     private final OfficeService officeService;
     private final IsAuthenticatedByService isAuthenticatedByService;
-    private final IRemoteRolesFetcher remoteRolesFetcher;
     private final IsInContactBookOfService isInContactBookOfService;
-    private final AcessoCidadaoApi acessoCidadaoApi;
+    private final RoleService roleService;
 
     @Autowired
     public PlanPermissionService(
@@ -50,18 +45,16 @@ public class PlanPermissionService {
             final PersonService personService,
             final OfficeService officeService,
             final IsAuthenticatedByService isAuthenticatedByService,
-            final IRemoteRolesFetcher remoteRolesFetcher,
             IsInContactBookOfService isInContactBookOfService,
-            AcessoCidadaoApi acessoCidadaoApi
+            RoleService roleService
     ) {
         this.repository = repository;
         this.planService = planService;
         this.personService = personService;
         this.officeService = officeService;
         this.isAuthenticatedByService = isAuthenticatedByService;
-        this.remoteRolesFetcher = remoteRolesFetcher;
         this.isInContactBookOfService = isInContactBookOfService;
-        this.acessoCidadaoApi = acessoCidadaoApi;
+        this.roleService = roleService;
     }
 
     public void delete(final Long idPlan, final String email) {
@@ -74,11 +67,11 @@ public class PlanPermissionService {
     }
 
     public List<PlanPermissionDto> findAllDto(final Long idPlan, final String email, Long idPerson) {
+        List<RoleResource> resources = this.roleService.getRolesByEmail(idPerson, email);
         final List<PlanPermissionDto> plansPermissionDto = new ArrayList<>();
         final Plan plan = this.planService.findById(idPlan);
         final List<CanAccessPlan> listPlansPermission = this.listPlansPermissions(plan, email);
         final Map<Person, List<PermissionDto>> mapPermission = new HashMap<>();
-
         listPlansPermission.forEach(p -> {
             final PermissionDto dto = new PermissionDto();
             dto.setId(p.getId());
@@ -87,51 +80,21 @@ public class PlanPermissionService {
             mapPermission.computeIfAbsent(p.getPerson(), k -> new ArrayList<>());
             mapPermission.get(p.getPerson()).add(dto);
         });
-
         mapPermission.keySet().forEach(person -> {
             final PlanPermissionDto planPermissionDto = new PlanPermissionDto();
             planPermissionDto.setIdPlan(idPlan);
             planPermissionDto.setPermissions(mapPermission.get(person));
-
-            final Optional<IsAuthenticatedBy> maybeAuthenticatedBy = this.isAuthenticatedByService
-                    .findAuthenticatedBy(person.getId());
-
+            final Optional<IsAuthenticatedBy> maybeAuthenticatedBy =
+                    this.isAuthenticatedByService.findAuthenticatedBy(person.getId());
             planPermissionDto.setPerson(PersonDto.from(
                     person,
                     Optional.empty(),
                     maybeAuthenticatedBy
             ));
             plansPermissionDto.add(planPermissionDto);
-
-            final List<RoleResource> roles = this.remoteRolesFetcher.fetch(person.getId());
-
-            planPermissionDto.getPerson().addAllRoles(roles);
-
-            Optional<PublicAgentResponse> responseOptional = this.acessoCidadaoApi.findAllPublicAgents(idPerson)
-                    .stream()
-                    .filter(publicAgentResponse -> Objects.equals(publicAgentResponse.getEmail(), email))
-                    .findFirst();
-
-            if (responseOptional.isPresent()) {
-                PublicAgentResponse response = responseOptional.get();
-                final List<RoleResource> roles2 = this.acessoCidadaoApi.findRoles(response.getSub(), idPerson)
-                        .stream()
-                        .map(roleResponse -> this.getRoleDto(roleResponse, idPerson))
-                        .collect(Collectors.toList());
-
-                planPermissionDto.getPerson().addAllRoles(roles2);
-            }
+            planPermissionDto.getPerson().addAllRoles(resources);
         });
-
         return plansPermissionDto;
-    }
-
-    private RoleResource getRoleDto(final PublicAgentRoleResponse roleResponse, final Long idPerson) {
-        final RoleResource roleResource = new RoleResource();
-        roleResource.setRole(roleResponse.getName());
-        final String workLocation = this.acessoCidadaoApi.getWorkLocation(roleResponse.getOrganizationGuid(), idPerson);
-        roleResource.setWorkLocation(workLocation);
-        return roleResource;
     }
 
     private List<CanAccessPlan> listPlansPermissions(final Plan plan, final String email) {

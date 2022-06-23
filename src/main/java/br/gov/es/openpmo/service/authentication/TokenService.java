@@ -1,6 +1,5 @@
 package br.gov.es.openpmo.service.authentication;
 
-import br.gov.es.openpmo.controller.workpack.WorkpackController;
 import br.gov.es.openpmo.enumerator.TokenType;
 import br.gov.es.openpmo.model.actors.Person;
 import io.jsonwebtoken.Claims;
@@ -77,6 +76,6 @@ public class TokenService {
 
   public Long getUserId(final String authorization) {
     final String token = authorization.substring(7);
-    return getPersonId(token, TokenType.AUTHENTICATION);
+    return this.getPersonId(token, TokenType.AUTHENTICATION);
   }
 }

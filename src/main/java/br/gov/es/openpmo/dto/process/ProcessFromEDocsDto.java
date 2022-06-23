@@ -4,7 +4,6 @@ import br.gov.es.openpmo.apis.edocs.ProcessTimeline;
 import br.gov.es.openpmo.apis.edocs.response.ProcessResponse;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
@@ -55,7 +54,7 @@ public class ProcessFromEDocsDto {
             }
             date = processTimeline.detail().getDate();
         }
-        long lengthOfStayOn = LocalDate.from(date).until(LocalDate.now(), ChronoUnit.DAYS);
+        long lengthOfStayOn = date.until(LocalDateTime.now(), ChronoUnit.DAYS);
 
         return new ProcessFromEDocsDto(
                 process.getProcessNumber(),

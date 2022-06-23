@@ -39,6 +39,14 @@ public class FindAllOfficePermissionByIdPersonUsingCustomFilter extends FindAllU
     query.append("RETURN ").append(this.nodeName).append(", office, person");
   }
 
+  @Override protected boolean hasAppendedBooleanBlock() {
+    return true;
+  }
+
+  @Override protected boolean hasToCloseAppendedBooleanBlock() {
+    return true;
+  }
+
   @Override
   public String[] getDefinedExternalParams() {
     return new String[]{"idOffice", "idPerson"};

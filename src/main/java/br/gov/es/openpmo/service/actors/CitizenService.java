@@ -11,6 +11,7 @@ import br.gov.es.openpmo.dto.person.RoleResource;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.relations.IsInContactBookOf;
+import br.gov.es.openpmo.service.permissions.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -34,18 +35,22 @@ public class CitizenService {
 
     private final IsInContactBookOfService contactService;
 
+    private final RoleService roleService;
+
     @Value("${app.login.server.name}")
     private String serverName;
 
     @Autowired
     public CitizenService(
-            final AcessoCidadaoApi acessoCidadaoApi,
-            final PersonService personService,
-            final IsInContactBookOfService contactService
+            AcessoCidadaoApi acessoCidadaoApi,
+            PersonService personService,
+            IsInContactBookOfService contactService,
+            RoleService roleService
     ) {
         this.acessoCidadaoApi = acessoCidadaoApi;
         this.personService = personService;
         this.contactService = contactService;
+        this.roleService = roleService;
     }
 
     private static int orderByAgentName(final CitizenByNameQuery agent1, final CitizenByNameQuery agent2) {
@@ -96,8 +101,7 @@ public class CitizenService {
     }
 
     private String findSubByCpf(final String cpf, final Long idPerson) {
-        return this.acessoCidadaoApi
-                .findSubByCpf(cpf, idPerson)
+        return this.acessoCidadaoApi.findSubByCpf(cpf, idPerson)
                 .orElseThrow(() -> new NegocioException(CITIZEN_NOT_FOUND));
     }
 
@@ -106,13 +110,11 @@ public class CitizenService {
     }
 
     private CitizenDto toCitizenDto(final PublicAgentResponse agent, final Long idOffice, final Long idPerson) {
-        final Optional<PublicAgentEmailResponse> maybeAgentEmail = this.acessoCidadaoApi.findAgentEmail(agent.getSub(), idPerson);
+        String sub = agent.getSub();
 
-        final List<RoleResource> roles = this.acessoCidadaoApi.findRoles(agent.getSub(), idPerson)
-                .stream()
-                .map(roleResponse -> this.getRoleDto(roleResponse, idPerson))
-                .sorted((a, b) -> a.getRole().compareToIgnoreCase(b.getRole()))
-                .collect(Collectors.toList());
+        final Optional<PublicAgentEmailResponse> maybeAgentEmail = this.acessoCidadaoApi.findAgentEmail(sub, idPerson);
+
+        List<RoleResource> roles = this.roleService.getRolesBySub(idPerson, sub);
 
         if (!maybeAgentEmail.isPresent()) {
             return null;
@@ -126,13 +128,9 @@ public class CitizenService {
     }
 
     private RoleResource getRoleDto(final PublicAgentRoleResponse roleResponse, final Long idPerson) {
-        final RoleResource roleResource = new RoleResource();
-        roleResource.setRole(roleResponse.getName());
-
+        String role = roleResponse.getName();
         final String workLocation = this.acessoCidadaoApi.getWorkLocation(roleResponse.getOrganizationGuid(), idPerson);
-        roleResource.setWorkLocation(workLocation);
-
-        return roleResource;
+        return new RoleResource(role, workLocation);
     }
 
     private CitizenDto buildCitizenDto(
@@ -184,10 +182,7 @@ public class CitizenService {
         final PublicAgentEmailResponse agentEmail = this.findAgentEmail(sub, idPerson);
         final Optional<Person> maybePerson = this.personService.findByEmail(agentEmail.getEmail());
 
-        final List<RoleResource> roles = this.acessoCidadaoApi.findRoles(sub, idPerson)
-                .stream()
-                .map(roleResponse -> this.getRoleDto(roleResponse, idPerson))
-                .collect(Collectors.toList());
+        List<RoleResource> roles = this.roleService.getRolesBySub(idPerson, sub);
 
         if (maybePerson.isPresent()) {
             return this.buildDtoFromCitizenAlreadyRegistered(roles, maybePerson.get(), idOffice);

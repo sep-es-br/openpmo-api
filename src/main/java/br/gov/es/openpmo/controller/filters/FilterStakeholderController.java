@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.controller.filters;
 
 import br.gov.es.openpmo.model.filter.CustomFilterEnum;
+import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.filters.CustomFilterService;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,20 +15,26 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/filter/workpackModels/{idWorkpackModel}/stakeholders")
 public class FilterStakeholderController extends CreateAndUpdateUsingWorkpackModelFilterOperations {
 
-    private final CustomFilterService customFilterService;
+  private final CustomFilterService customFilterService;
+  private final TokenService tokenService;
 
-    @Autowired
-    public FilterStakeholderController(final CustomFilterService customFilterService) {
-        this.customFilterService = customFilterService;
-    }
+  @Autowired
+  public FilterStakeholderController(final CustomFilterService customFilterService, final TokenService tokenService) {
+    this.customFilterService = customFilterService;
+    this.tokenService = tokenService;
+  }
 
-    @Override
-    protected CustomFilterService getCustomFilterService() {
-        return this.customFilterService;
-    }
+  @Override
+  protected CustomFilterService getCustomFilterService() {
+    return this.customFilterService;
+  }
 
-    @Override
-    protected CustomFilterEnum getFilter() {
-        return CustomFilterEnum.STAKEHOLDER;
-    }
+  @Override protected TokenService getTokenService() {
+    return this.tokenService;
+  }
+
+  @Override
+  protected CustomFilterEnum getFilter() {
+    return CustomFilterEnum.STAKEHOLDER;
+  }
 }

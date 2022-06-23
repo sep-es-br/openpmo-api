@@ -1,43 +1,60 @@
 package br.gov.es.openpmo.dto.person;
 
-public class RoleResource {
+import br.gov.es.openpmo.scheduler.updateroles.HasRole;
 
-  private String role;
+import java.util.Objects;
+import java.util.Optional;
 
-  private String workLocation;
+public class RoleResource implements HasRole {
 
-  public RoleResource() {
-  }
+    private static final String CITIZEN = "citizen";
 
-  public RoleResource(final String role) {
-    this.role = role;
-  }
+    private String role;
 
-  public RoleResource(final String role, final String workLocation) {
-    this.role = role;
-    this.workLocation = workLocation;
-  }
+    private String workLocation;
 
-  public static RoleResource citizen() {
-    final RoleResource resource = new RoleResource();
-    resource.role = "citizen";
-    return resource;
-  }
+    private RoleResource(String role) {
+        this.role = role;
+    }
 
-  public String getRole() {
-    return this.role;
-  }
+    public RoleResource(final String role, final String workLocation) {
+        this.role = role;
+        this.workLocation = workLocation;
+    }
 
-  public void setRole(final String role) {
-    this.role = role;
-  }
+    public static RoleResource citizen() {
+        return new RoleResource(CITIZEN);
+    }
 
-  public String getWorkLocation() {
-    return this.workLocation;
-  }
+    @Override
+    public String getRole() {
+        return this.role;
+    }
 
-  public void setWorkLocation(final String workLocation) {
-    this.workLocation = workLocation != null && workLocation.isEmpty() ? null : workLocation;
-  }
+    public void setRole(final String role) {
+        this.role = role;
+    }
 
+    public String getWorkLocation() {
+        return this.workLocation;
+    }
+
+    public void setWorkLocation(final String workLocation) {
+        this.workLocation = Optional.ofNullable(workLocation)
+                .filter(str -> !str.isEmpty())
+                .orElse(null);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        RoleResource that = (RoleResource) o;
+        return role.equals(that.role) && Objects.equals(workLocation, that.workLocation);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(role, workLocation);
+    }
 }

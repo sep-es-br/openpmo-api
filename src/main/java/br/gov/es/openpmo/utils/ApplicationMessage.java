@@ -218,6 +218,8 @@ public class ApplicationMessage {
 
     public static final String CCB_MEMBER_ALREADY_EVALUATED = "ccb-member.already.evaluated";
 
+    public static final String PERSON_ALREADY_EXISTS = "person.already.exists";
+
     public static final String BASELINE_IS_NOT_PROPOSED_INVALID_STATE_ERROR = "baseline.is.not.draft.invalid-state.error";
 
     public static final String WORKPACK_PASTE_ERROR = "workpack.paste.error";

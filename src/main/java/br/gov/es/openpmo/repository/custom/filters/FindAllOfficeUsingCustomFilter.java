@@ -39,6 +39,14 @@ public class FindAllOfficeUsingCustomFilter extends FindAllUsingCustomFilterBuil
     query.append("RETURN").append(" ").append(this.nodeName);
   }
 
+  @Override protected boolean hasAppendedBooleanBlock() {
+    return false;
+  }
+
+  @Override protected boolean hasToCloseAppendedBooleanBlock() {
+    return false;
+  }
+
   @Override
   public void buildOrderingAndDirectionClause(final CustomFilter filter, final StringBuilder query) {
     this.appendStringIfTrue(

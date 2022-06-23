@@ -2,7 +2,11 @@ package br.gov.es.openpmo.controller.process;
 
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.ResponseBase;
-import br.gov.es.openpmo.dto.process.*;
+import br.gov.es.openpmo.dto.process.ProcessCardDto;
+import br.gov.es.openpmo.dto.process.ProcessCreateDto;
+import br.gov.es.openpmo.dto.process.ProcessDetailDto;
+import br.gov.es.openpmo.dto.process.ProcessFromEDocsDto;
+import br.gov.es.openpmo.dto.process.ProcessUpdateDto;
 import br.gov.es.openpmo.model.process.Process;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.process.ProcessService;
@@ -31,18 +35,20 @@ public class ProcessController {
 
   @GetMapping
   public ResponseEntity<ResponseBase<List<ProcessCardDto>>> findAll(
-      @RequestParam("id-workpack") final Long idWorkpack,
-      @RequestParam(value = "idFilter", required = false) final Long idFilter
+    @RequestParam("id-workpack") final Long idWorkpack,
+    @RequestParam(value = "idFilter", required = false) final Long idFilter,
+    @RequestHeader("Authorization") final String authorization
   ) {
-    final List<ProcessCardDto> processes = this.service.findAllAsCardDto(idWorkpack, idFilter);
+    final Long idPerson = this.tokenService.getUserId(authorization);
+    final List<ProcessCardDto> processes = this.service.findAllAsCardDto(idWorkpack, idFilter, idPerson);
     final ResponseBase<List<ProcessCardDto>> response = ResponseBase.of(processes);
     return ResponseEntity.ok(response);
   }
 
   @GetMapping("/edocs")
   public ResponseEntity<ResponseBase<ProcessFromEDocsDto>> findProcessByProtocol(
-      @RequestParam(name = "process-number") final String protocol,
-      @RequestHeader(name = "Authorization") final String authorization
+    @RequestParam(name = "process-number") final String protocol,
+    @RequestHeader(name = "Authorization") final String authorization
   ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
     final ProcessFromEDocsDto processByProtocol = this.service.findProcessByProtocol(protocol, idPerson);
@@ -52,8 +58,8 @@ public class ProcessController {
 
   @GetMapping("/{id}")
   public ResponseEntity<ResponseBase<ProcessDetailDto>> findById(
-      @PathVariable final Long id,
-      @RequestHeader(name = "Authorization") final String authorization
+    @PathVariable final Long id,
+    @RequestHeader(name = "Authorization") final String authorization
   ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
     final ProcessDetailDto process = this.service.findById(id, idPerson);
@@ -70,8 +76,8 @@ public class ProcessController {
 
   @PutMapping
   public ResponseEntity<ResponseBase<ProcessDetailDto>> update(
-      @Valid @RequestBody final ProcessUpdateDto request,
-      @RequestHeader(name = "Authorization") final String authorization
+    @Valid @RequestBody final ProcessUpdateDto request,
+    @RequestHeader(name = "Authorization") final String authorization
   ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
     final ProcessDetailDto process = this.service.update(request, idPerson);

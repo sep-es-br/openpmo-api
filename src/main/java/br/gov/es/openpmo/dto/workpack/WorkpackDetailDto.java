@@ -9,8 +9,12 @@ import br.gov.es.openpmo.dto.workpackmodel.details.WorkpackModelDetailDto;
 import br.gov.es.openpmo.dto.workpackshared.WorkpackSharedDto;
 import br.gov.es.openpmo.model.relations.IsLinkedTo;
 import br.gov.es.openpmo.model.workpacks.Workpack;
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.swagger.annotations.ApiModel;
 
@@ -22,248 +26,260 @@ import java.util.Set;
 
 @JsonTypeInfo(use = Id.NAME, property = "type")
 @JsonSubTypes({@Type(value = PortfolioDetailDto.class, name = "Portfolio"),
-        @Type(value = ProgramDetailDto.class, name = "Program"),
-        @Type(value = OrganizerDetailDto.class, name = "Organizer"),
-        @Type(value = DeliverableDetailDto.class, name = "Deliverable"),
-        @Type(value = ProjectDetailDto.class, name = "Project"),
-        @Type(value = MilestoneDetailDto.class, name = "Milestone")})
+  @Type(value = ProgramDetailDto.class, name = "Program"),
+  @Type(value = OrganizerDetailDto.class, name = "Organizer"),
+  @Type(value = DeliverableDetailDto.class, name = "Deliverable"),
+  @Type(value = ProjectDetailDto.class, name = "Project"),
+  @Type(value = MilestoneDetailDto.class, name = "Milestone")})
 @ApiModel(subTypes = {PortfolioDetailDto.class, ProgramDetailDto.class, OrganizerDetailDto.class,
-        DeliverableDetailDto.class, ProjectDetailDto.class,
-        MilestoneDto.class}, discriminator = "type", description = "Supertype of all Workpack.")
+  DeliverableDetailDto.class, ProjectDetailDto.class,
+  MilestoneDto.class}, discriminator = "type", description = "Supertype of all Workpack.")
 public abstract class WorkpackDetailDto {
 
-    private Long id;
+  private Long id;
 
-    private PlanDto plan;
+  private PlanDto plan;
 
-    private WorkpackModelDetailDto model;
+  private WorkpackModelDetailDto model;
 
-    private Set<WorkpackDetailDto> children;
+  private Set<WorkpackDetailDto> children;
 
-    private List<? extends PropertyDto> properties;
+  private List<? extends PropertyDto> properties;
 
-    private Set<CostAccountDto> costs;
+  private Set<CostAccountDto> costs;
 
-    private List<PermissionDto> permissions;
+  private List<PermissionDto> permissions;
 
-    private WorkpackModelLinkedDto modelLinked;
+  private WorkpackModelLinkedDto modelLinked;
 
-    private List<WorkpackSharedDto> sharedWith;
+  private List<WorkpackSharedDto> sharedWith;
 
-    private Boolean linked;
+  private Boolean linked;
 
-    private Long linkedModel;
+  private Long linkedModel;
 
-    @JsonProperty("cancelable")
-    private boolean isCancelable;
+  @JsonProperty("cancelable")
+  private boolean isCancelable;
 
-    @JsonProperty("canceled")
-    private boolean isCanceled;
+  @JsonProperty("canceled")
+  private boolean isCanceled;
 
-    private boolean hasActiveBaseline;
+  @JsonProperty("canDeleted")
+  private boolean canBeDeleted;
 
-    private boolean pendingBaseline;
+  private boolean hasActiveBaseline;
 
-    private boolean cancelPropose;
+  private boolean pendingBaseline;
 
-    private String activeBaselineName;
+  private boolean cancelPropose;
 
-    @JsonFormat(pattern = "dd-MM-yyyy")
-    private LocalDate endManagementDate;
+  private String activeBaselineName;
 
-    private String reason;
+  @JsonFormat(pattern = "dd-MM-yyyy")
+  private LocalDate endManagementDate;
 
-    private Boolean completed;
+  private String reason;
 
-    private SimpleDashboard dashboard;
+  private Boolean completed;
 
-    public boolean isHasActiveBaseline() {
-        return this.hasActiveBaseline;
-    }
+  private SimpleDashboard dashboard;
 
-    public void setHasActiveBaseline(final boolean hasActiveBaseline) {
-        this.hasActiveBaseline = hasActiveBaseline;
-    }
+  public boolean isHasActiveBaseline() {
+    return this.hasActiveBaseline;
+  }
 
-    public List<WorkpackSharedDto> getSharedWith() {
-        return this.sharedWith;
-    }
+  public void setHasActiveBaseline(final boolean hasActiveBaseline) {
+    this.hasActiveBaseline = hasActiveBaseline;
+  }
 
-    public void setSharedWith(final List<WorkpackSharedDto> sharedWith) {
-        this.sharedWith = sharedWith;
-    }
+  public List<WorkpackSharedDto> getSharedWith() {
+    return this.sharedWith;
+  }
 
-    public Boolean getLinked() {
-        return this.linked;
-    }
+  public void setSharedWith(final List<WorkpackSharedDto> sharedWith) {
+    this.sharedWith = sharedWith;
+  }
 
-    public void setLinked(final Boolean linked) {
-        this.linked = linked;
-    }
+  public Boolean getLinked() {
+    return this.linked;
+  }
 
-    public void applyLinkedStatus(final Workpack workpack, final Long idWorkpackModel) {
-        this.linkedModel = Optional.ofNullable(workpack.getLinkedTo())
-                .flatMap(linkeds -> linkeds.stream()
-                        .map(IsLinkedTo::getWorkpackModelId)
-                        .filter(id -> Objects.equals(id, idWorkpackModel))
-                        .findFirst()).orElse(null);
-        this.linked = this.linkedModel != null;
-    }
+  public void setLinked(final Boolean linked) {
+    this.linked = linked;
+  }
 
-    public Long getLinkedModel() {
-        return this.linkedModel;
-    }
+  public void applyLinkedStatus(final Workpack workpack, final Long idWorkpackModel) {
+    this.linkedModel = Optional.ofNullable(workpack.getLinkedTo())
+      .flatMap(linkeds -> linkeds.stream()
+        .map(IsLinkedTo::getWorkpackModelId)
+        .filter(id -> Objects.equals(id, idWorkpackModel))
+        .findFirst()).orElse(null);
+    this.linked = this.linkedModel != null;
+  }
 
-    public void setLinkedModel(final Long linkedModel) {
-        this.linkedModel = linkedModel;
-    }
+  public Long getLinkedModel() {
+    return this.linkedModel;
+  }
 
-    public Long getId() {
-        return this.id;
-    }
+  public void setLinkedModel(final Long linkedModel) {
+    this.linkedModel = linkedModel;
+  }
 
-    public void setId(final Long id) {
-        this.id = id;
-    }
+  public Long getId() {
+    return this.id;
+  }
 
-    public WorkpackModelLinkedDto getModelLinked() {
-        return this.modelLinked;
-    }
+  public void setId(final Long id) {
+    this.id = id;
+  }
 
-    public void setModelLinked(final WorkpackModelLinkedDto modelLinked) {
-        this.modelLinked = modelLinked;
-    }
-
-    public PlanDto getPlan() {
-        return this.plan;
-    }
-
-    public void setPlan(final PlanDto plan) {
-        this.plan = plan;
-    }
-
-    public WorkpackModelDetailDto getModel() {
-        return this.model;
-    }
-
-    public void setModel(final WorkpackModelDetailDto model) {
-        this.model = model;
-    }
-
-    public Set<WorkpackDetailDto> getChildren() {
-        return this.children;
-    }
-
-    public void setChildren(final Set<WorkpackDetailDto> children) {
-        this.children = children;
-    }
-
-    public List<? extends PropertyDto> getProperties() {
-        return this.properties;
-    }
-
-    public void setProperties(final List<? extends PropertyDto> properties) {
-        this.properties = properties;
-    }
-
-    public Set<CostAccountDto> getCosts() {
-        return this.costs;
-    }
-
-    public void setCosts(final Set<CostAccountDto> costs) {
-        this.costs = costs;
-    }
-
-    public List<PermissionDto> getPermissions() {
-        return this.permissions;
-    }
-
-    public void setPermissions(final List<PermissionDto> permissions) {
-        this.permissions = permissions;
-    }
-
-    public boolean hasStakeholderSessionActive() {
-        return this.model.getStakeholderSessionActive();
-    }
-
-    public boolean samePlanId(final Long planId) {
-        return this.plan.getId().equals(planId);
-    }
-
-    @JsonIgnore
-    public Long getIdPlan() {
-        return this.plan.getId();
-    }
-
-    public boolean isCancelable() {
-        return this.isCancelable;
-    }
-
-    public void setCancelable(final boolean cancelable) {
-        this.isCancelable = cancelable;
-    }
-
-    public boolean isCanceled() {
-        return this.isCanceled;
-    }
-
-    public void setCanceled(final boolean canceled) {
-        this.isCanceled = canceled;
-    }
-
-    public boolean getPendingBaseline() {
-        return this.pendingBaseline;
-    }
-
-    public void setPendingBaseline(final boolean pendingBaseline) {
-        this.pendingBaseline = pendingBaseline;
-    }
-
-    public boolean getCancelPropose() {
-        return this.cancelPropose;
-    }
-
-    public void setCancelPropose(final boolean cancelPropose) {
-        this.cancelPropose = cancelPropose;
-    }
-
-    public LocalDate getEndManagementDate() {
-        return this.endManagementDate;
-    }
-
-    public void setEndManagementDate(final LocalDate endManagementDate) {
-        this.endManagementDate = endManagementDate;
-    }
-
-    public Boolean getCompleted() {
-        return completed;
-    }
-
-    public void setCompleted(Boolean completed) {
-        this.completed = completed;
-    }
-
-    public String getReason() {
-        return reason;
-    }
-
-    public void setReason(String reason) {
-        this.reason = reason;
-    }
-
-    public SimpleDashboard getDashboard() {
-        return dashboard;
-    }
-
-    public void setDashboard(SimpleDashboard dashboard) {
-        this.dashboard = dashboard;
-    }
-
-    public String getActiveBaselineName() {
-        return activeBaselineName;
-    }
-
-    public void setActiveBaselineName(String activeBaselineName) {
-        this.activeBaselineName = activeBaselineName;
-    }
+  public WorkpackModelLinkedDto getModelLinked() {
+    return this.modelLinked;
+  }
+
+  public void setModelLinked(final WorkpackModelLinkedDto modelLinked) {
+    this.modelLinked = modelLinked;
+  }
+
+  public PlanDto getPlan() {
+    return this.plan;
+  }
+
+  public void setPlan(final PlanDto plan) {
+    this.plan = plan;
+  }
+
+  public WorkpackModelDetailDto getModel() {
+    return this.model;
+  }
+
+  public void setModel(final WorkpackModelDetailDto model) {
+    this.model = model;
+  }
+
+  public Set<WorkpackDetailDto> getChildren() {
+    return this.children;
+  }
+
+  public void setChildren(final Set<WorkpackDetailDto> children) {
+    this.children = children;
+  }
+
+  public List<? extends PropertyDto> getProperties() {
+    return this.properties;
+  }
+
+  public void setProperties(final List<? extends PropertyDto> properties) {
+    this.properties = properties;
+  }
+
+  public Set<CostAccountDto> getCosts() {
+    return this.costs;
+  }
+
+  public void setCosts(final Set<CostAccountDto> costs) {
+    this.costs = costs;
+  }
+
+  public List<PermissionDto> getPermissions() {
+    return this.permissions;
+  }
+
+  public void setPermissions(final List<PermissionDto> permissions) {
+    this.permissions = permissions;
+  }
+
+  public boolean hasStakeholderSessionActive() {
+    return this.model.getStakeholderSessionActive();
+  }
+
+  public boolean samePlanId(final Long planId) {
+    return this.plan.getId().equals(planId);
+  }
+
+  @JsonIgnore
+  public Long getIdPlan() {
+    return this.plan.getId();
+  }
+
+  public boolean isCancelable() {
+    return this.isCancelable;
+  }
+
+  public void setCancelable(final boolean cancelable) {
+    this.isCancelable = cancelable;
+  }
+
+  public boolean isCanceled() {
+    return this.isCanceled;
+  }
+
+  public void setCanceled(final boolean canceled) {
+    this.isCanceled = canceled;
+  }
+
+  public boolean canBeDeleted() {
+    return canBeDeleted;
+  }
+
+  public void setCanBeDeleted(boolean canBeDeleted) {
+    this.canBeDeleted = canBeDeleted;
+  }
+
+  public boolean getPendingBaseline() {
+    return this.pendingBaseline;
+  }
+
+  public void setPendingBaseline(final boolean pendingBaseline) {
+    this.pendingBaseline = pendingBaseline;
+  }
+
+  public boolean getCancelPropose() {
+    return this.cancelPropose;
+  }
+
+  public void setCancelPropose(final boolean cancelPropose) {
+    this.cancelPropose = cancelPropose;
+  }
+
+  public LocalDate getEndManagementDate() {
+    return this.endManagementDate;
+  }
+
+  public void setEndManagementDate(final LocalDate endManagementDate) {
+    this.endManagementDate = endManagementDate;
+  }
+
+  public Boolean getCompleted() {
+    return completed;
+  }
+
+  public void setCompleted(Boolean completed) {
+    this.completed = completed;
+  }
+
+  public String getReason() {
+    return reason;
+  }
+
+  public void setReason(String reason) {
+    this.reason = reason;
+  }
+
+  public SimpleDashboard getDashboard() {
+    return dashboard;
+  }
+
+  public void setDashboard(SimpleDashboard dashboard) {
+    this.dashboard = dashboard;
+  }
+
+  public String getActiveBaselineName() {
+    return activeBaselineName;
+  }
+
+  public void setActiveBaselineName(String activeBaselineName) {
+    this.activeBaselineName = activeBaselineName;
+  }
+
 }

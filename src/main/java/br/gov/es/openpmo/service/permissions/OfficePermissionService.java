@@ -44,6 +44,7 @@ public class OfficePermissionService {
     private final IsInContactBookOfService isInContactBookOfService;
     private final IsAuthenticatedByService isAuthenticatedByService;
     private final IRemoteRolesFetcher remoteRolesFetcher;
+    private final RoleService roleService;
 
     @Autowired
     public OfficePermissionService(
@@ -55,7 +56,8 @@ public class OfficePermissionService {
             final FindAllOfficePermissionByIdPersonUsingCustomFilter findAllOfficePermissionByIdPerson,
             final IsInContactBookOfService isInContactBookOfService,
             final IsAuthenticatedByService isAuthenticatedByService,
-            final IRemoteRolesFetcher remoteRolesFetcher
+            final IRemoteRolesFetcher remoteRolesFetcher,
+            RoleService roleService
     ) {
         this.repository = repository;
         this.customFilterRepository = customFilterRepository;
@@ -66,6 +68,7 @@ public class OfficePermissionService {
         this.isInContactBookOfService = isInContactBookOfService;
         this.isAuthenticatedByService = isAuthenticatedByService;
         this.remoteRolesFetcher = remoteRolesFetcher;
+        this.roleService = roleService;
     }
 
     public void delete(final Long idOffice, final String email) {
@@ -81,29 +84,22 @@ public class OfficePermissionService {
         return this.repository.findByIdOfficeAndIdPerson(idOffice, idPerson);
     }
 
-    public List<OfficePermissionDto> findAllDto(final Long idOffice, final Long idFilter, final String email) {
-        final List<OfficePermissionDto> allPermissionsOfOffice = new ArrayList<>();
-
-        final Office office = this.officeService.findById(idOffice);
-        final List<Person> listPerson = this.personService.personInCanAccessOffice(idOffice);
-        final List<CanAccessOffice> listOfficesPermission = this.listOfficesPermissions(office, email, idFilter);
-
-        for (final Person person : listPerson) {
-            final OfficePermissionDto officePermissionItem = new OfficePermissionDto();
-
-            final List<CanAccessOffice> permissionsFilteredByPerson = listOfficesPermission.stream()
+    public List<OfficePermissionDto> findAllDto(Long idOffice, Long idFilter, String email, Long idPerson) {
+        List<RoleResource> roles = this.roleService.getRolesByEmail(idPerson, email);
+        List<OfficePermissionDto> allPermissionsOfOffice = new ArrayList<>();
+        Office office = this.officeService.findById(idOffice);
+        List<Person> listPerson = this.personService.personInCanAccessOffice(idOffice);
+        List<CanAccessOffice> listOfficesPermission = this.listOfficesPermissions(office, email, idFilter);
+        for (Person person : listPerson) {
+            OfficePermissionDto officePermissionItem = new OfficePermissionDto();
+            List<CanAccessOffice> permissionsFilteredByPerson = listOfficesPermission.stream()
                     .filter(permission -> permission.getPerson().equals(person))
                     .collect(Collectors.toList());
-
-            this.fillPersonDto(idOffice, person, officePermissionItem);
-
+            this.fillPersonDto(idOffice, person, officePermissionItem, roles);
             officePermissionItem.setIdOffice(idOffice);
-
             this.fillPermissions(officePermissionItem, permissionsFilteredByPerson);
-
             allPermissionsOfOffice.add(officePermissionItem);
         }
-
         if (email != null) {
             return allPermissionsOfOffice.stream().filter(permission -> {
                 if (permission.getPerson().getEmail() == null) {
@@ -112,7 +108,6 @@ public class OfficePermissionService {
                 return permission.getPerson().getEmail().equals(email);
             }).collect(Collectors.toList());
         }
-
         return allPermissionsOfOffice;
     }
 
@@ -127,19 +122,18 @@ public class OfficePermissionService {
         officePermissionItem.setPermissions(permissions);
     }
 
-    private void fillPersonDto(final Long idOffice, final Person person, final OfficePermissionDto officePermissionDto) {
-        final Optional<IsInContactBookOf> maybeContact = this.isInContactBookOfService.findContactInformationUsingPersonIdAndOffice(
-                person.getId(),
-                idOffice
-        );
-
-        final Optional<IsAuthenticatedBy> maybeAuthenticatedBy = this.isAuthenticatedByService.findAuthenticatedBy(person.getId());
-
-        officePermissionDto.setPerson(PersonDto.from(
-                person,
-                maybeContact,
-                maybeAuthenticatedBy
-        ));
+    private void fillPersonDto(
+            Long idOffice,
+            Person person,
+            OfficePermissionDto officePermissionDto,
+            List<RoleResource> roles
+    ) {
+        Optional<IsInContactBookOf> maybeContact =
+                this.isInContactBookOfService.findContactInformationUsingPersonIdAndOffice(person.getId(), idOffice);
+        Optional<IsAuthenticatedBy> maybeAuthenticatedBy = this.isAuthenticatedByService.findAuthenticatedBy(person.getId());
+        PersonDto personDto = PersonDto.from(person, maybeContact, maybeAuthenticatedBy);
+        personDto.addAllRoles(roles);
+        officePermissionDto.setPerson(personDto);
     }
 
     private List<CanAccessOffice> listOfficesPermissions(final Office office, final String email, final Long idFilter) {
@@ -284,15 +278,14 @@ public class OfficePermissionService {
         return this.repository.findInheritedPermission(workpackId, personId);
     }
 
-    public OfficePermissionDto findOfficePermissionsByEmail(final Long idOffice, final String email) {
+    public OfficePermissionDto findOfficePermissionsByEmail(final Long idOffice, final String email, Long idPerson) {
+        List<RoleResource> roles = this.roleService.getRolesByEmail(idPerson, email);
 
         final OfficePermissionDto officePermissionDto = new OfficePermissionDto();
-
         final Person person = this.personService.findPersonByEmail(email);
-
         final List<CanAccessOffice> permissions = this.findByOfficeAndPerson(idOffice, person.getId());
 
-        this.fillPersonDto(idOffice, person, officePermissionDto);
+        this.fillPersonDto(idOffice, person, officePermissionDto, roles);
         this.fillPermissions(officePermissionDto, permissions);
         this.fillPersonRoles(officePermissionDto, person.getId());
 

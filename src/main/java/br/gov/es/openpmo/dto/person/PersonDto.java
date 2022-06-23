@@ -145,6 +145,7 @@ public class PersonDto {
     }
 
     public List<RoleResource> getRoles() {
+        this.roles.sort((a, b) -> a.getRole().compareToIgnoreCase(b.getRole()));
         return Collections.unmodifiableList(this.roles);
     }
 

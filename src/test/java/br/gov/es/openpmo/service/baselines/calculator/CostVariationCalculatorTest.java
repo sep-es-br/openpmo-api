@@ -138,7 +138,7 @@ class CostVariationCalculatorTest {
     when(this.workpackName.getName()).thenReturn("");
     when(this.workpackRepository.findWorkpackNameAndFullname(ID_WORKPACK)).thenReturn(Optional.of(this.workpackName));
     when(this.consumesRepository.findAllSnapshotConsumesOfStepMaster(anyLong(), eq(ID_STEP)))
-      .thenReturn(Collections.emptyList());
+      .thenReturn(Collections.emptySet());
   }
 
 

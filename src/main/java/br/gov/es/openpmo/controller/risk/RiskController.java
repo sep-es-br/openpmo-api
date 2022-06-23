@@ -32,10 +32,11 @@ public class RiskController {
 
   @GetMapping
   public ResponseEntity<ResponseBase<List<RiskCardDto>>> findAll(
-      @RequestParam("id-workpack") final Long idWorkpack,
-      @RequestParam(required = false) final Long idFilter
+    @RequestParam("id-workpack") final Long idWorkpack,
+    @RequestParam(required = false) final Long idFilter,
+    @RequestHeader("Authorization") final Long idPerson
   ) {
-    final List<RiskCardDto> risks = this.service.findAllAsCardDto(idWorkpack, idFilter);
+    final List<RiskCardDto> risks = this.service.findAllAsCardDto(idWorkpack, idFilter, idPerson);
     final ResponseBase<List<RiskCardDto>> response = ResponseBase.of(risks);
     return ResponseEntity.ok(response);
   }

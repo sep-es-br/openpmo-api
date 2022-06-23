@@ -50,12 +50,12 @@ class ProcessResponseTest {
 
   static List<ProcessHistoryResponse> buildHistoryProcess() {
     return asList(
-      new ProcessHistoryResponse(LocalDateTime.now().minusDays(10), "name 1", "NM 1"),
-      new ProcessHistoryResponse(LocalDateTime.now().minusDays(20), "name 2", "NM 2"),
-      new ProcessHistoryResponse(LocalDateTime.now().minusDays(23), "name 2", "NM 2"),
-      new ProcessHistoryResponse(LocalDateTime.now().minusDays(24), "name 3", "NM 3"),
-      new ProcessHistoryResponse(LocalDateTime.now().minusDays(35), "name 3", "NM 3"),
-      new ProcessHistoryResponse(LocalDateTime.now().minusDays(38), "name 1", "NM 1")
+      new ProcessHistoryResponse(LocalDateTime.now().minusDays(10), "name 1", "NM 1", null, null),
+      new ProcessHistoryResponse(LocalDateTime.now().minusDays(20), "name 2", "NM 2", null, null),
+      new ProcessHistoryResponse(LocalDateTime.now().minusDays(23), "name 2", "NM 2", null, null),
+      new ProcessHistoryResponse(LocalDateTime.now().minusDays(24), "name 3", "NM 3", null, null),
+      new ProcessHistoryResponse(LocalDateTime.now().minusDays(35), "name 3", "NM 3", null, null),
+      new ProcessHistoryResponse(LocalDateTime.now().minusDays(38), "name 1", "NM 1", null, null)
     );
   }
 
@@ -122,7 +122,9 @@ class ProcessResponseTest {
         new ProcessHistoryResponse(
           LocalDateTime.now().minusDays(10),
           "name 1",
-          "NM 1"
+          "NM 1",
+          null,
+          null
         )));
       final List<ProcessTimeline> timeline = this.process.timeline();
       assertEquals(this.process.lengthOfStayOn(), timeline.get(0).daysDuration(), "Should has same days duration");

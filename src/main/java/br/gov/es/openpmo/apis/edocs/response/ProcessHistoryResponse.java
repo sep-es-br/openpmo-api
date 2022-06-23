@@ -24,6 +24,20 @@ public class ProcessHistoryResponse {
         this.descricaoTipo = this.getDescricaoTipo(json).orElse(null);
     }
 
+    public ProcessHistoryResponse(
+      final LocalDateTime date,
+      final String name,
+      final String abbreviation,
+      final String descricaoTipo,
+      final OrganogramaApi api
+    ) {
+        this.date = date;
+        this.name = name;
+        this.abbreviation = abbreviation;
+        this.descricaoTipo = descricaoTipo;
+        this.api = api;
+    }
+
     public LocalDateTime getDate() {
         return date;
     }

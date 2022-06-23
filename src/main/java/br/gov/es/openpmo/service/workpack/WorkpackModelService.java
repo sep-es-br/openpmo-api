@@ -512,7 +512,10 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
         );
         final GroupModel groupModel = (GroupModel) propertyModel;
         final List<PropertyModelDto> groupedProperties = new ArrayList<>();
-        groupModel.getGroupedProperties().forEach(property -> groupedProperties.add(this.getPropertyModelDto(property)));
+        Set<PropertyModel> properties = groupModel.getGroupedProperties();
+        if (properties != null && !properties.isEmpty()) {
+          properties.forEach(property -> groupedProperties.add(this.getPropertyModelDto(property)));
+        }
         groupModelDto.setGroupedProperties(groupedProperties);
         return groupModelDto;
       default:

@@ -37,16 +37,13 @@ public final class UnitCostCalculator {
         if (HasNoCurrentNorProposedValueToCalculateUnitCost(this.foreseenCost, this.plannedCost)) {
             return BigDecimal.ONE;
         }
-
         if (this.plannedCost != null) {
             return this.plannedCost.divide(this.plannedWork, 6, RoundingMode.HALF_UP);
         }
-
         if (this.foreseenCost != null) {
             return this.foreseenCost.divide(this.foreseenWork, 6, RoundingMode.HALF_UP);
         }
-
-        return null;
+        return BigDecimal.ONE;
     }
 
 }

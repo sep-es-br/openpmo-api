@@ -13,37 +13,37 @@ import java.util.Set;
 @Repository
 public interface DashboardDatasheetRepository extends Neo4jRepository<Workpack, Long> {
 
-    @Query("match (w:Workpack{deleted:false,canceled:false})<-[:IS_IN*]-(v:Workpack{deleted:false,canceled:false})-[:IS_INSTANCE_BY]->(m:WorkpackModel) " +
-            "where id(w)=$workpackId " +
-            "with v, collect(distinct m) as modelList " +
-            "with v, collect([n in modelList where id(n)=v.idWorkpackModel][0]) as modelGroup " +
-            "unwind modelGroup as models " +
-            "return id(models), " +
-            "    count(v) as quantity, " +
-            "    models.modelName as singularName, " +
-            "    models.modelNameInPlural as pluralName, " +
-            "    models.fontIcon as icon")
-    List<WorkpackByModelQueryResult> workpackByModel(Long workpackId);
+  @Query("match (w:Workpack{deleted:false})<-[:IS_IN*]-(v:Workpack{deleted:false,canceled:false})-[:IS_INSTANCE_BY]->(m:WorkpackModel) " +
+         "where id(w)=$workpackId and not (v)-[:IS_IN*..0]->(:Workpack{canceled:false})-[:IS_IN*..0]->(w) " +
+         "with v, collect(distinct m) as modelList " +
+         "with v, collect([n in modelList where id(n)=v.idWorkpackModel][0]) as modelGroup " +
+         "unwind modelGroup as models " +
+         "return id(models), " +
+         "    count(v) as quantity, " +
+         "    models.modelName as singularName, " +
+         "    models.modelNameInPlural as pluralName, " +
+         "    models.fontIcon as icon")
+  List<WorkpackByModelQueryResult> workpackByModel(Long workpackId);
 
-    @Query("match (a:Actor)-[s:IS_STAKEHOLDER_IN]->(w:Workpack{deleted:false,canceled:false}) " +
-            "optional match (w)-[:IS_IN*]->(v:Workpack{deleted:false,canceled:false}) " +
-            "optional match (a)<-[:IS_A_PORTRAIT_OF]-(file:File) " +
-            "with a,s,w,v,file " +
-            "where " +
-            "    ( " +
-            "        (a)-[s]->(w) and id(w)=$workpackId " +
-            "    ) " +
-            "    or " +
-            "    ( " +
-            "        (a)-[s]->(w)-[:IS_IN*]->(v:Workpack{deleted:false,canceled:false}) and id(v)=$workpackId " +
-            "    ) " +
-            "return " +
-            "    distinct id(a) as id, " +
-            "    a.name as name, " +
-            "    a.fullName as fullName, " +
-            "    s.role as role, " +
-            "    file, " +
-            "    'Organization' in labels(a) as organization")
-    Set<DatasheetStakeholderQueryResult> stakeholders(Long workpackId);
+  @Query("match (a:Actor)-[s:IS_STAKEHOLDER_IN]->(w:Workpack{deleted:false,canceled:false}) " +
+         "optional match (w)-[:IS_IN*]->(v:Workpack{deleted:false,canceled:false}) " +
+         "optional match (a)<-[:IS_A_PORTRAIT_OF]-(file:File) " +
+         "with a,s,w,v,file " +
+         "where " +
+         "    ( " +
+         "        (a)-[s]->(w) and id(w)=$workpackId " +
+         "    ) " +
+         "    or " +
+         "    ( " +
+         "        (a)-[s]->(w)-[:IS_IN*]->(v:Workpack{deleted:false,canceled:false}) and id(v)=$workpackId " +
+         "    ) " +
+         "return " +
+         "    distinct id(a) as id, " +
+         "    a.name as name, " +
+         "    a.fullName as fullName, " +
+         "    s.role as role, " +
+         "    file, " +
+         "    'Organization' in labels(a) as organization")
+  Set<DatasheetStakeholderQueryResult> stakeholders(Long workpackId);
 
 }

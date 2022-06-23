@@ -7,7 +7,9 @@ import br.gov.es.openpmo.repository.RulesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -55,7 +57,7 @@ public class RulesService {
     return this.rulesRepository.findByCustomFilter(customFilter);
   }
 
-  public void update(final CustomFilter customFilter, final List<CustomFilterRulesDto> rulesDto) {
+  public void update(final CustomFilter customFilter, final Collection<? extends CustomFilterRulesDto> rulesDto) {
     final List<Rules> rules = this.rulesRepository.findByCustomFilterId(customFilter.getId());
 
     this.findAndDeleteRemovedRules(rulesDto, rules, customFilter);
@@ -98,15 +100,18 @@ public class RulesService {
   }
 
   private void findAndDeleteRemovedRules(
-    final List<CustomFilterRulesDto> rulesDto,
-    final List<Rules> rules,
+    final Collection<? extends CustomFilterRulesDto> rulesDto,
+    final Collection<? extends Rules> rules,
     final CustomFilter customFilter
   ) {
     final List<Rules> removedRules = rules.stream()
       .filter(rule -> rulesDto.stream().noneMatch(filtro -> rule.getId().equals(filtro.getId())))
       .collect(Collectors.toList());
 
-    removedRules.forEach(customFilter.getRules()::remove);
+    if(Objects.isNull(customFilter.getRules())) return;
+
+    removedRules.forEach(r -> customFilter.getRules().remove(r));
+
     this.rulesRepository.deleteAll(removedRules);
 
   }

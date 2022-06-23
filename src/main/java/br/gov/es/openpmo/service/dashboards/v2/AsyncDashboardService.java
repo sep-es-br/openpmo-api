@@ -26,17 +26,21 @@ import java.util.stream.Collectors;
 public class AsyncDashboardService implements IAsyncDashboardService {
 
     private final DashboardRepository dashboardRepository;
+
     private final IDashboardTripleConstraintService tripleConstraintService;
+
     private final IDashboardEarnedValueAnalysisService earnedValueAnalysisService;
+
     private final WorkpackRepository workpackRepository;
+
     private final IDashboardIntervalService intervalService;
 
     public AsyncDashboardService(
-            DashboardRepository dashboardRepository,
-            IDashboardTripleConstraintService tripleConstraintService,
-            IDashboardEarnedValueAnalysisService earnedValueAnalysisService,
-            WorkpackRepository workpackRepository,
-            IDashboardIntervalService intervalService
+      DashboardRepository dashboardRepository,
+      IDashboardTripleConstraintService tripleConstraintService,
+      IDashboardEarnedValueAnalysisService earnedValueAnalysisService,
+      WorkpackRepository workpackRepository,
+      IDashboardIntervalService intervalService
     ) {
         this.dashboardRepository = dashboardRepository;
         this.tripleConstraintService = tripleConstraintService;
@@ -50,67 +54,67 @@ public class AsyncDashboardService implements IAsyncDashboardService {
         final Dashboard dashboard = getDashboard(worpackId);
 
         Optional.of(worpackId)
-                .map(this::getTripleConstraint)
-                .ifPresent(dashboard::setTripleConstraint);
+          .map(this::getTripleConstraint)
+          .ifPresent(dashboard::setTripleConstraint);
 
         Optional.of(worpackId)
-                .map(this::getEarnedValueAnalysis)
-                .ifPresent(dashboard::setEarnedValueAnalysis);
+          .map(this::getEarnedValueAnalysis)
+          .ifPresent(dashboard::setEarnedValueAnalysis);
 
         this.dashboardRepository.save(dashboard);
     }
 
     private Dashboard getDashboard(@NonNull Long worpackId) {
         return this.dashboardRepository
-                .findByWorkpackId(worpackId)
-                .orElse(createDashboard(worpackId));
+          .findByWorkpackId(worpackId)
+          .orElse(createDashboard(worpackId));
     }
 
     private Dashboard createDashboard(@NonNull Long worpackId) {
         final Dashboard dashboard = new Dashboard();
 
         Optional.of(worpackId)
-                .map(this::getWorkpack)
-                .ifPresent(dashboard::setWorkpack);
+          .map(this::getWorkpack)
+          .ifPresent(dashboard::setWorkpack);
 
         return dashboard;
     }
 
+    private Workpack getWorkpack(@NonNull Long worpackId) {
+        return this.workpackRepository.findById(worpackId)
+          .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
+    }
+
     private String getEarnedValueAnalysis(@NonNull Long worpackId) {
         return Optional.of(worpackId)
-                .map(this::calculateEarnedValueAnalysis)
-                .map(EarnedValueAnalysisData::of)
-                .map(new Gson()::toJson)
-                .orElse(null);
-    }
-
-    private String getTripleConstraint(@NonNull Long worpackId) {
-        return Optional.of(worpackId)
-                .map(this::calculateTripleConstraintDataChart)
-                .map(this::convertToTripleConstraintData)
-                .map(new Gson()::toJson)
-                .orElse(null);
-    }
-
-    private List<TripleConstraintData> convertToTripleConstraintData(List<TripleConstraintDataChart> charts) {
-        return charts.stream()
-                .map(TripleConstraintData::of)
-                .collect(Collectors.toList());
-    }
-
-    private List<TripleConstraintDataChart> calculateTripleConstraintDataChart(Long worpackId) {
-        return Optional.of(worpackId)
-                .flatMap(this.tripleConstraintService::calculate)
-                .orElse(Collections.singletonList(this.tripleConstraintService.build(getParams(worpackId))));
+          .map(this::calculateEarnedValueAnalysis)
+          .map(EarnedValueAnalysisData::of)
+          .map(new Gson()::toJson)
+          .orElse(null);
     }
 
     private DashboardEarnedValueAnalysis calculateEarnedValueAnalysis(@NonNull Long worpackId) {
         return this.earnedValueAnalysisService.calculate(worpackId);
     }
 
-    private Workpack getWorkpack(@NonNull Long worpackId) {
-        return this.workpackRepository.findById(worpackId)
-                .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
+    private String getTripleConstraint(@NonNull Long worpackId) {
+        return Optional.of(worpackId)
+          .map(this::calculateTripleConstraintDataChart)
+          .map(this::convertToTripleConstraintData)
+          .map(new Gson()::toJson)
+          .orElse(null);
+    }
+
+    private List<TripleConstraintData> convertToTripleConstraintData(List<TripleConstraintDataChart> charts) {
+        return charts.stream()
+          .map(TripleConstraintData::of)
+          .collect(Collectors.toList());
+    }
+
+    private List<TripleConstraintDataChart> calculateTripleConstraintDataChart(Long worpackId) {
+        return Optional.of(worpackId)
+          .flatMap(this.tripleConstraintService::calculate)
+          .orElse(Collections.singletonList(this.tripleConstraintService.build(getParams(worpackId))));
     }
 
     DashboardParameters getParams(Long workpackId) {
