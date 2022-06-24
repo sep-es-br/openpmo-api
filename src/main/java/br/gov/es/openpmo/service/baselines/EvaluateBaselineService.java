@@ -4,12 +4,12 @@ import br.gov.es.openpmo.dto.baselines.BaselineEvaluationRequest;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.baselines.Baseline;
+import br.gov.es.openpmo.model.journals.JournalAction;
 import br.gov.es.openpmo.model.relations.IsEvaluatedBy;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.IsCCBMemberRepository;
 import br.gov.es.openpmo.repository.IsEvaluatedByRepository;
-import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
 import br.gov.es.openpmo.service.journals.JournalCreator;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
@@ -36,8 +36,6 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
 
   private final WorkpackService workpackService;
 
-  private final WorkpackRepository workpackRepository;
-
   private final IsCCBMemberRepository ccbMemberRepository;
 
   private final IsEvaluatedByRepository evaluatedByRepository;
@@ -50,7 +48,6 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
   public EvaluateBaselineService(
     final BaselineRepository repository,
     final WorkpackService workpackService,
-    final WorkpackRepository workpackRepository,
     final IsCCBMemberRepository ccbMemberRepository,
     final IsEvaluatedByRepository evaluatedByRepository,
     final IAsyncDashboardService dashboardService,
@@ -58,7 +55,6 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
   ) {
     this.repository = repository;
     this.workpackService = workpackService;
-    this.workpackRepository = workpackRepository;
     this.ccbMemberRepository = ccbMemberRepository;
     this.evaluatedByRepository = evaluatedByRepository;
     this.dashboardService = dashboardService;
@@ -106,7 +102,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
       return;
     }
 
-    this.updateBaselineStatus(baseline);
+    this.updateBaselineStatus(baseline, idPerson);
     this.journalCreator.baseline(baseline, idPerson);
 
     this.repository.findWorkpacksIdByBaselineId(baseline.getId())
@@ -122,9 +118,9 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     this.repository.save(baseline, 0);
   }
 
-  private void updateBaselineStatus(final Baseline baseline) {
+  private void updateBaselineStatus(final Baseline baseline, Long idPerson) {
     this.inactivateBaselineIfHasPrevious(baseline);
-    this.approveBaseline(baseline);
+    this.approveBaseline(baseline, idPerson);
   }
 
   private void saveEvaluation(
@@ -140,18 +136,19 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     this.saveEvaluation(evaluation);
   }
 
-  private void approveBaseline(final Baseline baseline) {
+  private void approveBaseline(Baseline baseline, Long idPerson) {
     baseline.approve();
     this.saveBaseline(baseline);
     if (baseline.isCancelation()) {
-      cancelWorkpackByBaseline(baseline);
+      cancelWorkpackByBaseline(baseline, idPerson);
     }
   }
 
-  private void cancelWorkpackByBaseline(Baseline baseline) {
+  private void cancelWorkpackByBaseline(Baseline baseline, Long idPerson) {
     Workpack workpack = this.repository.findWorkpackByBaselineId(baseline.getId())
       .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
     this.workpackService.cancel(workpack.getId());
+    this.journalCreator.edition(workpack, JournalAction.CANCELLED, idPerson);
   }
 
   private void verifyAlreadyEvaluationOfMember(final Long idPerson, final Long idBaseline) {

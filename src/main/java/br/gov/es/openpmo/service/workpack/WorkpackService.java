@@ -1165,10 +1165,6 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final Workpack workpack = this.workpackRepository.findByIdWithChildren(idWorkpack)
       .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
 
-    if (!workpack.isCancelable()) {
-      return workpack;
-    }
-
     final Set<Workpack> workpacks = new HashSet<>();
     this.addWorkpackRecursively(workpack, workpacks);
     workpacks.forEach(w -> w.setCanceled(true));
