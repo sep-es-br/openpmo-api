@@ -34,8 +34,9 @@ public class RiskController {
   public ResponseEntity<ResponseBase<List<RiskCardDto>>> findAll(
     @RequestParam("id-workpack") final Long idWorkpack,
     @RequestParam(required = false) final Long idFilter,
-    @RequestHeader("Authorization") final Long idPerson
+    @RequestHeader("Authorization") final String authorization
   ) {
+    final Long idPerson = this.tokenService.getUserId(authorization);
     final List<RiskCardDto> risks = this.service.findAllAsCardDto(idWorkpack, idFilter, idPerson);
     final ResponseBase<List<RiskCardDto>> response = ResponseBase.of(risks);
     return ResponseEntity.ok(response);
