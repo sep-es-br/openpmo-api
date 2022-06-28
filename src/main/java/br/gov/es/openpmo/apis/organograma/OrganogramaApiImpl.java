@@ -9,11 +9,13 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -22,17 +24,24 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Component
 public class OrganogramaApiImpl implements OrganogramaApi {
+
+    static final Map<String, Optional<String>> cacheUnidadeSigla = new HashMap<>();
+    static String accessToken = null;
 
     private static final String AUTHORIZATION = "Authorization";
 
     private static final String BEARER = "Bearer ";
 
     private static final int HTTP_OK = 200;
+
+    private final Logger logger;
 
     @Value("${api.e-docs.grant_type}")
     private String grantType;
@@ -53,22 +62,34 @@ public class OrganogramaApiImpl implements OrganogramaApi {
     private String organogramaApi;
 
     @Autowired
-    public OrganogramaApiImpl() {
+    public OrganogramaApiImpl(Logger logger) {
+        this.logger = logger;
     }
 
     @Override
     public Optional<String> findSiglaByUnidade(String idUnidade) {
-        return this.getOrgaoByUnidade(idUnidade)
-                .map(orgao -> orgao.optJSONObject("organizacao"))
-                .map(organizacao -> organizacao.optString("sigla"));
+        boolean containsKey = cacheUnidadeSigla.containsKey(idUnidade);
+        if (containsKey) {
+            return cacheUnidadeSigla.get(idUnidade);
+        }
+        try {
+            Optional<String> stringOptional = this.getOrgaoByUnidade(idUnidade)
+                    .map(orgao -> orgao.optJSONObject("organizacao"))
+                    .map(organizacao -> organizacao.optString("sigla"));
+            cacheUnidadeSigla.put(idUnidade, stringOptional);
+            return stringOptional;
+        } catch (IllegalStateException e) {
+            return Optional.empty();
+        }
     }
 
     private Optional<JSONObject> getOrgaoByUnidade(String idUnidade) {
         final String uri = this.organogramaApi.concat("/unidades/").concat(idUnidade);
-        final HttpGet postRequest = new HttpGet(uri);
-        postRequest.addHeader(AUTHORIZATION, BEARER + this.fetchClientToken());
+        this.logger.info("Executing GET in {}", uri);
+        final HttpUriRequest getRequest = new HttpGet(uri);
+        getRequest.addHeader(AUTHORIZATION, BEARER + this.fetchClientToken());
         try (CloseableHttpClient httpClient = HttpClients.createDefault();
-             CloseableHttpResponse response = httpClient.execute(postRequest)) {
+             CloseableHttpResponse response = httpClient.execute(getRequest)) {
             StatusLine statusLine = response.getStatusLine();
             if (statusLine.getStatusCode() != HTTP_OK) {
                 statusLine.getReasonPhrase();
@@ -82,6 +103,10 @@ public class OrganogramaApiImpl implements OrganogramaApi {
     }
 
     private String fetchClientToken() {
+        if (accessToken != null) {
+            return accessToken;
+        }
+
         List<NameValuePair> parameters = new ArrayList<>();
         parameters.add(new BasicNameValuePair("grant_type", this.grantType));
         parameters.add(new BasicNameValuePair("scope", this.scopes));
@@ -94,7 +119,9 @@ public class OrganogramaApiImpl implements OrganogramaApi {
                 throw new IllegalStateException(ApplicationMessage.FAILED_FETCH_STATUS_NOT_OK);
             }
             final JSONObject result = new JSONObject(EntityUtils.toString(response.getEntity()));
-            return result.getString("access_token");
+            accessToken = result.getString("access_token");
+            this.logger.info("Token received successfully");
+            return accessToken;
         } catch (final IOException e) {
             throw new NegocioException(ApplicationMessage.FAILED_FETCH_TOKEN_ACESSO_CIDADAO);
         }
