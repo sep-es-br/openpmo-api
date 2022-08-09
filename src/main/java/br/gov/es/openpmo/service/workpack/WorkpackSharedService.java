@@ -14,11 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.DUPLICATED_VALUE;
@@ -87,19 +83,15 @@ public class WorkpackSharedService {
   }
 
   private static boolean verifyStructure(
-    final List<WorkpackModel> workpackModelStructure,
-    final List<WorkpackModel> workpackModelSharedStructure
+    final Collection<WorkpackModel> workpackModelStructure,
+    final Collection<WorkpackModel> workpackModelSharedStructure
   ) {
-    boolean equalStructure = true;
-    for(int i = 0; i < workpackModelStructure.size(); i++) {
-      final String workpackModelType = workpackModelStructure.get(i).getClass().getTypeName();
-      final String workpackModelSharedType = workpackModelSharedStructure.get(i).getClass().getTypeName();
-      if(!workpackModelType.equals(workpackModelSharedType)) {
-        equalStructure = false;
-        break;
-      }
-    }
-    return equalStructure;
+    return workpackModelStructure.stream()
+      .allMatch(a -> workpackModelSharedStructure.stream().anyMatch(b -> sameTypeName(a, b)));
+  }
+
+  private static boolean sameTypeName(WorkpackModel a, WorkpackModel b) {
+    return Objects.equals(a.getClass().getTypeName(), b.getClass().getTypeName());
   }
 
   private static List<WorkpackModel> fetchChildren(final WorkpackModel workpackModelShared) {

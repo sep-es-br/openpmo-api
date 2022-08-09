@@ -132,7 +132,7 @@ public class IssueResponse extends Entity {
   @Transient
   public void update(final IssueResponseUpdateDto request) {
     ObjectUtils.updateIfPresent(request::getName, this::setName);
-    ObjectUtils.updateIfPresent(request::getPlan, this::setName);
+    ObjectUtils.updateIfPresent(request::getPlan, this::setPlan);
     ObjectUtils.updateIfPresent(request::getStatus, this::setStatus);
     ObjectUtils.updateIfPresent(request::getDate, this::setDate);
   }

@@ -16,10 +16,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class FilterCostAccountController extends CreateAndUpdateUsingWorkpackModelFilterOperations {
 
   private final CustomFilterService customFilterService;
+  private final TokenService tokenService;
 
   @Autowired
-  public FilterCostAccountController(final CustomFilterService customFilterService) {
+  public FilterCostAccountController(final CustomFilterService customFilterService, TokenService tokenService) {
     this.customFilterService = customFilterService;
+    this.tokenService = tokenService;
   }
 
   @Override
@@ -28,7 +30,7 @@ public class FilterCostAccountController extends CreateAndUpdateUsingWorkpackMod
   }
 
   @Override protected TokenService getTokenService() {
-    return null;
+    return this.tokenService;
   }
 
   @Override
