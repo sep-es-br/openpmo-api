@@ -16,16 +16,12 @@ public class PersonUpdateDto {
   @NotNull
   private final String name;
 
-  @NotEmpty
-  @NotNull
   private final String contactEmail;
 
   @NotEmpty
   @NotNull
   private final String phoneNumber;
 
-  @NotEmpty
-  @NotNull
   private final String address;
 
   private final boolean unify;
