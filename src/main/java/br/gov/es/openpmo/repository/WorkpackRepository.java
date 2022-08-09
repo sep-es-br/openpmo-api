@@ -308,7 +308,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
          "WITH workpack, isBaselinedBy, baseline " +
          "WHERE id(workpack)=$idWorkpack " +
          "WITH collect(baseline) as baselines " +
-         "RETURN count(baselines)>0 and none(b in baselines where b.status in ['DRAFT', 'REJECTED'])")
+         "RETURN case baselines when [] then false else none(b in baselines where b.status in ['DRAFT', 'REJECTED']) end")
   boolean hasCancelPropose(Long idWorkpack);
 
   @Query("MATCH (w:Workpack)-[:IS_INSTANCE_BY]->(m:WorkpackModel) " +
