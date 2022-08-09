@@ -4,7 +4,6 @@ import br.gov.es.openpmo.apis.acessocidadao.AcessoCidadaoApi;
 import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentResponse;
 import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentRoleResponse;
 import br.gov.es.openpmo.dto.person.RoleResource;
-import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.relations.CanAccessOffice;
 import br.gov.es.openpmo.model.relations.CanAccessPlan;
@@ -14,7 +13,6 @@ import br.gov.es.openpmo.repository.PlanPermissionRepository;
 import br.gov.es.openpmo.repository.WorkpackPermissionRepository;
 import br.gov.es.openpmo.scheduler.updateroles.HasRole;
 import br.gov.es.openpmo.service.actors.PersonService;
-import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,7 +65,10 @@ public class RoleService {
             return Collections.emptyList();
         }
         List<RoleResource> roles = getRolesSorted(idPerson, publicAgent);
-        removeOldPermissions(roles, getPersonByEmail(publicAgent));
+        Person person = getPersonByEmail(publicAgent);
+        if (person != null) {
+          removeOldPermissions(roles, person);
+        }
         return roles;
     }
 
@@ -142,8 +143,7 @@ public class RoleService {
     }
 
     private Person getPersonByEmail(PublicAgentResponse publicAgent) {
-        return this.personService.findByEmail(publicAgent.getEmail())
-                .orElseThrow(() -> new NegocioException(ApplicationMessage.PERSON_NOT_FOUND));
+        return this.personService.findByEmail(publicAgent.getEmail()).orElse(null);
     }
 
     private Set<CanAccessOffice> findOfficePermissions(final Person person) {
