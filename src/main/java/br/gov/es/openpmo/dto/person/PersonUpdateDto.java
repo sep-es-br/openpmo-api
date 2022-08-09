@@ -18,8 +18,6 @@ public class PersonUpdateDto {
 
   private final String contactEmail;
 
-  @NotEmpty
-  @NotNull
   private final String phoneNumber;
 
   private final String address;
