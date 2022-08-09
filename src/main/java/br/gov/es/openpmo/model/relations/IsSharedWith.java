@@ -41,7 +41,7 @@ public class IsSharedWith {
     }
 
     public String comboName() {
-        return this.workpack.getName() + " (" + this.office.getName() + ")";
+        return this.workpack.getName() + this.workpack.getOriginalOffice().map(a -> " (" + a.getName() + ") ").orElse("");
     }
 
     public Workpack getWorkpack() {

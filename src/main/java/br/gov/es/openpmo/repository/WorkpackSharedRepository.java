@@ -4,7 +4,6 @@ import br.gov.es.openpmo.model.relations.IsSharedWith;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
 import org.springframework.data.neo4j.annotation.Query;
-import org.springframework.data.neo4j.annotation.QueryResult;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -28,7 +27,10 @@ public interface WorkpackSharedRepository extends Neo4jRepository<IsSharedWith, 
     + "OPTIONAL MATCH (instance)<-[isInInstance:IS_IN*]-(instanceChildren:WorkpackModel) "
     + "WITH office, planModel, model, sharedWith, workpack, instanceBy, instance, isInInstance, instanceChildren "
     + "WHERE id(model) = $idWorkpackModel "
-    + "RETURN office, planModel, sharedWith, workpack, instanceBy, instance, model, isInInstance, instanceChildren"
+    + "RETURN office, planModel, sharedWith, workpack, instanceBy, instance, model, isInInstance, instanceChildren, [ "
+      + "    [(workpack)-[bt:BELONGS_TO{linked:false}]->(originalPlan:Plan) | [bt, originalPlan]], "
+      + "    [(originalPlan:Plan)-[iab:IS_ADOPTED_BY]->(originalOffice:Office) | [iab, originalOffice]] " +
+      "]"
   )
   List<IsSharedWith> listAllWorkpacksShared(Long idWorkpackModel);
 
@@ -39,7 +41,10 @@ public interface WorkpackSharedRepository extends Neo4jRepository<IsSharedWith, 
     + "OPTIONAL MATCH (instance)<-[isInInstance:IS_IN*]-(instanceChildren:WorkpackModel) "
     + "WITH office, planModel, workpack, adoptedBy, belongsTo, instanceBy, instance, isInInstance, instanceChildren "
     + "WHERE workpack.public=true "
-    + "RETURN office, planModel, workpack, adoptedBy, belongsTo, instanceBy, instance, isInInstance, instanceChildren"
+    + "RETURN office, planModel, workpack, adoptedBy, belongsTo, instanceBy, instance, isInInstance, instanceChildren, [ "
+    + "    [(workpack)-[bt:BELONGS_TO{linked:false}]->(originalPlan:Plan) | [bt, originalPlan]], "
+    + "    [(originalPlan:Plan)-[iab:IS_ADOPTED_BY]->(originalOffice:Office) | [iab, originalOffice]] " +
+    "]"
   )
   List<Workpack> listAllWorkpacksPublic();
 

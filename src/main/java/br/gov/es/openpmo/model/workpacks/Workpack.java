@@ -6,6 +6,8 @@ import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.baselines.Snapshotable;
+import br.gov.es.openpmo.model.office.Office;
+import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.properties.Property;
 import br.gov.es.openpmo.model.relations.*;
 import br.gov.es.openpmo.model.schedule.Schedule;
@@ -495,6 +497,20 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
 
     public void setReason(String reason) {
         this.reason = reason;
+    }
+
+    @Transient
+    public Optional<Plan> getOriginalPlan() {
+        return this.belongsTo.stream()
+            .filter(a -> !a.getLinked())
+            .findFirst()
+            .map(BelongsTo::getPlan);
+    }
+
+    @Transient
+    public Optional<Office> getOriginalOffice() {
+      return this.getOriginalPlan()
+        .map(Plan::getOffice);
     }
 
 }
