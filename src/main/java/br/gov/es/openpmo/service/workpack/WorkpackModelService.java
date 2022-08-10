@@ -119,8 +119,17 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
       .orElse(new HashSet<>());
   }
 
+  private static void ifNotMilestoneDeliverableProgramWorkpackThrowException(
+    final WorkpackModelParamDto workpackModelParamDto,
+    final boolean isChildFromProgramModel
+  ) {
+    if (workpackModelParamDto.hasNoParent() || !isChildFromProgramModel) {
+      throw new NegocioException(WORKPACK_MODEL_MILESTONE_DELIVERABLE_PROGRAM_ERROR);
+    }
+  }
+
   public WorkpackModel save(final WorkpackModel workpackModel, final Long idParent) {
-    if(workpackModel.getId() == null) {
+    if (workpackModel.getId() == null) {
       workpackModel.setPlanModel(this.planModelService.findById(workpackModel.getIdPlanModel()));
       this.ifHasParentIdCreateAsChild(workpackModel, idParent);
     }
@@ -128,15 +137,10 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
   }
 
   private void ifHasParentIdCreateAsChild(final WorkpackModel workpackModel, final Long idParent) {
-    if(idParent != null) {
+    if (idParent != null) {
       final WorkpackModel parent = this.findById(idParent);
       workpackModel.addParent(parent);
     }
-  }
-
-  public WorkpackModel findById(final Long id) {
-    return this.workpackModelRepository.findAllByIdWorkpackModel(id).orElseThrow(
-      () -> new NegocioException(WORKPACKMODEL_NOT_FOUND));
   }
 
   public List<WorkpackModel> findAll(final Long idPlanModel) {
@@ -160,44 +164,51 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
     return this.workpackModelRepository.save(workpackModelUpdate);
   }
 
+  public WorkpackModel findById(final Long id) {
+    return this.workpackModelRepository.findAllByIdWorkpackModel(id)
+      .orElseThrow(() -> new NegocioException(WORKPACKMODEL_NOT_FOUND));
+  }
+
   private void verifyForPropertiesToUpdate(
     final Runnable createPropertyList,
     final Collection<? extends PropertyModel> properties,
     final Collection<PropertyModel> propertiesToUpdate
   ) {
-    if(properties != null && !properties.isEmpty()) {
-      for(final PropertyModel propertyModel : properties) {
-        if(propertyModel.getId() == null) {
-          if(propertiesToUpdate == null) {
+    if (properties != null && !properties.isEmpty()) {
+      for (final PropertyModel propertyModel : properties) {
+        if (propertyModel.getId() == null) {
+          if (propertiesToUpdate == null) {
             createPropertyList.run();
           }
           propertiesToUpdate.add(propertyModel);
           continue;
         }
-        if(propertiesToUpdate != null) {
+        if (propertiesToUpdate != null) {
           propertiesToUpdate.stream()
             .filter(p -> p.getId() != null && p.getId().equals(propertyModel.getId()))
             .findFirst()
             .ifPresent(propertyModelUpdate ->
-                         this.loadPropertyUpdate(propertyModelUpdate, propertyModel)
+              this.loadPropertyUpdate(propertyModelUpdate, propertyModel)
             );
         }
       }
     }
   }
 
-  private void verifyForPropertiesToDelete(final Set<PropertyModel> properties, final Set<PropertyModel> propertiesToUpdate) {
-    if(propertiesToUpdate != null && !propertiesToUpdate.isEmpty()) {
-
+  private void verifyForPropertiesToDelete(
+    final Collection<PropertyModel> properties,
+    final Collection<PropertyModel> propertiesToUpdate
+  ) {
+    if (propertiesToUpdate != null && !propertiesToUpdate.isEmpty()) {
       final Predicate<PropertyModel> findPropertiesToDelete = propertyModel -> properties == null ||
-                                                                               properties.stream().noneMatch(p -> p.getId() != null && p.getId().equals(
-                                                                                 propertyModel.getId()));
+        properties.stream().noneMatch(p -> p.getId() != null && p.getId().equals(
+          propertyModel.getId()));
       final Set<PropertyModel> propertiesToDelete = propertiesToUpdate.stream()
         .filter(findPropertiesToDelete)
         .collect(Collectors.toSet());
-      if(!propertiesToDelete.isEmpty()) {
-        for(final PropertyModel propertyModel : propertiesToDelete) {
-          if(!this.isCanDeleteProperty(propertyModel.getId())) {
+      if (!propertiesToDelete.isEmpty()) {
+        for (final PropertyModel propertyModel : propertiesToDelete) {
+          if (!this.isCanDeleteProperty(propertyModel.getId())) {
             throw new NegocioException(PROPERTY_MODEL_DELETE_RELATIONSHIP_ERROR);
           }
         }
@@ -208,7 +219,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
   }
 
   private void loadPropertyUpdate(final PropertyModel propertyModelUpdate, final PropertyModel propertyModel) {
-    if(!propertyModel.getClass().getTypeName().equals(propertyModelUpdate.getClass().getTypeName())) {
+    if (!propertyModel.getClass().getTypeName().equals(propertyModelUpdate.getClass().getTypeName())) {
       throw new NegocioException(PROPERTY_UPDATE_TYPE_ERROR);
     }
     propertyModelUpdate.setActive(propertyModel.isActive());
@@ -219,7 +230,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
     propertyModelUpdate.setName(propertyModel.getName());
     propertyModelUpdate.setSession(propertyModel.getSession());
 
-    switch(propertyModelUpdate.getClass().getTypeName()) {
+    switch (propertyModelUpdate.getClass().getTypeName()) {
       case TYPE_NAME_MODEL_INTEGER:
         final IntegerModel integerModelUpdate = (IntegerModel) propertyModelUpdate;
         final IntegerModel integerModel = (IntegerModel) propertyModel;
@@ -310,54 +321,25 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
 
   }
 
-  public WorkpackModel findByIdWorkpack(final Long idWorkpack) {
-    return this.workpackModelRepository.findByIdWorkpack(idWorkpack).orElseThrow(
-      () -> new NegocioException(WORKPACKMODEL_NOT_FOUND));
-  }
-
   private void verifyForGroupedPropertiesToDelete(final Set<PropertyModel> propertiesToDelete) {
     final Set<PropertyModel> groupedProperties = WorkpackModelService.extractGroupedPropertyIfExists(propertiesToDelete);
-    if(!groupedProperties.isEmpty()) {
+    if (!groupedProperties.isEmpty()) {
       final Collection<PropertyModel> groupedPropertiesToDelete = new HashSet<>();
-      for(final PropertyModel property : groupedProperties) {
+      for (final PropertyModel property : groupedProperties) {
         groupedPropertiesToDelete.addAll(((GroupModel) property).getGroupedProperties());
       }
       this.propertyModelService.delete(groupedPropertiesToDelete);
     }
   }
 
-  private static boolean hasWorkpackInstanceRelationship(final WorkpackModel workpackModel) {
-    switch(workpackModel.getClass().getTypeName()) {
-      case TYPE_NAME_MODEL_PORTFOLIO:
-        final PortfolioModel portfolioModel = (PortfolioModel) workpackModel;
-        return portfolioModel.getInstances() == null || portfolioModel.getInstances().isEmpty();
-      case TYPE_NAME_MODEL_PROGRAM:
-        final ProgramModel programModel = (ProgramModel) workpackModel;
-        return programModel.getInstances() == null || programModel.getInstances().isEmpty();
-      case TYPE_NAME_MODEL_ORGANIZER:
-        final OrganizerModel organizerModel = (OrganizerModel) workpackModel;
-        return organizerModel.getInstances() == null || organizerModel.getInstances().isEmpty();
-      case TYPE_NAME_MODEL_DELIVERABLE:
-        final DeliverableModel deliverableModel = (DeliverableModel) workpackModel;
-        return deliverableModel.getInstances() == null || deliverableModel.getInstances().isEmpty();
-      case TYPE_NAME_MODEL_PROJECT:
-        final ProjectModel projectModel = (ProjectModel) workpackModel;
-        return projectModel.getInstances() == null || projectModel.getInstances().isEmpty();
-      case TYPE_NAME_MODEL_MILESTONE:
-        final MilestoneModel milestoneModel = (MilestoneModel) workpackModel;
-        return milestoneModel.getInstances() == null || milestoneModel.getInstances().isEmpty();
-    }
-    return true;
-  }
-
   public WorkpackModel getWorkpackModel(final WorkpackModelParamDto workpackModelParamDto) {
     this.validType(workpackModelParamDto);
     Set<PropertyModel> propertyModels = null;
-    if(workpackModelParamDto.getProperties() != null && !workpackModelParamDto.getProperties().isEmpty()) {
+    if (workpackModelParamDto.getProperties() != null && !workpackModelParamDto.getProperties().isEmpty()) {
       propertyModels = this.getProperties(workpackModelParamDto);
     }
     WorkpackModel workpackModel = null;
-    switch(workpackModelParamDto.getClass().getTypeName()) {
+    switch (workpackModelParamDto.getClass().getTypeName()) {
       case PACKAGE_DTO + ".PortfolioModelParamDto":
         workpackModel = this.modelMapper.map(workpackModelParamDto, PortfolioModel.class);
         break;
@@ -377,10 +359,10 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
         workpackModel = this.modelMapper.map(workpackModelParamDto, MilestoneModel.class);
         break;
     }
-    if(workpackModel != null) {
+    if (workpackModel != null) {
       workpackModel.dashboardConfiguration(workpackModelParamDto.getDashboardConfiguration());
       workpackModel.setProperties(propertyModels);
-      if(workpackModelParamDto.getSortBy() != null && !CollectionUtils.isEmpty(workpackModel.getProperties())) {
+      if (workpackModelParamDto.getSortBy() != null && !CollectionUtils.isEmpty(workpackModel.getProperties())) {
         workpackModel.setSortBy(
           workpackModel.getProperties().stream()
             .filter(p -> p.getSession() == Session.PROPERTIES)
@@ -393,7 +375,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
   }
 
   private void validType(final WorkpackModelParamDto workpackModelParamDto) {
-    if(workpackModelParamDto.isDeliverableDtoOrMilestoneDto()) {
+    if (workpackModelParamDto.isDeliverableDtoOrMilestoneDto()) {
       final boolean isChildFromProgramModel = this.verifier.verify(
         workpackModelParamDto.getId(),
         WorkpackModelInstanceType.TYPE_NAME_MODEL_PROGRAM::isTypeOf
@@ -402,39 +384,30 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
     }
   }
 
-  private static void ifNotMilestoneDeliverableProgramWorkpackThrowException(
-    final WorkpackModelParamDto workpackModelParamDto,
-    final boolean isChildFromProgramModel
-  ) {
-    if(workpackModelParamDto.hasNoParent() || !isChildFromProgramModel) {
-      throw new NegocioException(WORKPACK_MODEL_MILESTONE_DELIVERABLE_PROGRAM_ERROR);
-    }
-  }
-
   public WorkpackModelDetailDto getWorkpackModelDetailDto(final WorkpackModel workpackModel) {
     Set<WorkpackModelDetailDto> children = null;
     List<WorkpackModelDto> parent = null;
     PropertyModelDto sortBy = null;
-    if(workpackModel.getChildren() != null) {
+    if (workpackModel.getChildren() != null) {
       children = this.getChildren(workpackModel.getChildren());
       workpackModel.setChildren(null);
     }
-    if(workpackModel.getParent() != null) {
+    if (workpackModel.getParent() != null) {
       parent = workpackModel.getParent().stream()
         .map(this::getWorkpackModelDto)
         .collect(Collectors.toList());
       workpackModel.setParent(null);
     }
     List<? extends PropertyModelDto> properties = null;
-    if(!CollectionUtils.isEmpty(workpackModel.getProperties())) {
+    if (!CollectionUtils.isEmpty(workpackModel.getProperties())) {
       properties = this.getPropertyModelDto(workpackModel);
     }
-    if(workpackModel.getSortBy() != null) {
+    if (workpackModel.getSortBy() != null) {
       sortBy = this.getPropertyModelDto(workpackModel.getSortBy());
       workpackModel.setSortBy(null);
     }
     final WorkpackModelDetailDto detailDto = this.convertWorkpackModelDetailDto(workpackModel);
-    if(detailDto != null) {
+    if (detailDto != null) {
       detailDto.dashboardConfiguration(workpackModel);
       detailDto.setChildren(children);
       detailDto.setParent(parent);
@@ -445,7 +418,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
   }
 
   private List<? extends PropertyModelDto> getPropertyModelDto(final WorkpackModel workpackModel) {
-    if(!CollectionUtils.isEmpty(workpackModel.getProperties())) {
+    if (!CollectionUtils.isEmpty(workpackModel.getProperties())) {
       final List<PropertyModelDto> list = new ArrayList<>();
       workpackModel.getProperties().forEach(propertyModel -> list.add(this.getPropertyModelDto(propertyModel)));
       list.sort(Comparator.comparing(PropertyModelDto::getSortIndex));
@@ -455,7 +428,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
   }
 
   public PropertyModelDto getPropertyModelDto(final PropertyModel propertyModel) {
-    switch(propertyModel.getClass().getTypeName()) {
+    switch (propertyModel.getClass().getTypeName()) {
       case TYPE_NAME_MODEL_INTEGER:
         return this.modelMapper.map(propertyModel, IntegerModelDto.class);
       case TYPE_NAME_MODEL_TEXT:
@@ -467,7 +440,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
       case TYPE_NAME_MODEL_UNIT_SELECTION:
         final UnitSelectionModelDto unitDto = this.modelMapper.map(propertyModel, UnitSelectionModelDto.class);
         final UnitSelectionModel unitModel = (UnitSelectionModel) propertyModel;
-        if(unitModel.getDefaultValue() != null) {
+        if (unitModel.getDefaultValue() != null) {
           unitDto.setDefaults(unitModel.getDefaultValue().getId());
         }
         return unitDto;
@@ -485,11 +458,11 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
           LocalitySelectionModelDto.class
         );
         final LocalitySelectionModel localityModel = (LocalitySelectionModel) propertyModel;
-        if(!CollectionUtils.isEmpty(localityModel.getDefaultValue())) {
+        if (!CollectionUtils.isEmpty(localityModel.getDefaultValue())) {
           localityDto.setDefaults(new ArrayList<>());
           localityModel.getDefaultValue().forEach(l -> localityDto.getDefaults().add(l.getId()));
         }
-        if(localityModel.getDomain() != null) {
+        if (localityModel.getDomain() != null) {
           localityDto.setIdDomain(localityModel.getDomain().getId());
         }
         return localityDto;
@@ -499,7 +472,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
           OrganizationSelectionModelDto.class
         );
         final OrganizationSelectionModel organizationModel = (OrganizationSelectionModel) propertyModel;
-        if(!CollectionUtils.isEmpty(organizationModel.getDefaultValue())) {
+        if (!CollectionUtils.isEmpty(organizationModel.getDefaultValue())) {
           organizationDto.setDefaults(new ArrayList<>());
           organizationModel.getDefaultValue().forEach(
             l -> organizationDto.getDefaults().add(l.getId()));
@@ -525,11 +498,11 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
 
   public WorkpackModelDto getWorkpackModelDto(final WorkpackModel workpackModel) {
     PropertyModelDto sortBy = null;
-    if(workpackModel.getSortBy() != null) {
+    if (workpackModel.getSortBy() != null) {
       sortBy = this.getPropertyModelDto(workpackModel.getSortBy());
     }
     workpackModel.setSortBy(null);
-    switch(workpackModel.getClass().getTypeName()) {
+    switch (workpackModel.getClass().getTypeName()) {
       case TYPE_NAME_MODEL_PORTFOLIO:
         final PortfolioModelDto portfolioModelDto = this.modelMapper.map(workpackModel, PortfolioModelDto.class);
         portfolioModelDto.setSortBy(sortBy);
@@ -561,11 +534,11 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
 
   private WorkpackModelDetailDto convertWorkpackModelDetailDto(final WorkpackModel workpackModel) {
     PropertyModelDto sortBy = null;
-    if(workpackModel.getSortBy() != null) {
+    if (workpackModel.getSortBy() != null) {
       sortBy = this.getPropertyModelDto(workpackModel.getSortBy());
     }
     final String typeName = workpackModel.getClass().getTypeName();
-    switch(typeName) {
+    switch (typeName) {
       case TYPE_NAME_MODEL_PORTFOLIO:
         final PortfolioModelDetailDto portfolioModelDetailDto = this.modelMapper.map(
           workpackModel,
@@ -608,17 +581,17 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
   }
 
   public Set<WorkpackModelDetailDto> getChildren(final Collection<? extends WorkpackModel> childrens) {
-    if(childrens != null && !childrens.isEmpty()) {
+    if (childrens != null && !childrens.isEmpty()) {
       final Set<WorkpackModelDetailDto> set = new HashSet<>();
       childrens.forEach(w -> {
         Set<WorkpackModelDetailDto> childrenChild = null;
-        if(w.getChildren() != null && !w.getChildren().isEmpty()) {
+        if (w.getChildren() != null && !w.getChildren().isEmpty()) {
           childrenChild = this.getChildren(w.getChildren());
         }
         w.setParent(null);
         w.setChildren(null);
         final WorkpackModelDetailDto detailDto = this.convertWorkpackModelDetailDto(w);
-        if(detailDto != null) {
+        if (detailDto != null) {
           detailDto.setChildren(childrenChild);
           set.add(detailDto);
         }
@@ -635,7 +608,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
   }
 
   private void extractToModel(final Collection<? super PropertyModel> propertyModels, final PropertyModelDto property) {
-    switch(property.getClass().getTypeName()) {
+    switch (property.getClass().getTypeName()) {
       case PACKAGE_PROPERTIES_DTO + ".IntegerModelDto":
         propertyModels.add(this.modelMapper.map(property, IntegerModel.class));
         break;
@@ -651,7 +624,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
       case PACKAGE_PROPERTIES_DTO + ".UnitSelectionModelDto":
         final UnitSelectionModel unitSelectionModel = this.modelMapper.map(property, UnitSelectionModel.class);
         final UnitSelectionModelDto unitSelectionDto = (UnitSelectionModelDto) property;
-        if(unitSelectionDto.getDefaults() != null) {
+        if (unitSelectionDto.getDefaults() != null) {
           unitSelectionModel.setDefaultValue(this.unitMeasureService.findById(unitSelectionDto.getDefaults()));
         }
         propertyModels.add(unitSelectionModel);
@@ -671,10 +644,10 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
       case PACKAGE_PROPERTIES_DTO + ".LocalitySelectionModelDto":
         final LocalitySelectionModel localitySelectionModel = this.modelMapper.map(property, LocalitySelectionModel.class);
         final LocalitySelectionModelDto localityDto = (LocalitySelectionModelDto) property;
-        if(localityDto.getIdDomain() != null) {
+        if (localityDto.getIdDomain() != null) {
           localitySelectionModel.setDomain(this.domainService.findById(localityDto.getIdDomain()));
         }
-        if(!CollectionUtils.isEmpty(localityDto.getDefaults())) {
+        if (!CollectionUtils.isEmpty(localityDto.getDefaults())) {
           localitySelectionModel.setDefaultValue(new HashSet<>());
           localityDto.getDefaults().forEach(
             l -> localitySelectionModel.getDefaultValue().add(this.localityService.findById(l)));
@@ -687,7 +660,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
           OrganizationSelectionModel.class
         );
         final OrganizationSelectionModelDto organizationDto = (OrganizationSelectionModelDto) property;
-        if(!CollectionUtils.isEmpty(organizationDto.getDefaults())) {
+        if (!CollectionUtils.isEmpty(organizationDto.getDefaults())) {
           organizationSelectionModel.setDefaultValue(new HashSet<>());
           organizationDto.getDefaults().forEach(
             o -> organizationSelectionModel.getDefaultValue().add(this.organizationService.findById(o)));
@@ -714,13 +687,9 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
       .orElseThrow(() -> new NegocioException(WORKPACKMODEL_NOT_FOUND));
   }
 
-  public Set<WorkpackModel> findAllByIdPlanModelWithChildren(final Long id) {
-    return this.workpackModelRepository.findAllByIdPlanModelWithChildren(id);
-  }
-
   public void deleteProperty(final Long idPropertyModel) {
     final PropertyModel propertyModel = this.propertyModelService.findById(idPropertyModel);
-    if(!this.isCanDeleteProperty(idPropertyModel)) {
+    if (!this.isCanDeleteProperty(idPropertyModel)) {
       throw new NegocioException(PROPERTY_MODEL_DELETE_RELATIONSHIP_ERROR);
     }
     final Collection<PropertyModel> properties = new HashSet<>();
