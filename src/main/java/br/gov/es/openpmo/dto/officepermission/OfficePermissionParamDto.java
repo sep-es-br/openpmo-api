@@ -11,7 +11,7 @@ public class OfficePermissionParamDto {
   @NotNull
   private Long idOffice;
   @NotNull
-  private String email;
+  private String key;
   private PersonDto person;
   private List<PermissionDto> permissions;
 
@@ -23,12 +23,12 @@ public class OfficePermissionParamDto {
     this.person = person;
   }
 
-  public String getEmail() {
-    return this.email;
+  public String getKey() {
+    return this.key;
   }
 
-  public void setEmail(final String email) {
-    this.email = email;
+  public void setKey(final String key) {
+    this.key = key;
   }
 
   public Long getIdOffice() {

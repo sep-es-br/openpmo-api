@@ -7,113 +7,131 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.CONTACT_EMAIL_NOT_NULL;
 
 public class PersonStakeholderParamDto {
 
-    private Long id;
-    @NotNull
-    private Boolean isUser;
-    private String name;
-    @NotNull
-    @NotEmpty
-    private String fullName;
-    private String phoneNumber;
-    private String address;
-    private String email;
-    @NotEmpty
-    @NotNull(message = CONTACT_EMAIL_NOT_NULL)
-    private String contactEmail;
+  private Long id;
+  @NotNull
+  private Boolean isUser;
+  private String name;
+  @NotNull
+  @NotEmpty
+  private String fullName;
+  private String phoneNumber;
+  private String address;
+  private String key;
+  private String email;
+  @NotEmpty
+  @NotNull(message = CONTACT_EMAIL_NOT_NULL)
+  private String contactEmail;
 
-    private String guid;
+  private String guid;
 
-    private Boolean administrator;
+  private Boolean administrator;
 
-    public PersonStakeholderParamDto() {
-    }
+  public PersonStakeholderParamDto() {
+  }
 
-    public PersonStakeholderParamDto(final String fullName, final String contactEmail) {
-        this.fullName = fullName;
-        this.contactEmail = contactEmail;
-    }
+  public PersonStakeholderParamDto(final String fullName, final String contactEmail) {
+    this.fullName = fullName;
+    this.contactEmail = contactEmail;
+  }
 
-    public String getEmail() {
-        return this.email;
-    }
+  public String getKey() {
+    return key;
+  }
 
-    public void setEmail(final String email) {
-        this.email = email;
-    }
+  public void setKey(String key) {
+    this.key = key;
+  }
 
-    public Long getId() {
-        return this.id;
-    }
+  public Boolean getUser() {
+    return isUser;
+  }
 
-    public void setId(final Long id) {
-        this.id = id;
-    }
+  public void setUser(Boolean user) {
+    isUser = user;
+  }
 
-    public String getName() {
-        return this.name;
-    }
+  public String getEmail() {
+    return email;
+  }
 
-    public void setName(final String name) {
-        this.name = name;
-    }
+  public void setEmail(String email) {
+    this.email = email;
+  }
 
-    public String getFullName() {
-        return this.fullName;
-    }
+  public Long getId() {
+    return this.id;
+  }
 
-    public void setFullName(final String fullName) {
-        this.fullName = fullName;
-    }
+  public void setId(final Long id) {
+    this.id = id;
+  }
 
-    public String getPhoneNumber() {
-        return this.phoneNumber;
-    }
+  public String getName() {
+    return this.name;
+  }
 
-    public void setPhoneNumber(final String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
+  public void setName(final String name) {
+    this.name = name;
+  }
 
-    public String getAddress() {
-        return this.address;
-    }
+  public String getFullName() {
+    return this.fullName;
+  }
 
-    public void setAddress(final String address) {
-        this.address = address;
-    }
+  public void setFullName(final String fullName) {
+    this.fullName = fullName;
+  }
 
-    public String getContactEmail() {
-        return this.contactEmail;
-    }
+  public String getPhoneNumber() {
+    return this.phoneNumber;
+  }
 
-    public void setContactEmail(final String contactEmail) {
-        this.contactEmail = contactEmail;
-    }
+  public void setPhoneNumber(final String phoneNumber) {
+    this.phoneNumber = phoneNumber;
+  }
 
-    public Boolean getIsUser() {
-        return this.isUser;
-    }
+  public String getAddress() {
+    return this.address;
+  }
 
-    public void setIsUser(final Boolean user) {
-        this.isUser = user;
-    }
+  public void setAddress(final String address) {
+    this.address = address;
+  }
 
-    public String firstNameFromFullName() {
-        return this.fullName.split(" ")[0];
-    }
+  public String getContactEmail() {
+    return this.contactEmail;
+  }
 
-    public String getGuid() {
-        return this.guid;
-    }
+  public void setContactEmail(final String contactEmail) {
+    this.contactEmail = contactEmail;
+  }
 
-    public void setGuid(final String guid) {
-        this.guid = guid;
-    }
+  public Boolean getIsUser() {
+    return this.isUser;
+  }
 
-    public Boolean getAdministrator() {
-        return administrator;
-    }
+  public void setIsUser(final Boolean user) {
+    this.isUser = user;
+  }
 
-    public void setAdministrator(Boolean administrator) {
-        this.administrator = administrator;
-    }
+  public String firstNameFromFullName() {
+    return this.fullName.split(" ")[0];
+  }
+
+  public String getGuid() {
+    return this.guid;
+  }
+
+  public void setGuid(final String guid) {
+    this.guid = guid;
+  }
+
+  public Boolean getAdministrator() {
+    return administrator;
+  }
+
+  public void setAdministrator(Boolean administrator) {
+    this.administrator = administrator;
+  }
+
 }

@@ -5,9 +5,9 @@ import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
 import br.gov.es.openpmo.model.relations.IsInContactBookOf;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 public class CitizenDto {
 
@@ -16,6 +16,7 @@ public class CitizenDto {
   private String fullName;
   private String phoneNumber;
   private String address;
+  private String key;
   private String email;
   private String contactEmail;
   private boolean administrator;
@@ -27,7 +28,7 @@ public class CitizenDto {
     this.roles.add(RoleResource.citizen());
   }
 
-  public static CitizenDto from(final Person person, final Set<IsInContactBookOf> contacts) {
+  public static CitizenDto from(final Person person, final Collection<IsInContactBookOf> contacts) {
     final Optional<IsInContactBookOf> maybeContact = contacts.stream()
       .filter(contact -> contact.getPersonId()
         .equals(person.getId())).findFirst();
@@ -41,8 +42,9 @@ public class CitizenDto {
   ) {
     final CitizenDto dto = from(person);
 
-    final boolean isUser = (person.getAuthentications() != null &&
-                            !person.getAuthentications().isEmpty()) || !(person.getAuthentications() == null);
+    final boolean isUser = person.getAuthentications() != null
+      && !person.getAuthentications().isEmpty()
+      || person.getAuthentications() != null;
 
     dto.setIsUser(isUser);
     maybeContact.ifPresent(contact -> {
@@ -51,6 +53,7 @@ public class CitizenDto {
       dto.setPhoneNumber(contact.getPhoneNumber());
     });
     maybeAuthentication.ifPresent(auth -> {
+      dto.setKey(auth.getKey());
       dto.setEmail(auth.getEmail());
     });
     return dto;
@@ -109,6 +112,14 @@ public class CitizenDto {
 
   public void setAddress(final String address) {
     this.address = address;
+  }
+
+  public String getKey() {
+    return key;
+  }
+
+  public void setKey(String key) {
+    this.key = key;
   }
 
   public String getEmail() {

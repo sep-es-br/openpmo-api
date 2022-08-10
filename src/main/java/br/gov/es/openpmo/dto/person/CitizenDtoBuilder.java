@@ -8,6 +8,7 @@ public final class CitizenDtoBuilder {
   private String fullName;
   private String phoneNumber;
   private String address;
+  private String key;
   private String email;
   private String contactEmail;
   private boolean administrator;
@@ -46,6 +47,11 @@ public final class CitizenDtoBuilder {
     return this;
   }
 
+  public CitizenDtoBuilder withKey(final String key) {
+    this.key = key;
+    return this;
+  }
+
   public CitizenDtoBuilder withEmail(final String email) {
     this.email = email;
     return this;
@@ -78,6 +84,7 @@ public final class CitizenDtoBuilder {
     personDto.setFullName(this.fullName);
     personDto.setPhoneNumber(this.phoneNumber);
     personDto.setAddress(this.address);
+    personDto.setKey(this.key);
     personDto.setEmail(this.email);
     personDto.setContactEmail(this.contactEmail);
     personDto.setAdministrator(this.administrator);

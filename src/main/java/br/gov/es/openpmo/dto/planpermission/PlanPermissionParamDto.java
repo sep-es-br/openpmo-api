@@ -13,7 +13,7 @@ public class PlanPermissionParamDto {
   @NotNull
   private Long idPlan;
   @NotNull
-  private String email;
+  private String key;
   private PersonDto person;
   private List<PermissionDto> permissions;
 
@@ -25,12 +25,12 @@ public class PlanPermissionParamDto {
     this.person = person;
   }
 
-  public String getEmail() {
-    return this.email;
+  public String getKey() {
+    return this.key;
   }
 
-  public void setEmail(final String email) {
-    this.email = email;
+  public void setKey(final String key) {
+    this.key = key;
   }
 
   public Long getIdPlan() {

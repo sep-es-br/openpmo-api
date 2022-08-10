@@ -10,6 +10,7 @@ import org.apache.http.Consts;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.*;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
@@ -33,275 +34,277 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.FAILED_FETCH_TOKEN_ACES
 @Scope("singleton")
 public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
 
-    private static final String AUTHORIZATION = "Authorization";
+  public static final String BASIC = "Basic ";
+  private static final String AUTHORIZATION = "Authorization";
+  private static final String BEARER = "Bearer ";
+  private static final int HTTP_OK = 200;
+  private final Logger logger;
 
-    private static final String BEARER = "Bearer ";
+  private final JournalCreator journalCreator;
 
-    private static final int HTTP_OK = 200;
+  @Value("${api.acessocidadao.grant_type}")
+  private String grantType;
 
-    private final Logger logger;
+  @Value("${api.acessocidadao.scope}")
+  private String scopes;
 
-    private final JournalCreator journalCreator;
+  @Value("${api.acessocidadao.client-id}")
+  private String clientId;
 
-    @Value("${api.acessocidadao.grant_type}")
-    private String grantType;
+  @Value("${api.acessocidadao.client-secret}")
+  private String clientSecret;
 
-    @Value("${api.acessocidadao.scope}")
-    private String scopes;
+  @Value("${api.acessocidadao.uri.webapi}")
+  private String acessocidadaoUriWebApi;
 
-    @Value("${api.acessocidadao.client-id}")
-    private String clientId;
+  @Value("${api.acessocidadao.uri.token}")
+  private String acessocidadaoUriToken;
 
-    @Value("${api.acessocidadao.client-secret}")
-    private String clientSecret;
+  private List<PublicAgentResponse> allPublicAgentResponses;
 
-    @Value("${api.acessocidadao.uri.webapi}")
-    private String acessocidadaoUriWebApi;
+  public AcessoCidadaoApiImpl(final Logger logger, final JournalCreator journalCreator) {
+    this.logger = logger;
+    this.journalCreator = journalCreator;
+  }
 
-    @Value("${api.acessocidadao.uri.token}")
-    private String acessocidadaoUriToken;
+  private static boolean notEmpty(final String sigla) {
+    return !sigla.isEmpty();
+  }
 
-    private List<PublicAgentResponse> allPublicAgentResponses;
-
-    public AcessoCidadaoApiImpl(final Logger logger, final JournalCreator journalCreator) {
-        this.logger = logger;
-        this.journalCreator = journalCreator;
+  private String getSigla(final OperationalOrganizationResponse org, final String organizationGuid) {
+    if (org.getGuid().equalsIgnoreCase(organizationGuid)) {
+      return org.getAbbreviation();
     }
 
-    private static boolean notEmpty(final String sigla) {
-        return !sigla.isEmpty();
-    }
+    return org.getChildren().stream()
+      .map(child -> this.getSigla(child, organizationGuid))
+      .filter(AcessoCidadaoApiImpl::notEmpty)
+      .findFirst()
+      .orElse("");
+  }
 
-    private String getSigla(final OperationalOrganizationResponse org, final String organizationGuid) {
-        if (org.getGuid().equalsIgnoreCase(organizationGuid)) {
-            return org.getAbbreviation();
+  @Override
+  @Cacheable("operationalOrganizations")
+  public List<OperationalOrganizationResponse> findAllOperationalOrganizations(final Long idPerson) {
+    return this.getList(
+      "/api/organizacoes/organograma-operacional",
+      (json, list) -> json.forEach(element -> {
+        if (element instanceof JSONObject) {
+          final JSONObject obj = (JSONObject) element;
+          list.add(new OperationalOrganizationResponse(obj));
         }
+      }),
+      idPerson);
+  }
 
-        return org.getChildren().stream()
-                .map(child -> this.getSigla(child, organizationGuid))
-                .filter(AcessoCidadaoApiImpl::notEmpty)
-                .findFirst()
-                .orElse("");
-    }
-
-    @Override
-    @Cacheable("operationalOrganizations")
-    public List<OperationalOrganizationResponse> findAllOperationalOrganizations(final Long idPerson) {
-        return this.getList(
-                "/api/organizacoes/organograma-operacional",
-                (json, list) -> json.forEach(element -> {
-                    if (element instanceof JSONObject) {
-                        final JSONObject obj = (JSONObject) element;
-                        list.add(new OperationalOrganizationResponse(obj));
-                    }
-                }),
-                idPerson);
-    }
-
-    @Override
-    @Cacheable("publicAgentRoles")
-    public List<PublicAgentRoleResponse> findRoles(final String guid, final Long idPerson) {
-        return this.getList(
-                "/api/agentepublico/" + guid + "/papeis",
-                (json, list) -> json.forEach(element -> {
-                    if (element instanceof JSONObject) {
-                        final JSONObject obj = (JSONObject) element;
-                        list.add(new PublicAgentRoleResponse(obj));
-                    }
-                }),
-                idPerson
-        );
-    }
-
-    private <T> List<T> getList(final String url, final BiConsumer<? super JSONArray, ? super List<T>> mapper, final Long idPerson) {
-        final List<T> data = new ArrayList<>();
-        final String token = this.fetchClientToken(idPerson);
-
-        if (token == null) {
-            return data;
+  @Override
+  @Cacheable("publicAgentRoles")
+  public List<PublicAgentRoleResponse> findRoles(final String guid, final Long idPerson) {
+    return this.getList(
+      "/api/agentepublico/" + guid + "/papeis",
+      (json, list) -> json.forEach(element -> {
+        if (element instanceof JSONObject) {
+          final JSONObject obj = (JSONObject) element;
+          list.add(new PublicAgentRoleResponse(obj));
         }
+      }),
+      idPerson
+    );
+  }
 
-        final String uri = MessageFormat.format("{0}{1}", this.acessocidadaoUriWebApi, url);
-        this.logger.info("Executing GET in {}", uri);
+  private <T> List<T> getList(final String url, final BiConsumer<? super JSONArray, ? super List<T>> mapper, final Long idPerson) {
+    final List<T> data = new ArrayList<>();
+    final String token = this.fetchClientToken(idPerson);
 
-        final HttpUriRequest get = new HttpGet(uri);
-        get.addHeader(AUTHORIZATION, BEARER + token);
+    if (token == null) {
+      return data;
+    }
 
-        try (final CloseableHttpResponse response = HttpClients.createDefault().execute(get)) {
-            if (response.getStatusLine().getStatusCode() == HTTP_OK) {
-                final JSONArray json = new JSONArray(EntityUtils.toString(response.getEntity()));
-                mapper.accept(json, data);
-            }
-        } catch (final IOException e) {
-            this.journalCreator.failure(idPerson);
-            e.printStackTrace();
+    final String uri = MessageFormat.format("{0}{1}", this.acessocidadaoUriWebApi, url);
+    this.logger.info("Executing GET in {}", uri);
+
+    final HttpUriRequest get = new HttpGet(uri);
+    get.addHeader(AUTHORIZATION, BEARER + token);
+
+    try (CloseableHttpClient httpClient = HttpClients.createDefault();
+         CloseableHttpResponse response = httpClient.execute(get)) {
+      if (response.getStatusLine().getStatusCode() == HTTP_OK) {
+        final JSONArray json = new JSONArray(EntityUtils.toString(response.getEntity()));
+        mapper.accept(json, data);
+      }
+    } catch (final IOException e) {
+      this.journalCreator.failure(idPerson);
+      e.printStackTrace();
+    }
+
+    return data;
+  }
+
+  private String fetchClientToken(final Long idPerson) {
+    final String basicToken = this.clientId + ":" + this.clientSecret;
+
+    this.logger.info("Executing POST in {}", this.acessocidadaoUriToken);
+    final HttpPost postRequest = new HttpPost(this.acessocidadaoUriToken);
+
+    final List<NameValuePair> urlParameters = new ArrayList<>();
+
+    urlParameters.add(new BasicNameValuePair("grant_type", this.grantType));
+    urlParameters.add(new BasicNameValuePair("scope", this.scopes));
+
+    postRequest.addHeader(
+      AUTHORIZATION,
+      BASIC + Base64.getEncoder().encodeToString(basicToken.getBytes())
+    );
+
+    postRequest.setEntity(new UrlEncodedFormEntity(urlParameters, Consts.UTF_8));
+
+    try (CloseableHttpClient httpClient = HttpClients.createDefault();
+         CloseableHttpResponse response = httpClient.execute(postRequest)) {
+      if (response.getStatusLine().getStatusCode() == HTTP_OK) {
+        final JSONObject result = new JSONObject(EntityUtils.toString(response.getEntity()));
+        this.logger.info("Token received successfully");
+        return result.getString("access_token");
+      }
+    } catch (final IOException e) {
+      this.journalCreator.failure(idPerson);
+      e.printStackTrace();
+      throw new NegocioException(FAILED_FETCH_TOKEN_ACESSO_CIDADAO);
+    }
+    return null;
+  }
+
+  @Override
+  @Cacheable("agentEmail")
+  public Optional<PublicAgentEmailResponse> findAgentEmail(final String sub, final Long idPerson) {
+    return Optional.ofNullable(
+      this.getEntity(
+        "/api/cidadao/" + sub + "/email",
+        json -> {
+          final String email = json.optString("email");
+          if (email == null) {
+            return null;
+          }
+          return new PublicAgentEmailResponse(json);
+        },
+        idPerson
+      )
+    );
+  }
+
+  private <T> T getEntity(final String url, final Function<? super JSONObject, T> mapper, final Long idPerson) {
+    final String token = this.fetchClientToken(idPerson);
+    if (token != null) {
+      final String uri = this.acessocidadaoUriWebApi.concat(url);
+      this.logger.info("Executing GET in {}", uri);
+      final HttpUriRequest get = new HttpGet(uri);
+      get.addHeader(AUTHORIZATION, BEARER + token);
+      try (CloseableHttpClient httpClient = HttpClients.createDefault();
+           CloseableHttpResponse response = httpClient.execute(get)) {
+        if (response.getStatusLine().getStatusCode() == HTTP_OK) {
+          final JSONObject json = new JSONObject(EntityUtils.toString(response.getEntity()));
+          return mapper.apply(json);
         }
-
-        return data;
+      } catch (final IOException e) {
+        this.journalCreator.failure(idPerson);
+        e.printStackTrace();
+      }
     }
+    return null;
+  }
 
-    private String fetchClientToken(final Long idPerson) {
-        final String basicToken = this.clientId + ":" + this.clientSecret;
+  @Override
+  @Cacheable("publicAgentSub")
+  public Optional<PublicAgentResponse> findPublicAgentBySub(final String sub, final Long idPerson) {
+    return Optional.ofNullable(
+      this.getEntity(
+        "/api/agentepublico/" + sub,
+        PublicAgentResponse::new,
+        idPerson
+      )
+    );
+  }
 
-        this.logger.info("Executing POST in {}", this.acessocidadaoUriToken);
-        final HttpPost postRequest = new HttpPost(this.acessocidadaoUriToken);
+  @Override
+  public Optional<String> findSubByCpf(final String cpf, Long idPerson) {
+    return Optional.ofNullable(this.getSub(
+      "/api/cidadao/" + cpf + "/pesquisaSub",
+      idPerson
+    ));
+  }
 
-        final List<NameValuePair> urlParameters = new ArrayList<>();
-
-        urlParameters.add(new BasicNameValuePair("grant_type", this.grantType));
-        urlParameters.add(new BasicNameValuePair("scope", this.scopes));
-
-        postRequest.addHeader(
-                AUTHORIZATION,
-                "Basic " + Base64.getEncoder().encodeToString(basicToken.getBytes())
-        );
-
-        postRequest.setEntity(new UrlEncodedFormEntity(urlParameters, Consts.UTF_8));
-
-        try (final CloseableHttpResponse response = HttpClients.createDefault().execute(postRequest)) {
-            if (response.getStatusLine().getStatusCode() == HTTP_OK) {
-                final JSONObject result = new JSONObject(EntityUtils.toString(response.getEntity()));
-                this.logger.info("Token received successfully");
-                return result.getString("access_token");
-            }
-        } catch (final IOException e) {
-            this.journalCreator.failure(idPerson);
-            e.printStackTrace();
-            throw new NegocioException(FAILED_FETCH_TOKEN_ACESSO_CIDADAO);
+  private String getSub(final String url, final Long idPerson) {
+    final String token = this.fetchClientToken(idPerson);
+    if (token != null) {
+      final String uri = this.acessocidadaoUriWebApi.concat(url);
+      final HttpUriRequest put = new HttpPut(uri);
+      put.addHeader(AUTHORIZATION, BEARER + token);
+      try (CloseableHttpClient httpClient = HttpClients.createDefault();
+           CloseableHttpResponse response = httpClient.execute(put)) {
+        if (response.getStatusLine().getStatusCode() == HTTP_OK) {
+          final JSONObject json = new JSONObject(EntityUtils.toString(response.getEntity()));
+          return json.getString("sub");
         }
-        return null;
+      } catch (final IOException e) {
+        this.journalCreator.failure(idPerson);
+        e.printStackTrace();
+      }
+    }
+    return null;
+  }
+
+  @Override
+  @Cacheable("organization")
+  public String getWorkLocation(final String organizationGuid, final Long idPerson) {
+    return this.findAllOperationalOrganizations(idPerson).stream()
+      .map(org -> this.getSigla(org, organizationGuid))
+      .filter(AcessoCidadaoApiImpl::notEmpty)
+      .findFirst()
+      .orElse("");
+  }
+
+  @Override
+  public void load(final Long idPerson) {
+    this.allPublicAgentResponses = this.findAllPublicAgents(idPerson);
+  }
+
+  @Override
+  @Cacheable("publicAgents")
+  public List<PublicAgentResponse> findAllPublicAgents(final Long idPerson) {
+    if (this.isPublicAgentsAlreadyInMemory()) {
+      return Collections.unmodifiableList(this.allPublicAgentResponses);
     }
 
-    @Override
-    @Cacheable("agentEmail")
-    public Optional<PublicAgentEmailResponse> findAgentEmail(final String sub, final Long idPerson) {
-        return Optional.ofNullable(
-                this.getEntity(
-                        "/api/cidadao/" + sub + "/email",
-                        json -> {
-                            final String email = json.optString("email");
-                            if (email == null) {
-                                return null;
-                            }
-                            return new PublicAgentEmailResponse(json);
-                        },
-                        idPerson
-                )
-        );
-    }
+    return this.findOperationalOrganization("GOVES", idPerson)
+      .map(organizationResponse -> getList(idPerson, organizationResponse))
+      .orElseGet(ArrayList::new);
+  }
 
-    private <T> T getEntity(final String url, final Function<? super JSONObject, T> mapper, final Long idPerson) {
-        final String token = this.fetchClientToken(idPerson);
-        if (token != null) {
-            final String uri = this.acessocidadaoUriWebApi.concat(url);
-            this.logger.info("Executing GET in {}", uri);
-            final HttpGet get = new HttpGet(uri);
-            get.addHeader(AUTHORIZATION, BEARER + token);
-            try (final CloseableHttpResponse response = HttpClients.createDefault().execute(get)) {
-                if (response.getStatusLine().getStatusCode() == HTTP_OK) {
-                    final JSONObject json = new JSONObject(EntityUtils.toString(response.getEntity()));
-                    return mapper.apply(json);
-                }
-            } catch (final IOException e) {
-                this.journalCreator.failure(idPerson);
-                e.printStackTrace();
-            }
+  private List<PublicAgentResponse> getList(Long idPerson, OperationalOrganizationResponse organizationResponse) {
+    return this.getList(
+      "/api/conjunto/" + organizationResponse.getGuid() + "/agentesPublicos",
+      (json, list) -> json.forEach(element -> {
+        if (element instanceof JSONObject) {
+          final JSONObject obj = (JSONObject) element;
+          list.add(new PublicAgentResponse(obj));
         }
-        return null;
-    }
+      }),
+      idPerson
+    );
+  }
 
-    @Override
-    @Cacheable("publicAgentSub")
-    public Optional<PublicAgentResponse> findPublicAgentBySub(final String sub, final Long idPerson) {
-        return Optional.ofNullable(
-                this.getEntity(
-                        "/api/agentepublico/" + sub,
-                        PublicAgentResponse::new,
-                        idPerson
-                )
-        );
-    }
+  private boolean isPublicAgentsAlreadyInMemory() {
+    return this.allPublicAgentResponses != null;
+  }
 
-    @Override
-    public Optional<String> findSubByCpf(final String cpf, Long idPerson) {
-        return Optional.ofNullable(this.getSub(
-                "/api/cidadao/" + cpf + "/pesquisaSub",
-                idPerson
-        ));
-    }
+  private Optional<OperationalOrganizationResponse> findOperationalOrganization(final String guid, final Long idPerson) {
+    return this.findAllOperationalOrganizations(idPerson).stream()
+      .filter(org -> org.getAbbreviation().equalsIgnoreCase(guid))
+      .findFirst();
+  }
 
-    private String getSub(final String url, final Long idPerson) {
-        final String token = this.fetchClientToken(idPerson);
-        if (token != null) {
-            final String uri = this.acessocidadaoUriWebApi.concat(url);
-            final HttpPut put = new HttpPut(uri);
-            put.addHeader(AUTHORIZATION, BEARER + token);
-            try (final CloseableHttpResponse response = HttpClients.createDefault().execute(put)) {
-                if (response.getStatusLine().getStatusCode() == HTTP_OK) {
-                    final JSONObject json = new JSONObject(EntityUtils.toString(response.getEntity()));
-                    return json.getString("sub");
-                }
-            } catch (final IOException e) {
-                this.journalCreator.failure(idPerson);
-                e.printStackTrace();
-            }
-        }
-        return null;
-    }
-
-    @Override
-    @Cacheable("organization")
-    public String getWorkLocation(final String organizationGuid, final Long idPerson) {
-        return this.findAllOperationalOrganizations(idPerson).stream()
-                .map(org -> this.getSigla(org, organizationGuid))
-                .filter(AcessoCidadaoApiImpl::notEmpty)
-                .findFirst()
-                .orElse("");
-    }
-
-    @Override
-    public void load(final Long idPerson) {
-        this.allPublicAgentResponses = this.findAllPublicAgents(idPerson);
-    }
-
-    @Override
-    @Cacheable("publicAgents")
-    public List<PublicAgentResponse> findAllPublicAgents(final Long idPerson) {
-        if (this.isPublicAgentsAlreadyInMemory()) {
-            return Collections.unmodifiableList(this.allPublicAgentResponses);
-        }
-
-        return this.findOperationalOrganization("GOVES", idPerson)
-                .map(organizationResponse -> getList(idPerson, organizationResponse))
-                .orElseGet(ArrayList::new);
-    }
-
-    private List<PublicAgentResponse> getList(Long idPerson, OperationalOrganizationResponse organizationResponse) {
-        return this.getList(
-                "/api/conjunto/" + organizationResponse.getGuid() + "/agentesPublicos",
-                (json, list) -> json.forEach(element -> {
-                    if (element instanceof JSONObject) {
-                        final JSONObject obj = (JSONObject) element;
-                        list.add(new PublicAgentResponse(obj));
-                    }
-                }),
-                idPerson
-        );
-    }
-
-    private boolean isPublicAgentsAlreadyInMemory() {
-        return this.allPublicAgentResponses != null;
-    }
-
-    private Optional<OperationalOrganizationResponse> findOperationalOrganization(final String guid, final Long idPerson) {
-        return this.findAllOperationalOrganizations(idPerson).stream()
-                .filter(org -> org.getAbbreviation().equalsIgnoreCase(guid))
-                .findFirst();
-    }
-
-    @Override
-    public void unload() {
-        this.allPublicAgentResponses = null;
-    }
+  @Override
+  public void unload() {
+    this.allPublicAgentResponses = null;
+  }
 
 }

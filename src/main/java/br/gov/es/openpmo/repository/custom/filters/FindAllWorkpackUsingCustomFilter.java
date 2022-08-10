@@ -37,8 +37,8 @@ public class FindAllWorkpackUsingCustomFilter extends FindAllUsingCustomFilterBu
                  "OPTIONAL MATCH (node)-[ii:IS_INSTANCE_BY]->(wm) " +
                  "OPTIONAL MATCH (node)-[lt:IS_LINKED_TO]->(wm) " +
                  "OPTIONAL MATCH (node)<-[:FEATURES]-(:Property)-[:VALUES]->(values) " +
-                 "WITH node, rf, p, is, pm, ii, wm, property, propertyModel, groupedProperty, " +
-                 "collect( property.value ) as properties, " +
+                 "WITH node, bt, rf, p, is, pm, ii, wm, property, propertyModel, groupedProperty, " +
+                 "collect( property ) as properties, " +
                  "collect( id(values) ) as selectedValues ");
   }
 

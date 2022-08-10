@@ -14,6 +14,7 @@ import java.util.Date;
 public class TokenService {
 
   private static final String ISSUER = "OPENPMO-SEP";
+  public static final String BEARER = "Bearer ";
 
   @Value("${jwt.secret}")
   private String secret;
@@ -27,55 +28,74 @@ public class TokenService {
   @Value("${jwt.refresh-expiration}")
   private String refreshExpiration;
 
-  public String generateToken(final Person person, final String email, final TokenType tokenType) {
-    final String expirationValue = TokenType.AUTHENTICATION.equals(tokenType) ? this.expiration : this.refreshExpiration;
-    final String secretValue = TokenType.AUTHENTICATION.equals(tokenType) ? this.secret : this.refreshSecret;
+  public String generateToken(final Person person, String key, final String email, final TokenType tokenType) {
+    final String expirationValue = getExpirationValue(tokenType);
+    final String secretValue = getSecretValue(tokenType);
 
-    final Date today = new Date();
-    final Date expirationDate = new Date(today.getTime() + Long.parseLong(expirationValue));
     final Claims claims = Jwts.claims().setSubject(person.getId().toString());
+    claims.put("key", key);
     claims.put("email", email);
     claims.put("administrator", person.getAdministrator());
 
-    return Jwts.builder().setIssuer(ISSUER).setIssuedAt(today).setClaims(claims).setExpiration(expirationDate)
-      .signWith(SignatureAlgorithm.HS256, secretValue).compact();
+    final Date today = new Date();
+    final Date expirationDate = new Date(today.getTime() + Long.parseLong(expirationValue));
+
+    return Jwts.builder()
+      .setIssuer(ISSUER)
+      .setIssuedAt(today)
+      .setClaims(claims)
+      .setExpiration(expirationDate)
+      .signWith(SignatureAlgorithm.HS256, secretValue)
+      .compact();
+  }
+
+  private String getExpirationValue(TokenType tokenType) {
+    if (TokenType.AUTHENTICATION.equals(tokenType)) {
+      return this.expiration;
+    }
+    return this.refreshExpiration;
   }
 
   public boolean isValidToken(final String token, final TokenType tokenType) {
-    final String secretValue = TokenType.AUTHENTICATION.equals(tokenType) ? this.secret : this.refreshSecret;
-
-    if(token != null) {
-      try {
-        Jwts.parser().setSigningKey(secretValue).parseClaimsJws(token);
-        return true;
-      }
-      catch(final Exception e) {
-        e.printStackTrace();
-        return false;
-      }
+    if (token == null) {
+      return false;
     }
-    return false;
+    try {
+      final String secretValue = getSecretValue(tokenType);
+      Jwts.parser().setSigningKey(secretValue).parseClaimsJws(token);
+      return true;
+    } catch (final Exception e) {
+      e.printStackTrace();
+      return false;
+    }
   }
 
   public Claims getUser(final String token, final TokenType tokenType) {
-    final String secretValue = TokenType.AUTHENTICATION.equals(tokenType) ? this.secret : this.refreshSecret;
-
-    return Jwts.parser().setSigningKey(secretValue).parseClaimsJws(token).getBody();
+    final String secretValue = getSecretValue(tokenType);
+    return Jwts.parser()
+      .setSigningKey(secretValue)
+      .parseClaimsJws(token)
+      .getBody();
   }
 
   public Long getPersonId(final String token, final TokenType tokenType) {
-    final String secretValue = TokenType.AUTHENTICATION.equals(tokenType) ? this.secret : this.refreshSecret;
-
+    final String secretValue = getSecretValue(tokenType);
     final Claims claims = Jwts.parser()
       .setSigningKey(secretValue)
       .parseClaimsJws(token)
       .getBody();
-
     return Long.parseLong(claims.getSubject());
   }
 
+  private String getSecretValue(TokenType tokenType) {
+    if (TokenType.AUTHENTICATION.equals(tokenType)) {
+      return this.secret;
+    }
+    return this.refreshSecret;
+  }
+
   public Long getUserId(final String authorization) {
-    final String token = authorization.substring(7);
+    final String token = authorization.substring(BEARER.length());
     return this.getPersonId(token, TokenType.AUTHENTICATION);
   }
 }

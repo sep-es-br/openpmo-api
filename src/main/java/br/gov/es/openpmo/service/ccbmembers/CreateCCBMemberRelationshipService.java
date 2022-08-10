@@ -64,19 +64,19 @@ public class CreateCCBMemberRelationshipService implements ICreateCCBMemberRelat
     final PersonDto personDto = request.getPerson();
     final Long idOffice = request.getIdOffice();
 
-    return this.findPersonByEmail(personDto.getEmail())
-        .map(person -> this.updatePersonAndRelationships(person, personDto, idOffice))
-        .orElseGet(() -> this.createPersonAndRelationships(personDto, idOffice));
+    return this.findPersonByKey(personDto.getKey())
+      .map(person -> this.updatePersonAndRelationships(person, personDto, idOffice))
+      .orElseGet(() -> this.createPersonAndRelationships(personDto, idOffice));
   }
 
-  private Optional<Person> findPersonByEmail(final String email) {
-    return this.personService.findByEmail(email);
+  private Optional<Person> findPersonByKey(final String email) {
+    return this.personService.findByKey(email);
   }
 
   private Person updatePersonAndRelationships(
-      final Person person,
-      final PersonDto personDto,
-      final Long idOffice
+    final Person person,
+    final PersonDto personDto,
+    final Long idOffice
   ) {
     person.setName(personDto.getName());
     person.setFullName(personDto.getFullName());
@@ -135,7 +135,7 @@ public class CreateCCBMemberRelationshipService implements ICreateCCBMemberRelat
       final PersonDto personDto,
       final Long idOffice
   ) {
-    return this.personService.savePerson(personDto.getEmail(), personDto, idOffice);
+    return this.personService.savePerson(personDto, idOffice);
   }
 
   private Workpack findWorkpackById(final Long idWorkpack) {

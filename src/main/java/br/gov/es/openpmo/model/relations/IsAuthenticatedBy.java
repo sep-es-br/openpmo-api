@@ -2,11 +2,8 @@ package br.gov.es.openpmo.model.relations;
 
 import br.gov.es.openpmo.model.actors.AuthService;
 import br.gov.es.openpmo.model.actors.Person;
-import org.neo4j.ogm.annotation.EndNode;
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.RelationshipEntity;
-import org.neo4j.ogm.annotation.StartNode;
+import org.neo4j.ogm.annotation.*;
+import org.springframework.data.annotation.Transient;
 
 @RelationshipEntity(type = "IS_AUTHENTICATED_BY")
 public class IsAuthenticatedBy {
@@ -14,6 +11,8 @@ public class IsAuthenticatedBy {
   @Id
   @GeneratedValue
   private Long id;
+
+  private String key;
 
   private String name;
 
@@ -28,14 +27,6 @@ public class IsAuthenticatedBy {
   private AuthService authService;
 
   public IsAuthenticatedBy() {
-  }
-
-  public IsAuthenticatedBy(final Long id, final String name, final String email, final Person person, final AuthService authService) {
-    this.id = id;
-    this.name = name;
-    this.email = email;
-    this.person = person;
-    this.authService = authService;
   }
 
   public Long getId() {
@@ -86,7 +77,16 @@ public class IsAuthenticatedBy {
     this.guid = guid;
   }
 
+  @Transient
   public Long getIdPerson() {
     return this.person.getId();
+  }
+
+  public String getKey() {
+    return key;
+  }
+
+  public void setKey(String key) {
+    this.key = key;
   }
 }

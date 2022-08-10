@@ -21,68 +21,68 @@ import java.util.List;
 @RequestMapping("/office-permissions")
 public class OfficePermissionController {
 
-    private final OfficePermissionService service;
-    private final TokenService tokenService;
+  private final OfficePermissionService service;
+  private final TokenService tokenService;
 
-    @Autowired
-    public OfficePermissionController(
-            OfficePermissionService service,
-            TokenService tokenService
-    ) {
-        this.service = service;
-        this.tokenService = tokenService;
-    }
+  @Autowired
+  public OfficePermissionController(
+    OfficePermissionService service,
+    TokenService tokenService
+  ) {
+    this.service = service;
+    this.tokenService = tokenService;
+  }
 
-    @GetMapping
-    public ResponseEntity<ResponseBase<List<OfficePermissionDto>>> indexBase(
-            @RequestParam(name = "id-office") final Long idOffice,
-            @RequestParam(required = false) final Long idFilter,
-            @RequestParam(name = "email", required = false) final String email,
-            @RequestHeader(name = "Authorization") final String authorization
-    ) {
-        final Long idPerson = this.tokenService.getUserId(authorization);
-        final List<OfficePermissionDto> offices = this.service.findAllDto(idOffice, idFilter, email, idPerson);
-        if (offices.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-        final ResponseBase<List<OfficePermissionDto>> response = new ResponseBase<List<OfficePermissionDto>>()
-                .setData(offices).setSuccess(true).setMessage(ApplicationMessage.OPERATION_SUCCESS);
-        return ResponseEntity.ok(response);
+  @GetMapping
+  public ResponseEntity<ResponseBase<List<OfficePermissionDto>>> indexBase(
+    @RequestParam(name = "id-office") final Long idOffice,
+    @RequestParam(required = false) final Long idFilter,
+    @RequestParam(name = "key", required = false) final String key,
+    @RequestHeader(name = "Authorization") final String authorization
+  ) {
+    final Long idPerson = this.tokenService.getUserId(authorization);
+    final List<OfficePermissionDto> offices = this.service.findAllDto(idOffice, idFilter, key, idPerson);
+    if (offices.isEmpty()) {
+      return ResponseEntity.noContent().build();
     }
+    final ResponseBase<List<OfficePermissionDto>> response = new ResponseBase<List<OfficePermissionDto>>()
+      .setData(offices).setSuccess(true).setMessage(ApplicationMessage.OPERATION_SUCCESS);
+    return ResponseEntity.ok(response);
+  }
 
-    @GetMapping("/{id-office}")
-    public ResponseEntity<ResponseBase<OfficePermissionDto>> findPermissionsById(
-            @PathVariable(name = "id-office") final Long idOffice,
-            @RequestParam(name = "email", required = false) final String email,
-            @RequestHeader(name = "Authorization") final String authorization
-    ) {
-        Long idPerson = this.tokenService.getUserId(authorization);
-        OfficePermissionDto permissions = this.service.findOfficePermissionsByEmail(idOffice, email, idPerson);
-        return ResponseEntity.ok(ResponseBase.of(permissions));
-    }
+  @GetMapping("/{id-office}")
+  public ResponseEntity<ResponseBase<OfficePermissionDto>> findPermissionsById(
+    @PathVariable(name = "id-office") final Long idOffice,
+    @RequestParam(name = "key", required = false) final String key,
+    @RequestHeader(name = "Authorization") final String authorization
+  ) {
+    Long idPerson = this.tokenService.getUserId(authorization);
+    OfficePermissionDto permissions = this.service.findOfficePermissionsByKey(idOffice, key, idPerson);
+    return ResponseEntity.ok(ResponseBase.of(permissions));
+  }
 
-    @PostMapping
-    public ResponseEntity<ResponseBase<Entity>> store(@Valid @RequestBody final OfficePermissionParamDto request) {
-        this.service.store(request);
-        final ResponseBase<Entity> response = new ResponseBase<Entity>()
-                .setSuccess(true)
-                .setMessage(ApplicationMessage.OPERATION_SUCCESS);
-        return ResponseEntity.ok(response);
-    }
+  @PostMapping
+  public ResponseEntity<ResponseBase<Entity>> store(@Valid @RequestBody final OfficePermissionParamDto request) {
+    this.service.store(request);
+    final ResponseBase<Entity> response = new ResponseBase<Entity>()
+      .setSuccess(true)
+      .setMessage(ApplicationMessage.OPERATION_SUCCESS);
+    return ResponseEntity.ok(response);
+  }
 
-    @PutMapping
-    public ResponseEntity<ResponseBase<Entity>> update(@Valid @RequestBody final OfficePermissionParamDto request) {
-        this.service.update(request);
-        final ResponseBase<Entity> entity = new ResponseBase<Entity>().setSuccess(true).setMessage(ApplicationMessage.OPERATION_SUCCESS);
-        return ResponseEntity.ok(entity);
-    }
+  @PutMapping
+  public ResponseEntity<ResponseBase<Entity>> update(@Valid @RequestBody final OfficePermissionParamDto request) {
+    this.service.update(request);
+    final ResponseBase<Entity> entity = new ResponseBase<Entity>().setSuccess(true).setMessage(ApplicationMessage.OPERATION_SUCCESS);
+    return ResponseEntity.ok(entity);
+  }
 
-    @DeleteMapping
-    public ResponseEntity<Void> delete(
-            @RequestParam(name = "id-office") final Long idOffice,
-            @RequestParam(name = "email") final String email
-    ) {
-        this.service.delete(idOffice, email);
-        return ResponseEntity.ok().build();
-    }
+  @DeleteMapping
+  public ResponseEntity<Void> delete(
+    @RequestParam(name = "id-office") final Long idOffice,
+    @RequestParam(name = "key") final String key
+  ) {
+    this.service.delete(idOffice, key);
+    return ResponseEntity.ok().build();
+  }
 }

@@ -17,7 +17,6 @@ public class Person extends Actor {
 
   private boolean administrator;
 
-
   @Relationship(type = "IS_AUTHENTICATED_BY")
   private Set<IsAuthenticatedBy> authentications;
 
@@ -27,12 +26,9 @@ public class Person extends Actor {
   @Relationship(type = "IS_A_PORTRAIT_OF", direction = Relationship.INCOMING)
   private File avatar;
 
-  public Person() {
-  }
-
   @Transient
   public Optional<IsAuthenticatedBy> findAuthenticationDataBy(final String serverName) {
-    if(this.authentications == null) return Optional.empty();
+    if (this.authentications == null) return Optional.empty();
     return this.authentications
       .stream()
       .filter(auth -> auth.getAuthService().getServer().equalsIgnoreCase(serverName))
@@ -41,7 +37,7 @@ public class Person extends Actor {
 
   @Transient
   public Optional<IsInContactBookOf> findContactInformationBy(final Long idOffice) {
-    if(this.authentications == null) return Optional.empty();
+    if (this.authentications == null) return Optional.empty();
     return this.isInContactBookOf
       .stream()
       .filter(contact -> contact.getOfficeId().equals(idOffice))
@@ -57,7 +53,7 @@ public class Person extends Actor {
   }
 
   public Set<IsAuthenticatedBy> getAuthentications() {
-    if(this.authentications == null) return new HashSet<>();
+    if (this.authentications == null) return new HashSet<>();
     return Collections.unmodifiableSet(this.authentications);
   }
 
@@ -66,7 +62,7 @@ public class Person extends Actor {
   }
 
   public Set<IsInContactBookOf> getIsInContactBookOf() {
-    if(this.isInContactBookOf == null) return new HashSet<>();
+    if (this.isInContactBookOf == null) return new HashSet<>();
     return Collections.unmodifiableSet(this.isInContactBookOf);
   }
 

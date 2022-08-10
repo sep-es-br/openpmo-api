@@ -73,7 +73,7 @@ import static org.mockito.Mockito.mockingDetails;
     final Person person = new Person();
     person.setId(1L);
     person.setName("User Test");
-    final String token = "Bearer " + this.tokenService.generateToken(person, "email", TokenType.AUTHENTICATION);
+    final String token = "Bearer " + this.tokenService.generateToken(person, "key", "email", TokenType.AUTHENTICATION);
     Mockito.when(this.request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn(token);
     Mockito.when(this.request.getRequestURI()).thenReturn("/offices");
     this.securityFilter.doFilterInternal(this.request, this.response, this.filterChain);

@@ -13,13 +13,20 @@ import java.util.Optional;
 @Repository
 public interface CustomFilterRepository extends Neo4jRepository<CustomFilter, Long> {
 
-  @Query("MATCH (person:Person)-[has1:HAS]->(customFilter:CustomFilter)<-[has2:HAS]-(rules:Rules) " +
+  @Query("MATCH (person:Person)-[has1:HAS]->(customFilter:CustomFilter) " +
+         "OPTIONAL MATCH (customFilter)<-[has2:HAS]-(rules:Rules) " +
+         "WITH person, has1, customFilter, has2, rules " +
          "WHERE ID(person)=$idPerson and customFilter.type=$type " +
          "RETURN person, has1, customFilter, has2, rules")
-  List<CustomFilter> findByType(@Param("type") CustomFilterEnum type, @Param("idPerson") Long idPerson);
+  List<CustomFilter> findByType(
+    @Param("type") CustomFilterEnum type,
+    @Param("idPerson") Long idPerson
+  );
 
-  @Query("MATCH (workpackModel:WorkpackModel)<-[for:FOR]-(customFilter:CustomFilter)<-[has:HAS]-(rules:Rules) " +
+  @Query("MATCH (workpackModel:WorkpackModel)<-[for:FOR]-(customFilter:CustomFilter)" +
          "MATCH (customFilter)<-[:HAS]-(person:Person) " +
+         "OPTIONAL MATCH (customFilter)<-[has:HAS]-(rules:Rules) " +
+         "WITH workpackModel, for, customFilter, person, has, rules " +
          "WHERE ID(workpackModel)=$workpackModelId and customFilter.type=$filter and ID(person)=$idPerson " +
          "RETURN workpackModel,customFilter,rules,for,has")
   List<CustomFilter> findByWorkpackModelIdAndType(
@@ -37,8 +44,14 @@ public interface CustomFilterRepository extends Neo4jRepository<CustomFilter, Lo
          "]")
   Optional<CustomFilter> findByIdWithRelationships(@Param("idFilter") Long idFilter);
 
-  @Query("MATCH (person:Person)-[has1:HAS]->(customFilter:CustomFilter)<-[has2:HAS]-(rules:Rules) " +
+  @Query("MATCH (person:Person)-[has1:HAS]->(customFilter:CustomFilter) " +
+         "OPTIONAL MATCH (customFilter:CustomFilter)<-[has2:HAS]-(rules:Rules) " +
+         "WITH person, has1, customFilter, has2, rules " +
          "WHERE ID(person)=$idPerson and ID(customFilter)=$id " +
          "RETURN person, has1, customFilter, has2, rules")
-  Optional<CustomFilter> findByIdAndPersonId(@Param("id") Long id, @Param("idPerson") Long idPerson);
+  Optional<CustomFilter> findByIdAndPersonId(
+    @Param("id") Long id,
+    @Param("idPerson") Long idPerson
+  );
+
 }

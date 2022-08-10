@@ -8,164 +8,182 @@ import java.util.*;
 
 public class PersonDto {
 
-    private final List<RoleResource> roles = new ArrayList<>();
-    private Long id;
-    private String name;
-    private String fullName;
-    private String phoneNumber;
-    private String address;
-    private String email;
-    private String contactEmail;
-    private boolean administrator;
-    private Boolean isUser;
-    private String guid;
+  private final List<RoleResource> roles = new ArrayList<>();
+  private Long id;
+  private String name;
+  private String fullName;
+  private String phoneNumber;
+  private String address;
+  private String key;
+  private String email;
+  private String contactEmail;
+  private boolean administrator;
+  private Boolean isUser;
+  private String guid;
 
-    public PersonDto() {
-        this.roles.add(RoleResource.citizen());
+  public PersonDto() {
+    this.roles.add(RoleResource.citizen());
+  }
+
+  public static PersonDto from(final Person person, final Set<IsInContactBookOf> contacts) {
+    final Optional<IsInContactBookOf> maybeContact = contacts.stream()
+      .filter(contact -> contact.getPersonId()
+        .equals(person.getId())).findFirst();
+    return from(person, maybeContact, Optional.empty());
+  }
+
+  public static PersonDto from(
+    final Person person,
+    final Optional<? extends IsInContactBookOf> maybeContact,
+    final Optional<? extends IsAuthenticatedBy> maybeAuthentication
+  ) {
+    final PersonDto dto = from(person);
+    boolean isUser;
+
+    if (person.getAuthentications() == null) {
+      isUser = false;
+    } else {
+      isUser = !person.getAuthentications().isEmpty();
     }
 
-    public static PersonDto from(final Person person, final Set<IsInContactBookOf> contacts) {
-        final Optional<IsInContactBookOf> maybeContact = contacts.stream()
-                .filter(contact -> contact.getPersonId()
-                        .equals(person.getId())).findFirst();
-        return from(person, maybeContact, Optional.empty());
-    }
+    dto.setIsUser(isUser);
+    maybeContact.ifPresent(contact -> {
+      dto.setContactEmail(contact.getEmail());
+      dto.setAddress(contact.getAddress());
+      dto.setPhoneNumber(contact.getPhoneNumber());
+    });
+    maybeAuthentication.ifPresent(auth -> {
+      dto.setKey(auth.getKey());
+      dto.setEmail(auth.getEmail());
+    });
+    return dto;
+  }
 
-    public static PersonDto from(
-            final Person person,
-            final Optional<? extends IsInContactBookOf> maybeContact,
-            final Optional<? extends IsAuthenticatedBy> maybeAuthentication
-    ) {
-        final PersonDto dto = from(person);
-        boolean isUser;
+  private static PersonDto from(final Person person) {
+    final PersonDto dto = new PersonDto();
+    dto.setId(person.getId());
+    dto.setName(person.getName());
+    dto.setFullName(person.getFullName());
+    return dto;
+  }
 
-        if (person.getAuthentications() == null) {
-            isUser = false;
-        } else {
-            isUser = !person.getAuthentications().isEmpty();
-        }
+  public static PersonDto from(
+    final Person person,
+    final Optional<? extends IsInContactBookOf> maybeContact
+  ) {
+    return from(person, maybeContact, Optional.empty());
+  }
 
-        dto.setIsUser(isUser);
-        maybeContact.ifPresent(contact -> {
-            dto.setContactEmail(contact.getEmail());
-            dto.setAddress(contact.getAddress());
-            dto.setPhoneNumber(contact.getPhoneNumber());
-        });
-        maybeAuthentication.ifPresent(auth -> {
-            dto.setEmail(auth.getEmail());
-        });
-        return dto;
-    }
+  public void addAllRoles(final Collection<? extends RoleResource> roles) {
+    Optional.ofNullable(roles).ifPresent(this.roles::addAll);
+  }
 
-    private static PersonDto from(final Person person) {
-        final PersonDto dto = new PersonDto();
-        dto.setId(person.getId());
-        dto.setName(person.getName());
-        dto.setFullName(person.getFullName());
-        return dto;
-    }
+  public void addRole(final RoleResource role) {
+    this.roles.add(role);
+  }
 
-    public static PersonDto from(
-            final Person person,
-            final Optional<? extends IsInContactBookOf> maybeContact
-    ) {
-        return from(person, maybeContact, Optional.empty());
-    }
+  public Long getId() {
+    return this.id;
+  }
 
-    public void addAllRoles(final Collection<? extends RoleResource> roles) {
-        Optional.ofNullable(roles).ifPresent(this.roles::addAll);
-    }
+  public void setId(final Long id) {
+    this.id = id;
+  }
 
-    public void addRole(final RoleResource role) {
-        this.roles.add(role);
-    }
+  public String getName() {
+    return this.name;
+  }
 
-    public Long getId() {
-        return this.id;
-    }
+  public void setName(final String name) {
+    this.name = name;
+  }
 
-    public void setId(final Long id) {
-        this.id = id;
-    }
+  public String getFullName() {
+    return this.fullName;
+  }
 
-    public String getName() {
-        return this.name;
-    }
+  public void setFullName(final String fullName) {
+    this.fullName = fullName;
+  }
 
-    public void setName(final String name) {
-        this.name = name;
-    }
+  public String getPhoneNumber() {
+    return this.phoneNumber;
+  }
 
-    public String getFullName() {
-        return this.fullName;
-    }
+  public void setPhoneNumber(final String phoneNumber) {
+    this.phoneNumber = phoneNumber;
+  }
 
-    public void setFullName(final String fullName) {
-        this.fullName = fullName;
-    }
+  public String getAddress() {
+    return this.address;
+  }
 
-    public String getPhoneNumber() {
-        return this.phoneNumber;
-    }
+  public void setAddress(final String address) {
+    this.address = address;
+  }
 
-    public void setPhoneNumber(final String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
+  public String getKey() {
+    return key;
+  }
 
-    public String getAddress() {
-        return this.address;
-    }
+  public void setKey(String key) {
+    this.key = key;
+  }
 
-    public void setAddress(final String address) {
-        this.address = address;
-    }
+  public Boolean getUser() {
+    return isUser;
+  }
 
-    public String getEmail() {
-        return this.email;
-    }
+  public void setUser(Boolean user) {
+    isUser = user;
+  }
 
-    public void setEmail(final String email) {
-        this.email = email;
-    }
+  public String getEmail() {
+    return this.email;
+  }
 
-    public boolean isAdministrator() {
-        return this.administrator;
-    }
+  public void setEmail(final String email) {
+    this.email = email;
+  }
 
-    public void setAdministrator(final boolean administrator) {
-        this.administrator = administrator;
-    }
+  public boolean isAdministrator() {
+    return this.administrator;
+  }
 
-    public Boolean getIsUser() {
-        return this.isUser;
-    }
+  public void setAdministrator(final boolean administrator) {
+    this.administrator = administrator;
+  }
 
-    public void setIsUser(final Boolean user) {
-        this.isUser = user;
-    }
+  public Boolean getIsUser() {
+    return this.isUser;
+  }
 
-    public List<RoleResource> getRoles() {
-        this.roles.sort((a, b) -> a.getRole().compareToIgnoreCase(b.getRole()));
-        return Collections.unmodifiableList(this.roles);
-    }
+  public void setIsUser(final Boolean user) {
+    this.isUser = user;
+  }
 
-    public boolean hasAnyContactInformationData() {
-        return this.contactEmail != null;
-    }
+  public List<RoleResource> getRoles() {
+    this.roles.sort((a, b) -> a.getRole().compareToIgnoreCase(b.getRole()));
+    return Collections.unmodifiableList(this.roles);
+  }
 
-    public String getContactEmail() {
-        return this.contactEmail;
-    }
+  public boolean hasAnyContactInformationData() {
+    return this.contactEmail != null;
+  }
 
-    public void setContactEmail(final String contactEmail) {
-        this.contactEmail = contactEmail;
-    }
+  public String getContactEmail() {
+    return this.contactEmail;
+  }
 
-    public String getGuid() {
-        return this.guid;
-    }
+  public void setContactEmail(final String contactEmail) {
+    this.contactEmail = contactEmail;
+  }
 
-    public void setGuid(final String guid) {
-        this.guid = guid;
-    }
+  public String getGuid() {
+    return this.guid;
+  }
+
+  public void setGuid(final String guid) {
+    this.guid = guid;
+  }
 }
