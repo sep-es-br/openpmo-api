@@ -39,10 +39,6 @@ public class WorkpackModelMenuService {
             List<WorkpackModel> workpackModels =
                     this.planModelRepository.findAllWorkpackModelsByPlanModelId(planModel.getId());
 
-            if (workpackModels.isEmpty()) {
-                continue;
-            }
-
             Set<WorkpackModelMenuResponse> workpackModelMenuResponses = new HashSet<>();
 
             for (WorkpackModel workpackModel : workpackModels) {
