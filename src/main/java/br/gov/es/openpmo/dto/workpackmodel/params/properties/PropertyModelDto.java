@@ -26,7 +26,7 @@ import javax.validation.constraints.NotNull;
   UnitSelectionModelDto.class, SelectionModelDto.class, TextAreaModelDto.class, NumberModelDto.class, CurrencyModelDto.class,
   LocalitySelectionModelDto.class, GroupModelDto.class,
   OrganizationSelectionModelDto.class}, discriminator = "type", description = "Supertype of all PropertyModel.")
-public abstract class PropertyModelDto {
+public class PropertyModelDto {
 
   private Long id;
 
