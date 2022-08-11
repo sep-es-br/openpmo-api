@@ -114,9 +114,7 @@ public class ApplicationMessage {
 
     public static final String PLANMODEL_NOT_NULL = "planModel.not.null";
 
-    public static final String FILTER_SHOULD_BE_PERSON_OR_ORGANIZATION = "filter.should.be.person.or.organization";
-
-    public static final String COST_ACCOUNT_DELETE_RELATIONSHIP_ERROR = "cost-account.delete.relationship.error";
+    public static final String COST_ACCOUNT_DELETE_RELATIONSHIP_ERROR = "costAccount.delete.relationship.error";
 
     public static final String PRECISION_NOT_NULL = "precision.not.null";
 
