@@ -52,12 +52,13 @@ public class MenuController {
 
     @GetMapping("/portfolio")
     public ResponseEntity<ResponseBaseItens<WorkpackMenuDto>> indexPortfolio(
-            @RequestParam("id-office") final Long idOffice,
-            @RequestHeader(name = "Authorization") final String autorization
+      @RequestParam("id-office") final Long idOffice,
+      @RequestParam(value = "id-plan", required = false) final Long idPlan,
+      @RequestHeader(name = "Authorization") final String autorization
     ) {
         final Long idUser = this.tokenService.getUserId(autorization);
         final List<WorkpackMenuDto> portfolios =
-                this.menuService.findAllPortfolio(new PortfolioMenuRequest(idOffice, idUser));
+          this.menuService.findAllPortfolio(new PortfolioMenuRequest(idOffice, idPlan, idUser));
 
         if (portfolios.isEmpty()) {
             return ResponseEntity.noContent().build();
