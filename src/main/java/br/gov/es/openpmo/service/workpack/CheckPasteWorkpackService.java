@@ -75,7 +75,7 @@ public class CheckPasteWorkpackService {
 
         while (fromIterator.hasNext()) {
             PropertyModel from = fromIterator.next();
-            Collection<PropertyModel> toCopy = new HashSet<>(second);
+            Iterable<PropertyModel> toCopy = new HashSet<>(second);
 
             for (PropertyModel to : toCopy) {
                 if (compatibleComparator.test(from, to)) {
@@ -117,7 +117,7 @@ public class CheckPasteWorkpackService {
 
         while (fromIterator.hasNext()) {
             WorkpackModel from = fromIterator.next();
-            Collection<WorkpackModel> toCopy = new HashSet<>(second);
+            Iterable<WorkpackModel> toCopy = new HashSet<>(second);
 
             for (WorkpackModel to : toCopy) {
                 if (compatibleComparator.test(from, to, response, entered)) {
@@ -149,7 +149,7 @@ public class CheckPasteWorkpackService {
 
         areWorkpackModelsCompatible(workpackModelFrom, workpackModelTo, response, entered);
 
-        if (response.getCanPaste() && !entered.isValue()) {
+        if (Boolean.TRUE.equals(response.getCanPaste()) && !entered.isValue()) {
             response.setCanPaste(false);
         }
 

@@ -11,14 +11,7 @@ import br.gov.es.openpmo.service.workpack.WorkpackSharedService;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -65,23 +58,15 @@ public class WorkpackLinkController {
     return ResponseEntity.ok(ResponseBaseItens.of(null));
   }
 
-
   @PostMapping("/{id-workpack}/unlink/to/workpackModel/{id-workpack-model}")
   public ResponseEntity<ResponseBaseItens<Void>> unlinkWorkpack(
     @PathVariable("id-workpack") final Long idWorkpack,
     @PathVariable("id-workpack-model") final Long idWorkpackModel,
-    @RequestParam("id-plan") final Long idPlan,
-    @RequestParam(value = "id-workpack-parent", required = false) final Long idWorkpackParent
+    @RequestParam("id-plan") final Long idPlan
   ) {
-    this.workpackLinkService.unlink(
-      idWorkpack,
-      idWorkpackModel,
-      idWorkpackParent,
-      idPlan
-    );
+    this.workpackLinkService.unlink(idWorkpack, idWorkpackModel, idPlan);
     return ResponseEntity.ok(ResponseBaseItens.of(null));
   }
-
 
   @GetMapping("/linked/{id-workpack}")
   public ResponseEntity<ResponseBaseWorkpackDetail> getById(

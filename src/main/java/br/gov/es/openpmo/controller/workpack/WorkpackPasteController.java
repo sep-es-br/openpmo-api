@@ -16,59 +16,59 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/workpack")
 public class WorkpackPasteController {
 
-    private final CheckPasteWorkpackService checkPasteWorkpackService;
+  private final CheckPasteWorkpackService checkPasteWorkpackService;
 
-    private final PasteToWorkpackService pasteToWorkpackService;
+  private final PasteToWorkpackService pasteToWorkpackService;
 
-    private final ResponseHandler responseHandler;
+  private final ResponseHandler responseHandler;
 
-    @Autowired
-    public WorkpackPasteController(
-            final CheckPasteWorkpackService checkPasteWorkpackService,
-            final PasteToWorkpackService pasteToWorkpackService,
-            final ResponseHandler responseHandler
-    ) {
-        this.checkPasteWorkpackService = checkPasteWorkpackService;
-        this.pasteToWorkpackService = pasteToWorkpackService;
-        this.responseHandler = responseHandler;
-    }
+  @Autowired
+  public WorkpackPasteController(
+    final CheckPasteWorkpackService checkPasteWorkpackService,
+    final PasteToWorkpackService pasteToWorkpackService,
+    final ResponseHandler responseHandler
+  ) {
+    this.checkPasteWorkpackService = checkPasteWorkpackService;
+    this.pasteToWorkpackService = pasteToWorkpackService;
+    this.responseHandler = responseHandler;
+  }
 
-    @GetMapping("/{idWorkpack}/check-paste/{idWorkpackModelTo}")
-    public Response<WorkpackPasteResponse> checksIfCanPasteWorkpack(
-            @PathVariable final Long idWorkpack,
-            @PathVariable final Long idWorkpackModelTo,
-            @RequestParam final Long idWorkpackModelFrom
-    ) {
-        final WorkpackPasteResponse response = this.checkPasteWorkpackService.checksIfCanPasteWorkpack(
-                idWorkpack,
-                idWorkpackModelTo,
-                idWorkpackModelFrom
-        );
+  @GetMapping("/{idWorkpack}/check-paste/{idWorkpackModelTo}")
+  public Response<WorkpackPasteResponse> checksIfCanPasteWorkpack(
+    @PathVariable final Long idWorkpack,
+    @PathVariable final Long idWorkpackModelTo,
+    @RequestParam final Long idWorkpackModelFrom
+  ) {
+    final WorkpackPasteResponse response = this.checkPasteWorkpackService.checksIfCanPasteWorkpack(
+      idWorkpack,
+      idWorkpackModelTo,
+      idWorkpackModelFrom
+    );
 
-        return this.responseHandler.success(response);
-    }
+    return this.responseHandler.success(response);
+  }
 
-    @Transactional
-    @PostMapping("/{idWorkpack}/paste-to/{idWorkpackModelTo}")
-    public Response<Void> pastesWorkpackTo(
-            @PathVariable final Long idWorkpack,
-            @RequestParam final Long idPlanFrom,
-            @RequestParam final Long idPlanTo,
-            @RequestParam final Long idWorkpackModelFrom,
-            @PathVariable final Long idWorkpackModelTo,
-            @RequestParam final Long idParentFrom,
-            @RequestParam final Long idParentTo
-    ) {
-        this.pasteToWorkpackService.pastesWorkpackTo(
-                idWorkpack,
-                idPlanFrom,
-                idParentFrom,
-                idWorkpackModelFrom,
-                idPlanTo,
-                idParentTo,
-                idWorkpackModelTo);
+  @Transactional
+  @PostMapping("/{idWorkpack}/paste-to/{idWorkpackModelTo}")
+  public Response<Void> pastesWorkpackTo(
+    @PathVariable final Long idWorkpack,
+    @RequestParam final Long idPlanFrom,
+    @RequestParam final Long idPlanTo,
+    @RequestParam final Long idWorkpackModelFrom,
+    @PathVariable final Long idWorkpackModelTo,
+    @RequestParam(required = false) final Long idParentFrom,
+    @RequestParam(required = false) final Long idParentTo
+  ) {
+    this.pasteToWorkpackService.pastesWorkpackTo(
+      idWorkpack,
+      idPlanFrom,
+      idParentFrom,
+      idWorkpackModelFrom,
+      idPlanTo,
+      idParentTo,
+      idWorkpackModelTo);
 
-        return this.responseHandler.success();
-    }
+    return this.responseHandler.success();
+  }
 
 }
