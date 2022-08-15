@@ -34,7 +34,7 @@ public interface WorkpackLinkRepository extends Neo4jRepository<IsLinkedTo, Long
          "OPTIONAL MATCH (workpack)-[isIn:IS_IN]->(parent:Workpack)-[:BELONGS_TO]->(plan) " +
          "WITH plan, workpack, belongsTo, isIn, parent, linkedTo, model " +
          "WHERE id(workpack)=$idWorkpack AND id(model)=$idWorkpackModel " +
-         "RETURN isIn"
+         "DETACH DELETE isIn"
   )
   void unlinkParentRelation(Long idPlan, Long idWorkpackModel, Long idWorkpack);
 
