@@ -7,7 +7,12 @@ import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.relations.BelongsTo;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
-import br.gov.es.openpmo.repository.*;
+import br.gov.es.openpmo.repository.BelongsToRepository;
+import br.gov.es.openpmo.repository.PlanRepository;
+import br.gov.es.openpmo.repository.PropertyModelRepository;
+import br.gov.es.openpmo.repository.PropertyRepository;
+import br.gov.es.openpmo.repository.WorkpackModelRepository;
+import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +22,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class PasteToWorkpackService {
@@ -43,7 +50,7 @@ public class PasteToWorkpackService {
     final WorkpackModelRepository workpackModelRepository,
     final PropertyRepository propertyRepository,
     final PropertyModelRepository propertyModelRepository,
-    IAsyncDashboardService dashboardService
+    final IAsyncDashboardService dashboardService
   ) {
     this.workpackRepository = workpackRepository;
     this.belongsToRepository = belongsToRepository;
@@ -62,7 +69,7 @@ public class PasteToWorkpackService {
   }
 
   private static <T> void validateIfIsEmpty(final Collection<T> workpacks) {
-    if (!workpacks.isEmpty()) {
+    if(!workpacks.isEmpty()) {
       throw new NegocioException(ApplicationMessage.WORKPACK_PASTE_ERROR);
     }
   }
@@ -76,28 +83,28 @@ public class PasteToWorkpackService {
     final Collection<? extends Property> properties,
     final Collection<? extends PropertyModel> propertyModels
   ) {
-    if (allEmpty(properties)) {
+    if(allEmpty(properties)) {
       return;
     }
 
-    if (allEmpty(propertyModels)) {
+    if(allEmpty(propertyModels)) {
       throw new NegocioException(ApplicationMessage.WORKPACK_PASTE_ERROR);
     }
 
-    if (properties.size() > propertyModels.size()) {
+    if(properties.size() > propertyModels.size()) {
       throw new NegocioException(ApplicationMessage.WORKPACK_PASTE_ERROR);
     }
 
-    Iterable<Property> fromCopy = new HashSet<>(properties);
-    Iterator<Property> fromIterator = fromCopy.iterator();
+    final Iterable<Property> fromCopy = new HashSet<>(properties);
+    final Iterator<Property> fromIterator = fromCopy.iterator();
 
-    while (fromIterator.hasNext()) {
-      Property property = fromIterator.next();
-      PropertyModel propertyModelFrom = this.getPropertyModel(property);
+    while(fromIterator.hasNext()) {
+      final Property property = fromIterator.next();
+      final PropertyModel propertyModelFrom = this.getPropertyModel(property);
 
-      Iterable<PropertyModel> toCopy = new HashSet<>(propertyModels);
-      for (PropertyModel propertyModelTo : toCopy) {
-        if (propertyModelFrom.isCompatibleWith(propertyModelTo)) {
+      final Iterable<PropertyModel> toCopy = new HashSet<>(propertyModels);
+      for(final PropertyModel propertyModelTo : toCopy) {
+        if(propertyModelFrom.isCompatibleWith(propertyModelTo)) {
           this.handlePasteProperty(property, propertyModelTo);
           fromIterator.remove();
           break;
@@ -105,7 +112,7 @@ public class PasteToWorkpackService {
       }
     }
 
-    for (Property property : fromCopy) {
+    for(final Property property : fromCopy) {
       this.propertyRepository
         .deleteFeaturesRelationshipByPropertyIdAndWorkpackId(workpack.getId(), property.getId());
     }
@@ -127,27 +134,27 @@ public class PasteToWorkpackService {
     final Plan plan = this.getPlan(idPlanTo);
     final WorkpackModel workpackModel = this.getWorkpackModel(idWorkpackModelTo);
 
-    if (idParentFrom != null) {
+    if(idParentFrom != null) {
       this.validateParent(idWorkpack, idParentFrom);
       this.workpackRepository.deleteIsInRelationshipByWorkpackIdAndParentId(idWorkpack, idParentFrom);
     }
 
-    if (idParentTo != null) {
+    if(idParentTo != null) {
       this.workpackRepository.createIsInRelationship(idWorkpack, idParentTo);
     }
 
     this.handlePasteWorkpack(workpack, workpackModel, plan);
 
-    if (idParentFrom != null) {
+    if(idParentFrom != null) {
       this.calculateDashboard(idParentFrom);
     }
 
     this.calculateDashboard(idWorkpack);
   }
 
-  private void calculateDashboard(Long workpackId) {
+  private void calculateDashboard(final Long workpackId) {
     this.workpackRepository.findAllInHierarchy(workpackId)
-      .forEach(dashboardService::calculate);
+      .forEach(this.dashboardService::calculate);
   }
 
   private Plan getPlan(final Long idPlan) {
@@ -155,14 +162,21 @@ public class PasteToWorkpackService {
       .orElseThrow(() -> new NegocioException(ApplicationMessage.PLAN_NOT_FOUND));
   }
 
-  private void handlePasteWorkpack(final Workpack workpack, final WorkpackModel workpackModel, final Plan plan) {
+  private void handlePasteWorkpack(
+    final Workpack workpack,
+    final WorkpackModel workpackModel,
+    final Plan plan
+  ) {
     this.handlePlan(workpack, plan);
     this.handleWorkpackModel(workpack, workpackModel);
     this.handleProperties(workpack, workpack.getProperties(), workpackModel.getProperties());
     this.handleChildren(workpack.getChildren(), workpackModel.getChildren(), plan);
   }
 
-  private void handlePasteProperty(final Property property, final PropertyModel propertyModel) {
+  private void handlePasteProperty(
+    final Property property,
+    final PropertyModel propertyModel
+  ) {
     this.propertyModelRepository.deleteRelationshipByPropertyId(property.getId());
     this.propertyModelRepository.createRelationshipByPropertyIdAndModelId(property.getId(), propertyModel.getId());
   }
@@ -172,28 +186,32 @@ public class PasteToWorkpackService {
     final Collection<? extends WorkpackModel> workpackModels,
     final Plan plan
   ) {
-    if (allEmpty(workpacks)) {
+    if(allEmpty(workpacks)) {
       return;
     }
 
-    if (allEmpty(workpackModels)) {
+    if(allEmpty(workpackModels)) {
       throw new NegocioException(ApplicationMessage.WORKPACK_PASTE_ERROR);
     }
 
-    if (workpacks.size() > workpackModels.size()) {
+    final Set<WorkpackModel> workpackModelFromInstance = workpacks.stream()
+      .map(Workpack::getWorkpackModelInstance)
+      .collect(Collectors.toSet());
+
+    if(workpackModelFromInstance.size() > workpackModels.size()) {
       throw new NegocioException(ApplicationMessage.WORKPACK_PASTE_ERROR);
     }
 
     final Collection<Workpack> fromCopy = new HashSet<>(workpacks);
     final Iterator<Workpack> fromIterator = fromCopy.iterator();
 
-    while (fromIterator.hasNext()) {
-      Workpack workpack = fromIterator.next();
-      WorkpackModel workpackModelFrom = this.getWorkpackModel(workpack);
+    while(fromIterator.hasNext()) {
+      final Workpack workpack = fromIterator.next();
+      final WorkpackModel workpackModelFrom = this.getWorkpackModel(workpack);
 
-      Iterable<WorkpackModel> toCopy = new HashSet<>(workpackModels);
-      for (WorkpackModel workpackModelTo : toCopy) {
-        if (areWorkpackModelsCompatible(workpackModelFrom, workpackModelTo)) {
+      final Iterable<WorkpackModel> toCopy = new HashSet<>(workpackModels);
+      for(final WorkpackModel workpackModelTo : toCopy) {
+        if(areWorkpackModelsCompatible(workpackModelFrom, workpackModelTo)) {
           this.handlePasteWorkpack(workpack, workpackModelTo, plan);
           fromIterator.remove();
           break;
@@ -214,12 +232,18 @@ public class PasteToWorkpackService {
       .orElseThrow(() -> new NegocioException(ApplicationMessage.PROPERTY_MODEL_NOT_FOUND));
   }
 
-  private void handleWorkpackModel(final Workpack workpack, final WorkpackModel workpackModel) {
+  private void handleWorkpackModel(
+    final Workpack workpack,
+    final WorkpackModel workpackModel
+  ) {
     this.workpackModelRepository.deleteRelationshipByWorkpackId(workpack.getId());
     this.workpackModelRepository.createRelationshipByWorkpackIdAndModelId(workpack.getId(), workpackModel.getId());
   }
 
-  private void handlePlan(final Workpack workpack, final Plan plan) {
+  private void handlePlan(
+    final Workpack workpack,
+    final Plan plan
+  ) {
     this.belongsToRepository.deleteByWorkpackId(workpack.getId());
     final BelongsTo belongsTo = new BelongsTo();
     belongsTo.setWorkpack(workpack);
@@ -233,20 +257,29 @@ public class PasteToWorkpackService {
       .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
   }
 
-  private void validateParent(final Long idWorkpack, final Long idParentFrom) {
-    if (idParentFrom != null && !this.workpackRepository.isWorkpackInParent(idWorkpack, idParentFrom)) {
+  private void validateParent(
+    final Long idWorkpack,
+    final Long idParentFrom
+  ) {
+    if(idParentFrom != null && !this.workpackRepository.isWorkpackInParent(idWorkpack, idParentFrom)) {
       throw new NegocioException(ApplicationMessage.WORKPACK_PASTE_ERROR);
     }
   }
 
-  private void validateModel(final Long idWorkpack, final Long idWorkpackModelFrom) {
-    if (!this.workpackModelRepository.isWorkpackInstanceByModel(idWorkpack, idWorkpackModelFrom)) {
+  private void validateModel(
+    final Long idWorkpack,
+    final Long idWorkpackModelFrom
+  ) {
+    if(!this.workpackModelRepository.isWorkpackInstanceByModel(idWorkpack, idWorkpackModelFrom)) {
       throw new NegocioException(ApplicationMessage.WORKPACK_PASTE_ERROR);
     }
   }
 
-  private void validatePlan(final Long idWorkpack, final Long idPlanFrom) {
-    if (!this.belongsToRepository.workpackBelongsToPlan(idWorkpack, idPlanFrom)) {
+  private void validatePlan(
+    final Long idWorkpack,
+    final Long idPlanFrom
+  ) {
+    if(!this.belongsToRepository.workpackBelongsToPlan(idWorkpack, idPlanFrom)) {
       throw new NegocioException(ApplicationMessage.WORKPACK_PASTE_ERROR);
     }
   }

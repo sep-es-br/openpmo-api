@@ -5,11 +5,15 @@ import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.baselines.Snapshotable;
 import br.gov.es.openpmo.model.properties.Property;
+import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.relations.IsCostAccountSnapshotOf;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 import org.springframework.data.annotation.Transient;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static org.neo4j.ogm.annotation.Relationship.INCOMING;
@@ -104,4 +108,9 @@ public class CostAccount extends Entity implements Snapshotable<CostAccount> {
         this.snapshots = snapshots;
     }
 
+    public Set<PropertyModel> getPropertyModels() {
+        final Set<PropertyModel> propertyModels = new HashSet<>();
+        this.getProperties().forEach(property -> propertyModels.add(property.getPropertyModel()));
+        return propertyModels;
+    }
 }

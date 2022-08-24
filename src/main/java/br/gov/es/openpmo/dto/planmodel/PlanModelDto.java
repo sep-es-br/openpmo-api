@@ -32,8 +32,22 @@ public class PlanModelDto {
     this.sharedWithAll = planModel.isPublicShared();
 
     this.sharedWith = Optional.ofNullable(planModel.getSharedWith())
-      .map(offices -> offices.stream().map(Office::getDto).collect(Collectors.toSet()))
-      .orElse(Collections.emptySet());
+        .map(offices -> offices.stream().map(Office::getDto).collect(Collectors.toSet()))
+        .orElse(Collections.emptySet());
+  }
+
+  public static PlanModelDto of(final PlanModel planModel) {
+    final PlanModelDto planModelDto = new PlanModelDto();
+    planModelDto.setId(planModel.getId());
+    planModelDto.setIdOffice(planModel.getIdOffice());
+    planModelDto.setName(planModel.getName());
+    planModelDto.setFullName(planModel.getFullName());
+    planModelDto.setSharedWithAll(false);
+    planModelDto.setSharedWith(planModel.getSharedWith()
+        .stream()
+        .map(OfficeDto::of)
+        .collect(Collectors.toSet()));
+    return planModelDto;
   }
 
   public Long getId() {

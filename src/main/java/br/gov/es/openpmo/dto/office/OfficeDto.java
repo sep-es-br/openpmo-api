@@ -3,6 +3,7 @@ package br.gov.es.openpmo.dto.office;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.model.office.Office;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class OfficeDto {
@@ -51,5 +52,14 @@ public class OfficeDto {
 
   public void setPermissions(final List<PermissionDto> permissions) {
     this.permissions = permissions;
+  }
+
+  public static OfficeDto of(final Office office) {
+    final OfficeDto officeDto = new OfficeDto();
+    officeDto.setId(office.getId());
+    officeDto.setName(office.getName());
+    officeDto.setPermissions(new ArrayList<>());
+    officeDto.setFullName(office.getFullName());
+    return officeDto;
   }
 }

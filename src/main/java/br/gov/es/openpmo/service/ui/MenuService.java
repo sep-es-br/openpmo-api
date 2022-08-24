@@ -9,7 +9,6 @@ import br.gov.es.openpmo.dto.workpack.PropertyDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackDetailDto;
 import br.gov.es.openpmo.dto.workpackmodel.details.WorkpackModelDetailDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.PropertyModelDto;
-import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.office.plan.Plan;
@@ -27,12 +26,18 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.enumerator.Session.PROPERTIES;
 import static br.gov.es.openpmo.service.workpack.GetPropertyValue.getValueProperty;
-import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_MODEL_TYPE_MISMATCH;
 
 @Service
 public class MenuService {
@@ -80,7 +85,7 @@ public class MenuService {
       .findFirst()
       .orElse(null);
 
-    if (propertyName == null) return Optional.empty();
+    if(propertyName == null) return Optional.empty();
 
     return workpack.getProperties().stream()
       .filter(Objects::nonNull)
@@ -88,7 +93,10 @@ public class MenuService {
       .findFirst();
   }
 
-  private static boolean isWorkpackWithPermission(final Collection<Long> permittedWorkpacksId, final Workpack workpack) {
+  private static boolean isWorkpackWithPermission(
+    final Collection<Long> permittedWorkpacksId,
+    final Workpack workpack
+  ) {
     return permittedWorkpacksId.contains(workpack.getId());
   }
 
@@ -97,7 +105,7 @@ public class MenuService {
 
     final boolean hasAnyPermission = this.hasAnyPermission(request.getIdUser(), permissions);
 
-    if (this.hasOfficePermission(request.getIdUser(), hasAnyPermission, request.getIdOffice())) {
+    if(this.hasOfficePermission(request.getIdUser(), hasAnyPermission, request.getIdOffice())) {
       final List<Plan> plans = this.findAllPlansInOffice(request.getIdOffice()).stream()
         .filter(a -> request.getIdPlan() == null || request.getIdPlan().equals(a.getId()))
         .collect(Collectors.toList());
@@ -126,11 +134,11 @@ public class MenuService {
 
     final Long idPlan = plan.getId();
 
-    if (!hasAnyPermission) {
+    if(!hasAnyPermission) {
       hasPlanPermission = this.hasPlanPermission(portfolioMenuRequest.getIdUser(), idPlan);
     }
 
-    if (hasPlanPermission || this.planService.hasPermissionPlanWorkpack(idPlan, portfolioMenuRequest.getIdUser())) {
+    if(hasPlanPermission || this.planService.hasPermissionPlanWorkpack(idPlan, portfolioMenuRequest.getIdUser())) {
       this.addPlanStructure(new AddPlanCommand(
         portfolioMenuRequest.getIdUser(),
         idPlan,
@@ -157,14 +165,20 @@ public class MenuService {
     ));
   }
 
-  private Set<Long> findAllWorkpacksWithPermissions(final Long idUser, final Long idPlan) {
+  private Set<Long> findAllWorkpacksWithPermissions(
+    final Long idUser,
+    final Long idPlan
+  ) {
     return this.workpackService.findAllWorkpacksWithPermissions(
       idPlan,
       idUser
     );
   }
 
-  private boolean hasPlanPermission(final Long idUser, final Long idPlan) {
+  private boolean hasPlanPermission(
+    final Long idUser,
+    final Long idPlan
+  ) {
     return this.planService.hasPermissionPlan(idPlan, idUser);
   }
 
@@ -180,13 +194,13 @@ public class MenuService {
 
       final boolean hasPermission = this.hasAnyPermission(idUser, permissions);
 
-      if (this.hasOfficePermission(idUser, hasPermission, office.getId())) {
+      if(this.hasOfficePermission(idUser, hasPermission, office.getId())) {
         final MenuOfficeDto item = this.modelMapper.map(office, MenuOfficeDto.class);
         item.setPlans(new HashSet<>());
         final List<Plan> plans = this.findAllPlansInOffice(office.getId());
 
-        for (final Plan plan : plans) {
-          if (hasPermission || this.planService.hasPermissionPlanWorkpack(plan.getId(), idUser)) {
+        for(final Plan plan : plans) {
+          if(hasPermission || this.planService.hasPermissionPlanWorkpack(plan.getId(), idUser)) {
             item.getPlans().add(this.modelMapper.map(plan, PlanMenuDto.class));
           }
         }
@@ -196,7 +210,11 @@ public class MenuService {
     return menus;
   }
 
-  private boolean hasOfficePermission(final Long idUser, final boolean hasPermission, final Long idOffice) {
+  private boolean hasOfficePermission(
+    final Long idUser,
+    final boolean hasPermission,
+    final Long idOffice
+  ) {
     return hasPermission || this.officeService.hasPermissionPlanWorkpack(idOffice, idUser);
   }
 
@@ -211,7 +229,10 @@ public class MenuService {
     return this.officeService.findById(idOffice);
   }
 
-  private boolean hasAnyPermission(final Long idUser, final Collection<PermissionDto> permissions) {
+  private boolean hasAnyPermission(
+    final Long idUser,
+    final Collection<PermissionDto> permissions
+  ) {
     final Person person = this.findPersonById(idUser);
     return person.getAdministrator() || (permissions != null && !permissions.isEmpty());
   }
@@ -234,13 +255,13 @@ public class MenuService {
 
     final Set<WorkpackMenuDto> menu = new HashSet<>(0);
 
-    for (final Workpack workpack : workpacks) {
+    for(final Workpack workpack : workpacks) {
 
       final Set<BelongsTo> workpackBelongsToRelation = workpack.getBelongsTo();
       final boolean isLinked = workpackBelongsToRelation.stream()
         .anyMatch(belongsTo -> idPlan.equals(belongsTo.getIdPlan()) && Boolean.TRUE.equals(belongsTo.getLinked()));
 
-      if (isLinked) {
+      if(isLinked) {
         final WorkpackModel linkedModel = this.fetchLinkedModel(workpack, idPlan);
         this.addLinkedWorkpack(
           idPlan,
@@ -251,7 +272,8 @@ public class MenuService {
           workpack,
           linkedModel
         );
-      } else {
+      }
+      else {
         permission = this.addWorkpack(
           idPlan,
           idUser,
@@ -283,7 +305,7 @@ public class MenuService {
     menuItemDto.setFontIcon(modelDetailDto.getFontIcon());
     menuItemDto.setIdWorkpackModelLinked(linkedModel.getId());
 
-    if (modelDetailDto.hasProperties()) {
+    if(modelDetailDto.hasProperties()) {
       permission = this.addPropertyName(
         permission,
         permittedWorkpackId,
@@ -294,7 +316,7 @@ public class MenuService {
         modelDetailDto
       );
     }
-    if (workpack.getChildren() != null) {
+    if(workpack.getChildren() != null) {
       menuItemDto.setChildren(this.buildWorkpackLinkedStructure(
         workpack.getChildren(),
         idPlan,
@@ -318,10 +340,11 @@ public class MenuService {
   ) {
     final Set<WorkpackMenuDto> menu = new HashSet<>(0);
 
-    for (final Workpack workpack : children) {
-      final WorkpackModel linkedModelEquivalent =
-        this.findWorkpackModelEquivalent(workpack.getWorkpackModelInstance(), linkedChildrenModel.getChildren())
-          .orElseThrow(() -> new NegocioException(WORKPACK_MODEL_TYPE_MISMATCH));
+    for(final Workpack workpack : children) {
+      final Optional<WorkpackModel> maybeLinkedModelEquivalent =
+        this.findWorkpackModelEquivalent(workpack.getWorkpackModelInstance(), linkedChildrenModel.getChildren());
+
+      if(!maybeLinkedModelEquivalent.isPresent()) continue;
 
       permission = this.addLinkedWorkpack(
         idPlan,
@@ -330,14 +353,17 @@ public class MenuService {
         idWorkpackStakeholder,
         menu,
         workpack,
-        linkedModelEquivalent
+        maybeLinkedModelEquivalent.get()
       );
     }
     return menu;
   }
 
-  private Optional<WorkpackModel> findWorkpackModelEquivalent(final WorkpackModel model, final Set<WorkpackModel> linkedModels) {
-    if (linkedModels == null || linkedModels.isEmpty()) {
+  private Optional<WorkpackModel> findWorkpackModelEquivalent(
+    final WorkpackModel model,
+    final Set<WorkpackModel> linkedModels
+  ) {
+    if(linkedModels == null || linkedModels.isEmpty()) {
       return Optional.empty();
     }
 
@@ -345,20 +371,23 @@ public class MenuService {
       .filter(model::hasSameName)
       .findFirst();
 
-    if (workpackModel.isPresent()) {
+    if(workpackModel.isPresent()) {
       return workpackModel;
     }
 
     final Set<WorkpackModel> children = new HashSet<>();
 
-    for (final WorkpackModel linkedModel : linkedModels) {
+    for(final WorkpackModel linkedModel : linkedModels) {
       children.addAll(linkedModel.getChildren());
     }
 
     return this.findWorkpackModelEquivalent(model, children);
   }
 
-  private WorkpackModel fetchLinkedModel(final Workpack workpack, final Long idPlan) {
+  private WorkpackModel fetchLinkedModel(
+    final Workpack workpack,
+    final Long idPlan
+  ) {
     return this.workpackService.findWorkpackModelLinked(
       workpack.getId(),
       idPlan
@@ -380,7 +409,7 @@ public class MenuService {
     menuItemDto.setIdPlan(idPlan);
     menuItemDto.setFontIcon(model.getFontIcon());
 
-    if (model.hasProperties()) {
+    if(model.hasProperties()) {
       permission = this.addPropertyName(
         permission,
         permittedWorkpacksId,
@@ -391,7 +420,7 @@ public class MenuService {
         model
       );
     }
-    if (workpack.getChildren() != null) {
+    if(workpack.getChildren() != null) {
       menuItemDto.setChildren(this.buildWorkpackStructure(
         workpack.getChildren(),
         idPlan,
@@ -414,25 +443,28 @@ public class MenuService {
   ) {
     final Optional<Property> maybeProperty = equivalentPropertyOfWorkpack(workpack, detailDto, model);
 
-    if (maybeProperty.isPresent()) {
+    if(maybeProperty.isPresent()) {
       menuItem.setName((String) getValueProperty(maybeProperty.get()));
-      if (isWorkpackWithPermission(permittedWorkpacksId, workpack)) {
+      if(isWorkpackWithPermission(permittedWorkpacksId, workpack)) {
         permission = true;
       }
-      if (permission || this.isChildrenWithPermission(workpack.getChildren(), permittedWorkpacksId)) {
+      if(permission || this.isChildrenWithPermission(workpack.getChildren(), permittedWorkpacksId)) {
         menu.add(menuItem);
       }
     }
     return permission;
   }
 
-  private boolean isChildrenWithPermission(final Iterable<? extends Workpack> workpacks, final Set<Long> idWorkpackStakeholder) {
-    if (workpacks == null) return false;
-    for (final Workpack workpack : workpacks) {
-      if (isWorkpackWithPermission(idWorkpackStakeholder, workpack)) {
+  private boolean isChildrenWithPermission(
+    final Iterable<? extends Workpack> workpacks,
+    final Set<Long> idWorkpackStakeholder
+  ) {
+    if(workpacks == null) return false;
+    for(final Workpack workpack : workpacks) {
+      if(isWorkpackWithPermission(idWorkpackStakeholder, workpack)) {
         return true;
       }
-      if (workpack.getChildren() != null) {
+      if(workpack.getChildren() != null) {
         return this.isChildrenWithPermission(workpack.getChildren(), idWorkpackStakeholder);
       }
     }
@@ -440,6 +472,7 @@ public class MenuService {
   }
 
   private static final class AddPlanCommand {
+
     private final Long idUser;
     private final Long idPlan;
     private final Collection<? super WorkpackMenuDto> menus;
@@ -472,5 +505,7 @@ public class MenuService {
     public boolean isHasPlanPermission() {
       return this.hasPlanPermission;
     }
+
   }
+
 }

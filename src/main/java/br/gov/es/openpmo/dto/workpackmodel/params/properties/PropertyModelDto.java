@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.dto.workpackmodel.params.properties;
 
 import br.gov.es.openpmo.enumerator.Session;
+import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
@@ -11,100 +12,113 @@ import javax.validation.constraints.NotNull;
 
 @JsonTypeInfo(use = Id.NAME, property = "type")
 @JsonSubTypes({@JsonSubTypes.Type(value = IntegerModelDto.class, name = "IntegerModel"),
-  @JsonSubTypes.Type(value = TextModelDto.class, name = "TextModel"),
-  @JsonSubTypes.Type(value = DateModelDto.class, name = "DateModel"),
-  @JsonSubTypes.Type(value = ToggleModelDto.class, name = "ToggleModel"),
-  @JsonSubTypes.Type(value = UnitSelectionModelDto.class, name = "UnitSelectionModel"),
-  @JsonSubTypes.Type(value = SelectionModelDto.class, name = "SelectionModel"),
-  @JsonSubTypes.Type(value = TextAreaModelDto.class, name = "TextAreaModel"),
-  @JsonSubTypes.Type(value = NumberModelDto.class, name = "NumberModel"),
-  @JsonSubTypes.Type(value = CurrencyModelDto.class, name = "CurrencyModel"),
-  @JsonSubTypes.Type(value = LocalitySelectionModelDto.class, name = "LocalitySelectionModel"),
-  @JsonSubTypes.Type(value = GroupModelDto.class, name = "GroupModel"),
-  @JsonSubTypes.Type(value = OrganizationSelectionModelDto.class, name = "OrganizationSelectionModel")})
+        @JsonSubTypes.Type(value = TextModelDto.class, name = "TextModel"),
+        @JsonSubTypes.Type(value = DateModelDto.class, name = "DateModel"),
+        @JsonSubTypes.Type(value = ToggleModelDto.class, name = "ToggleModel"),
+        @JsonSubTypes.Type(value = UnitSelectionModelDto.class, name = "UnitSelectionModel"),
+        @JsonSubTypes.Type(value = SelectionModelDto.class, name = "SelectionModel"),
+        @JsonSubTypes.Type(value = TextAreaModelDto.class, name = "TextAreaModel"),
+        @JsonSubTypes.Type(value = NumberModelDto.class, name = "NumberModel"),
+        @JsonSubTypes.Type(value = CurrencyModelDto.class, name = "CurrencyModel"),
+        @JsonSubTypes.Type(value = LocalitySelectionModelDto.class, name = "LocalitySelectionModel"),
+        @JsonSubTypes.Type(value = GroupModelDto.class, name = "GroupModel"),
+        @JsonSubTypes.Type(value = OrganizationSelectionModelDto.class, name = "OrganizationSelectionModel")})
 @ApiModel(subTypes = {IntegerModelDto.class, TextModelDto.class, DateModelDto.class, ToggleModelDto.class,
-  UnitSelectionModelDto.class, SelectionModelDto.class, TextAreaModelDto.class, NumberModelDto.class, CurrencyModelDto.class,
-  LocalitySelectionModelDto.class, GroupModelDto.class,
-  OrganizationSelectionModelDto.class}, discriminator = "type", description = "Supertype of all PropertyModel.")
+        UnitSelectionModelDto.class, SelectionModelDto.class, TextAreaModelDto.class, NumberModelDto.class, CurrencyModelDto.class,
+        LocalitySelectionModelDto.class, GroupModelDto.class,
+        OrganizationSelectionModelDto.class}, discriminator = "type", description = "Supertype of all PropertyModel.")
 public class PropertyModelDto {
 
-  private Long id;
+    private Long id;
 
-  @NotNull
-  private Long sortIndex;
-  @NotBlank
-  private String name;
-  @NotBlank
-  private String label;
-  @NotNull
-  private Session session;
+    @NotNull
+    private Long sortIndex;
+    @NotBlank
+    private String name;
+    @NotBlank
+    private String label;
+    @NotNull
+    private Session session;
 
-  private boolean active;
-  private boolean fullLine;
-  private boolean required;
+    private boolean active;
+    private boolean fullLine;
+    private boolean required;
 
-  public Long getId() {
-    return this.id;
-  }
+    public static PropertyModelDto of(final PropertyModel propertyModel) {
+        final PropertyModelDto propertyModelDto = new PropertyModelDto();
+        propertyModelDto.setId(propertyModel.getId());
+        propertyModelDto.setActive(propertyModel.isActive());
+        propertyModelDto.setName(propertyModel.getName());
+        propertyModelDto.setLabel(propertyModel.getLabel());
+        propertyModelDto.setFullLine(propertyModel.isFullLine());
+        propertyModelDto.setSession(propertyModel.getSession());
+        propertyModelDto.setRequired(propertyModel.isRequired());
+        propertyModelDto.setSortIndex(propertyModel.getSortIndex());
+        return propertyModelDto;
+    }
 
-  public void setId(final Long id) {
-    this.id = id;
-  }
+    public Long getId() {
+        return this.id;
+    }
 
-  public boolean isActive() {
-    return this.active;
-  }
+    public void setId(final Long id) {
+        this.id = id;
+    }
 
-  public void setActive(final boolean active) {
-    this.active = active;
-  }
+    public boolean isActive() {
+        return this.active;
+    }
 
-  public Session getSession() {
-    return this.session;
-  }
+    public void setActive(final boolean active) {
+        this.active = active;
+    }
 
-  public void setSession(final Session session) {
-    this.session = session;
-  }
+    public Session getSession() {
+        return this.session;
+    }
 
-  public String getName() {
-    return this.name;
-  }
+    public void setSession(final Session session) {
+        this.session = session;
+    }
 
-  public void setName(final String name) {
-    this.name = name;
-  }
+    public String getName() {
+        return this.name;
+    }
 
-  public String getLabel() {
-    return this.label;
-  }
+    public void setName(final String name) {
+        this.name = name;
+    }
 
-  public void setLabel(final String label) {
-    this.label = label;
-  }
+    public String getLabel() {
+        return this.label;
+    }
 
-  public Long getSortIndex() {
-    return this.sortIndex;
-  }
+    public void setLabel(final String label) {
+        this.label = label;
+    }
 
-  public void setSortIndex(final Long sortIndex) {
-    this.sortIndex = sortIndex;
-  }
+    public Long getSortIndex() {
+        return this.sortIndex;
+    }
 
-  public boolean isFullLine() {
-    return this.fullLine;
-  }
+    public void setSortIndex(final Long sortIndex) {
+        this.sortIndex = sortIndex;
+    }
 
-  public void setFullLine(final boolean fullLine) {
-    this.fullLine = fullLine;
-  }
+    public boolean isFullLine() {
+        return this.fullLine;
+    }
 
-  public boolean isRequired() {
-    return this.required;
-  }
+    public void setFullLine(final boolean fullLine) {
+        this.fullLine = fullLine;
+    }
 
-  public void setRequired(final boolean required) {
-    this.required = required;
-  }
+    public boolean isRequired() {
+        return this.required;
+    }
+
+    public void setRequired(final boolean required) {
+        this.required = required;
+    }
 
 }

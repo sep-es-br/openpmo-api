@@ -73,6 +73,8 @@ public abstract class WorkpackDetailDto {
 
   private boolean cancelPropose;
 
+  private Boolean hasScheduleSectionActive;
+
   private String activeBaselineName;
 
   @JsonFormat(pattern = "dd-MM-yyyy")
@@ -108,7 +110,10 @@ public abstract class WorkpackDetailDto {
     this.linked = linked;
   }
 
-  public void applyLinkedStatus(final Workpack workpack, final Long idWorkpackModel) {
+  public void applyLinkedStatus(
+    final Workpack workpack,
+    final Long idWorkpackModel
+  ) {
     this.linkedModel = Optional.ofNullable(workpack.getLinkedTo())
       .flatMap(linkeds -> linkeds.stream()
         .map(IsLinkedTo::getWorkpackModelId)
@@ -219,10 +224,10 @@ public abstract class WorkpackDetailDto {
   }
 
   public boolean canBeDeleted() {
-    return canBeDeleted;
+    return this.canBeDeleted;
   }
 
-  public void setCanBeDeleted(boolean canBeDeleted) {
+  public void setCanBeDeleted(final boolean canBeDeleted) {
     this.canBeDeleted = canBeDeleted;
   }
 
@@ -251,35 +256,44 @@ public abstract class WorkpackDetailDto {
   }
 
   public Boolean getCompleted() {
-    return completed;
+    return this.completed;
   }
 
-  public void setCompleted(Boolean completed) {
+  public void setCompleted(final Boolean completed) {
     this.completed = completed;
   }
 
   public String getReason() {
-    return reason;
+    return this.reason;
   }
 
-  public void setReason(String reason) {
+  public void setReason(final String reason) {
     this.reason = reason;
   }
 
   public SimpleDashboard getDashboard() {
-    return dashboard;
+    return this.dashboard;
   }
 
-  public void setDashboard(SimpleDashboard dashboard) {
+  public void setDashboard(final SimpleDashboard dashboard) {
     this.dashboard = dashboard;
   }
 
   public String getActiveBaselineName() {
-    return activeBaselineName;
+    return this.activeBaselineName;
   }
 
-  public void setActiveBaselineName(String activeBaselineName) {
+  public void setActiveBaselineName(final String activeBaselineName) {
     this.activeBaselineName = activeBaselineName;
+  }
+
+
+  public Boolean getHasScheduleSectionActive() {
+    return this.hasScheduleSectionActive;
+  }
+
+  public void setHasScheduleSectionActive(final Boolean hasScheduleSectionActive) {
+    this.hasScheduleSectionActive = hasScheduleSectionActive;
   }
 
 }

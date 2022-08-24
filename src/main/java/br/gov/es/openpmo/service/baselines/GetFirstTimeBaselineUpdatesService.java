@@ -25,8 +25,8 @@ public class GetFirstTimeBaselineUpdatesService implements IGetFirstTimeBaseline
 
   @Autowired
   public GetFirstTimeBaselineUpdatesService(
-      final BaselineRepository baselineRepository,
-      final WorkpackRepository workpackRepository
+    final BaselineRepository baselineRepository,
+    final WorkpackRepository workpackRepository
   ) {
     this.baselineRepository = baselineRepository;
     this.workpackRepository = workpackRepository;
@@ -38,17 +38,21 @@ public class GetFirstTimeBaselineUpdatesService implements IGetFirstTimeBaseline
   }
 
   @Nullable
-  private UpdateResponse getUpdate(final Workpack workpack, final boolean isSnapshot) {
+  private UpdateResponse getUpdate(
+    final Workpack workpack,
+    final boolean isSnapshot
+  ) {
     UpdateResponse result = null;
     final Workpack master = this.getWorkpack(workpack, isSnapshot);
 
-    if (master != null) {
+    if(master != null) {
       result = new UpdateResponse(
-          master.getId(),
-          getIcon(master),
-          this.getDescription(master),
-          BaselineStatus.NEW,
-          null);
+        master.getId(),
+        getIcon(master),
+        this.getDescription(master),
+        BaselineStatus.NEW,
+        null
+      );
     }
 
     return result;
@@ -59,15 +63,18 @@ public class GetFirstTimeBaselineUpdatesService implements IGetFirstTimeBaseline
   }
 
   @Override
-  public List<UpdateResponse> getUpdates(final Iterable<? extends Workpack> workpacks, final boolean isSnapshot) {
-    if (workpacks == null) {
+  public List<UpdateResponse> getUpdates(
+    final Iterable<? extends Workpack> workpacks,
+    final boolean isSnapshot
+  ) {
+    if(workpacks == null) {
       return Collections.emptyList();
     }
 
     final List<UpdateResponse> updates = new ArrayList<>();
 
-    for (final Workpack workpack : workpacks) {
-      if (workpack.isDeliverable() || workpack.isMilestone()) {
+    for(final Workpack workpack : workpacks) {
+      if(workpack.isDeliverable() || workpack.isMilestone()) {
         Optional.ofNullable(this.getUpdate(workpack, isSnapshot)).ifPresent(updates::add);
       }
       updates.addAll(this.getUpdates(workpack.getChildren(), isSnapshot));
@@ -78,15 +85,19 @@ public class GetFirstTimeBaselineUpdatesService implements IGetFirstTimeBaseline
 
   private String getWorkpackName(final Workpack workpack) {
     return this.workpackRepository.findWorkpackNameAndFullname(workpack.getId())
-        .map(WorkpackName::getName)
-        .orElse(null);
+      .map(WorkpackName::getName)
+      .orElse(null);
   }
 
   @Nullable
-  private Workpack getWorkpack(final Workpack workpack, final boolean isSnapshot) {
+  private Workpack getWorkpack(
+    final Workpack workpack,
+    final boolean isSnapshot
+  ) {
+    final Workpack master = this.baselineRepository.findMasterBySnapshotId(workpack.getId()).orElse(null);
     return isSnapshot
-        ? this.baselineRepository.findMasterBySnapshotId(workpack.getId()).orElse(null)
-        : workpack;
+      ? master
+      : workpack;
   }
 
 }

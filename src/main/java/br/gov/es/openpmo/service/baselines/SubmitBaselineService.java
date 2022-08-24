@@ -26,11 +26,11 @@ public class SubmitBaselineService implements ISubmitBaselineService {
 
     @Autowired
     public SubmitBaselineService(
-            final JournalCreator journalCreator,
-            final BaselineRepository baselineRepository,
-            final IFirstTimeSubmitBaselineService firstTimeSubmitBaselineService,
-            final IAnotherTimeSubmitBaselineService anotherTimeSubmitBaselineService,
-            IAsyncDashboardService dashboardService
+      final JournalCreator journalCreator,
+      final BaselineRepository baselineRepository,
+      final IFirstTimeSubmitBaselineService firstTimeSubmitBaselineService,
+      final IAnotherTimeSubmitBaselineService anotherTimeSubmitBaselineService,
+      final IAsyncDashboardService dashboardService
     ) {
         this.journalCreator = journalCreator;
         this.baselineRepository = baselineRepository;

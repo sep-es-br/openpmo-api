@@ -6,7 +6,12 @@ import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.baselines.Status;
 import br.gov.es.openpmo.model.properties.Property;
-import br.gov.es.openpmo.model.relations.*;
+import br.gov.es.openpmo.model.relations.Consumes;
+import br.gov.es.openpmo.model.relations.IsCostAccountSnapshotOf;
+import br.gov.es.openpmo.model.relations.IsPropertySnapshotOf;
+import br.gov.es.openpmo.model.relations.IsScheduleSnapshotOf;
+import br.gov.es.openpmo.model.relations.IsStepSnapshotOf;
+import br.gov.es.openpmo.model.relations.IsWorkpackSnapshotOf;
 import br.gov.es.openpmo.model.schedule.Schedule;
 import br.gov.es.openpmo.model.schedule.Step;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
@@ -17,7 +22,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -451,7 +461,7 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
     this.baselineHelper.createBaselineSnapshotRelationship(baseline, newSnapshot, this.workpackRepository);
     this.createMasterSnapshotRelationship(this.getWorpackMaster(snapshot), newSnapshot);
     this.snapshotProperties(snapshot, newSnapshot, baseline);
-    this.createScheduleWorkpackRelationship(baseline, snapshot, newSnapshot);
+    this.createScheduleWorkpackRelationship(baseline, workpack, newSnapshot);
     this.snapshotChildren(baseline, snapshot, newSnapshot);
   }
 
@@ -492,7 +502,7 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
     this.createMasterSnapshotRelationship(this.getWorpackMaster(child), newSnapshot);
     this.linkChildAndParentSnapshots(newSnapshot, parent);
     this.snapshotProperties(child, newSnapshot, baseline);
-    this.createScheduleWorkpackRelationship(baseline, child, newSnapshot);
+    this.createScheduleWorkpackRelationship(baseline, child.getWorkpackMaster(), newSnapshot);
     this.snapshotChildren(baseline, child, newSnapshot);
   }
 
