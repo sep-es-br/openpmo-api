@@ -26,7 +26,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.CUSTOM_FILTER_NOT_FOUND;
@@ -57,7 +63,7 @@ public class OfficePermissionService {
     final IsInContactBookOfService isInContactBookOfService,
     final IsAuthenticatedByService isAuthenticatedByService,
     final IRemoteRolesFetcher remoteRolesFetcher,
-    RoleService roleService
+    final RoleService roleService
   ) {
     this.repository = repository;
     this.customFilterRepository = customFilterRepository;
@@ -71,7 +77,10 @@ public class OfficePermissionService {
     this.roleService = roleService;
   }
 
-  public void delete(final Long idOffice, final String key) {
+  public void delete(
+    final Long idOffice,
+    final String key
+  ) {
     final Person person = this.personService.findByKey(key)
       .orElseThrow(() -> new RegistroNaoEncontradoException(OFFICE_PERMISSION_NOT_FOUND));
 
@@ -80,19 +89,27 @@ public class OfficePermissionService {
     this.repository.deleteAll(permissionsToDelete);
   }
 
-  public List<CanAccessOffice> findByOfficeAndPerson(final Long idOffice, final Long idPerson) {
+  public List<CanAccessOffice> findByOfficeAndPerson(
+    final Long idOffice,
+    final Long idPerson
+  ) {
     return this.repository.findByIdOfficeAndIdPerson(idOffice, idPerson);
   }
 
-  public List<OfficePermissionDto> findAllDto(Long idOffice, Long idFilter, String key, Long idPerson) {
-    List<RoleResource> roles = this.roleService.getRolesByKey(idPerson, key);
-    List<OfficePermissionDto> allPermissionsOfOffice = new ArrayList<>();
-    Office office = this.officeService.findById(idOffice);
-    List<Person> listPerson = this.personService.personInCanAccessOffice(idOffice);
-    List<CanAccessOffice> listOfficesPermission = this.listOfficesPermissions(office, key, idFilter);
-    for (Person person : listPerson) {
-      OfficePermissionDto officePermissionItem = new OfficePermissionDto();
-      List<CanAccessOffice> permissionsFilteredByPerson = listOfficesPermission.stream()
+  public List<OfficePermissionDto> findAllDto(
+    final Long idOffice,
+    final Long idFilter,
+    final String key,
+    final Long idPerson
+  ) {
+    final List<RoleResource> roles = this.roleService.getRolesByKey(idPerson, key);
+    final List<OfficePermissionDto> allPermissionsOfOffice = new ArrayList<>();
+    final Office office = this.officeService.findById(idOffice);
+    final List<Person> listPerson = this.personService.personInCanAccessOffice(idOffice);
+    final List<CanAccessOffice> listOfficesPermission = this.listOfficesPermissions(office, key, idFilter);
+    for(final Person person : listPerson) {
+      final OfficePermissionDto officePermissionItem = new OfficePermissionDto();
+      final List<CanAccessOffice> permissionsFilteredByPerson = listOfficesPermission.stream()
         .filter(permission -> permission.getPerson().equals(person))
         .collect(Collectors.toList());
       this.fillPersonDto(idOffice, person, officePermissionItem, roles);
@@ -100,9 +117,9 @@ public class OfficePermissionService {
       this.fillPermissions(officePermissionItem, permissionsFilteredByPerson);
       allPermissionsOfOffice.add(officePermissionItem);
     }
-    if (key != null) {
+    if(key != null) {
       return allPermissionsOfOffice.stream().filter(permission -> {
-        if (permission.getPerson().getKey() == null) {
+        if(permission.getPerson().getKey() == null) {
           return true;
         }
         return permission.getPerson().getKey().equals(key);
@@ -123,21 +140,25 @@ public class OfficePermissionService {
   }
 
   private void fillPersonDto(
-    Long idOffice,
-    Person person,
-    OfficePermissionDto officePermissionDto,
-    Collection<RoleResource> roles
+    final Long idOffice,
+    final Person person,
+    final OfficePermissionDto officePermissionDto,
+    final Collection<RoleResource> roles
   ) {
-    Optional<IsInContactBookOf> maybeContact =
+    final Optional<IsInContactBookOf> maybeContact =
       this.isInContactBookOfService.findContactInformationUsingPersonIdAndOffice(person.getId(), idOffice);
-    Optional<IsAuthenticatedBy> maybeAuthenticatedBy = this.isAuthenticatedByService.findAuthenticatedBy(person.getId());
-    PersonDto personDto = PersonDto.from(person, maybeContact, maybeAuthenticatedBy);
+    final Optional<IsAuthenticatedBy> maybeAuthenticatedBy = this.isAuthenticatedByService.findAuthenticatedBy(person.getId());
+    final PersonDto personDto = PersonDto.from(person, maybeContact, maybeAuthenticatedBy);
     personDto.addAllRoles(roles);
     officePermissionDto.setPerson(personDto);
   }
 
-  private List<CanAccessOffice> listOfficesPermissions(final Office office, String key, final Long idFilter) {
-    if (idFilter == null) {
+  private List<CanAccessOffice> listOfficesPermissions(
+    final Office office,
+    final String key,
+    final Long idFilter
+  ) {
+    if(idFilter == null) {
       return this.listOfficesPermissions(office, key);
     }
 
@@ -148,7 +169,7 @@ public class OfficePermissionService {
     final Map<String, Object> params = new HashMap<>();
     params.put("idOffice", office.getId());
 
-    if (key == null || key.isEmpty()) {
+    if(key == null || key.isEmpty()) {
       return this.findAllOfficePermission.execute(filter, params);
     }
 
@@ -159,8 +180,11 @@ public class OfficePermissionService {
     return this.findAllOfficePermissionByIdPerson.execute(filter, params);
   }
 
-  private List<CanAccessOffice> listOfficesPermissions(final Office office, final String key) {
-    if (key == null || key.isEmpty()) {
+  private List<CanAccessOffice> listOfficesPermissions(
+    final Office office,
+    final String key
+  ) {
+    if(key == null || key.isEmpty()) {
       return this.repository.findByIdOffice(office.getId());
     }
     final Person person = this.personService.findPersonByKey(key);
@@ -186,14 +210,14 @@ public class OfficePermissionService {
     final List<CanAccessOffice> officesPermissionsDataBase = this.findByOfficeAndPerson(office.getId(), person.getId());
 
     officesPermissionsDataBase.forEach(permissionDatabase -> {
-      if (request.getPermissions() == null || request.getPermissions().stream().noneMatch(
+      if(request.getPermissions() == null || request.getPermissions().stream().noneMatch(
         rp -> rp.getRole().equals(permissionDatabase.getRole()))) {
         this.delete(permissionDatabase);
       }
     });
-    if (!CollectionUtils.isEmpty(request.getPermissions())) {
+    if(!CollectionUtils.isEmpty(request.getPermissions())) {
       request.getPermissions().forEach(permission -> {
-        if (permission.getId() == null && officesPermissionsDataBase.stream().noneMatch(
+        if(permission.getId() == null && officesPermissionsDataBase.stream().noneMatch(
           pbd -> permission.getRole() != null && permission.getRole().equals(pbd.getRole()))) {
           this.save(this.buildCanAccessOffice(person, office, permission, null));
           return;
@@ -201,7 +225,7 @@ public class OfficePermissionService {
         final Optional<CanAccessOffice> optionalCanAccessOffice = officesPermissionsDataBase.stream().filter(
           pbd -> permission.getRole() != null && permission.getRole().equals(
             pbd.getRole())).findFirst();
-        if (optionalCanAccessOffice.isPresent()) {
+        if(optionalCanAccessOffice.isPresent()) {
           this.save(this.buildCanAccessOffice(
             person,
             office,
@@ -210,7 +234,7 @@ public class OfficePermissionService {
           ));
           return;
         }
-        if (permission.getId() != null) {
+        if(permission.getId() != null) {
           final CanAccessOffice canAccessOffice = this.repository.findById(permission.getId()).orElseThrow(
             () -> new RegistroNaoEncontradoException(OFFICE_PERMISSION_NOT_FOUND));
           this.save(this.buildCanAccessOffice(person, office, permission, canAccessOffice.getId()));
@@ -221,12 +245,19 @@ public class OfficePermissionService {
 
   }
 
-  private Person returnPersonOrCreateIfNotExists(final String key, final PersonDto person, final Long idOffice) {
+  private Person returnPersonOrCreateIfNotExists(
+    final String key,
+    final PersonDto person,
+    final Long idOffice
+  ) {
     final Optional<Person> personOptional = this.personService.findByKey(key);
     return personOptional.orElseGet(() -> this.storePerson(person, idOffice));
   }
 
-  private Person storePerson(final PersonDto person, final Long idOffice) {
+  private Person storePerson(
+    final PersonDto person,
+    final Long idOffice
+  ) {
     return this.personService.savePerson(person, idOffice);
   }
 
@@ -238,7 +269,7 @@ public class OfficePermissionService {
     final Person person = officePermission.getPerson();
     final Office office = officePermission.getOffice();
 
-    if (!this.isInContactBookOfService.existsByPersonIdAndOfficeId(person.getId(), office.getId())) {
+    if(!this.isInContactBookOfService.existsByPersonIdAndOfficeId(person.getId(), office.getId())) {
       final IsInContactBookOf isInContactBookOf = new IsInContactBookOf();
       isInContactBookOf.setPerson(person);
       isInContactBookOf.setOffice(office);
@@ -248,7 +279,12 @@ public class OfficePermissionService {
     return this.repository.save(officePermission, 0);
   }
 
-  private CanAccessOffice buildCanAccessOffice(final Person person, final Office office, final PermissionDto request, final Long id) {
+  private CanAccessOffice buildCanAccessOffice(
+    final Person person,
+    final Office office,
+    final PermissionDto request,
+    final Long id
+  ) {
     return new CanAccessOffice(id, "", request.getRole(), request.getLevel(), person, office);
   }
 
@@ -264,19 +300,26 @@ public class OfficePermissionService {
     final List<CanAccessOffice> canAccessOffices = this.findByOfficeAndPerson(office.getId(), person.getId());
 
     request.getPermissions().forEach(permission -> {
-      if (canAccessOffices.stream().noneMatch(c -> c.getRole().equals(permission.getRole()))) {
+      if(canAccessOffices.stream().noneMatch(c -> c.getRole().equals(permission.getRole()))) {
         this.save(this.buildCanAccessOffice(person, office, permission, null));
       }
     });
     return person;
   }
 
-  public Set<CanAccessOffice> findInheritedPermission(final Long workpackId, final Long personId) {
+  public Set<CanAccessOffice> findInheritedPermission(
+    final Long workpackId,
+    final Long personId
+  ) {
     return this.repository.findInheritedPermission(workpackId, personId);
   }
 
-  public OfficePermissionDto findOfficePermissionsByKey(final Long idOffice, final String key, Long idPerson) {
-    List<RoleResource> roles = this.roleService.getRolesByKey(idPerson, key);
+  public OfficePermissionDto findOfficePermissionsByKey(
+    final Long idOffice,
+    final String key,
+    final Long idPerson
+  ) {
+    final List<RoleResource> roles = this.roleService.getRolesByKey(idPerson, key);
 
     final OfficePermissionDto officePermissionDto = new OfficePermissionDto();
     final Person person = this.personService.findPersonByKey(key);
@@ -289,8 +332,12 @@ public class OfficePermissionService {
     return officePermissionDto;
   }
 
-  private void fillPersonRoles(final OfficePermissionDto officePermissionDto, final Long personId) {
+  private void fillPersonRoles(
+    final OfficePermissionDto officePermissionDto,
+    final Long personId
+  ) {
     final List<RoleResource> roles = this.remoteRolesFetcher.fetch(personId);
     officePermissionDto.addAllRoles(roles);
   }
+
 }

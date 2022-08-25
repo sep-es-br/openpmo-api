@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 @JsonTypeInfo(use = Id.NAME, property = "type")
 @JsonSubTypes({@Type(value = PortfolioDetailDto.class, name = "Portfolio"),
@@ -85,6 +86,21 @@ public abstract class WorkpackDetailDto {
   private Boolean completed;
 
   private SimpleDashboard dashboard;
+
+  public static <TYPE extends WorkpackDetailDto> WorkpackDetailDto of(
+    final Workpack workpack,
+    final Supplier<TYPE> instanceSupplier
+  ) {
+    final TYPE instance = instanceSupplier.get();
+    instance.setId(workpack.getId());
+    instance.setCancelable(workpack.isCancelable());
+    instance.setCanceled(workpack.isCanceled());
+    instance.setCanBeDeleted(workpack.isDeleted());
+    instance.setEndManagementDate(workpack.getEndManagementDate());
+    instance.setReason(workpack.getReason());
+    instance.setCompleted(workpack.getCompleted());
+    return instance;
+  }
 
   public boolean isHasActiveBaseline() {
     return this.hasActiveBaseline;

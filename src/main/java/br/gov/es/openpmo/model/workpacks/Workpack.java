@@ -29,6 +29,7 @@ import io.swagger.annotations.ApiModel;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 import org.springframework.data.annotation.Transient;
+import org.springframework.util.ObjectUtils;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -529,6 +530,28 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
   public Optional<Office> getOriginalOffice() {
     return this.getOriginalPlan()
       .map(Plan::getOffice);
+  }
+
+  @Transient
+  public boolean hasPropertyModel() {
+    return Optional.ofNullable(this.getWorkpackModelInstance())
+      .map(WorkpackModel::hasProperties)
+      .orElse(false);
+  }
+
+  @Transient
+  public boolean hasStakeholderSessionActive() {
+    return this.getWorkpackModelInstance().getStakeholderSessionActive();
+  }
+
+  @Transient
+  public boolean sameOriginalPlan(final Long planId) {
+    return this.getOriginalPlan().map(plan -> planId.equals(plan.getId())).orElse(false);
+  }
+
+  @Transient
+  public boolean hasEndManagementDate() {
+    return !ObjectUtils.isEmpty(this.endManagementDate);
   }
 
 }

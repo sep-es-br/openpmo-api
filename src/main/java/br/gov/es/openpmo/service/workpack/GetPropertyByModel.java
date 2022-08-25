@@ -7,7 +7,7 @@ import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import org.springframework.util.CollectionUtils;
 
-import static br.gov.es.openpmo.utils.PropertyModelInstanceType.*;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.*;
 
 public final class GetPropertyByModel {
 

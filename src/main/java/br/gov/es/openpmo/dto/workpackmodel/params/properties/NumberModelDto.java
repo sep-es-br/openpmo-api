@@ -1,11 +1,24 @@
 package br.gov.es.openpmo.dto.workpackmodel.params.properties;
 
+import br.gov.es.openpmo.model.properties.models.NumberModel;
+import br.gov.es.openpmo.model.properties.models.PropertyModel;
+
 public class NumberModelDto extends PropertyModelDto {
 
   private Double defaultValue;
   private Double min;
   private Double max;
   private Integer decimals;
+
+  public static NumberModelDto of(final PropertyModel propertyModel) {
+    final NumberModelDto instance = (NumberModelDto) PropertyModelDto.of(propertyModel, NumberModelDto::new);
+    instance.setDecimals(((NumberModel) propertyModel).getDecimals());
+    instance.setMin(((NumberModel) propertyModel).getMin());
+    instance.setMax(((NumberModel) propertyModel).getMax());
+    instance.setDefaultValue(((NumberModel) propertyModel).getDefaultValue());
+    return instance;
+  }
+
 
   public Double getDefaultValue() {
     return this.defaultValue;

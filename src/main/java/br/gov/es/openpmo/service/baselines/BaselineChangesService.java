@@ -8,7 +8,11 @@ import br.gov.es.openpmo.model.schedule.Schedule;
 import br.gov.es.openpmo.model.schedule.Step;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
 import br.gov.es.openpmo.model.workpacks.Workpack;
-import br.gov.es.openpmo.repository.*;
+import br.gov.es.openpmo.repository.ConsumesRepository;
+import br.gov.es.openpmo.repository.CostAccountRepository;
+import br.gov.es.openpmo.repository.PropertyRepository;
+import br.gov.es.openpmo.repository.ScheduleRepository;
+import br.gov.es.openpmo.repository.StepRepository;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,7 +22,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import static br.gov.es.openpmo.utils.PropertyModelInstanceType.TYPE_MODEL_NAME_DATE;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_DATE;
 
 @Service
 public class BaselineChangesService implements IBaselineChangesService {

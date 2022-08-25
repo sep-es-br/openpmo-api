@@ -153,10 +153,11 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   Set<Workpack> findAllUsingPlan(@Param("idPlan") Long idPlan);
 
   @Query("MATCH (plan:Plan) " +
+         "WHERE id(plan)=$idPlan " +
          "MATCH (plan)<-[belongsTo:BELONGS_TO]-(w:Workpack{deleted:false,canceled:false}) " +
          "MATCH (plan)-[isStructuredBy:IS_STRUCTURED_BY]->(planModel:PlanModel) " +
          "MATCH (w)-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
-         "WHERE id(plan) = $idPlan AND NOT (w)-[:IS_IN]->(:Workpack{deleted:false,canceled:false}) " +
+         "WHERE NOT (w)-[:IS_IN]->(:Workpack{deleted:false,canceled:false}) " +
          "RETURN w, belongsTo, isStructuredBy, plan, instanceBy, planModel, model, [ " +
          " [(w)-[isLinkedTo:IS_LINKED_TO]-(modelLinked:WorkpackModel) | [isLinkedTo, modelLinked] ], " +
          " [(w)<-[f1:FEATURES]-(p1:Property)-[d1:IS_DRIVEN_BY]->(pm1:PropertyModel) | [f1, p1, d1, pm1] ], " +

@@ -5,6 +5,8 @@ import br.gov.es.openpmo.model.office.Locality;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
+import java.beans.Transient;
+import java.util.Optional;
 import java.util.Set;
 
 @NodeEntity
@@ -41,4 +43,12 @@ public class LocalitySelectionModel extends PropertyModel {
   public void setDomain(final Domain domain) {
     this.domain = domain;
   }
+
+  @Transient
+  public Long getDomainId() {
+    return Optional.ofNullable(this.domain)
+      .map(Domain::getId)
+      .orElse(null);
+  }
+
 }

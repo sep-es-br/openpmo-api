@@ -2,10 +2,12 @@ package br.gov.es.openpmo.dto.costaccount;
 
 import br.gov.es.openpmo.dto.workpack.PropertyDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.PropertyModelDto;
-import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
+import br.gov.es.openpmo.utils.PropertyModelInstanceType;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class CostAccountDto {
@@ -58,8 +60,8 @@ public class CostAccountDto {
     private static List<PropertyModelDto> getModelsFrom(final CostAccount costAccount) {
         return Optional.ofNullable(costAccount)
                 .map(ca -> ca.getPropertyModels()
-                        .stream()
-                        .map(PropertyModelDto::of)
+                  .stream()
+                  .map(PropertyModelInstanceType::map)
                         .collect(Collectors.toList())
                 )
                 .orElse(new ArrayList<>());

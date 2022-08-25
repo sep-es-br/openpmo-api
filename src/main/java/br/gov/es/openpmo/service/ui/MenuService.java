@@ -7,6 +7,7 @@ import br.gov.es.openpmo.dto.menu.WorkpackMenuDto;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.dto.workpack.PropertyDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackDetailDto;
+import br.gov.es.openpmo.dto.workpack.WorkpackName;
 import br.gov.es.openpmo.dto.workpackmodel.details.WorkpackModelDetailDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.PropertyModelDto;
 import br.gov.es.openpmo.model.actors.Person;
@@ -22,7 +23,6 @@ import br.gov.es.openpmo.service.office.plan.PlanService;
 import br.gov.es.openpmo.service.workpack.WorkpackModelService;
 import br.gov.es.openpmo.service.workpack.WorkpackPermissionVerifier;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -37,7 +37,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.enumerator.Session.PROPERTIES;
-import static br.gov.es.openpmo.service.workpack.GetPropertyValue.getValueProperty;
 
 @Service
 public class MenuService {
@@ -45,7 +44,6 @@ public class MenuService {
   private final WorkpackService workpackService;
   private final PlanService planService;
   private final OfficeService officeService;
-  private final ModelMapper modelMapper;
   private final PersonService personService;
   private final WorkpackModelService workpackModelService;
   private final WorkpackPermissionVerifier workpackPermissionVerifier;
@@ -56,7 +54,6 @@ public class MenuService {
     final PlanService planService,
     final PersonService personService,
     final OfficeService officeService,
-    final ModelMapper modelMapper,
     final WorkpackModelService workpackModelService,
     final WorkpackPermissionVerifier workpackPermissionVerifier
   ) {
@@ -64,7 +61,6 @@ public class MenuService {
     this.workpackService = workpackService;
     this.planService = planService;
     this.officeService = officeService;
-    this.modelMapper = modelMapper;
     this.workpackModelService = workpackModelService;
     this.workpackPermissionVerifier = workpackPermissionVerifier;
   }
@@ -106,13 +102,13 @@ public class MenuService {
     final boolean hasAnyPermission = this.hasAnyPermission(request.getIdUser(), permissions);
 
     if(this.hasOfficePermission(request.getIdUser(), hasAnyPermission, request.getIdOffice())) {
-      final List<Plan> plans = this.findAllPlansInOffice(request.getIdOffice()).stream()
+      final List<Plan> plans = this.findAllPlansInOffice(request.getIdOffice()).parallelStream()
         .filter(a -> request.getIdPlan() == null || request.getIdPlan().equals(a.getId()))
         .collect(Collectors.toList());
 
       final List<WorkpackMenuDto> menus = new ArrayList<>(0);
 
-      plans.forEach(plan -> this.addPlanIfHasPermission(
+      plans.parallelStream().forEach(plan -> this.addPlanIfHasPermission(
         request,
         menus,
         hasAnyPermission,
@@ -189,19 +185,19 @@ public class MenuService {
 
     final List<Office> offices = this.officeService.findAll();
 
-    offices.forEach(office -> {
+    offices.parallelStream().forEach(office -> {
       final List<PermissionDto> permissions = this.fetchOfficePermissions(new PortfolioMenuRequest(office.getId(), idUser));
 
       final boolean hasPermission = this.hasAnyPermission(idUser, permissions);
 
       if(this.hasOfficePermission(idUser, hasPermission, office.getId())) {
-        final MenuOfficeDto item = this.modelMapper.map(office, MenuOfficeDto.class);
+        final MenuOfficeDto item = MenuOfficeDto.of(office);
         item.setPlans(new HashSet<>());
         final List<Plan> plans = this.findAllPlansInOffice(office.getId());
 
         for(final Plan plan : plans) {
           if(hasPermission || this.planService.hasPermissionPlanWorkpack(plan.getId(), idUser)) {
-            item.getPlans().add(this.modelMapper.map(plan, PlanMenuDto.class));
+            item.getPlans().add(PlanMenuDto.of(plan));
           }
         }
         menus.add(item);
@@ -258,6 +254,7 @@ public class MenuService {
     for(final Workpack workpack : workpacks) {
 
       final Set<BelongsTo> workpackBelongsToRelation = workpack.getBelongsTo();
+
       final boolean isLinked = workpackBelongsToRelation.stream()
         .anyMatch(belongsTo -> idPlan.equals(belongsTo.getIdPlan()) && Boolean.TRUE.equals(belongsTo.getLinked()));
 
@@ -296,24 +293,16 @@ public class MenuService {
     final Workpack workpack,
     final WorkpackModel linkedModel
   ) {
-    final WorkpackMenuDto menuItemDto = this.modelMapper.map(workpack, WorkpackMenuDto.class);
-    final WorkpackDetailDto detailDto = this.workpackService.getWorkpackDetailDto(workpack);
-
-    final WorkpackModelDetailDto modelDetailDto = detailDto.getModel();
-
-    menuItemDto.setIdPlan(idPlan);
-    menuItemDto.setFontIcon(modelDetailDto.getFontIcon());
+    final WorkpackMenuDto menuItemDto = WorkpackMenuDto.of(workpack, idPlan);
     menuItemDto.setIdWorkpackModelLinked(linkedModel.getId());
 
-    if(modelDetailDto.hasProperties()) {
+    if(workpack.hasPropertyModel()) {
       permission = this.addPropertyName(
         permission,
         permittedWorkpackId,
         menu,
         workpack,
-        menuItemDto,
-        detailDto,
-        modelDetailDto
+        menuItemDto
       );
     }
     if(workpack.getChildren() != null) {
@@ -402,22 +391,15 @@ public class MenuService {
     final Collection<? super WorkpackMenuDto> menu,
     final Workpack workpack
   ) {
-    final WorkpackMenuDto menuItemDto = this.modelMapper.map(workpack, WorkpackMenuDto.class);
-    final WorkpackDetailDto detailDto = this.workpackService.getWorkpackDetailDto(workpack);
-    final WorkpackModelDetailDto model = detailDto.getModel();
+    final WorkpackMenuDto menuItemDto = WorkpackMenuDto.of(workpack, idPlan);
 
-    menuItemDto.setIdPlan(idPlan);
-    menuItemDto.setFontIcon(model.getFontIcon());
-
-    if(model.hasProperties()) {
+    if(workpack.hasPropertyModel()) {
       permission = this.addPropertyName(
         permission,
         permittedWorkpacksId,
         menu,
         workpack,
-        menuItemDto,
-        detailDto,
-        model
+        menuItemDto
       );
     }
     if(workpack.getChildren() != null) {
@@ -437,14 +419,13 @@ public class MenuService {
     final Set<Long> permittedWorkpacksId,
     final Collection<? super WorkpackMenuDto> menu,
     final Workpack workpack,
-    final WorkpackMenuDto menuItem,
-    final WorkpackDetailDto detailDto,
-    final WorkpackModelDetailDto model
+    final WorkpackMenuDto menuItem
   ) {
-    final Optional<Property> maybeProperty = equivalentPropertyOfWorkpack(workpack, detailDto, model);
+    final Optional<String> maybeWorkpackNameData = this.workpackService.findWorkpackNameAndFullname(workpack.getId())
+      .map(WorkpackName::getName);
 
-    if(maybeProperty.isPresent()) {
-      menuItem.setName((String) getValueProperty(maybeProperty.get()));
+    if(maybeWorkpackNameData.isPresent()) {
+      menuItem.setName(maybeWorkpackNameData.get());
       if(isWorkpackWithPermission(permittedWorkpacksId, workpack)) {
         permission = true;
       }

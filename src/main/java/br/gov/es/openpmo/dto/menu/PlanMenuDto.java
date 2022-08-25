@@ -1,11 +1,27 @@
 package br.gov.es.openpmo.dto.menu;
 
+import br.gov.es.openpmo.model.office.plan.Plan;
+
 import java.util.Objects;
 
 public class PlanMenuDto {
+
   private Long id;
   private String name;
 
+  public PlanMenuDto() {}
+
+  public PlanMenuDto(
+    final Long id,
+    final String name
+  ) {
+    this.id = id;
+    this.name = name;
+  }
+
+  public static PlanMenuDto of(final Plan plan) {
+    return new PlanMenuDto(plan.getId(), plan.getName());
+  }
 
   public Long getId() {
     return this.id;
@@ -39,4 +55,5 @@ public class PlanMenuDto {
     final PlanMenuDto that = (PlanMenuDto) o;
     return Objects.equals(this.id, that.id) && Objects.equals(this.name, that.name);
   }
+
 }

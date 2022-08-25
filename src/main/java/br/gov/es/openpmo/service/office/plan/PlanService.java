@@ -26,7 +26,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.CUSTOM_FILTER_NOT_FOUND;
@@ -35,183 +40,212 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.PLAN_NOT_FOUND;
 @Service
 public class PlanService implements BreadcrumbPlanHelper {
 
-    private final PlanRepository planRepository;
-    private final PersonService personService;
-    private final PlanPermissionRepository planPermissionRepository;
-    private final OfficePermissionService officePermissionService;
-    private final OfficeService officeService;
-    private final CustomFilterRepository customFilterRepository;
-    private final FindAllPlanUsingCustomFilter findAllPlan;
-    private final WorkpackRepository workpackRepository;
+  private final PlanRepository planRepository;
+  private final PersonService personService;
+  private final PlanPermissionRepository planPermissionRepository;
+  private final OfficePermissionService officePermissionService;
+  private final OfficeService officeService;
+  private final CustomFilterRepository customFilterRepository;
+  private final FindAllPlanUsingCustomFilter findAllPlan;
+  private final WorkpackRepository workpackRepository;
 
-    @Autowired
-    public PlanService(
-            final PlanRepository planRepository,
-            final PersonService personService,
-            final PlanPermissionRepository planPermissionRepository,
-            final OfficePermissionService officePermissionService,
-            final OfficeService officeService,
-            final CustomFilterRepository customFilterRepository,
-            final FindAllPlanUsingCustomFilter findAllPlan,
-            WorkpackRepository workpackRepository
-    ) {
-        this.planRepository = planRepository;
-        this.personService = personService;
-        this.planPermissionRepository = planPermissionRepository;
-        this.officePermissionService = officePermissionService;
-        this.officeService = officeService;
-        this.customFilterRepository = customFilterRepository;
-        this.findAllPlan = findAllPlan;
-        this.workpackRepository = workpackRepository;
+  @Autowired
+  public PlanService(
+    final PlanRepository planRepository,
+    final PersonService personService,
+    final PlanPermissionRepository planPermissionRepository,
+    final OfficePermissionService officePermissionService,
+    final OfficeService officeService,
+    final CustomFilterRepository customFilterRepository,
+    final FindAllPlanUsingCustomFilter findAllPlan,
+    final WorkpackRepository workpackRepository
+  ) {
+    this.planRepository = planRepository;
+    this.personService = personService;
+    this.planPermissionRepository = planPermissionRepository;
+    this.officePermissionService = officePermissionService;
+    this.officeService = officeService;
+    this.customFilterRepository = customFilterRepository;
+    this.findAllPlan = findAllPlan;
+    this.workpackRepository = workpackRepository;
+  }
+
+  public List<Plan> findAll() {
+    final List<Plan> plans = new ArrayList<>();
+    this.planRepository.findAll().forEach(plans::add);
+    return plans;
+  }
+
+  public List<Plan> findAllInOffice(
+    final Long idOffice,
+    final Long idFilter
+  ) {
+    if(idFilter == null) {
+      return this.findAllInOffice(idOffice);
     }
+    final CustomFilter filter = this.customFilterRepository
+      .findById(idFilter)
+      .orElseThrow(() -> new NegocioException(CUSTOM_FILTER_NOT_FOUND));
 
-    public List<Plan> findAll() {
-        final List<Plan> plans = new ArrayList<>();
-        this.planRepository.findAll().forEach(plans::add);
-        return plans;
+    final Map<String, Object> params = new HashMap<>();
+
+    params.put("idOffice", idOffice);
+
+    return this.findAllPlan.execute(filter, params);
+  }
+
+  public List<Plan> findAllInOffice(final Long idOffice) {
+    return this.planRepository.findAllInOffice(idOffice);
+  }
+
+  public Plan save(final Plan plan) {
+    return this.planRepository.save(plan);
+  }
+
+  public void delete(final Plan plan) {
+    if(this.workpackRepository.existsByPlanId(plan.getId())) {
+      throw new NegocioException(ApplicationMessage.PLAN_DELETE_RELATIONSHIP_ERROR);
     }
+    this.planRepository.delete(plan);
+  }
 
-    public List<Plan> findAllInOffice(final Long idOffice, final Long idFilter) {
-        if (idFilter == null) {
-            return this.findAllInOffice(idOffice);
-        }
-        final CustomFilter filter = this.customFilterRepository
-                .findById(idFilter)
-                .orElseThrow(() -> new NegocioException(CUSTOM_FILTER_NOT_FOUND));
+  public Plan getPlan(final PlanUpdateDto planUpdateDto) {
+    final Plan plan = this.findById(planUpdateDto.getId());
+    plan.setStart(planUpdateDto.getStart());
+    plan.setFinish(planUpdateDto.getFinish());
+    plan.setName(planUpdateDto.getName());
+    plan.setFullName(planUpdateDto.getFullName());
+    return plan;
+  }
 
-        final Map<String, Object> params = new HashMap<>();
+  public Plan findById(final Long idPlan) {
+    return this.planRepository.findById(idPlan)
+      .orElseThrow(() -> new NegocioException(PLAN_NOT_FOUND));
+  }
 
-        params.put("idOffice", idOffice);
-
-        return this.findAllPlan.execute(filter, params);
+  public List<PlanDto> chekPermission(
+    final List<PlanDto> plans,
+    final Long idUser,
+    final Long idOffice
+  ) {
+    final Person person = this.personService.findById(idUser);
+    if(person.getAdministrator()) {
+      return plans;
     }
-
-    public List<Plan> findAllInOffice(final Long idOffice) {
-        return this.planRepository.findAllInOffice(idOffice);
+    final Office office = this.officeService.findById(idOffice);
+    final List<PermissionDto> officePermissions = this.getOfficePermissionDto(office, person);
+    for(final Iterator<PlanDto> it = plans.iterator(); it.hasNext(); ) {
+      final PlanDto planDto = it.next();
+      final List<CanAccessPlan> canAccessPlans = this.planPermissionRepository.findByIdPlanAndIdPerson(
+        planDto.getId(),
+        idUser
+      );
+      final List<PermissionDto> planPermissions = new ArrayList<>();
+      if(!canAccessPlans.isEmpty()) {
+        canAccessPlans.forEach(p -> {
+          final PermissionDto dto = new PermissionDto();
+          dto.setId(p.getId());
+          dto.setLevel(p.getPermissionLevel());
+          dto.setRole(p.getRole());
+          planPermissions.add(dto);
+        });
+      }
+      List<PermissionDto> permissions = this.getPermissions(planPermissions, officePermissions);
+      if(permissions == null || permissions.isEmpty()) {
+        permissions = this.getPermissionReadWorkpack(planDto.getId(), idUser);
+      }
+      if(permissions.isEmpty()) {
+        it.remove();
+        continue;
+      }
+      planDto.setPermissions(permissions);
     }
+    return plans;
+  }
 
-    public Plan save(final Plan plan) {
-        return this.planRepository.save(plan);
-    }
+  private List<PermissionDto> getOfficePermissionDto(
+    final Office office,
+    final Person person
+  ) {
+    final List<CanAccessOffice> canAccessOffices = this.officePermissionService.findByOfficeAndPerson(
+      office.getId(),
+      person.getId()
+    );
+    return canAccessOffices.stream().map(c -> {
+      final PermissionDto permissionDto = new PermissionDto();
+      permissionDto.setRole(c.getRole());
+      permissionDto.setLevel(c.getPermissionLevel());
+      permissionDto.setId(c.getId());
+      return permissionDto;
+    }).collect(Collectors.toList());
+  }
 
-    public void delete(final Plan plan) {
-        if (this.workpackRepository.existsByPlanId(plan.getId())) {
-            throw new NegocioException(ApplicationMessage.PLAN_DELETE_RELATIONSHIP_ERROR);
-        }
-        this.planRepository.delete(plan);
+  private List<PermissionDto> getPermissions(
+    final List<PermissionDto> planPermissions,
+    final List<PermissionDto> officePermissions
+  ) {
+    if(planPermissions != null && planPermissions.stream().anyMatch(c -> PermissionLevelEnum.EDIT.equals(c.getLevel()))) {
+      return planPermissions;
     }
+    if(officePermissions.stream().anyMatch(c -> PermissionLevelEnum.EDIT.equals(c.getLevel()))) {
+      return officePermissions;
+    }
+    return CollectionUtils.isEmpty(planPermissions) ? officePermissions : planPermissions;
+  }
 
-    public Plan getPlan(final PlanUpdateDto planUpdateDto) {
-        final Plan plan = this.findById(planUpdateDto.getId());
-        plan.setStart(planUpdateDto.getStart());
-        plan.setFinish(planUpdateDto.getFinish());
-        plan.setName(planUpdateDto.getName());
-        plan.setFullName(planUpdateDto.getFullName());
-        return plan;
+  private List<PermissionDto> getPermissionReadWorkpack(
+    final Long idPlan,
+    final Long idUser
+  ) {
+    final List<PermissionDto> permissions = new ArrayList<>();
+    if(this.hasPermissionReadWorkpack(idPlan, idUser)) {
+      final PermissionDto dto = new PermissionDto();
+      dto.setId(0L);
+      dto.setLevel(PermissionLevelEnum.READ);
+      dto.setRole("user");
+      permissions.add(dto);
     }
+    return permissions;
+  }
 
-    public Plan findById(final Long idPlan) {
-        return this.planRepository.findById(idPlan)
-                .orElseThrow(() -> new NegocioException(PLAN_NOT_FOUND));
-    }
+  private boolean hasPermissionReadWorkpack(
+    final Long idPlan,
+    final Long idUser
+  ) {
+    return this.planPermissionRepository.hasWorkpackPermission(idPlan, idUser);
+  }
 
-    public List<PlanDto> chekPermission(final List<PlanDto> plans, final Long idUser, final Long idOffice) {
-        final Person person = this.personService.findById(idUser);
-        if (person.getAdministrator()) {
-            return plans;
-        }
-        final Office office = this.officeService.findById(idOffice);
-        final List<PermissionDto> officePermissions = this.getOfficePermissionDto(office, person);
-        for (final Iterator<PlanDto> it = plans.iterator(); it.hasNext(); ) {
-            final PlanDto planDto = it.next();
-            final List<CanAccessPlan> canAccessPlans = this.planPermissionRepository.findByIdPlanAndIdPerson(
-                    planDto.getId(),
-                    idUser
-            );
-            final List<PermissionDto> planPermissions = new ArrayList<>();
-            if (!canAccessPlans.isEmpty()) {
-                canAccessPlans.forEach(p -> {
-                    final PermissionDto dto = new PermissionDto();
-                    dto.setId(p.getId());
-                    dto.setLevel(p.getPermissionLevel());
-                    dto.setRole(p.getRole());
-                    planPermissions.add(dto);
-                });
-            }
-            List<PermissionDto> permissions = this.getPermissions(planPermissions, officePermissions);
-            if (permissions == null || permissions.isEmpty()) {
-                permissions = this.getPermissionReadWorkpack(planDto.getId(), idUser);
-            }
-            if (permissions.isEmpty()) {
-                it.remove();
-                continue;
-            }
-            planDto.setPermissions(permissions);
-        }
-        return plans;
+  public boolean hasPermissionPlanWorkpack(
+    final Long idPlan,
+    final Long idUser
+  ) {
+    if(this.hasPermissionPlan(idPlan, idUser)) {
+      return true;
     }
+    return this.hasPermissionReadWorkpack(idPlan, idUser);
+  }
 
-    private List<PermissionDto> getOfficePermissionDto(final Office office, final Person person) {
-        final List<CanAccessOffice> canAccessOffices = this.officePermissionService.findByOfficeAndPerson(office.getId(), person.getId());
-        return canAccessOffices.stream().map(c -> {
-            final PermissionDto permissionDto = new PermissionDto();
-            permissionDto.setRole(c.getRole());
-            permissionDto.setLevel(c.getPermissionLevel());
-            permissionDto.setId(c.getId());
-            return permissionDto;
-        }).collect(Collectors.toList());
-    }
+  public boolean hasPermissionPlan(
+    final Long idPlan,
+    final Long idUser
+  ) {
+    return this.planPermissionRepository.hasPermissionPlan(idPlan, idUser);
+  }
 
-    private List<PermissionDto> getPermissions(
-            final List<PermissionDto> planPermissions,
-            final List<PermissionDto> officePermissions
-    ) {
-        if (planPermissions != null && planPermissions.stream().anyMatch(c -> PermissionLevelEnum.EDIT.equals(c.getLevel()))) {
-            return planPermissions;
-        }
-        if (officePermissions.stream().anyMatch(c -> PermissionLevelEnum.EDIT.equals(c.getLevel()))) {
-            return officePermissions;
-        }
-        return CollectionUtils.isEmpty(planPermissions) ? officePermissions : planPermissions;
-    }
+  public Plan findNotLinkedBelongsTo(final Long id) {
+    return this.planRepository.findPlanWithNotLinkedBelongsToRelationship(id)
+      .orElseThrow(() -> new NegocioException(PLAN_NOT_FOUND));
+  }
 
-    private List<PermissionDto> getPermissionReadWorkpack(final Long idPlan, final Long idUser) {
-        final List<PermissionDto> permissions = new ArrayList<>();
-        if (this.hasPermissionReadWorkpack(idPlan, idUser)) {
-            final PermissionDto dto = new PermissionDto();
-            dto.setId(0L);
-            dto.setLevel(PermissionLevelEnum.READ);
-            dto.setRole("user");
-            permissions.add(dto);
-        }
-        return permissions;
-    }
+  public boolean hasLinkWithWorkpack(
+    final Long idWorkpack,
+    final Long idPlan
+  ) {
+    final List<BelongsTo> belongsTos = this.planRepository.hasLinkWithWorkpack(idWorkpack, idPlan);
+    return Optional.ofNullable(belongsTos)
+      .map(relation -> relation.stream().anyMatch(BelongsTo::getLinked))
+      .orElse(false);
+  }
 
-    private boolean hasPermissionReadWorkpack(final Long idPlan, final Long idUser) {
-        return this.planPermissionRepository.hasWorkpackPermission(idPlan, idUser);
-    }
-
-    public boolean hasPermissionPlanWorkpack(final Long idPlan, final Long idUser) {
-        if (this.hasPermissionPlan(idPlan, idUser)) {
-            return true;
-        }
-        return this.hasPermissionReadWorkpack(idPlan, idUser);
-    }
-
-    public boolean hasPermissionPlan(final Long idPlan, final Long idUser) {
-        return this.planPermissionRepository.hasPermissionPlan(idPlan, idUser);
-    }
-
-    public Plan findNotLinkedBelongsTo(final Long id) {
-        return this.planRepository.findPlanWithNotLinkedBelongsToRelationship(id)
-                .orElseThrow(() -> new NegocioException(PLAN_NOT_FOUND));
-    }
-
-    public boolean hasLinkWithWorkpack(final Long idWorkpack, final Long idPlan) {
-        final List<BelongsTo> belongsTos = this.planRepository.hasLinkWithWorkpack(idWorkpack, idPlan);
-        return Optional.ofNullable(belongsTos)
-                .map(relation -> relation.stream().anyMatch(BelongsTo::getLinked))
-                .orElse(false);
-    }
 }
 

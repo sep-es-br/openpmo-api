@@ -1,50 +1,56 @@
 package br.gov.es.openpmo.dto.workpack;
 
 import br.gov.es.openpmo.enumerator.MilestoneStatus;
+import br.gov.es.openpmo.model.workpacks.Workpack;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDate;
 
 public class MilestoneDetailDto extends WorkpackDetailDto {
 
-    private MilestoneStatus milestoneStatus;
+  private MilestoneStatus milestoneStatus;
 
-    private LocalDate milestoneDate;
+  private LocalDate milestoneDate;
 
-    @JsonFormat(pattern = "dd/MM/yyyy")
-    private LocalDate expirationDate;
+  @JsonFormat(pattern = "dd/MM/yyyy")
+  private LocalDate expirationDate;
 
-    private boolean isWithinAWeek;
+  private boolean isWithinAWeek;
 
-    public MilestoneStatus getMilestoneStatus() {
-        return this.milestoneStatus;
-    }
+  public static MilestoneDetailDto of(final Workpack workpack) {
+    return (MilestoneDetailDto) WorkpackDetailDto.of(workpack, MilestoneDetailDto::new);
+  }
 
-    public void setMilestoneStatus(final MilestoneStatus milestoneStatus) {
-        this.milestoneStatus = milestoneStatus;
-    }
+  public MilestoneStatus getMilestoneStatus() {
+    return this.milestoneStatus;
+  }
 
-    public LocalDate getExpirationDate() {
-        return this.expirationDate;
-    }
+  public void setMilestoneStatus(final MilestoneStatus milestoneStatus) {
+    this.milestoneStatus = milestoneStatus;
+  }
 
-    public void setExpirationDate(final LocalDate expirationDate) {
-        this.expirationDate = expirationDate;
-    }
+  public LocalDate getExpirationDate() {
+    return this.expirationDate;
+  }
 
-    public boolean isWithinAWeek() {
-        return this.isWithinAWeek;
-    }
+  public void setExpirationDate(final LocalDate expirationDate) {
+    this.expirationDate = expirationDate;
+  }
 
-    public void setWithinAWeek(final boolean withinAWeek) {
-        this.isWithinAWeek = withinAWeek;
-    }
+  public boolean isWithinAWeek() {
+    return this.isWithinAWeek;
+  }
 
-    public LocalDate getMilestoneDate() {
-        return milestoneDate;
-    }
+  public void setWithinAWeek(final boolean withinAWeek) {
+    this.isWithinAWeek = withinAWeek;
+  }
 
-    public void setMilestoneDate(LocalDate milestoneDate) {
-        this.milestoneDate = milestoneDate;
-    }
+  public LocalDate getMilestoneDate() {
+    return this.milestoneDate;
+  }
+
+  public void setMilestoneDate(final LocalDate milestoneDate) {
+    this.milestoneDate = milestoneDate;
+  }
+
 }

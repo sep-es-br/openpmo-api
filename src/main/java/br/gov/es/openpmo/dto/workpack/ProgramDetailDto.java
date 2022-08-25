@@ -1,7 +1,6 @@
 package br.gov.es.openpmo.dto.workpack;
 
 import br.gov.es.openpmo.dto.costaccount.CostAccountDto;
-import br.gov.es.openpmo.dto.workpackmodel.details.ProgramModelDetailDto;
 import br.gov.es.openpmo.dto.workpackshared.WorkpackSharedDto;
 import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.relations.IsSharedWith;
@@ -17,28 +16,7 @@ import java.util.stream.Collectors;
 public class ProgramDetailDto extends WorkpackDetailDto {
 
   public static ProgramDetailDto of(final Workpack workpack) {
-    final ProgramDetailDto programDetailDto = new ProgramDetailDto();
-    programDetailDto.setId(workpack.getId());
-//    Optional.ofNullable(getPlan(workpack)).map(PlanDto::of).ifPresent(programDetailDto::setPlan);
-    Optional.ofNullable(workpack.getWorkpackModelInstance()).map(ProgramModelDetailDto::of).ifPresent(programDetailDto::setModel);
-    programDetailDto.setProperties(getProperties(workpack));
-    programDetailDto.setPermissions(new ArrayList<>());
-    //TODO programDetailDto.setModelLinked(?);
-    programDetailDto.setLinked(null);
-    //TODO programDetailDto.setLinkedModel(?);
-    programDetailDto.setCancelable(workpack.isCancelable());
-    programDetailDto.setCanceled(workpack.isCanceled());
-    programDetailDto.setCanBeDeleted(workpack.isDeleted());
-    //TODO programDetailDto.setHasActiveBaseline(?);
-    //TODO programDetailDto.setPendingBaseline(?);
-    //TODO programDetailDto.setCancelPropose(?);
-    //TODO programDetailDto.setHasScheduleSectionActive(?);
-    //TODO programDetailDto.setActiveBaselineName(?);
-    programDetailDto.setEndManagementDate(workpack.getEndManagementDate());
-    programDetailDto.setReason(workpack.getReason());
-    programDetailDto.setCompleted(workpack.getCompleted());
-    //TODO programDetailDto.setDashboard(?);
-    return programDetailDto;
+    return (ProgramDetailDto) WorkpackDetailDto.of(workpack, ProgramDetailDto::new);
   }
 
   private static List<WorkpackSharedDto> getSharedWith(final Workpack workpack) {

@@ -1,12 +1,14 @@
 package br.gov.es.openpmo.dto.menu;
 
 import br.gov.es.openpmo.dto.permission.PermissionDto;
+import br.gov.es.openpmo.model.workpacks.Workpack;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 public class WorkpackMenuDto {
+
   private Long id;
   private Long idPlan;
   private String name;
@@ -14,6 +16,38 @@ public class WorkpackMenuDto {
   private List<PermissionDto> permissions;
   private Long idWorkpackModelLinked;
   private Set<WorkpackMenuDto> children = new HashSet<>(0);
+
+  public WorkpackMenuDto(
+    final Long id,
+    final Long idPlan,
+    final String name,
+    final List<PermissionDto> permissions,
+    final String fontIcon,
+    final Long idWorkpackModelLinked
+  ) {
+    this.id = id;
+    this.idPlan = idPlan;
+    this.name = name;
+    this.permissions = permissions;
+    this.fontIcon = fontIcon;
+    this.idWorkpackModelLinked = idWorkpackModelLinked;
+  }
+
+  public WorkpackMenuDto() {}
+
+  public static WorkpackMenuDto of(
+    final Workpack workpack,
+    final Long idPlan
+  ) {
+    return new WorkpackMenuDto(
+      workpack.getId(),
+      idPlan,
+      workpack.getName(),
+      null,
+      workpack.getIcon(),
+      null
+    );
+  }
 
   public Long getId() {
     return this.id;
@@ -70,4 +104,5 @@ public class WorkpackMenuDto {
   public void setIdWorkpackModelLinked(final Long idWorkpackModelLinked) {
     this.idWorkpackModelLinked = idWorkpackModelLinked;
   }
+
 }

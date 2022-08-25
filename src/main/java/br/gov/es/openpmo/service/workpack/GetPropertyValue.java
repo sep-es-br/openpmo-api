@@ -7,7 +7,7 @@ import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 
 import static br.gov.es.openpmo.service.workpack.GetPropertyByModel.getPropertyByModel;
-import static br.gov.es.openpmo.utils.PropertyModelInstanceType.*;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.*;
 
 public final class GetPropertyValue {
 
