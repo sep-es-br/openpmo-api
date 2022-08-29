@@ -15,7 +15,7 @@ public class NumberDto extends PropertyDto {
         this.value = value;
     }
 
-    public static PropertyDto of(final Property property) {
+    public static NumberDto of(final Property property) {
         final NumberDto numberDto = new NumberDto();
         numberDto.setId(property.getId());
         numberDto.setIdPropertyModel(property.getPropertyModelId());

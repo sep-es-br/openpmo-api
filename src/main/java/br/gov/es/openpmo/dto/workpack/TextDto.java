@@ -15,7 +15,7 @@ public class TextDto extends PropertyDto {
         this.value = value;
     }
 
-    public static PropertyDto of(final Property property) {
+    public static TextDto of(final Property property) {
         final TextDto textDto = new TextDto();
         textDto.setId(property.getId());
         textDto.setIdPropertyModel(property.getPropertyModelId());

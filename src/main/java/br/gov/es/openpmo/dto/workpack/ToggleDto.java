@@ -15,7 +15,7 @@ public class ToggleDto extends PropertyDto {
         this.value = value;
     }
 
-    public static PropertyDto of(final Property property) {
+    public static ToggleDto of(final Property property) {
         final ToggleDto toggleDto = new ToggleDto();
         toggleDto.setId(property.getId());
         toggleDto.setIdPropertyModel(property.getPropertyModelId());

@@ -12,7 +12,7 @@ public class OrganizationSelectionDto extends PropertyDto {
 
   private Set<Long> selectedValues;
 
-  public static PropertyDto of(final Property property) {
+  public static OrganizationSelectionDto of(final Property property) {
     final OrganizationSelectionDto organizationSelectionDto = new OrganizationSelectionDto();
     organizationSelectionDto.setId(property.getId());
     organizationSelectionDto.setIdPropertyModel(property.getPropertyModelId());

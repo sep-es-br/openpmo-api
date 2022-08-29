@@ -23,7 +23,6 @@ import javax.validation.Valid;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Api
 @RestController
@@ -37,7 +36,8 @@ public class CostAccountController {
 
   @Autowired
   public CostAccountController(
-    final CostAccountService costAccountService, final WorkpackService workpackService,
+    final CostAccountService costAccountService,
+    final WorkpackService workpackService,
     final ModelMapper modelMapper
   ) {
     this.costAccountService = costAccountService;
@@ -51,32 +51,19 @@ public class CostAccountController {
     @RequestParam(required = false) final Long idFilter
   ) {
     final List<CostAccountDto> costs = this.costAccountService.findAllByIdWorkpack(
-        idWorkpack,
-        idFilter
-      )
-      .stream()
-      .map(this::mapToDto)
-      .collect(Collectors.toList());
+      idWorkpack,
+      idFilter
+    );
     if(costs.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
     return ResponseEntity.ok(ResponseBaseItens.of(costs));
   }
 
-  private CostAccountDto mapToDto(final CostAccount costAccount) {
-    final CostAccountDto dto = this.modelMapper.map(costAccount, CostAccountDto.class);
-    if(costAccount.getWorkpack() != null) {
-      dto.setIdWorkpack(costAccount.getWorkpackId());
-    }
-    if(!CollectionUtils.isEmpty(costAccount.getProperties())) {
-      dto.setProperties(this.costAccountService.getPropertiesDto(costAccount.getProperties(), dto));
-    }
-    return dto;
-  }
-
   @GetMapping("/workpack")
   public ResponseEntity<ResponseBase<CostDto>> getCostsByWorkpack(
-    @RequestParam(value = "id", required = false) final Long id, @RequestParam("id-workpack") final Long idWorkpack
+    @RequestParam(value = "id", required = false) final Long id,
+    @RequestParam("id-workpack") final Long idWorkpack
   ) {
     final CostDto costDto = this.costAccountService.getCost(id, idWorkpack);
     if(costDto == null) {
@@ -85,18 +72,10 @@ public class CostAccountController {
     return ResponseEntity.ok(ResponseBase.of(costDto));
   }
 
-  @GetMapping("{id}")
+  @GetMapping("/{id}")
   public ResponseEntity<ResponseBase<CostAccountDto>> findById(@PathVariable final Long id) {
-    final CostAccount costAccount = this.costAccountService.findById(id);
-    final CostAccountDto costAccountDto = this.modelMapper.map(costAccount, CostAccountDto.class);
-    if(!CollectionUtils.isEmpty(costAccount.getProperties())) {
-      costAccountDto.setProperties(
-        this.costAccountService.getPropertiesDto(costAccount.getProperties(), costAccountDto));
-    }
-    if(costAccount.getWorkpack() != null) {
-      costAccountDto.setIdWorkpack(costAccount.getWorkpack().getId());
-    }
-    return ResponseEntity.ok(ResponseBase.of(costAccountDto));
+    final CostAccountDto response = this.costAccountService.findByIdAsDto(id);
+    return ResponseEntity.ok(ResponseBase.of(response));
   }
 
   @PostMapping
@@ -138,12 +117,10 @@ public class CostAccountController {
   ) {
     final CostAccount costAccount = this.getCostAccount(costAccountUpdateDto);
     this.costAccountService.save(costAccount);
-    final ResponseBase<EntityDto> entity = new ResponseBase<EntityDto>().setData(
-      new EntityDto(costAccount.getId())).setSuccess(true);
-    return ResponseEntity.status(200).body(entity);
+    return ResponseEntity.ok(ResponseBase.of(EntityDto.of(costAccount)));
   }
 
-  @DeleteMapping("{id}")
+  @DeleteMapping("/{id}")
   public ResponseEntity<Void> delete(@PathVariable final Long id) {
     final CostAccount costAccount = this.costAccountService.findById(id);
     this.costAccountService.delete(costAccount);

@@ -15,7 +15,7 @@ public class SelectionDto extends PropertyDto {
         this.value = value;
     }
 
-    public static PropertyDto of(final Property property) {
+    public static SelectionDto of(final Property property) {
         final SelectionDto selectionDto = new SelectionDto();
         selectionDto.setId(property.getId());
         selectionDto.setIdPropertyModel(property.getPropertyModelId());

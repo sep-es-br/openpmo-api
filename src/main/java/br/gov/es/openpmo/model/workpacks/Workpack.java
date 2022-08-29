@@ -554,4 +554,9 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
     return !ObjectUtils.isEmpty(this.endManagementDate);
   }
 
+  @Transient
+  public boolean hasInstance() {
+    return this.getWorkpackModelInstance() != null;
+  }
+
 }

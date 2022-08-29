@@ -17,7 +17,7 @@ public class CurrencyDto extends PropertyDto {
         this.value = value;
     }
 
-    public static PropertyDto of(final Property property) {
+    public static CurrencyDto of(final Property property) {
         final CurrencyDto currencyDto = new CurrencyDto();
         currencyDto.setId(property.getId());
         currencyDto.setIdPropertyModel(property.getPropertyModelId());

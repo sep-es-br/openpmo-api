@@ -9,7 +9,11 @@ import br.gov.es.openpmo.service.journals.JournalCreator;
 import org.apache.http.Consts;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.*;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
@@ -24,7 +28,11 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -62,7 +70,10 @@ public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
 
   private List<PublicAgentResponse> allPublicAgentResponses;
 
-  public AcessoCidadaoApiImpl(final Logger logger, final JournalCreator journalCreator) {
+  public AcessoCidadaoApiImpl(
+    final Logger logger,
+    final JournalCreator journalCreator
+  ) {
     this.logger = logger;
     this.journalCreator = journalCreator;
   }
@@ -71,8 +82,11 @@ public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
     return !sigla.isEmpty();
   }
 
-  private String getSigla(final OperationalOrganizationResponse org, final String organizationGuid) {
-    if (org.getGuid().equalsIgnoreCase(organizationGuid)) {
+  private String getSigla(
+    final OperationalOrganizationResponse org,
+    final String organizationGuid
+  ) {
+    if(org.getGuid().equalsIgnoreCase(organizationGuid)) {
       return org.getAbbreviation();
     }
 
@@ -89,21 +103,25 @@ public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
     return this.getList(
       "/api/organizacoes/organograma-operacional",
       (json, list) -> json.forEach(element -> {
-        if (element instanceof JSONObject) {
+        if(element instanceof JSONObject) {
           final JSONObject obj = (JSONObject) element;
           list.add(new OperationalOrganizationResponse(obj));
         }
       }),
-      idPerson);
+      idPerson
+    );
   }
 
   @Override
   @Cacheable("publicAgentRoles")
-  public List<PublicAgentRoleResponse> findRoles(final String guid, final Long idPerson) {
+  public List<PublicAgentRoleResponse> findRoles(
+    final String guid,
+    final Long idPerson
+  ) {
     return this.getList(
       "/api/agentepublico/" + guid + "/papeis",
       (json, list) -> json.forEach(element -> {
-        if (element instanceof JSONObject) {
+        if(element instanceof JSONObject) {
           final JSONObject obj = (JSONObject) element;
           list.add(new PublicAgentRoleResponse(obj));
         }
@@ -112,11 +130,98 @@ public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
     );
   }
 
-  private <T> List<T> getList(final String url, final BiConsumer<? super JSONArray, ? super List<T>> mapper, final Long idPerson) {
+  @Override
+  @Cacheable("publicAgents")
+  public List<PublicAgentResponse> findAllPublicAgents(final Long idPerson) {
+    if(this.isPublicAgentsAlreadyInMemory()) {
+      return Collections.unmodifiableList(this.allPublicAgentResponses);
+    }
+
+    final List<PublicAgentResponse> agentsResponse = this.findOperationalOrganization("GOVES", idPerson)
+      .map(organizationResponse -> this.getList(idPerson, organizationResponse))
+      .orElseGet(ArrayList::new);
+    return agentsResponse;
+  }
+
+  @Override
+  @Cacheable("agentEmail")
+  public Optional<PublicAgentEmailResponse> findAgentEmail(
+    final String sub,
+    final Long idPerson
+  ) {
+    return Optional.ofNullable(
+      this.getEntity(
+        "/api/cidadao/" + sub + "/email",
+        json -> {
+          final String email = json.optString("email");
+          if(email == null) {
+            return null;
+          }
+          return new PublicAgentEmailResponse(json);
+        },
+        idPerson
+      )
+    );
+  }
+
+  @Override
+  @Cacheable("publicAgentSub")
+  public Optional<PublicAgentResponse> findPublicAgentBySub(
+    final String sub,
+    final Long idPerson
+  ) {
+    return Optional.ofNullable(
+      this.getEntity(
+        "/api/agentepublico/" + sub,
+        PublicAgentResponse::new,
+        idPerson
+      )
+    );
+  }
+
+  @Override
+  public Optional<String> findSubByCpf(
+    final String cpf,
+    final Long idPerson
+  ) {
+    return Optional.ofNullable(this.getSub(
+      "/api/cidadao/" + cpf + "/pesquisaSub",
+      idPerson
+    ));
+  }
+
+  @Override
+  @Cacheable("organization")
+  public String getWorkLocation(
+    final String organizationGuid,
+    final Long idPerson
+  ) {
+    return this.findAllOperationalOrganizations(idPerson).stream()
+      .map(org -> this.getSigla(org, organizationGuid))
+      .filter(AcessoCidadaoApiImpl::notEmpty)
+      .findFirst()
+      .orElse("");
+  }
+
+  @Override
+  public void load(final Long idPerson) {
+    this.allPublicAgentResponses = this.findAllPublicAgents(idPerson);
+  }
+
+  @Override
+  public void unload() {
+    this.allPublicAgentResponses = null;
+  }
+
+  private <T> List<T> getList(
+    final String url,
+    final BiConsumer<? super JSONArray, ? super List<T>> mapper,
+    final Long idPerson
+  ) {
     final List<T> data = new ArrayList<>();
     final String token = this.fetchClientToken(idPerson);
 
-    if (token == null) {
+    if(token == null) {
       return data;
     }
 
@@ -126,13 +231,14 @@ public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
     final HttpUriRequest get = new HttpGet(uri);
     get.addHeader(AUTHORIZATION, BEARER + token);
 
-    try (CloseableHttpClient httpClient = HttpClients.createDefault();
-         CloseableHttpResponse response = httpClient.execute(get)) {
-      if (response.getStatusLine().getStatusCode() == HTTP_OK) {
+    try(final CloseableHttpClient httpClient = HttpClients.createDefault();
+        final CloseableHttpResponse response = httpClient.execute(get)) {
+      if(response.getStatusLine().getStatusCode() == HTTP_OK) {
         final JSONArray json = new JSONArray(EntityUtils.toString(response.getEntity()));
         mapper.accept(json, data);
       }
-    } catch (final IOException e) {
+    }
+    catch(final IOException e) {
       this.journalCreator.failure(idPerson);
       e.printStackTrace();
     }
@@ -158,14 +264,15 @@ public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
 
     postRequest.setEntity(new UrlEncodedFormEntity(urlParameters, Consts.UTF_8));
 
-    try (CloseableHttpClient httpClient = HttpClients.createDefault();
-         CloseableHttpResponse response = httpClient.execute(postRequest)) {
-      if (response.getStatusLine().getStatusCode() == HTTP_OK) {
+    try(final CloseableHttpClient httpClient = HttpClients.createDefault();
+        final CloseableHttpResponse response = httpClient.execute(postRequest)) {
+      if(response.getStatusLine().getStatusCode() == HTTP_OK) {
         final JSONObject result = new JSONObject(EntityUtils.toString(response.getEntity()));
         this.logger.info("Token received successfully");
         return result.getString("access_token");
       }
-    } catch (final IOException e) {
+    }
+    catch(final IOException e) {
       this.journalCreator.failure(idPerson);
       e.printStackTrace();
       throw new NegocioException(FAILED_FETCH_TOKEN_ACESSO_CIDADAO);
@@ -173,38 +280,25 @@ public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
     return null;
   }
 
-  @Override
-  @Cacheable("agentEmail")
-  public Optional<PublicAgentEmailResponse> findAgentEmail(final String sub, final Long idPerson) {
-    return Optional.ofNullable(
-      this.getEntity(
-        "/api/cidadao/" + sub + "/email",
-        json -> {
-          final String email = json.optString("email");
-          if (email == null) {
-            return null;
-          }
-          return new PublicAgentEmailResponse(json);
-        },
-        idPerson
-      )
-    );
-  }
-
-  private <T> T getEntity(final String url, final Function<? super JSONObject, T> mapper, final Long idPerson) {
+  private <T> T getEntity(
+    final String url,
+    final Function<? super JSONObject, T> mapper,
+    final Long idPerson
+  ) {
     final String token = this.fetchClientToken(idPerson);
-    if (token != null) {
+    if(token != null) {
       final String uri = this.acessocidadaoUriWebApi.concat(url);
       this.logger.info("Executing GET in {}", uri);
       final HttpUriRequest get = new HttpGet(uri);
       get.addHeader(AUTHORIZATION, BEARER + token);
-      try (CloseableHttpClient httpClient = HttpClients.createDefault();
-           CloseableHttpResponse response = httpClient.execute(get)) {
-        if (response.getStatusLine().getStatusCode() == HTTP_OK) {
+      try(final CloseableHttpClient httpClient = HttpClients.createDefault();
+          final CloseableHttpResponse response = httpClient.execute(get)) {
+        if(response.getStatusLine().getStatusCode() == HTTP_OK) {
           final JSONObject json = new JSONObject(EntityUtils.toString(response.getEntity()));
           return mapper.apply(json);
         }
-      } catch (final IOException e) {
+      }
+      catch(final IOException e) {
         this.journalCreator.failure(idPerson);
         e.printStackTrace();
       }
@@ -212,39 +306,23 @@ public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
     return null;
   }
 
-  @Override
-  @Cacheable("publicAgentSub")
-  public Optional<PublicAgentResponse> findPublicAgentBySub(final String sub, final Long idPerson) {
-    return Optional.ofNullable(
-      this.getEntity(
-        "/api/agentepublico/" + sub,
-        PublicAgentResponse::new,
-        idPerson
-      )
-    );
-  }
-
-  @Override
-  public Optional<String> findSubByCpf(final String cpf, Long idPerson) {
-    return Optional.ofNullable(this.getSub(
-      "/api/cidadao/" + cpf + "/pesquisaSub",
-      idPerson
-    ));
-  }
-
-  private String getSub(final String url, final Long idPerson) {
+  private String getSub(
+    final String url,
+    final Long idPerson
+  ) {
     final String token = this.fetchClientToken(idPerson);
-    if (token != null) {
+    if(token != null) {
       final String uri = this.acessocidadaoUriWebApi.concat(url);
       final HttpUriRequest put = new HttpPut(uri);
       put.addHeader(AUTHORIZATION, BEARER + token);
-      try (CloseableHttpClient httpClient = HttpClients.createDefault();
-           CloseableHttpResponse response = httpClient.execute(put)) {
-        if (response.getStatusLine().getStatusCode() == HTTP_OK) {
+      try(final CloseableHttpClient httpClient = HttpClients.createDefault();
+          final CloseableHttpResponse response = httpClient.execute(put)) {
+        if(response.getStatusLine().getStatusCode() == HTTP_OK) {
           final JSONObject json = new JSONObject(EntityUtils.toString(response.getEntity()));
           return json.getString("sub");
         }
-      } catch (final IOException e) {
+      }
+      catch(final IOException e) {
         this.journalCreator.failure(idPerson);
         e.printStackTrace();
       }
@@ -252,38 +330,14 @@ public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
     return null;
   }
 
-  @Override
-  @Cacheable("organization")
-  public String getWorkLocation(final String organizationGuid, final Long idPerson) {
-    return this.findAllOperationalOrganizations(idPerson).stream()
-      .map(org -> this.getSigla(org, organizationGuid))
-      .filter(AcessoCidadaoApiImpl::notEmpty)
-      .findFirst()
-      .orElse("");
-  }
-
-  @Override
-  public void load(final Long idPerson) {
-    this.allPublicAgentResponses = this.findAllPublicAgents(idPerson);
-  }
-
-  @Override
-  @Cacheable("publicAgents")
-  public List<PublicAgentResponse> findAllPublicAgents(final Long idPerson) {
-    if (this.isPublicAgentsAlreadyInMemory()) {
-      return Collections.unmodifiableList(this.allPublicAgentResponses);
-    }
-
-    return this.findOperationalOrganization("GOVES", idPerson)
-      .map(organizationResponse -> getList(idPerson, organizationResponse))
-      .orElseGet(ArrayList::new);
-  }
-
-  private List<PublicAgentResponse> getList(Long idPerson, OperationalOrganizationResponse organizationResponse) {
+  private List<PublicAgentResponse> getList(
+    final Long idPerson,
+    final OperationalOrganizationResponse organizationResponse
+  ) {
     return this.getList(
       "/api/conjunto/" + organizationResponse.getGuid() + "/agentesPublicos",
       (json, list) -> json.forEach(element -> {
-        if (element instanceof JSONObject) {
+        if(element instanceof JSONObject) {
           final JSONObject obj = (JSONObject) element;
           list.add(new PublicAgentResponse(obj));
         }
@@ -296,15 +350,13 @@ public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
     return this.allPublicAgentResponses != null;
   }
 
-  private Optional<OperationalOrganizationResponse> findOperationalOrganization(final String guid, final Long idPerson) {
+  private Optional<OperationalOrganizationResponse> findOperationalOrganization(
+    final String guid,
+    final Long idPerson
+  ) {
     return this.findAllOperationalOrganizations(idPerson).stream()
       .filter(org -> org.getAbbreviation().equalsIgnoreCase(guid))
       .findFirst();
-  }
-
-  @Override
-  public void unload() {
-    this.allPublicAgentResponses = null;
   }
 
 }

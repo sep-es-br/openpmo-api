@@ -103,10 +103,14 @@ public class OfficePermissionService {
     final Long idPerson
   ) {
     final List<RoleResource> roles = this.roleService.getRolesByKey(idPerson, key);
-    final List<OfficePermissionDto> allPermissionsOfOffice = new ArrayList<>();
+
     final Office office = this.officeService.findById(idOffice);
+
     final List<Person> listPerson = this.personService.personInCanAccessOffice(idOffice);
+
     final List<CanAccessOffice> listOfficesPermission = this.listOfficesPermissions(office, key, idFilter);
+
+    final List<OfficePermissionDto> allPermissionsOfOffice = new ArrayList<>();
     for(final Person person : listPerson) {
       final OfficePermissionDto officePermissionItem = new OfficePermissionDto();
       final List<CanAccessOffice> permissionsFilteredByPerson = listOfficesPermission.stream()
@@ -117,6 +121,7 @@ public class OfficePermissionService {
       this.fillPermissions(officePermissionItem, permissionsFilteredByPerson);
       allPermissionsOfOffice.add(officePermissionItem);
     }
+
     if(key != null) {
       return allPermissionsOfOffice.stream().filter(permission -> {
         if(permission.getPerson().getKey() == null) {
@@ -319,12 +324,11 @@ public class OfficePermissionService {
     final String key,
     final Long idPerson
   ) {
-    final List<RoleResource> roles = this.roleService.getRolesByKey(idPerson, key);
-
     final OfficePermissionDto officePermissionDto = new OfficePermissionDto();
     final Person person = this.personService.findPersonByKey(key);
     final List<CanAccessOffice> permissions = this.findByOfficeAndPerson(idOffice, person.getId());
 
+    final List<RoleResource> roles = this.roleService.getRolesByKey(idPerson, key);
     this.fillPersonDto(idOffice, person, officePermissionDto, roles);
     this.fillPermissions(officePermissionDto, permissions);
     this.fillPersonRoles(officePermissionDto, person.getId());

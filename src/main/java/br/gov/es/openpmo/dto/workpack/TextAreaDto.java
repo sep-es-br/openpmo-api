@@ -15,7 +15,7 @@ public class TextAreaDto extends PropertyDto {
         this.value = value;
     }
 
-    public static PropertyDto of(final Property property) {
+    public static TextAreaDto of(final Property property) {
         final TextAreaDto textAreaDto = new TextAreaDto();
         textAreaDto.setId(property.getId());
         textAreaDto.setIdPropertyModel(property.getPropertyModelId());

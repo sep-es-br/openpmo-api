@@ -18,14 +18,14 @@ public class UnitSelectionDto extends PropertyDto {
         this.selectedValue = selectedValue;
     }
 
-    public static PropertyDto of(final Property property) {
+    public static UnitSelectionDto of(final Property property) {
         final UnitSelectionDto unitSelectionDto = new UnitSelectionDto();
         unitSelectionDto.setId(property.getId());
         unitSelectionDto.setIdPropertyModel(property.getPropertyModelId());
         unitSelectionDto.setSelectedValue(Optional.of((UnitSelection) property)
-                .map(UnitSelection::getValue)
-                .map(UnitMeasure::getId)
-                .orElse(null));
+                                            .map(UnitSelection::getValue)
+                                            .map(UnitMeasure::getId)
+                                            .orElse(null));
         return unitSelectionDto;
     }
 }

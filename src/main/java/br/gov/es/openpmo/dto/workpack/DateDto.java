@@ -17,7 +17,7 @@ public class DateDto extends PropertyDto {
         this.value = value;
     }
 
-    public static PropertyDto of(final Property property) {
+    public static DateDto of(final Property property) {
         final DateDto dateDto = new DateDto();
         dateDto.setId(property.getId());
         dateDto.setIdPropertyModel(property.getPropertyModelId());

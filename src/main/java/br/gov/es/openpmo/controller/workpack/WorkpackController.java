@@ -10,6 +10,7 @@ import br.gov.es.openpmo.dto.workpack.EndDeliverableManagementRequest;
 import br.gov.es.openpmo.dto.workpack.ResponseBaseWorkpack;
 import br.gov.es.openpmo.dto.workpack.ResponseBaseWorkpackDetail;
 import br.gov.es.openpmo.dto.workpack.WorkpackDetailDto;
+import br.gov.es.openpmo.dto.workpack.WorkpackNameResponse;
 import br.gov.es.openpmo.dto.workpack.WorkpackParamDto;
 import br.gov.es.openpmo.model.journals.JournalAction;
 import br.gov.es.openpmo.model.workpacks.Milestone;
@@ -20,12 +21,11 @@ import br.gov.es.openpmo.service.completed.ICompleteDeliverableService;
 import br.gov.es.openpmo.service.completed.IDeliverableEndManagementService;
 import br.gov.es.openpmo.service.dashboards.v2.IDashboardService;
 import br.gov.es.openpmo.service.journals.JournalCreator;
+import br.gov.es.openpmo.service.workpack.GetWorkpackName;
 import br.gov.es.openpmo.service.workpack.WorkpackPermissionVerifier;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
 import br.gov.es.openpmo.utils.ResponseHandler;
 import io.swagger.annotations.Api;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,12 +46,12 @@ import static br.gov.es.openpmo.service.workpack.PropertyComparator.compare;
 public class WorkpackController {
 
   private static final String SUCESSO = "Success";
-  private static final Logger LOGGER = LoggerFactory.getLogger(WorkpackController.class);
   private final ResponseHandler responseHandler;
   private final WorkpackService workpackService;
   private final TokenService tokenService;
   private final WorkpackPermissionVerifier workpackPermissionVerifier;
   private final JournalCreator journalCreator;
+  private final GetWorkpackName getWorkpackName;
   private final ICompleteDeliverableService completeDeliverableService;
   private final IDeliverableEndManagementService deliverableEndManagementService;
   private final IDashboardService dashboardService;
@@ -64,6 +64,7 @@ public class WorkpackController {
     final TokenService tokenService,
     final WorkpackPermissionVerifier workpackPermissionVerifier,
     final JournalCreator journalCreator,
+    final GetWorkpackName getWorkpackName,
     final ICompleteDeliverableService completeDeliverableService,
     final IDeliverableEndManagementService deliverableEndManagementService,
     final IDashboardService dashboardService
@@ -73,6 +74,7 @@ public class WorkpackController {
     this.tokenService = tokenService;
     this.workpackPermissionVerifier = workpackPermissionVerifier;
     this.journalCreator = journalCreator;
+    this.getWorkpackName = getWorkpackName;
     this.completeDeliverableService = completeDeliverableService;
     this.deliverableEndManagementService = deliverableEndManagementService;
     this.dashboardService = dashboardService;
@@ -219,16 +221,15 @@ public class WorkpackController {
     @RequestParam(value = "id-plan", required = false) final Long idPlan,
     @RequestHeader(name = "Authorization") final String authorization
   ) {
-    final Long idUser = this.tokenService.getUserId(authorization);
-
+    final Long idPerson = this.tokenService.getUserId(authorization);
     final Workpack workpack = this.workpackService.findByIdWithParent(idWorkpack);
 
     final WorkpackDetailDto workpackDetailDto = this.workpackService.getWorkpackDetailDto(workpack, idPlan);
 
     final List<PermissionDto> permissions = this.workpackPermissionVerifier.fetchPermissions(
-      idUser,
+      idPerson,
       idPlan,
-      workpackDetailDto.getId()
+      idWorkpack
     );
 
     workpackDetailDto.setPermissions(permissions);
@@ -313,5 +314,12 @@ public class WorkpackController {
     this.deliverableEndManagementService.apply(idDeliverable, request);
     return this.responseHandler.success();
   }
+
+  @GetMapping("/{idWorkpack}/name")
+  public ResponseEntity<WorkpackNameResponse> getWorkpackName(@PathVariable final Long idWorkpack) {
+    final WorkpackNameResponse response = this.getWorkpackName.execute(idWorkpack);
+    return ResponseEntity.ok(response);
+  }
+
 
 }

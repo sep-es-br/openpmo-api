@@ -13,17 +13,26 @@ import br.gov.es.openpmo.repository.PlanPermissionRepository;
 import br.gov.es.openpmo.repository.WorkpackPermissionRepository;
 import br.gov.es.openpmo.scheduler.updateroles.HasRole;
 import br.gov.es.openpmo.service.actors.PersonService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ObjectUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class RoleService {
 
-  public static final String CITIZEN = "citizen";
+  private static final String CITIZEN = "citizen";
+  private static final Logger LOGGER = LoggerFactory.getLogger(RoleService.class);
 
   private final AcessoCidadaoApi acessoCidadaoApi;
 
@@ -37,11 +46,11 @@ public class RoleService {
 
   @Autowired
   public RoleService(
-    AcessoCidadaoApi acessoCidadaoApi,
-    PersonService personService,
-    OfficePermissionRepository officePermissionRepository,
-    PlanPermissionRepository planPermissionRepository,
-    WorkpackPermissionRepository workpackPermissionRepository
+    final AcessoCidadaoApi acessoCidadaoApi,
+    final PersonService personService,
+    final OfficePermissionRepository officePermissionRepository,
+    final PlanPermissionRepository planPermissionRepository,
+    final WorkpackPermissionRepository workpackPermissionRepository
   ) {
     this.acessoCidadaoApi = acessoCidadaoApi;
     this.personService = personService;
@@ -50,100 +59,151 @@ public class RoleService {
     this.workpackPermissionRepository = workpackPermissionRepository;
   }
 
-  @Transactional
-  public List<RoleResource> getRolesByKey(Long idPerson, String key) {
-    return getRolesOfPublicAgent(idPerson, getPublicAgentResponseByKey(idPerson, key));
-  }
-
-  @Transactional
-  public List<RoleResource> getRolesBySub(Long idPerson, String sub) {
-    return getRolesOfPublicAgent(idPerson, getPublicAgentResponseBySub(idPerson, sub));
-  }
-
-  private List<RoleResource> getRolesOfPublicAgent(Long idPerson, PublicAgentResponse publicAgent) {
-    if (publicAgent == null) {
-      return Collections.emptyList();
-    }
-    List<RoleResource> roles = getRolesSorted(idPerson, publicAgent);
-    Person person = getPersonByEmail(publicAgent);
-    if (person != null) {
-      removeOldPermissions(roles, person);
-    }
-    return roles;
-  }
-
-  private void removeOldPermissions(Collection<RoleResource> roles, Person person) {
-    removeOldOfficePermissions(roles, person);
-    removeOldPlanPermissions(roles, person);
-    removeOldWorkpackPermissions(roles, person);
-  }
-
-  private List<RoleResource> getRolesSorted(Long idPerson, PublicAgentResponse publicAgent) {
-    List<RoleResource> roles = new ArrayList<>();
-    for (PublicAgentRoleResponse roleResponse : getRolesByKey(publicAgent, idPerson)) {
-      roles.add(this.getRoleResource(roleResponse, idPerson));
-    }
-    roles.sort(this::sortByRoleIgnoreCase);
-    return roles;
-  }
-
-  private int sortByRoleIgnoreCase(HasRole first, HasRole second) {
+  private static int sortByRoleIgnoreCase(
+    final HasRole first,
+    final HasRole second
+  ) {
     return first.getRole().compareToIgnoreCase(second.getRole());
   }
 
-  private void removeOldWorkpackPermissions(Collection<RoleResource> roles, Person person) {
-    Set<CanAccessWorkpack> removable = findWorkpackPermissions(person).stream()
-      .filter(permission -> canRemovePermission(permission, roles))
+  @Transactional
+  public List<RoleResource> getRolesByKey(
+    final Long idPerson,
+    final String key
+  ) {
+    return this.getRolesOfPublicAgent(idPerson, key);
+  }
+
+  @Transactional
+  public List<RoleResource> getRolesBySub(
+    final Long idPerson,
+    final String sub
+  ) {
+    return this.getRolesOfPublicAgent(idPerson, this.getPublicAgentResponseBySub(idPerson, sub).getSub());
+  }
+
+  private List<RoleResource> getRolesOfPublicAgent(
+    final Long idPerson,
+    final String key
+  ) {
+    final List<RoleResource> roles = this.getRolesSorted(idPerson, key);
+    final Person person = this.getPersonByEmail(key);
+    if(person != null) {
+      this.removeOldPermissions(roles, person);
+    }
+    return roles;
+  }
+
+  private void removeOldPermissions(
+    final Collection<RoleResource> roles,
+    final Person person
+  ) {
+    this.removeOldOfficePermissions(roles, person);
+    this.removeOldPlanPermissions(roles, person);
+    this.removeOldWorkpackPermissions(roles, person);
+  }
+
+  private List<RoleResource> getRolesSorted(
+    final Long idPerson,
+    final String key
+  ) {
+    final List<RoleResource> roles = new ArrayList<>();
+    final List<PublicAgentRoleResponse> agentRoles = this.getAgentRolesResponseByKey(idPerson, key);
+
+    if(ObjectUtils.isEmpty(agentRoles)) return Collections.emptyList();
+
+    for(final PublicAgentRoleResponse roleResponse : agentRoles) {
+      roles.add(this.getRoleResource(roleResponse, idPerson));
+    }
+    roles.sort(RoleService::sortByRoleIgnoreCase);
+    return roles;
+  }
+
+  private void removeOldWorkpackPermissions(
+    final Collection<? extends RoleResource> roles,
+    final Person person
+  ) {
+    final Set<CanAccessWorkpack> removable = this.findWorkpackPermissions(person).stream()
+      .filter(permission -> this.canRemovePermission(permission, roles))
       .collect(Collectors.toSet());
     this.workpackPermissionRepository.deleteAll(removable);
   }
 
-  private void removeOldPlanPermissions(Collection<RoleResource> roles, Person person) {
-    Set<CanAccessPlan> removable = findPlanPermissions(person).stream()
-      .filter(permission -> canRemovePermission(permission, roles))
+  private void removeOldPlanPermissions(
+    final Collection<? extends RoleResource> roles,
+    final Person person
+  ) {
+    final Set<CanAccessPlan> removable = this.findPlanPermissions(person).stream()
+      .filter(permission -> this.canRemovePermission(permission, roles))
       .collect(Collectors.toSet());
     this.planPermissionRepository.deleteAll(removable);
   }
 
-  private void removeOldOfficePermissions(Collection<RoleResource> roles, Person person) {
-    Set<CanAccessOffice> collect = findOfficePermissions(person).stream()
-      .filter(permission -> canRemovePermission(permission, roles))
+  private void removeOldOfficePermissions(
+    final Collection<? extends RoleResource> roles,
+    final Person person
+  ) {
+    final Set<CanAccessOffice> collect = this.findOfficePermissions(person).stream()
+      .filter(permission -> this.canRemovePermission(permission, roles))
       .collect(Collectors.toSet());
     this.officePermissionRepository.deleteAll(collect);
   }
 
-  private boolean canRemovePermission(HasRole permission, Collection<? extends HasRole> roles) {
-    return roles.stream().noneMatch(role -> isRoleEquals(role.getRole(), permission.getRole()));
+  private boolean canRemovePermission(
+    final HasRole permission,
+    final Collection<? extends HasRole> roles
+  ) {
+    return roles.stream().noneMatch(role -> this.isRoleEquals(role.getRole(), permission.getRole()));
   }
 
-  private boolean isRoleEquals(String role1, String role2) {
+  private boolean isRoleEquals(
+    final String role1,
+    final String role2
+  ) {
     return Objects.equals(role1, role2) || Objects.equals(role2, CITIZEN);
   }
 
-  private List<PublicAgentRoleResponse> getRolesByKey(PublicAgentResponse publicAgent, Long idPerson) {
-    return this.acessoCidadaoApi.findRoles(publicAgent.getSub(), idPerson);
+  private List<PublicAgentRoleResponse> getAgentRolesResponseByKey(
+    final Long idPerson,
+    final String key
+  ) {
+    return this.acessoCidadaoApi.findRoles(key, idPerson);
   }
 
-  private PublicAgentResponse getPublicAgentResponseByKey(Long idPerson, String key) {
-    return this.acessoCidadaoApi.findAllPublicAgents(idPerson).stream()
+  private PublicAgentResponse getPublicAgentResponseByKey(
+    final Long idPerson,
+    final String key
+  ) {
+    return this.acessoCidadaoApi.findAllPublicAgents(idPerson)
+      .parallelStream()
       .filter(publicAgent -> Objects.equals(publicAgent.getSub(), key))
-      .findFirst().orElse(null);
+      .findFirst()
+      .orElse(null);
   }
 
-  private PublicAgentResponse getPublicAgentResponseBySub(Long idPerson, String sub) {
+  private PublicAgentResponse getPublicAgentResponseBySub(
+    final Long idPerson,
+    final String sub
+  ) {
     return this.acessoCidadaoApi.findPublicAgentBySub(sub, idPerson).orElse(null);
   }
 
-  private RoleResource getRoleResource(final PublicAgentRoleResponse publicAgentRole, final Long idPerson) {
-    return new RoleResource(publicAgentRole.getName(), getWorkLocation(publicAgentRole, idPerson));
+  private RoleResource getRoleResource(
+    final PublicAgentRoleResponse publicAgentRole,
+    final Long idPerson
+  ) {
+    return new RoleResource(publicAgentRole.getName(), this.getWorkLocation(publicAgentRole, idPerson));
   }
 
-  private String getWorkLocation(PublicAgentRoleResponse publicAgentRole, Long idPerson) {
+  private String getWorkLocation(
+    final PublicAgentRoleResponse publicAgentRole,
+    final Long idPerson
+  ) {
     return this.acessoCidadaoApi.getWorkLocation(publicAgentRole.getOrganizationGuid(), idPerson);
   }
 
-  private Person getPersonByEmail(PublicAgentResponse publicAgent) {
-    return this.personService.findByKey(publicAgent.getSub()).orElse(null);
+  private Person getPersonByEmail(final String key) {
+    return this.personService.findByKey(key).orElse(null);
   }
 
   private Set<CanAccessOffice> findOfficePermissions(final Person person) {

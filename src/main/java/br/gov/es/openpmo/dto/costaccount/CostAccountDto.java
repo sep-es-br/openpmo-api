@@ -11,65 +11,92 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class CostAccountDto {
-    private Long id;
-    private List<? extends PropertyDto> properties;
-    private List<PropertyModelDto> models;
-    private Long idWorkpack;
 
-    public Long getId() {
-        return this.id;
-    }
+  private Long id;
+  private List<? extends PropertyDto> properties;
+  private List<PropertyModelDto> models;
+  private Long idWorkpack;
+  private String workpackModelName;
+  private String workpackModelFullName;
 
-    public void setId(final Long id) {
-        this.id = id;
-    }
+  public static CostAccountDto of(final CostAccount costAccount) {
+    final CostAccountDto instance = new CostAccountDto();
+    instance.setId(costAccount.getId());
+    instance.setIdWorkpack(costAccount.getWorkpackId());
+    instance.setProperties(getPropertiesFrom(costAccount));
+    instance.setModels(getModelsFrom(costAccount));
+    return instance;
+  }
 
-    public List<? extends PropertyDto> getProperties() {
-        return this.properties;
-    }
+  public static CostAccountDto withoutRelations(final CostAccount costAccount) {
+    final CostAccountDto instance = new CostAccountDto();
+    instance.setId(costAccount.getId());
+    instance.setIdWorkpack(costAccount.getWorkpackId());
+    return instance;
+  }
 
-    public void setProperties(final List<? extends PropertyDto> properties) {
-        this.properties = properties;
-    }
+  private static List<PropertyModelDto> getModelsFrom(final CostAccount costAccount) {
+    return Optional.ofNullable(costAccount)
+      .map(ca -> ca.getPropertyModels()
+        .stream()
+        .map(PropertyModelInstanceType::map)
+        .collect(Collectors.toList())
+      )
+      .orElse(new ArrayList<>());
+  }
 
-    public List<PropertyModelDto> getModels() {
-        return this.models;
-    }
+  private static List<PropertyDto> getPropertiesFrom(final CostAccount costAccount) {
+    return Optional.of(costAccount.getProperties())
+      .map(ca -> ca.stream().map(PropertyDto::of).collect(Collectors.toList()))
+      .orElse(new ArrayList<>());
+  }
 
-    public void setModels(final List<PropertyModelDto> models) {
-        this.models = models;
-    }
+  public Long getId() {
+    return this.id;
+  }
 
-    public Long getIdWorkpack() {
-        return this.idWorkpack;
-    }
+  public void setId(final Long id) {
+    this.id = id;
+  }
 
-    public void setIdWorkpack(final Long idWorkpack) {
-        this.idWorkpack = idWorkpack;
-    }
+  public List<? extends PropertyDto> getProperties() {
+    return this.properties;
+  }
 
-    public static CostAccountDto of(final CostAccount costAccount) {
-        final CostAccountDto instance = new CostAccountDto();
-        instance.setId(costAccount.getId());
-        instance.setIdWorkpack(costAccount.getWorkpackId());
-        instance.setProperties(getPropertiesFrom(costAccount));
-        instance.setModels(getModelsFrom(costAccount));
-        return instance;
-    }
+  public void setProperties(final List<? extends PropertyDto> properties) {
+    this.properties = properties;
+  }
 
-    private static List<PropertyModelDto> getModelsFrom(final CostAccount costAccount) {
-        return Optional.ofNullable(costAccount)
-                .map(ca -> ca.getPropertyModels()
-                  .stream()
-                  .map(PropertyModelInstanceType::map)
-                        .collect(Collectors.toList())
-                )
-                .orElse(new ArrayList<>());
-    }
+  public List<PropertyModelDto> getModels() {
+    return this.models;
+  }
 
-    private static List<PropertyDto> getPropertiesFrom(final CostAccount costAccount) {
-        return Optional.of(costAccount.getProperties())
-                .map(ca -> ca.stream().map(PropertyDto::of).collect(Collectors.toList()))
-                .orElse(new ArrayList<>());
-    }
+  public void setModels(final List<PropertyModelDto> models) {
+    this.models = models;
+  }
+
+  public Long getIdWorkpack() {
+    return this.idWorkpack;
+  }
+
+  public void setIdWorkpack(final Long idWorkpack) {
+    this.idWorkpack = idWorkpack;
+  }
+
+  public String getWorkpackModelName() {
+    return this.workpackModelName;
+  }
+
+  public void setWorkpackModelName(final String workpackModelName) {
+    this.workpackModelName = workpackModelName;
+  }
+
+  public String getWorkpackModelFullName() {
+    return this.workpackModelFullName;
+  }
+
+  public void setWorkpackModelFullName(final String workpackModelFullName) {
+    this.workpackModelFullName = workpackModelFullName;
+  }
+
 }

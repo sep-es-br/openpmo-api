@@ -1,7 +1,6 @@
 package br.gov.es.openpmo.service.ui;
 
 import br.gov.es.openpmo.dto.menu.BreadcrumbDto;
-import br.gov.es.openpmo.dto.workpack.WorkpackDetailDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackName;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.office.Office;
@@ -67,7 +66,10 @@ public class WorkpackBreadcrumbService {
     );
   }
 
-  private static boolean isInPlan(final Workpack workpack, final Long idPlan) {
+  private static boolean isInPlan(
+    final Workpack workpack,
+    final Long idPlan
+  ) {
     return workpack.getBelongsTo().stream().anyMatch(belongsTo -> belongsTo.getIdPlan().equals(idPlan));
   }
 
@@ -80,7 +82,10 @@ public class WorkpackBreadcrumbService {
     );
   }
 
-  public Collection<BreadcrumbDto> buildWorkpackHierarchyAsBreadcrumb(final Long idWorkpack, final Long idPlan) {
+  public Collection<BreadcrumbDto> buildWorkpackHierarchyAsBreadcrumb(
+    final Long idWorkpack,
+    final Long idPlan
+  ) {
     final Workpack workpack = this.findWorkpackAndParentsById(idWorkpack);
 
     final Optional<BelongsTo> maybeBelongsTo = this.maybeFindBelongsToBy(idPlan, workpack);
@@ -94,13 +99,19 @@ public class WorkpackBreadcrumbService {
     }
   }
 
-  private Optional<BelongsTo> maybeFindBelongsToBy(final Long idPlan, final Workpack workpack) {
+  private Optional<BelongsTo> maybeFindBelongsToBy(
+    final Long idPlan,
+    final Workpack workpack
+  ) {
     return workpack.getBelongsTo().stream()
       .filter(belongsTo -> idPlan.equals(belongsTo.getIdPlan()))
       .findFirst();
   }
 
-  private Collection<BreadcrumbDto> maybeBelongsToInParent(final Long idWorkpack, final Long idPlan) {
+  private Collection<BreadcrumbDto> maybeBelongsToInParent(
+    final Long idWorkpack,
+    final Long idPlan
+  ) {
     final List<BreadcrumbDto> breadcrumbs = new ArrayList<>(0);
     final IsLinkedTo linkedToRelation = this.findWorkpackParentLinked(idWorkpack, idPlan);
     final Workpack workpackParentLinked = linkedToRelation.getWorkpack();
@@ -186,14 +197,21 @@ public class WorkpackBreadcrumbService {
     return workpackBreadcrumbItem;
   }
 
-  private IsLinkedTo findWorkpackParentLinked(final Long idWorkpack, final Long idPlan) {
+  private IsLinkedTo findWorkpackParentLinked(
+    final Long idWorkpack,
+    final Long idPlan
+  ) {
     return this.breadcrumbWorkpackLinkedHelper.findWorkpackParentLinked(
       idWorkpack,
       idPlan
     ).orElseThrow(() -> new NegocioException(WORKPACK_LINKED_NOT_FOUND));
   }
 
-  private Collection<BreadcrumbDto> workpackBelongsToPlan(final Long idWorkpack, final Long idPlan, final boolean linked) {
+  private Collection<BreadcrumbDto> workpackBelongsToPlan(
+    final Long idWorkpack,
+    final Long idPlan,
+    final boolean linked
+  ) {
     final List<BreadcrumbDto> breadcrumbs = new ArrayList<>(0);
     final Workpack workpack = this.findWorkpackAndParentsById(idWorkpack);
     if(linked) {
@@ -221,7 +239,10 @@ public class WorkpackBreadcrumbService {
     return this.breadcrumbWorkpackHelper.findByIdWithParent(idWorkpack);
   }
 
-  private void addOfficeAndPlanBreadcrumbDto(final Long idPlan, final Collection<? super BreadcrumbDto> breadcrumbs) {
+  private void addOfficeAndPlanBreadcrumbDto(
+    final Long idPlan,
+    final Collection<? super BreadcrumbDto> breadcrumbs
+  ) {
     final Plan plan = this.findPlanById(idPlan);
     final Office office = plan.getOffice();
     final BreadcrumbDto breadcrumbPlanDto = fromPlan(plan);
@@ -234,7 +255,10 @@ public class WorkpackBreadcrumbService {
     return this.breadcrumbPlanHelper.findById(idPlan);
   }
 
-  private BreadcrumbDto fromLinkedWorkpack(final Workpack workpack, final Long idPlan) {
+  private BreadcrumbDto fromLinkedWorkpack(
+    final Workpack workpack,
+    final Long idPlan
+  ) {
     final BreadcrumbDto breadcrumbDto = fromEmptyWokpack(workpack);
 
     final WorkpackName nameAndFullname = this.breadcrumbWorkpackHelper.findWorkpackNameAndFullname(
@@ -253,17 +277,11 @@ public class WorkpackBreadcrumbService {
     return breadcrumbDto;
   }
 
-  private WorkpackDetailDto getWorkpackDetailDto(final Workpack workpack) {
-    return this.breadcrumbWorkpackHelper.getWorkpackDetailDto(workpack);
-  }
-
   private BreadcrumbDto fromWorkpack(final Workpack workpack) {
     final BreadcrumbDto breadcrumbDto = fromEmptyWokpack(workpack);
     breadcrumbDto.setType(workpack.getClass().getSimpleName());
 
-    final WorkpackDetailDto detailDto = this.getWorkpackDetailDto(workpack);
-
-    if(detailDto.getModel() != null && detailDto.getModel().getProperties() != null) {
+    if(workpack.hasInstance() && workpack.hasPropertyModel()) {
 
       final WorkpackName nameAndFullname = this.breadcrumbWorkpackHelper.findWorkpackNameAndFullname(
         workpack.getId()
@@ -271,13 +289,17 @@ public class WorkpackBreadcrumbService {
 
       breadcrumbDto.setName(nameAndFullname.getName());
       breadcrumbDto.setFullName(nameAndFullname.getFullName());
-      breadcrumbDto.setModelName(detailDto.getModel().getModelName());
+      breadcrumbDto.setModelName(workpack.getWorkpackModelInstance().getModelName());
     }
     return breadcrumbDto;
   }
 
 
-  private void addWorkpackToBreadcrumb(final Workpack workpack, final List<BreadcrumbDto> breadcrumbs, final Long idPlan) {
+  private void addWorkpackToBreadcrumb(
+    final Workpack workpack,
+    final List<BreadcrumbDto> breadcrumbs,
+    final Long idPlan
+  ) {
     final boolean isInSamePlan = isInPlan(workpack, idPlan);
     if(isInSamePlan) {
       breadcrumbs.add(this.fromWorkpack(workpack));
@@ -296,4 +318,5 @@ public class WorkpackBreadcrumbService {
       this.addWorkpackToBreadcrumb(workpack, breadcrumbs, idPlan);
     }
   }
+
 }

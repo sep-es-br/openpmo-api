@@ -99,23 +99,23 @@ public class WorkpackPermissionVerifier {
     final List<PermissionDto> permissionsPlan = this.fetchPlanPermissions(idPlan, idUser);
     final Set<Workpack> workpacks = this.getAllWorkpacksUsingPlan(idPlan);
     final Workpack workpack = this.getWorkpack(workpacks, idWorkpack);
-    if(workpack != null) {
-      if(hasStakeholderSessionActive(workpack)) {
-        List<PermissionDto> permissions = ifCanAccessWorkpackThenFetchPermissions(workpack, idUser);
-        permissions = this.fetchPermissionsFromWorkpack(workpack, idUser, idPlan);
-        final List<PermissionDto> permissionDtos = this.fetchPermissions(
-          permissions,
-          permissionsPlan,
-          permissionsOffice,
-          idWorkpack,
-          idPlan
-        );
-        return permissionDtos;
-      }
-      final List<PermissionDto> permissions = this.fetchPermissionsFromWorkpack(workpack, idUser, idPlan);
-      return this.fetchPermissions(permissions, permissionsPlan, permissionsOffice, idWorkpack, idPlan);
+
+    if(workpack == null) return null;
+
+    if(hasStakeholderSessionActive(workpack)) {
+      List<PermissionDto> permissions = ifCanAccessWorkpackThenFetchPermissions(workpack, idUser);
+      permissions = this.fetchPermissionsFromWorkpack(workpack, idUser, idPlan);
+      final List<PermissionDto> permissionDtos = this.fetchPermissions(
+        permissions,
+        permissionsPlan,
+        permissionsOffice,
+        idWorkpack,
+        idPlan
+      );
+      return permissionDtos;
     }
-    return null;
+    final List<PermissionDto> permissions = this.fetchPermissionsFromWorkpack(workpack, idUser, idPlan);
+    return this.fetchPermissions(permissions, permissionsPlan, permissionsOffice, idWorkpack, idPlan);
   }
 
   private Set<Workpack> getAllWorkpacksUsingPlan(final Long idPlan) {

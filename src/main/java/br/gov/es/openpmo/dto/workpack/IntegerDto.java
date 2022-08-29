@@ -15,7 +15,7 @@ public class IntegerDto extends PropertyDto {
         this.value = value;
     }
 
-    public static PropertyDto of(final Property property) {
+    public static IntegerDto of(final Property property) {
         final IntegerDto integerDto = new IntegerDto();
         integerDto.setId(property.getId());
         integerDto.setIdPropertyModel(property.getPropertyModelId());

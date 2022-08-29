@@ -12,7 +12,7 @@ public class LocalitySelectionDto extends PropertyDto {
 
   private Set<Long> selectedValues;
 
-  public static PropertyDto of(final Property property) {
+  public static LocalitySelectionDto of(final Property property) {
     final LocalitySelectionDto localitySelectionDto = new LocalitySelectionDto();
     localitySelectionDto.setId(property.getId());
     localitySelectionDto.setIdPropertyModel(property.getPropertyModelId());
