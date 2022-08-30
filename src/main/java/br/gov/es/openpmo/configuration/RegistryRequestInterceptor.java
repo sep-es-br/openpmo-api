@@ -61,11 +61,11 @@ public class RegistryRequestInterceptor implements HandlerInterceptor {
       case "POST":
       case "PUT":
       case "PATCH":
-        handleRequestBody(request, uuid);
+//        handleRequestBody(request, uuid);
         break;
     }
 
-    return HandlerInterceptor.super.preHandle(request, response, handler);
+    return true;
   }
 
 

@@ -79,7 +79,7 @@ public class RoleService {
     final Long idPerson,
     final String sub
   ) {
-    return this.getRolesOfPublicAgent(idPerson, this.getPublicAgentResponseBySub(idPerson, sub).getSub());
+    return this.getRolesOfPublicAgent(idPerson, sub);
   }
 
   private List<RoleResource> getRolesOfPublicAgent(
