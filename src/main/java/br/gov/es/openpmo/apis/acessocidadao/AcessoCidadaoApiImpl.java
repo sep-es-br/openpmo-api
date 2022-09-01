@@ -113,7 +113,6 @@ public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
   }
 
   @Override
-  @Cacheable("publicAgentRoles")
   public List<PublicAgentRoleResponse> findRoles(
     final String guid,
     final Long idPerson
@@ -191,7 +190,6 @@ public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
   }
 
   @Override
-  @Cacheable("organization")
   public String getWorkLocation(
     final String organizationGuid,
     final Long idPerson
