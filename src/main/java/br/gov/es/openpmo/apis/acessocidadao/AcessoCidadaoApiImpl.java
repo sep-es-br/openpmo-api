@@ -190,6 +190,7 @@ public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
   }
 
   @Override
+  @Cacheable("organization")
   public String getWorkLocation(
     final String organizationGuid,
     final Long idPerson
