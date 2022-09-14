@@ -5,6 +5,7 @@ import br.gov.es.openpmo.dto.ResponseBaseItens;
 import br.gov.es.openpmo.dto.workpack.ResponseBaseWorkpackDetail;
 import br.gov.es.openpmo.dto.workpack.WorkpackDetailDto;
 import br.gov.es.openpmo.service.authentication.TokenService;
+import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.workpack.WorkpackLinkService;
 import br.gov.es.openpmo.service.workpack.WorkpackPermissionVerifier;
 import br.gov.es.openpmo.service.workpack.WorkpackSharedService;
@@ -34,18 +35,21 @@ public class WorkpackLinkController {
   private final WorkpackLinkService workpackLinkService;
   private final TokenService tokenService;
   private final WorkpackPermissionVerifier workpackPermissionVerifier;
+  private final ICanAccessService canAccessService;
 
   @Autowired
   public WorkpackLinkController(
     final WorkpackSharedService workpackSharedService,
     final WorkpackLinkService workpackLinkService,
     final TokenService tokenService,
-    final WorkpackPermissionVerifier workpackPermissionVerifier
+    final WorkpackPermissionVerifier workpackPermissionVerifier,
+    final ICanAccessService canAccessService
   ) {
     this.workpackSharedService = workpackSharedService;
     this.workpackLinkService = workpackLinkService;
     this.tokenService = tokenService;
     this.workpackPermissionVerifier = workpackPermissionVerifier;
+    this.canAccessService = canAccessService;
   }
 
   @GetMapping("/can-be-linked")
@@ -59,8 +63,10 @@ public class WorkpackLinkController {
     @PathVariable("id-workpack") final Long idWorkpack,
     @PathVariable("id-workpack-model") final Long idworkpackModel,
     @RequestParam("id-plan") final Long idPlan,
-    @RequestParam(value = "id-parent", required = false) final Long idParent
+    @RequestParam(value = "id-parent", required = false) final Long idParent,
+    @RequestHeader("Authorization") final String authorization
   ) {
+    this.canAccessService.ensureCanEditResource(idWorkpack, authorization);
     this.workpackLinkService.linkWorkpackToWorkpackModel(idWorkpack, idworkpackModel, idPlan, idParent);
     return ResponseEntity.ok(ResponseBaseItens.of(null));
   }
@@ -72,7 +78,7 @@ public class WorkpackLinkController {
     @RequestParam("id-plan") final Long idPlan
   ) {
     this.workpackLinkService.unlink(idWorkpack, idWorkpackModel, idPlan);
-    return ResponseEntity.ok(ResponseBaseItens.of(null));
+    return ResponseEntity.ok(ResponseBaseItens.empty());
   }
 
   @GetMapping("/linked/{id-workpack}")
@@ -82,6 +88,8 @@ public class WorkpackLinkController {
     @RequestParam("id-plan") final Long idPlan,
     @RequestHeader(name = "Authorization") final String authorization
   ) {
+    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
+
     final Long idUser = this.tokenService.getUserId(authorization);
 
     final WorkpackDetailDto response = this.workpackLinkService.getByIdWorkpack(

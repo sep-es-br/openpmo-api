@@ -7,6 +7,7 @@ public class ConsumesParamDto {
 
   private Long id;
   private BigDecimal actualCost;
+
   private BigDecimal plannedCost;
   @NotNull
   private Long idCostAccount;
@@ -42,4 +43,5 @@ public class ConsumesParamDto {
   public void setIdCostAccount(final Long idCostAccount) {
     this.idCostAccount = idCostAccount;
   }
+
 }

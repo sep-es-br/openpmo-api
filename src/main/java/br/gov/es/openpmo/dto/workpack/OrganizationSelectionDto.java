@@ -29,6 +29,16 @@ public class OrganizationSelectionDto extends PropertyDto {
       ).orElse(null);
   }
 
+  @Override
+  public String getType() {
+    return "OrganizationSelection";
+  }
+
+  @Override
+  public void setType(final String type) {
+    this.type = type;
+  }
+
   public Set<Long> getSelectedValues() {
     return this.selectedValues;
   }

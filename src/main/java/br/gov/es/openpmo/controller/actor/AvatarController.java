@@ -4,6 +4,7 @@ package br.gov.es.openpmo.controller.actor;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.file.AvatarDto;
 import br.gov.es.openpmo.service.actors.AvatarService;
+import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.UrlResource;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,10 +32,15 @@ import java.io.IOException;
 public class AvatarController {
 
   private final AvatarService service;
+  private final ICanAccessService canAccessService;
 
   @Autowired
-  public AvatarController(final AvatarService service) {
+  public AvatarController(
+    final AvatarService service,
+    final ICanAccessService canAccessService
+  ) {
     this.service = service;
+    this.canAccessService = canAccessService;
   }
 
   @GetMapping("/avatar/{idAvatar}/person")
@@ -50,50 +57,46 @@ public class AvatarController {
   @GetMapping("/persons/{idPerson}/avatar")
   public ResponseEntity<ResponseBase<AvatarDto>> findById(
     @PathVariable("idPerson") final Long idPerson,
-    final UriComponentsBuilder uriComponentsBuilder
+    final UriComponentsBuilder uriComponentsBuilder,
+    @RequestHeader("Authorization") final String authorization
   ) {
+    this.canAccessService.ensureCanAccessSelfResource(idPerson, authorization);
     final AvatarDto avatar = this.service.findById(idPerson, uriComponentsBuilder);
-
-    final ResponseBase<AvatarDto> response = new ResponseBase<AvatarDto>()
-      .setData(avatar)
-      .setSuccess(true);
-
-    return ResponseEntity.ok(response);
+    return ResponseEntity.ok(ResponseBase.of(avatar));
   }
 
   @PostMapping("/persons/{idPerson}/avatar")
   public ResponseEntity<ResponseBase<AvatarDto>> upload(
     @PathVariable final Long idPerson,
     @RequestParam final MultipartFile file,
+    @RequestHeader("Authorization") final String authorization,
     final UriComponentsBuilder uriComponentsBuilder
-  ) throws IOException {
-    final AvatarDto avatarDto = this.service.save(file, idPerson, uriComponentsBuilder);
-
-    final ResponseBase<AvatarDto> response = new ResponseBase<AvatarDto>()
-      .setData(avatarDto)
-      .setSuccess(true);
-
-    return ResponseEntity.status(HttpStatus.OK).body(response);
+  ) {
+    this.canAccessService.ensureCanAccessSelfResource(idPerson, authorization);
+    final AvatarDto avatarDto = this.service.create(file, idPerson, uriComponentsBuilder);
+    return ResponseEntity.ok(ResponseBase.of(avatarDto));
   }
 
   @PutMapping("/persons/{idPerson}/avatar")
   public ResponseEntity<ResponseBase<AvatarDto>> update(
     @PathVariable final Long idPerson,
     @RequestParam final MultipartFile file,
+    @RequestHeader("Authorization") final String authorization,
     final UriComponentsBuilder uriComponentsBuilder
-  ) throws IOException {
+  ) {
+    this.canAccessService.ensureCanAccessSelfResource(idPerson, authorization);
     final AvatarDto avatarDto = this.service.update(file, idPerson, uriComponentsBuilder);
-
-    final ResponseBase<AvatarDto> response = new ResponseBase<AvatarDto>()
-      .setData(avatarDto)
-      .setSuccess(true);
-
-    return ResponseEntity.status(HttpStatus.OK).body(response);
+    return ResponseEntity.ok(ResponseBase.of(avatarDto));
   }
 
   @DeleteMapping("/persons/{idPerson}/avatar")
-  public ResponseEntity<Void> delete(@PathVariable final Long idPerson) {
+  public ResponseEntity<Void> delete(
+    @PathVariable final Long idPerson,
+    @RequestHeader("Authorization") final String authorization
+  ) {
+    this.canAccessService.ensureCanAccessSelfResource(idPerson, authorization);
     this.service.deleteAvatarByIdPerson(idPerson);
     return ResponseEntity.status(HttpStatus.OK).build();
   }
+
 }

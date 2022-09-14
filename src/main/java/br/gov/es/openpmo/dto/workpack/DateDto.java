@@ -7,21 +7,33 @@ import java.time.LocalDateTime;
 
 public class DateDto extends PropertyDto {
 
-    private LocalDateTime value;
+  private String type = "Date";
+  private LocalDateTime value;
 
-    public LocalDateTime getValue() {
-        return this.value;
-    }
+  public static DateDto of(final Property property) {
+    final DateDto dateDto = new DateDto();
+    dateDto.setId(property.getId());
+    dateDto.setIdPropertyModel(property.getPropertyModelId());
+    dateDto.setValue(((Date) property).getValue());
+    return dateDto;
+  }
 
-    public void setValue(final LocalDateTime value) {
-        this.value = value;
-    }
+  public LocalDateTime getValue() {
+    return this.value;
+  }
 
-    public static DateDto of(final Property property) {
-        final DateDto dateDto = new DateDto();
-        dateDto.setId(property.getId());
-        dateDto.setIdPropertyModel(property.getPropertyModelId());
-        dateDto.setValue(((Date) property).getValue());
-        return dateDto;
-    }
+  public void setValue(final LocalDateTime value) {
+    this.value = value;
+  }
+
+  @Override
+  public String getType() {
+    return "Date";
+  }
+
+  @Override
+  public void setType(final String type) {
+    this.type = type;
+  }
+
 }

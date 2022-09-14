@@ -8,24 +8,35 @@ import java.util.Optional;
 
 public class UnitSelectionDto extends PropertyDto {
 
-    private Long selectedValue;
+  private Long selectedValue;
 
-    public Long getSelectedValue() {
-        return this.selectedValue;
-    }
+  public static UnitSelectionDto of(final Property property) {
+    final UnitSelectionDto unitSelectionDto = new UnitSelectionDto();
+    unitSelectionDto.setId(property.getId());
+    unitSelectionDto.setIdPropertyModel(property.getPropertyModelId());
+    unitSelectionDto.setSelectedValue(Optional.of((UnitSelection) property)
+                                        .map(UnitSelection::getValue)
+                                        .map(UnitMeasure::getId)
+                                        .orElse(null));
+    return unitSelectionDto;
+  }
 
-    public void setSelectedValue(final Long selectedValue) {
-        this.selectedValue = selectedValue;
-    }
+  public Long getSelectedValue() {
+    return this.selectedValue;
+  }
 
-    public static UnitSelectionDto of(final Property property) {
-        final UnitSelectionDto unitSelectionDto = new UnitSelectionDto();
-        unitSelectionDto.setId(property.getId());
-        unitSelectionDto.setIdPropertyModel(property.getPropertyModelId());
-        unitSelectionDto.setSelectedValue(Optional.of((UnitSelection) property)
-                                            .map(UnitSelection::getValue)
-                                            .map(UnitMeasure::getId)
-                                            .orElse(null));
-        return unitSelectionDto;
-    }
+  public void setSelectedValue(final Long selectedValue) {
+    this.selectedValue = selectedValue;
+  }
+
+  @Override
+  public String getType() {
+    return "UnitSelection";
+  }
+
+  @Override
+  public void setType(final String type) {
+    this.type = type;
+  }
+
 }

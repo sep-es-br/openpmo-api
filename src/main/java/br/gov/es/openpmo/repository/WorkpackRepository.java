@@ -501,4 +501,12 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   )
   Boolean hasScheduleSessionActive(Long idWorkpack);
 
+  @Query(
+    "MATCH (workpack:Workpack)-[:IS_INSTANCE_BY]->(workpackModel:WorkpackModel) " +
+    "WHERE id(workpackModel)=$idWorkpackModel " +
+    "RETURN workpack"
+  )
+  Set<Workpack> findWorkpacksByWorkpackModel(@Param("idWorkpackModel") Long idWorkpackModel);
+
+
 }

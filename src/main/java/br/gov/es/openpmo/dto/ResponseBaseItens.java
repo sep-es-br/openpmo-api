@@ -24,6 +24,10 @@ public class ResponseBaseItens<T> {
       .setMessage(ApplicationMessage.OPERATION_SUCCESS);
   }
 
+  public static ResponseBaseItens<Void> empty() {
+    return of(null);
+  }
+
   public String getMessage() {
     return this.message;
   }

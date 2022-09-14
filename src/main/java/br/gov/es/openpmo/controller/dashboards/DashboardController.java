@@ -23,57 +23,57 @@ import java.util.List;
 @RequestMapping("dashboards")
 public class DashboardController implements IDashboardController {
 
-    private final ResponseHandler responseHandler;
-    private final IDashboardBaselineService baselineService;
-    private final IDashboardIntervalService intervalService;
-    private final IDashboardService dashboardService;
-    private final IAsyncDashboardService asyncDashboardService;
+  private final ResponseHandler responseHandler;
+  private final IDashboardBaselineService baselineService;
+  private final IDashboardIntervalService intervalService;
+  private final IDashboardService dashboardService;
+  private final IAsyncDashboardService asyncDashboardService;
 
-    public DashboardController(
-            ResponseHandler responseHandler,
-            IDashboardBaselineService baselineService,
-            IDashboardService dashboardService,
-            IDashboardIntervalService intervalService,
-            IAsyncDashboardService asyncDashboardService
-    ) {
-        this.responseHandler = responseHandler;
-        this.baselineService = baselineService;
-        this.dashboardService = dashboardService;
-        this.intervalService = intervalService;
-        this.asyncDashboardService = asyncDashboardService;
-    }
+  public DashboardController(
+    final ResponseHandler responseHandler,
+    final IDashboardBaselineService baselineService,
+    final IDashboardService dashboardService,
+    final IDashboardIntervalService intervalService,
+    final IAsyncDashboardService asyncDashboardService
+  ) {
+    this.responseHandler = responseHandler;
+    this.baselineService = baselineService;
+    this.dashboardService = dashboardService;
+    this.intervalService = intervalService;
+    this.asyncDashboardService = asyncDashboardService;
+  }
 
-    @Override
-    public Response<List<DashboardBaselineResponse>> getBaselines(Long workpackId) {
-        final List<DashboardBaselineResponse> baselines = this.baselineService.getBaselines(workpackId);
-        return responseHandler.success(baselines);
-    }
+  @Override
+  public Response<List<DashboardBaselineResponse>> getBaselines(final Long workpackId) {
+    final List<DashboardBaselineResponse> baselines = this.baselineService.getBaselines(workpackId);
+    return this.responseHandler.success(baselines);
+  }
 
-    @Override
-    public Response<Interval> getInterval(Long workpackId) {
-        final Interval interval = this.intervalService.calculateFor(workpackId);
-        return this.responseHandler.success(interval);
-    }
+  @Override
+  public Response<Interval> getInterval(final Long workpackId) {
+    final Interval interval = this.intervalService.calculateFor(workpackId);
+    return this.responseHandler.success(interval);
+  }
 
-    @Override
-    public Response<DashboardResponse> getDashboard(
-            Boolean showHeader,
-            Long workpackId,
-            Long baselineId,
-            YearMonth yearMonth,
-            UriComponentsBuilder uriComponentsBuilder
-    ) {
-        final DashboardParameters parameters =
-                new DashboardParameters(showHeader, workpackId, baselineId, yearMonth, uriComponentsBuilder);
+  @Override
+  public Response<DashboardResponse> getDashboard(
+    final Boolean showHeader,
+    final Long workpackId,
+    final Long baselineId,
+    final YearMonth yearMonth,
+    final UriComponentsBuilder uriComponentsBuilder
+  ) {
+    final DashboardParameters parameters =
+      new DashboardParameters(showHeader, workpackId, baselineId, yearMonth, uriComponentsBuilder);
 
-        DashboardResponse response = this.dashboardService.build(parameters);
-        return this.responseHandler.success(response);
-    }
+    final DashboardResponse response = this.dashboardService.build(parameters);
+    return this.responseHandler.success(response);
+  }
 
-    @Override
-    public Response<Void> calculate(Long workpackId) {
-        this.asyncDashboardService.calculate(workpackId);
-        return this.responseHandler.success();
-    }
+  @Override
+  public Response<Void> calculate(final Long workpackId) {
+    this.asyncDashboardService.calculate(workpackId);
+    return this.responseHandler.success();
+  }
 
 }

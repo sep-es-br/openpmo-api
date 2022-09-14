@@ -206,115 +206,113 @@ public class CostAccountService {
     final Collection<? extends Property> properties,
     final CostAccountDto costAccountDto
   ) {
-    if(!CollectionUtils.isEmpty(properties)) {
-      costAccountDto.setModels(new ArrayList<>());
-      final List<PropertyDto> list = new ArrayList<>();
-      properties.forEach(property -> {
-        switch(property.getClass().getTypeName()) {
-          case TYPE_MODEL_NAME_INTEGER:
-            final IntegerDto integerDto = IntegerDto.of(property);
-            if(((Integer) property).getDriver() != null) {
-              integerDto.setIdPropertyModel(((Integer) property).getDriver().getId());
-              costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((Integer) property).getDriver()));
-            }
-            list.add(integerDto);
-            break;
-          case TYPE_MODEL_NAME_TEXT:
-            final TextDto textDto = TextDto.of(property);
-            if(((Text) property).getDriver() != null) {
-              textDto.setIdPropertyModel(((Text) property).getDriver().getId());
-              costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((Text) property).getDriver()));
-            }
-            list.add(textDto);
-            break;
-          case TYPE_MODEL_NAME_DATE:
-            final DateDto dateDto = DateDto.of(property);
-            if(((Date) property).getDriver() != null) {
-              dateDto.setIdPropertyModel(((Date) property).getDriver().getId());
-              costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((Date) property).getDriver()));
-            }
-            list.add(dateDto);
-            break;
-          case TYPE_MODEL_NAME_TOGGLE:
-            final ToggleDto toggleDto = ToggleDto.of(property);
-            if(((Toggle) property).getDriver() != null) {
-              toggleDto.setIdPropertyModel(((Toggle) property).getDriver().getId());
-              costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((Toggle) property).getDriver()));
-            }
-            list.add(toggleDto);
-            break;
-          case TYPE_MODEL_NAME_UNIT_SELECTION:
-            final UnitSelectionDto unitSelectionDto = UnitSelectionDto.of(property);
-            if(((UnitSelection) property).getDriver() != null) {
-              unitSelectionDto.setIdPropertyModel(((UnitSelection) property).getDriver().getId());
-              costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((UnitSelection) property).getDriver()));
-            }
-            if(((UnitSelection) property).getValue() != null) {
-              unitSelectionDto.setSelectedValue(((UnitSelection) property).getValue().getId());
-            }
-            list.add(unitSelectionDto);
-            break;
-          case TYPE_MODEL_NAME_SELECTION:
-            final SelectionDto selectionDto = SelectionDto.of(property);
-            if(((Selection) property).getDriver() != null) {
-              selectionDto.setIdPropertyModel(((Selection) property).getDriver().getId());
-              costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((Selection) property).getDriver()));
-            }
-            list.add(selectionDto);
-            break;
-          case TYPE_MODEL_NAME_TEXT_AREA:
-            final TextAreaDto textAreaDto = TextAreaDto.of(property);
-            if(((TextArea) property).getDriver() != null) {
-              textAreaDto.setIdPropertyModel(((TextArea) property).getDriver().getId());
-              costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((TextArea) property).getDriver()));
-            }
-            list.add(textAreaDto);
-            break;
-          case TYPE_MODEL_NAME_NUMBER:
-            final NumberDto numberDto = NumberDto.of(property);
-            if(((Number) property).getDriver() != null) {
-              numberDto.setIdPropertyModel(((Number) property).getDriver().getId());
-              costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((Number) property).getDriver()));
-            }
-            list.add(numberDto);
-            break;
-          case TYPE_MODEL_NAME_CURRENCY:
-            final CurrencyDto currencyDto = CurrencyDto.of(property);
-            if(((Currency) property).getDriver() != null) {
-              currencyDto.setIdPropertyModel(((Currency) property).getDriver().getId());
-              costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((Currency) property).getDriver()));
-            }
-            list.add(currencyDto);
-            break;
-          case TYPE_MODEL_NAME_LOCALITY_SELECTION:
-            final LocalitySelectionDto localitySelectionDto = LocalitySelectionDto.of(property);
-            if(((LocalitySelection) property).getDriver() != null) {
-              localitySelectionDto.setIdPropertyModel(((LocalitySelection) property).getDriver().getId());
-              costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((LocalitySelection) property).getDriver()));
-            }
-            if(((LocalitySelection) property).getValue() != null) {
-              localitySelectionDto.setSelectedValues(new HashSet<>());
-              ((LocalitySelection) property).getValue().forEach(o -> localitySelectionDto.getSelectedValues().add(o.getId()));
-            }
-            list.add(localitySelectionDto);
-            break;
-          case TYPE_MODEL_NAME_ORGANIZATION_SELECTION:
-            final OrganizationSelectionDto organizationSelectionDto = OrganizationSelectionDto.of(property);
-            if(((OrganizationSelection) property).getDriver() != null) {
-              organizationSelectionDto.setIdPropertyModel(((OrganizationSelection) property).getDriver().getId());
-              costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((OrganizationSelection) property).getDriver()));
-            }
-            if(((OrganizationSelection) property).getValue() != null) {
-              organizationSelectionDto.setSelectedValues(new HashSet<>());
-              ((OrganizationSelection) property).getValue().forEach(o -> organizationSelectionDto.getSelectedValues().add(o.getId()));
-            }
-            list.add(organizationSelectionDto);
-            break;
-        }
-      });
-      return list;
-    }
-    return null;
+    if(CollectionUtils.isEmpty(properties)) {return null;}
+    costAccountDto.setModels(new ArrayList<>());
+    final List<PropertyDto> list = new ArrayList<>();
+    properties.forEach(property -> {
+      switch(property.getClass().getTypeName()) {
+        case TYPE_MODEL_NAME_INTEGER:
+          final IntegerDto integerDto = IntegerDto.of(property);
+          if(((Integer) property).getDriver() != null) {
+            integerDto.setIdPropertyModel(((Integer) property).getDriver().getId());
+            costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((Integer) property).getDriver()));
+          }
+          list.add(integerDto);
+          break;
+        case TYPE_MODEL_NAME_TEXT:
+          final TextDto textDto = TextDto.of(property);
+          if(((Text) property).getDriver() != null) {
+            textDto.setIdPropertyModel(((Text) property).getDriver().getId());
+            costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((Text) property).getDriver()));
+          }
+          list.add(textDto);
+          break;
+        case TYPE_MODEL_NAME_DATE:
+          final DateDto dateDto = DateDto.of(property);
+          if(((Date) property).getDriver() != null) {
+            dateDto.setIdPropertyModel(((Date) property).getDriver().getId());
+            costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((Date) property).getDriver()));
+          }
+          list.add(dateDto);
+          break;
+        case TYPE_MODEL_NAME_TOGGLE:
+          final ToggleDto toggleDto = ToggleDto.of(property);
+          if(((Toggle) property).getDriver() != null) {
+            toggleDto.setIdPropertyModel(((Toggle) property).getDriver().getId());
+            costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((Toggle) property).getDriver()));
+          }
+          list.add(toggleDto);
+          break;
+        case TYPE_MODEL_NAME_UNIT_SELECTION:
+          final UnitSelectionDto unitSelectionDto = UnitSelectionDto.of(property);
+          if(((UnitSelection) property).getDriver() != null) {
+            unitSelectionDto.setIdPropertyModel(((UnitSelection) property).getDriver().getId());
+            costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((UnitSelection) property).getDriver()));
+          }
+          if(((UnitSelection) property).getValue() != null) {
+            unitSelectionDto.setSelectedValue(((UnitSelection) property).getValue().getId());
+          }
+          list.add(unitSelectionDto);
+          break;
+        case TYPE_MODEL_NAME_SELECTION:
+          final SelectionDto selectionDto = SelectionDto.of(property);
+          if(((Selection) property).getDriver() != null) {
+            selectionDto.setIdPropertyModel(((Selection) property).getDriver().getId());
+            costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((Selection) property).getDriver()));
+          }
+          list.add(selectionDto);
+          break;
+        case TYPE_MODEL_NAME_TEXT_AREA:
+          final TextAreaDto textAreaDto = TextAreaDto.of(property);
+          if(((TextArea) property).getDriver() != null) {
+            textAreaDto.setIdPropertyModel(((TextArea) property).getDriver().getId());
+            costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((TextArea) property).getDriver()));
+          }
+          list.add(textAreaDto);
+          break;
+        case TYPE_MODEL_NAME_NUMBER:
+          final NumberDto numberDto = NumberDto.of(property);
+          if(((Number) property).getDriver() != null) {
+            numberDto.setIdPropertyModel(((Number) property).getDriver().getId());
+            costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((Number) property).getDriver()));
+          }
+          list.add(numberDto);
+          break;
+        case TYPE_MODEL_NAME_CURRENCY:
+          final CurrencyDto currencyDto = CurrencyDto.of(property);
+          if(((Currency) property).getDriver() != null) {
+            currencyDto.setIdPropertyModel(((Currency) property).getDriver().getId());
+            costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((Currency) property).getDriver()));
+          }
+          list.add(currencyDto);
+          break;
+        case TYPE_MODEL_NAME_LOCALITY_SELECTION:
+          final LocalitySelectionDto localitySelectionDto = LocalitySelectionDto.of(property);
+          if(((LocalitySelection) property).getDriver() != null) {
+            localitySelectionDto.setIdPropertyModel(((LocalitySelection) property).getDriver().getId());
+            costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((LocalitySelection) property).getDriver()));
+          }
+          if(((LocalitySelection) property).getValue() != null) {
+            localitySelectionDto.setSelectedValues(new HashSet<>());
+            ((LocalitySelection) property).getValue().forEach(o -> localitySelectionDto.getSelectedValues().add(o.getId()));
+          }
+          list.add(localitySelectionDto);
+          break;
+        case TYPE_MODEL_NAME_ORGANIZATION_SELECTION:
+          final OrganizationSelectionDto organizationSelectionDto = OrganizationSelectionDto.of(property);
+          if(((OrganizationSelection) property).getDriver() != null) {
+            organizationSelectionDto.setIdPropertyModel(((OrganizationSelection) property).getDriver().getId());
+            costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((OrganizationSelection) property).getDriver()));
+          }
+          if(((OrganizationSelection) property).getValue() != null) {
+            organizationSelectionDto.setSelectedValues(new HashSet<>());
+            ((OrganizationSelection) property).getValue().forEach(o -> organizationSelectionDto.getSelectedValues().add(o.getId()));
+          }
+          list.add(organizationSelectionDto);
+          break;
+      }
+    });
+    return list;
   }
 
 }

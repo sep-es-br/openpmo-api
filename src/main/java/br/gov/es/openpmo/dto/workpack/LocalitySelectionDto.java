@@ -29,6 +29,16 @@ public class LocalitySelectionDto extends PropertyDto {
       ).orElse(null);
   }
 
+  @Override
+  public String getType() {
+    return "LocalitySelection";
+  }
+
+  @Override
+  public void setType(final String type) {
+    this.type = type;
+  }
+
   public Set<Long> getSelectedValues() {
     return this.selectedValues;
   }

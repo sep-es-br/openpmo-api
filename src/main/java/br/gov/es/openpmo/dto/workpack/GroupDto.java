@@ -29,6 +29,16 @@ public class GroupDto extends PropertyDto {
       .orElse(null);
   }
 
+  @Override
+  public String getType() {
+    return "Group";
+  }
+
+  @Override
+  public void setType(final String type) {
+    this.type = type;
+  }
+
   public List<? extends PropertyDto> getGroupedProperties() {
     return this.groupedProperties;
   }

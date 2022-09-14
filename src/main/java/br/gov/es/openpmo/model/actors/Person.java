@@ -9,6 +9,7 @@ import org.springframework.data.annotation.Transient;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -28,7 +29,7 @@ public class Person extends Actor {
 
   @Transient
   public Optional<IsAuthenticatedBy> findAuthenticationDataBy(final String serverName) {
-    if (this.authentications == null) return Optional.empty();
+    if(this.authentications == null) return Optional.empty();
     return this.authentications
       .stream()
       .filter(auth -> auth.getAuthService().getServer().equalsIgnoreCase(serverName))
@@ -37,7 +38,7 @@ public class Person extends Actor {
 
   @Transient
   public Optional<IsInContactBookOf> findContactInformationBy(final Long idOffice) {
-    if (this.authentications == null) return Optional.empty();
+    if(this.authentications == null) return Optional.empty();
     return this.isInContactBookOf
       .stream()
       .filter(contact -> contact.getOfficeId().equals(idOffice))
@@ -53,7 +54,7 @@ public class Person extends Actor {
   }
 
   public Set<IsAuthenticatedBy> getAuthentications() {
-    if (this.authentications == null) return new HashSet<>();
+    if(this.authentications == null) return new HashSet<>();
     return Collections.unmodifiableSet(this.authentications);
   }
 
@@ -62,7 +63,7 @@ public class Person extends Actor {
   }
 
   public Set<IsInContactBookOf> getIsInContactBookOf() {
-    if (this.isInContactBookOf == null) return new HashSet<>();
+    if(this.isInContactBookOf == null) return new HashSet<>();
     return Collections.unmodifiableSet(this.isInContactBookOf);
   }
 
@@ -96,6 +97,12 @@ public class Person extends Actor {
 
   private Set<IsInContactBookOf> getIsInContactBookOfOrEmptySet() {
     return Optional.ofNullable(this.isInContactBookOf).orElse(Collections.emptySet());
+  }
+
+
+  @Transient
+  public boolean hasAvatar() {
+    return !Objects.isNull(this.avatar);
   }
 
 }

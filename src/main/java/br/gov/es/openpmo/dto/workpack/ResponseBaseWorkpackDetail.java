@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.dto.workpack;
 
+import br.gov.es.openpmo.utils.ApplicationMessage;
 import io.swagger.annotations.ApiModelProperty;
 
 public class ResponseBaseWorkpackDetail {
@@ -10,6 +11,14 @@ public class ResponseBaseWorkpackDetail {
   private boolean success = true;
   @ApiModelProperty(position = 3)
   private WorkpackDetailDto data;
+
+
+  public static ResponseBaseWorkpackDetail of(final WorkpackDetailDto data) {
+    return new ResponseBaseWorkpackDetail()
+      .setData(data)
+      .setMessage(ApplicationMessage.OPERATION_SUCCESS)
+      .setSuccess(true);
+  }
 
   public String getMessage() {
     return this.message;
@@ -37,4 +46,5 @@ public class ResponseBaseWorkpackDetail {
     this.data = entidade;
     return this;
   }
+
 }

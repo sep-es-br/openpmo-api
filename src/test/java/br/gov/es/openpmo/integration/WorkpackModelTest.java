@@ -33,7 +33,8 @@ import java.util.Collections;
 import java.util.List;
 
 @Testcontainers
-@SpringBootTest class WorkpackModelTest extends BaseTest {
+@SpringBootTest
+class WorkpackModelTest extends BaseTest {
 
   @Autowired
   private WorkpackModelController workpackModelController;
@@ -51,7 +52,8 @@ import java.util.List;
   private Long idDomain;
   private Long idPlanModel;
 
-  @BeforeEach void loadOffice() {
+  @BeforeEach
+  void loadOffice() {
     if(this.idOffice == null) {
       final OfficeStoreDto office = new OfficeStoreDto();
       office.setName("Office Test WorkpackModel");
@@ -88,7 +90,8 @@ import java.util.List;
     }
   }
 
-  @Test void shouldCreateWorkpackModel() {
+  @Test
+  void shouldCreateWorkpackModel() {
     final List<Long> ids = this.getListWorkpackModelId();
     Assertions.assertFalse(ids.isEmpty());
   }
@@ -102,7 +105,7 @@ import java.util.List;
       "fa-edit",
       this.idPlanModel
     );
-    ResponseEntity<ResponseBase<EntityDto>> response = this.workpackModelController.save(workpackModelParam);
+    ResponseEntity<ResponseBase<EntityDto>> response = this.workpackModelController.save(workpackModelParam, this.getToken(true));
     Assertions.assertEquals(200, response.getStatusCodeValue());
     Assertions.assertNotNull(response.getBody());
     Assertions.assertNotNull(response.getBody().getData());
@@ -115,7 +118,7 @@ import java.util.List;
       "fa-folder",
       this.idPlanModel
     );
-    response = this.workpackModelController.save(workpackModelParam);
+    response = this.workpackModelController.save(workpackModelParam, this.getToken(true));
     Assertions.assertEquals(200, response.getStatusCodeValue());
     Assertions.assertNotNull(response.getBody());
     Assertions.assertNotNull(response.getBody().getData());
@@ -128,7 +131,7 @@ import java.util.List;
       "fa-edit",
       this.idPlanModel
     );
-    response = this.workpackModelController.save(workpackModelParam);
+    response = this.workpackModelController.save(workpackModelParam, this.getToken(true));
     Assertions.assertEquals(200, response.getStatusCodeValue());
     Assertions.assertNotNull(response.getBody());
     Assertions.assertNotNull(response.getBody().getData());
@@ -141,7 +144,7 @@ import java.util.List;
       "fa",
       this.idPlanModel
     );
-    response = this.workpackModelController.save(workpackModelParam);
+    response = this.workpackModelController.save(workpackModelParam, this.getToken(true));
     Assertions.assertEquals(200, response.getStatusCodeValue());
     Assertions.assertNotNull(response.getBody());
     Assertions.assertNotNull(response.getBody().getData());
@@ -154,7 +157,7 @@ import java.util.List;
       "fa",
       this.idPlanModel
     );
-    response = this.workpackModelController.save(workpackModelParam);
+    response = this.workpackModelController.save(workpackModelParam, this.getToken(true));
     Assertions.assertEquals(200, response.getStatusCodeValue());
     Assertions.assertNotNull(response.getBody());
     Assertions.assertNotNull(response.getBody().getData());
@@ -163,7 +166,7 @@ import java.util.List;
     final WorkpackModelParamDto workpackModel = this.getWorkpackModelParamProject("Model test creat", this.idPlanModel,
                                                                                   this.idDomain
     );
-    response = this.workpackModelController.save(workpackModel);
+    response = this.workpackModelController.save(workpackModel, this.getToken(true));
     Assertions.assertEquals(200, response.getStatusCodeValue());
     Assertions.assertNotNull(response.getBody());
     Assertions.assertNotNull(response.getBody().getData());
@@ -172,77 +175,99 @@ import java.util.List;
     return ids;
   }
 
-  @Test void shouldUpdateWorkpackModel() {
+  @Test
+  void shouldUpdateWorkpackModel() {
     final WorkpackModelParamDto workpackModel = this.getWorkpackModelParamProject("Model test update", this.idPlanModel,
                                                                                   this.idDomain
     );
-    ResponseEntity<ResponseBase<EntityDto>> response = this.workpackModelController.save(workpackModel);
+    ResponseEntity<ResponseBase<EntityDto>> response = this.workpackModelController.save(workpackModel, this.getToken(true));
     Assertions.assertEquals(200, response.getStatusCodeValue());
     Assertions.assertNotNull(response.getBody());
     Assertions.assertNotNull(response.getBody().getData());
 
-    final ResponseEntity<ResponseBaseWorkpackModelDetail> responseFind = this.workpackModelController.find(response.getBody().getData().getId());
+    final ResponseEntity<ResponseBaseWorkpackModelDetail> responseFind =
+      this.workpackModelController.find(response.getBody().getData().getId(), this.getToken(true));
     Assertions.assertEquals(200, responseFind.getStatusCodeValue());
     Assertions.assertNotNull(responseFind.getBody());
 
     workpackModel.setId(response.getBody().getData().getId());
     workpackModel.setModelName("Model test updated");
     workpackModel.setProperties(responseFind.getBody().getData().getProperties());
-    response = this.workpackModelController.update(workpackModel);
+    response = this.workpackModelController.update(workpackModel, this.getToken(true));
     Assertions.assertEquals(200, response.getStatusCodeValue());
     Assertions.assertNotNull(response.getBody());
     Assertions.assertNotNull(response.getBody().getData());
   }
 
-  @Test void shouldListAll() {
-    ResponseEntity<ResponseBaseWorkpackModel> responseList = this.workpackModelController.indexBase(-1L);
+  @Test
+  void shouldListAll() {
+    ResponseEntity<ResponseBaseWorkpackModel> responseList = this.workpackModelController.indexBase(-1L, this.getToken(true));
     Assertions.assertEquals(204, responseList.getStatusCodeValue());
     Assertions.assertNull(responseList.getBody());
 
     final WorkpackModelParamDto workpackModel = this.getWorkpackModelParamProject("Model test list", this.idPlanModel,
                                                                                   this.idDomain
     );
-    final ResponseEntity<ResponseBase<EntityDto>> response = this.workpackModelController.save(workpackModel);
+    final ResponseEntity<ResponseBase<EntityDto>> response = this.workpackModelController.save(
+      workpackModel,
+      this.getToken(true)
+    );
+
     Assertions.assertEquals(200, response.getStatusCodeValue());
     Assertions.assertNotNull(response.getBody());
     Assertions.assertNotNull(response.getBody().getData());
 
-    responseList = this.workpackModelController.indexBase(this.idPlanModel);
+    responseList = this.workpackModelController.indexBase(this.idPlanModel, this.getToken(true));
     Assertions.assertEquals(200, responseList.getStatusCodeValue());
     Assertions.assertNotNull(responseList.getBody());
 
   }
 
-  @Test void shouldDelete() {
+  @Test
+  void shouldDelete() {
     final WorkpackModelParamDto workpackModel = this.getWorkpackModelParamProject("Model test delete", this.idPlanModel,
                                                                                   this.idDomain
     );
-    final ResponseEntity<ResponseBase<EntityDto>> response = this.workpackModelController.save(workpackModel);
+    final ResponseEntity<ResponseBase<EntityDto>> response = this.workpackModelController.save(
+      workpackModel,
+      this.getToken(true)
+    );
     Assertions.assertEquals(200, response.getStatusCodeValue());
     Assertions.assertNotNull(response.getBody());
     Assertions.assertNotNull(response.getBody().getData());
-    final ResponseEntity<Void> responseDelete = this.workpackModelController.delete(response.getBody().getData().getId(), null);
+    final ResponseEntity<Void> responseDelete = this.workpackModelController.delete(response.getBody().getData().getId(), null,
+                                                                                    ""
+    );
     Assertions.assertEquals(200, responseDelete.getStatusCodeValue());
   }
 
-  @Test void shouldFindOne() {
+  @Test
+  void shouldFindOne() {
     this.getListWorkpackModelId().forEach(id -> {
-      final ResponseEntity<ResponseBaseWorkpackModelDetail> responseFind = this.workpackModelController.find(id);
+      final ResponseEntity<ResponseBaseWorkpackModelDetail> responseFind = this.workpackModelController.find(
+        id,
+        this.getToken(true)
+      );
       Assertions.assertEquals(200, responseFind.getStatusCodeValue());
       Assertions.assertNotNull(responseFind.getBody());
       Assertions.assertNotNull(responseFind.getBody().getData());
     });
   }
 
-  @Test void shouldReturnTrue() {
+  @Test
+  void shouldReturnTrue() {
     final WorkpackModelParamDto workpackModel = this.getWorkpackModelParamProject("Model test parent", this.idPlanModel,
                                                                                   this.idDomain
     );
-    final ResponseEntity<ResponseBase<EntityDto>> response = this.workpackModelController.save(workpackModel);
+    final ResponseEntity<ResponseBase<EntityDto>> response = this.workpackModelController.save(
+      workpackModel,
+      this.getToken(true)
+    );
     Assertions.assertEquals(200, response.getStatusCodeValue());
     Assertions.assertNotNull(response.getBody());
     Assertions.assertNotNull(response.getBody().getData());
-    final ResponseEntity<ResponseBase<Boolean>> responseIsParent = this.workpackModelController.parentProject(response.getBody().getData().getId());
+    final ResponseEntity<ResponseBase<Boolean>> responseIsParent =
+      this.workpackModelController.parentProject(response.getBody().getData().getId(), this.getToken(true));
     Assertions.assertEquals(200, responseIsParent.getStatusCodeValue());
     Assertions.assertNotNull(responseIsParent.getBody());
     Assertions.assertTrue(responseIsParent.getBody().getData());
@@ -255,6 +280,7 @@ import java.util.List;
     public Configuration configuration() {
       return new Configuration.Builder().uri(databaseServer.getBoltUrl()).build();
     }
+
   }
 
 }

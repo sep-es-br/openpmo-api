@@ -3,6 +3,7 @@ package br.gov.es.openpmo.configuration;
 import br.gov.es.openpmo.dto.ErroDto;
 import br.gov.es.openpmo.dto.FormValidationErrorDto;
 import br.gov.es.openpmo.exception.AutenticacaoException;
+import br.gov.es.openpmo.exception.CannotAccessResourceException;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.exception.RegistroNaoEncontradoException;
 import br.gov.es.openpmo.utils.ApplicationMessage;
@@ -30,17 +31,21 @@ public class ResourceExceptionHandler {
     this.log = log;
   }
 
+  private static FormValidationErrorDto getFormValidationErrorDto(final FieldError error) {
+    final String message = error.getDefaultMessage();
+    return new FormValidationErrorDto(error.getField(), message);
+  }
+
+  private static String getFormattedError(final Exception exception) {
+    return MessageFormat.format("{0}${1}", ApplicationMessage.ERRO_NEGOCIO, exception.getMessage());
+  }
+
   @ResponseStatus(code = HttpStatus.BAD_REQUEST)
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public List<FormValidationErrorDto> handle(final MethodArgumentNotValidException exception) {
     return exception.getBindingResult().getFieldErrors().stream()
-        .map(ResourceExceptionHandler::getFormValidationErrorDto)
-        .collect(Collectors.toList());
-  }
-
-  private static FormValidationErrorDto getFormValidationErrorDto(final FieldError error) {
-    final String message = error.getDefaultMessage();
-    return new FormValidationErrorDto(error.getField(), message);
+      .map(ResourceExceptionHandler::getFormValidationErrorDto)
+      .collect(Collectors.toList());
   }
 
   @ResponseStatus(code = HttpStatus.BAD_REQUEST)
@@ -85,10 +90,6 @@ public class ResourceExceptionHandler {
     return new ErroDto(getFormattedError(exception));
   }
 
-  private static String getFormattedError(final Exception exception) {
-    return MessageFormat.format("{0}${1}", ApplicationMessage.ERRO_NEGOCIO, exception.getMessage());
-  }
-
   @ResponseStatus(code = HttpStatus.INTERNAL_SERVER_ERROR)
   @ExceptionHandler(IOException.class)
   public ErroDto handle(final IOException exception) {
@@ -99,6 +100,14 @@ public class ResourceExceptionHandler {
   @ResponseStatus(code = HttpStatus.INTERNAL_SERVER_ERROR)
   @ExceptionHandler(Exception.class)
   public ErroDto handle(final Exception exception) {
+    this.log.error("Error Exception", exception);
+    return new ErroDto(getFormattedError(exception));
+  }
+
+
+  @ResponseStatus(code = HttpStatus.FORBIDDEN)
+  @ExceptionHandler(CannotAccessResourceException.class)
+  public ErroDto handle(final CannotAccessResourceException exception) {
     this.log.error("Error Exception", exception);
     return new ErroDto(getFormattedError(exception));
   }

@@ -5,7 +5,7 @@ import br.gov.es.openpmo.dto.file.AvatarDto;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.repository.FileRepository;
-import org.slf4j.Logger;
+import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
@@ -21,6 +21,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.UUID;
 
+import static br.gov.es.openpmo.utils.ApplicationMessage.AVATAR_CREATE_ERROR;
+import static br.gov.es.openpmo.utils.ApplicationMessage.AVATAR_DELETE_ERROR;
 import static br.gov.es.openpmo.utils.ApplicationMessage.FILE_NOT_FOUND;
 
 @Service
@@ -28,23 +30,29 @@ public class AvatarService {
 
   private final PersonService personService;
   private final FileRepository repository;
-  private final Logger logger;
 
   @Value("${app.pathImagens}")
   private String basePath;
 
   public AvatarService(
     final PersonService personService,
-    final FileRepository repository,
-    final Logger logger
+    final FileRepository repository
   ) {
     this.personService = personService;
     this.repository = repository;
-    this.logger = logger;
+  }
+
+  private static void ifPersonAlreadyHasAvatarThrowException(final Person person) {
+    if(person.hasAvatar()) {
+      throw new NegocioException(ApplicationMessage.AVATAR_ALREADY_EXISTS);
+    }
   }
 
   @Transactional(readOnly = true)
-  public AvatarDto findById(final Long idPerson, final UriComponentsBuilder uriComponentsBuilder) {
+  public AvatarDto findById(
+    final Long idPerson,
+    final UriComponentsBuilder uriComponentsBuilder
+  ) {
 
     final br.gov.es.openpmo.model.actors.File avatar = this.personService
       .findById(idPerson)
@@ -57,30 +65,49 @@ public class AvatarService {
     return new AvatarDto(avatar, uriComponentsBuilder);
   }
 
-  public br.gov.es.openpmo.model.actors.File find(final Long id) {
-    return this.repository.findById(id)
-      .orElseThrow(() -> new NegocioException(FILE_NOT_FOUND));
-  }
 
-  public AvatarDto update(final MultipartFile multipartFile, final Long idPerson, final UriComponentsBuilder uriComponentsBuilder) throws IOException {
+  @Transactional
+  public AvatarDto update(
+    final MultipartFile multipartFile,
+    final Long idPerson,
+    final UriComponentsBuilder uriComponentsBuilder
+  ) {
     this.deleteAvatarByIdPerson(idPerson);
     return this.save(multipartFile, idPerson, uriComponentsBuilder);
   }
 
   @Transactional
-  public AvatarDto save(final MultipartFile multipartFile, final Long idPerson, final UriComponentsBuilder uriComponentsBuilder) throws IOException {
+  public AvatarDto create(
+    final MultipartFile multipartFile,
+    final Long idPerson,
+    final UriComponentsBuilder uriComponentsBuilder
+  ) {
     final Person person = this.personService.findById(idPerson);
-
-    final br.gov.es.openpmo.model.actors.File avatar = this.createAvatar(multipartFile, person);
-
-    this.saveOnDisc(multipartFile.getBytes(), avatar.getUniqueNameKey());
-
-    this.repository.save(avatar);
-
-    return new AvatarDto(avatar, uriComponentsBuilder);
+    ifPersonAlreadyHasAvatarThrowException(person);
+    return this.save(multipartFile, idPerson, uriComponentsBuilder);
   }
 
-  private br.gov.es.openpmo.model.actors.File createAvatar(final MultipartFile multipartFile, final Person person) {
+  private AvatarDto save(
+    final MultipartFile multipartFile,
+    final Long idPerson,
+    final UriComponentsBuilder uriComponentsBuilder
+  ) {
+    try {
+      final Person person = this.personService.findById(idPerson);
+      final br.gov.es.openpmo.model.actors.File avatar = this.createAvatar(multipartFile, person);
+      this.saveOnDisc(multipartFile.getBytes(), avatar.getUniqueNameKey());
+      this.repository.save(avatar);
+      return new AvatarDto(avatar, uriComponentsBuilder);
+    }
+    catch(final IOException e) {
+      throw new NegocioException(AVATAR_CREATE_ERROR, e);
+    }
+  }
+
+  private br.gov.es.openpmo.model.actors.File createAvatar(
+    final MultipartFile multipartFile,
+    final Person person
+  ) {
     final br.gov.es.openpmo.model.actors.File avatar = new br.gov.es.openpmo.model.actors.File();
     avatar.setUniqueNameKey(UUID.randomUUID() + multipartFile.getOriginalFilename());
     avatar.setUserGivenName(multipartFile.getOriginalFilename());
@@ -89,7 +116,10 @@ public class AvatarService {
     return avatar;
   }
 
-  private void saveOnDisc(final byte[] dados, final String nomeArquivo) throws IOException {
+  private void saveOnDisc(
+    final byte[] dados,
+    final String nomeArquivo
+  ) throws IOException {
     final String caminhoArquivo = this.generatePath(nomeArquivo);
     final File file = Files.createFile(Paths.get(caminhoArquivo)).toFile();
 
@@ -127,7 +157,7 @@ public class AvatarService {
       Files.delete(Paths.get(caminhoArquivo));
     }
     catch(final IOException e) {
-      this.logger.error("File not removed", e);
+      throw new NegocioException(AVATAR_DELETE_ERROR, e);
     }
   }
 
@@ -136,11 +166,15 @@ public class AvatarService {
   }
 
   public UrlResource getAvatar(final Long idAvatar) throws IOException {
-    final br.gov.es.openpmo.model.actors.File avatar = this.repository.findById(idAvatar)
-      .orElseThrow(() -> new NegocioException(FILE_NOT_FOUND));
-
+    final br.gov.es.openpmo.model.actors.File avatar = this.findAvatarById(idAvatar);
     final String path = this.basePath + avatar.getUniqueNameKey();
     final URI uri = Paths.get(path).toUri();
     return new UrlResource(uri);
   }
+
+  private br.gov.es.openpmo.model.actors.File findAvatarById(final Long idAvatar) {
+    return this.repository.findById(idAvatar)
+      .orElseThrow(() -> new NegocioException(FILE_NOT_FOUND));
+  }
+
 }
