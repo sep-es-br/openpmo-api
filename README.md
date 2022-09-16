@@ -27,36 +27,69 @@ A instalação do OpenPMO é configurável via arquivo de configuração para su
 Os usuários administradores do OpenPMO serão identificados em tempo de instalação via arquivo de configuração, que listará os usuários do sistema
 de autenticação adotado que terão perfil *Administrator* naquela instalação do OpenPMO.
 
-Toda pessoa que se logar no Open PMO e que não for "*Administrator*" terá o perfil "*User*" no OpenPMO.
+Toda pessoa que se logar no OpenPMO e que não for "*Administrator*" terá o perfil "*User*" no OpenPMO.
 
 O Open PMO não deve permitir a edição de campos informados pelo Serviço de Autenticação, mas deve manter tais informações em sua base de dados, para
 efeito de histórico e consultas posteriores diretamente ao banco de dados.
 
-O ícone e o rótulo do botão de login da interface (abaixo) também serão definidos na instalação via arquivo de configuração. Seguem instruções:
+### Instalação
 
-![Botão do Login](.github/assets/botao_login.png)
+A API do OpenPMO espera que já exista o nó do serviço de autenticação criado no banco de dados Neo4j, para isso crie o nó utilizado o comando abaixo:
 
-O arquivo configuração Front-End está localizado no caminho `src/app/assets/config/app-config.json`
+```cypher
 
-#### Alterar ícone
-
-Propriedade no arquivo de configuração é a "*authButtonIcon*".
-
-O valor pode ser uma classe de icone do *Font Awesome*, por exemplo, "*fas fa-users*".
-
-Pode também ser um caminho até o ícone, o ícone deve estar dentro da pasta "*assets*”. Tendo um ícone localizado no caminho `assets/icons/logo.svg` o
-valor na configuração deve ser `icons/logo.svg`.
-
-#### Alterar label
-
-Como o projeto utiliza internalização é necessário informar o valor em `en-US` e `pt-BR`.
-
-A propriedade no arquivo de configuração é a "*authButtonText*"
-
-Informar o valor da tradução desejada conforme o valor na propriedade "*authButtonText*", por exemplo:
-
-```
-  "authButtonText": { "en-US": "Enter", "pt-BR": "Entrar" }
+CREATE (authService:AuthService {
+  server:   'nome-do-servico-de-autenticacao',
+  endpoint: 'endpoint-de-logout-do-servico-de-autenticacao'
+})
 ```
 
+Após isso, será necessário adicionar as configurações obrigatórias do arquivo `application.properties` localizado em `src/main/resources/`. Abaixo
+segue a explicação e exemplo de cada propriedade necessária para o correto funcionamento da API.
 
+- `app.default-timezone`
+  - Define o timezone da aplicação, necessário para qualquer operação que envolva datas.
+- `app.version`
+  - Define a versão atual da aplicação, essa versão irá aparecer no frontend.
+  - Exemplo: `app.version=1.0.0`
+- `app.login.server.name`
+  - Define o nome do serviço de autenticação. Deve possuir o mesmo nome do nó inicial adicionado manualmente.
+  - Exemplo: `app.login.server.name=AcessoCidadao`
+- `app.pathImagens`
+  - Define o diretório do servidor onde será armazenado as imagens. Esse diretório deve ser criado antes de iniciar a aplicação e deve possuir e o
+    OpenPMO deve possuir permissões leitura e escrita no diretório.
+  - Exemplo: `app.pathImagens=/tmp/open-pmo/imagens/`
+- `app.journalPath`
+  - Define o diretório do servidor onde será armazenado arquivos relacionados ao `journal`. Preferencialmente deve-se coloca-lo no mesmo diretório
+    base das imagens.
+  - Exemplo: `app.journalPath=/tmp/open-pmo/journal/`
+- `app.scheduler.*`
+  - Essas propriedades definem constantes de tempo onde uma tarefa deve ser iniciada pelo `scheduler` do Spring Boot. Não é recomendado
+    alteração exceto se o código-fonte esteja a ser alterado em conjunto.
+  - Constantes:
+    ```properties
+      app.scheduler.everyday-at-0pm=0 0 0 1/1 * ?
+      app.scheduler.everyday-every-1min=0 0/1 * 1/1 * ?
+      app.scheduler.everyday-every-1hour=0 0 0/1 1/1 * ?
+    ```
+- `server.servlet.context-path`
+  - Define a rota inicial da API, não deve ser alterado exceto se necessário para alterações no código-fonte do OpenPMO.
+- `spring.data.neo4j.*`
+  - Define propriedades de conexão com o banco de dados Neo4j.
+- `spring.security.oauth2.client.*`
+  - Define propriedades de configuração do servidor de autenticação OAuth2.
+- `jwt.*`
+  - Define propriedades de configuração do `JWT`.
+- `server.ssl.*`
+  - Define propriedades de configuração do `SSL`.
+- `users.administrators`
+  - Define o email dos administradores iniciais separado por vírgula, necessário para quando a aplicação for executada pela primeira vez por não
+    haver usuários.
+    pré-definidos.
+  - Exemplo: `users.administrators=usuario_um@gmail.com,usuario_dois@gmail.com`
+- `api.acessocidadao.*`
+  - Define propriedades de configuração para chamadas da API do Acesso Cidadão.
+- `api.e-docs.*`
+  - Define propriedades de configuração para chamadas da API do E-Docs.
+- `api.organograma.uri.webapi`
+  - Define url para chamada de API do organograma.
