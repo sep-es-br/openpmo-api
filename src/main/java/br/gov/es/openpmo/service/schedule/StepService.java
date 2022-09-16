@@ -18,12 +18,12 @@ import br.gov.es.openpmo.service.workpack.CostAccountService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -48,6 +48,7 @@ public class StepService {
   private final ConsumesRepository consumesRepository;
 
   private final CostAccountService costAccountService;
+  private final RecalculateStepsAfterRemove recalculateStepsAfterRemove;
 
   private final ModelMapper modelMapper;
 
@@ -57,12 +58,14 @@ public class StepService {
     final ScheduleRepository scheduleRepository,
     final ConsumesRepository consumesRepository,
     final CostAccountService costAccountService,
+    final RecalculateStepsAfterRemove recalculateStepsAfterRemove,
     final ModelMapper modelMapper
   ) {
     this.stepRepository = stepRepository;
     this.scheduleRepository = scheduleRepository;
     this.consumesRepository = consumesRepository;
     this.costAccountService = costAccountService;
+    this.recalculateStepsAfterRemove = recalculateStepsAfterRemove;
     this.modelMapper = modelMapper;
   }
 
@@ -110,46 +113,18 @@ public class StepService {
     return step.getPeriodFromStartDate().getMonthValue() == schedule.getStart().getMonthValue();
   }
 
-  private static void ifPlannedWorkIsZeroOrNullThrowException(final BigDecimal plannedWork) {
+  private static void ifPlannedWorkIsZeroOrNullThrowException(final Comparable<? super BigDecimal> plannedWork) {
     if(Objects.isNull(plannedWork) || plannedWork.compareTo(BigDecimal.ZERO) == 0) {
       throw new NegocioException(STEP_PLANNED_WORK_CANNOT_BE_NULL_OR_ZERO);
     }
   }
 
+  @Transactional
   public void delete(final Long id) {
     final Step step = this.findById(id);
-    final Long idSchedule = step.getSchedule().getId();
-    final Schedule schedule = this.findScheduleById(idSchedule);
-
-    final List<Step> steps = schedule.getSteps().stream()
-      .sorted(Comparator.comparing(Step::getPeriodFromStart))
-      .collect(Collectors.toList());
-
     this.stepRepository.delete(step);
-
-    final boolean start = isStart(step, schedule);
-
-    if(steps.size() > 1) {
-      if(start) {
-        steps.remove(0);
-        setStart(schedule, steps.get(0).getPeriodFromStart());
-      }
-      else {
-        Collections.reverse(steps);
-        steps.remove(0);
-        setEnd(schedule, steps.get(0).getPeriodFromStart());
-      }
-    }
-    else {
-      if(start) {
-        setStart(schedule, step.getPeriodFromStart() + 1);
-      }
-      else {
-        setEnd(schedule, step.getPeriodFromStart() - 1);
-      }
-    }
-
-    this.scheduleRepository.save(schedule);
+    final List<Step> steps = this.recalculateStepsAfterRemove.execute(step);
+    this.stepRepository.saveAll(steps);
   }
 
   public Step findById(final Long id) {
