@@ -1,8 +1,8 @@
 package br.gov.es.openpmo.service.permissions.canaccess;
 
 import br.gov.es.openpmo.exception.CannotAccessResourceException;
+import br.gov.es.openpmo.utils.ApplicationMessage;
 
-import static br.gov.es.openpmo.service.permissions.canaccess.ICanAccessData.ICanAccessDataResponse;
 import static br.gov.es.openpmo.utils.ApplicationMessage.CANNOT_ACCESS_ADMIN_RESOURCE;
 import static br.gov.es.openpmo.utils.ApplicationMessage.CANNOT_ACCESS_PERSONAL_RESOURCE;
 import static br.gov.es.openpmo.utils.ApplicationMessage.CANNOT_EDIT_RESOURCE;
@@ -15,6 +15,8 @@ public class CanAccessDataResponse implements ICanAccessDataResponse {
   private final Boolean basicRead;
   private final Boolean admin;
   private final Boolean self;
+  private final String key;
+  private final ICanAccessManagementDataResponse canAccessManagement;
 
 
   public CanAccessDataResponse(
@@ -22,13 +24,22 @@ public class CanAccessDataResponse implements ICanAccessDataResponse {
     final Boolean read,
     final Boolean basicRead,
     final Boolean admin,
-    final Boolean self
+    final Boolean self,
+    final String key,
+    final ICanAccessManagementDataResponse canAccessManagement
   ) {
     this.edit = edit;
     this.read = read;
     this.basicRead = basicRead;
     this.admin = admin;
     this.self = self;
+    this.key = key;
+    this.canAccessManagement = canAccessManagement;
+  }
+
+  @Override
+  public String getKey() {
+    return this.key;
   }
 
   @Override
@@ -85,7 +96,6 @@ public class CanAccessDataResponse implements ICanAccessDataResponse {
     }
   }
 
-
   @Override
   public void ensureCanAccessSelfResource() {
     if(Boolean.TRUE.equals(this.admin)) return;
@@ -93,5 +103,29 @@ public class CanAccessDataResponse implements ICanAccessDataResponse {
       throw new CannotAccessResourceException(CANNOT_ACCESS_PERSONAL_RESOURCE);
     }
   }
+
+  @Override
+  public void ensureCanAccessManagementResource() {
+    if(Boolean.TRUE.equals(this.admin)) return;
+    if(Boolean.FALSE.equals(this.canAccessManagement.getEdit())) {
+      throw new CannotAccessResourceException(ApplicationMessage.CANNOT_ACCESS_MANAGEMENT_RESOURCE);
+    }
+  }
+
+  @Override
+  public Boolean getManagementEdit() {
+    return this.canAccessManagement.getEdit();
+  }
+
+  @Override
+  public Boolean getManagementRead() {
+    return this.canAccessManagement.getRead();
+  }
+
+  @Override
+  public Boolean getSelf() {
+    return this.self;
+  }
+
 
 }

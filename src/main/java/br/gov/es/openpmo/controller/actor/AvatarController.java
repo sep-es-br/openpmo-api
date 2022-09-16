@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.controller.actor;
 
 
+import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.file.AvatarDto;
 import br.gov.es.openpmo.service.actors.AvatarService;
@@ -17,7 +18,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 @Api
 @RestController
@@ -57,10 +58,11 @@ public class AvatarController {
   @GetMapping("/persons/{idPerson}/avatar")
   public ResponseEntity<ResponseBase<AvatarDto>> findById(
     @PathVariable("idPerson") final Long idPerson,
-    final UriComponentsBuilder uriComponentsBuilder,
-    @RequestHeader("Authorization") final String authorization
+    @RequestParam(value = "id-office", required = false) final Long idOffice,
+    @Authorization final String authorization,
+    final UriComponentsBuilder uriComponentsBuilder
   ) {
-    this.canAccessService.ensureCanAccessSelfResource(idPerson, authorization);
+    this.canAccessService.ensureCanAccessManagementOrSelfResource(Arrays.asList(idOffice, idPerson), authorization);
     final AvatarDto avatar = this.service.findById(idPerson, uriComponentsBuilder);
     return ResponseEntity.ok(ResponseBase.of(avatar));
   }
@@ -69,10 +71,11 @@ public class AvatarController {
   public ResponseEntity<ResponseBase<AvatarDto>> upload(
     @PathVariable final Long idPerson,
     @RequestParam final MultipartFile file,
-    @RequestHeader("Authorization") final String authorization,
+    @RequestParam(value = "id-office", required = false) final Long idOffice,
+    @Authorization final String authorization,
     final UriComponentsBuilder uriComponentsBuilder
   ) {
-    this.canAccessService.ensureCanAccessSelfResource(idPerson, authorization);
+    this.canAccessService.ensureCanAccessManagementOrSelfResource(Arrays.asList(idOffice, idPerson), authorization);
     final AvatarDto avatarDto = this.service.create(file, idPerson, uriComponentsBuilder);
     return ResponseEntity.ok(ResponseBase.of(avatarDto));
   }
@@ -81,10 +84,11 @@ public class AvatarController {
   public ResponseEntity<ResponseBase<AvatarDto>> update(
     @PathVariable final Long idPerson,
     @RequestParam final MultipartFile file,
-    @RequestHeader("Authorization") final String authorization,
+    @RequestParam(value = "id-office", required = false) final Long idOffice,
+    @Authorization final String authorization,
     final UriComponentsBuilder uriComponentsBuilder
   ) {
-    this.canAccessService.ensureCanAccessSelfResource(idPerson, authorization);
+    this.canAccessService.ensureCanAccessManagementOrSelfResource(Arrays.asList(idPerson, idOffice), authorization);
     final AvatarDto avatarDto = this.service.update(file, idPerson, uriComponentsBuilder);
     return ResponseEntity.ok(ResponseBase.of(avatarDto));
   }
@@ -92,9 +96,10 @@ public class AvatarController {
   @DeleteMapping("/persons/{idPerson}/avatar")
   public ResponseEntity<Void> delete(
     @PathVariable final Long idPerson,
-    @RequestHeader("Authorization") final String authorization
+    @RequestParam(value = "id-office", required = false) final Long idOffice,
+    @Authorization final String authorization
   ) {
-    this.canAccessService.ensureCanAccessSelfResource(idPerson, authorization);
+    this.canAccessService.ensureCanAccessManagementOrSelfResource(Arrays.asList(idPerson, idOffice), authorization);
     this.service.deleteAvatarByIdPerson(idPerson);
     return ResponseEntity.status(HttpStatus.OK).build();
   }

@@ -36,11 +36,15 @@ public class CanAccessData implements ICanAccessData {
     return permissions > 0;
   }
 
-  private static boolean isSelfId(
+  private static Boolean isSelfId(
     final PersonDataResponse personData,
-    final Long id
+    final List<Long> ids
   ) {
-    return personData.getPerson().getId().equals(id);
+    return ids.stream().anyMatch(argId -> argId.equals(getId(personData)));
+  }
+
+  private static Long getId(final PersonDataResponse personData) {
+    return personData.getPerson().getId();
   }
 
   @Override
@@ -56,7 +60,12 @@ public class CanAccessData implements ICanAccessData {
       hasPermission(ids, personData.getKey(), this.permissionRepository::hasReadPermission),
       hasPermission(ids, personData.getKey(), this.permissionRepository::hasBasicReadPermission),
       isAdministrator(personData),
-      isSelfId(personData, id)
+      isSelfId(personData, ids),
+      personData.getKey(),
+      new CanAccessManagementDataResponse(
+        hasPermission(ids, personData.getKey(), this.permissionRepository::hasEditManagementPermission),
+        true
+      )
     );
   }
 
@@ -71,7 +80,12 @@ public class CanAccessData implements ICanAccessData {
       hasPermission(ids, personData.getKey(), this.permissionRepository::hasReadPermission),
       hasPermission(ids, personData.getKey(), this.permissionRepository::hasBasicReadPermission),
       isAdministrator(personData),
-      false
+      isSelfId(personData, ids),
+      personData.getKey(),
+      new CanAccessManagementDataResponse(
+        hasPermission(ids, personData.getKey(), this.permissionRepository::hasEditManagementPermission),
+        true
+      )
     );
   }
 
@@ -83,7 +97,9 @@ public class CanAccessData implements ICanAccessData {
       null,
       null,
       isAdministrator(personData),
-      false
+      false,
+      personData.getKey(),
+      null
     );
   }
 

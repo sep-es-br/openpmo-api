@@ -18,7 +18,12 @@ import br.gov.es.openpmo.dto.plan.PlanStoreDto;
 import br.gov.es.openpmo.dto.planmodel.PlanModelStoreDto;
 import br.gov.es.openpmo.dto.workpack.*;
 import br.gov.es.openpmo.dto.workpackmodel.details.ResponseBaseWorkpackModelDetail;
-import br.gov.es.openpmo.dto.workpackmodel.params.*;
+import br.gov.es.openpmo.dto.workpackmodel.params.DeliverableModelParamDto;
+import br.gov.es.openpmo.dto.workpackmodel.params.MilestoneModelParamDto;
+import br.gov.es.openpmo.dto.workpackmodel.params.OrganizerModelParamDto;
+import br.gov.es.openpmo.dto.workpackmodel.params.PortfolioModelParamDto;
+import br.gov.es.openpmo.dto.workpackmodel.params.ProgramModelParamDto;
+import br.gov.es.openpmo.dto.workpackmodel.params.WorkpackModelParamDto;
 import br.gov.es.openpmo.enumerator.GeneralOperatorsEnum;
 import br.gov.es.openpmo.enumerator.LocalityTypesEnum;
 import br.gov.es.openpmo.enumerator.Session;
@@ -290,7 +295,7 @@ class WorkpackTest extends BaseTest {
 
   @Test void shouldDelete() {
     final Long idWorkpackProject = this.getWorkpackProjectId();
-    final ResponseEntity<Void> response = this.workpackController.delete(idWorkpackProject);
+    final ResponseEntity<Void> response = this.workpackController.delete(idWorkpackProject, getToken(true));
     Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
   }
 
@@ -322,6 +327,7 @@ class WorkpackTest extends BaseTest {
       null,
       ids.get(0),
       null,
+      false,
       this.getToken(false)
     );
     Assertions.assertEquals(204, responseFind.getStatusCodeValue());
@@ -331,6 +337,7 @@ class WorkpackTest extends BaseTest {
       null,
       ids.get(0),
       null,
+      false,
       this.getToken(true)
     );
     Assertions.assertEquals(HTTP_STATUS_OK, responseFind.getStatusCodeValue());
@@ -367,6 +374,7 @@ class WorkpackTest extends BaseTest {
       null,
       ids.get(0),
       this.idFilter,
+      false,
       this.getToken(false)
     );
     Assertions.assertEquals(204, responseFind.getStatusCodeValue());
@@ -376,6 +384,7 @@ class WorkpackTest extends BaseTest {
       null,
       ids.get(0),
       this.idFilter,
+      false,
       this.getToken(true)
     );
     Assertions.assertEquals(HTTP_STATUS_OK, responseFind.getStatusCodeValue());

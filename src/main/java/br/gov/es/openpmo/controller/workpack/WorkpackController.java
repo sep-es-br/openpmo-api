@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.controller.workpack;
 
+import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.Response;
 import br.gov.es.openpmo.dto.ResponseBase;
@@ -33,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -108,7 +110,7 @@ public class WorkpackController {
     @RequestParam(value = "id-plan-model", required = false) final Long idPlanModel,
     @RequestParam(value = "id-workpack-model", required = false) final Long idWorkpackModel,
     @RequestParam(value = "idFilter", required = false) final Long idFilter,
-    @RequestHeader(name = "Authorization") final String authorization
+    @Authorization final String authorization
   ) {
 
     this.canAccessService.ensureCanReadResource(idPlan, authorization);
@@ -184,7 +186,7 @@ public class WorkpackController {
     @RequestParam(value = "id-workpack-model", required = false) final Long idWorkpackModel,
     @RequestParam(value = "idFilter", required = false) final Long idFilter,
     @RequestParam(value = "workpackLinked", required = false) final boolean workpackLinked,
-    @RequestHeader(name = "Authorization") final String authorization
+    @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanReadResource(idWorkpackParent, authorization);
 
@@ -228,7 +230,7 @@ public class WorkpackController {
   public ResponseEntity<ResponseBaseWorkpackDetail> find(
     @PathVariable final Long idWorkpack,
     @RequestParam(value = "id-plan", required = false) final Long idPlan,
-    @RequestHeader(name = "Authorization") final String authorization
+    @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
 
@@ -251,9 +253,12 @@ public class WorkpackController {
   @PostMapping
   public ResponseEntity<ResponseBase<EntityDto>> save(
     @RequestBody @Valid final WorkpackParamDto request,
-    @RequestHeader(name = "Authorization") final String authorization
+    @Authorization final String authorization
   ) {
-    this.canAccessService.ensureCanEditResource(request.getIdPlan(), authorization);
+    this.canAccessService.ensureCanEditResource(
+      Arrays.asList(request.getIdPlan(), request.getIdParent()),
+      authorization
+    );
     final Workpack workpack = this.workpackService.getWorkpack(request);
     final EntityDto response = this.workpackService.save(workpack, request.getIdPlan(), request.getIdParent());
 
@@ -270,9 +275,9 @@ public class WorkpackController {
   @PutMapping
   public ResponseEntity<ResponseBase<EntityDto>> update(
     @RequestBody @Valid final WorkpackParamDto request,
-    @RequestHeader(name = "Authorization") final String authorization
+    @Authorization final String authorization
   ) {
-    this.canAccessService.ensureCanEditResource(request.getIdParent(), authorization);
+    this.canAccessService.ensureCanEditResource(request.getId(), authorization);
     final Workpack workpack = this.workpackService.update(this.workpackService.getWorkpack(request));
     final Long idPerson = this.tokenService.getUserId(authorization);
     this.journalCreator.edition(workpack, JournalAction.EDITED, idPerson);
@@ -282,7 +287,7 @@ public class WorkpackController {
   @PatchMapping("/{id}/cancel")
   public ResponseEntity<Void> cancel(
     @PathVariable("id") final Long idWorkpack,
-    @RequestHeader(name = "Authorization") final String authorization
+    @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanEditResource(idWorkpack, authorization);
     final Workpack workpack = this.workpackService.cancel(idWorkpack);
@@ -294,7 +299,7 @@ public class WorkpackController {
   @PatchMapping("/{id}/restore")
   public ResponseEntity<Void> restore(
     @PathVariable("id") final Long idWorkpack,
-    @RequestHeader("Authorization") final String authorization
+    @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanEditResource(idWorkpack, authorization);
     this.workpackService.restore(idWorkpack);
@@ -304,7 +309,7 @@ public class WorkpackController {
   @DeleteMapping("/{idWorkpack}")
   public ResponseEntity<Void> delete(
     @PathVariable final Long idWorkpack,
-    @RequestHeader("Authorization") final String authorization
+    @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanEditResource(idWorkpack, authorization);
     final Workpack workpack = this.workpackService.findById(idWorkpack);
@@ -317,7 +322,7 @@ public class WorkpackController {
   public Response<Void> completeDeliverable(
     @PathVariable("id-deliverable") final Long idDeliverable,
     @RequestBody final CompleteDeliverableRequest request,
-    @RequestHeader("Authorization") final String authorization
+    @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanEditResource(idDeliverable, authorization);
     this.completeDeliverableService.apply(idDeliverable, request);
@@ -329,7 +334,7 @@ public class WorkpackController {
   public Response<Void> endDeliverableManagement(
     @PathVariable("id-deliverable") final Long idDeliverable,
     @RequestBody final EndDeliverableManagementRequest request,
-    @RequestHeader("Authorization") final String authorization
+    @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanEditResource(idDeliverable, authorization);
     this.deliverableEndManagementService.apply(idDeliverable, request);
@@ -339,7 +344,7 @@ public class WorkpackController {
   @GetMapping("/{idWorkpack}/name")
   public ResponseEntity<WorkpackNameResponse> getWorkpackName(
     @PathVariable final Long idWorkpack,
-    @RequestHeader("Authorization") final String authorization
+    @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
     final WorkpackNameResponse response = this.getWorkpackName.execute(idWorkpack);

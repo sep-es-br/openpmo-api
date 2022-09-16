@@ -259,6 +259,7 @@ public class ApplicationMessage {
   public static final String CANNOT_EDIT_RESOURCE = "permission.cannot.edit.resource";
   public static final String CANNOT_ACCESS_ADMIN_RESOURCE = "permission.cannot.access.admin.resource";
   public static final String CANNOT_ACCESS_PERSONAL_RESOURCE = "permission.cannot.access.personal.resource";
+  public static final String CANNOT_ACCESS_MANAGEMENT_RESOURCE = "permission.cannot.access.management.resource";
   public static final String AVATAR_CREATE_ERROR = "avatar.create.error";
   public static final String AVATAR_DELETE_ERROR = "avatar.delete.error";
   public static final String AVATAR_ALREADY_EXISTS = "avatar.already.exists";

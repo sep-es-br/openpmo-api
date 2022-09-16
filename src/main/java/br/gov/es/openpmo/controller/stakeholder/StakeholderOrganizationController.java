@@ -1,11 +1,12 @@
 package br.gov.es.openpmo.controller.stakeholder;
 
+import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.stakeholder.OrganizationStakeholderParamDto;
 import br.gov.es.openpmo.dto.stakeholder.StakeholderOrganizationDto;
 import br.gov.es.openpmo.model.Entity;
+import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.stakeholder.StakeholderService;
-import br.gov.es.openpmo.utils.ApplicationMessage;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -28,51 +29,58 @@ import javax.validation.Valid;
 public class StakeholderOrganizationController {
 
   private final StakeholderService stakeholderService;
+  private final ICanAccessService canAccessService;
 
   @Autowired
-  public StakeholderOrganizationController(final StakeholderService stakeholderService) {
+  public StakeholderOrganizationController(
+    final StakeholderService stakeholderService,
+    final ICanAccessService canAccessService
+  ) {
     this.stakeholderService = stakeholderService;
+    this.canAccessService = canAccessService;
   }
 
   @GetMapping
   public ResponseEntity<ResponseBase<StakeholderOrganizationDto>> index(
     @RequestParam(name = "id-workpack") final Long idWorkpack,
-    @RequestParam(name = "id-organization", required = false) final Long idOrganization
+    @RequestParam(name = "id-organization", required = false) final Long idOrganization,
+    @Authorization final String authorization
   ) {
+    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
     final StakeholderOrganizationDto organizationDto = this.stakeholderService.findOrganization(
       idWorkpack,
       idOrganization
     );
-
-    final ResponseBase<StakeholderOrganizationDto> entity = new ResponseBase<StakeholderOrganizationDto>().setData(
-        organizationDto)
-      .setSuccess(true).setMessage(ApplicationMessage.OPERATION_SUCCESS);
-    return ResponseEntity.status(200).body(entity);
+    return ResponseEntity.ok(ResponseBase.of(organizationDto));
   }
 
   @PostMapping
   public ResponseEntity<ResponseBase<Entity>> storeOrganization(
-    @RequestBody @Valid final OrganizationStakeholderParamDto request
+    @RequestBody @Valid final OrganizationStakeholderParamDto request,
+    @Authorization final String authorization
   ) {
+    this.canAccessService.ensureCanEditResource(request.getIdWorkpack(), authorization);
     this.stakeholderService.storeStakeholderOrganization(request);
-    final ResponseBase<Entity> entity = new ResponseBase<Entity>().setSuccess(true).setMessage(ApplicationMessage.OPERATION_SUCCESS);
-    return ResponseEntity.ok(entity);
+    return ResponseEntity.ok(ResponseBase.of());
   }
 
   @PutMapping
   public ResponseEntity<ResponseBase<Entity>> updateOrganization(
-    @RequestBody @Valid final OrganizationStakeholderParamDto request
+    @RequestBody @Valid final OrganizationStakeholderParamDto request,
+    @Authorization final String authorization
   ) {
+    this.canAccessService.ensureCanEditResource(request.getIdWorkpack(), authorization);
     this.stakeholderService.updateStakeholderOrganization(request);
-    final ResponseBase<Entity> entity = new ResponseBase<Entity>().setSuccess(true).setMessage(ApplicationMessage.OPERATION_SUCCESS);
-    return ResponseEntity.ok(entity);
+    return ResponseEntity.ok(ResponseBase.of());
   }
 
   @DeleteMapping
   public ResponseEntity<Void> deleteOrganization(
-    @RequestParam(name = "id-workpack", required = true) final Long idWorkpack,
-    @RequestParam(name = "id-organization", required = true) final Long idOrganization
+    @RequestParam(name = "id-workpack") final Long idWorkpack,
+    @RequestParam(name = "id-organization") final Long idOrganization,
+    @Authorization final String authorization
   ) {
+    this.canAccessService.ensureCanEditResource(idWorkpack, authorization);
     this.stakeholderService.deleteOrganization(idWorkpack, idOrganization);
     return ResponseEntity.ok().build();
   }

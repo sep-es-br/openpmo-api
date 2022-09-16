@@ -64,5 +64,17 @@ public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, C
     @Param("sub") String sub
   );
 
+  @Query("MATCH  " +
+         "    (p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-(a:AuthService), " +
+         "    path=shortestPath((n)-[*0..]->(m)) " +
+         "    WHERE id(n) IN $ids AND " +
+         "    (m)<-[:CAN_ACCESS_OFFICE {permissionLevel:'EDIT'}]-(p) " +
+         "RETURN count(path) "
+  )
+  Long hasEditManagementPermission(
+    @Param("ids") List<Long> ids,
+    @Param("sub") String sub
+  );
+
 
 }

@@ -29,7 +29,8 @@ import java.util.List;
 import static java.util.Collections.singletonList;
 
 @Testcontainers
-@SpringBootTest class UnitMeasureTest extends BaseTest {
+@SpringBootTest
+class UnitMeasureTest extends BaseTest {
 
   @Autowired
   private UnitMeasureController unitMeasureController;
@@ -43,7 +44,8 @@ import static java.util.Collections.singletonList;
   private Long idOffice;
   private Long idFilter;
 
-  @BeforeEach void load() {
+  @BeforeEach
+  void load() {
     if(this.idOffice == null) {
       final OfficeStoreDto office = new OfficeStoreDto();
       office.setName("Office Test UnitMeasure");
@@ -68,7 +70,10 @@ import static java.util.Collections.singletonList;
 
       filter.setRules(singletonList(rule));
 
-      final ResponseEntity<ResponseBase<CustomFilterDto>> response = this.filterUnitMeasuresController.save(filter);
+      final ResponseEntity<ResponseBase<CustomFilterDto>> response = this.filterUnitMeasuresController.save(
+        filter,
+        this.getToken(true)
+      );
       Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
       Assertions.assertNotNull(response.getBody());
       Assertions.assertNotNull(response.getBody().getData());
@@ -77,7 +82,8 @@ import static java.util.Collections.singletonList;
     }
   }
 
-  @Test void shouldCreateUnitMeasure() {
+  @Test
+  void shouldCreateUnitMeasure() {
     final UnitMeasureStoreDto unitMeasure = new UnitMeasureStoreDto();
     unitMeasure.setName("UnitMeasure Test");
     unitMeasure.setFullName("UnitMeasure Test ADM ");
@@ -88,7 +94,8 @@ import static java.util.Collections.singletonList;
     Assertions.assertNotNull(response.getBody().getData());
   }
 
-  @Test void shouldUpdateUnitMeasure() {
+  @Test
+  void shouldUpdateUnitMeasure() {
     final UnitMeasureStoreDto unitMeasure = new UnitMeasureStoreDto();
     unitMeasure.setName("UnitMeasure Test update");
     unitMeasure.setFullName("UnitMeasure Test update ");
@@ -106,7 +113,8 @@ import static java.util.Collections.singletonList;
     Assertions.assertNotNull(response.getBody().getData());
   }
 
-  @Test void shouldDelete() {
+  @Test
+  void shouldDelete() {
     final UnitMeasureStoreDto unitMeasure = new UnitMeasureStoreDto();
     unitMeasure.setName("UnitMeasure Test delete");
     unitMeasure.setFullName("UnitMeasure Test delete ");
@@ -119,7 +127,8 @@ import static java.util.Collections.singletonList;
     Assertions.assertEquals(HTTP_STATUS_OK, responseDelete.getStatusCodeValue());
   }
 
-  @Test void shouldListAll() {
+  @Test
+  void shouldListAll() {
     final UnitMeasureStoreDto unitMeasure = new UnitMeasureStoreDto();
     unitMeasure.setName("UnitMeasure Test list");
     unitMeasure.setFullName("UnitMeasure Test list ");
@@ -136,7 +145,8 @@ import static java.util.Collections.singletonList;
     Assertions.assertFalse(responseList.getBody().getData().isEmpty());
   }
 
-  @Test void shouldListAllUsingCustomFilter() {
+  @Test
+  void shouldListAllUsingCustomFilter() {
     final UnitMeasureStoreDto unitMeasure = new UnitMeasureStoreDto();
     unitMeasure.setName("UnitMeasure Test list");
     unitMeasure.setFullName("UnitMeasure Test list ");
@@ -153,7 +163,8 @@ import static java.util.Collections.singletonList;
     Assertions.assertFalse(responseList.getBody().getData().isEmpty());
   }
 
-  @Test void shouldFindOne() {
+  @Test
+  void shouldFindOne() {
     final UnitMeasureStoreDto unitMeasure = new UnitMeasureStoreDto();
     unitMeasure.setName("UnitMeasure Test find");
     unitMeasure.setFullName("UnitMeasure Test find ");
@@ -162,7 +173,8 @@ import static java.util.Collections.singletonList;
     Assertions.assertEquals(HTTP_STATUS_OK, response.getStatusCodeValue());
     Assertions.assertNotNull(response.getBody());
     Assertions.assertNotNull(response.getBody().getData());
-    final ResponseEntity<ResponseBase<UnitMeasureDto>> responseFind = this.unitMeasureController.findById(response.getBody().getData().getId());
+    final ResponseEntity<ResponseBase<UnitMeasureDto>> responseFind =
+      this.unitMeasureController.findById(response.getBody().getData().getId());
     Assertions.assertEquals(HTTP_STATUS_OK, responseFind.getStatusCodeValue());
     Assertions.assertNotNull(responseFind.getBody());
     Assertions.assertNotNull(responseFind.getBody().getData());
@@ -176,6 +188,7 @@ import static java.util.Collections.singletonList;
     public Configuration configuration() {
       return new Configuration.Builder().uri(databaseServer.getBoltUrl()).build();
     }
+
   }
 
 

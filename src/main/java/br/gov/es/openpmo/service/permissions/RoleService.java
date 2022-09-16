@@ -143,16 +143,17 @@ public class RoleService {
     final Collection<? extends RoleResource> roles,
     final Person person
   ) {
-    final Set<CanAccessOffice> collect = this.findOfficePermissions(person).stream()
+    final Set<CanAccessOffice> permissions = this.findOfficePermissions(person).stream()
       .filter(permission -> this.canRemovePermission(permission, roles))
       .collect(Collectors.toSet());
-    this.officePermissionRepository.deleteAll(collect);
+    this.officePermissionRepository.deleteAll(permissions);
   }
 
   private boolean canRemovePermission(
     final HasRole permission,
     final Collection<? extends HasRole> roles
   ) {
+    if(permission.getRole().equals(CITIZEN)) return false;
     return roles.stream().noneMatch(role -> this.isRoleEquals(role.getRole(), permission.getRole()));
   }
 
@@ -160,7 +161,7 @@ public class RoleService {
     final String role1,
     final String role2
   ) {
-    return Objects.equals(role1, role2) || Objects.equals(role2, CITIZEN);
+    return Objects.equals(role1, role2);
   }
 
   private List<PublicAgentRoleResponse> getAgentRolesResponseByKey(

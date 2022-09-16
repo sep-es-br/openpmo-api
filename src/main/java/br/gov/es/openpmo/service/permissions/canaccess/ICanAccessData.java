@@ -18,28 +18,4 @@ public interface ICanAccessData {
   ICanAccessDataResponse execute(String authorizationHeader);
 
 
-  interface ICanAccessDataResponse {
-
-    Boolean getEdit();
-
-    Boolean getRead();
-
-    Boolean getBasicRead();
-
-    Boolean getAdmin();
-
-    Boolean canEditResource();
-
-    Boolean canReadResource();
-
-    void ensureCanReadResource();
-
-    void ensureCanEditResource();
-
-    void ensureCanAccessAdminResource();
-
-    void ensureCanAccessSelfResource();
-
-  }
-
 }
