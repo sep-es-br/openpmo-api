@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiFunction;
 
 @Component
@@ -40,7 +41,9 @@ public class CanAccessData implements ICanAccessData {
     final PersonDataResponse personData,
     final List<Long> ids
   ) {
-    return ids.stream().anyMatch(argId -> argId.equals(getId(personData)));
+    return ids.stream()
+      .filter(Objects::nonNull)
+      .anyMatch(argId -> argId.equals(getId(personData)));
   }
 
   private static Long getId(final PersonDataResponse personData) {
