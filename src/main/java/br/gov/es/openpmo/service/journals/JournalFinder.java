@@ -19,44 +19,50 @@ import java.util.stream.Collectors;
 @Service
 public class JournalFinder {
 
-    private final JournalRepository journalRepository;
+  private final JournalRepository journalRepository;
 
-    private final JournalResponseMapper journalResponseMapper;
+  private final JournalResponseMapper journalResponseMapper;
 
-    @Autowired
-    public JournalFinder(final JournalRepository journalRepository, final JournalResponseMapper journalResponseMapper) {
-        this.journalRepository = journalRepository;
-        this.journalResponseMapper = journalResponseMapper;
-    }
+  @Autowired
+  public JournalFinder(
+    final JournalRepository journalRepository,
+    final JournalResponseMapper journalResponseMapper
+  ) {
+    this.journalRepository = journalRepository;
+    this.journalResponseMapper = journalResponseMapper;
+  }
 
-    public Page<JournalResponse> getAll(
-            final LocalDate from,
-            final LocalDate to,
-            final List<JournalType> journalType,
-            final List<Integer> scope,
-            final UriComponentsBuilder uriComponentsBuilder,
-            final Pageable pageable
-    ) {
-        final List<JournalEntry> journalEntries = this.journalRepository.findAll(from, to, journalType, scope);
+  private static Page<JournalEntry> getJournalEntryPage(
+    final Collection<? extends JournalEntry> journalEntries,
+    final Pageable pageable
+  ) {
+    final List<JournalEntry> pageList = journalEntries.stream()
+      .skip((long) pageable.getPageSize() * pageable.getPageNumber())
+      .limit(pageable.getPageSize())
+      .collect(Collectors.toList());
 
-        return getJournalEntryPage(journalEntries, pageable)
-                .map(journalEntry -> this.getResponse(uriComponentsBuilder, journalEntry));
-    }
+    return new PageImpl<>(pageList, pageable, journalEntries.size());
+  }
 
-    private static Page<JournalEntry> getJournalEntryPage(
-            final Collection<? extends JournalEntry> journalEntries,
-            final Pageable pageable
-    ) {
-        final List<JournalEntry> pageList = journalEntries.stream()
-                .skip((long) pageable.getPageSize() * pageable.getPageNumber())
-                .limit(pageable.getPageSize())
-                .collect(Collectors.toList());
+  public Page<JournalResponse> getAll(
+    final LocalDate from,
+    final LocalDate to,
+    final List<JournalType> journalType,
+    final List<Integer> scope,
+    final UriComponentsBuilder uriComponentsBuilder,
+    final Pageable pageable
+  ) {
+    final List<JournalEntry> journalEntries = this.journalRepository.findAll(from, to, journalType, scope);
 
-        return new PageImpl<>(pageList, pageable, journalEntries.size());
-    }
+    return getJournalEntryPage(journalEntries, pageable)
+      .map(journalEntry -> this.getResponse(uriComponentsBuilder, journalEntry));
+  }
 
-    private JournalResponse getResponse(final UriComponentsBuilder uriComponentsBuilder, final JournalEntry journalEntry) {
-        return this.journalResponseMapper.map(journalEntry, uriComponentsBuilder);
-    }
+  private JournalResponse getResponse(
+    final UriComponentsBuilder uriComponentsBuilder,
+    final JournalEntry journalEntry
+  ) {
+    return this.journalResponseMapper.map(journalEntry, uriComponentsBuilder);
+  }
 
 }

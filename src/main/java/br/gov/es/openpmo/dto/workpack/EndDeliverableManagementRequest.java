@@ -7,23 +7,26 @@ import java.time.LocalDate;
 
 public class EndDeliverableManagementRequest {
 
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    private final LocalDate endManagementDate;
+  @JsonFormat(pattern = "yyyy-MM-dd")
+  private final LocalDate endManagementDate;
 
-    private final String reason;
+  private final String reason;
 
-    @JsonCreator
-    public EndDeliverableManagementRequest(final LocalDate endManagementDate, String reason) {
-        this.endManagementDate = endManagementDate;
-        this.reason = reason;
-    }
+  @JsonCreator
+  public EndDeliverableManagementRequest(
+    final LocalDate endManagementDate,
+    final String reason
+  ) {
+    this.endManagementDate = endManagementDate;
+    this.reason = reason;
+  }
 
-    public LocalDate getEndManagementDate() {
-        return this.endManagementDate;
-    }
+  public LocalDate getEndManagementDate() {
+    return this.endManagementDate;
+  }
 
-    public String getReason() {
-        return reason;
-    }
+  public String getReason() {
+    return this.reason;
+  }
 
 }

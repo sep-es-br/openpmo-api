@@ -11,7 +11,10 @@ public class StakeholderCardViewDto {
   private final Long id;
   private final String name;
 
-  public StakeholderCardViewDto(final Long id, final String name) {
+  public StakeholderCardViewDto(
+    final Long id,
+    final String name
+  ) {
     this.id = id;
     this.name = name;
   }
@@ -40,4 +43,5 @@ public class StakeholderCardViewDto {
     final StakeholderCardViewDto that = (StakeholderCardViewDto) o;
     return this.id.equals(that.id);
   }
+
 }

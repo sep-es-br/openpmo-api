@@ -129,4 +129,5 @@ public class CustomFilter extends Entity {
     this.setWorkpackModel(workpackModel);
     this.setType(customFilterEnum);
   }
+
 }

@@ -13,223 +13,268 @@ import java.util.Optional;
 
 public abstract class FindStakeholderAndPermissionUsingCustomFilterBuilder extends AbstractCustomFilterBuilder {
 
-    public Optional<StakeholderAndPermissionQuery> execute(final CustomFilter filter, final Map<String, Object> params) {
-        this.validateArgs(filter, params);
-        this.verifyExternalParam(params);
+  public Optional<StakeholderAndPermissionQuery> execute(
+    final CustomFilter filter,
+    final Map<String, Object> params
+  ) {
+    this.validateArgs(filter, params);
+    this.verifyExternalParam(params);
 
-        final boolean haveExternalParam = !params.keySet().isEmpty();
-        final String query = this.buildQuery(filter, params);
+    final boolean haveExternalParam = !params.keySet().isEmpty();
+    final String query = this.buildQuery(filter, params);
 
-        final Result result = this.getSession().query(query, params);
-        final Iterable<Map<String, Object>> maps = result.queryResults();
-        final Map<String, Object> objectMap = maps.iterator().next();
+    final Result result = this.getSession().query(query, params);
+    final Iterable<Map<String, Object>> maps = result.queryResults();
+    final Map<String, Object> objectMap = maps.iterator().next();
 
-        return Optional.ofNullable(objectMap).map(this::getPermissionQuery);
+    return Optional.ofNullable(objectMap).map(this::getPermissionQuery);
+  }
+
+  private StakeholderAndPermissionQuery getPermissionQuery(final Map<String, Object> objectMap) {
+    try {
+      return new StakeholderAndPermissionQuery(this.getStakeholders(objectMap), this.getPermissions(objectMap));
+    }
+    catch(final ClassCastException classCastException) {
+      return null;
+    }
+  }
+
+  private ArrayList<CanAccessWorkpack> getPermissions(final Map<String, Object> objectMap) throws ClassCastException {
+    return (ArrayList<CanAccessWorkpack>) objectMap.get("permissions");
+  }
+
+  private ArrayList<IsStakeholderIn> getStakeholders(final Map<String, Object> objectMap) throws ClassCastException {
+    return (ArrayList<IsStakeholderIn>) objectMap.get("stakeholders");
+  }
+
+  @Override
+  protected String buildCustomFilterRule(
+    final Rules rule,
+    final String label
+  ) {
+    final PropertyValue propertyValue = PropertyValue.find(rule.getPropertyName());
+    return propertyValue.getCondition(rule.getRelationalOperator().getOperador(), label) + " ";
+  }
+
+  @Override
+  protected void buildOrderingAndDirectionClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
+    // sobrescreve ordenação padrão.
+  }
+
+  protected enum PropertyValue {
+    NAME("name", "actor", "person") {
+      @Override
+      String getCondition(
+        final String operator,
+        final String label
+      ) {
+        return String.format(
+          "(%s.%s %s $%s OR %s.%s %s $%s)",
+          this.firstNode, this.property, operator, label, this.secondNode, this.property, operator, label
+        );
+      }
+
+      @Override
+      String getOrdering(final CustomFilter filter) {
+        return String.format(
+          "ORDER BY %s.%s, %s.%s",
+          this.firstNode, this.property, this.secondNode, this.property
+        );
+      }
+    },
+    FULL_NAME("fullName", "actor", "person") {
+      @Override
+      String getCondition(
+        final String operator,
+        final String label
+      ) {
+        return String.format(
+          "(%s.%s %s $%s OR %s.%s %s $%s)",
+          this.firstNode, this.property, operator, label, this.secondNode, this.property, operator, label
+        );
+      }
+
+      @Override
+      String getOrdering(final CustomFilter filter) {
+        return String.format(
+          "ORDER BY %s.%s, %s.%s",
+          this.firstNode, this.property, this.secondNode, this.property
+        );
+      }
+    },
+    SECTOR("sector", "actor", null) {
+      @Override
+      String getCondition(
+        final String operator,
+        final String label
+      ) {
+        return String.format(
+          "(%s.%s %s $%s)",
+          this.firstNode, this.property, operator, label
+        );
+      }
+
+      @Override
+      String getOrdering(final CustomFilter filter) {
+        return String.format(
+          "ORDER BY %s.%s",
+          this.firstNode, this.property
+        );
+      }
+    },
+    ADDRESS("address", "contact", "actor") {
+      @Override
+      String getCondition(
+        final String operator,
+        final String label
+      ) {
+        return String.format(
+          "(%s.%s %s $%s OR %s.%s %s $%s)",
+          this.firstNode, this.property, operator, label, this.secondNode, this.property, operator, label
+        );
+      }
+
+      @Override
+      String getOrdering(final CustomFilter filter) {
+        return String.format(
+          "ORDER BY %s.%s, %s.%s",
+          this.firstNode, this.property, this.secondNode, this.property
+        );
+      }
+    },
+    CONTACT_EMAIL("contactEmail", "contact", "actor") {
+      @Override
+      String getCondition(
+        final String operator,
+        final String label
+      ) {
+        return String.format(
+          "(%s.%s %s $%s OR %s.%s %s $%s)",
+          this.firstNode, this.property, operator, label, this.secondNode, this.property, operator, label
+        );
+      }
+
+      @Override
+      String getOrdering(final CustomFilter filter) {
+        return String.format(
+          "ORDER BY %s.%s, %s.%s",
+          this.firstNode, this.property, this.secondNode, this.property
+        );
+      }
+    },
+    PHONE_NUMBER("phoneNumber", "contact", "actor") {
+      @Override
+      String getCondition(
+        final String operator,
+        final String label
+      ) {
+        return String.format(
+          "(%s.%s %s $%s OR %s.%s %s $%s)",
+          this.firstNode, this.property, operator, label, this.secondNode, this.property, operator, label
+        );
+      }
+
+      @Override
+      String getOrdering(final CustomFilter filter) {
+        return String.format(
+          "ORDER BY %s.%s, %s.%s",
+          this.firstNode, this.property, this.secondNode, this.property
+        );
+      }
+    },
+    ADMINISTRATOR("administrator", "person", "actor") {
+      @Override
+      String getCondition(
+        final String operator,
+        final String label
+      ) {
+        return String.format(
+          "(%s.%s %s $%s OR %s.%s %s $%s)",
+          this.firstNode, this.property, operator, label, this.secondNode, this.property, operator, label
+        );
+      }
+
+      @Override
+      String getOrdering(final CustomFilter filter) {
+        return String.format(
+          "ORDER BY %s.%s, %s.%s",
+          this.firstNode, this.property, this.secondNode, this.property
+        );
+      }
+    },
+    LEVEL("level", "canAccessWorkpack", null) {
+      @Override
+      String getCondition(
+        final String operator,
+        final String label
+      ) {
+        return String.format(
+          "(%s.%s %s $%s)",
+          this.firstNode, this.property, operator, label
+        );
+      }
+
+      @Override
+      String getOrdering(final CustomFilter filter) {
+        return String.format(
+          "ORDER BY %s.%s",
+          this.firstNode, this.property
+        );
+      }
+    },
+    ROLE("role", "isStakeholderIn", null) {
+      @Override
+      String getCondition(
+        final String operator,
+        final String label
+      ) {
+        return String.format(
+          "(lower(%s.%s) %s lower($%s))",
+          this.firstNode, this.property, operator, label
+        );
+      }
+
+      @Override
+      String getOrdering(final CustomFilter filter) {
+        return String.format(
+          "ORDER BY %s.%s",
+          this.firstNode, this.property
+        );
+      }
+    };
+
+    protected final String property;
+    protected final String firstNode;
+    protected final String secondNode;
+
+    PropertyValue(
+      final String property,
+      final String firstNode,
+      final String secondNode
+    ) {
+      this.property = property;
+      this.firstNode = firstNode;
+      this.secondNode = secondNode;
     }
 
-    private StakeholderAndPermissionQuery getPermissionQuery(Map<String, Object> objectMap) {
-        try {
-            return new StakeholderAndPermissionQuery(getStakeholders(objectMap), getPermissions(objectMap));
-        } catch (ClassCastException classCastException) {
-            return null;
+    public static PropertyValue find(final String property) {
+      for(final PropertyValue value : PropertyValue.values()) {
+        if(value.property.equals(property)) {
+          return value;
         }
+      }
+      throw new IllegalArgumentException("error");
     }
 
-    private ArrayList<CanAccessWorkpack> getPermissions(Map<String, Object> objectMap) throws ClassCastException {
-        return (ArrayList<CanAccessWorkpack>) objectMap.get("permissions");
-    }
+    abstract String getCondition(
+      String operator,
+      String label
+    );
 
-    private ArrayList<IsStakeholderIn> getStakeholders(Map<String, Object> objectMap) throws ClassCastException {
-        return (ArrayList<IsStakeholderIn>) objectMap.get("stakeholders");
-    }
+    abstract String getOrdering(CustomFilter filter);
+  }
 
-    @Override
-    protected String buildCustomFilterRule(final Rules rule, final String label) {
-        final PropertyValue propertyValue = PropertyValue.find(rule.getPropertyName());
-        return propertyValue.getCondition(rule.getRelationalOperator().getOperador(), label) + " ";
-    }
-
-    @Override
-    protected void buildOrderingAndDirectionClause(final CustomFilter filter, final StringBuilder query) {
-        // sobrescreve ordenação padrão.
-    }
-
-    protected enum PropertyValue {
-        NAME("name", "actor", "person") {
-            @Override
-            String getCondition(final String operator, final String label) {
-                return String.format(
-                        "(%s.%s %s $%s OR %s.%s %s $%s)",
-                        this.firstNode, this.property, operator, label, this.secondNode, this.property, operator, label
-                );
-            }
-
-            @Override
-            String getOrdering(final CustomFilter filter) {
-                return String.format(
-                        "ORDER BY %s.%s, %s.%s",
-                        this.firstNode, this.property, this.secondNode, this.property
-                );
-            }
-        },
-        FULL_NAME("fullName", "actor", "person") {
-            @Override
-            String getCondition(final String operator, final String label) {
-                return String.format(
-                        "(%s.%s %s $%s OR %s.%s %s $%s)",
-                        this.firstNode, this.property, operator, label, this.secondNode, this.property, operator, label
-                );
-            }
-
-            @Override
-            String getOrdering(final CustomFilter filter) {
-                return String.format(
-                        "ORDER BY %s.%s, %s.%s",
-                        this.firstNode, this.property, this.secondNode, this.property
-                );
-            }
-        },
-        SECTOR("sector", "actor", null) {
-            @Override
-            String getCondition(final String operator, final String label) {
-                return String.format(
-                        "(%s.%s %s $%s)",
-                        this.firstNode, this.property, operator, label
-                );
-            }
-
-            @Override
-            String getOrdering(final CustomFilter filter) {
-                return String.format(
-                        "ORDER BY %s.%s",
-                        this.firstNode, this.property
-                );
-            }
-        },
-        ADDRESS("address", "contact", "actor") {
-            @Override
-            String getCondition(final String operator, final String label) {
-                return String.format(
-                        "(%s.%s %s $%s OR %s.%s %s $%s)",
-                        this.firstNode, this.property, operator, label, this.secondNode, this.property, operator, label
-                );
-            }
-
-            @Override
-            String getOrdering(final CustomFilter filter) {
-                return String.format(
-                        "ORDER BY %s.%s, %s.%s",
-                        this.firstNode, this.property, this.secondNode, this.property
-                );
-            }
-        },
-        CONTACT_EMAIL("contactEmail", "contact", "actor") {
-            @Override
-            String getCondition(final String operator, final String label) {
-                return String.format(
-                        "(%s.%s %s $%s OR %s.%s %s $%s)",
-                        this.firstNode, this.property, operator, label, this.secondNode, this.property, operator, label
-                );
-            }
-
-            @Override
-            String getOrdering(final CustomFilter filter) {
-                return String.format(
-                        "ORDER BY %s.%s, %s.%s",
-                        this.firstNode, this.property, this.secondNode, this.property
-                );
-            }
-        },
-        PHONE_NUMBER("phoneNumber", "contact", "actor") {
-            @Override
-            String getCondition(final String operator, final String label) {
-                return String.format(
-                        "(%s.%s %s $%s OR %s.%s %s $%s)",
-                        this.firstNode, this.property, operator, label, this.secondNode, this.property, operator, label
-                );
-            }
-
-            @Override
-            String getOrdering(final CustomFilter filter) {
-                return String.format(
-                        "ORDER BY %s.%s, %s.%s",
-                        this.firstNode, this.property, this.secondNode, this.property
-                );
-            }
-        },
-        ADMINISTRATOR("administrator", "person", "actor") {
-            @Override
-            String getCondition(final String operator, final String label) {
-                return String.format(
-                        "(%s.%s %s $%s OR %s.%s %s $%s)",
-                        this.firstNode, this.property, operator, label, this.secondNode, this.property, operator, label
-                );
-            }
-
-            @Override
-            String getOrdering(final CustomFilter filter) {
-                return String.format(
-                        "ORDER BY %s.%s, %s.%s",
-                        this.firstNode, this.property, this.secondNode, this.property
-                );
-            }
-        },
-        LEVEL("level", "canAccessWorkpack", null) {
-            @Override
-            String getCondition(final String operator, final String label) {
-                return String.format(
-                        "(%s.%s %s $%s)",
-                        this.firstNode, this.property, operator, label
-                );
-            }
-
-            @Override
-            String getOrdering(final CustomFilter filter) {
-                return String.format(
-                        "ORDER BY %s.%s",
-                        this.firstNode, this.property
-                );
-            }
-        },
-        ROLE("role", "isStakeholderIn", null) {
-            @Override
-            String getCondition(final String operator, final String label) {
-                return String.format(
-                        "(lower(%s.%s) %s lower($%s))",
-                        this.firstNode, this.property, operator, label
-                );
-            }
-
-            @Override
-            String getOrdering(final CustomFilter filter) {
-                return String.format(
-                        "ORDER BY %s.%s",
-                        this.firstNode, this.property
-                );
-            }
-        };
-
-        protected final String property;
-        protected final String firstNode;
-        protected final String secondNode;
-
-        PropertyValue(final String property, final String firstNode, final String secondNode) {
-            this.property = property;
-            this.firstNode = firstNode;
-            this.secondNode = secondNode;
-        }
-
-        public static PropertyValue find(final String property) {
-            for (final PropertyValue value : PropertyValue.values()) {
-                if (value.property.equals(property)) {
-                    return value;
-                }
-            }
-            throw new IllegalArgumentException("error");
-        }
-
-        abstract String getCondition(String operator, String label);
-
-        abstract String getOrdering(CustomFilter filter);
-    }
 }

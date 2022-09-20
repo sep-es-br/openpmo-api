@@ -14,7 +14,10 @@ public class PersonListDto {
   private AvatarDto avatar;
 
 
-  public PersonListDto(final AllPersonInOfficeQuery query, final UriComponentsBuilder uriComponentsBuilder) {
+  public PersonListDto(
+    final AllPersonInOfficeQuery query,
+    final UriComponentsBuilder uriComponentsBuilder
+  ) {
     this(
       query.getId(),
       query.getName(),
@@ -71,4 +74,5 @@ public class PersonListDto {
   public void setAvatar(final AvatarDto avatar) {
     this.avatar = avatar;
   }
+
 }

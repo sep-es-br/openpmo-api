@@ -32,10 +32,10 @@ public class IssueResponseService {
 
   @Autowired
   public IssueResponseService(
-      final IssueResponseRepository repository,
-      final PersonService personService,
-      final IssueService issueService,
-      final JournalCreator journalCreator
+    final IssueResponseRepository repository,
+    final PersonService personService,
+    final IssueService issueService,
+    final JournalCreator journalCreator
   ) {
     this.repository = repository;
     this.personService = personService;
@@ -44,7 +44,10 @@ public class IssueResponseService {
   }
 
   @Transactional
-  public EntityDto create(final IssueResponseCreateDto request, final Long idPerson) {
+  public EntityDto create(
+    final IssueResponseCreateDto request,
+    final Long idPerson
+  ) {
     final Issue issue = this.findIssueById(request.getIssueId());
     final Set<Person> responsible = this.personService.findAllById(request.getResponsible());
     final IssueResponse response = IssueResponse.of(request, issue, responsible);
@@ -58,7 +61,10 @@ public class IssueResponseService {
   }
 
   @Transactional
-  public IssueResponseDetailDto update(final IssueResponseUpdateDto request, final Long idPerson) {
+  public IssueResponseDetailDto update(
+    final IssueResponseUpdateDto request,
+    final Long idPerson
+  ) {
     final IssueResponse response = this.findById(request.getId());
     response.update(request);
     this.repository.save(response, 0);
@@ -68,7 +74,7 @@ public class IssueResponseService {
 
   private IssueResponse findById(final Long id) {
     return this.repository.findById(id)
-        .orElseThrow(() -> new RegistroNaoEncontradoException(ISSUE_RESPONSE_NOT_FOUND));
+      .orElseThrow(() -> new RegistroNaoEncontradoException(ISSUE_RESPONSE_NOT_FOUND));
   }
 
   @Transactional

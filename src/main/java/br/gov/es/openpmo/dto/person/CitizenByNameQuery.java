@@ -5,7 +5,10 @@ public final class CitizenByNameQuery {
   private final String name;
   private final String sub;
 
-  public CitizenByNameQuery(final String name, final String sub) {
+  public CitizenByNameQuery(
+    final String name,
+    final String sub
+  ) {
     this.name = name;
     this.sub = sub;
   }
@@ -17,5 +20,6 @@ public final class CitizenByNameQuery {
   public String getSub() {
     return this.sub;
   }
+
 }
 

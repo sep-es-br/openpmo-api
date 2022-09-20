@@ -10,62 +10,80 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 
 @Component
+@Deprecated
 public class GetMilestoneDashboardData implements IGetMilestoneDashboardData {
 
-    private final DashboardMilestoneRepository repository;
+  private final DashboardMilestoneRepository repository;
 
-    @Autowired
-    public GetMilestoneDashboardData(final DashboardMilestoneRepository repository) {
-        this.repository = repository;
-    }
+  @Autowired
+  public GetMilestoneDashboardData(final DashboardMilestoneRepository repository) {
+    this.repository = repository;
+  }
 
-    @Override
-    public MilestoneDataChart get(final DashboardParameters parameters) {
-        final Long idBaseline = parameters.getBaselineId();
-        final Long idWorkpack = parameters.getWorkpackId();
-        final YearMonth yearMonth = parameters.getYearMonth();
+  private static LocalDate getMinOfNowAnd(final YearMonth date) {
+    final LocalDate now = LocalDate.now();
+    final LocalDate endOfMonth = date.atEndOfMonth();
+    return now.isBefore(endOfMonth) ? now : endOfMonth;
+  }
 
-        final LocalDate minDate = getMinOfNowAnd(yearMonth);
+  @Override
+  public MilestoneDataChart get(final DashboardParameters parameters) {
+    final Long idBaseline = parameters.getBaselineId();
+    final Long idWorkpack = parameters.getWorkpackId();
+    final YearMonth yearMonth = parameters.getYearMonth();
 
-        final Long quantity = this.getQuantity(idBaseline, idWorkpack);
-        final Long concluded = this.getConcluded(idBaseline, idWorkpack);
-        final Long lateConcluded = this.getLateConcluded(idBaseline, idWorkpack);
-        final Long late = this.getLate(idBaseline, idWorkpack, minDate);
-        final Long onTime = this.getOnTime(idBaseline, idWorkpack, minDate);
+    final LocalDate minDate = getMinOfNowAnd(yearMonth);
 
-        return new MilestoneDataChart(
-                quantity,
-                concluded,
-                lateConcluded,
-                late,
-                onTime
-        );
-    }
+    final Long quantity = this.getQuantity(idBaseline, idWorkpack);
+    final Long concluded = this.getConcluded(idBaseline, idWorkpack);
+    final Long lateConcluded = this.getLateConcluded(idBaseline, idWorkpack);
+    final Long late = this.getLate(idBaseline, idWorkpack, minDate);
+    final Long onTime = this.getOnTime(idBaseline, idWorkpack, minDate);
 
-    private static LocalDate getMinOfNowAnd(final YearMonth date) {
-        final LocalDate now = LocalDate.now();
-        final LocalDate endOfMonth = date.atEndOfMonth();
-        return now.isBefore(endOfMonth) ? now : endOfMonth;
-    }
+    return new MilestoneDataChart(
+      quantity,
+      concluded,
+      lateConcluded,
+      late,
+      onTime
+    );
+  }
 
-    private Long getQuantity(final Long baselineId, final Long idWorkpack) {
-        return null;
-    }
+  private Long getQuantity(
+    final Long baselineId,
+    final Long idWorkpack
+  ) {
+    return null;
+  }
 
-    private Long getConcluded(final Long baselineId, final Long idWorkpack) {
-        return null;
-    }
+  private Long getConcluded(
+    final Long baselineId,
+    final Long idWorkpack
+  ) {
+    return null;
+  }
 
-    private Long getLateConcluded(final Long baselineId, final Long idWorkpack) {
-        return null;
-    }
+  private Long getLateConcluded(
+    final Long baselineId,
+    final Long idWorkpack
+  ) {
+    return null;
+  }
 
-    private Long getLate(final Long baselineId, final Long idWorkpack, final LocalDate refDate) {
-        return null;
-    }
+  private Long getLate(
+    final Long baselineId,
+    final Long idWorkpack,
+    final LocalDate refDate
+  ) {
+    return null;
+  }
 
-    private Long getOnTime(final Long baselineId, final Long idWorkpack, final LocalDate refDate) {
-        return null;
-    }
+  private Long getOnTime(
+    final Long baselineId,
+    final Long idWorkpack,
+    final LocalDate refDate
+  ) {
+    return null;
+  }
 
 }

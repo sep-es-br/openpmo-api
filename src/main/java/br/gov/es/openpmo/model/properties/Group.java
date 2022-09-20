@@ -15,60 +15,60 @@ import java.util.Set;
 @NodeEntity
 public class Group extends Property<Group, Set<Property>> {
 
-    @Relationship(type = "GROUPS")
-    private Set<Property> groupedProperties;
+  @Relationship(type = "GROUPS")
+  private Set<Property> groupedProperties;
 
-    private CategoryEnum category;
+  private CategoryEnum category;
 
-    @Relationship(type = "COMPOSES")
-    private Baseline baseline;
+  @Relationship(type = "COMPOSES")
+  private Baseline baseline;
 
-    @Relationship("FEATURES")
-    private Workpack workpack;
+  @Relationship("FEATURES")
+  private Workpack workpack;
 
-    @Relationship("IS_DRIVEN_BY")
-    private GroupModel driver;
+  @Relationship("IS_DRIVEN_BY")
+  private GroupModel driver;
 
-    public Group() {
-    }
+  public Group() {
+  }
 
-    public Set<Property> getGroupedProperties() {
-        return this.groupedProperties;
-    }
+  public Set<Property> getGroupedProperties() {
+    return this.groupedProperties;
+  }
 
-    public void setGroupedProperties(final Set<Property> groupedProperties) {
-        this.groupedProperties = groupedProperties;
-    }
+  public void setGroupedProperties(final Set<Property> groupedProperties) {
+    this.groupedProperties = groupedProperties;
+  }
 
-    public GroupModel getDriver() {
-        return this.driver;
-    }
+  public GroupModel getDriver() {
+    return this.driver;
+  }
 
-    public void setDriver(final GroupModel driver) {
-        this.driver = driver;
-    }
+  public void setDriver(final GroupModel driver) {
+    this.driver = driver;
+  }
 
-    @Override
-    public Group snapshot() {
-        final Group group = new Group();
-        group.setValue(Optional.ofNullable(this.groupedProperties).map(HashSet::new).orElse(null));
-        return group;
-    }
+  @Override
+  public Group snapshot() {
+    final Group group = new Group();
+    group.setValue(Optional.ofNullable(this.groupedProperties).map(HashSet::new).orElse(null));
+    return group;
+  }
 
-    @Override
-    public void setValue(final Set<Property> value) {
-        this.groupedProperties = value;
-    }
+  @Override
+  public Baseline getBaseline() {
+    return this.baseline;
+  }
 
-    @Override
-    public CategoryEnum getCategory() {
-        return this.category;
-    }
+  @Override
+  public void setBaseline(final Baseline baseline) {
+    this.baseline = baseline;
+  }
 
-    @Override
-    public void setCategory(final CategoryEnum category) {
-        this.category = category;
-    }
+  @Override
+  public CategoryEnum getCategory() {
+    return this.category;
+  }
 
   @Override
   public Workpack getWorkpack() {
@@ -80,8 +80,9 @@ public class Group extends Property<Group, Set<Property>> {
     this.workpack = workpack;
   }
 
-  @Override public PropertyModel getPropertyModel() {
-    return this.getDriver();
+  @Override
+  public void setCategory(final CategoryEnum category) {
+    this.category = category;
   }
 
   @Override
@@ -91,18 +92,18 @@ public class Group extends Property<Group, Set<Property>> {
   }
 
   @Override
+  public PropertyModel getPropertyModel() {
+    return this.getDriver();
+  }
+
+  @Override
   public Set<Property> getValue() {
     return this.groupedProperties;
-    }
+  }
 
-    @Override
-    public Baseline getBaseline() {
-        return this.baseline;
-    }
-
-    @Override
-    public void setBaseline(final Baseline baseline) {
-        this.baseline = baseline;
-    }
+  @Override
+  public void setValue(final Set<Property> value) {
+    this.groupedProperties = value;
+  }
 
 }

@@ -6,61 +6,62 @@ import java.util.List;
 
 public class WorkpackPermissionDetailDto {
 
-    private Long id;
-    private String name;
-    private List<String> roles;
-    private String icon;
-    private PermissionLevelEnum accessLevel;
-    private Boolean isCcbMember;
+  private Long id;
+  private String name;
+  private List<String> roles;
+  private String icon;
+  private PermissionLevelEnum accessLevel;
+  private Boolean isCcbMember;
 
-    public WorkpackPermissionDetailDto() {
-    }
+  public WorkpackPermissionDetailDto() {
+  }
 
-    public Long getId() {
-        return id;
-    }
+  public Long getId() {
+    return this.id;
+  }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+  public void setId(final Long id) {
+    this.id = id;
+  }
 
-    public String getName() {
-        return name;
-    }
+  public String getName() {
+    return this.name;
+  }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+  public void setName(final String name) {
+    this.name = name;
+  }
 
-    public List<String> getRoles() {
-        return roles;
-    }
+  public List<String> getRoles() {
+    return this.roles;
+  }
 
-    public void setRoles(List<String> roles) {
-        this.roles = roles;
-    }
+  public void setRoles(final List<String> roles) {
+    this.roles = roles;
+  }
 
-    public String getIcon() {
-        return icon;
-    }
+  public String getIcon() {
+    return this.icon;
+  }
 
-    public void setIcon(String icon) {
-        this.icon = icon;
-    }
+  public void setIcon(final String icon) {
+    this.icon = icon;
+  }
 
-    public PermissionLevelEnum getAccessLevel() {
-        return accessLevel;
-    }
+  public PermissionLevelEnum getAccessLevel() {
+    return this.accessLevel;
+  }
 
-    public void setAccessLevel(PermissionLevelEnum accessLevel) {
-        this.accessLevel = accessLevel;
-    }
+  public void setAccessLevel(final PermissionLevelEnum accessLevel) {
+    this.accessLevel = accessLevel;
+  }
 
-    public Boolean getCcbMember() {
-        return isCcbMember;
-    }
+  public Boolean getCcbMember() {
+    return this.isCcbMember;
+  }
 
-    public void setCcbMember(Boolean ccbMember) {
-        isCcbMember = ccbMember;
-    }
+  public void setCcbMember(final Boolean ccbMember) {
+    this.isCcbMember = ccbMember;
+  }
+
 }

@@ -11,4 +11,5 @@ public class ErroDto {
   public String getErro() {
     return this.erro;
   }
+
 }

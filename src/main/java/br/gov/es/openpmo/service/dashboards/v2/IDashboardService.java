@@ -6,8 +6,8 @@ import br.gov.es.openpmo.dto.dashboards.v2.SimpleDashboard;
 
 public interface IDashboardService {
 
-    DashboardResponse build(DashboardParameters parameters);
+  DashboardResponse build(DashboardParameters parameters);
 
-    SimpleDashboard buildSimple(Long workpackId);
+  SimpleDashboard buildSimple(Long workpackId);
 
 }

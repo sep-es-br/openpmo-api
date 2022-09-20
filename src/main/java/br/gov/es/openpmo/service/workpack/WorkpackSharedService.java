@@ -15,7 +15,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.DUPLICATED_VALUE;
@@ -43,7 +48,7 @@ public class WorkpackSharedService {
     final WorkpackService workpackService,
     final WorkpackModelService workpackModelService,
     final OfficeService officeService,
-    WorkpackRepository workpackRepository
+    final WorkpackRepository workpackRepository
   ) {
     this.repository = repository;
     this.workpackService = workpackService;
@@ -57,27 +62,30 @@ public class WorkpackSharedService {
     final Collection<WorkpackModel> baseWorkpackModelStructure,
     final WorkpackModel instanceWorkpack
   ) {
-    if (!baseWorkpackModel.getModelName().equals(instanceWorkpack.getModelName())) {
+    if(!baseWorkpackModel.getModelName().equals(instanceWorkpack.getModelName())) {
       return false;
     }
     final List<WorkpackModel> instanceChildren = fetchChildren(instanceWorkpack);
-    if (baseWorkpackModelStructure.size() != instanceChildren.size()) {
+    if(baseWorkpackModelStructure.size() != instanceChildren.size()) {
       return false;
     }
     return baseWorkpackModelStructure.stream()
       .allMatch(f -> instanceChildren.stream().anyMatch(s -> sameTypeName(f, s)));
   }
 
-  private static String getOfficeName(Workpack workpack) {
+  private static String getOfficeName(final Workpack workpack) {
     return workpack
       .getOriginalOffice()
       .map(a -> " (" + a.getName() + ")")
       .orElse("");
   }
 
-  private static boolean sameTypeName(WorkpackModel first, WorkpackModel second) {
-    String firstTypeName = first.getClass().getTypeName();
-    String secondTypeName = second.getClass().getTypeName();
+  private static boolean sameTypeName(
+    final WorkpackModel first,
+    final WorkpackModel second
+  ) {
+    final String firstTypeName = first.getClass().getTypeName();
+    final String secondTypeName = second.getClass().getTypeName();
     return Objects.equals(firstTypeName, secondTypeName);
   }
 
@@ -88,29 +96,35 @@ public class WorkpackSharedService {
   }
 
   private static boolean verifyIfItWillNeedToIncludeAllOffices(final List<WorkpackSharedParamDto> request) {
-    if (request.size() != 1) {
+    if(request.size() != 1) {
       return false;
     }
     final WorkpackSharedParamDto firstItem = request.get(0);
     return ALL.equalsIgnoreCase(firstItem.officeName()) || firstItem.idOffice() == null;
   }
 
-  private static List<WorkpackSharedDto> getWorkpackSharedDtos(Collection<IsSharedWith> sharedWith) {
+  private static List<WorkpackSharedDto> getWorkpackSharedDtos(final Collection<IsSharedWith> sharedWith) {
     return sharedWith.stream()
       .map(WorkpackSharedDto::of)
       .collect(Collectors.toList());
   }
 
-  private void addItem(final Collection<? super ComboDto> itens, final IsSharedWith relationship) {
-    String workpackName = getWorkpackName(relationship.workpackId());
-    String officeName = getOfficeName(relationship.getWorkpack());
-    itens.add(new ComboDto(relationship.workpackId(), workpackName + officeName));
+  private static Optional<IsSharedWith> searchSharedRelationship(
+    final Collection<IsSharedWith> isSharedWiths,
+    final Long id
+  ) {
+    return isSharedWiths.stream()
+      .filter(filtro -> filtro.getId().equals(id))
+      .findFirst();
   }
 
-  private String getWorkpackName(Long workpackId) {
-    return this.workpackRepository.findWorkpackNameAndFullname(workpackId)
-      .map(WorkpackName::getName)
-      .orElse("");
+  private void addItem(
+    final Collection<? super ComboDto> itens,
+    final IsSharedWith relationship
+  ) {
+    final String workpackName = this.getWorkpackName(relationship.workpackId());
+    final String officeName = getOfficeName(relationship.getWorkpack());
+    itens.add(new ComboDto(relationship.workpackId(), workpackName + officeName));
   }
 
   private void revokePublicAccess(final Long idWorkpack) {
@@ -124,22 +138,42 @@ public class WorkpackSharedService {
     this.deleteSharedRelationship(idWorkpack, null);
   }
 
-  private void deleteSharedRelationship(final Long idWorkpack, final Long idOffice) {
+  private String getWorkpackName(final Long workpackId) {
+    return this.workpackRepository.findWorkpackNameAndFullname(workpackId)
+      .map(WorkpackName::getName)
+      .orElse("");
+  }
+
+  private void deleteSharedRelationship(
+    final Long idWorkpack,
+    final Long idOffice
+  ) {
     this.repository.deleteExternalPermission(idWorkpack, idOffice);
     this.repository.deleteExternalParent(idWorkpack, idOffice);
     this.repository.deleteExternalLinkedRelationship(idWorkpack, idOffice);
     this.repository.deleteSharedRelationship(idWorkpack, idOffice);
   }
 
-  private void addItem(final Collection<? super ComboDto> itens, final Workpack publicWorkpack) {
-    String workpackName = getWorkpackName(publicWorkpack.getId());
-    String officeName = getOfficeName(publicWorkpack);
+  private void addItem(
+    final Collection<? super ComboDto> itens,
+    final Workpack publicWorkpack
+  ) {
+    final String workpackName = this.getWorkpackName(publicWorkpack.getId());
+    final String officeName = getOfficeName(publicWorkpack);
     itens.add(new ComboDto(publicWorkpack.getId(), workpackName + officeName));
   }
 
+  public IsSharedWith findById(final Long id) {
+    return this.repository.findById(id)
+      .orElseThrow(() -> new NegocioException(REGISTRO_NOT_FOUND));
+  }
+
   @Transactional
-  public void revokeShare(final Long idSharedWith, final Long idWorkpack) {
-    if (idSharedWith == null) {
+  public void revokeShare(
+    final Long idSharedWith,
+    final Long idWorkpack
+  ) {
+    if(idSharedWith == null) {
       this.revokePublicAccess(idWorkpack);
       return;
     }
@@ -148,25 +182,15 @@ public class WorkpackSharedService {
     this.deleteSharedRelationship(idWorkpack, idOffice);
   }
 
-  public IsSharedWith findById(final Long id) {
-    return this.repository.findById(id)
-      .orElseThrow(() -> new NegocioException(REGISTRO_NOT_FOUND));
-  }
-
-  private void createSharedRelationship(final Workpack workpack, final WorkpackSharedParamDto item) {
+  private void createSharedRelationship(
+    final Workpack workpack,
+    final WorkpackSharedParamDto item
+  ) {
     final IsSharedWith newRelationship = new IsSharedWith();
     newRelationship.setWorkpack(workpack);
     newRelationship.setOffice(this.officeService.findById(item.idOffice()));
     newRelationship.setPermissionLevel(item.getLevel());
     this.repository.save(newRelationship);
-  }
-
-  private static Optional<IsSharedWith> searchSharedRelationship(
-    final Collection<IsSharedWith> isSharedWiths, final Long id
-  ) {
-    return isSharedWiths.stream()
-      .filter(filtro -> filtro.getId().equals(id))
-      .findFirst();
   }
 
   private void updateSharedPermissionLevel(final WorkpackSharedParamDto item) {
@@ -175,7 +199,10 @@ public class WorkpackSharedService {
     this.repository.save(isSharedWith);
   }
 
-  public void store(final Long idWorkpack, final List<WorkpackSharedParamDto> request) {
+  public void store(
+    final Long idWorkpack,
+    final List<WorkpackSharedParamDto> request
+  ) {
     final Workpack workpack = this.workpackService.findByIdDefault(idWorkpack);
 
     final boolean workpackPublic = verifyIfItWillNeedToIncludeAllOffices(request);
@@ -185,7 +212,7 @@ public class WorkpackSharedService {
 
     final List<IsSharedWith> isSharedWiths = this.repository.findSharedWithDataByWorkpackId(idWorkpack);
 
-    if (workpackPublic) {
+    if(workpackPublic) {
       this.repository.deleteAll(isSharedWiths);
       return;
     }
@@ -199,7 +226,7 @@ public class WorkpackSharedService {
     final WorkpackSharedParamDto item
   ) {
     final Optional<IsSharedWith> maybeIsShared = searchSharedRelationship(isSharedWiths, item.getId());
-    if (maybeIsShared.isPresent()) {
+    if(maybeIsShared.isPresent()) {
       this.updateSharedPermissionLevel(item);
       return;
     }
@@ -207,9 +234,12 @@ public class WorkpackSharedService {
     this.createSharedRelationship(workpack, item);
   }
 
-  private void validateDuplicatedValues(final Long idWorkpack, final WorkpackSharedParamDto request) {
+  private void validateDuplicatedValues(
+    final Long idWorkpack,
+    final WorkpackSharedParamDto request
+  ) {
     final Optional<IsSharedWith> entity = this.repository.findByIdWorkpackAndIdOffice(idWorkpack, request.idOffice());
-    if (!entity.isPresent()) {
+    if(!entity.isPresent()) {
       return;
     }
     throw new NegocioException(DUPLICATED_VALUE);
@@ -217,11 +247,11 @@ public class WorkpackSharedService {
 
   public List<WorkpackSharedDto> getAll(final Long idWorkpack) {
     final Optional<Workpack> maybeWorkpack = this.repository.findWorkpackById(idWorkpack);
-    if (!maybeWorkpack.isPresent()) {
+    if(!maybeWorkpack.isPresent()) {
       return emptyList();
     }
     final Workpack workpack = maybeWorkpack.get();
-    if (TRUE.equals(workpack.getPublicShared())) {
+    if(TRUE.equals(workpack.getPublicShared())) {
       return Collections.singletonList(WorkpackSharedDto.of(workpack));
     }
     return Optional.ofNullable(workpack.getSharedWith())
@@ -249,10 +279,10 @@ public class WorkpackSharedService {
     final Collection<WorkpackModel> workpackModelStructure
   ) {
     final List<Workpack> publicWorkpacks = this.repository.listAllWorkpacksPublic();
-    for (final Workpack publicWorkpack : publicWorkpacks) {
+    for(final Workpack publicWorkpack : publicWorkpacks) {
       final WorkpackModel instance = publicWorkpack.getWorkpackModelInstance();
-      if (validStructure(workpackModel, workpackModelStructure, instance)) {
-        addItem(itens, publicWorkpack);
+      if(validStructure(workpackModel, workpackModelStructure, instance)) {
+        this.addItem(itens, publicWorkpack);
       }
     }
   }
@@ -263,11 +293,12 @@ public class WorkpackSharedService {
     final Collection<WorkpackModel> workpackModelStructure
   ) {
     final List<IsSharedWith> isSharedWiths = this.repository.listAllWorkpacksShared(workpackModel.getId());
-    for (final IsSharedWith relationship : isSharedWiths) {
+    for(final IsSharedWith relationship : isSharedWiths) {
       final WorkpackModel instanceWorkpackRelationship = relationship.workpackInstance();
-      if (validStructure(workpackModel, workpackModelStructure, instanceWorkpackRelationship)) {
-        addItem(itens, relationship);
+      if(validStructure(workpackModel, workpackModelStructure, instanceWorkpackRelationship)) {
+        this.addItem(itens, relationship);
       }
     }
   }
+
 }

@@ -64,4 +64,5 @@ public class Organization extends Actor {
   public void setContactEmail(final String contactEmail) {
     this.contactEmail = contactEmail;
   }
+
 }

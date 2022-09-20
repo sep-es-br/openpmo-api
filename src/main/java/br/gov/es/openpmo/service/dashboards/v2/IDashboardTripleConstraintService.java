@@ -8,8 +8,8 @@ import java.util.Optional;
 
 public interface IDashboardTripleConstraintService {
 
-    TripleConstraintDataChart build(DashboardParameters parameters);
+  TripleConstraintDataChart build(DashboardParameters parameters);
 
-    Optional<List<TripleConstraintDataChart>> calculate(Long workpackId);
+  Optional<List<TripleConstraintDataChart>> calculate(Long workpackId);
 
 }

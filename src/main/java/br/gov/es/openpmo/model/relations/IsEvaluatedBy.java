@@ -111,4 +111,5 @@ public class IsEvaluatedBy {
   public Long getIdPerson() {
     return this.person.getId();
   }
+
 }

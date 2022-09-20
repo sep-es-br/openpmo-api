@@ -19,7 +19,10 @@ public class FilterPlanController extends CreateAndUpdateUsingCommonFilterOperat
   private final TokenService tokenService;
 
   @Autowired
-  public FilterPlanController(final CustomFilterService customFilterService, final TokenService tokenService) {
+  public FilterPlanController(
+    final CustomFilterService customFilterService,
+    final TokenService tokenService
+  ) {
     this.customFilterService = customFilterService;
     this.tokenService = tokenService;
   }
@@ -34,7 +37,9 @@ public class FilterPlanController extends CreateAndUpdateUsingCommonFilterOperat
     return this.customFilterService;
   }
 
-  @Override protected TokenService getTokenService() {
+  @Override
+  protected TokenService getTokenService() {
     return this.tokenService;
   }
+
 }

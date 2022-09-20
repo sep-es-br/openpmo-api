@@ -87,4 +87,5 @@ public class LocalityDetailDto {
   public void setDomainRoot(final DomainDto domainRoot) {
     this.domainRoot = domainRoot;
   }
+
 }

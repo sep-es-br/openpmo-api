@@ -102,7 +102,8 @@ public class Number extends Property<Number, Double> {
     this.workpack = workpack;
   }
 
-  @Override public PropertyModel getPropertyModel() {
+  @Override
+  public PropertyModel getPropertyModel() {
     return this.getDriver();
   }
 

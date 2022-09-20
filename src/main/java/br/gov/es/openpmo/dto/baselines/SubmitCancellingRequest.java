@@ -27,12 +27,12 @@ public class SubmitCancellingRequest {
 
   @JsonCreator
   public SubmitCancellingRequest(
-      final Long idWorkpack,
-      final String name,
-      final String description,
-      final String message,
-      final Boolean cancelation,
-      final Status status
+    final Long idWorkpack,
+    final String name,
+    final String description,
+    final String message,
+    final Boolean cancelation,
+    final Status status
   ) {
     this.idWorkpack = idWorkpack;
     this.name = name;

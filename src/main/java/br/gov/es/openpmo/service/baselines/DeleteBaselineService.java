@@ -31,12 +31,12 @@ public class DeleteBaselineService implements IDeleteBaselineService {
 
   private Baseline findBaselineById(final Long idBaseline) {
     return this.baselineRepository.findById(idBaseline)
-        .orElseThrow(() -> new NegocioException(ApplicationMessage.BASELINE_NOT_FOUND));
+      .orElseThrow(() -> new NegocioException(ApplicationMessage.BASELINE_NOT_FOUND));
   }
 
   private Workpack findWorkpackByIdBaseline(final Long idBaseline) {
     return this.baselineRepository.findWorkpackByBaselineId(idBaseline)
-        .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
+      .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
   }
 
   private void deleteBaseline(final Baseline baseline) {

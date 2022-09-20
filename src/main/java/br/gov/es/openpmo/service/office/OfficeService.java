@@ -88,7 +88,10 @@ public class OfficeService {
     this.officeRepository.delete(office);
   }
 
-  public List<OfficeDto> checkPermission(final List<OfficeDto> offices, final Long idUser) {
+  public List<OfficeDto> checkPermission(
+    final List<OfficeDto> offices,
+    final Long idUser
+  ) {
     final Person person = this.personService.findById(idUser);
     if(person.getAdministrator()) {
       return offices;
@@ -128,7 +131,10 @@ public class OfficeService {
     return offices;
   }
 
-  public boolean hasPermissionPlanWorkpack(final Long idOffice, final Long idUser) {
+  public boolean hasPermissionPlanWorkpack(
+    final Long idOffice,
+    final Long idUser
+  ) {
     final boolean hasCanAccessPlan = this.officePermissionRepository.hasCanAccessPlan(idOffice, idUser);
     if(hasCanAccessPlan) {
       return true;
@@ -140,7 +146,10 @@ public class OfficeService {
     return this.officeRepository.findOfficeByPlanId(id);
   }
 
-  public Optional<Office> findOfficeByWorkpack(final Long idWorkpack, final Long idPlan) {
+  public Optional<Office> findOfficeByWorkpack(
+    final Long idWorkpack,
+    final Long idPlan
+  ) {
     return this.officeRepository.findOfficeByWorkpackId(idWorkpack, idPlan);
   }
 

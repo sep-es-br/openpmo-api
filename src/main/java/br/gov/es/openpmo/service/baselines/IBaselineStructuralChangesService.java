@@ -6,13 +6,13 @@ import br.gov.es.openpmo.model.workpacks.Workpack;
 public interface IBaselineStructuralChangesService {
 
   boolean hasStructureChanges(
-      final Baseline baseline,
-      final Workpack workpack
+    final Baseline baseline,
+    final Workpack workpack
   );
 
   boolean hasBaselineStructureChanges(
-      Baseline baseline,
-      Workpack workpack
+    Baseline baseline,
+    Workpack workpack
   );
 
 }

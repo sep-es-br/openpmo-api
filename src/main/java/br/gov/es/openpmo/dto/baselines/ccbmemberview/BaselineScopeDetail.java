@@ -13,6 +13,7 @@ import static br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintUtil
 import static br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintUtils.roundOneDecimal;
 
 public class BaselineScopeDetail {
+
   private final List<ScopeDetailItem> scopeDetails = new ArrayList<>();
   private BigDecimal currentScopePercent = ONE_HUNDRED;
   private BigDecimal variation;
@@ -78,4 +79,5 @@ public class BaselineScopeDetail {
     this.proposedScopePercent = roundOneDecimal(this.proposedScopePercent);
     this.scopeDetails.forEach(ScopeDetailItem::roundData);
   }
+
 }

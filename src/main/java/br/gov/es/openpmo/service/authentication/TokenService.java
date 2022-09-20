@@ -28,9 +28,14 @@ public class TokenService {
   @Value("${jwt.refresh-expiration}")
   private String refreshExpiration;
 
-  public String generateToken(final Person person, String key, final String email, final TokenType tokenType) {
-    final String expirationValue = getExpirationValue(tokenType);
-    final String secretValue = getSecretValue(tokenType);
+  public String generateToken(
+    final Person person,
+    final String key,
+    final String email,
+    final TokenType tokenType
+  ) {
+    final String expirationValue = this.getExpirationValue(tokenType);
+    final String secretValue = this.getSecretValue(tokenType);
 
     final Claims claims = Jwts.claims().setSubject(person.getId().toString());
     claims.put("key", key);
@@ -49,37 +54,47 @@ public class TokenService {
       .compact();
   }
 
-  private String getExpirationValue(TokenType tokenType) {
-    if (TokenType.AUTHENTICATION.equals(tokenType)) {
+  private String getExpirationValue(final TokenType tokenType) {
+    if(TokenType.AUTHENTICATION.equals(tokenType)) {
       return this.expiration;
     }
     return this.refreshExpiration;
   }
 
-  public boolean isValidToken(final String token, final TokenType tokenType) {
-    if (token == null) {
+  public boolean isValidToken(
+    final String token,
+    final TokenType tokenType
+  ) {
+    if(token == null) {
       return false;
     }
     try {
-      final String secretValue = getSecretValue(tokenType);
+      final String secretValue = this.getSecretValue(tokenType);
       Jwts.parser().setSigningKey(secretValue).parseClaimsJws(token);
       return true;
-    } catch (final Exception e) {
+    }
+    catch(final Exception e) {
       e.printStackTrace();
       return false;
     }
   }
 
-  public Claims getUser(final String token, final TokenType tokenType) {
-    final String secretValue = getSecretValue(tokenType);
+  public Claims getUser(
+    final String token,
+    final TokenType tokenType
+  ) {
+    final String secretValue = this.getSecretValue(tokenType);
     return Jwts.parser()
       .setSigningKey(secretValue)
       .parseClaimsJws(token)
       .getBody();
   }
 
-  public Long getPersonId(final String token, final TokenType tokenType) {
-    final String secretValue = getSecretValue(tokenType);
+  public Long getPersonId(
+    final String token,
+    final TokenType tokenType
+  ) {
+    final String secretValue = this.getSecretValue(tokenType);
     final Claims claims = Jwts.parser()
       .setSigningKey(secretValue)
       .parseClaimsJws(token)
@@ -87,8 +102,8 @@ public class TokenService {
     return Long.parseLong(claims.getSubject());
   }
 
-  private String getSecretValue(TokenType tokenType) {
-    if (TokenType.AUTHENTICATION.equals(tokenType)) {
+  private String getSecretValue(final TokenType tokenType) {
+    if(TokenType.AUTHENTICATION.equals(tokenType)) {
       return this.secret;
     }
     return this.refreshSecret;
@@ -98,4 +113,5 @@ public class TokenService {
     final String token = authorization.substring(BEARER.length());
     return this.getPersonId(token, TokenType.AUTHENTICATION);
   }
+
 }

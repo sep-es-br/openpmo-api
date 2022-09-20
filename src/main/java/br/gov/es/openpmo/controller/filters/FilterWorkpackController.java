@@ -19,7 +19,10 @@ public class FilterWorkpackController extends CreateAndUpdateUsingWorkpackModelF
   private final TokenService tokenService;
 
   @Autowired
-  public FilterWorkpackController(final CustomFilterService customFilterService, final TokenService tokenService) {
+  public FilterWorkpackController(
+    final CustomFilterService customFilterService,
+    final TokenService tokenService
+  ) {
     this.customFilterService = customFilterService;
     this.tokenService = tokenService;
   }
@@ -29,7 +32,8 @@ public class FilterWorkpackController extends CreateAndUpdateUsingWorkpackModelF
     return this.customFilterService;
   }
 
-  @Override protected TokenService getTokenService() {
+  @Override
+  protected TokenService getTokenService() {
     return this.tokenService;
   }
 
@@ -37,4 +41,5 @@ public class FilterWorkpackController extends CreateAndUpdateUsingWorkpackModelF
   protected CustomFilterEnum getFilter() {
     return CustomFilterEnum.WORKPACK;
   }
+
 }

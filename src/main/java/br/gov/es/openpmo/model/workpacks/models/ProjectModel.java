@@ -19,4 +19,5 @@ public class ProjectModel extends WorkpackModel {
   public void setInstances(final Set<Project> instances) {
     this.instances = instances;
   }
+
 }

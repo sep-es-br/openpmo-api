@@ -14,4 +14,5 @@ public class WorkpackModelCompletedUpdateRequest {
   public Boolean getCompleted() {
     return this.completed;
   }
+
 }

@@ -5,6 +5,7 @@ import br.gov.es.openpmo.model.relations.IsSharedWith;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 
 public class WorkpackSharedDto {
+
   private Long id;
   private WorkpackSharedOfficeItem office;
   private PermissionLevelEnum level;
@@ -12,7 +13,11 @@ public class WorkpackSharedDto {
   public WorkpackSharedDto() {
   }
 
-  public WorkpackSharedDto(final Long id, final WorkpackSharedOfficeItem office, final PermissionLevelEnum level) {
+  public WorkpackSharedDto(
+    final Long id,
+    final WorkpackSharedOfficeItem office,
+    final PermissionLevelEnum level
+  ) {
     this.id = id;
     this.office = office;
     this.level = level;
@@ -57,4 +62,5 @@ public class WorkpackSharedDto {
   public void setLevel(final PermissionLevelEnum level) {
     this.level = level;
   }
+
 }

@@ -3,6 +3,7 @@ package br.gov.es.openpmo.dto.unitmeasure;
 import br.gov.es.openpmo.model.office.UnitMeasure;
 
 public class UnitMeasureDto {
+
   private Long id;
   private String name;
   private String fullName;
@@ -60,4 +61,5 @@ public class UnitMeasureDto {
   public void setPrecision(final Long precision) {
     this.precision = precision;
   }
+
 }

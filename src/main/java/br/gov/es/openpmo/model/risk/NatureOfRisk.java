@@ -10,7 +10,10 @@ public enum NatureOfRisk {
   private final String nature;
   private final NatureOfIssue equivalentNatureIssue;
 
-  NatureOfRisk(final String nature, final NatureOfIssue equivalentNatureIssue) {
+  NatureOfRisk(
+    final String nature,
+    final NatureOfIssue equivalentNatureIssue
+  ) {
     this.nature = nature;
     this.equivalentNatureIssue = equivalentNatureIssue;
   }

@@ -7,72 +7,73 @@ import java.time.YearMonth;
 
 public class PerformanceIndexes {
 
-    private final BigDecimal actualCost;
+  private final BigDecimal actualCost;
 
-    private final BigDecimal plannedValue;
+  private final BigDecimal plannedValue;
 
-    private final BigDecimal earnedValue;
+  private final BigDecimal earnedValue;
 
-    private final BigDecimal estimatesAtCompletion;
+  private final BigDecimal estimatesAtCompletion;
 
-    private final BigDecimal estimateToComplete;
+  private final BigDecimal estimateToComplete;
 
-    private final CostPerformanceIndex costPerformanceIndex;
+  private final CostPerformanceIndex costPerformanceIndex;
 
-    private final SchedulePerformanceIndex schedulePerformanceIndex;
+  private final SchedulePerformanceIndex schedulePerformanceIndex;
 
-    @JsonFormat(pattern = "yyyy-MM")
-    private final YearMonth date;
+  @JsonFormat(pattern = "yyyy-MM")
+  private final YearMonth date;
 
-    public PerformanceIndexes(
-            BigDecimal actualCost,
-            BigDecimal plannedValue,
-            BigDecimal earnedValue,
-            BigDecimal estimatesAtCompletion,
-            BigDecimal estimateToComplete,
-            CostPerformanceIndex costPerformanceIndex,
-            SchedulePerformanceIndex schedulePerformanceIndex,
-            YearMonth date
-    ) {
-        this.actualCost = actualCost;
-        this.plannedValue = plannedValue;
-        this.earnedValue = earnedValue;
-        this.estimatesAtCompletion = estimatesAtCompletion;
-        this.estimateToComplete = estimateToComplete;
-        this.costPerformanceIndex = costPerformanceIndex;
-        this.schedulePerformanceIndex = schedulePerformanceIndex;
-        this.date = date;
-    }
+  public PerformanceIndexes(
+    final BigDecimal actualCost,
+    final BigDecimal plannedValue,
+    final BigDecimal earnedValue,
+    final BigDecimal estimatesAtCompletion,
+    final BigDecimal estimateToComplete,
+    final CostPerformanceIndex costPerformanceIndex,
+    final SchedulePerformanceIndex schedulePerformanceIndex,
+    final YearMonth date
+  ) {
+    this.actualCost = actualCost;
+    this.plannedValue = plannedValue;
+    this.earnedValue = earnedValue;
+    this.estimatesAtCompletion = estimatesAtCompletion;
+    this.estimateToComplete = estimateToComplete;
+    this.costPerformanceIndex = costPerformanceIndex;
+    this.schedulePerformanceIndex = schedulePerformanceIndex;
+    this.date = date;
+  }
 
-    public BigDecimal getActualCost() {
-        return actualCost;
-    }
+  public BigDecimal getActualCost() {
+    return this.actualCost;
+  }
 
-    public BigDecimal getPlannedValue() {
-        return plannedValue;
-    }
+  public BigDecimal getPlannedValue() {
+    return this.plannedValue;
+  }
 
-    public BigDecimal getEarnedValue() {
-        return earnedValue;
-    }
+  public BigDecimal getEarnedValue() {
+    return this.earnedValue;
+  }
 
-    public BigDecimal getEstimatesAtCompletion() {
-        return estimatesAtCompletion;
-    }
+  public BigDecimal getEstimatesAtCompletion() {
+    return this.estimatesAtCompletion;
+  }
 
-    public BigDecimal getEstimateToComplete() {
-        return estimateToComplete;
-    }
+  public BigDecimal getEstimateToComplete() {
+    return this.estimateToComplete;
+  }
 
-    public CostPerformanceIndex getCostPerformanceIndex() {
-        return costPerformanceIndex;
-    }
+  public CostPerformanceIndex getCostPerformanceIndex() {
+    return this.costPerformanceIndex;
+  }
 
-    public SchedulePerformanceIndex getSchedulePerformanceIndex() {
-        return schedulePerformanceIndex;
-    }
+  public SchedulePerformanceIndex getSchedulePerformanceIndex() {
+    return this.schedulePerformanceIndex;
+  }
 
-    public YearMonth getDate() {
-        return date;
-    }
+  public YearMonth getDate() {
+    return this.date;
+  }
+
 }

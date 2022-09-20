@@ -4,10 +4,14 @@ import org.springframework.data.neo4j.annotation.QueryResult;
 
 @QueryResult
 public class ProjectAndProgramParentResult {
+
   private final Long idProgram;
   private final Long idProject;
 
-  public ProjectAndProgramParentResult(final Long idProgram, final Long idProject) {
+  public ProjectAndProgramParentResult(
+    final Long idProgram,
+    final Long idProject
+  ) {
     this.idProgram = idProgram;
     this.idProject = idProject;
   }
@@ -23,4 +27,5 @@ public class ProjectAndProgramParentResult {
   public Long getIdProject() {
     return this.idProject;
   }
+
 }

@@ -7,8 +7,8 @@ import java.util.List;
 
 public interface IDashboardEarnedValueByStepsService {
 
-    List<EarnedValueByStep> build(DashboardParameters parameters);
+  List<EarnedValueByStep> build(DashboardParameters parameters);
 
-    List<EarnedValueByStep> calculate(final Long workpackId);
+  List<EarnedValueByStep> calculate(final Long workpackId);
 
 }

@@ -13,7 +13,10 @@ public class AvatarDto {
   private final String name;
   private final String mimeType;
 
-  public AvatarDto(final File file, final UriComponentsBuilder uriComponentsBuilder) {
+  public AvatarDto(
+    final File file,
+    final UriComponentsBuilder uriComponentsBuilder
+  ) {
     Objects.requireNonNull(uriComponentsBuilder);
     final String url = uriComponentsBuilder.cloneBuilder()
       .path("/avatar/" + file.getId() + "/person")
@@ -47,4 +50,5 @@ public class AvatarDto {
   public String getMimeType() {
     return this.mimeType;
   }
+
 }

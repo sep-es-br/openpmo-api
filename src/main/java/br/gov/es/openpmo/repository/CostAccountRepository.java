@@ -61,7 +61,8 @@ public interface CostAccountRepository extends Neo4jRepository<CostAccount, Long
     Long idBaseline
   );
 
-  @Query("MATCH (a:CostAccount)-[:IS_SNAPSHOT_OF]->(m:CostAccount)<-[i:IS_SNAPSHOT_OF]-(s:CostAccount)-[c:COMPOSES]->(b:Baseline) " +
+  @Query("MATCH (a:CostAccount)-[:IS_SNAPSHOT_OF]->(m:CostAccount)<-[i:IS_SNAPSHOT_OF]-(s:CostAccount)-[c:COMPOSES]->" +
+         "(b:Baseline) " +
          "WHERE id(a)=$idCostAccount AND id(b)=$idBaseline " +
          "RETURN s")
   Optional<CostAccount> findAnotherSnapshotOfMasterBySnapshotIdAndAnotherBaselineId(

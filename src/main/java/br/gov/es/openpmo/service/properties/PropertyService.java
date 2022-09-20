@@ -33,4 +33,5 @@ public class PropertyService {
   public void delete(final Set<Property> properties) {
     this.propertyRepository.deleteAll(properties);
   }
+
 }

@@ -4,6 +4,7 @@ import br.gov.es.openpmo.model.actors.Organization;
 import br.gov.es.openpmo.model.actors.OrganizationEnum;
 
 public class OrganizationDto {
+
   private Long id;
   private String name;
   private String address;

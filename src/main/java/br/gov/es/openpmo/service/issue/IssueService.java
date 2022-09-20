@@ -65,7 +65,12 @@ public class IssueService {
     this.journalCreator = journalCreator;
   }
 
-  public List<IssueCardDto> findAllAsCardDto(final Long idWorkpack, final Long idRisk, final Long idFilter, final Long idPerson) {
+  public List<IssueCardDto> findAllAsCardDto(
+    final Long idWorkpack,
+    final Long idRisk,
+    final Long idFilter,
+    final Long idPerson
+  ) {
     if(idWorkpack == null) {
       throw new IllegalArgumentException(ID_WORKPACK_NOT_NULL);
     }
@@ -85,14 +90,20 @@ public class IssueService {
       .collect(Collectors.toList());
   }
 
-  private List<IssueCardDto> findAllAsCardDto(final Long idWorkpack, final Long idRisk) {
+  private List<IssueCardDto> findAllAsCardDto(
+    final Long idWorkpack,
+    final Long idRisk
+  ) {
     return this.repository.findAllAsIssueCardDto(idWorkpack, idRisk).stream()
       .map(IssueCardDto::of)
       .collect(Collectors.toList());
   }
 
   @Transactional
-  public EntityDto createIssueFromRisk(final Long idRisk, final Long idPerson) {
+  public EntityDto createIssueFromRisk(
+    final Long idRisk,
+    final Long idPerson
+  ) {
     final Risk risk = this.riskService.findById(idRisk);
     final Issue issue = Issue.of(risk);
     this.repository.save(issue);
@@ -104,7 +115,10 @@ public class IssueService {
   }
 
   @Transactional
-  public EntityDto create(final IssueCreateDto request, final Long idPerson) {
+  public EntityDto create(
+    final IssueCreateDto request,
+    final Long idPerson
+  ) {
     final Workpack workpack = this.workpackService.findById(request.getIdWorkpack());
     final Issue issue = Issue.of(request, workpack);
     this.repository.save(issue);
@@ -115,7 +129,10 @@ public class IssueService {
   }
 
   @Transactional
-  public IssueDetailDto update(final IssueUpdateDto request, final Long idPerson) {
+  public IssueDetailDto update(
+    final IssueUpdateDto request,
+    final Long idPerson
+  ) {
     final Issue issue = this.repository.findById(request.getId())
       .orElseThrow(() -> new RegistroNaoEncontradoException(ISSUE_NOT_FOUND));
 

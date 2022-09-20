@@ -8,11 +8,11 @@ import java.util.Set;
 
 public interface IDashboardCostScopeService {
 
-    CostAndScopeData build(
-            Long baselineId,
-            YearMonth referenceDate,
-            Set<? extends Step> steps,
-            boolean canceled
-    );
+  CostAndScopeData build(
+    Long baselineId,
+    YearMonth referenceDate,
+    Set<? extends Step> steps,
+    boolean canceled
+  );
 
 }

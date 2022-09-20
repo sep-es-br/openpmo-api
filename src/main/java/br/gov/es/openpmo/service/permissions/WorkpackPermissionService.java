@@ -9,13 +9,14 @@ import java.util.Set;
 @Service
 public class WorkpackPermissionService {
 
-    private final WorkpackPermissionRepository repository;
+  private final WorkpackPermissionRepository repository;
 
-    public WorkpackPermissionService(final WorkpackPermissionRepository repository) {
-        this.repository = repository;
-    }
+  public WorkpackPermissionService(final WorkpackPermissionRepository repository) {
+    this.repository = repository;
+  }
 
-    public void deleteAll(final Set<CanAccessWorkpack> permissions) {
-        this.repository.deleteAll(permissions);
-    }
+  public void deleteAll(final Set<CanAccessWorkpack> permissions) {
+    this.repository.deleteAll(permissions);
+  }
+
 }

@@ -1,6 +1,10 @@
 package br.gov.es.openpmo.service.journals;
 
-import br.gov.es.openpmo.dto.journals.*;
+import br.gov.es.openpmo.dto.journals.EvidenceField;
+import br.gov.es.openpmo.dto.journals.InformationField;
+import br.gov.es.openpmo.dto.journals.JournalResponse;
+import br.gov.es.openpmo.dto.journals.PersonField;
+import br.gov.es.openpmo.dto.journals.WorkpackField;
 import br.gov.es.openpmo.dto.workpack.WorkpackName;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.File;
@@ -35,16 +39,54 @@ public class JournalResponseMapper {
 
   @Autowired
   public JournalResponseMapper(
-      final WorkpackRepository workpackRepository,
-      final WorkpackModelRepository workpackModelRepository,
-      final JournalRepository journalRepository
+    final WorkpackRepository workpackRepository,
+    final WorkpackModelRepository workpackModelRepository,
+    final JournalRepository journalRepository
   ) {
     this.workpackRepository = workpackRepository;
     this.workpackModelRepository = workpackModelRepository;
     this.journalRepository = journalRepository;
   }
 
-  public JournalResponse map(final JournalEntry journalEntry, final UriComponentsBuilder uriComponentsBuilder) {
+  private static EvidenceField getEvidenceField(
+    final File file,
+    final UriComponentsBuilder uriComponentsBuilder
+  ) {
+    final EvidenceField evidenceField = new EvidenceField();
+    evidenceField.setId(file.getId());
+    evidenceField.setMimeType(file.getMimeType());
+    evidenceField.setName(file.getUserGivenName());
+    evidenceField.setUrl(getUrl(file, uriComponentsBuilder));
+    return evidenceField;
+  }
+
+  private static InformationField getInformationField(final JournalEntry journalEntry) {
+    final InformationField informationField = new InformationField();
+    informationField.setTitle(journalEntry.getNameItem());
+    informationField.setDescription(journalEntry.getDescription());
+    return informationField;
+  }
+
+  private static String getUrl(
+    final File file,
+    final UriComponentsBuilder uriComponentsBuilder
+  ) {
+    return uriComponentsBuilder.cloneBuilder()
+      .path(getEndpoint(file))
+      .build()
+      .toUri()
+      .toString()
+      .replace("http://", "https://");
+  }
+
+  private List<File> getFiles(final JournalEntry journalEntry) {
+    return this.journalRepository.findEvidencesByJournalId(journalEntry.getId());
+  }
+
+  public JournalResponse map(
+    final JournalEntry journalEntry,
+    final UriComponentsBuilder uriComponentsBuilder
+  ) {
     final JournalResponse journalResponse = new JournalResponse();
 
     journalResponse.setType(journalEntry.getType());
@@ -66,42 +108,13 @@ public class JournalResponseMapper {
     return journalResponse;
   }
 
-  private static InformationField getInformationField(final JournalEntry journalEntry) {
-    final InformationField informationField = new InformationField();
-    informationField.setTitle(journalEntry.getNameItem());
-    informationField.setDescription(journalEntry.getDescription());
-    return informationField;
-  }
-
   private Set<EvidenceField> getEvidenceFieldSet(
-      final JournalEntry journalEntry,
-      final UriComponentsBuilder uriComponentsBuilder
+    final JournalEntry journalEntry,
+    final UriComponentsBuilder uriComponentsBuilder
   ) {
     return this.getFiles(journalEntry).stream()
-        .map(file -> getEvidenceField(file, uriComponentsBuilder))
-        .collect(Collectors.toSet());
-  }
-
-  private List<File> getFiles(final JournalEntry journalEntry) {
-    return this.journalRepository.findEvidencesByJournalId(journalEntry.getId());
-  }
-
-  private static EvidenceField getEvidenceField(final File file, final UriComponentsBuilder uriComponentsBuilder) {
-    final EvidenceField evidenceField = new EvidenceField();
-    evidenceField.setId(file.getId());
-    evidenceField.setMimeType(file.getMimeType());
-    evidenceField.setName(file.getUserGivenName());
-    evidenceField.setUrl(getUrl(file, uriComponentsBuilder));
-    return evidenceField;
-  }
-
-  private static String getUrl(final File file, final UriComponentsBuilder uriComponentsBuilder) {
-    return uriComponentsBuilder.cloneBuilder()
-        .path(getEndpoint(file))
-        .build()
-        .toUri()
-        .toString()
-        .replace("http://", "https://");
+      .map(file -> getEvidenceField(file, uriComponentsBuilder))
+      .collect(Collectors.toSet());
   }
 
   private static String getEndpoint(final File file) {
@@ -110,7 +123,7 @@ public class JournalResponseMapper {
 
   @Nullable
   private WorkpackField getWorkpackField(final JournalEntry journalEntry) {
-    if (journalEntry.getType() == JournalType.FAIL) {
+    if(journalEntry.getType() == JournalType.FAIL) {
       return null;
     }
 
@@ -125,20 +138,20 @@ public class JournalResponseMapper {
 
   private String getWorkpackModelName(final Long workpackId) {
     return this.workpackModelRepository.findByIdWorkpack(workpackId)
-        .map(WorkpackModel::getModelName)
-        .orElse("");
+      .map(WorkpackModel::getModelName)
+      .orElse("");
   }
 
   private Long getWorkpackId(final JournalEntry journalEntry) {
     return this.journalRepository.findWorkpackIdByJournalId(journalEntry.getId())
-        .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
+      .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
   }
 
   @Transient
   private String getWorkpackName(final Long workpackId) {
     return this.findWorkpackNameAndFullname(workpackId)
-        .map(WorkpackName::getName)
-        .orElse("");
+      .map(WorkpackName::getName)
+      .orElse("");
   }
 
   private Optional<WorkpackName> findWorkpackNameAndFullname(final Long workpackId) {
@@ -155,7 +168,7 @@ public class JournalResponseMapper {
 
   private Person getPerson(final JournalEntry journalEntry) {
     return this.journalRepository.findPersonByJournalId(journalEntry.getId())
-        .orElseThrow(() -> new NegocioException(ApplicationMessage.PERSON_NOT_FOUND));
+      .orElseThrow(() -> new NegocioException(ApplicationMessage.PERSON_NOT_FOUND));
   }
 
 }

@@ -14,10 +14,11 @@ public class DashboardConfiguration {
 
   @JsonCreator
   public DashboardConfiguration(
-      @JsonProperty("dashboardShowRisks") final Boolean dashboardShowRisks,
-      @JsonProperty("dashboardShowEva") final Boolean dashboardShowEva,
-      @JsonProperty("dashboardShowMilestones") final Boolean dashboardShowMilestones,
-      @JsonProperty("dashboardShowStakeholders") final Set<String> dashboardShowStakeholders) {
+    @JsonProperty("dashboardShowRisks") final Boolean dashboardShowRisks,
+    @JsonProperty("dashboardShowEva") final Boolean dashboardShowEva,
+    @JsonProperty("dashboardShowMilestones") final Boolean dashboardShowMilestones,
+    @JsonProperty("dashboardShowStakeholders") final Set<String> dashboardShowStakeholders
+  ) {
     this.dashboardShowRisks = dashboardShowRisks;
     this.dashboardShowEva = dashboardShowEva;
     this.dashboardShowMilestones = dashboardShowMilestones;
@@ -39,4 +40,5 @@ public class DashboardConfiguration {
   public Set<String> getDashboardShowStakeholders() {
     return this.dashboardShowStakeholders;
   }
+
 }

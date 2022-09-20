@@ -31,7 +31,10 @@ public class FindAllCostAccountUsingCustomFilter extends FindAllUsingCustomFilte
   }
 
   @Override
-  public void buildMatchClause(final CustomFilter filter, final StringBuilder query) {
+  public void buildMatchClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query.append("" +
                  "MATCH (workpack:Workpack{deleted:false})<-[i:APPLIES_TO]-(node:CostAccount), " +
                  "(workpack)-[belongsTo:BELONGS_TO]->(plan:Plan), " +
@@ -45,7 +48,10 @@ public class FindAllCostAccountUsingCustomFilter extends FindAllUsingCustomFilte
   }
 
   @Override
-  public void buildWhereClause(final CustomFilter filter, final StringBuilder query) {
+  public void buildWhereClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query.append("WHERE (" +
                  "   id(workpack)=$idWorkpack " +
                  "   AND belongsTo.linked=false" +
@@ -67,20 +73,28 @@ public class FindAllCostAccountUsingCustomFilter extends FindAllUsingCustomFilte
   }
 
   @Override
-  protected String buildCustomFilterRule(final Rules rule, final String label) {
+  protected String buildCustomFilterRule(
+    final Rules rule,
+    final String label
+  ) {
     return this.buildFilterRuleForWorkpack(rule, label);
   }
 
-  @Override protected boolean hasAppendedBooleanBlock() {
-    return true;
-  }
-
-  @Override protected boolean hasToCloseAppendedBooleanBlock() {
+  @Override
+  protected boolean hasAppendedBooleanBlock() {
     return true;
   }
 
   @Override
-  protected void buildOrderingAndDirectionClause(final CustomFilter filter, final StringBuilder query) {
+  protected boolean hasToCloseAppendedBooleanBlock() {
+    return true;
+  }
+
+  @Override
+  protected void buildOrderingAndDirectionClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     this.buildOrderingAndDirectionClauseForWorkpack(filter, query);
   }
 
@@ -103,4 +117,5 @@ public class FindAllCostAccountUsingCustomFilter extends FindAllUsingCustomFilte
   public PropertyModelRepository getPropertyModelRepository() {
     return this.propertyModelRepository;
   }
+
 }

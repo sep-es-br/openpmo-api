@@ -149,4 +149,5 @@ public class BaselineDetailCCBMemberResponse {
   public void addEvaluation(final EvaluationItem evaluation) {
     this.evaluations.add(evaluation);
   }
+
 }

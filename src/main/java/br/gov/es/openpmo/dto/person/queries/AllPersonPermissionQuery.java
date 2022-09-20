@@ -37,4 +37,5 @@ public class AllPersonPermissionQuery {
   public Set<CanAccessWorkpack> getCanAccessWorkpack() {
     return this.canAccessWorkpack;
   }
+
 }

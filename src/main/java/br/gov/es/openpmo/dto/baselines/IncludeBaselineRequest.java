@@ -13,7 +13,12 @@ public class IncludeBaselineRequest {
   private Long idWorkpack;
 
   @JsonCreator
-  public IncludeBaselineRequest(final Long idWorkpack, final String name, final String message, final String description) {
+  public IncludeBaselineRequest(
+    final Long idWorkpack,
+    final String name,
+    final String message,
+    final String description
+  ) {
     this.idWorkpack = idWorkpack;
     this.name = name;
     this.message = message;

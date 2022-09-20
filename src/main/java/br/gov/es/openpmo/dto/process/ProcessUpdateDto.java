@@ -6,6 +6,7 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
 public class ProcessUpdateDto {
+
   @NotNull
   private final Long id;
   @NotNull
@@ -15,7 +16,11 @@ public class ProcessUpdateDto {
   private final String note;
 
   @JsonCreator
-  public ProcessUpdateDto(final Long id, final String name, final String note) {
+  public ProcessUpdateDto(
+    final Long id,
+    final String name,
+    final String note
+  ) {
     this.id = id;
     this.name = name;
     this.note = note;
@@ -32,4 +37,5 @@ public class ProcessUpdateDto {
   public String getNote() {
     return this.note;
   }
+
 }

@@ -23,13 +23,19 @@ public class FindAllProcessUsingCustomFilter extends FindAllUsingCustomFilterBui
   }
 
   @Override
-  protected void buildMatchClause(final CustomFilter filter, final StringBuilder query) {
+  protected void buildMatchClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query.append("MATCH (").append(this.nodeName)
       .append(":Process)-[isReportedFor:IS_BELONG_TO]->(workpack:Workpack{deleted:false})\n");
   }
 
   @Override
-  protected void buildWhereClause(final CustomFilter filter, final StringBuilder query) {
+  protected void buildWhereClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query.append("WHERE id(workpack)=$idWorkpack\n");
   }
 
@@ -39,11 +45,13 @@ public class FindAllProcessUsingCustomFilter extends FindAllUsingCustomFilterBui
   }
 
 
-  @Override protected boolean hasAppendedBooleanBlock() {
+  @Override
+  protected boolean hasAppendedBooleanBlock() {
     return true;
   }
 
-  @Override protected boolean hasToCloseAppendedBooleanBlock() {
+  @Override
+  protected boolean hasToCloseAppendedBooleanBlock() {
     return true;
   }
 
@@ -53,4 +61,5 @@ public class FindAllProcessUsingCustomFilter extends FindAllUsingCustomFilterBui
       "idWorkpack"
     };
   }
+
 }

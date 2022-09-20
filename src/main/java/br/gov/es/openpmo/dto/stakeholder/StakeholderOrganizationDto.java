@@ -34,4 +34,5 @@ public class StakeholderOrganizationDto {
   public void setRoles(final List<RoleDto> roles) {
     this.roles = roles;
   }
+
 }

@@ -4,6 +4,6 @@ import br.gov.es.openpmo.dto.dashboards.v2.Interval;
 
 public interface IDashboardIntervalService {
 
-    Interval calculateFor(Long workpackId);
+  Interval calculateFor(Long workpackId);
 
 }

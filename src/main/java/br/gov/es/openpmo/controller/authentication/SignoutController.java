@@ -26,8 +26,11 @@ public class SignoutController {
   }
 
   @GetMapping
-  public void index(@RequestParam("token") final String authorization, final HttpServletRequest request,
-                    final HttpServletResponse response) throws IOException {
+  public void index(
+    @RequestParam("token") final String authorization,
+    final HttpServletRequest request,
+    final HttpServletResponse response
+  ) throws IOException {
 
     final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
     if(auth != null) {

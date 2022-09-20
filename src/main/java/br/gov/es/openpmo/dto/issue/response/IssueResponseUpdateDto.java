@@ -26,11 +26,11 @@ public class IssueResponseUpdateDto {
   private final IssueResponseStatus status;
 
   public IssueResponseUpdateDto(
-      final Long id,
-      final String name,
-      final String plan,
-      final LocalDate date,
-      final IssueResponseStatus status
+    final Long id,
+    final String name,
+    final String plan,
+    final LocalDate date,
+    final IssueResponseStatus status
   ) {
     this.id = id;
     this.name = name;

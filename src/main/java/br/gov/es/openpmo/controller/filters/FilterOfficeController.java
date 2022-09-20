@@ -19,7 +19,10 @@ public class FilterOfficeController extends CreateAndUpdateUsingCommonFilterOper
   private final TokenService tokenService;
 
   @Autowired
-  public FilterOfficeController(final CustomFilterService customFilterService, final TokenService tokenService) {
+  public FilterOfficeController(
+    final CustomFilterService customFilterService,
+    final TokenService tokenService
+  ) {
     this.customFilterService = customFilterService;
     this.tokenService = tokenService;
   }
@@ -29,7 +32,8 @@ public class FilterOfficeController extends CreateAndUpdateUsingCommonFilterOper
     return this.customFilterService;
   }
 
-  @Override protected TokenService getTokenService() {
+  @Override
+  protected TokenService getTokenService() {
     return this.tokenService;
   }
 
@@ -37,4 +41,5 @@ public class FilterOfficeController extends CreateAndUpdateUsingCommonFilterOper
   protected CustomFilterEnum getFilter() {
     return CustomFilterEnum.OFFICE;
   }
+
 }

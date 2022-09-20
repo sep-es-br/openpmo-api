@@ -4,14 +4,15 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 
 public class CompleteDeliverableRequest {
 
-    private final Boolean completed;
+  private final Boolean completed;
 
-    @JsonCreator
-    public CompleteDeliverableRequest(Boolean completed) {
-        this.completed = completed;
-    }
+  @JsonCreator
+  public CompleteDeliverableRequest(final Boolean completed) {
+    this.completed = completed;
+  }
 
-    public Boolean getCompleted() {
-        return completed;
-    }
+  public Boolean getCompleted() {
+    return this.completed;
+  }
+
 }

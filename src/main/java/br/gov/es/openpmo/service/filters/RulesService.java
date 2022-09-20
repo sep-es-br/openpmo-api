@@ -23,7 +23,10 @@ public class RulesService {
     this.rulesRepository = rulesRepository;
   }
 
-  public void create(final CustomFilter customFilter, final CustomFilterRulesDto rule) {
+  public void create(
+    final CustomFilter customFilter,
+    final CustomFilterRulesDto rule
+  ) {
     final Rules entity = new Rules(
       customFilter,
       rule.getLogicOperator(),
@@ -34,7 +37,10 @@ public class RulesService {
     this.rulesRepository.save(entity);
   }
 
-  public List<Rules> createAll(final CustomFilter filter, final List<CustomFilterRulesDto> rulesDto) {
+  public List<Rules> createAll(
+    final CustomFilter filter,
+    final List<CustomFilterRulesDto> rulesDto
+  ) {
     final List<Rules> rules = rulesDto.stream().map(r ->
                                                       new Rules(
                                                         filter,
@@ -57,7 +63,10 @@ public class RulesService {
     return this.rulesRepository.findByCustomFilter(customFilter);
   }
 
-  public void update(final CustomFilter customFilter, final Collection<? extends CustomFilterRulesDto> rulesDto) {
+  public void update(
+    final CustomFilter customFilter,
+    final Collection<? extends CustomFilterRulesDto> rulesDto
+  ) {
     final List<Rules> rules = this.rulesRepository.findByCustomFilterId(customFilter.getId());
 
     this.findAndDeleteRemovedRules(rulesDto, rules, customFilter);
@@ -74,13 +83,19 @@ public class RulesService {
     });
   }
 
-  private Rules updateRegisteredRule(final CustomFilterRulesDto ruleDto, final Rules ruleFound) {
+  private Rules updateRegisteredRule(
+    final CustomFilterRulesDto ruleDto,
+    final Rules ruleFound
+  ) {
     ruleFound.update(ruleDto);
     this.rulesRepository.save(ruleFound);
     return ruleFound;
   }
 
-  private Rules createNewRule(final CustomFilter customFilter, final CustomFilterRulesDto ruleDto) {
+  private Rules createNewRule(
+    final CustomFilter customFilter,
+    final CustomFilterRulesDto ruleDto
+  ) {
     final Rules newRule = new Rules(
       customFilter,
       ruleDto.getLogicOperator(),
@@ -92,7 +107,10 @@ public class RulesService {
     return newRule;
   }
 
-  private Optional<Rules> findRegisteredRuleBetween(final List<Rules> rules, final CustomFilterRulesDto ruleDto) {
+  private Optional<Rules> findRegisteredRuleBetween(
+    final List<Rules> rules,
+    final CustomFilterRulesDto ruleDto
+  ) {
     return rules
       .stream()
       .filter(filtro -> filtro.getId().equals(ruleDto.getId()))
@@ -115,4 +133,5 @@ public class RulesService {
     this.rulesRepository.deleteAll(removedRules);
 
   }
+
 }

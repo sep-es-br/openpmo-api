@@ -14,7 +14,10 @@ public final class GetPropertyValue {
   private GetPropertyValue() {
   }
 
-  public static Object getValueProperty(final Workpack workpack, final PropertyModel sortBy) {
+  public static Object getValueProperty(
+    final Workpack workpack,
+    final PropertyModel sortBy
+  ) {
     final Property property = getPropertyByModel(workpack, sortBy);
     return getValueProperty(property);
   }
@@ -72,4 +75,5 @@ public final class GetPropertyValue {
     }
     return object;
   }
+
 }

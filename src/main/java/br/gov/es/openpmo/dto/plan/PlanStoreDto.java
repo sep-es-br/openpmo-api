@@ -7,6 +7,7 @@ import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 public class PlanStoreDto {
+
   @NotNull(message = ApplicationMessage.OFFICE_NOT_NULL)
   private Long idOffice;
   @NotNull(message = ApplicationMessage.PLANMODEL_NOT_NULL)
@@ -67,4 +68,5 @@ public class PlanStoreDto {
   public void setFinish(final LocalDate finish) {
     this.finish = finish;
   }
+
 }

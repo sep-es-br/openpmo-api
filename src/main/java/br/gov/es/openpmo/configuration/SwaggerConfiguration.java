@@ -63,4 +63,5 @@ public class SwaggerConfiguration {
       .description("This API documentation is responsible for explaining how to use the methods developed for OPEN-PMO.")
       .version(this.version).build();
   }
+
 }

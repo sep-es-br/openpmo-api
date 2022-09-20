@@ -14,55 +14,56 @@ import static br.gov.es.openpmo.model.dashboards.DashboardUtils.apply;
 
 public class EarnedValueAnalysisData {
 
-    private Set<EarnedValueByStepData> earnedValueByStep;
+  private Set<EarnedValueByStepData> earnedValueByStep;
 
-    private Set<PerformanceIndexesData> performanceIndexes;
+  private Set<PerformanceIndexesData> performanceIndexes;
 
-    public static EarnedValueAnalysisData of(DashboardEarnedValueAnalysis from) {
-        if (from == null) {
-            return null;
-        }
-
-        final EarnedValueAnalysisData to = new EarnedValueAnalysisData();
-
-        apply(from.getEarnedValueByStep(), EarnedValueByStepData::of, to::setEarnedValueByStep, HashSet::new);
-        apply(from.getPerformanceIndexes(), PerformanceIndexesData::of, to::setPerformanceIndexes, HashSet::new);
-
-        return to;
+  public static EarnedValueAnalysisData of(final DashboardEarnedValueAnalysis from) {
+    if(from == null) {
+      return null;
     }
 
-    public DashboardEarnedValueAnalysis getResponse() {
-        final List<EarnedValueByStep> earnedValueByStep = this.getEarnedValueByStep()
-                .stream()
-                .map(EarnedValueByStepData::getResponse)
-                .sorted(Comparator.comparing(EarnedValueByStep::getDate))
-                .collect(Collectors.toList());
+    final EarnedValueAnalysisData to = new EarnedValueAnalysisData();
 
-        final List<PerformanceIndexes> performanceIndexes = this.getPerformanceIndexes()
-                .stream()
-                .map(PerformanceIndexesData::getResponse)
-                .sorted(Comparator.comparing(PerformanceIndexes::getDate))
-                .collect(Collectors.toList());
+    apply(from.getEarnedValueByStep(), EarnedValueByStepData::of, to::setEarnedValueByStep, HashSet::new);
+    apply(from.getPerformanceIndexes(), PerformanceIndexesData::of, to::setPerformanceIndexes, HashSet::new);
 
-        return new DashboardEarnedValueAnalysis(
-                earnedValueByStep,
-                performanceIndexes
-        );
-    }
+    return to;
+  }
 
-    public Set<EarnedValueByStepData> getEarnedValueByStep() {
-        return earnedValueByStep;
-    }
+  public DashboardEarnedValueAnalysis getResponse() {
+    final List<EarnedValueByStep> earnedValueByStep = this.getEarnedValueByStep()
+      .stream()
+      .map(EarnedValueByStepData::getResponse)
+      .sorted(Comparator.comparing(EarnedValueByStep::getDate))
+      .collect(Collectors.toList());
 
-    public void setEarnedValueByStep(Set<EarnedValueByStepData> earnedValueByStep) {
-        this.earnedValueByStep = earnedValueByStep;
-    }
+    final List<PerformanceIndexes> performanceIndexes = this.getPerformanceIndexes()
+      .stream()
+      .map(PerformanceIndexesData::getResponse)
+      .sorted(Comparator.comparing(PerformanceIndexes::getDate))
+      .collect(Collectors.toList());
 
-    public Set<PerformanceIndexesData> getPerformanceIndexes() {
-        return performanceIndexes;
-    }
+    return new DashboardEarnedValueAnalysis(
+      earnedValueByStep,
+      performanceIndexes
+    );
+  }
 
-    public void setPerformanceIndexes(Set<PerformanceIndexesData> performanceIndexes) {
-        this.performanceIndexes = performanceIndexes;
-    }
+  public Set<EarnedValueByStepData> getEarnedValueByStep() {
+    return this.earnedValueByStep;
+  }
+
+  public void setEarnedValueByStep(final Set<EarnedValueByStepData> earnedValueByStep) {
+    this.earnedValueByStep = earnedValueByStep;
+  }
+
+  public Set<PerformanceIndexesData> getPerformanceIndexes() {
+    return this.performanceIndexes;
+  }
+
+  public void setPerformanceIndexes(final Set<PerformanceIndexesData> performanceIndexes) {
+    this.performanceIndexes = performanceIndexes;
+  }
+
 }

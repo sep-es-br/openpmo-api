@@ -63,7 +63,10 @@ public enum StakeholderSorter {
   private final String keyToCompare;
   private final Comparator<StakeholderDto> comparator;
 
-  StakeholderSorter(final String keyToCompare, final Comparator<StakeholderDto> comparator) {
+  StakeholderSorter(
+    final String keyToCompare,
+    final Comparator<StakeholderDto> comparator
+  ) {
     this.keyToCompare = keyToCompare;
     this.comparator = comparator;
   }

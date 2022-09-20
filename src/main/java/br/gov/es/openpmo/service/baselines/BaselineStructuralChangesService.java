@@ -18,16 +18,16 @@ public class BaselineStructuralChangesService implements IBaselineStructuralChan
 
   @Override
   public boolean hasStructureChanges(
-      final Baseline baseline,
-      final Workpack workpack
+    final Baseline baseline,
+    final Workpack workpack
   ) {
     return this.baselineRepository.hasStructureChanges(workpack.getId(), baseline.getId());
   }
 
   @Override
   public boolean hasBaselineStructureChanges(
-      final Baseline baseline,
-      final Workpack workpack
+    final Baseline baseline,
+    final Workpack workpack
   ) {
     return this.baselineRepository.hasBaselineStructureChanges(workpack.getId(), baseline.getId());
   }

@@ -946,35 +946,35 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
         final String typeName = property.getClass().getTypeName();
         switch(typeName) {
           case TYPE_MODEL_NAME_INTEGER:
-            final IntegerDto integerDto = (IntegerDto) IntegerDto.of(property);
+            final IntegerDto integerDto = IntegerDto.of(property);
             if(((Integer) property).getDriver() != null) {
               integerDto.setIdPropertyModel(((Integer) property).getDriver().getId());
             }
             list.add(integerDto);
             break;
           case TYPE_MODEL_NAME_TEXT:
-            final TextDto textDto = (TextDto) TextDto.of(property);
+            final TextDto textDto = TextDto.of(property);
             if(((Text) property).getDriver() != null) {
               textDto.setIdPropertyModel(((Text) property).getDriver().getId());
             }
             list.add(textDto);
             break;
           case TYPE_MODEL_NAME_DATE:
-            final DateDto dateDto = (DateDto) DateDto.of(property);
+            final DateDto dateDto = DateDto.of(property);
             if(((Date) property).getDriver() != null) {
               dateDto.setIdPropertyModel(((Date) property).getDriver().getId());
             }
             list.add(dateDto);
             break;
           case TYPE_MODEL_NAME_TOGGLE:
-            final ToggleDto toggleDto = (ToggleDto) ToggleDto.of(property);
+            final ToggleDto toggleDto = ToggleDto.of(property);
             if(((Toggle) property).getDriver() != null) {
               toggleDto.setIdPropertyModel(((Toggle) property).getDriver().getId());
             }
             list.add(toggleDto);
             break;
           case TYPE_MODEL_NAME_UNIT_SELECTION:
-            final UnitSelectionDto unitSelectionDto = (UnitSelectionDto) UnitSelectionDto.of(property);
+            final UnitSelectionDto unitSelectionDto = UnitSelectionDto.of(property);
             if(((UnitSelection) property).getDriver() != null) {
               unitSelectionDto.setIdPropertyModel(((UnitSelection) property).getDriver().getId());
             }
@@ -984,35 +984,35 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
             list.add(unitSelectionDto);
             break;
           case TYPE_MODEL_NAME_SELECTION:
-            final SelectionDto selectionDto = (SelectionDto) SelectionDto.of(property);
+            final SelectionDto selectionDto = SelectionDto.of(property);
             if(((Selection) property).getDriver() != null) {
               selectionDto.setIdPropertyModel(((Selection) property).getDriver().getId());
             }
             list.add(selectionDto);
             break;
           case TYPE_MODEL_NAME_TEXT_AREA:
-            final TextAreaDto textAreaDto = (TextAreaDto) TextAreaDto.of(property);
+            final TextAreaDto textAreaDto = TextAreaDto.of(property);
             if(((TextArea) property).getDriver() != null) {
               textAreaDto.setIdPropertyModel(((TextArea) property).getDriver().getId());
             }
             list.add(textAreaDto);
             break;
           case TYPE_MODEL_NAME_NUMBER:
-            final NumberDto numberDto = (NumberDto) NumberDto.of(property);
+            final NumberDto numberDto = NumberDto.of(property);
             if(((Number) property).getDriver() != null) {
               numberDto.setIdPropertyModel(((Number) property).getDriver().getId());
             }
             list.add(numberDto);
             break;
           case TYPE_MODEL_NAME_CURRENCY:
-            final CurrencyDto currencyDto = (CurrencyDto) CurrencyDto.of(property);
+            final CurrencyDto currencyDto = CurrencyDto.of(property);
             if(((Currency) property).getDriver() != null) {
               currencyDto.setIdPropertyModel(((Currency) property).getDriver().getId());
             }
             list.add(currencyDto);
             break;
           case TYPE_MODEL_NAME_LOCALITY_SELECTION:
-            final LocalitySelectionDto localitySelectionDto = (LocalitySelectionDto) LocalitySelectionDto.of(property);
+            final LocalitySelectionDto localitySelectionDto = LocalitySelectionDto.of(property);
             if(((LocalitySelection) property).getDriver() != null) {
               localitySelectionDto.setIdPropertyModel(((LocalitySelection) property).getDriver().getId());
             }
@@ -1025,7 +1025,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
             break;
           case TYPE_MODEL_NAME_ORGANIZATION_SELECTION:
             final OrganizationSelectionDto organizationSelectionDto =
-              (OrganizationSelectionDto) OrganizationSelectionDto.of(property);
+              OrganizationSelectionDto.of(property);
             if(((OrganizationSelection) property).getDriver() != null) {
               organizationSelectionDto
                 .setIdPropertyModel(((OrganizationSelection) property).getDriver().getId());

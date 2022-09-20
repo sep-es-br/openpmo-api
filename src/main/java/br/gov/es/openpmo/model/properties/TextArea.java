@@ -102,7 +102,8 @@ public class TextArea extends Property<TextArea, String> {
     this.workpack = workpack;
   }
 
-  @Override public PropertyModel getPropertyModel() {
+  @Override
+  public PropertyModel getPropertyModel() {
     return this.getDriver();
   }
 

@@ -19,7 +19,10 @@ public class FilterDomainController extends CreateAndUpdateUsingCommonFilterOper
   private final TokenService tokenService;
 
   @Autowired
-  public FilterDomainController(final CustomFilterService customFilterService, final TokenService tokenService) {
+  public FilterDomainController(
+    final CustomFilterService customFilterService,
+    final TokenService tokenService
+  ) {
     this.customFilterService = customFilterService;
     this.tokenService = tokenService;
   }
@@ -29,7 +32,8 @@ public class FilterDomainController extends CreateAndUpdateUsingCommonFilterOper
     return this.customFilterService;
   }
 
-  @Override protected TokenService getTokenService() {
+  @Override
+  protected TokenService getTokenService() {
     return this.tokenService;
   }
 
@@ -37,4 +41,5 @@ public class FilterDomainController extends CreateAndUpdateUsingCommonFilterOper
   protected CustomFilterEnum getFilter() {
     return CustomFilterEnum.DOMAIN;
   }
+
 }

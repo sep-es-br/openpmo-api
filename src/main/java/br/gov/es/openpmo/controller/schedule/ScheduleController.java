@@ -23,47 +23,50 @@ import java.util.List;
 @RequestMapping("/schedules")
 public class ScheduleController {
 
-    private final ScheduleService scheduleService;
-    private final StepService stepService;
+  private final ScheduleService scheduleService;
+  private final StepService stepService;
 
-    @Autowired
-    public ScheduleController(final ScheduleService scheduleService, final StepService stepService) {
-        this.scheduleService = scheduleService;
-        this.stepService = stepService;
-    }
+  @Autowired
+  public ScheduleController(
+    final ScheduleService scheduleService,
+    final StepService stepService
+  ) {
+    this.scheduleService = scheduleService;
+    this.stepService = stepService;
+  }
 
-    @GetMapping
-    public ResponseEntity<ResponseBase<List<ScheduleDto>>> findAll(@RequestParam("id-workpack") final Long idWorkpack) {
-        final List<ScheduleDto> schedules = this.scheduleService.findAll(idWorkpack);
-        if (schedules.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok(ResponseBase.of(schedules));
+  @GetMapping
+  public ResponseEntity<ResponseBase<List<ScheduleDto>>> findAll(@RequestParam("id-workpack") final Long idWorkpack) {
+    final List<ScheduleDto> schedules = this.scheduleService.findAll(idWorkpack);
+    if(schedules.isEmpty()) {
+      return ResponseEntity.noContent().build();
     }
+    return ResponseEntity.ok(ResponseBase.of(schedules));
+  }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ResponseBase<ScheduleDto>> findById(@PathVariable final Long id) {
-        final Schedule schedule = this.scheduleService.findById(id);
-        final ScheduleDto scheduleDto = this.scheduleService.mapsToSheduleDto(schedule);
-        return ResponseEntity.ok(ResponseBase.of(scheduleDto));
-    }
+  @GetMapping("/{id}")
+  public ResponseEntity<ResponseBase<ScheduleDto>> findById(@PathVariable final Long id) {
+    final Schedule schedule = this.scheduleService.findById(id);
+    final ScheduleDto scheduleDto = this.scheduleService.mapsToSheduleDto(schedule);
+    return ResponseEntity.ok(ResponseBase.of(scheduleDto));
+  }
 
-    @PostMapping
-    public ResponseEntity<ResponseBase<EntityDto>> save(@Valid @RequestBody final ScheduleParamDto scheduleParamDto) {
-        final Schedule schedule = this.scheduleService.save(scheduleParamDto);
-        return ResponseEntity.ok(ResponseBase.of(new EntityDto(schedule.getId())));
-    }
+  @PostMapping
+  public ResponseEntity<ResponseBase<EntityDto>> save(@Valid @RequestBody final ScheduleParamDto scheduleParamDto) {
+    final Schedule schedule = this.scheduleService.save(scheduleParamDto);
+    return ResponseEntity.ok(ResponseBase.of(new EntityDto(schedule.getId())));
+  }
 
-    @PutMapping
-    public ResponseEntity<ResponseBase<EntityDto>> update(@RequestBody @Valid final StepUpdateDto stepUpdateDto) {
-        final Step step = this.stepService.update(stepUpdateDto);
-        return ResponseEntity.ok(ResponseBase.of(new EntityDto(step.getId())));
-    }
+  @PutMapping
+  public ResponseEntity<ResponseBase<EntityDto>> update(@RequestBody @Valid final StepUpdateDto stepUpdateDto) {
+    final Step step = this.stepService.update(stepUpdateDto);
+    return ResponseEntity.ok(ResponseBase.of(new EntityDto(step.getId())));
+  }
 
-    @DeleteMapping("{id}")
-    public ResponseEntity<Void> delete(@PathVariable final Long id) {
-        this.scheduleService.delete(id);
-        return ResponseEntity.ok().build();
-    }
+  @DeleteMapping("{id}")
+  public ResponseEntity<Void> delete(@PathVariable final Long id) {
+    this.scheduleService.delete(id);
+    return ResponseEntity.ok().build();
+  }
 
 }

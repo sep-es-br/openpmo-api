@@ -9,23 +9,26 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class PersonPermissionsService {
 
-    private final PersonRepository personRepository;
-    private final IsCCBMemberRepository ccbMemberRepository;
+  private final PersonRepository personRepository;
+  private final IsCCBMemberRepository ccbMemberRepository;
 
-    @Autowired
-    public PersonPermissionsService(
-            final PersonRepository personRepository,
-            IsCCBMemberRepository ccbMemberRepository
-    ) {
-        this.personRepository = personRepository;
-        this.ccbMemberRepository = ccbMemberRepository;
-    }
+  @Autowired
+  public PersonPermissionsService(
+    final PersonRepository personRepository,
+    final IsCCBMemberRepository ccbMemberRepository
+  ) {
+    this.personRepository = personRepository;
+    this.ccbMemberRepository = ccbMemberRepository;
+  }
 
-    @Transactional
-    public void deleteAllPermissions(final Long idPerson, final Long idOffice) {
-        this.ccbMemberRepository.deleteAllByPersonIdAndOfficeId(idPerson, idOffice);
-        this.personRepository.deleteAllPermissionsBy(idPerson, idOffice);
-    }
+  @Transactional
+  public void deleteAllPermissions(
+    final Long idPerson,
+    final Long idOffice
+  ) {
+    this.ccbMemberRepository.deleteAllByPersonIdAndOfficeId(idPerson, idOffice);
+    this.personRepository.deleteAllPermissionsBy(idPerson, idOffice);
+  }
 
 
 }

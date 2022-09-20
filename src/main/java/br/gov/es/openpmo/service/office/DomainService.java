@@ -46,7 +46,10 @@ public class DomainService {
     this.modelMapper = modelMapper;
   }
 
-  public List<Domain> findAll(final Long idOffice, final Long idFilter) {
+  public List<Domain> findAll(
+    final Long idOffice,
+    final Long idFilter
+  ) {
 
     if(idFilter == null) {
       return this.findAll(idOffice);
@@ -108,4 +111,5 @@ public class DomainService {
     }
     this.domainRepository.delete(domain);
   }
+
 }

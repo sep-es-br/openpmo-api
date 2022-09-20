@@ -3,11 +3,16 @@ package br.gov.es.openpmo.dto.costaccount;
 import java.math.BigDecimal;
 
 public class CostDto {
+
   private Long idWorkpack;
   private BigDecimal planed;
   private BigDecimal atual;
 
-  public CostDto(final Long idWorkpack, final BigDecimal planed, final BigDecimal atual) {
+  public CostDto(
+    final Long idWorkpack,
+    final BigDecimal planed,
+    final BigDecimal atual
+  ) {
     this.idWorkpack = idWorkpack;
     this.planed = planed;
     this.atual = atual;
@@ -36,4 +41,5 @@ public class CostDto {
   public void setAtual(final BigDecimal atual) {
     this.atual = atual;
   }
+
 }

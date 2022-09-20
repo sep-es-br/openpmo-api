@@ -13,4 +13,5 @@ public interface BreadcrumbWorkpackHelper {
   WorkpackDetailDto getWorkpackDetailDto(Workpack workpack);
 
   Optional<WorkpackName> findWorkpackNameAndFullname(Long idWorkpack);
+
 }

@@ -18,4 +18,5 @@ public class GroupModel extends PropertyModel {
   public void setGroupedProperties(final Set<PropertyModel> groupedProperties) {
     this.groupedProperties = groupedProperties;
   }
+
 }

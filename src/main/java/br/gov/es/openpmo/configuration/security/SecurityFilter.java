@@ -37,30 +37,73 @@ public class SecurityFilter extends OncePerRequestFilter {
     this.tokenService = tokenService;
   }
 
+  private static boolean isPublicUrl(final String url) {
+    return url.endsWith("/refresh")
+           || url.endsWith("/signout")
+           || (url.contains("/avatar") && url.endsWith("/person"))
+           || url.endsWith("/versions")
+           || url.endsWith("/acesso-cidadao-response.html")
+           || url.endsWith("/acesso-cidadao-response")
+           || url.contains("/evidence/image");
+  }
+
+  private static boolean isSwaggerUrl(final String url) {
+    return url.endsWith("/documentation/index.html")
+           || url.endsWith("/v2/api-docs")
+           || url.contains("/swagger-resources")
+           || url.contains("/swagger-ui-standalone-preset.js")
+           || url.contains("/swagger-ui-bundle.js")
+           || url.contains("/swagger-ui.css")
+           || url.contains("/favicon-16x16.ico")
+           || url.contains("/logo.png")
+           || url.contains("/webjars/");
+  }
+
+  private static String getToken(final HttpServletRequest request) {
+    String token = request.getHeader("Authorization");
+    final String url = request.getRequestURI();
+    if(token == null && url.endsWith("/signout")) {
+      token = request.getParameter("token");
+    }
+
+    if(token == null) {
+      throw new AutenticacaoException(ApplicationMessage.TOKEN_NOT_FOUND);
+    }
+
+    if(!token.startsWith("Bearer ")) {
+      throw new AutenticacaoException(ApplicationMessage.INVALID_TOKEN);
+    }
+
+    return token;
+  }
+
   @Override
   public void doFilterInternal(
-      final HttpServletRequest request,
-      final HttpServletResponse response,
-      final FilterChain filterChain
+    final HttpServletRequest request,
+    final HttpServletResponse response,
+    final FilterChain filterChain
   ) throws IOException, ServletException {
     final String url = request.getRequestURI();
 
     final boolean isSwaggerUrl = isSwaggerUrl(url);
     final boolean isPublicUrl = isPublicUrl(url);
 
-    if (isPublicUrl || isSwaggerUrl) {
+    if(isPublicUrl || isSwaggerUrl) {
       filterChain.doFilter(request, response);
-    } else {
+    }
+    else {
       try {
         this.validateToken(request);
-      } catch (final AutenticacaoException a) {
+      }
+      catch(final AutenticacaoException a) {
         response.setStatus(HttpStatus.SC_UNAUTHORIZED);
         final ErroDto erroDto = new ErroDto(a.getMessage());
         final JSONObject erroJON = new JSONObject(erroDto);
         response.setCharacterEncoding("utf-8");
         response.getWriter().write(erroJON.toString());
         return;
-      } catch (final RuntimeException e) {
+      }
+      catch(final RuntimeException e) {
         log.log(Level.SEVERE, e.toString(), e);
         throw e;
       }
@@ -68,31 +111,9 @@ public class SecurityFilter extends OncePerRequestFilter {
     }
   }
 
-  private static boolean isPublicUrl(final String url) {
-    return url.endsWith("/refresh")
-        || url.endsWith("/signout")
-        || (url.contains("/avatar") && url.endsWith("/person"))
-        || url.endsWith("/versions")
-        || url.endsWith("/acesso-cidadao-response.html")
-        || url.endsWith("/acesso-cidadao-response")
-        || url.contains("/evidence/image");
-  }
-
-  private static boolean isSwaggerUrl(final String url) {
-    return url.endsWith("/documentation/index.html")
-        || url.endsWith("/v2/api-docs")
-        || url.contains("/swagger-resources")
-        || url.contains("/swagger-ui-standalone-preset.js")
-        || url.contains("/swagger-ui-bundle.js")
-        || url.contains("/swagger-ui.css")
-        || url.contains("/favicon-16x16.ico")
-        || url.contains("/logo.png")
-        || url.contains("/webjars/");
-  }
-
   private void validateToken(final HttpServletRequest request) {
     final String token = getToken(request).split(" ")[1];
-    if (this.tokenService.isValidToken(token, TokenType.AUTHENTICATION)) {
+    if(this.tokenService.isValidToken(token, TokenType.AUTHENTICATION)) {
       final String user = this.tokenService.getUser(token, TokenType.AUTHENTICATION).getSubject();
       final Authentication authentication = new UsernamePasswordAuthenticationToken(user, "");
 
@@ -100,30 +121,12 @@ public class SecurityFilter extends OncePerRequestFilter {
       securityContext.setAuthentication(authentication);
       final HttpSession session = request.getSession(true);
       session.setAttribute(
-          HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
-          securityContext
+        HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+        securityContext
       );
       return;
     }
     throw new AutenticacaoException(ApplicationMessage.INVALID_TOKEN);
-  }
-
-  private static String getToken(final HttpServletRequest request) {
-    String token = request.getHeader("Authorization");
-    final String url = request.getRequestURI();
-    if (token == null && url.endsWith("/signout")) {
-      token = request.getParameter("token");
-    }
-
-    if (token == null) {
-      throw new AutenticacaoException(ApplicationMessage.TOKEN_NOT_FOUND);
-    }
-
-    if (!token.startsWith("Bearer ")) {
-      throw new AutenticacaoException(ApplicationMessage.INVALID_TOKEN);
-    }
-
-    return token;
   }
 
 }

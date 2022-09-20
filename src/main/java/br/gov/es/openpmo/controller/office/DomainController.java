@@ -27,7 +27,10 @@ public class DomainController {
   private final ModelMapper modelMapper;
 
   @Autowired
-  public DomainController(final DomainService domainService, final ModelMapper modelMapper) {
+  public DomainController(
+    final DomainService domainService,
+    final ModelMapper modelMapper
+  ) {
     this.domainService = domainService;
     this.modelMapper = modelMapper;
   }

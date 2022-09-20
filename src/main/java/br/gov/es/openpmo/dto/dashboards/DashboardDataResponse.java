@@ -21,11 +21,12 @@ public class DashboardDataResponse {
 
   @JsonCreator
   public DashboardDataResponse(
-      final RiskDataChart risk,
-      final MilestoneDataChart milestone,
-      final TripleConstraintDataChart tripleConstraint,
-      final DatasheetResponse datasheet,
-      final DashboardEarnedValueAnalysis earnedValueAnalysis) {
+    final RiskDataChart risk,
+    final MilestoneDataChart milestone,
+    final TripleConstraintDataChart tripleConstraint,
+    final DatasheetResponse datasheet,
+    final DashboardEarnedValueAnalysis earnedValueAnalysis
+  ) {
     this.risk = risk;
     this.milestone = milestone;
     this.datasheet = datasheet;

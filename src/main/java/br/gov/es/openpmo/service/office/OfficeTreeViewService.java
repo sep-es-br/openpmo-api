@@ -45,7 +45,7 @@ public class OfficeTreeViewService {
   public OfficeTreeViewDto findOfficeTreeViewById(final Long idOffice) {
     final OfficeTreeViewQuery officeTreeViewQuery = this.findOfficeAsTreeViewQuery(idOffice);
 
-    if (officeTreeViewQuery == null) {
+    if(officeTreeViewQuery == null) {
       return null;
     }
 
@@ -99,4 +99,5 @@ public class OfficeTreeViewService {
       .map(WorkpackName::getName)
       .orElse(null);
   }
+
 }

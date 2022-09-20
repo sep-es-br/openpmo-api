@@ -70,7 +70,10 @@ public class GetByldCCBMemberService implements IGetByIdCCBMemberService {
       .collect(Collectors.toList());
   }
 
-  private List<IsCCBMemberFor> findAllCCBMembersByPersonId(final Long personId, final Long workpackId) {
+  private List<IsCCBMemberFor> findAllCCBMembersByPersonId(
+    final Long personId,
+    final Long workpackId
+  ) {
     return this.ccbMemberRepository.findAllByPersonIdAndWorkpackId(personId, workpackId);
   }
 

@@ -69,4 +69,5 @@ public class PersonUpdateDto {
   public boolean getUnify() {
     return this.unify;
   }
+
 }

@@ -39,13 +39,13 @@ public class GetBaselineService implements IGetBaselineService {
 
   @Autowired
   public GetBaselineService(
-      final IGetBaselineUpdatesService updatesService,
-      final IGetBaselineUpdatesFromAnotherBaselineService updatesFromAnotherBaselineService,
-      final IGetFirstTimeBaselineUpdatesService getFirstTimeBaselineUpdatesService,
-      final BaselineRepository baselineRepository,
-      final WorkpackRepository workpackRepository,
-      final IGetAllBaselineEvaluations getAllBaselineEvaluations,
-      final BaselineRepository repository
+    final IGetBaselineUpdatesService updatesService,
+    final IGetBaselineUpdatesFromAnotherBaselineService updatesFromAnotherBaselineService,
+    final IGetFirstTimeBaselineUpdatesService getFirstTimeBaselineUpdatesService,
+    final BaselineRepository baselineRepository,
+    final WorkpackRepository workpackRepository,
+    final IGetAllBaselineEvaluations getAllBaselineEvaluations,
+    final BaselineRepository repository
   ) {
     this.updatesService = updatesService;
     this.updatesFromAnotherBaselineService = updatesFromAnotherBaselineService;
@@ -65,12 +65,14 @@ public class GetBaselineService implements IGetBaselineService {
 
     this.addEvaluatedBy(response, baseline.getId());
 
-    if (isCancelation(baseline)) {
+    if(isCancelation(baseline)) {
       result = response;
-    } else if (isDraft(baseline)) {
+    }
+    else if(isDraft(baseline)) {
       this.addUpdates(response, baseline);
       result = response;
-    } else {
+    }
+    else {
       this.addUpdatesFromPreviousBaselineOrFromBaseline(response, baseline);
       result = response;
     }
@@ -80,7 +82,7 @@ public class GetBaselineService implements IGetBaselineService {
 
   private Baseline getBaselineById(final Long idBaseline) {
     return this.repository.findBaselineDetailById(idBaseline)
-        .orElseThrow(() -> new NegocioException(BASELINE_NOT_FOUND));
+      .orElseThrow(() -> new NegocioException(BASELINE_NOT_FOUND));
   }
 
   private static boolean isCancelation(final Baseline baseline) {
@@ -95,15 +97,24 @@ public class GetBaselineService implements IGetBaselineService {
     return snapshot.getChildren();
   }
 
-  private void addUpdates(final BaselineDetailResponse response, final Baseline baseline) {
+  private void addUpdates(
+    final BaselineDetailResponse response,
+    final Baseline baseline
+  ) {
     response.setUpdates(this.getUpdatesFromWorkpack(this.getWorkpackByBaseline(baseline)));
   }
 
-  private void addUpdatesFromPreviousBaselineOrFromBaseline(final BaselineDetailResponse response, final Baseline baseline) {
+  private void addUpdatesFromPreviousBaselineOrFromBaseline(
+    final BaselineDetailResponse response,
+    final Baseline baseline
+  ) {
     response.setUpdates(this.getUpdates(baseline));
   }
 
-  private void addEvaluatedBy(final BaselineDetailResponse response, final Long idBaseline) {
+  private void addEvaluatedBy(
+    final BaselineDetailResponse response,
+    final Long idBaseline
+  ) {
     final List<EvaluationItem> items = this.getEvaluationItems(idBaseline);
     response.setEvaluations(items);
   }
@@ -118,8 +129,8 @@ public class GetBaselineService implements IGetBaselineService {
 
   private List<UpdateResponse> getUpdates(final Baseline baseline) {
     return this.getPreviousBaseline(baseline)
-        .map(previousBaseline -> this.getUpdatesFromPreviousBaseline(baseline, previousBaseline))
-        .orElseGet(() -> this.getUpdatesFromBaseline(baseline));
+      .map(previousBaseline -> this.getUpdatesFromPreviousBaseline(baseline, previousBaseline))
+      .orElseGet(() -> this.getUpdatesFromBaseline(baseline));
   }
 
   private Workpack getWorkpackByBaseline(final Baseline baseline) {
@@ -128,7 +139,7 @@ public class GetBaselineService implements IGetBaselineService {
 
   private Workpack getWorkpackById(final Long idWorkpack) {
     return this.workpackRepository.findWithPropertiesAndModelAndChildrenById(idWorkpack)
-        .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
+      .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
   }
 
   private Optional<Baseline> getPreviousBaseline(final Baseline baseline) {
@@ -142,10 +153,13 @@ public class GetBaselineService implements IGetBaselineService {
 
   private Workpack getSnapshotFromBaseline(final Baseline baseline) {
     return this.baselineRepository.findWorkpackProjectSnapshotFromBaseline(baseline.getId())
-        .orElseThrow(() -> new NegocioException(ApplicationMessage.SNAPSHOT_NOT_FOUND));
+      .orElseThrow(() -> new NegocioException(ApplicationMessage.SNAPSHOT_NOT_FOUND));
   }
 
-  private List<UpdateResponse> getUpdatesFromPreviousBaseline(final Baseline baseline, final Baseline previousBaseline) {
+  private List<UpdateResponse> getUpdatesFromPreviousBaseline(
+    final Baseline baseline,
+    final Baseline previousBaseline
+  ) {
     return this.updatesFromAnotherBaselineService.getUpdates(previousBaseline, baseline);
   }
 

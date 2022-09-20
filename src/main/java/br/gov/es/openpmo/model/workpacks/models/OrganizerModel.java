@@ -19,4 +19,5 @@ public class OrganizerModel extends WorkpackModel {
   public void setInstances(final Set<Organizer> instances) {
     this.instances = instances;
   }
+
 }

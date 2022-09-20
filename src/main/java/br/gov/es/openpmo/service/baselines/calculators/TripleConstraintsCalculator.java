@@ -1,6 +1,12 @@
 package br.gov.es.openpmo.service.baselines.calculators;
 
-import br.gov.es.openpmo.dto.baselines.ccbmemberview.*;
+import br.gov.es.openpmo.dto.baselines.ccbmemberview.CostDetailItem;
+import br.gov.es.openpmo.dto.baselines.ccbmemberview.ProposedAndCurrentValue;
+import br.gov.es.openpmo.dto.baselines.ccbmemberview.ScheduleDetailItem;
+import br.gov.es.openpmo.dto.baselines.ccbmemberview.ScheduleInterval;
+import br.gov.es.openpmo.dto.baselines.ccbmemberview.ScopeDetailItem;
+import br.gov.es.openpmo.dto.baselines.ccbmemberview.StepCollectedData;
+import br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintOutput;
 import br.gov.es.openpmo.dto.workpack.WorkpackName;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
@@ -107,7 +113,8 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
       .reduce(BigDecimal.ZERO, BigDecimal::add);
   }
 
-  @Override public TripleConstraintOutput calculate(final Long idBaseline) {
+  @Override
+  public TripleConstraintOutput calculate(final Long idBaseline) {
     final Workpack master = this.findProjectMasterOfBaseline(idBaseline);
 
     final boolean isCancelationBaseline = this.isCancelationBaseline(idBaseline);
@@ -134,7 +141,10 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
     return this.repository.findDeliverableWorkpacksOfProjectMaster(master.getId());
   }
 
-  private Optional<Baseline> findPreviousBaseline(final Long idBaseline, final Workpack master) {
+  private Optional<Baseline> findPreviousBaseline(
+    final Long idBaseline,
+    final Workpack master
+  ) {
     return this.repository.findPreviousBaseline(idBaseline, master.getId());
   }
 
@@ -241,7 +251,10 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
       .orElse("");
   }
 
-  private ScheduleInterval findSnapshotOfScheduleAsScheduleInterval(final Long idBaseline, final Schedule master) {
+  private ScheduleInterval findSnapshotOfScheduleAsScheduleInterval(
+    final Long idBaseline,
+    final Schedule master
+  ) {
     return this.scheduleRepository.findSnapshotByMasterIdAndBaselineId(master.getId(), idBaseline)
       .map(ScheduleInterval::ofSchedule)
       .orElse(null);
@@ -259,18 +272,21 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
       final Set<Consumes> consumesProposed = stepMaster.getConsumes();
 
       final Set<Consumes> consumesCurrent = this.findConsumesSnapshotByStepMasterAndBaselineId(
-              idBaselineReference,
-              stepMaster
+        idBaselineReference,
+        stepMaster
       );
       addStepDataToCollector(stepCollectedData, consumesProposed, consumesCurrent);
     }
     return stepCollectedData;
   }
 
-  private Set<Consumes> findConsumesSnapshotByStepMasterAndBaselineId(final Long idBaseline, final Step stepMaster) {
+  private Set<Consumes> findConsumesSnapshotByStepMasterAndBaselineId(
+    final Long idBaseline,
+    final Step stepMaster
+  ) {
     return this.consumesRepository.findAllSnapshotConsumesOfStepMaster(
-            idBaseline,
-            stepMaster.getId()
+      idBaseline,
+      stepMaster.getId()
     );
   }
 

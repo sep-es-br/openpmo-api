@@ -26,7 +26,17 @@ public class WorkpackModelReuseService {
     this.repository = repository;
   }
 
-  public WorkpackModel reuse(final Long idWorkpackModelParent, final Long idWorkpackModel) {
+  private static void ifAnyNullThrowException(
+    final Long idWorkpackModelParent,
+    final Long idWorkpackModel
+  ) {
+    if(idWorkpackModelParent == null || idWorkpackModel == null) throw new NegocioException(ID_WORKPACK_NOT_NULL);
+  }
+
+  public WorkpackModel reuse(
+    final Long idWorkpackModelParent,
+    final Long idWorkpackModel
+  ) {
     WorkpackModelReuseService.ifAnyNullThrowException(idWorkpackModelParent, idWorkpackModel);
 
     final WorkpackModel children = this.findWorkpackModel(idWorkpackModel);
@@ -39,16 +49,15 @@ public class WorkpackModelReuseService {
     return children;
   }
 
-  private static void ifAnyNullThrowException(final Long idWorkpackModelParent, final Long idWorkpackModel) {
-    if(idWorkpackModelParent == null || idWorkpackModel == null) throw new NegocioException(ID_WORKPACK_NOT_NULL);
-  }
-
   private WorkpackModel findWorkpackModel(final Long id) {
     return this.repository.findById(id)
       .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACKMODEL_NOT_FOUND));
   }
 
-  public List<ReusableWorkpackModelHierarchyDto> findWorkpackModelReusable(final Long idWorkpackModel, final Long idPlanModel) {
+  public List<ReusableWorkpackModelHierarchyDto> findWorkpackModelReusable(
+    final Long idWorkpackModel,
+    final Long idPlanModel
+  ) {
     final Set<WorkpackModel> models = this.repository.findAllByIdPlanModelWithChildren(idPlanModel);
     return this.createHierarchy(idWorkpackModel, models);
   }
@@ -92,4 +101,5 @@ public class WorkpackModelReuseService {
       if(item.getParent() != null) this.doNotReuseParentAscending(item.getParent());
     }
   }
+
 }

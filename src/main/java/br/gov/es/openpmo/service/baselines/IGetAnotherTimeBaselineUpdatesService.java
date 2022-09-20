@@ -10,8 +10,8 @@ import java.util.List;
 public interface IGetAnotherTimeBaselineUpdatesService {
 
   List<UpdateResponse> getUpdates(
-      final Baseline baseline,
-      final Workpack workpack
+    final Baseline baseline,
+    final Workpack workpack
   );
 
 }

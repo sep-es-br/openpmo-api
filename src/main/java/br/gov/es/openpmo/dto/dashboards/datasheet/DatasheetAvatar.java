@@ -10,7 +10,12 @@ public class DatasheetAvatar {
 
   private final String mimeType;
 
-  public DatasheetAvatar(final Long id, final String url, final String name, final String mimeType) {
+  public DatasheetAvatar(
+    final Long id,
+    final String url,
+    final String name,
+    final String mimeType
+  ) {
     this.id = id;
     this.url = url;
     this.name = name;

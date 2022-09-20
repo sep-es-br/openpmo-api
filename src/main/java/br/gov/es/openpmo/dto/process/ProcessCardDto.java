@@ -55,4 +55,5 @@ public class ProcessCardDto {
   public boolean isPriority() {
     return this.priority;
   }
+
 }

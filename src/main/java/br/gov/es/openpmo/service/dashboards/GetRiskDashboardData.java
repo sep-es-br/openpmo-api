@@ -11,6 +11,7 @@ import static br.gov.es.openpmo.model.risk.Importance.LOW;
 import static br.gov.es.openpmo.model.risk.Importance.MEDIUM;
 
 @Component
+@Deprecated
 public class GetRiskDashboardData implements IGetRiskDashboardData {
 
   private final RiskRepository repository;
@@ -21,7 +22,8 @@ public class GetRiskDashboardData implements IGetRiskDashboardData {
   }
 
 
-  @Override public RiskDataChart get(final Long idWorkpack) {
+  @Override
+  public RiskDataChart get(final Long idWorkpack) {
     return new RiskDataChart(
       this.countTotalAllRisks(idWorkpack),
       this.countRisksByImportance(idWorkpack, HIGH),
@@ -31,7 +33,10 @@ public class GetRiskDashboardData implements IGetRiskDashboardData {
     );
   }
 
-  private Long countRisksByImportance(final Long idWorkpack, final Importance importance) {
+  private Long countRisksByImportance(
+    final Long idWorkpack,
+    final Importance importance
+  ) {
     return this.repository.countOpenedRiskOfWorkpackByImportance(idWorkpack, importance.name());
   }
 

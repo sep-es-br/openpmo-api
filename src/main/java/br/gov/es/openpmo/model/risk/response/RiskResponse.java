@@ -50,16 +50,16 @@ public class RiskResponse extends Entity {
   }
 
   private RiskResponse(
-      final String name,
-      final When when,
-      final LocalDate startDate,
-      final LocalDate endDate,
-      final Strategy strategy,
-      final RiskResponseStatus status,
-      final String trigger,
-      final String plan,
-      final Risk risk,
-      final Set<Person> responsible
+    final String name,
+    final When when,
+    final LocalDate startDate,
+    final LocalDate endDate,
+    final Strategy strategy,
+    final RiskResponseStatus status,
+    final String trigger,
+    final String plan,
+    final Risk risk,
+    final Set<Person> responsible
   ) {
     this.name = name;
     this.when = when;
@@ -74,32 +74,32 @@ public class RiskResponse extends Entity {
     this.endDate = endDate;
   }
 
-  private void ifStartDateIsAfterEndDateThrowException(
-      final ChronoLocalDate startDate,
-      final ChronoLocalDate endDate
-  ) {
-    if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
-      throw new NegocioException(START_DATE_AFTER_END_DATE);
-    }
-  }
-
   public static RiskResponse of(
-      final RiskResponseCreateDto request,
-      final Risk risk,
-      final Set<Person> responsible
+    final RiskResponseCreateDto request,
+    final Risk risk,
+    final Set<Person> responsible
   ) {
     return new RiskResponse(
-        request.getName(),
-        request.getWhen(),
-        request.getStartDate(),
-        request.getEndDate(),
-        request.getStrategy(),
-        request.getStatus(),
-        request.getTrigger(),
-        request.getPlan(),
-        risk,
-        responsible
+      request.getName(),
+      request.getWhen(),
+      request.getStartDate(),
+      request.getEndDate(),
+      request.getStrategy(),
+      request.getStatus(),
+      request.getTrigger(),
+      request.getPlan(),
+      risk,
+      responsible
     );
+  }
+
+  private void ifStartDateIsAfterEndDateThrowException(
+    final ChronoLocalDate startDate,
+    final ChronoLocalDate endDate
+  ) {
+    if(startDate != null && endDate != null && startDate.isAfter(endDate)) {
+      throw new NegocioException(START_DATE_AFTER_END_DATE);
+    }
   }
 
   public String getName() {
@@ -143,12 +143,15 @@ public class RiskResponse extends Entity {
   }
 
   public Set<Person> getResponsible() {
-    if (this.responsible == null) return Collections.emptySet();
+    if(this.responsible == null) return Collections.emptySet();
     return Collections.unmodifiableSet(this.responsible);
   }
 
   @Transient
-  public void update(final RiskResponseUpdateDto request, final Set<Person> responsible) {
+  public void update(
+    final RiskResponseUpdateDto request,
+    final Set<Person> responsible
+  ) {
     ObjectUtils.updateIfPresent(() -> responsible, this::setResponsible);
     ObjectUtils.updateIfPresent(request::getName, this::setName);
     ObjectUtils.updateIfPresent(request::getWhen, this::setWhen);
@@ -206,10 +209,10 @@ public class RiskResponse extends Entity {
 
   @Transient
   public Set<StakeholderCardViewDto> getResponsibleAsStakeholderCardDto() {
-    if (this.responsible == null) return Collections.emptySet();
+    if(this.responsible == null) return Collections.emptySet();
     return this.responsible.stream()
-        .map(StakeholderCardViewDto::of)
-        .collect(Collectors.toSet());
+      .map(StakeholderCardViewDto::of)
+      .collect(Collectors.toSet());
   }
 
   @Transient

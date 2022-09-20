@@ -10,7 +10,11 @@ public class PersonContactDetail {
   public PersonContactDetail() {
   }
 
-  public PersonContactDetail(final String email, final String phone, final String address) {
+  public PersonContactDetail(
+    final String email,
+    final String phone,
+    final String address
+  ) {
     this.email = email;
     this.phone = phone;
     this.address = address;
@@ -39,4 +43,5 @@ public class PersonContactDetail {
   public void setAddress(final String address) {
     this.address = address;
   }
+
 }

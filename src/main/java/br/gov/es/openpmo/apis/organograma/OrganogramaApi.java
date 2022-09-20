@@ -7,10 +7,11 @@ import static br.gov.es.openpmo.apis.organograma.OrganogramaApiImpl.cacheUnidade
 
 public interface OrganogramaApi {
 
-    Optional<String> findSiglaByUnidade(String idUnidade);
+  static void clearCache() {
+    cacheUnidadeSigla.clear();
+    accessToken = null;
+  }
 
-    static void clearCache() {
-        cacheUnidadeSigla.clear();
-        accessToken = null;
-    }
+  Optional<String> findSiglaByUnidade(String idUnidade);
+
 }

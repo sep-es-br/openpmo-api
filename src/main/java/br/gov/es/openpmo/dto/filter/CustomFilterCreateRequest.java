@@ -5,6 +5,7 @@ import br.gov.es.openpmo.model.filter.CustomFilterEnum;
 import javax.validation.Valid;
 
 public class CustomFilterCreateRequest {
+
   @Valid private final CustomFilterDto request;
   private final CustomFilterEnum customFilterEnum;
   private final Long idWorkPackModel;
@@ -37,4 +38,5 @@ public class CustomFilterCreateRequest {
   public Long getIdWorkPackModel() {
     return this.idWorkPackModel;
   }
+
 }

@@ -82,8 +82,8 @@ public class JournalResponse {
 
   public Set<EvidenceField> getEvidenceFieldSet() {
     return Optional.ofNullable(this.evidenceFieldSet)
-        .map(Collections::unmodifiableSet)
-        .orElse(Collections.emptySet());
+      .map(Collections::unmodifiableSet)
+      .orElse(Collections.emptySet());
   }
 
   public void setEvidenceFieldSet(final Set<? extends EvidenceField> evidenceFieldSet) {

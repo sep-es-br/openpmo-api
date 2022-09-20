@@ -102,7 +102,8 @@ public class Integer extends Property<Integer, Long> {
     this.workpack = workpack;
   }
 
-  @Override public PropertyModel getPropertyModel() {
+  @Override
+  public PropertyModel getPropertyModel() {
     return this.getDriver();
   }
 

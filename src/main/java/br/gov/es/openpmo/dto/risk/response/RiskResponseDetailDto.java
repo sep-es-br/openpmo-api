@@ -109,4 +109,5 @@ public class RiskResponseDetailDto {
   public Set<StakeholderCardViewDto> getResponsible() {
     return this.responsible;
   }
+
 }

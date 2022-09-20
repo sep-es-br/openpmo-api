@@ -32,8 +32,8 @@ public class PlanModelDto {
     this.sharedWithAll = planModel.isPublicShared();
 
     this.sharedWith = Optional.ofNullable(planModel.getSharedWith())
-        .map(offices -> offices.stream().map(Office::getDto).collect(Collectors.toSet()))
-        .orElse(Collections.emptySet());
+      .map(offices -> offices.stream().map(Office::getDto).collect(Collectors.toSet()))
+      .orElse(Collections.emptySet());
   }
 
   public static PlanModelDto of(final PlanModel planModel) {
@@ -44,9 +44,9 @@ public class PlanModelDto {
     planModelDto.setFullName(planModel.getFullName());
     planModelDto.setSharedWithAll(false);
     planModelDto.setSharedWith(planModel.getSharedWith()
-        .stream()
-        .map(OfficeDto::of)
-        .collect(Collectors.toSet()));
+                                 .stream()
+                                 .map(OfficeDto::of)
+                                 .collect(Collectors.toSet()));
     return planModelDto;
   }
 
@@ -97,4 +97,5 @@ public class PlanModelDto {
   public void setSharedWith(final Set<OfficeDto> sharedWith) {
     this.sharedWith = sharedWith;
   }
+
 }

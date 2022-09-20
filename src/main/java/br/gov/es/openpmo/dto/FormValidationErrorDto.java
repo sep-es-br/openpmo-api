@@ -5,7 +5,10 @@ public class FormValidationErrorDto {
   private final String field;
   private final String error;
 
-  public FormValidationErrorDto(final String field, final String error) {
+  public FormValidationErrorDto(
+    final String field,
+    final String error
+  ) {
     this.field = field;
     this.error = error;
   }
@@ -17,4 +20,5 @@ public class FormValidationErrorDto {
   public String getError() {
     return this.error;
   }
+
 }

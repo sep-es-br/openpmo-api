@@ -5,8 +5,8 @@ import br.gov.es.openpmo.dto.dashboards.RiskDataChart;
 
 public interface IDashboardRiskService {
 
-    RiskDataChart build(DashboardParameters parameters);
+  RiskDataChart build(DashboardParameters parameters);
 
-    RiskDataChart build(Long workpackId);
+  RiskDataChart build(Long workpackId);
 
 }

@@ -24,7 +24,10 @@ public class WorkpackModelPatchCompletedStatus {
     this.repository = repository;
   }
 
-  public void patch(final WorkpackModelCompletedUpdateRequest request, final Long idWorkpackModel) {
+  public void patch(
+    final WorkpackModelCompletedUpdateRequest request,
+    final Long idWorkpackModel
+  ) {
 
     if(Objects.isNull(request)) throw new IllegalArgumentException(COMPLETED_STATUS_MUST_BE_NOT_NULL);
 
@@ -52,4 +55,5 @@ public class WorkpackModelPatchCompletedStatus {
     return this.repository.findById(idWorkpackModel)
       .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
   }
+
 }

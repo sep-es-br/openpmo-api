@@ -25,7 +25,7 @@ public class ScopeDetailItem {
   @JsonIgnore
   private BigDecimal difference;
   @JsonIgnore
-  private BigDecimal unitCost;
+  private final BigDecimal unitCost;
 
   public ScopeDetailItem(
     final String icon,
@@ -113,4 +113,5 @@ public class ScopeDetailItem {
   public void roundData() {
     this.variation = roundOneDecimal(this.variation);
   }
+
 }

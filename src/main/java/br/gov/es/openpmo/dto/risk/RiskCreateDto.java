@@ -129,4 +129,5 @@ public class RiskCreateDto {
   public void setHappenedIn(final LocalDate happenedIn) {
     this.happenedIn = happenedIn;
   }
+
 }

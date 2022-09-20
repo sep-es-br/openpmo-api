@@ -11,22 +11,26 @@ public class EditDraftBaselineRequest {
   private final String description;
 
   @JsonCreator
-  public EditDraftBaselineRequest(String name, String message, String description) {
+  public EditDraftBaselineRequest(
+    final String name,
+    final String message,
+    final String description
+  ) {
     this.name = name;
     this.message = message;
     this.description = description;
   }
 
   public String getName() {
-    return name;
+    return this.name;
   }
 
   public String getMessage() {
-    return message;
+    return this.message;
   }
 
   public String getDescription() {
-    return description;
+    return this.description;
   }
 
 }

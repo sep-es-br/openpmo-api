@@ -29,4 +29,5 @@ public class PersonByFullNameQuery {
   public Set<IsInContactBookOf> getContacts() {
     return this.contacts;
   }
+
 }

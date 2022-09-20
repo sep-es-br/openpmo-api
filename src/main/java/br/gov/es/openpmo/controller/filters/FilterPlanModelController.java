@@ -19,7 +19,10 @@ public class FilterPlanModelController extends CreateAndUpdateUsingCommonFilterO
   private final TokenService tokenService;
 
   @Autowired
-  public FilterPlanModelController(final CustomFilterService customFilterService, final TokenService tokenService) {
+  public FilterPlanModelController(
+    final CustomFilterService customFilterService,
+    final TokenService tokenService
+  ) {
     this.customFilterService = customFilterService;
     this.tokenService = tokenService;
   }
@@ -29,7 +32,8 @@ public class FilterPlanModelController extends CreateAndUpdateUsingCommonFilterO
     return this.customFilterService;
   }
 
-  @Override protected TokenService getTokenService() {
+  @Override
+  protected TokenService getTokenService() {
     return this.tokenService;
   }
 
@@ -37,4 +41,5 @@ public class FilterPlanModelController extends CreateAndUpdateUsingCommonFilterO
   protected CustomFilterEnum getFilter() {
     return CustomFilterEnum.PLAN_MODELS;
   }
+
 }

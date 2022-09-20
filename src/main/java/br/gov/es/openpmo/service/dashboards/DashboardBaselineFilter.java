@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@Deprecated
 public class DashboardBaselineFilter implements IDashboardBaselineFilter {
 
   private final DashboardBaselineRepository baselineRepository;

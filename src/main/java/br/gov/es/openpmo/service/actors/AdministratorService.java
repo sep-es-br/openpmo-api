@@ -16,6 +16,7 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.PERSON_NOT_FOUND;
 
 @Service
 public class AdministratorService {
+
   private final PersonRepository personRepository;
 
   @Value("${app.login.server.name}")
@@ -26,7 +27,10 @@ public class AdministratorService {
     this.personRepository = personRepository;
   }
 
-  public AdministratorDto updateAdministratorStatus(final AdministratorStatusRequest request, final Long personId) {
+  public AdministratorDto updateAdministratorStatus(
+    final AdministratorStatusRequest request,
+    final Long personId
+  ) {
     final boolean administrator = request.getAdministrator();
 
     final Person person = this.personRepository.findById(personId)
@@ -45,4 +49,5 @@ public class AdministratorService {
       .map(person -> new AdministratorDto(person, this.serverName))
       .collect(Collectors.toList());
   }
+
 }

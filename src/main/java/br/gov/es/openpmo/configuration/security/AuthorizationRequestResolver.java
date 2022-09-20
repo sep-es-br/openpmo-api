@@ -14,8 +14,10 @@ public class AuthorizationRequestResolver implements OAuth2AuthorizationRequestR
 
   private final OAuth2AuthorizationRequestResolver delegatedRequestResolver;
 
-  public AuthorizationRequestResolver(final ClientRegistrationRepository clientRegistrationRepository,
-                                      final String authorizeUri) {
+  public AuthorizationRequestResolver(
+    final ClientRegistrationRepository clientRegistrationRepository,
+    final String authorizeUri
+  ) {
     this.delegatedRequestResolver = new DefaultOAuth2AuthorizationRequestResolver(
       clientRegistrationRepository,
       authorizeUri
@@ -29,7 +31,10 @@ public class AuthorizationRequestResolver implements OAuth2AuthorizationRequestR
   }
 
   @Override
-  public OAuth2AuthorizationRequest resolve(final HttpServletRequest request, final String clientRegistrationId) {
+  public OAuth2AuthorizationRequest resolve(
+    final HttpServletRequest request,
+    final String clientRegistrationId
+  ) {
     final OAuth2AuthorizationRequest req = this.delegatedRequestResolver.resolve(request, clientRegistrationId);
     return this.customizeRequest(req);
   }

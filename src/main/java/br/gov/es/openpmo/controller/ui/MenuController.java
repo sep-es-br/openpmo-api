@@ -11,7 +11,12 @@ import br.gov.es.openpmo.service.ui.WorkpackModelMenuService;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -21,63 +26,63 @@ import java.util.List;
 @RequestMapping("/menus")
 public class MenuController {
 
-    private final MenuService menuService;
-    private final TokenService tokenService;
-    private final WorkpackModelMenuService workpackModelMenuService;
+  private final MenuService menuService;
+  private final TokenService tokenService;
+  private final WorkpackModelMenuService workpackModelMenuService;
 
-    @Autowired
-    public MenuController(
-            final MenuService menuService,
-            final TokenService tokenService,
-            final WorkpackModelMenuService workpackModelMenuService
-    ) {
-        this.menuService = menuService;
-        this.tokenService = tokenService;
-        this.workpackModelMenuService = workpackModelMenuService;
+  @Autowired
+  public MenuController(
+    final MenuService menuService,
+    final TokenService tokenService,
+    final WorkpackModelMenuService workpackModelMenuService
+  ) {
+    this.menuService = menuService;
+    this.tokenService = tokenService;
+    this.workpackModelMenuService = workpackModelMenuService;
+  }
+
+  @GetMapping("/office")
+  public ResponseEntity<ResponseBaseItens<MenuOfficeDto>> indexOffice(
+    @RequestHeader(name = "Authorization") final String autorization
+  ) {
+    final Long idUser = this.tokenService.getUserId(autorization);
+    final List<MenuOfficeDto> offices = this.menuService.findAllOffice(idUser);
+
+    if(offices.isEmpty()) {
+      return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/office")
-    public ResponseEntity<ResponseBaseItens<MenuOfficeDto>> indexOffice(
-            @RequestHeader(name = "Authorization") final String autorization
-    ) {
-        final Long idUser = this.tokenService.getUserId(autorization);
-        final List<MenuOfficeDto> offices = this.menuService.findAllOffice(idUser);
+    return ResponseEntity.ok(ResponseBaseItens.of(offices));
+  }
 
-        if (offices.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
+  @GetMapping("/portfolio")
+  public ResponseEntity<ResponseBaseItens<WorkpackMenuDto>> indexPortfolio(
+    @RequestParam("id-office") final Long idOffice,
+    @RequestParam(value = "id-plan", required = false) final Long idPlan,
+    @RequestHeader(name = "Authorization") final String autorization
+  ) {
+    final Long idUser = this.tokenService.getUserId(autorization);
+    final List<WorkpackMenuDto> portfolios =
+      this.menuService.findAllPortfolio(new PortfolioMenuRequest(idOffice, idPlan, idUser));
 
-        return ResponseEntity.ok(ResponseBaseItens.of(offices));
+    if(portfolios.isEmpty()) {
+      return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/portfolio")
-    public ResponseEntity<ResponseBaseItens<WorkpackMenuDto>> indexPortfolio(
-      @RequestParam("id-office") final Long idOffice,
-      @RequestParam(value = "id-plan", required = false) final Long idPlan,
-      @RequestHeader(name = "Authorization") final String autorization
-    ) {
-        final Long idUser = this.tokenService.getUserId(autorization);
-        final List<WorkpackMenuDto> portfolios =
-          this.menuService.findAllPortfolio(new PortfolioMenuRequest(idOffice, idPlan, idUser));
+    return ResponseEntity.ok(ResponseBaseItens.of(portfolios));
+  }
 
-        if (portfolios.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
+  @GetMapping("/planModels")
+  public ResponseEntity<ResponseBaseItens<PlanModelMenuResponse>> indexWorkpackModels(
+    @RequestParam("id-office") final Long idOffice
+  ) {
+    final List<PlanModelMenuResponse> responses = this.workpackModelMenuService.getResponses(idOffice);
 
-        return ResponseEntity.ok(ResponseBaseItens.of(portfolios));
+    if(responses.isEmpty()) {
+      return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/planModels")
-    public ResponseEntity<ResponseBaseItens<PlanModelMenuResponse>> indexWorkpackModels(
-            @RequestParam("id-office") final Long idOffice
-    ) {
-        List<PlanModelMenuResponse> responses = workpackModelMenuService.getResponses(idOffice);
-
-        if (responses.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-
-        return ResponseEntity.ok(ResponseBaseItens.of(responses));
-    }
+    return ResponseEntity.ok(ResponseBaseItens.of(responses));
+  }
 
 }

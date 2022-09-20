@@ -8,6 +8,6 @@ import java.util.List;
 @FunctionalInterface
 public interface IGetEarnedValueBySteps {
 
-    List<EarnedValueByStep> get(DashboardParameters parameters);
+  List<EarnedValueByStep> get(DashboardParameters parameters);
 
 }

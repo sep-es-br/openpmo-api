@@ -34,4 +34,5 @@ public class DateModel extends PropertyModel {
   public void setDefaultValue(final LocalDateTime defaultValue) {
     this.defaultValue = defaultValue;
   }
+
 }

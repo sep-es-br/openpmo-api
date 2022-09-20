@@ -51,7 +51,10 @@ public class ReusableWorkpackModelHierarchyDto {
     return reusableWorkpack;
   }
 
-  public static ReusableWorkpackModelHierarchyDto ofChild(final WorkpackModel model, final ReusableWorkpackModelHierarchyDto dto) {
+  public static ReusableWorkpackModelHierarchyDto ofChild(
+    final WorkpackModel model,
+    final ReusableWorkpackModelHierarchyDto dto
+  ) {
     final ReusableWorkpackModelHierarchyDto reusableWorkpack = new ReusableWorkpackModelHierarchyDto(
       model.getId(),
       model.getModelName(),
@@ -114,14 +117,17 @@ public class ReusableWorkpackModelHierarchyDto {
     return Collections.unmodifiableSet(this.parent);
   }
 
-  @Override public int hashCode() {
+  @Override
+  public int hashCode() {
     return Objects.hash(this.id);
   }
 
-  @Override public boolean equals(final Object o) {
+  @Override
+  public boolean equals(final Object o) {
     if(this == o) return true;
     if(!(o instanceof ReusableWorkpackModelHierarchyDto)) return false;
     final ReusableWorkpackModelHierarchyDto that = (ReusableWorkpackModelHierarchyDto) o;
     return this.id.equals(that.id);
   }
+
 }

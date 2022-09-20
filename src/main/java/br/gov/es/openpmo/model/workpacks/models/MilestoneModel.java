@@ -19,4 +19,5 @@ public class MilestoneModel extends WorkpackModel {
   public void setInstances(final Set<Milestone> instances) {
     this.instances = instances;
   }
+
 }

@@ -14,7 +14,10 @@ public class StakeholderAndPermissionQuery {
   private final Set<IsStakeholderIn> stakeholderIn;
   private final Set<CanAccessWorkpack> workpackPermissions;
 
-  public StakeholderAndPermissionQuery(final ArrayList<IsStakeholderIn> stakeholderIn, final ArrayList<CanAccessWorkpack> workpackPermissions) {
+  public StakeholderAndPermissionQuery(
+    final ArrayList<IsStakeholderIn> stakeholderIn,
+    final ArrayList<CanAccessWorkpack> workpackPermissions
+  ) {
     this.stakeholderIn = new HashSet<>(stakeholderIn);
     this.workpackPermissions = new HashSet<>(workpackPermissions);
   }
@@ -26,4 +29,5 @@ public class StakeholderAndPermissionQuery {
   public Set<CanAccessWorkpack> getWorkpackPermissions() {
     return this.workpackPermissions;
   }
+
 }

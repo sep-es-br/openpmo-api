@@ -3,6 +3,7 @@ package br.gov.es.openpmo.dto.schedule;
 import java.math.BigDecimal;
 
 public class CostSchedule {
+
   private Long id;
   private BigDecimal plannedCost;
   private BigDecimal actualCost;
@@ -30,4 +31,5 @@ public class CostSchedule {
   public void setActualCost(final BigDecimal actualCost) {
     this.actualCost = actualCost;
   }
+
 }

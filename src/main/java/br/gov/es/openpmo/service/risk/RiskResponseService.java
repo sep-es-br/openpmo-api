@@ -29,10 +29,10 @@ public class RiskResponseService {
   private final RiskService riskService;
 
   public RiskResponseService(
-      final JournalCreator journalCreator,
-      final RiskResponseRepository repository,
-      final PersonService personService,
-      final RiskService riskService
+    final JournalCreator journalCreator,
+    final RiskResponseRepository repository,
+    final PersonService personService,
+    final RiskService riskService
   ) {
     this.journalCreator = journalCreator;
     this.repository = repository;
@@ -40,7 +40,10 @@ public class RiskResponseService {
     this.riskService = riskService;
   }
 
-  public RiskResponse create(final RiskResponseCreateDto request, final Long idPerson) {
+  public RiskResponse create(
+    final RiskResponseCreateDto request,
+    final Long idPerson
+  ) {
     final Risk risk = this.findRiskById(request.getIdRisk());
     final Set<Person> responsible = this.findResponsible(request.getResponsible());
     final RiskResponse riskResponse = RiskResponse.of(request, risk, responsible);
@@ -58,11 +61,14 @@ public class RiskResponseService {
   }
 
   public void deleteById(final Long idRiskResponse) {
-    if (idRiskResponse == null) throw new IllegalArgumentException(RISK_RESPONSE_ID_NULL);
+    if(idRiskResponse == null) throw new IllegalArgumentException(RISK_RESPONSE_ID_NULL);
     this.repository.deleteById(idRiskResponse);
   }
 
-  public RiskResponseDetailDto update(final RiskResponseUpdateDto request, final Long idPerson) {
+  public RiskResponseDetailDto update(
+    final RiskResponseUpdateDto request,
+    final Long idPerson
+  ) {
     final RiskResponse riskResponse = this.findById(request.getId());
     this.update(request, riskResponse);
     this.repository.save(riskResponse);
@@ -70,14 +76,17 @@ public class RiskResponseService {
     return RiskResponseDetailDto.of(riskResponse);
   }
 
-  private void update(final RiskResponseUpdateDto request, final RiskResponse riskResponse) {
+  private void update(
+    final RiskResponseUpdateDto request,
+    final RiskResponse riskResponse
+  ) {
     final Set<Person> responsible = this.findResponsible(request.getResponsible());
     riskResponse.update(request, responsible);
   }
 
   private RiskResponse findById(final Long id) {
     return this.repository.findById(id)
-        .orElseThrow(() -> new NegocioException(ApplicationMessage.RISK_RESPONSE_NOT_FOUND));
+      .orElseThrow(() -> new NegocioException(ApplicationMessage.RISK_RESPONSE_NOT_FOUND));
   }
 
   public RiskResponseDetailDto findRiskByIdAsDetailDto(final Long id) {

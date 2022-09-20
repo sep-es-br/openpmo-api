@@ -8,81 +8,81 @@ import org.springframework.data.annotation.Transient;
 @NodeEntity
 public class RiskData extends Entity {
 
-    private Long total;
+  private Long total;
 
-    private Long high;
+  private Long high;
 
-    private Long low;
+  private Long low;
 
-    private Long closed;
+  private Long closed;
 
-    private Long medium;
+  private Long medium;
 
-    public static RiskData of(RiskDataChart from) {
-        if (from == null) {
-            return null;
-        }
-
-        final RiskData to = new RiskData();
-
-        to.setTotal(from.getTotal());
-        to.setHigh(from.getHigh());
-        to.setLow(from.getLow());
-        to.setClosed(from.getClosed());
-        to.setMedium(from.getMedium());
-
-        return to;
+  public static RiskData of(final RiskDataChart from) {
+    if(from == null) {
+      return null;
     }
 
-    public void setTotal(Long total) {
-        this.total = total;
-    }
+    final RiskData to = new RiskData();
 
-    public void setHigh(Long high) {
-        this.high = high;
-    }
+    to.setTotal(from.getTotal());
+    to.setHigh(from.getHigh());
+    to.setLow(from.getLow());
+    to.setClosed(from.getClosed());
+    to.setMedium(from.getMedium());
 
-    public void setLow(Long low) {
-        this.low = low;
-    }
+    return to;
+  }
 
-    public void setClosed(Long closed) {
-        this.closed = closed;
-    }
+  @Transient
+  public RiskDataChart getResponse() {
+    return new RiskDataChart(
+      this.total,
+      this.high,
+      this.low,
+      this.medium,
+      this.closed
+    );
+  }
 
-    public void setMedium(Long medium) {
-        this.medium = medium;
-    }
+  public Long getTotal() {
+    return this.total;
+  }
 
-    @Transient
-    public RiskDataChart getResponse() {
-        return new RiskDataChart(
-                this.total,
-                this.high,
-                this.low,
-                this.medium,
-                this.closed
-        );
-    }
+  public void setTotal(final Long total) {
+    this.total = total;
+  }
 
-    public Long getTotal() {
-        return total;
-    }
+  public Long getHigh() {
+    return this.high;
+  }
 
-    public Long getHigh() {
-        return high;
-    }
+  public void setHigh(final Long high) {
+    this.high = high;
+  }
 
-    public Long getLow() {
-        return low;
-    }
+  public Long getLow() {
+    return this.low;
+  }
 
-    public Long getClosed() {
-        return closed;
-    }
+  public void setLow(final Long low) {
+    this.low = low;
+  }
 
-    public Long getMedium() {
-        return medium;
-    }
+  public Long getClosed() {
+    return this.closed;
+  }
+
+  public void setClosed(final Long closed) {
+    this.closed = closed;
+  }
+
+  public Long getMedium() {
+    return this.medium;
+  }
+
+  public void setMedium(final Long medium) {
+    this.medium = medium;
+  }
 
 }

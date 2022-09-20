@@ -23,7 +23,10 @@ public class IsAuthenticatedByService {
   private String authenticationServiceName;
 
   @Autowired
-  public IsAuthenticatedByService(final IsAuthenticatedByRepository repository, final AuthServiceRepository authServiceRepository) {
+  public IsAuthenticatedByService(
+    final IsAuthenticatedByRepository repository,
+    final AuthServiceRepository authServiceRepository
+  ) {
     this.repository = repository;
     this.authServiceRepository = authServiceRepository;
   }
@@ -54,4 +57,5 @@ public class IsAuthenticatedByService {
       .findAuthServiceByServer(this.authenticationServiceName)
       .orElseThrow(() -> new NegocioException(ApplicationMessage.AUTH_SERVICE_NOT_FOUND));
   }
+
 }

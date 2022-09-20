@@ -37,7 +37,8 @@ public class SignInController {
 
   @GetMapping("/acesso-cidadao-response")
   public RedirectView acessoCidadao(
-    @RequestParam(name = "access_token") final String token, final HttpServletRequest request,
+    @RequestParam(name = "access_token") final String token,
+    final HttpServletRequest request,
     final HttpServletResponse response
   ) throws Exception {
     final AcessoDto acessoDto = this.authenticationService.authenticate(token);
@@ -68,4 +69,5 @@ public class SignInController {
 
     return ResponseEntity.ok().body(signinDto);
   }
+
 }

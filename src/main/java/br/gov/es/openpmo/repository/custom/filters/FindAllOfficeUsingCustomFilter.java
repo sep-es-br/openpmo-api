@@ -24,12 +24,18 @@ public class FindAllOfficeUsingCustomFilter extends FindAllUsingCustomFilterBuil
   }
 
   @Override
-  public void buildMatchClause(final CustomFilter filter, final StringBuilder query) {
+  public void buildMatchClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query.append("MATCH (").append(this.nodeName).append(":").append(filter.getType().getNodeName()).append(") ");
   }
 
   @Override
-  public void buildWhereClause(final CustomFilter filter, final StringBuilder query) {
+  public void buildWhereClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     if(filter.getRules() == null || filter.getRules().isEmpty()) return;
     query.append("WHERE").append(" ");
   }
@@ -39,16 +45,21 @@ public class FindAllOfficeUsingCustomFilter extends FindAllUsingCustomFilterBuil
     query.append("RETURN").append(" ").append(this.nodeName);
   }
 
-  @Override protected boolean hasAppendedBooleanBlock() {
-    return false;
-  }
-
-  @Override protected boolean hasToCloseAppendedBooleanBlock() {
+  @Override
+  protected boolean hasAppendedBooleanBlock() {
     return false;
   }
 
   @Override
-  public void buildOrderingAndDirectionClause(final CustomFilter filter, final StringBuilder query) {
+  protected boolean hasToCloseAppendedBooleanBlock() {
+    return false;
+  }
+
+  @Override
+  public void buildOrderingAndDirectionClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     this.appendStringIfTrue(
       filter.getSortBy() != null,
       builder -> builder.append(" ").append("ORDER BY ").append(this.nodeName).append(".").append(filter.getSortBy()),

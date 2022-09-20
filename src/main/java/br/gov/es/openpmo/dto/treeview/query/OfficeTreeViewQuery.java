@@ -8,13 +8,17 @@ import java.util.List;
 
 @QueryResult
 public class OfficeTreeViewQuery {
+
   private Office office;
   private List<Plan> plans;
 
   public OfficeTreeViewQuery() {
   }
 
-  public OfficeTreeViewQuery(final Office office, final List<Plan> plans) {
+  public OfficeTreeViewQuery(
+    final Office office,
+    final List<Plan> plans
+  ) {
     this.office = office;
     this.plans = plans;
   }

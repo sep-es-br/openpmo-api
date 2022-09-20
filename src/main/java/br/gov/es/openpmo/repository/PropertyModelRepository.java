@@ -17,18 +17,21 @@ public interface PropertyModelRepository extends Neo4jRepository<PropertyModel, 
   Long countPropertyByIdPropertyModel(@Param("id") Long id);
 
   @Query("match (p:Property)-[i:IS_DRIVEN_BY]->(:PropertyModel) " +
-      "where id(p)=$propertyId " +
-      "detach delete i")
+         "where id(p)=$propertyId " +
+         "detach delete i")
   void deleteRelationshipByPropertyId(Long propertyId);
 
   @Query("match (p:Property), (m:PropertyModel) " +
-      "where id(p)=$propertyId and id(m)=$propertyModelId " +
-      "create (p)-[:IS_DRIVEN_BY]->(m)")
-  void createRelationshipByPropertyIdAndModelId(Long propertyId, Long propertyModelId);
+         "where id(p)=$propertyId and id(m)=$propertyModelId " +
+         "create (p)-[:IS_DRIVEN_BY]->(m)")
+  void createRelationshipByPropertyIdAndModelId(
+    Long propertyId,
+    Long propertyModelId
+  );
 
   @Query("match (p:Property)-[:IS_DRIVEN_BY]->(m:PropertyModel) " +
-      "where id(p)=$propertyId " +
-      "return m")
+         "where id(p)=$propertyId " +
+         "return m")
   Optional<PropertyModel> findByIdProperty(Long propertyId);
 
 }

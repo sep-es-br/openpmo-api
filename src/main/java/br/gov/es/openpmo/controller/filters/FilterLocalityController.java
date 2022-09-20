@@ -19,7 +19,10 @@ public class FilterLocalityController extends CreateAndUpdateUsingCommonFilterOp
   private final TokenService tokenService;
 
   @Autowired
-  public FilterLocalityController(final CustomFilterService customFilterService, final TokenService tokenService) {
+  public FilterLocalityController(
+    final CustomFilterService customFilterService,
+    final TokenService tokenService
+  ) {
     this.customFilterService = customFilterService;
     this.tokenService = tokenService;
   }
@@ -29,7 +32,8 @@ public class FilterLocalityController extends CreateAndUpdateUsingCommonFilterOp
     return this.customFilterService;
   }
 
-  @Override protected TokenService getTokenService() {
+  @Override
+  protected TokenService getTokenService() {
     return this.tokenService;
   }
 
@@ -37,4 +41,5 @@ public class FilterLocalityController extends CreateAndUpdateUsingCommonFilterOp
   protected CustomFilterEnum getFilter() {
     return CustomFilterEnum.LOCALITY;
   }
+
 }

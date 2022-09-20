@@ -19,75 +19,75 @@ import org.springframework.stereotype.Service;
 @Service
 public class UpdateCCBMemberRelationshipService implements IUpdateCCBMemberRelationshipService {
 
-    private final IsCCBMemberRepository repository;
+  private final IsCCBMemberRepository repository;
 
-    private final IsInContactBookOfRepository isInContactBookOfRepository;
+  private final IsInContactBookOfRepository isInContactBookOfRepository;
 
-    private final WorkpackService workpackService;
+  private final WorkpackService workpackService;
 
-    private final PersonService personService;
+  private final PersonService personService;
 
-    private final OfficeService officeService;
+  private final OfficeService officeService;
 
-    @Autowired
-    public UpdateCCBMemberRelationshipService(
-            final IsCCBMemberRepository repository,
-            final IsInContactBookOfRepository isInContactBookOfRepository,
-            final WorkpackService workpackService,
-            final PersonService personService,
-            final OfficeService officeService
-    ) {
-        this.repository = repository;
-        this.isInContactBookOfRepository = isInContactBookOfRepository;
-        this.workpackService = workpackService;
-        this.personService = personService;
-        this.officeService = officeService;
+  @Autowired
+  public UpdateCCBMemberRelationshipService(
+    final IsCCBMemberRepository repository,
+    final IsInContactBookOfRepository isInContactBookOfRepository,
+    final WorkpackService workpackService,
+    final PersonService personService,
+    final OfficeService officeService
+  ) {
+    this.repository = repository;
+    this.isInContactBookOfRepository = isInContactBookOfRepository;
+    this.workpackService = workpackService;
+    this.personService = personService;
+    this.officeService = officeService;
+  }
+
+  @Override
+  public void updateRelationship(final CCBMemberRequest request) {
+    final Person person = this.updatePersonAndRelationships(request);
+    final Workpack workpack = this.workpackService.findByIdDefault(request.getIdWorkpack());
+
+    this.repository.deleteAllByPersonIdAndWorkpackId(person.getId(), workpack.getId());
+
+    for(final MemberAs memberAs : request.getMemberAs()) {
+      this.repository.save(new IsCCBMemberFor(memberAs, person, workpack), 0);
     }
+  }
 
-    @Override
-    public void updateRelationship(final CCBMemberRequest request) {
-        final Person person = this.updatePersonAndRelationships(request);
-        final Workpack workpack = this.workpackService.findByIdDefault(request.getIdWorkpack());
+  private Person updatePersonAndRelationships(final CCBMemberRequest request) {
+    final Office office = this.officeService.findById(request.getIdOffice());
+    return this.updatePerson(request.getPerson(), office);
+  }
 
-        this.repository.deleteAllByPersonIdAndWorkpackId(person.getId(), workpack.getId());
+  private Person updatePerson(
+    final PersonDto personDto,
+    final Office office
+  ) {
+    final Person person = this.personService.findByIdOrElseThrow(personDto.getId());
+    this.updatePersonAndRelationships(person, personDto, office);
+    return person;
+  }
 
-        for (final MemberAs memberAs : request.getMemberAs()) {
-            this.repository.save(new IsCCBMemberFor(memberAs, person, workpack), 0);
-        }
-    }
+  private void updatePersonAndRelationships(
+    final Person person,
+    final PersonDto personDto,
+    final Office office
+  ) {
+    this.isInContactBookOfRepository
+      .findIsInContactBookOfByPersonIdAndOfficeId(person.getId(), office.getId())
+      .ifPresent(inContactBookOf -> this.updateIsInContactBookOf(inContactBookOf, personDto));
+  }
 
-    private Person updatePersonAndRelationships(final CCBMemberRequest request) {
-        final Office office = this.officeService.findById(request.getIdOffice());
-        return this.updatePerson(request.getPerson(), office);
-    }
-
-    private Person updatePerson(
-            final PersonDto personDto,
-            final Office office
-    ) {
-        final Person person = this.personService.findByIdOrElseThrow(personDto.getId());
-        this.updatePersonAndRelationships(person, personDto, office);
-        return person;
-    }
-
-    private void updatePersonAndRelationships(
-            final Person person,
-            final PersonDto personDto,
-            final Office office
-    ) {
-        this.isInContactBookOfRepository
-                .findIsInContactBookOfByPersonIdAndOfficeId(person.getId(), office.getId())
-                .ifPresent(inContactBookOf -> this.updateIsInContactBookOf(inContactBookOf, personDto));
-    }
-
-    private void updateIsInContactBookOf(
-            final IsInContactBookOf isInContactBookOf,
-            final PersonDto personDto
-    ) {
-        isInContactBookOf.setPhoneNumber(personDto.getPhoneNumber());
-        isInContactBookOf.setEmail(personDto.getContactEmail());
-        isInContactBookOf.setAddress(personDto.getAddress());
-        this.isInContactBookOfRepository.save(isInContactBookOf, 0);
-    }
+  private void updateIsInContactBookOf(
+    final IsInContactBookOf isInContactBookOf,
+    final PersonDto personDto
+  ) {
+    isInContactBookOf.setPhoneNumber(personDto.getPhoneNumber());
+    isInContactBookOf.setEmail(personDto.getContactEmail());
+    isInContactBookOf.setAddress(personDto.getAddress());
+    this.isInContactBookOfRepository.save(isInContactBookOf, 0);
+  }
 
 }

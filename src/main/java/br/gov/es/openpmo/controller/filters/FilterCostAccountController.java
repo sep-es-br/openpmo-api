@@ -19,7 +19,10 @@ public class FilterCostAccountController extends CreateAndUpdateUsingWorkpackMod
   private final TokenService tokenService;
 
   @Autowired
-  public FilterCostAccountController(final CustomFilterService customFilterService, TokenService tokenService) {
+  public FilterCostAccountController(
+    final CustomFilterService customFilterService,
+    final TokenService tokenService
+  ) {
     this.customFilterService = customFilterService;
     this.tokenService = tokenService;
   }
@@ -29,7 +32,8 @@ public class FilterCostAccountController extends CreateAndUpdateUsingWorkpackMod
     return this.customFilterService;
   }
 
-  @Override protected TokenService getTokenService() {
+  @Override
+  protected TokenService getTokenService() {
     return this.tokenService;
   }
 
@@ -37,4 +41,5 @@ public class FilterCostAccountController extends CreateAndUpdateUsingWorkpackMod
   protected CustomFilterEnum getFilter() {
     return CustomFilterEnum.COST_ACCOUNT;
   }
+
 }

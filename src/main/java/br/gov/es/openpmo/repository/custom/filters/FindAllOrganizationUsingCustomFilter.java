@@ -24,13 +24,19 @@ public class FindAllOrganizationUsingCustomFilter extends FindAllUsingCustomFilt
   }
 
   @Override
-  public void buildMatchClause(final CustomFilter filter, final StringBuilder query) {
+  public void buildMatchClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query.append("MATCH (").append(this.nodeName)
       .append(":Organization)-[is:IS_REGISTERED_IN]->(office:Office) ");
   }
 
   @Override
-  public void buildWhereClause(final CustomFilter filter, final StringBuilder query) {
+  public void buildWhereClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query.append("WHERE ID(office) = $idOffice ");
   }
 
@@ -39,11 +45,13 @@ public class FindAllOrganizationUsingCustomFilter extends FindAllUsingCustomFilt
     query.append("RETURN ").append(this.nodeName).append(", office");
   }
 
-  @Override protected boolean hasAppendedBooleanBlock() {
+  @Override
+  protected boolean hasAppendedBooleanBlock() {
     return true;
   }
 
-  @Override protected boolean hasToCloseAppendedBooleanBlock() {
+  @Override
+  protected boolean hasToCloseAppendedBooleanBlock() {
     return true;
   }
 
@@ -51,4 +59,5 @@ public class FindAllOrganizationUsingCustomFilter extends FindAllUsingCustomFilt
   public String[] getDefinedExternalParams() {
     return new String[]{"idOffice"};
   }
+
 }

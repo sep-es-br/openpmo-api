@@ -16,42 +16,48 @@ import java.util.stream.Collectors;
 @Component
 public class GetAllBaselineEvaluations implements IGetAllBaselineEvaluations {
 
-    private final IsCCBMemberRepository isCCBMemberRepository;
+  private final IsCCBMemberRepository isCCBMemberRepository;
 
-    private final IsEvaluatedByRepository evaluatedByRepository;
+  private final IsEvaluatedByRepository evaluatedByRepository;
 
-    @Autowired
-    public GetAllBaselineEvaluations(
-            IsCCBMemberRepository isCCBMemberRepository,
-            IsEvaluatedByRepository evaluatedByRepository
-    ) {
-        this.isCCBMemberRepository = isCCBMemberRepository;
-        this.evaluatedByRepository = evaluatedByRepository;
-    }
+  @Autowired
+  public GetAllBaselineEvaluations(
+    final IsCCBMemberRepository isCCBMemberRepository,
+    final IsEvaluatedByRepository evaluatedByRepository
+  ) {
+    this.isCCBMemberRepository = isCCBMemberRepository;
+    this.evaluatedByRepository = evaluatedByRepository;
+  }
 
-    @Override
-    public List<EvaluationItem> getEvaluations(final Long idBaseline) {
-        return this.getMembers(idBaseline)
-                .stream()
-                .map(member -> this.getEvaluationItem(member, idBaseline))
-                .collect(Collectors.toList());
-    }
+  @Override
+  public List<EvaluationItem> getEvaluations(final Long idBaseline) {
+    return this.getMembers(idBaseline)
+      .stream()
+      .map(member -> this.getEvaluationItem(member, idBaseline))
+      .collect(Collectors.toList());
+  }
 
-    private EvaluationItem getEvaluationItem(final Person member, final Long idBaseline) {
-        final Optional<IsEvaluatedBy> maybeEvaluation = this.getEvaluation(member, idBaseline);
-        return maybeEvaluation.map(EvaluationItem::fromBaselineEvaluated)
-                .orElseGet(() -> EvaluationItem.fromBaselineNotEvaluated(member));
-    }
+  private EvaluationItem getEvaluationItem(
+    final Person member,
+    final Long idBaseline
+  ) {
+    final Optional<IsEvaluatedBy> maybeEvaluation = this.getEvaluation(member, idBaseline);
+    return maybeEvaluation.map(EvaluationItem::fromBaselineEvaluated)
+      .orElseGet(() -> EvaluationItem.fromBaselineNotEvaluated(member));
+  }
 
-    private Optional<IsEvaluatedBy> getEvaluation(final Person member, final Long idBaseline) {
-        return this.evaluatedByRepository.findEvaluation(idBaseline, member.getId());
-    }
+  private Optional<IsEvaluatedBy> getEvaluation(
+    final Person member,
+    final Long idBaseline
+  ) {
+    return this.evaluatedByRepository.findEvaluation(idBaseline, member.getId());
+  }
 
-    private Set<Person> getMembers(final Long idBaseline) {
-        Set<Person> activeMembersOfBaseline = this.isCCBMemberRepository.findAllActiveMembersOfBaseline(idBaseline);
-        Set<Person> evaluators = this.evaluatedByRepository.findEvaluators(idBaseline);
-        activeMembersOfBaseline.addAll(evaluators);
-        return activeMembersOfBaseline;
-    }
+  private Set<Person> getMembers(final Long idBaseline) {
+    final Set<Person> activeMembersOfBaseline = this.isCCBMemberRepository.findAllActiveMembersOfBaseline(idBaseline);
+    final Set<Person> evaluators = this.evaluatedByRepository.findEvaluators(idBaseline);
+    activeMembersOfBaseline.addAll(evaluators);
+    return activeMembersOfBaseline;
+  }
 
 }

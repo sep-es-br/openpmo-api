@@ -35,7 +35,7 @@ public class PersonCreateRequest {
   }
 
   public String getKey() {
-    return key;
+    return this.key;
   }
 
   public String getName() {
@@ -53,4 +53,5 @@ public class PersonCreateRequest {
   public Boolean getAdministrator() {
     return this.administrator;
   }
+
 }

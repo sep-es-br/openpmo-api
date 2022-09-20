@@ -81,4 +81,5 @@ public class Rules extends Entity {
     this.setPropertyName(ruleDto.getPropertyName());
     this.setRelationalOperator(ruleDto.getOperator());
   }
+
 }

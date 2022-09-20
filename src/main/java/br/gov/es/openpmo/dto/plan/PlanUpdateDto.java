@@ -58,4 +58,5 @@ public class PlanUpdateDto {
   public void setFinish(final LocalDate finish) {
     this.finish = finish;
   }
+
 }

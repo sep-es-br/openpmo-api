@@ -24,13 +24,19 @@ public class FindAllOfficePermissionUsingCustomFilter extends FindAllUsingCustom
   }
 
   @Override
-  public void buildMatchClause(final CustomFilter filter, final StringBuilder query) {
+  public void buildMatchClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query.append("MATCH (person:Person)-[").append(this.nodeName).append(":CAN_ACCESS_OFFICE]->")
       .append("(office:Office)").append(" ");
   }
 
   @Override
-  public void buildWhereClause(final CustomFilter filter, final StringBuilder query) {
+  public void buildWhereClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query.append("WHERE ID(office)=$idOffice").append(" ");
   }
 
@@ -39,11 +45,13 @@ public class FindAllOfficePermissionUsingCustomFilter extends FindAllUsingCustom
     query.append("RETURN ").append(this.nodeName).append(", office, person");
   }
 
-  @Override protected boolean hasAppendedBooleanBlock() {
+  @Override
+  protected boolean hasAppendedBooleanBlock() {
     return true;
   }
 
-  @Override protected boolean hasToCloseAppendedBooleanBlock() {
+  @Override
+  protected boolean hasToCloseAppendedBooleanBlock() {
     return true;
   }
 
@@ -51,4 +59,5 @@ public class FindAllOfficePermissionUsingCustomFilter extends FindAllUsingCustom
   public String[] getDefinedExternalParams() {
     return new String[]{"idOffice"};
   }
+
 }

@@ -8,4 +8,5 @@ import java.util.List;
 public interface IRemoteRolesFetcher {
 
   List<RoleResource> fetch(Long idPerson);
+
 }

@@ -55,4 +55,5 @@ public class RiskCardDto {
   public Long getId() {
     return this.id;
   }
+
 }

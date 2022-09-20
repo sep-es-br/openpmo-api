@@ -20,17 +20,23 @@ public class DeleteCCBMemberService implements IDeleteCCBMemberService {
   }
 
   @Override
-  public void delete(final Long idPerson, final Long idWorkpack) {
+  public void delete(
+    final Long idPerson,
+    final Long idWorkpack
+  ) {
     final List<IsCCBMemberFor> ccbMembers = this.getAllByPersonIdAndWorkpackId(idPerson, idWorkpack);
 
-    if (ccbMembers.isEmpty()) {
+    if(ccbMembers.isEmpty()) {
       throw new NegocioException(ApplicationMessage.CCB_MEMBER_NOT_FOUND);
     }
 
     this.ccbMemberRepository.deleteAll(ccbMembers);
   }
 
-  private List<IsCCBMemberFor> getAllByPersonIdAndWorkpackId(final Long idPerson, final Long idWorkpack) {
+  private List<IsCCBMemberFor> getAllByPersonIdAndWorkpackId(
+    final Long idPerson,
+    final Long idWorkpack
+  ) {
     return this.ccbMemberRepository.findAllByPersonIdAndWorkpackId(idPerson, idWorkpack);
   }
 

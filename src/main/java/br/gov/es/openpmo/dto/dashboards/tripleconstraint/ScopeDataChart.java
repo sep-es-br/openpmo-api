@@ -205,6 +205,7 @@ public class ScopeDataChart {
     final BigDecimal difference;
     if(this.plannedWork == null) {
       difference = Optional.ofNullable(this.foreseenWork)
+        .map(BigDecimal::negate)
         .orElse(BigDecimal.ZERO);
     }
     else {
@@ -219,6 +220,7 @@ public class ScopeDataChart {
     final BigDecimal difference;
     if(this.plannedWork == null) {
       difference = Optional.ofNullable(this.actualWork)
+        .map(BigDecimal::negate)
         .orElse(BigDecimal.ZERO);
     }
     else {

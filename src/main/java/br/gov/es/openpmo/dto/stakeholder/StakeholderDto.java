@@ -56,4 +56,5 @@ public class StakeholderDto {
   public List<PermissionDto> getPermissions() {
     return this.permissions;
   }
+
 }

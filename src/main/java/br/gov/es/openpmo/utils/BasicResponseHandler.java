@@ -9,12 +9,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class BasicResponseHandler implements ResponseHandler {
 
-  @Override public <T> Response<T> success(final T data) {
+  @Override
+  public <T> Response<T> success(final T data) {
     final ResponseBase<T> of = ResponseBase.of(data);
     return new BasicResponse<>(of, HttpStatus.OK);
   }
 
-  @Override public Response<Void> success() {
+  @Override
+  public Response<Void> success() {
     final ResponseBase<Void> success = ResponseBase.success();
     return new BasicResponse<>(success, HttpStatus.OK);
   }

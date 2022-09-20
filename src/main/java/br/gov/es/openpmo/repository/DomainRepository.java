@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 public interface DomainRepository extends Neo4jRepository<Domain, Long>, CustomRepository {
+
   @Query("MATCH (d:Domain)-[apl:APPLIES_TO]->(o:Office) WHERE id(o) = $idOffice OR $idOffice IS NULL "
          + " OPTIONAL MATCH (d)<-[bt:BELONGS_TO]-(l:Locality) RETURN d, bt, l, [ " +
          " [ (d)-[apl:APPLIES_TO]->(o:Office) | [apl, o] ], " +
@@ -25,4 +26,5 @@ public interface DomainRepository extends Neo4jRepository<Domain, Long>, CustomR
          " [ (l)-[btl:IS_IN]->(lc:Locality) | [btl, lc] ] " +
          " ] ORDER BY d.name")
   Optional<Domain> findByIdWithLocalities(@Param("id") Long id);
+
 }

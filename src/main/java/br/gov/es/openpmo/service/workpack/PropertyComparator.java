@@ -9,7 +9,10 @@ public final class PropertyComparator {
   private PropertyComparator() {
   }
 
-  public static int compare(final Object a, final Object b) {
+  public static int compare(
+    final Object a,
+    final Object b
+  ) {
     if(a instanceof String && b instanceof String) {
       final Collator collator = Collator.getInstance();
       collator.setStrength(Collator.PRIMARY);
@@ -35,4 +38,5 @@ public final class PropertyComparator {
     }
     return -1;
   }
+
 }

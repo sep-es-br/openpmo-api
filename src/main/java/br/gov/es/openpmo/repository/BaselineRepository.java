@@ -369,7 +369,10 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long> {
          "    CASE id(p) WHEN $workpackId THEN collect(DISTINCT datetime(d3.value)) ELSE [] END AS startDatesList, " +
          "    CASE id(w) WHEN $workpackId THEN collect(DISTINCT datetime(s1.end)) ELSE [] END + " +
          "    CASE id(d) WHEN $workpackId THEN collect(DISTINCT datetime(s2.end)) ELSE [] END + " +
-         "    CASE id(p) WHEN $workpackId THEN collect(DISTINCT datetime(s3.end)) ELSE [] END AS endDatesList " +
+         "    CASE id(p) WHEN $workpackId THEN collect(DISTINCT datetime(s3.end)) ELSE [] END + " +
+         "    CASE id(w) WHEN $workpackId THEN collect(DISTINCT datetime(d1.value)) ELSE [] END + " +
+         "    CASE id(m) WHEN $workpackId THEN collect(DISTINCT datetime(d2.value)) ELSE [] END + " +
+         "    CASE id(p) WHEN $workpackId THEN collect(DISTINCT datetime(d3.value)) ELSE [] END AS endDatesList " +
          "UNWIND startDatesList AS startDates " +
          "UNWIND endDatesList AS endDates " +
          "RETURN min(startDates) AS initialDate, max(endDates) AS endDate ")

@@ -18,4 +18,5 @@ public interface RulesRepository extends Neo4jRepository<Rules, Long> {
   List<Rules> findByCustomFilterId(Long id);
 
   List<Rules> findByCustomFilter(CustomFilter customFilter);
+
 }

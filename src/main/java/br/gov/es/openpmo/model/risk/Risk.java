@@ -100,7 +100,10 @@ public class Risk extends Entity {
     }
   }
 
-  public static Risk of(final RiskCreateDto request, final Workpack workpack) {
+  public static Risk of(
+    final RiskCreateDto request,
+    final Workpack workpack
+  ) {
     return new Risk(
       request.getName(),
       request.getDescription(),
@@ -244,4 +247,5 @@ public class Risk extends Entity {
   public NatureOfIssue getNatureAsIssueNature() {
     return this.nature.issue();
   }
+
 }

@@ -19,51 +19,57 @@ import java.util.UUID;
 @Service
 public class EvidenceCreator {
 
-    private final FileRepository fileRepository;
+  private final FileRepository fileRepository;
 
-    private final JournalRepository journalRepository;
+  private final JournalRepository journalRepository;
 
-    @Value("${app.journalPath}")
-    private String journalPath;
+  @Value("${app.journalPath}")
+  private String journalPath;
 
-    @Autowired
-    public EvidenceCreator(
-            final FileRepository fileRepository,
-            final JournalRepository journalRepository
-    ) {
-        this.fileRepository = fileRepository;
-        this.journalRepository = journalRepository;
-    }
+  @Autowired
+  public EvidenceCreator(
+    final FileRepository fileRepository,
+    final JournalRepository journalRepository
+  ) {
+    this.fileRepository = fileRepository;
+    this.journalRepository = journalRepository;
+  }
 
-    public void create(final Long idJournal, final MultipartFile multipartFile) throws IOException {
-        final JournalEntry journalEntry = this.findJournalById(idJournal);
-        final File file = createFile(journalEntry, multipartFile);
-        FileUtils.storeFile(this.journalPath, file.getUniqueNameKey(), multipartFile.getBytes());
-        this.saveFile(file);
-    }
+  private static File createFile(
+    final JournalEntry journalEntry,
+    final MultipartFile multipartFile
+  ) {
+    final File file = new File();
+    file.setJournalEntry(journalEntry);
+    file.setUniqueNameKey(getUniqueNameKey(multipartFile));
+    file.setUserGivenName(multipartFile.getOriginalFilename());
+    file.setMimeType(multipartFile.getContentType());
+    return file;
+  }
 
-    private void saveFile(final File file) {
-        this.fileRepository.save(file);
-    }
+  private static String getUniqueNameKey(final MultipartFile multipartFile) {
+    final UUID randomNumber = UUID.randomUUID();
+    final String originalFilename = multipartFile.getOriginalFilename();
+    return MessageFormat.format("{0}{1}", randomNumber, originalFilename);
+  }
 
-    private static File createFile(final JournalEntry journalEntry, final MultipartFile multipartFile) {
-        final File file = new File();
-        file.setJournalEntry(journalEntry);
-        file.setUniqueNameKey(getUniqueNameKey(multipartFile));
-        file.setUserGivenName(multipartFile.getOriginalFilename());
-        file.setMimeType(multipartFile.getContentType());
-        return file;
-    }
+  public void create(
+    final Long idJournal,
+    final MultipartFile multipartFile
+  ) throws IOException {
+    final JournalEntry journalEntry = this.findJournalById(idJournal);
+    final File file = createFile(journalEntry, multipartFile);
+    FileUtils.storeFile(this.journalPath, file.getUniqueNameKey(), multipartFile.getBytes());
+    this.saveFile(file);
+  }
 
-    private static String getUniqueNameKey(final MultipartFile multipartFile) {
-        final UUID randomNumber = UUID.randomUUID();
-        final String originalFilename = multipartFile.getOriginalFilename();
-        return MessageFormat.format("{0}{1}", randomNumber, originalFilename);
-    }
+  private void saveFile(final File file) {
+    this.fileRepository.save(file);
+  }
 
-    private JournalEntry findJournalById(final Long idJournal) {
-        return this.journalRepository.findById(idJournal)
-                .orElseThrow(() -> new NegocioException(ApplicationMessage.JOURNAL_NOT_FOUND));
-    }
+  private JournalEntry findJournalById(final Long idJournal) {
+    return this.journalRepository.findById(idJournal)
+      .orElseThrow(() -> new NegocioException(ApplicationMessage.JOURNAL_NOT_FOUND));
+  }
 
 }

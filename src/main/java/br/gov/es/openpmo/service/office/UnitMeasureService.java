@@ -40,7 +40,10 @@ public class UnitMeasureService {
     this.officeService = officeService;
   }
 
-  public List<UnitMeasure> findAll(final Long idOffice, final Long idFilter) {
+  public List<UnitMeasure> findAll(
+    final Long idOffice,
+    final Long idFilter
+  ) {
 
     if(idFilter == null) {
       return this.findAll(idOffice);

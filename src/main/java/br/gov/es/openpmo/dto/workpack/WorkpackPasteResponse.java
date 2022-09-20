@@ -13,7 +13,10 @@ public class WorkpackPasteResponse {
   public WorkpackPasteResponse() {
   }
 
-  public WorkpackPasteResponse(final Boolean canPaste, final Boolean incompatiblesProperties) {
+  public WorkpackPasteResponse(
+    final Boolean canPaste,
+    final Boolean incompatiblesProperties
+  ) {
     this.canPaste = canPaste;
     this.incompatiblesProperties = incompatiblesProperties;
   }

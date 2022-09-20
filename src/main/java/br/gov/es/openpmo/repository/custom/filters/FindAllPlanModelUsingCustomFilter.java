@@ -24,14 +24,20 @@ public class FindAllPlanModelUsingCustomFilter extends FindAllUsingCustomFilterB
   }
 
   @Override
-  public void buildMatchClause(final CustomFilter filter, final StringBuilder query) {
+  public void buildMatchClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query.append("MATCH (").append(this.nodeName)
       .append(":PlanModel)-[r:IS_ADOPTED_BY]->(o:Office)")
       .append(" ");
   }
 
   @Override
-  public void buildWhereClause(final CustomFilter filter, final StringBuilder query) {
+  public void buildWhereClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query.append("WHERE ID(o)= $idOffice").append(" ");
   }
 
@@ -40,11 +46,13 @@ public class FindAllPlanModelUsingCustomFilter extends FindAllUsingCustomFilterB
     query.append("RETURN ").append(this.nodeName).append(", r, o");
   }
 
-  @Override protected boolean hasAppendedBooleanBlock() {
+  @Override
+  protected boolean hasAppendedBooleanBlock() {
     return true;
   }
 
-  @Override protected boolean hasToCloseAppendedBooleanBlock() {
+  @Override
+  protected boolean hasToCloseAppendedBooleanBlock() {
     return true;
   }
 
@@ -52,4 +60,5 @@ public class FindAllPlanModelUsingCustomFilter extends FindAllUsingCustomFilterB
   public String[] getDefinedExternalParams() {
     return new String[]{"idOffice"};
   }
+
 }

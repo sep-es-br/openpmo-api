@@ -8,6 +8,9 @@ import java.util.List;
 @FunctionalInterface
 public interface IGetFirstTimeBaselineUpdatesService {
 
-  List<UpdateResponse> getUpdates(final Iterable<? extends Workpack> workpacks, final boolean isSnapshot);
+  List<UpdateResponse> getUpdates(
+    final Iterable<? extends Workpack> workpacks,
+    final boolean isSnapshot
+  );
 
 }

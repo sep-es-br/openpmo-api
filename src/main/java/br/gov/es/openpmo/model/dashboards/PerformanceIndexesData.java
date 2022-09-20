@@ -11,117 +11,118 @@ import static br.gov.es.openpmo.model.dashboards.DashboardUtils.apply;
 
 public class PerformanceIndexesData {
 
-    private BigDecimal actualCost;
+  private BigDecimal actualCost;
 
-    private BigDecimal plannedValue;
+  private BigDecimal plannedValue;
 
-    private BigDecimal earnedValue;
+  private BigDecimal earnedValue;
 
-    private BigDecimal estimatesAtCompletion;
+  private BigDecimal estimatesAtCompletion;
 
-    private BigDecimal estimateToComplete;
+  private BigDecimal estimateToComplete;
 
-    private CostPerformanceIndexData costPerformanceIndex;
+  private CostPerformanceIndexData costPerformanceIndex;
 
-    private SchedulePerformanceIndexData schedulePerformanceIndex;
+  private SchedulePerformanceIndexData schedulePerformanceIndex;
 
-    @JsonFormat(pattern = "yyyy-MM")
-    private YearMonth date;
+  @JsonFormat(pattern = "yyyy-MM")
+  private YearMonth date;
 
-    public static PerformanceIndexesData of(PerformanceIndexes from) {
-        if (from == null) {
-            return null;
-        }
-
-        final PerformanceIndexesData to = new PerformanceIndexesData();
-
-        to.setActualCost(from.getActualCost());
-        to.setPlannedValue(from.getPlannedValue());
-        to.setEarnedValue(from.getEarnedValue());
-        to.setEstimatesAtCompletion(from.getEstimatesAtCompletion());
-        to.setEstimateToComplete(from.getEstimateToComplete());
-        to.setDate(from.getDate());
-
-        apply(from.getCostPerformanceIndex(), CostPerformanceIndexData::of, to::setCostPerformanceIndex);
-        apply(from.getSchedulePerformanceIndex(), SchedulePerformanceIndexData::of, to::setSchedulePerformanceIndex);
-
-        return to;
+  public static PerformanceIndexesData of(final PerformanceIndexes from) {
+    if(from == null) {
+      return null;
     }
 
-    public BigDecimal getActualCost() {
-        return actualCost;
-    }
+    final PerformanceIndexesData to = new PerformanceIndexesData();
 
-    public void setActualCost(BigDecimal actualCost) {
-        this.actualCost = actualCost;
-    }
+    to.setActualCost(from.getActualCost());
+    to.setPlannedValue(from.getPlannedValue());
+    to.setEarnedValue(from.getEarnedValue());
+    to.setEstimatesAtCompletion(from.getEstimatesAtCompletion());
+    to.setEstimateToComplete(from.getEstimateToComplete());
+    to.setDate(from.getDate());
 
-    public BigDecimal getPlannedValue() {
-        return plannedValue;
-    }
+    apply(from.getCostPerformanceIndex(), CostPerformanceIndexData::of, to::setCostPerformanceIndex);
+    apply(from.getSchedulePerformanceIndex(), SchedulePerformanceIndexData::of, to::setSchedulePerformanceIndex);
 
-    public void setPlannedValue(BigDecimal plannedValue) {
-        this.plannedValue = plannedValue;
-    }
+    return to;
+  }
 
-    public BigDecimal getEarnedValue() {
-        return earnedValue;
-    }
+  public BigDecimal getActualCost() {
+    return this.actualCost;
+  }
 
-    public void setEarnedValue(BigDecimal earnedValue) {
-        this.earnedValue = earnedValue;
-    }
+  public void setActualCost(final BigDecimal actualCost) {
+    this.actualCost = actualCost;
+  }
 
-    public BigDecimal getEstimatesAtCompletion() {
-        return estimatesAtCompletion;
-    }
+  public BigDecimal getPlannedValue() {
+    return this.plannedValue;
+  }
 
-    public void setEstimatesAtCompletion(BigDecimal estimatesAtCompletion) {
-        this.estimatesAtCompletion = estimatesAtCompletion;
-    }
+  public void setPlannedValue(final BigDecimal plannedValue) {
+    this.plannedValue = plannedValue;
+  }
 
-    public BigDecimal getEstimateToComplete() {
-        return estimateToComplete;
-    }
+  public BigDecimal getEarnedValue() {
+    return this.earnedValue;
+  }
 
-    public void setEstimateToComplete(BigDecimal estimateToComplete) {
-        this.estimateToComplete = estimateToComplete;
-    }
+  public void setEarnedValue(final BigDecimal earnedValue) {
+    this.earnedValue = earnedValue;
+  }
 
-    public CostPerformanceIndexData getCostPerformanceIndex() {
-        return costPerformanceIndex;
-    }
+  public BigDecimal getEstimatesAtCompletion() {
+    return this.estimatesAtCompletion;
+  }
 
-    public void setCostPerformanceIndex(CostPerformanceIndexData costPerformanceIndex) {
-        this.costPerformanceIndex = costPerformanceIndex;
-    }
+  public void setEstimatesAtCompletion(final BigDecimal estimatesAtCompletion) {
+    this.estimatesAtCompletion = estimatesAtCompletion;
+  }
 
-    public SchedulePerformanceIndexData getSchedulePerformanceIndex() {
-        return schedulePerformanceIndex;
-    }
+  public BigDecimal getEstimateToComplete() {
+    return this.estimateToComplete;
+  }
 
-    public void setSchedulePerformanceIndex(SchedulePerformanceIndexData schedulePerformanceIndex) {
-        this.schedulePerformanceIndex = schedulePerformanceIndex;
-    }
+  public void setEstimateToComplete(final BigDecimal estimateToComplete) {
+    this.estimateToComplete = estimateToComplete;
+  }
 
-    public YearMonth getDate() {
-        return date;
-    }
+  public CostPerformanceIndexData getCostPerformanceIndex() {
+    return this.costPerformanceIndex;
+  }
 
-    public void setDate(YearMonth date) {
-        this.date = date;
-    }
+  public void setCostPerformanceIndex(final CostPerformanceIndexData costPerformanceIndex) {
+    this.costPerformanceIndex = costPerformanceIndex;
+  }
 
-    public PerformanceIndexes getResponse() {
-        return new PerformanceIndexes(
-                this.actualCost,
-                this.plannedValue,
-                this.earnedValue,
-                this.estimatesAtCompletion,
-                this.estimateToComplete,
-                Optional.ofNullable(this.costPerformanceIndex).map(CostPerformanceIndexData::getResponse).orElse(null),
-                Optional.ofNullable(this.schedulePerformanceIndex).map(SchedulePerformanceIndexData::getResponse).orElse(null),
-                this.date
-        );
-    }
+  public SchedulePerformanceIndexData getSchedulePerformanceIndex() {
+    return this.schedulePerformanceIndex;
+  }
+
+  public void setSchedulePerformanceIndex(final SchedulePerformanceIndexData schedulePerformanceIndex) {
+    this.schedulePerformanceIndex = schedulePerformanceIndex;
+  }
+
+  public YearMonth getDate() {
+    return this.date;
+  }
+
+  public void setDate(final YearMonth date) {
+    this.date = date;
+  }
+
+  public PerformanceIndexes getResponse() {
+    return new PerformanceIndexes(
+      this.actualCost,
+      this.plannedValue,
+      this.earnedValue,
+      this.estimatesAtCompletion,
+      this.estimateToComplete,
+      Optional.ofNullable(this.costPerformanceIndex).map(CostPerformanceIndexData::getResponse).orElse(null),
+      Optional.ofNullable(this.schedulePerformanceIndex).map(SchedulePerformanceIndexData::getResponse).orElse(null),
+      this.date
+    );
+  }
+
 }

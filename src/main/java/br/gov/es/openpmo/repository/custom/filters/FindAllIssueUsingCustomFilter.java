@@ -23,13 +23,19 @@ public class FindAllIssueUsingCustomFilter extends FindAllUsingCustomFilterBuild
   }
 
   @Override
-  protected void buildMatchClause(final CustomFilter filter, final StringBuilder query) {
+  protected void buildMatchClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query.append("MATCH (issue:").append(this.nodeName)
       .append(")-[reported:IS_REPORTED_FOR]->(workpack:Workpack{deleted:false})").append(" ");
   }
 
   @Override
-  protected void buildWhereClause(final CustomFilter filter, final StringBuilder query) {
+  protected void buildWhereClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query.append("WHERE id(workpack)=$idWorkpack").append(" ");
   }
 
@@ -39,11 +45,13 @@ public class FindAllIssueUsingCustomFilter extends FindAllUsingCustomFilterBuild
   }
 
 
-  @Override protected boolean hasAppendedBooleanBlock() {
+  @Override
+  protected boolean hasAppendedBooleanBlock() {
     return true;
   }
 
-  @Override protected boolean hasToCloseAppendedBooleanBlock() {
+  @Override
+  protected boolean hasToCloseAppendedBooleanBlock() {
     return true;
   }
 
@@ -53,4 +61,5 @@ public class FindAllIssueUsingCustomFilter extends FindAllUsingCustomFilterBuild
       "idWorkpack"
     };
   }
+
 }

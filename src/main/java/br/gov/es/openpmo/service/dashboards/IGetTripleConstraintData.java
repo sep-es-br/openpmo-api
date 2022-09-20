@@ -6,6 +6,6 @@ import br.gov.es.openpmo.dto.dashboards.tripleconstraint.TripleConstraintDataCha
 @FunctionalInterface
 public interface IGetTripleConstraintData {
 
-    TripleConstraintDataChart get(DashboardParameters parameters);
+  TripleConstraintDataChart get(DashboardParameters parameters);
 
 }

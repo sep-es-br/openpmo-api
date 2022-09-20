@@ -3,6 +3,7 @@ package br.gov.es.openpmo.dto.issue;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 public class IssueFromRiskDto {
+
   private final Long idRisk;
 
   @JsonCreator
@@ -13,4 +14,5 @@ public class IssueFromRiskDto {
   public Long getIdRisk() {
     return this.idRisk;
   }
+
 }

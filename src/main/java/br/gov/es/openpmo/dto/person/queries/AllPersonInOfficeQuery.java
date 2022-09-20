@@ -38,4 +38,5 @@ public class AllPersonInOfficeQuery {
   public String getName() {
     return this.name;
   }
+
 }

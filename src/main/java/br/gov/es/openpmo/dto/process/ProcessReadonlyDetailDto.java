@@ -7,6 +7,7 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
 public class ProcessReadonlyDetailDto {
+
   @NotEmpty
   @NotNull(message = ApplicationMessage.PROCESS_NUMBER_NOT_NULL)
   private final String processNumber;
@@ -64,4 +65,5 @@ public class ProcessReadonlyDetailDto {
   public Boolean getPriority() {
     return this.priority;
   }
+
 }

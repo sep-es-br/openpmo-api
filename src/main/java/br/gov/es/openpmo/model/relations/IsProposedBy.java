@@ -63,4 +63,5 @@ public class IsProposedBy {
     final String roleName = proposer.getRole() != null ? proposer.getRole() : null;
     this.formattedRole = MessageFormat.format("{0} ({1})", name, roleName);
   }
+
 }

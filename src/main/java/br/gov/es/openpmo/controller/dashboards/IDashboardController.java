@@ -14,28 +14,28 @@ import java.util.List;
 
 public interface IDashboardController {
 
-    @GetMapping("/baselines")
-    Response<List<DashboardBaselineResponse>> getBaselines(
-            @RequestParam("id-workpack") final Long workpackId
-    );
+  @GetMapping("/baselines")
+  Response<List<DashboardBaselineResponse>> getBaselines(
+    @RequestParam("id-workpack") final Long workpackId
+  );
 
-    @GetMapping("/schedule-interval")
-    Response<Interval> getInterval(
-            @RequestParam("id-workpack") final Long workpackId
-    );
+  @GetMapping("/schedule-interval")
+  Response<Interval> getInterval(
+    @RequestParam("id-workpack") final Long workpackId
+  );
 
-    @GetMapping
-    Response<DashboardResponse> getDashboard(
-            @RequestParam(name = "show-header", defaultValue = "true") Boolean showHeader,
-            @RequestParam(name = "id-workpack") Long workpackId,
-            @RequestParam(name = "id-baseline", required = false) Long baselineId,
-            @RequestParam(name = "date-reference", required = false) @DateTimeFormat(pattern = "MM/yyyy") YearMonth yearMonth,
-            UriComponentsBuilder uriComponentsBuilder
-    );
+  @GetMapping
+  Response<DashboardResponse> getDashboard(
+    @RequestParam(name = "show-header", defaultValue = "true") Boolean showHeader,
+    @RequestParam(name = "id-workpack") Long workpackId,
+    @RequestParam(name = "id-baseline", required = false) Long baselineId,
+    @RequestParam(name = "date-reference", required = false) @DateTimeFormat(pattern = "MM/yyyy") YearMonth yearMonth,
+    UriComponentsBuilder uriComponentsBuilder
+  );
 
-    @GetMapping("/calculate")
-    Response<Void> calculate(
-            @RequestParam("id-workpack") final Long workpackId
-    );
+  @GetMapping("/calculate")
+  Response<Void> calculate(
+    @RequestParam("id-workpack") final Long workpackId
+  );
 
 }

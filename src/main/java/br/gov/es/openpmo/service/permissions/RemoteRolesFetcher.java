@@ -16,51 +16,54 @@ import java.util.stream.Collectors;
 @Component
 public class RemoteRolesFetcher implements IRemoteRolesFetcher {
 
-    private final IsAuthenticatedByRepository authenticationRepository;
+  private final IsAuthenticatedByRepository authenticationRepository;
 
-    private final AcessoCidadaoApi acessoCidadaoApi;
+  private final AcessoCidadaoApi acessoCidadaoApi;
 
-    @Value("${app.login.server.name}")
-    private String serverName;
+  @Value("${app.login.server.name}")
+  private String serverName;
 
-    @Autowired
-    public RemoteRolesFetcher(
-            final IsAuthenticatedByRepository authenticationRepository,
-            final AcessoCidadaoApi acessoCidadaoApi
-    ) {
-        this.authenticationRepository = authenticationRepository;
-        this.acessoCidadaoApi = acessoCidadaoApi;
+  @Autowired
+  public RemoteRolesFetcher(
+    final IsAuthenticatedByRepository authenticationRepository,
+    final AcessoCidadaoApi acessoCidadaoApi
+  ) {
+    this.authenticationRepository = authenticationRepository;
+    this.acessoCidadaoApi = acessoCidadaoApi;
+  }
+
+  public List<RoleResource> fetch(final Long idPerson) {
+    final IsAuthenticatedBy authentication = this.findAuthenticatedByUsingPersonAndDefaultServerName(idPerson);
+
+    if(authentication == null) {
+      return null;
     }
 
-    public List<RoleResource> fetch(final Long idPerson) {
-        final IsAuthenticatedBy authentication = this.findAuthenticatedByUsingPersonAndDefaultServerName(idPerson);
+    final String guid = authentication.getGuid();
 
-        if (authentication == null) {
-            return null;
-        }
-
-        final String guid = authentication.getGuid();
-
-        if (guid == null) {
-            return Collections.emptyList();
-        }
-
-        final List<PublicAgentRoleResponse> publicAgentRoles = this.acessoCidadaoApi.findRoles(guid, idPerson);
-
-        return publicAgentRoles.stream()
-                .map(agentRole -> this.mapToRoleResource(agentRole, idPerson))
-                .collect(Collectors.toList());
+    if(guid == null) {
+      return Collections.emptyList();
     }
 
-    private RoleResource mapToRoleResource(final PublicAgentRoleResponse agentRole, final Long idPerson) {
-        final String workLocation = this.acessoCidadaoApi.getWorkLocation(agentRole.getOrganizationGuid(), idPerson);
-        return new RoleResource(agentRole.getName(), workLocation);
-    }
+    final List<PublicAgentRoleResponse> publicAgentRoles = this.acessoCidadaoApi.findRoles(guid, idPerson);
 
-    private IsAuthenticatedBy findAuthenticatedByUsingPersonAndDefaultServerName(final Long idPerson) {
-        return this.authenticationRepository
-                .findAuthenticatedByUsingPersonAndDefaultServerName(idPerson, this.serverName)
-                .orElse(null);
-    }
+    return publicAgentRoles.stream()
+      .map(agentRole -> this.mapToRoleResource(agentRole, idPerson))
+      .collect(Collectors.toList());
+  }
+
+  private RoleResource mapToRoleResource(
+    final PublicAgentRoleResponse agentRole,
+    final Long idPerson
+  ) {
+    final String workLocation = this.acessoCidadaoApi.getWorkLocation(agentRole.getOrganizationGuid(), idPerson);
+    return new RoleResource(agentRole.getName(), workLocation);
+  }
+
+  private IsAuthenticatedBy findAuthenticatedByUsingPersonAndDefaultServerName(final Long idPerson) {
+    return this.authenticationRepository
+      .findAuthenticatedByUsingPersonAndDefaultServerName(idPerson, this.serverName)
+      .orElse(null);
+  }
 
 }

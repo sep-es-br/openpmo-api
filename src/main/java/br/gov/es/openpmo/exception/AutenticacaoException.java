@@ -14,4 +14,5 @@ public class AutenticacaoException extends RuntimeException {
   public AutenticacaoException(final String mensagem) {
     super(mensagem);
   }
+
 }

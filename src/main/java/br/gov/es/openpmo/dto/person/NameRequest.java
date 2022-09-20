@@ -4,14 +4,15 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 
 public class NameRequest {
 
-    private final String name;
+  private final String name;
 
-    @JsonCreator
-    public NameRequest(String name) {
-        this.name = name;
-    }
+  @JsonCreator
+  public NameRequest(final String name) {
+    this.name = name;
+  }
 
-    public String getName() {
-        return name;
-    }
+  public String getName() {
+    return this.name;
+  }
+
 }

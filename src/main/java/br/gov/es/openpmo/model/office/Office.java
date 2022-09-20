@@ -17,63 +17,64 @@ import static org.neo4j.ogm.annotation.Relationship.INCOMING;
 @NodeEntity
 public class Office extends Entity {
 
-    private String name;
-    private String fullName;
+  private String name;
+  private String fullName;
 
-    @JsonIgnoreProperties("office")
-    @Relationship(type = "IS_ADOPTED_BY", direction = INCOMING)
-    private Set<Plan> plans;
+  @JsonIgnoreProperties("office")
+  @Relationship(type = "IS_ADOPTED_BY", direction = INCOMING)
+  private Set<Plan> plans;
 
-    @JsonIgnoreProperties("office")
-    @Relationship(type = "IS_ADOPTED_BY", direction = INCOMING)
-    private Set<PlanModel> plansModel;
+  @JsonIgnoreProperties("office")
+  @Relationship(type = "IS_ADOPTED_BY", direction = INCOMING)
+  private Set<PlanModel> plansModel;
 
-    @JsonIgnoreProperties("office")
-    @Relationship(type = "IS_IN_CONTACT_BOOK_OF", direction = INCOMING)
-    private Set<IsInContactBookOf> contactBooks;
+  @JsonIgnoreProperties("office")
+  @Relationship(type = "IS_IN_CONTACT_BOOK_OF", direction = INCOMING)
+  private Set<IsInContactBookOf> contactBooks;
 
-    public String getName() {
-        return this.name;
-    }
+  public String getName() {
+    return this.name;
+  }
 
-    public void setName(final String name) {
-        this.name = name;
-    }
+  public void setName(final String name) {
+    this.name = name;
+  }
 
-    public String getFullName() {
-        return this.fullName;
-    }
+  public String getFullName() {
+    return this.fullName;
+  }
 
-    public void setFullName(final String fullName) {
-        this.fullName = fullName;
-    }
+  public void setFullName(final String fullName) {
+    this.fullName = fullName;
+  }
 
-    public Set<Plan> getPlans() {
-        return this.plans;
-    }
+  public Set<Plan> getPlans() {
+    return this.plans;
+  }
 
-    public void setPlans(final Set<Plan> plans) {
-        this.plans = plans;
-    }
+  public void setPlans(final Set<Plan> plans) {
+    this.plans = plans;
+  }
 
-    public Set<PlanModel> getPlansModel() {
-        return this.plansModel;
-    }
+  public Set<PlanModel> getPlansModel() {
+    return this.plansModel;
+  }
 
-    public void setPlansModel(final Set<PlanModel> plansModel) {
-        this.plansModel = plansModel;
-    }
+  public void setPlansModel(final Set<PlanModel> plansModel) {
+    this.plansModel = plansModel;
+  }
 
-    public Set<IsInContactBookOf> getContactBooks() {
-        return this.contactBooks;
-    }
+  public Set<IsInContactBookOf> getContactBooks() {
+    return this.contactBooks;
+  }
 
-    public void setContactBooks(final Set<IsInContactBookOf> contactBooks) {
-        this.contactBooks = contactBooks;
-    }
+  public void setContactBooks(final Set<IsInContactBookOf> contactBooks) {
+    this.contactBooks = contactBooks;
+  }
 
-    @Transient
-    public OfficeDto getDto() {
-        return new OfficeDto(this);
-    }
+  @Transient
+  public OfficeDto getDto() {
+    return new OfficeDto(this);
+  }
+
 }

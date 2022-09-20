@@ -64,7 +64,10 @@ public class PlanModelService {
     return planModels;
   }
 
-  public List<PlanModel> findAllInOffice(final Long idOffice, final Long idFilter) {
+  public List<PlanModel> findAllInOffice(
+    final Long idOffice,
+    final Long idFilter
+  ) {
     if(idFilter == null) {
       return this.findAllInOffice(idOffice);
     }
@@ -102,7 +105,10 @@ public class PlanModelService {
     return this.save(planModel);
   }
 
-  private void sharedWith(final PlanModelStoreDto planModelStoreDto, final PlanModel planModel) {
+  private void sharedWith(
+    final PlanModelStoreDto planModelStoreDto,
+    final PlanModel planModel
+  ) {
     final boolean isSharedWithAll = planModelStoreDto.isSharedWithAll();
     planModel.setPublicShared(isSharedWithAll);
 
@@ -115,7 +121,10 @@ public class PlanModelService {
     planModel.setSharedWith(sharedWith);
   }
 
-  private void share(final PlanModelStoreDto planModelStoreDto, final Collection<? super Office> sharedWith) {
+  private void share(
+    final PlanModelStoreDto planModelStoreDto,
+    final Collection<? super Office> sharedWith
+  ) {
     final Set<Long> idOffices = planModelStoreDto.getSharedWith()
       .stream()
       .map(OfficeDto::getId)
@@ -125,7 +134,10 @@ public class PlanModelService {
     sharedWith.addAll(offices);
   }
 
-  private void setOffice(final PlanModel planModel, final Long idOffice) {
+  private void setOffice(
+    final PlanModel planModel,
+    final Long idOffice
+  ) {
     final Office office = this.officeService.findById(idOffice);
     planModel.setOffice(office);
   }
@@ -169,4 +181,5 @@ public class PlanModelService {
     final List<PlanModel> sharedWithOffice = this.planModelRepository.findAllSharedWithOffice(idOffice);
     return sharedWithOffice.stream().map(PlanModelDto::new).collect(Collectors.toList());
   }
+
 }

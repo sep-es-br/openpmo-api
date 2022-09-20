@@ -8,10 +8,19 @@ import java.util.List;
 
 public interface EDocsApi {
 
-    ProcessResponse findProcessByProtocol(String protocol, Long idPerson);
+  ProcessResponse findProcessByProtocol(
+    String protocol,
+    Long idPerson
+  );
 
-    List<ProcessHistoryResponse> findProcessHistoryById(String id, Long idPerson);
+  List<ProcessHistoryResponse> findProcessHistoryById(
+    String id,
+    Long idPerson
+  );
 
-    boolean isProcessPriority(String processId, Long personId) throws IOException;
+  boolean isProcessPriority(
+    String processId,
+    Long personId
+  ) throws IOException;
 
 }

@@ -103,7 +103,8 @@ public class Date extends Property<Date, LocalDateTime> {
     this.workpack = workpack;
   }
 
-  @Override public PropertyModel getPropertyModel() {
+  @Override
+  public PropertyModel getPropertyModel() {
     return this.getDriver();
   }
 

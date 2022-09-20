@@ -49,4 +49,5 @@ public abstract class CreateAndUpdateUsingCommonFilterOperations extends CommonF
 
     return ResponseEntity.ok(ResponseBase.of(customFilterUpdated));
   }
+
 }

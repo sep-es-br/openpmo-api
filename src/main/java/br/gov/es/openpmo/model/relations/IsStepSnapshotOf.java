@@ -7,8 +7,8 @@ import org.neo4j.ogm.annotation.RelationshipEntity;
 public class IsStepSnapshotOf extends IsSnapshotOf<Step> {
 
   public IsStepSnapshotOf(
-      final Step master,
-      final Step snapshot
+    final Step master,
+    final Step snapshot
   ) {
     super(master, snapshot);
   }

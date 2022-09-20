@@ -39,4 +39,5 @@ public class CostAccountUpdateDto {
   public void setProperties(final List<? extends PropertyDto> properties) {
     this.properties = properties;
   }
+
 }

@@ -36,7 +36,10 @@ public enum CustomFilterEnum {
   private final String nodeName;
   private final Class<?> nodeClass;
 
-  <T> CustomFilterEnum(final String type, final Class<T> nodeClass) {
+  <T> CustomFilterEnum(
+    final String type,
+    final Class<T> nodeClass
+  ) {
     this.nodeName = type;
     this.nodeClass = nodeClass;
   }

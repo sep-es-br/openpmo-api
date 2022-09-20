@@ -4,7 +4,12 @@ import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
 import br.gov.es.openpmo.model.relations.IsInContactBookOf;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 public class PersonDto {
 
@@ -25,7 +30,10 @@ public class PersonDto {
     this.roles.add(RoleResource.citizen());
   }
 
-  public static PersonDto from(final Person person, final Set<IsInContactBookOf> contacts) {
+  public static PersonDto from(
+    final Person person,
+    final Set<IsInContactBookOf> contacts
+  ) {
     final Optional<IsInContactBookOf> maybeContact = contacts.stream()
       .filter(contact -> contact.getPersonId()
         .equals(person.getId())).findFirst();
@@ -38,11 +46,12 @@ public class PersonDto {
     final Optional<? extends IsAuthenticatedBy> maybeAuthentication
   ) {
     final PersonDto dto = from(person);
-    boolean isUser;
+    final boolean isUser;
 
-    if (person.getAuthentications() == null) {
+    if(person.getAuthentications() == null) {
       isUser = false;
-    } else {
+    }
+    else {
       isUser = !person.getAuthentications().isEmpty();
     }
 
@@ -123,19 +132,19 @@ public class PersonDto {
   }
 
   public String getKey() {
-    return key;
+    return this.key;
   }
 
-  public void setKey(String key) {
+  public void setKey(final String key) {
     this.key = key;
   }
 
   public Boolean getUser() {
-    return isUser;
+    return this.isUser;
   }
 
-  public void setUser(Boolean user) {
-    isUser = user;
+  public void setUser(final Boolean user) {
+    this.isUser = user;
   }
 
   public String getEmail() {
@@ -186,4 +195,5 @@ public class PersonDto {
   public void setGuid(final String guid) {
     this.guid = guid;
   }
+
 }

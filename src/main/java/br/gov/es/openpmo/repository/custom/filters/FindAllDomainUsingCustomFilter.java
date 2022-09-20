@@ -24,13 +24,19 @@ public class FindAllDomainUsingCustomFilter extends FindAllUsingCustomFilterBuil
   }
 
   @Override
-  public void buildMatchClause(final CustomFilter filter, final StringBuilder query) {
+  public void buildMatchClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query.append("MATCH (").append(this.nodeName)
       .append(":Domain)-[apl:APPLIES_TO]->(o:Office) ");
   }
 
   @Override
-  public void buildWhereClause(final CustomFilter filter, final StringBuilder query) {
+  public void buildWhereClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query.append("WHERE ( ID(o) = $idOffice OR $idOffice IS NULL ) ");
   }
 
@@ -46,9 +52,21 @@ public class FindAllDomainUsingCustomFilter extends FindAllUsingCustomFilterBuil
       .append("]");
   }
 
+  @Override
+  protected boolean hasAppendedBooleanBlock() {
+    return true;
+  }
 
   @Override
-  public void buildOrderingAndDirectionClause(final CustomFilter filter, final StringBuilder query) {
+  protected boolean hasToCloseAppendedBooleanBlock() {
+    return true;
+  }
+
+  @Override
+  public void buildOrderingAndDirectionClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     this.appendStringIfTrue(
       filter.getSortBy() != null,
       builder -> builder.append(" ").append("ORDER BY ")
@@ -59,16 +77,9 @@ public class FindAllDomainUsingCustomFilter extends FindAllUsingCustomFilterBuil
     );
   }
 
-  @Override protected boolean hasAppendedBooleanBlock() {
-    return true;
-  }
-
-  @Override protected boolean hasToCloseAppendedBooleanBlock() {
-    return true;
-  }
-
   @Override
   public String[] getDefinedExternalParams() {
     return new String[]{"idOffice"};
   }
+
 }

@@ -32,4 +32,5 @@ public class PersonQuery implements IGetPersonFromAuthorization.PersonDataRespon
   public String getKey() {
     return this.key;
   }
+
 }

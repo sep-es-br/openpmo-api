@@ -31,8 +31,12 @@ public class CanAccessPlan implements HasRole {
   private Plan plan;
 
   public CanAccessPlan(
-    final Long id, final String organization, final String role, final PermissionLevelEnum permissionLevel,
-    final Person person, final Plan plan
+    final Long id,
+    final String organization,
+    final String role,
+    final PermissionLevelEnum permissionLevel,
+    final Person person,
+    final Plan plan
   ) {
     this.id = id;
     this.organization = organization;
@@ -111,4 +115,5 @@ public class CanAccessPlan implements HasRole {
     if(this.person == null) return false;
     return this.person.getId().equals(idUser);
   }
+
 }

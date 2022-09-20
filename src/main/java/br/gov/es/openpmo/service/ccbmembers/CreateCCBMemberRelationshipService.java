@@ -33,11 +33,11 @@ public class CreateCCBMemberRelationshipService implements ICreateCCBMemberRelat
 
   @Autowired
   public CreateCCBMemberRelationshipService(
-      final IsCCBMemberRepository repository,
-      final IsInContactBookOfRepository isInContactBookOfRepository,
-      final WorkpackService workpackService,
-      final PersonService personService,
-      final OfficeService officeService
+    final IsCCBMemberRepository repository,
+    final IsInContactBookOfRepository isInContactBookOfRepository,
+    final WorkpackService workpackService,
+    final PersonService personService,
+    final OfficeService officeService
   ) {
     this.repository = repository;
     this.isInContactBookOfRepository = isInContactBookOfRepository;
@@ -51,12 +51,16 @@ public class CreateCCBMemberRelationshipService implements ICreateCCBMemberRelat
     final Person person = this.createOrUpdatePersonAndRelationships(request);
     final Workpack workpack = this.findWorkpackById(request.getIdWorkpack());
 
-    for (final MemberAs memberAs : request.getMemberAs()) {
+    for(final MemberAs memberAs : request.getMemberAs()) {
       this.saveCCBMember(person, workpack, memberAs);
     }
   }
 
-  private void saveCCBMember(final Person person, final Workpack workpack, final MemberAs memberAs) {
+  private void saveCCBMember(
+    final Person person,
+    final Workpack workpack,
+    final MemberAs memberAs
+  ) {
     this.repository.save(new IsCCBMemberFor(memberAs, person, workpack), 0);
   }
 
@@ -83,9 +87,10 @@ public class CreateCCBMemberRelationshipService implements ICreateCCBMemberRelat
 
     final Optional<IsInContactBookOf> isInContactBookOf = this.findIsInContactBookOf(person.getId(), idOffice);
 
-    if (isInContactBookOf.isPresent()) {
+    if(isInContactBookOf.isPresent()) {
       this.updateIsInContactBookOf(isInContactBookOf.get(), personDto);
-    } else {
+    }
+    else {
       this.createIsInContactBookOf(personDto, idOffice, person);
     }
 
@@ -93,16 +98,16 @@ public class CreateCCBMemberRelationshipService implements ICreateCCBMemberRelat
   }
 
   private Optional<IsInContactBookOf> findIsInContactBookOf(
-      final Long idPerson,
-      final Long idOffice
+    final Long idPerson,
+    final Long idOffice
   ) {
     return this.isInContactBookOfRepository
-        .findIsInContactBookOfByPersonIdAndOfficeId(idPerson, idOffice);
+      .findIsInContactBookOfByPersonIdAndOfficeId(idPerson, idOffice);
   }
 
   private void updateIsInContactBookOf(
-      final IsInContactBookOf isInContactBookOf,
-      final PersonDto personDto
+    final IsInContactBookOf isInContactBookOf,
+    final PersonDto personDto
   ) {
     isInContactBookOf.setPhoneNumber(personDto.getPhoneNumber());
     isInContactBookOf.setEmail(personDto.getContactEmail());
@@ -115,9 +120,9 @@ public class CreateCCBMemberRelationshipService implements ICreateCCBMemberRelat
   }
 
   private void createIsInContactBookOf(
-      final PersonDto personDto,
-      final Long idOffice,
-      final Person person
+    final PersonDto personDto,
+    final Long idOffice,
+    final Person person
   ) {
     final Office office = this.findOfficeById(idOffice);
     this.saveIsInContactBookOf(new IsInContactBookOf(personDto, office, person));
@@ -132,8 +137,8 @@ public class CreateCCBMemberRelationshipService implements ICreateCCBMemberRelat
   }
 
   private Person createPersonAndRelationships(
-      final PersonDto personDto,
-      final Long idOffice
+    final PersonDto personDto,
+    final Long idOffice
   ) {
     return this.personService.savePerson(personDto, idOffice);
   }

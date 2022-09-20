@@ -44,7 +44,10 @@ public class LocalityBreadcrumbService {
     return reverseBreadcrumbs(breadcrumbs);
   }
 
-  private void addLocalityParentBreadcrumbDto(final Locality locality, final List<BreadcrumbDto> breadcrumbs) {
+  private void addLocalityParentBreadcrumbDto(
+    final Locality locality,
+    final List<BreadcrumbDto> breadcrumbs
+  ) {
     breadcrumbs.add(fromLocality(locality));
     if(locality.getParent() != null) {
       this.addLocalityParentBreadcrumbDto(locality.getParent(), breadcrumbs);

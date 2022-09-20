@@ -8,7 +8,10 @@ public class CostPerformanceIndex {
 
   private final BigDecimal costVariation;
 
-  public CostPerformanceIndex(final BigDecimal indexValue, final BigDecimal costVariation) {
+  public CostPerformanceIndex(
+    final BigDecimal indexValue,
+    final BigDecimal costVariation
+  ) {
     this.indexValue = indexValue;
     this.costVariation = costVariation;
   }

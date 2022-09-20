@@ -108,7 +108,8 @@ public class LocalitySelection extends Property<LocalitySelection, Set<Locality>
     this.workpack = workpack;
   }
 
-  @Override public PropertyModel getPropertyModel() {
+  @Override
+  public PropertyModel getPropertyModel() {
     return this.getDriver();
   }
 

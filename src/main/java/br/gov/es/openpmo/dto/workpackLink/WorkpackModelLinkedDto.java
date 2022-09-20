@@ -3,6 +3,7 @@ package br.gov.es.openpmo.dto.workpackLink;
 import java.util.List;
 
 public class WorkpackModelLinkedDto {
+
   private Long id;
   private String name;
   private String nameInPlural;

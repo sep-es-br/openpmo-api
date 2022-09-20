@@ -25,15 +25,18 @@ public class IssueController {
 
   private final TokenService tokenService;
 
-  public IssueController(final IssueService service, final TokenService tokenService) {
+  public IssueController(
+    final IssueService service,
+    final TokenService tokenService
+  ) {
     this.service = service;
     this.tokenService = tokenService;
   }
 
   @PostMapping("/create-from-risk")
   public ResponseEntity<ResponseBase<EntityDto>> createIssueFromRisk(
-      @RequestBody final IssueFromRiskDto request,
-      @RequestHeader(name = "Authorization") final String authorization
+    @RequestBody final IssueFromRiskDto request,
+    @RequestHeader(name = "Authorization") final String authorization
   ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
     final EntityDto response = this.service.createIssueFromRisk(request.getIdRisk(), idPerson);
@@ -42,8 +45,8 @@ public class IssueController {
 
   @PostMapping
   public ResponseEntity<ResponseBase<EntityDto>> create(
-      @Valid @RequestBody final IssueCreateDto request,
-      @RequestHeader(name = "Authorization") final String authorization
+    @Valid @RequestBody final IssueCreateDto request,
+    @RequestHeader(name = "Authorization") final String authorization
   ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
     final EntityDto response = this.service.create(request, idPerson);
@@ -70,8 +73,8 @@ public class IssueController {
 
   @PutMapping
   public ResponseEntity<ResponseBase<IssueDetailDto>> update(
-      @Valid @RequestBody final IssueUpdateDto request,
-      @RequestHeader(name = "Authorization") final String authorization
+    @Valid @RequestBody final IssueUpdateDto request,
+    @RequestHeader(name = "Authorization") final String authorization
   ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
     final IssueDetailDto response = this.service.update(request, idPerson);

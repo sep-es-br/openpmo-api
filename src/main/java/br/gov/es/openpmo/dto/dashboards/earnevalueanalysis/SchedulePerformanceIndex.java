@@ -8,7 +8,10 @@ public class SchedulePerformanceIndex {
 
   private final BigDecimal scheduleVariation;
 
-  public SchedulePerformanceIndex(final BigDecimal indexValue, final BigDecimal scheduleVariation) {
+  public SchedulePerformanceIndex(
+    final BigDecimal indexValue,
+    final BigDecimal scheduleVariation
+  ) {
     this.indexValue = indexValue;
     this.scheduleVariation = scheduleVariation;
   }

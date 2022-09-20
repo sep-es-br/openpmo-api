@@ -41,7 +41,7 @@ public class EvidenceFinder {
 
   private File findEvidenceById(final Long idEvidence) {
     return this.fileRepository.findById(idEvidence)
-        .orElseThrow(() -> new NegocioException(FILE_NOT_FOUND));
+      .orElseThrow(() -> new NegocioException(FILE_NOT_FOUND));
   }
 
 }

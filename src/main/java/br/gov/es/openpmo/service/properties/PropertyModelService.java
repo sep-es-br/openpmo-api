@@ -39,4 +39,5 @@ public class PropertyModelService {
   public boolean canDeleteProperty(final Long id) {
     return this.propertyModelRepository.countPropertyByIdPropertyModel(id) == 0;
   }
+
 }

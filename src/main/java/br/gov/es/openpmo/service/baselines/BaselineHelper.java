@@ -28,18 +28,27 @@ public class BaselineHelper {
 
   @Autowired
   public BaselineHelper(
-      final BaselineHelperWorkpackRepository baselineHelperWorkpackRepository,
-      final BaselineHelperScheduleRepository baselineHelperScheduleRepository
+    final BaselineHelperWorkpackRepository baselineHelperWorkpackRepository,
+    final BaselineHelperScheduleRepository baselineHelperScheduleRepository
   ) {
     this.baselineHelperWorkpackRepository = baselineHelperWorkpackRepository;
     this.baselineHelperScheduleRepository = baselineHelperScheduleRepository;
   }
 
+  private static <T> void ifIsNullThrowsException(
+    final T obj,
+    final String message
+  ) {
+    if(Objects.isNull(obj)) {
+      throw new NegocioException(message);
+    }
+  }
+
   public <T extends Snapshotable<T>, R extends IsSnapshotOf<T>> void createMasterSnapshotRelationship(
-      final T master,
-      final T snapshot,
-      final Neo4jRepository<? super R, Long> repository,
-      final BiFunction<T, T, R> constructor
+    final T master,
+    final T snapshot,
+    final Neo4jRepository<? super R, Long> repository,
+    final BiFunction<T, T, R> constructor
   ) {
     master.setCategory(CategoryEnum.MASTER);
     snapshot.setCategory(CategoryEnum.SNAPSHOT);
@@ -49,25 +58,25 @@ public class BaselineHelper {
   }
 
   public <T extends Snapshotable<T>> T createSnapshot(
-      final T snapshotable,
-      final Neo4jRepository<? super T, Long> repository
+    final T snapshotable,
+    final Neo4jRepository<? super T, Long> repository
   ) {
     final T snapshot = snapshotable.snapshot();
     return repository.save(snapshot);
   }
 
   public <T extends Snapshotable<T>> void createBaselineSnapshotRelationship(
-      final Baseline baseline,
-      final T snapshot,
-      final Neo4jRepository<T, Long> repository
+    final Baseline baseline,
+    final T snapshot,
+    final Neo4jRepository<T, Long> repository
   ) {
     snapshot.setBaseline(baseline);
     repository.save(snapshot);
   }
 
   public void createIsInRelationship(
-      final Workpack child,
-      final Workpack parent
+    final Workpack child,
+    final Workpack parent
   ) {
     ifIsNullThrowsException(child, ApplicationMessage.WORKPACK_IS_NULL);
     ifIsNullThrowsException(parent, ApplicationMessage.COST_ACCOUNT_NOT_FOUND);
@@ -76,15 +85,9 @@ public class BaselineHelper {
     this.baselineHelperWorkpackRepository.createIsInRelationship(childId, parentId);
   }
 
-  private static <T> void ifIsNullThrowsException(final T obj, final String message) {
-    if (Objects.isNull(obj)) {
-      throw new NegocioException(message);
-    }
-  }
-
   public void createAppliesToRelationship(
-      final Workpack workpack,
-      final CostAccount costAccount
+    final Workpack workpack,
+    final CostAccount costAccount
   ) {
     ifIsNullThrowsException(workpack, ApplicationMessage.WORKPACK_IS_NULL);
     ifIsNullThrowsException(costAccount, ApplicationMessage.COST_ACCOUNT_NOT_FOUND);
@@ -94,8 +97,8 @@ public class BaselineHelper {
   }
 
   public void createFeatureRelationship(
-      final Workpack workpack,
-      final Schedule schedule
+    final Workpack workpack,
+    final Schedule schedule
   ) {
     ifIsNullThrowsException(workpack, ApplicationMessage.WORKPACK_IS_NULL);
     ifIsNullThrowsException(schedule, ApplicationMessage.SCHEDULE_IS_NULL);
@@ -105,8 +108,8 @@ public class BaselineHelper {
   }
 
   public void createComposesRelationship(
-      final Schedule schedule,
-      final Step step
+    final Schedule schedule,
+    final Step step
   ) {
     ifIsNullThrowsException(schedule, ApplicationMessage.SCHEDULE_IS_NULL);
     ifIsNullThrowsException(step, ApplicationMessage.STEP_NOT_FOUND);

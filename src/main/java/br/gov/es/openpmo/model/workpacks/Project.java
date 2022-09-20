@@ -7,20 +7,20 @@ import org.neo4j.ogm.annotation.Relationship;
 @NodeEntity
 public class Project extends Workpack {
 
-    @Relationship("IS_INSTANCE_BY")
-    private ProjectModel instance;
+  @Relationship("IS_INSTANCE_BY")
+  private ProjectModel instance;
 
-    public ProjectModel getInstance() {
-        return this.instance;
-    }
+  public ProjectModel getInstance() {
+    return this.instance;
+  }
 
-    public void setInstance(final ProjectModel instance) {
-        this.instance = instance;
-    }
+  public void setInstance(final ProjectModel instance) {
+    this.instance = instance;
+  }
 
-    @Override
-    public Workpack snapshot() {
-        return new Project();
-    }
+  @Override
+  public Workpack snapshot() {
+    return new Project();
+  }
 
 }

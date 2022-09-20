@@ -7,8 +7,8 @@ import org.neo4j.ogm.annotation.RelationshipEntity;
 public class IsScheduleSnapshotOf extends IsSnapshotOf<Schedule> {
 
   public IsScheduleSnapshotOf(
-      final Schedule master,
-      final Schedule snapshot
+    final Schedule master,
+    final Schedule snapshot
   ) {
     super(master, snapshot);
   }

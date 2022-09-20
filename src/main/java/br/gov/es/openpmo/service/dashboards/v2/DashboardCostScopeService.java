@@ -22,152 +22,164 @@ import java.util.stream.Collectors;
 @Component
 public class DashboardCostScopeService implements IDashboardCostScopeService {
 
-    private final StepRepository stepRepository;
-    private final ConsumesRepository consumesRepository;
+  private final StepRepository stepRepository;
+  private final ConsumesRepository consumesRepository;
 
-    @Autowired
-    public DashboardCostScopeService(StepRepository stepRepository, final ConsumesRepository consumesRepository) {
-        this.stepRepository = stepRepository;
-        this.consumesRepository = consumesRepository;
+  @Autowired
+  public DashboardCostScopeService(
+    final StepRepository stepRepository,
+    final ConsumesRepository consumesRepository
+  ) {
+    this.stepRepository = stepRepository;
+    this.consumesRepository = consumesRepository;
+  }
+
+  private static void totalActualCost(
+    final YearMonth referenceDate,
+    final CostDataChart costDataChart,
+    final ScopeDataChart scopeDataChart,
+    final Set<? extends Step> steps,
+    final boolean canceled
+  ) {
+    if(canceled) {
+      return;
     }
 
-    @Override
-    public CostAndScopeData build(
-            final Long baselineId,
-            final YearMonth referenceDate,
-            final Set<? extends Step> steps,
-            boolean canceled
-    ) {
-        final CostDataChart costDataChart = new CostDataChart();
-        final ScopeDataChart scopeDataChart = new ScopeDataChart();
+    final Set<Step> filteredSteps = steps.stream()
+      .filter(step -> isBeforeOrEquals(step, referenceDate))
+      .collect(Collectors.toSet());
 
-        totalActualCost(referenceDate, costDataChart, scopeDataChart, steps, canceled);
-        totalPlannedCost(baselineId, costDataChart, scopeDataChart, steps);
-        totalForeseenCost(costDataChart, scopeDataChart, steps, canceled);
+    final BigDecimal sumOfActualWork = sumValuesOf(filteredSteps, Step::getActualWork);
+    scopeDataChart.sumActualValue(sumOfActualWork);
 
-        scopeDataChart.setCostDataChart(costDataChart);
-        return new CostAndScopeData(costDataChart, scopeDataChart);
+    filteredSteps.stream()
+      .map(step -> sumValuesOf(step.getConsumes(), Consumes::getActualCost))
+      .forEach(costDataChart::sumActualValue);
+  }
+
+  private static void totalForeseenCost(
+    final CostDataChart costDataChart,
+    final ScopeDataChart scopeDataChart,
+    final Set<? extends Step> steps,
+    final boolean canceled
+  ) {
+    if(canceled) {
+      return;
     }
 
-    private static void totalActualCost(
-            final YearMonth referenceDate,
-            final CostDataChart costDataChart,
-            final ScopeDataChart scopeDataChart,
-            final Set<? extends Step> steps,
-            boolean canceled
-    ) {
-        if (canceled) {
-            return;
-        }
+    final BigDecimal sumOfPlannedWork = sumValuesOf(steps, Step::getPlannedWork);
+    scopeDataChart.sumForeseenValue(sumOfPlannedWork);
 
-        final Set<Step> filteredSteps = steps.stream()
-                .filter(step -> isBeforeOrEquals(step, referenceDate))
-                .collect(Collectors.toSet());
+    for(final Step step : steps) {
+      final BigDecimal bigDecimal = sumValuesOf(step.getConsumes(), Consumes::getPlannedCost);
+      costDataChart.sumForeseenValue(bigDecimal);
+    }
+  }
 
-        final BigDecimal sumOfActualWork = sumValuesOf(filteredSteps, Step::getActualWork);
-        scopeDataChart.sumActualValue(sumOfActualWork);
+  private static boolean isBeforeOrEquals(
+    final Step step,
+    final YearMonth referenceDate
+  ) {
+    final LocalDate mesAno = getMesAno(referenceDate);
+    return !asYearMonth(step).isAfter(YearMonth.from(mesAno));
+  }
 
-        filteredSteps.stream()
-                .map(step -> sumValuesOf(step.getConsumes(), Consumes::getActualCost))
-                .forEach(costDataChart::sumActualValue);
+  public static LocalDate getMesAno(final YearMonth yearMonth) {
+    final LocalDate now = LocalDate.now();
+    if(yearMonth == null) {
+      return now;
+    }
+    final LocalDate endOfMonth = yearMonth.atEndOfMonth();
+    if(now.isBefore(endOfMonth)) {
+      return now;
+    }
+    return endOfMonth;
+  }
+
+  private static <T> BigDecimal sumValuesOf(
+    final Set<? extends T> itens,
+    final Function<? super T, BigDecimal> mapper
+  ) {
+    if(itens == null || itens.isEmpty()) {
+      return null;
     }
 
-    private void totalPlannedCost(
-            final Long baselineId,
-            final CostDataChart costDataChart,
-            final ScopeDataChart scopeDataChart,
-            final Set<? extends Step> steps
-    ) {
-        for (final Step step : steps) {
-            final Long baselineIdToWorkWith = getBaselineIdOrNull(baselineId, step);
+    return itens.stream()
+      .map(mapper)
+      .filter(Objects::nonNull)
+      .reduce(BigDecimal.ZERO, BigDecimal::add);
+  }
 
-            if (baselineIdToWorkWith == null) {
-                continue;
-            }
+  private static YearMonth asYearMonth(final Step step) {
+    return step.getYearMonth();
+  }
 
-            final Set<Consumes> consumesSnapshot = getConsumesSnapshot(step, baselineIdToWorkWith);
-            final Set<Step> stepsSnapshot = getStepsSnapshot(consumesSnapshot);
+  @Override
+  public CostAndScopeData build(
+    final Long baselineId,
+    final YearMonth referenceDate,
+    final Set<? extends Step> steps,
+    final boolean canceled
+  ) {
+    final CostDataChart costDataChart = new CostDataChart();
+    final ScopeDataChart scopeDataChart = new ScopeDataChart();
 
-            final BigDecimal sumOfPlannedCost = sumValuesOf(consumesSnapshot, Consumes::getPlannedCost);
-            final BigDecimal sumOfPlannedWork = sumValuesOf(stepsSnapshot, Step::getPlannedWork);
+    totalActualCost(referenceDate, costDataChart, scopeDataChart, steps, canceled);
+    this.totalPlannedCost(baselineId, costDataChart, scopeDataChart, steps);
+    totalForeseenCost(costDataChart, scopeDataChart, steps, canceled);
 
-            costDataChart.sumPlannedValue(sumOfPlannedCost);
-            scopeDataChart.sumPlannedValue(sumOfPlannedWork);
-        }
+    scopeDataChart.setCostDataChart(costDataChart);
+    return new CostAndScopeData(costDataChart, scopeDataChart);
+  }
+
+  private void totalPlannedCost(
+    final Long baselineId,
+    final CostDataChart costDataChart,
+    final ScopeDataChart scopeDataChart,
+    final Set<? extends Step> steps
+  ) {
+    for(final Step step : steps) {
+      final Long baselineIdToWorkWith = this.getBaselineIdOrNull(baselineId, step);
+
+      if(baselineIdToWorkWith == null) {
+        continue;
+      }
+
+      final Set<Consumes> consumesSnapshot = this.getConsumesSnapshot(step, baselineIdToWorkWith);
+      final Set<Step> stepsSnapshot = this.getStepsSnapshot(consumesSnapshot);
+
+      final BigDecimal sumOfPlannedCost = sumValuesOf(consumesSnapshot, Consumes::getPlannedCost);
+      final BigDecimal sumOfPlannedWork = sumValuesOf(stepsSnapshot, Step::getPlannedWork);
+
+      costDataChart.sumPlannedValue(sumOfPlannedCost);
+      scopeDataChart.sumPlannedValue(sumOfPlannedWork);
     }
+  }
 
-    private static void totalForeseenCost(
-            final CostDataChart costDataChart,
-            final ScopeDataChart scopeDataChart,
-            final Set<? extends Step> steps,
-            boolean canceled
-    ) {
-        if (canceled) {
-            return;
-        }
+  private Long getBaselineIdOrNull(
+    final Long baselineId,
+    final Step step
+  ) {
+    return Optional.ofNullable(baselineId)
+      .orElse(this.getActiveBaselineIdOrNull(step));
+  }
 
-        final BigDecimal sumOfPlannedWork = sumValuesOf(steps, Step::getPlannedWork);
-        scopeDataChart.sumForeseenValue(sumOfPlannedWork);
+  private Set<Consumes> getConsumesSnapshot(
+    final Step step,
+    final Long idBaseline
+  ) {
+    return this.consumesRepository
+      .findAllSnapshotConsumesOfStepMaster(idBaseline, step.getId());
+  }
 
-        for (Step step : steps) {
-            BigDecimal bigDecimal = sumValuesOf(step.getConsumes(), Consumes::getPlannedCost);
-            costDataChart.sumForeseenValue(bigDecimal);
-        }
-    }
+  private Set<Step> getStepsSnapshot(final Set<Consumes> consumesSnapshot) {
+    return consumesSnapshot.stream()
+      .map(Consumes::getStep)
+      .collect(Collectors.toSet());
+  }
 
-    private static boolean isBeforeOrEquals(Step step, YearMonth referenceDate) {
-        LocalDate mesAno = getMesAno(referenceDate);
-        return !asYearMonth(step).isAfter(YearMonth.from(mesAno));
-    }
-
-    public static LocalDate getMesAno(YearMonth yearMonth) {
-        LocalDate now = LocalDate.now();
-        if (yearMonth == null) {
-            return now;
-        }
-        LocalDate endOfMonth = yearMonth.atEndOfMonth();
-        if (now.isBefore(endOfMonth)) {
-            return now;
-        }
-        return endOfMonth;
-    }
-
-    private static <T> BigDecimal sumValuesOf(
-            final Set<? extends T> itens,
-            final Function<? super T, BigDecimal> mapper
-    ) {
-        if (itens == null || itens.isEmpty()) {
-            return null;
-        }
-
-        return itens.stream()
-                .map(mapper)
-                .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-    private Long getBaselineIdOrNull(Long baselineId, Step step) {
-        return Optional.ofNullable(baselineId)
-                .orElse(getActiveBaselineIdOrNull(step));
-    }
-
-    private Set<Consumes> getConsumesSnapshot(Step step, Long idBaseline) {
-        return this.consumesRepository
-                .findAllSnapshotConsumesOfStepMaster(idBaseline, step.getId());
-    }
-
-    private Set<Step> getStepsSnapshot(Set<Consumes> consumesSnapshot) {
-        return consumesSnapshot.stream()
-                .map(Consumes::getStep)
-                .collect(Collectors.toSet());
-    }
-
-    private static YearMonth asYearMonth(final Step step) {
-        return step.getYearMonth();
-    }
-
-    private Long getActiveBaselineIdOrNull(Step step) {
-        return this.stepRepository.findActiveBaseline(step.getId());
-    }
+  private Long getActiveBaselineIdOrNull(final Step step) {
+    return this.stepRepository.findActiveBaseline(step.getId());
+  }
 
 }

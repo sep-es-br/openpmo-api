@@ -16,4 +16,5 @@ public interface ProcessRepository extends Neo4jRepository<Process, Long>, Custo
          "RETURN process"
   )
   List<Process> findAllByWorkpack(Long idWorkpack);
+
 }

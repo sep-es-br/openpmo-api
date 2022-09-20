@@ -27,4 +27,5 @@ public class GetPersonById {
     return this.personRepository.findById(id)
       .orElseThrow(() -> new NegocioException(PERSON_NOT_FOUND));
   }
+
 }

@@ -28,7 +28,10 @@ public class CitizenDto {
     this.roles.add(RoleResource.citizen());
   }
 
-  public static CitizenDto from(final Person person, final Collection<IsInContactBookOf> contacts) {
+  public static CitizenDto from(
+    final Person person,
+    final Collection<IsInContactBookOf> contacts
+  ) {
     final Optional<IsInContactBookOf> maybeContact = contacts.stream()
       .filter(contact -> contact.getPersonId()
         .equals(person.getId())).findFirst();
@@ -43,8 +46,8 @@ public class CitizenDto {
     final CitizenDto dto = from(person);
 
     final boolean isUser = person.getAuthentications() != null
-      && !person.getAuthentications().isEmpty()
-      || person.getAuthentications() != null;
+                           && !person.getAuthentications().isEmpty()
+                           || person.getAuthentications() != null;
 
     dto.setIsUser(isUser);
     maybeContact.ifPresent(contact -> {
@@ -115,10 +118,10 @@ public class CitizenDto {
   }
 
   public String getKey() {
-    return key;
+    return this.key;
   }
 
-  public void setKey(String key) {
+  public void setKey(final String key) {
     this.key = key;
   }
 
@@ -147,10 +150,10 @@ public class CitizenDto {
   }
 
   public List<RoleResource> getRoles() {
-    return roles;
+    return this.roles;
   }
 
-  public void setRoles(List<RoleResource> roles) {
+  public void setRoles(final List<RoleResource> roles) {
     this.roles = roles;
   }
 
@@ -165,4 +168,5 @@ public class CitizenDto {
   public void setContactEmail(final String contactEmail) {
     this.contactEmail = contactEmail;
   }
+
 }

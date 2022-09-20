@@ -275,6 +275,18 @@ public class ScheduleService {
     this.scheduleRepository.findSnapshotByMasterId(schedule.getId()).ifPresent(snapshot -> {
       scheduleDto.setBaselineStart(snapshot.getStart());
       scheduleDto.setBaselineEnd(snapshot.getEnd());
+
+      final BigDecimal plannedWork = snapshot.getSteps().stream()
+        .map(Step::getPlannedWork)
+        .filter(Objects::nonNull)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+      final BigDecimal plannedCost = snapshot.getSteps().stream()
+        .flatMap(step -> step.getConsumes().stream())
+        .map(Consumes::getPlannedCost)
+        .filter(Objects::nonNull)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+      scheduleDto.setBaselinePlaned(plannedWork);
+      scheduleDto.setBaselineCost(plannedCost);
     });
 
     return scheduleDto;

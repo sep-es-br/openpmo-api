@@ -9,7 +9,10 @@ public class AcessoDto {
   public AcessoDto() {
   }
 
-  public AcessoDto(final String token, final String refreshToken) {
+  public AcessoDto(
+    final String token,
+    final String refreshToken
+  ) {
     this.token = token;
     this.refreshToken = refreshToken;
   }
@@ -37,4 +40,5 @@ public class AcessoDto {
   public void setTokenAux(final String tokenAux) {
     this.tokenAux = tokenAux;
   }
+
 }

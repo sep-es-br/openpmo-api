@@ -25,121 +25,125 @@ import java.util.stream.Collectors;
 @Service
 public class AsyncDashboardService implements IAsyncDashboardService {
 
-    private final DashboardRepository dashboardRepository;
+  private final DashboardRepository dashboardRepository;
 
-    private final IDashboardTripleConstraintService tripleConstraintService;
+  private final IDashboardTripleConstraintService tripleConstraintService;
 
-    private final IDashboardEarnedValueAnalysisService earnedValueAnalysisService;
+  private final IDashboardEarnedValueAnalysisService earnedValueAnalysisService;
 
-    private final WorkpackRepository workpackRepository;
+  private final WorkpackRepository workpackRepository;
 
-    private final IDashboardIntervalService intervalService;
+  private final IDashboardIntervalService intervalService;
 
-    public AsyncDashboardService(
-      DashboardRepository dashboardRepository,
-      IDashboardTripleConstraintService tripleConstraintService,
-      IDashboardEarnedValueAnalysisService earnedValueAnalysisService,
-      WorkpackRepository workpackRepository,
-      IDashboardIntervalService intervalService
-    ) {
-        this.dashboardRepository = dashboardRepository;
-        this.tripleConstraintService = tripleConstraintService;
-        this.earnedValueAnalysisService = earnedValueAnalysisService;
-        this.workpackRepository = workpackRepository;
-        this.intervalService = intervalService;
+  public AsyncDashboardService(
+    final DashboardRepository dashboardRepository,
+    final IDashboardTripleConstraintService tripleConstraintService,
+    final IDashboardEarnedValueAnalysisService earnedValueAnalysisService,
+    final WorkpackRepository workpackRepository,
+    final IDashboardIntervalService intervalService
+  ) {
+    this.dashboardRepository = dashboardRepository;
+    this.tripleConstraintService = tripleConstraintService;
+    this.earnedValueAnalysisService = earnedValueAnalysisService;
+    this.workpackRepository = workpackRepository;
+    this.intervalService = intervalService;
+  }
+
+  @Override
+  public void calculate(@NonNull final Long worpackId) {
+    final Dashboard dashboard = this.getDashboard(worpackId);
+
+    Optional.of(worpackId)
+      .map(this::getTripleConstraint)
+      .ifPresent(dashboard::setTripleConstraint);
+
+    Optional.of(worpackId)
+      .map(this::getEarnedValueAnalysis)
+      .ifPresent(dashboard::setEarnedValueAnalysis);
+
+    this.dashboardRepository.save(dashboard);
+  }
+
+  private Dashboard getDashboard(@NonNull final Long worpackId) {
+    return this.dashboardRepository
+      .findByWorkpackId(worpackId)
+      .orElse(this.createDashboard(worpackId));
+  }
+
+  private Dashboard createDashboard(@NonNull final Long worpackId) {
+    final Dashboard dashboard = new Dashboard();
+
+    Optional.of(worpackId)
+      .map(this::getWorkpack)
+      .ifPresent(dashboard::setWorkpack);
+
+    return dashboard;
+  }
+
+  private Workpack getWorkpack(@NonNull final Long worpackId) {
+    return this.workpackRepository.findById(worpackId)
+      .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
+  }
+
+  private String getEarnedValueAnalysis(@NonNull final Long worpackId) {
+    return Optional.of(worpackId)
+      .map(this::calculateEarnedValueAnalysis)
+      .map(EarnedValueAnalysisData::of)
+      .map(new Gson()::toJson)
+      .orElse(null);
+  }
+
+  private DashboardEarnedValueAnalysis calculateEarnedValueAnalysis(@NonNull final Long worpackId) {
+    return this.earnedValueAnalysisService.calculate(worpackId);
+  }
+
+  private String getTripleConstraint(@NonNull final Long worpackId) {
+    return Optional.of(worpackId)
+      .map(this::calculateTripleConstraintDataChart)
+      .map(this::convertToTripleConstraintData)
+      .map(new Gson()::toJson)
+      .orElse(null);
+  }
+
+  private List<TripleConstraintData> convertToTripleConstraintData(final List<TripleConstraintDataChart> charts) {
+    return charts.stream()
+      .map(TripleConstraintData::of)
+      .collect(Collectors.toList());
+  }
+
+  private List<TripleConstraintDataChart> calculateTripleConstraintDataChart(final Long worpackId) {
+    return Optional.of(worpackId)
+      .flatMap(this.tripleConstraintService::calculate)
+      .orElse(Collections.singletonList(this.tripleConstraintService.build(this.getParams(worpackId))));
+  }
+
+  DashboardParameters getParams(final Long workpackId) {
+    final Interval interval = this.intervalService.calculateFor(workpackId);
+
+    if(interval.getStartDate() == null || interval.getEndDate() == null) {
+      return null;
     }
 
-    @Override
-    public void calculate(@NonNull Long worpackId) {
-        final Dashboard dashboard = getDashboard(worpackId);
+    final YearMonth previousMonth = YearMonth.now().minusMonths(1);
+    final YearMonth startMonth = YearMonth.from(interval.getStartDate());
+    final YearMonth endMonth = YearMonth.from(interval.getEndDate());
+    final YearMonth clampDate = this.clampDate(previousMonth, startMonth, endMonth);
 
-        Optional.of(worpackId)
-          .map(this::getTripleConstraint)
-          .ifPresent(dashboard::setTripleConstraint);
+    return new DashboardParameters(false, workpackId, null, clampDate, null);
+  }
 
-        Optional.of(worpackId)
-          .map(this::getEarnedValueAnalysis)
-          .ifPresent(dashboard::setEarnedValueAnalysis);
-
-        this.dashboardRepository.save(dashboard);
+  private YearMonth clampDate(
+    final YearMonth underTest,
+    final YearMonth minDate,
+    final YearMonth maxDate
+  ) {
+    if(underTest.isBefore(minDate)) {
+      return minDate;
     }
-
-    private Dashboard getDashboard(@NonNull Long worpackId) {
-        return this.dashboardRepository
-          .findByWorkpackId(worpackId)
-          .orElse(createDashboard(worpackId));
+    if(underTest.isAfter(maxDate)) {
+      return maxDate;
     }
-
-    private Dashboard createDashboard(@NonNull Long worpackId) {
-        final Dashboard dashboard = new Dashboard();
-
-        Optional.of(worpackId)
-          .map(this::getWorkpack)
-          .ifPresent(dashboard::setWorkpack);
-
-        return dashboard;
-    }
-
-    private Workpack getWorkpack(@NonNull Long worpackId) {
-        return this.workpackRepository.findById(worpackId)
-          .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
-    }
-
-    private String getEarnedValueAnalysis(@NonNull Long worpackId) {
-        return Optional.of(worpackId)
-          .map(this::calculateEarnedValueAnalysis)
-          .map(EarnedValueAnalysisData::of)
-          .map(new Gson()::toJson)
-          .orElse(null);
-    }
-
-    private DashboardEarnedValueAnalysis calculateEarnedValueAnalysis(@NonNull Long worpackId) {
-        return this.earnedValueAnalysisService.calculate(worpackId);
-    }
-
-    private String getTripleConstraint(@NonNull Long worpackId) {
-        return Optional.of(worpackId)
-          .map(this::calculateTripleConstraintDataChart)
-          .map(this::convertToTripleConstraintData)
-          .map(new Gson()::toJson)
-          .orElse(null);
-    }
-
-    private List<TripleConstraintData> convertToTripleConstraintData(List<TripleConstraintDataChart> charts) {
-        return charts.stream()
-          .map(TripleConstraintData::of)
-          .collect(Collectors.toList());
-    }
-
-    private List<TripleConstraintDataChart> calculateTripleConstraintDataChart(Long worpackId) {
-        return Optional.of(worpackId)
-          .flatMap(this.tripleConstraintService::calculate)
-          .orElse(Collections.singletonList(this.tripleConstraintService.build(getParams(worpackId))));
-    }
-
-    DashboardParameters getParams(Long workpackId) {
-        final Interval interval = intervalService.calculateFor(workpackId);
-
-        if (interval.getStartDate() == null || interval.getEndDate() == null) {
-            return null;
-        }
-
-        final YearMonth previousMonth = YearMonth.now().minusMonths(1);
-        final YearMonth startMonth = YearMonth.from(interval.getStartDate());
-        final YearMonth endMonth = YearMonth.from(interval.getEndDate());
-        final YearMonth clampDate = clampDate(previousMonth, startMonth, endMonth);
-
-        return new DashboardParameters(false, workpackId, null, clampDate, null);
-    }
-
-    private YearMonth clampDate(YearMonth underTest, YearMonth minDate, YearMonth maxDate) {
-        if (underTest.isBefore(minDate)) {
-            return minDate;
-        }
-        if (underTest.isAfter(maxDate)) {
-            return maxDate;
-        }
-        return underTest;
-    }
+    return underTest;
+  }
 
 }

@@ -438,7 +438,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
          "    collect(DISTINCT datetime(date1.value)) + " +
          "    collect(DISTINCT datetime(date2.value)) AS dates " +
          "UNWIND (scheduleStartDates+dates) AS startDates " +
-         "UNWIND (scheduleEndDates) AS unwindScheduleEndDates " +
+         "UNWIND (scheduleEndDates+dates) AS unwindScheduleEndDates " +
          "RETURN " +
          "    min(startDates) AS initialDate, " +
          "    max(unwindScheduleEndDates) AS endDate")

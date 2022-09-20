@@ -8,139 +8,166 @@ import java.util.Optional;
 
 public enum ModelType {
 
-    A(ModelType::getSetorModeloA, ModelType::getSiglaModeloA),
-    B(ModelType::getSetorModeloB, ModelType::getSiglaModeloB),
-    C(ModelType::getSetorModeloC, ModelType::getSiglaModeloC);
+  A(ModelType::getSetorModeloA, ModelType::getSiglaModeloA),
+  B(ModelType::getSetorModeloB, ModelType::getSiglaModeloB),
+  C(ModelType::getSetorModeloC, ModelType::getSiglaModeloC);
 
-    private final ModelFunction setor;
-    private final ModelFunction sigla;
+  private final ModelFunction setor;
+  private final ModelFunction sigla;
 
-    ModelType(ModelFunction setor, ModelFunction sigla) {
-        this.setor = setor;
-        this.sigla = sigla;
+  ModelType(
+    final ModelFunction setor,
+    final ModelFunction sigla
+  ) {
+    this.setor = setor;
+    this.sigla = sigla;
+  }
+
+  private static Optional<String> getSetorModeloA(
+    final OrganogramaApi api,
+    final JSONObject json
+  ) {
+    final Optional<String> maybeLocalizacao = Optional.of(json)
+      .map(p -> p.optJSONObject("localizacao"))
+      .map(s -> s.optString("nome"));
+
+    if(maybeLocalizacao.isPresent()) {
+      return maybeLocalizacao;
     }
 
-    public Optional<String> getSetor(OrganogramaApi api, JSONObject json) {
-        return setor.apply(api, json);
+    return Optional.of(json)
+      .map(j -> j.optJSONObject("papel"))
+      .map(p -> p.optJSONObject("setor"))
+      .map(s -> s.optString("nome"));
+  }
+
+  private static Optional<String> getSetorModeloB(
+    final OrganogramaApi api,
+    final JSONObject json
+  ) {
+    return Optional.of(json)
+      .map(j -> j.optJSONObject("papel"))
+      .map(p -> p.optJSONObject("setor"))
+      .map(s -> s.optString("nome"));
+  }
+
+  private static Optional<String> getSetorModeloC(
+    final OrganogramaApi api,
+    final JSONObject json
+  ) {
+    final Optional<JSONObject> destino = Optional.of(json)
+      .map(j -> j.optJSONObject("destino"));
+
+    final Optional<String> destinoPapelSigla = destino
+      .map(d -> d.optJSONObject("papel"))
+      .map(p -> p.optJSONObject("setor"))
+      .map(s -> s.optString("nome"));
+
+    if(destinoPapelSigla.isPresent()) {
+      return destinoPapelSigla;
     }
 
-    public Optional<String> getSigla(OrganogramaApi api, JSONObject json) {
-        return sigla.apply(api, json);
+    final Optional<String> destinoGrupoSigla = destino.map(d -> d.optJSONObject("grupo"))
+      .map(s -> s.optString("nome"));
+
+    if(destinoGrupoSigla.isPresent()) {
+      return destinoGrupoSigla;
     }
 
-    private static Optional<String> getSetorModeloA(OrganogramaApi api, JSONObject json) {
-        Optional<String> maybeLocalizacao = Optional.of(json)
-                .map(p -> p.optJSONObject("localizacao"))
-                .map(s -> s.optString("nome"));
+    final Optional<String> destinoSetor = destino.map(p -> p.optJSONObject("setor"))
+      .map(s -> s.optString("nome"));
 
-        if (maybeLocalizacao.isPresent()) {
-            return maybeLocalizacao;
-        }
-
-        return Optional.of(json)
-                .map(j -> j.optJSONObject("papel"))
-                .map(p -> p.optJSONObject("setor"))
-                .map(s -> s.optString("nome"));
+    if(destinoSetor.isPresent()) {
+      return destinoSetor;
     }
 
-    private static Optional<String> getSetorModeloB(OrganogramaApi api, JSONObject json) {
-        return Optional.of(json)
-                .map(j -> j.optJSONObject("papel"))
-                .map(p -> p.optJSONObject("setor"))
-                .map(s -> s.optString("nome"));
+    return destino.map(s -> s.optString("nome"));
+  }
+
+  private static Optional<String> getSiglaModeloA(
+    final OrganogramaApi api,
+    final JSONObject json
+  ) {
+    final Optional<String> maybeLocalizacao = Optional.of(json)
+      .map(p -> p.optJSONObject("localizacao"))
+      .map(s -> s.optString("id"))
+      .flatMap(api::findSiglaByUnidade);
+
+    if(maybeLocalizacao.isPresent()) {
+      return maybeLocalizacao;
     }
 
-    private static Optional<String> getSetorModeloC(OrganogramaApi api, JSONObject json) {
-        Optional<JSONObject> destino = Optional.of(json)
-                .map(j -> j.optJSONObject("destino"));
+    return Optional.of(json)
+      .map(j -> j.optJSONObject("papel"))
+      .map(p -> p.optJSONObject("setor"))
+      .map(s -> s.optJSONObject("organizacao"))
+      .map(o -> o.optString("sigla"));
+  }
 
-        Optional<String> destinoPapelSigla = destino
-                .map(d -> d.optJSONObject("papel"))
-                .map(p -> p.optJSONObject("setor"))
-                .map(s -> s.optString("nome"));
+  private static Optional<String> getSiglaModeloB(
+    final OrganogramaApi api,
+    final JSONObject json
+  ) {
+    return Optional.of(json)
+      .map(j -> j.optJSONObject("papel"))
+      .map(p -> p.optJSONObject("setor"))
+      .map(s -> s.optJSONObject("organizacao"))
+      .map(o -> o.optString("sigla"));
+  }
 
-        if (destinoPapelSigla.isPresent()) {
-            return destinoPapelSigla;
-        }
+  private static Optional<String> getSiglaModeloC(
+    final OrganogramaApi api,
+    final JSONObject json
+  ) {
+    final Optional<JSONObject> destino = Optional.of(json)
+      .map(j -> j.optJSONObject("destino"));
 
-        Optional<String> destinoGrupoSigla = destino.map(d -> d.optJSONObject("grupo"))
-                .map(s -> s.optString("nome"));
+    final Optional<String> destinoPapelSigla = destino
+      .map(d -> d.optJSONObject("papel"))
+      .map(p -> p.optJSONObject("setor"))
+      .map(s -> s.optString("id"))
+      .flatMap(api::findSiglaByUnidade);
 
-        if (destinoGrupoSigla.isPresent()) {
-            return destinoGrupoSigla;
-        }
-
-        Optional<String> destinoSetor = destino.map(p -> p.optJSONObject("setor"))
-                .map(s -> s.optString("nome"));
-
-        if (destinoSetor.isPresent()) {
-            return destinoSetor;
-        }
-
-        return destino.map(s -> s.optString("nome"));
+    if(destinoPapelSigla.isPresent()) {
+      return destinoPapelSigla;
     }
 
-    private static Optional<String> getSiglaModeloA(OrganogramaApi api, JSONObject json) {
-        Optional<String> maybeLocalizacao = Optional.of(json)
-                .map(p -> p.optJSONObject("localizacao"))
-                .map(s -> s.optString("id"))
-                .flatMap(api::findSiglaByUnidade);
+    final Optional<String> destinoGrupoSigla = destino
+      .map(d -> d.optJSONObject("grupo"))
+      .map(p -> p.optJSONObject("localizacao"))
+      .map(s -> s.optString("id"))
+      .flatMap(api::findSiglaByUnidade);
 
-        if (maybeLocalizacao.isPresent()) {
-            return maybeLocalizacao;
-        }
-
-        return Optional.of(json)
-                .map(j -> j.optJSONObject("papel"))
-                .map(p -> p.optJSONObject("setor"))
-                .map(s -> s.optJSONObject("organizacao"))
-                .map(o -> o.optString("sigla"));
+    if(destinoGrupoSigla.isPresent()) {
+      return destinoGrupoSigla;
     }
 
-    private static Optional<String> getSiglaModeloB(OrganogramaApi api, JSONObject json) {
-        return Optional.of(json)
-                .map(j -> j.optJSONObject("papel"))
-                .map(p -> p.optJSONObject("setor"))
-                .map(s -> s.optJSONObject("organizacao"))
-                .map(o -> o.optString("sigla"));
+    final Optional<String> destinoSetorOrganizacaoSigla = destino
+      .map(p -> p.optJSONObject("setor"))
+      .map(s -> s.optString("id"))
+      .flatMap(api::findSiglaByUnidade);
+
+    if(destinoSetorOrganizacaoSigla.isPresent()) {
+      return destinoSetorOrganizacaoSigla;
     }
 
-    private static Optional<String> getSiglaModeloC(OrganogramaApi api, JSONObject json) {
-        Optional<JSONObject> destino = Optional.of(json)
-                .map(j -> j.optJSONObject("destino"));
+    return destino
+      .map(s -> s.optJSONObject("organizacao"))
+      .map(o -> o.optString("sigla"));
+  }
 
-        Optional<String> destinoPapelSigla = destino
-                .map(d -> d.optJSONObject("papel"))
-                .map(p -> p.optJSONObject("setor"))
-                .map(s -> s.optString("id"))
-                .flatMap(api::findSiglaByUnidade);
+  public Optional<String> getSetor(
+    final OrganogramaApi api,
+    final JSONObject json
+  ) {
+    return this.setor.apply(api, json);
+  }
 
-        if (destinoPapelSigla.isPresent()) {
-            return destinoPapelSigla;
-        }
-
-        Optional<String> destinoGrupoSigla = destino
-                .map(d -> d.optJSONObject("grupo"))
-                .map(p -> p.optJSONObject("localizacao"))
-                .map(s -> s.optString("id"))
-                .flatMap(api::findSiglaByUnidade);
-
-        if (destinoGrupoSigla.isPresent()) {
-            return destinoGrupoSigla;
-        }
-
-        Optional<String> destinoSetorOrganizacaoSigla = destino
-                .map(p -> p.optJSONObject("setor"))
-                .map(s -> s.optString("id"))
-                .flatMap(api::findSiglaByUnidade);
-
-        if (destinoSetorOrganizacaoSigla.isPresent()) {
-            return destinoSetorOrganizacaoSigla;
-        }
-
-        return destino
-                .map(s -> s.optJSONObject("organizacao"))
-                .map(o -> o.optString("sigla"));
-    }
+  public Optional<String> getSigla(
+    final OrganogramaApi api,
+    final JSONObject json
+  ) {
+    return this.sigla.apply(api, json);
+  }
 
 }

@@ -14,7 +14,10 @@ public final class GetPropertyByModel {
   private GetPropertyByModel() {
   }
 
-  public static Property getPropertyByModel(final Workpack workpack, final PropertyModel propertyModel) {
+  public static Property getPropertyByModel(
+    final Workpack workpack,
+    final PropertyModel propertyModel
+  ) {
     if(workpack == null || CollectionUtils.isEmpty(workpack.getProperties())) {
       return null;
     }

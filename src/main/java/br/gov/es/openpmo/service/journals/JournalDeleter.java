@@ -14,7 +14,10 @@ public class JournalDeleter {
   private final EvidenceDeleter evidenceDeleter;
 
   @Autowired
-  public JournalDeleter(final JournalRepository journalRepository, final EvidenceDeleter evidenceDeleter) {
+  public JournalDeleter(
+    final JournalRepository journalRepository,
+    final EvidenceDeleter evidenceDeleter
+  ) {
     this.journalRepository = journalRepository;
     this.evidenceDeleter = evidenceDeleter;
   }
@@ -22,7 +25,7 @@ public class JournalDeleter {
   public void deleteJournalsByWorkpackId(final Long workpackId) {
     final List<Long> journalEntries = this.getJournalIdsByWorkpackId(workpackId);
 
-    for (final Long journalEntry : journalEntries) {
+    for(final Long journalEntry : journalEntries) {
       this.evidenceDeleter.deleteEvidencesByJournalId(journalEntry);
       this.deleteJournalById(journalEntry);
     }

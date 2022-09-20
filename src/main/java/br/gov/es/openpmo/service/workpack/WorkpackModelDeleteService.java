@@ -1,8 +1,6 @@
 package br.gov.es.openpmo.service.workpack;
 
 import br.gov.es.openpmo.exception.NegocioException;
-import br.gov.es.openpmo.model.properties.models.GroupModel;
-import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.workpacks.models.DeliverableModel;
 import br.gov.es.openpmo.model.workpacks.models.MilestoneModel;
 import br.gov.es.openpmo.model.workpacks.models.OrganizerModel;
@@ -15,10 +13,6 @@ import br.gov.es.openpmo.service.properties.PropertyModelService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Collection;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_MODEL_DELETE_RELATIONSHIP_ERROR;
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_MODEL_INVALID_STATE_DELETE_RELATIONSHIP_ERROR;
@@ -44,8 +38,35 @@ public class WorkpackModelDeleteService {
     this.workpackModelRepository = workpackModelRepository;
   }
 
+  private static boolean isInvalidStateToDelete(
+    final WorkpackModel children,
+    final WorkpackModel parent
+  ) {
+    return isChildrenInvalidState(children, parent)
+           || isParentInvalidState(parent, children);
+  }
+
+  private static boolean isChildrenInvalidState(
+    final WorkpackModel children,
+    final WorkpackModel parent
+  ) {
+    return (children.getParent() == null && parent != null) || (children.getParent() != null && parent == null);
+  }
+
+  private static boolean isParentInvalidState(
+    final WorkpackModel parent,
+    final WorkpackModel children
+  ) {
+    return parent != null
+           && parent.getChildren() == null
+           && children.containsParent(parent);
+  }
+
   @Transactional
-  public void delete(final WorkpackModel workpackModel, final WorkpackModel parent) {
+  public void delete(
+    final WorkpackModel workpackModel,
+    final WorkpackModel parent
+  ) {
     if(isInvalidStateToDelete(workpackModel, parent)) {
       throw new NegocioException(WORKPACK_MODEL_INVALID_STATE_DELETE_RELATIONSHIP_ERROR);
     }
@@ -60,24 +81,6 @@ public class WorkpackModelDeleteService {
     }
 
     this.workpackModelRepository.deleteCascadeAllNodesRelated(workpackModel.getId());
-  }
-
-  private static boolean isInvalidStateToDelete(final WorkpackModel children, final WorkpackModel parent) {
-    return isChildrenInvalidState(children, parent)
-           || isParentInvalidState(parent, children);
-  }
-
-  private static boolean isParentInvalidState(
-    final WorkpackModel parent,
-    final WorkpackModel children
-  ) {
-    return parent != null
-           && parent.getChildren() == null
-           && children.containsParent(parent);
-  }
-
-  private static boolean isChildrenInvalidState(final WorkpackModel children, final WorkpackModel parent) {
-    return (children.getParent() == null && parent != null) || (children.getParent() != null && parent == null);
   }
 
   private static boolean hasWorkpackInstanceRelationship(final WorkpackModel workpackModel) {
@@ -103,4 +106,5 @@ public class WorkpackModelDeleteService {
     }
     return true;
   }
+
 }

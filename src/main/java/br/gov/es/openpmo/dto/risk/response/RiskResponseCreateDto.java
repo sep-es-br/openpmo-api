@@ -98,4 +98,5 @@ public class RiskResponseCreateDto {
   public Set<Long> getResponsible() {
     return this.responsible;
   }
+
 }

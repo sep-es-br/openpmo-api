@@ -59,7 +59,10 @@ public class BaselineScheduleDetail {
     this.currentValue = calculateValue(this.currentStartDate, this.currentEndDate);
   }
 
-  private static BigDecimal calculateValue(final Temporal startDate, final Temporal endDate) {
+  private static BigDecimal calculateValue(
+    final Temporal startDate,
+    final Temporal endDate
+  ) {
     final BigDecimal intervalDateInDays = daysBetween(startDate, endDate);
 
     if(intervalDateInDays == null) {
@@ -156,4 +159,5 @@ public class BaselineScheduleDetail {
     this.variation = roundOneDecimal(this.variation);
     this.scheduleDetails.forEach(ScheduleDetailItem::roundData);
   }
+
 }

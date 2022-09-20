@@ -4,6 +4,9 @@ import br.gov.es.openpmo.dto.completed.CompleteDeliverableRequest;
 
 public interface ICompleteDeliverableService {
 
-    void apply(Long idWorkpack, CompleteDeliverableRequest request);
+  void apply(
+    Long idWorkpack,
+    CompleteDeliverableRequest request
+  );
 
 }

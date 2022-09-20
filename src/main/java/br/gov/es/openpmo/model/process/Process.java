@@ -49,7 +49,10 @@ public class Process extends Entity {
     this.workpack = workpack;
   }
 
-  public static Process of(final ProcessCreateDto request, final Workpack workpack) {
+  public static Process of(
+    final ProcessCreateDto request,
+    final Workpack workpack
+  ) {
     return new Process(
       request.getName(),
       request.getReadonlyDetail().getSubject(),
@@ -139,7 +142,10 @@ public class Process extends Entity {
     this.status = status;
   }
 
-  public void update(final ProcessUpdateDto request, final ProcessResponse processByProtocol) {
+  public void update(
+    final ProcessUpdateDto request,
+    final ProcessResponse processByProtocol
+  ) {
     ObjectUtils.updateIfPresent(request::getName, this::setName);
     ObjectUtils.updateIfPresent(request::getNote, this::setNote);
     this.updateUsingEDocsData(processByProtocol);
@@ -152,4 +158,5 @@ public class Process extends Entity {
     ObjectUtils.updateIfPresent(process::getPriority, this::setPriority);
     ObjectUtils.updateIfPresent(process::getStatus, this::setStatus);
   }
+
 }

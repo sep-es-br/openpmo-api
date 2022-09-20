@@ -33,15 +33,15 @@ public class PersonPermissionDetailQuery {
   private final IsCCBMemberFor isCCBMemberFor;
 
   public PersonPermissionDetailQuery(
-    Person person,
-    Office office,
-    Plan plan,
-    Workpack workpack,
-    CanAccessOffice canAccessOffice,
-    CanAccessPlan canAccessPlan,
-    CanAccessWorkpack canAccessWorkpack,
-    IsStakeholderIn isStakeholderIn,
-    IsCCBMemberFor isCCBMemberFor
+    final Person person,
+    final Office office,
+    final Plan plan,
+    final Workpack workpack,
+    final CanAccessOffice canAccessOffice,
+    final CanAccessPlan canAccessPlan,
+    final CanAccessWorkpack canAccessWorkpack,
+    final IsStakeholderIn isStakeholderIn,
+    final IsCCBMemberFor isCCBMemberFor
   ) {
     this.person = person;
     this.office = office;
@@ -55,39 +55,39 @@ public class PersonPermissionDetailQuery {
   }
 
   public Person getPerson() {
-    return person;
+    return this.person;
   }
 
   public Office getOffice() {
-    return office;
+    return this.office;
   }
 
   public CanAccessOffice getCanAccessOffice() {
-    return canAccessOffice;
+    return this.canAccessOffice;
   }
 
   public CanAccessPlan getCanAccessPlan() {
-    return canAccessPlan;
+    return this.canAccessPlan;
   }
 
   public CanAccessWorkpack getCanAccessWorkpack() {
-    return canAccessWorkpack;
+    return this.canAccessWorkpack;
   }
 
   public IsStakeholderIn getIsStakeholderIn() {
-    return isStakeholderIn;
+    return this.isStakeholderIn;
   }
 
   public IsCCBMemberFor getIsCCBMemberFor() {
-    return isCCBMemberFor;
+    return this.isCCBMemberFor;
   }
 
   public Plan getPlan() {
-    return plan;
+    return this.plan;
   }
 
   public Workpack getWorkpack() {
-    return workpack;
+    return this.workpack;
   }
 
 }

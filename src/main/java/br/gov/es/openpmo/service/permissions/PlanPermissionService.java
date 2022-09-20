@@ -22,7 +22,12 @@ import br.gov.es.openpmo.service.office.plan.PlanService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.OFFICE_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PLAN_PERMISSION_NOT_FOUND;
@@ -57,17 +62,24 @@ public class PlanPermissionService {
     this.roleService = roleService;
   }
 
-  public void delete(final Long idPlan, final String key) {
+  public void delete(
+    final Long idPlan,
+    final String key
+  ) {
     final Optional<Person> personOptional = this.personService.findByKey(key);
-    if (!personOptional.isPresent()) {
+    if(!personOptional.isPresent()) {
       throw new RegistroNaoEncontradoException(PLAN_PERMISSION_NOT_FOUND);
     }
     final List<CanAccessPlan> list = this.repository.findByIdPlanAndIdPerson(idPlan, personOptional.get().getId());
     this.repository.deleteAll(list);
   }
 
-  public List<PlanPermissionDto> findAllDto(final Long idPlan, final String key, Long idPerson) {
-    List<RoleResource> resources = this.roleService.getRolesByKey(idPerson, key);
+  public List<PlanPermissionDto> findAllDto(
+    final Long idPlan,
+    final String key,
+    final Long idPerson
+  ) {
+    final List<RoleResource> resources = this.roleService.getRolesByKey(idPerson, key);
     final List<PlanPermissionDto> plansPermissionDto = new ArrayList<>();
     final Plan plan = this.planService.findById(idPlan);
     final List<CanAccessPlan> listPlansPermission = this.listPlansPermissions(plan, key);
@@ -97,8 +109,11 @@ public class PlanPermissionService {
     return plansPermissionDto;
   }
 
-  private List<CanAccessPlan> listPlansPermissions(final Plan plan, final String key) {
-    if (key == null || key.isEmpty()) {
+  private List<CanAccessPlan> listPlansPermissions(
+    final Plan plan,
+    final String key
+  ) {
+    if(key == null || key.isEmpty()) {
       return this.findByIdPlan(plan.getId());
     }
 
@@ -111,7 +126,10 @@ public class PlanPermissionService {
     return this.repository.findByIdPlan(idPlan);
   }
 
-  public List<CanAccessPlan> findByPlanAndPerson(final Plan plan, final Person person) {
+  public List<CanAccessPlan> findByPlanAndPerson(
+    final Plan plan,
+    final Person person
+  ) {
     return this.repository.findByIdPlanAndIdPerson(plan.getId(), person.getId());
   }
 
@@ -140,21 +158,21 @@ public class PlanPermissionService {
     plansPermissionsDataBase.forEach(permissionDatabase -> {
       final boolean find = request.getPermissions() != null && request.getPermissions().stream()
         .anyMatch(filtro -> permissionDatabase.getId().equals(filtro.getId()));
-      if (find) {
+      if(find) {
         return;
       }
       this.delete(permissionDatabase);
     });
 
-    if (request.getPermissions() != null) {
+    if(request.getPermissions() != null) {
       request.getPermissions().forEach(permission -> {
-        if (permission.getId() == null) {
+        if(permission.getId() == null) {
           this.save(this.buildCanAccessPlan(person, plan, permission, null), person);
           return;
         }
 
         final Optional<CanAccessPlan> optionalCanAccessPlan = this.repository.findById(permission.getId());
-        if (!optionalCanAccessPlan.isPresent()) {
+        if(!optionalCanAccessPlan.isPresent()) {
           throw new RegistroNaoEncontradoException(PLAN_PERMISSION_NOT_FOUND);
         }
         this.save(this.buildCanAccessPlan(person, plan, permission, optionalCanAccessPlan.get().getId()), person);
@@ -163,13 +181,19 @@ public class PlanPermissionService {
 
   }
 
-  private Person returnPersonOrCreateIfNotExists(final PersonDto person, final Long idOffice) {
+  private Person returnPersonOrCreateIfNotExists(
+    final PersonDto person,
+    final Long idOffice
+  ) {
     final Optional<Person> maybePerson = this.personService.findByKey(person.getKey());
     return maybePerson.orElseGet(() -> this.storePerson(person, idOffice));
 
   }
 
-  private Person storePerson(final PersonDto person, final Long idOffice) {
+  private Person storePerson(
+    final PersonDto person,
+    final Long idOffice
+  ) {
     return this.personService.savePerson(person, idOffice);
   }
 
@@ -177,11 +201,14 @@ public class PlanPermissionService {
     this.repository.delete(plan);
   }
 
-  public CanAccessPlan save(final CanAccessPlan planPermission, Person person) {
+  public CanAccessPlan save(
+    final CanAccessPlan planPermission,
+    final Person person
+  ) {
     final Office office = this.officeService.findOfficeByPlan(planPermission.getIdPlan())
       .orElseThrow(() -> new NegocioException(OFFICE_NOT_FOUND));
 
-    if (!this.isInContactBookOfService.existsByPersonIdAndOfficeId(person.getId(), office.getId())) {
+    if(!this.isInContactBookOfService.existsByPersonIdAndOfficeId(person.getId(), office.getId())) {
       final IsInContactBookOf isInContactBookOf = new IsInContactBookOf();
       isInContactBookOf.setPerson(person);
       isInContactBookOf.setOffice(office);
@@ -191,7 +218,12 @@ public class PlanPermissionService {
     return this.repository.save(planPermission, 0);
   }
 
-  private CanAccessPlan buildCanAccessPlan(final Person person, final Plan plan, final PermissionDto request, final Long id) {
+  private CanAccessPlan buildCanAccessPlan(
+    final Person person,
+    final Plan plan,
+    final PermissionDto request,
+    final Long id
+  ) {
     return new CanAccessPlan(
       id,
       "",
@@ -210,13 +242,17 @@ public class PlanPermissionService {
 
     final Plan plan = this.planService.findById(request.getIdPlan());
 
-    for (PermissionDto permission : request.getPermissions()) {
+    for(final PermissionDto permission : request.getPermissions()) {
       final CanAccessPlan planPermission = this.buildCanAccessPlan(person, plan, permission, null);
       this.save(planPermission, person);
     }
   }
 
-  public Set<CanAccessPlan> findInheritedPermission(final Long workpackId, final Long personId) {
+  public Set<CanAccessPlan> findInheritedPermission(
+    final Long workpackId,
+    final Long personId
+  ) {
     return this.repository.findInheritedPermission(workpackId, personId);
   }
+
 }

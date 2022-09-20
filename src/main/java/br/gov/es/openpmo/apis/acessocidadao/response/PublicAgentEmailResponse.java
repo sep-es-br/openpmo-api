@@ -19,4 +19,5 @@ public class PublicAgentEmailResponse {
   public String getCorporateEmail() {
     return this.corporateEmail;
   }
+
 }

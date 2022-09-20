@@ -16,7 +16,12 @@ public class CookieService {
   private String domainCookie;
 
 
-  public void createCookie(final HttpServletResponse response, final String name, final String value, final String path) {
+  public void createCookie(
+    final HttpServletResponse response,
+    final String name,
+    final String value,
+    final String path
+  ) {
     final Cookie cookie = new Cookie(name, value);
     cookie.setMaxAge(3600);
     cookie.setHttpOnly(true);
@@ -26,7 +31,12 @@ public class CookieService {
     response.addCookie(cookie);
   }
 
-  public void deleteCookie(final HttpServletRequest request, final HttpServletResponse response, final String name, final String path) {
+  public void deleteCookie(
+    final HttpServletRequest request,
+    final HttpServletResponse response,
+    final String name,
+    final String path
+  ) {
     final Cookie cookie = this.findCookie(request, name);
     cookie.setMaxAge(0);
     cookie.setHttpOnly(true);
@@ -36,7 +46,10 @@ public class CookieService {
     response.addCookie(cookie);
   }
 
-  public Cookie findCookie(final HttpServletRequest request, final String name) {
+  public Cookie findCookie(
+    final HttpServletRequest request,
+    final String name
+  ) {
     if(request.getCookies() != null) {
       final Optional<Cookie> filter = Arrays.stream(request.getCookies()).filter(c -> c.getName().equals(name)).findAny();
       if(!filter.isPresent()) {

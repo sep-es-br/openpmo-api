@@ -71,4 +71,5 @@ public class BreadcrumbDto {
   public void setModelName(final String modelName) {
     this.modelName = modelName;
   }
+
 }

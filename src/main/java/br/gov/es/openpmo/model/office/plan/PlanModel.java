@@ -76,4 +76,5 @@ public class PlanModel extends Entity {
   public Long getIdOffice() {
     return Optional.ofNullable(this.office).map(Entity::getId).orElse(null);
   }
+
 }

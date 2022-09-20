@@ -24,7 +24,10 @@ public class EvidenceDeleter {
   private String basePath;
 
   @Autowired
-  public EvidenceDeleter(final JournalRepository journalRepository, final Logger logger) {
+  public EvidenceDeleter(
+    final JournalRepository journalRepository,
+    final Logger logger
+  ) {
     this.journalRepository = journalRepository;
     this.logger = logger;
   }
@@ -32,7 +35,7 @@ public class EvidenceDeleter {
   public void deleteEvidencesByJournalId(final Long journalId) {
     final List<File> files = this.getEvidencesByJournalId(journalId);
 
-    for (final File file : files) {
+    for(final File file : files) {
       this.eraseEvidenceFromDisk(file);
       this.deleteEvidenceById(file);
     }
@@ -50,7 +53,8 @@ public class EvidenceDeleter {
     try {
       final String filePath = this.getFilePath(fileToDelete.getUniqueNameKey());
       Files.delete(Paths.get(filePath));
-    } catch (final IOException e) {
+    }
+    catch(final IOException e) {
       this.logger.error("File not removed", e);
     }
   }

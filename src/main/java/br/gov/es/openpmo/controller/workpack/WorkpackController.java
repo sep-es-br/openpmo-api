@@ -265,9 +265,7 @@ public class WorkpackController {
     final Long idPerson = this.tokenService.getUserId(authorization);
     this.journalCreator.edition(workpack, JournalAction.CREATED, idPerson);
 
-    if(workpack instanceof Milestone) {
-      this.workpackService.calculateDashboard(workpack);
-    }
+    if(workpack instanceof Milestone) this.workpackService.calculateDashboard(workpack);
 
     return ResponseEntity.ok(ResponseBase.of(response));
   }
@@ -281,6 +279,9 @@ public class WorkpackController {
     final Workpack workpack = this.workpackService.update(this.workpackService.getWorkpack(request));
     final Long idPerson = this.tokenService.getUserId(authorization);
     this.journalCreator.edition(workpack, JournalAction.EDITED, idPerson);
+
+    if(workpack instanceof Milestone) this.workpackService.calculateDashboard(workpack);
+
     return ResponseEntity.ok(ResponseBase.of(EntityDto.of(workpack)));
   }
 

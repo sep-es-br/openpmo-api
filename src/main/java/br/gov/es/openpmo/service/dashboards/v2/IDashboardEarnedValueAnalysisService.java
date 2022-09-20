@@ -5,8 +5,8 @@ import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.DashboardEarnedValueA
 
 public interface IDashboardEarnedValueAnalysisService {
 
-    DashboardEarnedValueAnalysis build(DashboardParameters parameters);
+  DashboardEarnedValueAnalysis build(DashboardParameters parameters);
 
-    DashboardEarnedValueAnalysis calculate(Long workpackId);
+  DashboardEarnedValueAnalysis calculate(Long workpackId);
 
 }

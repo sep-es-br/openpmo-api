@@ -13,7 +13,12 @@ public class IssueCardDto {
   private final Importance importance;
   private final StatusOfIssue status;
 
-  public IssueCardDto(final Long id, final String name, final Importance importance, final StatusOfIssue status) {
+  public IssueCardDto(
+    final Long id,
+    final String name,
+    final Importance importance,
+    final StatusOfIssue status
+  ) {
     this.id = id;
     this.name = name;
     this.importance = importance;
@@ -44,4 +49,5 @@ public class IssueCardDto {
   public StatusOfIssue getStatus() {
     return this.status;
   }
+
 }

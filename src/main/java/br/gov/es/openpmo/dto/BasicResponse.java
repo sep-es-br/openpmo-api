@@ -10,15 +10,25 @@ public class BasicResponse<T> extends ResponseEntity<ResponseBase<T>> implements
     super(status);
   }
 
-  public BasicResponse(final ResponseBase<T> body, final HttpStatus status) {
+  public BasicResponse(
+    final ResponseBase<T> body,
+    final HttpStatus status
+  ) {
     super(body, status);
   }
 
-  public BasicResponse(final MultiValueMap<String, String> headers, final HttpStatus status) {
+  public BasicResponse(
+    final MultiValueMap<String, String> headers,
+    final HttpStatus status
+  ) {
     super(headers, status);
   }
 
-  public BasicResponse(final ResponseBase<T> body, final MultiValueMap<String, String> headers, final HttpStatus status) {
+  public BasicResponse(
+    final ResponseBase<T> body,
+    final MultiValueMap<String, String> headers,
+    final HttpStatus status
+  ) {
     super(body, headers, status);
   }
 

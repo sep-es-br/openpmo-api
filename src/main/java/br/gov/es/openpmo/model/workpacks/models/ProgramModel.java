@@ -19,4 +19,5 @@ public class ProgramModel extends WorkpackModel {
   public void setInstances(final Set<Program> instances) {
     this.instances = instances;
   }
+
 }

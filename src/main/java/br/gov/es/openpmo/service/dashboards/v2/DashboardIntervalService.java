@@ -21,76 +21,76 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_NOT_FOUND;
 @Service
 public class DashboardIntervalService implements IDashboardIntervalService {
 
-    private final DashboardRepository dashboardRepository;
+  private final DashboardRepository dashboardRepository;
 
-    private final WorkpackRepository workpackRepository;
+  private final WorkpackRepository workpackRepository;
 
-    private final BaselineRepository baselineRepository;
+  private final BaselineRepository baselineRepository;
 
-    public DashboardIntervalService(
-            DashboardRepository dashboardRepository,
-            WorkpackRepository workpackRepository,
-            BaselineRepository baselineRepository
-    ) {
-        this.dashboardRepository = dashboardRepository;
-        this.workpackRepository = workpackRepository;
-        this.baselineRepository = baselineRepository;
+  public DashboardIntervalService(
+    final DashboardRepository dashboardRepository,
+    final WorkpackRepository workpackRepository,
+    final BaselineRepository baselineRepository
+  ) {
+    this.dashboardRepository = dashboardRepository;
+    this.workpackRepository = workpackRepository;
+    this.baselineRepository = baselineRepository;
+  }
+
+  @Override
+  @Nullable
+  public Interval calculateFor(@Nullable final Long workpackId) {
+    return Optional.ofNullable(workpackId)
+      .filter(this::existsByIdOrElseThrow)
+      .map(this::getInterval)
+      .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_IS_NULL));
+  }
+
+  @NonNull
+  private boolean existsByIdOrElseThrow(@NonNull final Long workpackId) {
+    return Optional.of(workpackId)
+      .map(this.workpackRepository::existsById)
+      .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
+  }
+
+  @Nullable
+  private Interval getInterval(@NonNull final Long workpackId) {
+    final List<Long> baselineIds = this.getActiveBaselineIds(workpackId);
+
+    if(baselineIds.isEmpty()) {
+      return this.workpackRepository.findIntervalInSchedulesChildrenOf(workpackId)
+        .map(Interval::new)
+        .orElse(null);
     }
 
-    @Override
-    @Nullable
-    public Interval calculateFor(@Nullable Long workpackId) {
-        return Optional.ofNullable(workpackId)
-                .filter(this::existsByIdOrElseThrow)
-                .map(this::getInterval)
-                .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_IS_NULL));
-    }
+    return this.baselineRepository.fetchIntervalOfSchedules(workpackId, baselineIds)
+      .map(Interval::new)
+      .orElse(null);
+  }
 
-    @NonNull
-    private boolean existsByIdOrElseThrow(@NonNull Long workpackId) {
-        return Optional.of(workpackId)
-                .map(this.workpackRepository::existsById)
-                .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
-    }
+  private List<Long> getActiveBaselineIds(final Long workpackId) {
+    final List<Baseline> baselines = this.hasActiveBaseline(workpackId)
+      ? this.findActiveBaseline(workpackId)
+      : this.findAllActiveBaselines(workpackId);
 
-    @Nullable
-    private Interval getInterval(@NonNull Long workpackId) {
-        final List<Long> baselineIds = getActiveBaselineIds(workpackId);
+    return baselines.stream()
+      .map(Baseline::getId)
+      .collect(Collectors.toList());
+  }
 
-        if (baselineIds.isEmpty()) {
-            return this.workpackRepository.findIntervalInSchedulesChildrenOf(workpackId)
-                    .map(Interval::new)
-                    .orElse(null);
-        }
+  private boolean hasActiveBaseline(final Long workpackId) {
+    return this.workpackRepository.hasActiveBaseline(workpackId);
+  }
 
-        return this.baselineRepository.fetchIntervalOfSchedules(workpackId, baselineIds)
-                .map(Interval::new)
-                .orElse(null);
-    }
+  private List<Baseline> findActiveBaseline(final Long workpackId) {
+    return this.baselineRepository.findActiveBaseline(workpackId)
+      .map(Collections::singletonList)
+      .orElseThrow(() -> new NegocioException(BASELINE_NOT_FOUND));
+  }
 
-    private List<Long> getActiveBaselineIds(Long workpackId) {
-        List<Baseline> baselines = hasActiveBaseline(workpackId)
-                ? findActiveBaseline(workpackId)
-                : findAllActiveBaselines(workpackId);
-
-        return baselines.stream()
-                .map(Baseline::getId)
-                .collect(Collectors.toList());
-    }
-
-    private boolean hasActiveBaseline(Long workpackId) {
-        return this.workpackRepository.hasActiveBaseline(workpackId);
-    }
-
-    private List<Baseline> findActiveBaseline(Long workpackId) {
-        return this.baselineRepository.findActiveBaseline(workpackId)
-                .map(Collections::singletonList)
-                .orElseThrow(() -> new NegocioException(BASELINE_NOT_FOUND));
-    }
-
-    private List<Baseline> findAllActiveBaselines(Long workpackId) {
-        return this.baselineRepository.findAllActiveBaselines(workpackId);
-    }
+  private List<Baseline> findAllActiveBaselines(final Long workpackId) {
+    return this.baselineRepository.findAllActiveBaselines(workpackId);
+  }
 
 
 }

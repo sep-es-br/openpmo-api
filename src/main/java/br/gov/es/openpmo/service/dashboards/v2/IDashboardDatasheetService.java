@@ -6,6 +6,6 @@ import br.gov.es.openpmo.dto.dashboards.datasheet.DatasheetResponse;
 @FunctionalInterface
 public interface IDashboardDatasheetService {
 
-    DatasheetResponse build(final DashboardParameters parameters);
+  DatasheetResponse build(final DashboardParameters parameters);
 
 }

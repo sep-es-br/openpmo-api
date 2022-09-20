@@ -103,7 +103,8 @@ public class Currency extends Property<Currency, BigDecimal> {
     this.workpack = workpack;
   }
 
-  @Override public PropertyModel getPropertyModel() {
+  @Override
+  public PropertyModel getPropertyModel() {
     return this.getDriver();
   }
 

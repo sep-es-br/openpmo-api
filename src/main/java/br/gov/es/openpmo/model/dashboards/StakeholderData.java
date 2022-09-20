@@ -14,53 +14,53 @@ import static br.gov.es.openpmo.model.dashboards.DashboardUtils.apply;
 @NodeEntity
 public class StakeholderData extends Entity {
 
-    @Relationship("CONTAINS")
-    private ActorData actor;
+  @Relationship("CONTAINS")
+  private ActorData actor;
 
-    private String role;
+  private String role;
 
-    public static StakeholderData of(DatasheetStakeholderResponse from) {
-        if (from == null) {
-            return null;
-        }
-
-        final StakeholderData to = new StakeholderData();
-
-        to.setRole(from.getRole());
-        apply(from.getActor(), ActorData::of, to::setActor);
-
-        return to;
+  public static StakeholderData of(final DatasheetStakeholderResponse from) {
+    if(from == null) {
+      return null;
     }
 
-    public void setRole(String role) {
-        this.role = role;
-    }
+    final StakeholderData to = new StakeholderData();
 
-    public void setActor(ActorData actor) {
-        this.actor = actor;
-    }
+    to.setRole(from.getRole());
+    apply(from.getActor(), ActorData::of, to::setActor);
 
-    public ActorData getActor() {
-        return actor;
-    }
+    return to;
+  }
 
-    public String getRole() {
-        return role;
-    }
+  public ActorData getActor() {
+    return this.actor;
+  }
 
-    @Transient
-    public DatasheetStakeholderResponse getResponse() {
-        return new DatasheetStakeholderResponse(
-                getDatasheetActor(),
-                this.role
-        );
-    }
+  public void setActor(final ActorData actor) {
+    this.actor = actor;
+  }
 
-    @Transient
-    private DatasheetActor getDatasheetActor() {
-        return Optional.ofNullable(this.actor)
-                .map(ActorData::getResponse)
-                .orElse(null);
-    }
+  public String getRole() {
+    return this.role;
+  }
+
+  public void setRole(final String role) {
+    this.role = role;
+  }
+
+  @Transient
+  public DatasheetStakeholderResponse getResponse() {
+    return new DatasheetStakeholderResponse(
+      this.getDatasheetActor(),
+      this.role
+    );
+  }
+
+  @Transient
+  private DatasheetActor getDatasheetActor() {
+    return Optional.ofNullable(this.actor)
+      .map(ActorData::getResponse)
+      .orElse(null);
+  }
 
 }

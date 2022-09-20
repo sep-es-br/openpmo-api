@@ -10,7 +10,11 @@ public class GetAllCCBMemberBaselineResponse {
 
   private final List<GetAllBaselinesResponse> baselines;
 
-  public GetAllCCBMemberBaselineResponse(final Long idWorkpack, final String nameWorkpack, final List<GetAllBaselinesResponse> baselines) {
+  public GetAllCCBMemberBaselineResponse(
+    final Long idWorkpack,
+    final String nameWorkpack,
+    final List<GetAllBaselinesResponse> baselines
+  ) {
     this.idWorkpack = idWorkpack;
     this.nameWorkpack = nameWorkpack;
     this.baselines = baselines;

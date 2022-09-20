@@ -26,61 +26,62 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
 
   @Autowired
   public GetAllBaselinesService(
-      final BaselineRepository baselineRepository,
-      final WorkpackRepository workpackRepository,
-      final IsCCBMemberRepository ccbMemberRepository
+    final BaselineRepository baselineRepository,
+    final WorkpackRepository workpackRepository,
+    final IsCCBMemberRepository ccbMemberRepository
   ) {
     this.baselineRepository = baselineRepository;
     this.workpackRepository = workpackRepository;
     this.ccbMemberRepository = ccbMemberRepository;
   }
 
+  private static GetAllBaselinesResponse getBaselinesResponse(final Baseline baseline) {
+    return new GetAllBaselinesResponse(
+      baseline.getId(),
+      baseline.getIdWorkpack(),
+      baseline.getName(),
+      baseline.getStatus(),
+      baseline.getDescription(),
+      baseline.getActivationDate(),
+      baseline.getProposalDate(),
+      baseline.getMessage(),
+      baseline.isCancelation(),
+      baseline.isActive()
+    );
+  }
+
   @Override
   public List<GetAllBaselinesResponse> getAllByWorkpackId(final Long idWorkpack) {
     return this.baselineRepository.findAllByWorkpackId(idWorkpack).stream()
-        .map(GetAllBaselinesService::getBaselinesResponse)
-        .collect(Collectors.toList());
-  }
-
-  private static GetAllBaselinesResponse getBaselinesResponse(final Baseline baseline) {
-    return new GetAllBaselinesResponse(
-        baseline.getId(),
-        baseline.getIdWorkpack(),
-        baseline.getName(),
-        baseline.getStatus(),
-        baseline.getDescription(),
-        baseline.getActivationDate(),
-        baseline.getProposalDate(),
-        baseline.getMessage(),
-        baseline.isCancelation(),
-        baseline.isActive()
-    );
+      .map(GetAllBaselinesService::getBaselinesResponse)
+      .collect(Collectors.toList());
   }
 
   @Override
   public List<GetAllCCBMemberBaselineResponse> getAllByPersonId(final Long idPerson) {
     return this.getWorkpacks(idPerson).stream()
-        .map(this::getGetAllCCBMemberBaselineResponse)
-        .collect(Collectors.toList());
+      .map(this::getGetAllCCBMemberBaselineResponse)
+      .collect(Collectors.toList());
   }
 
   private GetAllCCBMemberBaselineResponse getGetAllCCBMemberBaselineResponse(final Workpack workpack) {
     final List<GetAllBaselinesResponse> baselines = new ArrayList<>();
 
-    for (final Baseline baseline : this.getBaselines(workpack)) {
+    for(final Baseline baseline : this.getBaselines(workpack)) {
       baselines.add(getBaselinesResponse(baseline));
     }
 
     return new GetAllCCBMemberBaselineResponse(
-        workpack.getId(),
-        this.getWorkpackName(workpack),
-        baselines);
+      workpack.getId(),
+      this.getWorkpackName(workpack),
+      baselines
+    );
   }
 
   private String getWorkpackName(final Workpack workpack) {
     return this.workpackRepository.findWorkpackNameAndFullname(workpack.getId())
-        .map(WorkpackName::getName)
-        .orElse(null);
+      .map(WorkpackName::getName)
+      .orElse(null);
   }
 
   private List<Baseline> getBaselines(final Workpack workpack) {

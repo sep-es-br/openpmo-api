@@ -8,81 +8,81 @@ import org.springframework.data.annotation.Transient;
 @NodeEntity
 public class MilestoneData extends Entity {
 
-    private Long quantity;
+  private Long quantity;
 
-    private Long concluded;
+  private Long concluded;
 
-    private Long lateConcluded;
+  private Long lateConcluded;
 
-    private Long late;
+  private Long late;
 
-    private Long onTime;
+  private Long onTime;
 
-    public static MilestoneData of(MilestoneDataChart from) {
-        if (from == null) {
-            return null;
-        }
-
-        final MilestoneData to = new MilestoneData();
-
-        to.setQuantity(from.getQuantity());
-        to.setConcluded(from.getConcluded());
-        to.setLateConcluded(from.getLateConcluded());
-        to.setLate(from.getLate());
-        to.setOnTime(from.getOnTime());
-
-        return to;
+  public static MilestoneData of(final MilestoneDataChart from) {
+    if(from == null) {
+      return null;
     }
 
-    public void setQuantity(Long quantity) {
-        this.quantity = quantity;
-    }
+    final MilestoneData to = new MilestoneData();
 
-    public void setConcluded(Long concluded) {
-        this.concluded = concluded;
-    }
+    to.setQuantity(from.getQuantity());
+    to.setConcluded(from.getConcluded());
+    to.setLateConcluded(from.getLateConcluded());
+    to.setLate(from.getLate());
+    to.setOnTime(from.getOnTime());
 
-    public void setLateConcluded(Long lateConcluded) {
-        this.lateConcluded = lateConcluded;
-    }
+    return to;
+  }
 
-    public void setLate(Long late) {
-        this.late = late;
-    }
+  public Long getQuantity() {
+    return this.quantity;
+  }
 
-    public void setOnTime(Long onTime) {
-        this.onTime = onTime;
-    }
+  public void setQuantity(final Long quantity) {
+    this.quantity = quantity;
+  }
 
-    public Long getQuantity() {
-        return quantity;
-    }
+  public Long getConcluded() {
+    return this.concluded;
+  }
 
-    public Long getConcluded() {
-        return concluded;
-    }
+  public void setConcluded(final Long concluded) {
+    this.concluded = concluded;
+  }
 
-    public Long getLateConcluded() {
-        return lateConcluded;
-    }
+  public Long getLateConcluded() {
+    return this.lateConcluded;
+  }
 
-    public Long getLate() {
-        return late;
-    }
+  public void setLateConcluded(final Long lateConcluded) {
+    this.lateConcluded = lateConcluded;
+  }
 
-    public Long getOnTime() {
-        return onTime;
-    }
+  public Long getLate() {
+    return this.late;
+  }
 
-    @Transient
-    public MilestoneDataChart getResponse() {
-        return new MilestoneDataChart(
-                this.quantity,
-                this.concluded,
-                this.lateConcluded,
-                this.late,
-                this.onTime
-        );
-    }
+  public void setLate(final Long late) {
+    this.late = late;
+  }
+
+  public Long getOnTime() {
+    return this.onTime;
+  }
+
+  public void setOnTime(final Long onTime) {
+    this.onTime = onTime;
+  }
+
+  @Transient
+  public MilestoneDataChart getResponse() {
+    return new MilestoneDataChart(
+      this.quantity,
+      this.concluded,
+      this.lateConcluded,
+      this.late,
+      this.onTime
+    );
+  }
 
 }

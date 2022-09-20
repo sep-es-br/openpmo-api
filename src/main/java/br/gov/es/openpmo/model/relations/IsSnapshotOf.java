@@ -21,7 +21,10 @@ public abstract class IsSnapshotOf<T> {
   @GeneratedValue
   private Long id;
 
-  protected IsSnapshotOf(final T master, final T snapshot) {
+  protected IsSnapshotOf(
+    final T master,
+    final T snapshot
+  ) {
     this.master = master;
     this.snapshot = snapshot;
     this.date = LocalDateTime.now();

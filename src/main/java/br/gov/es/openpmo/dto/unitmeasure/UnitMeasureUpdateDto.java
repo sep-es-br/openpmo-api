@@ -6,6 +6,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 public class UnitMeasureUpdateDto {
+
   @NotNull(message = ApplicationMessage.ID_NOT_NULL)
   private Long id;
   @NotBlank(message = ApplicationMessage.NAME_NOT_BLANK)
@@ -56,4 +57,5 @@ public class UnitMeasureUpdateDto {
   public void setPrecision(final Long precision) {
     this.precision = precision;
   }
+
 }

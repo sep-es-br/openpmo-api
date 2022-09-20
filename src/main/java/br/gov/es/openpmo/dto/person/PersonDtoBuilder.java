@@ -3,6 +3,7 @@ package br.gov.es.openpmo.dto.person;
 import java.util.List;
 
 public final class PersonDtoBuilder {
+
   private Long id;
   private String name;
   private String fullName;
@@ -92,4 +93,5 @@ public final class PersonDtoBuilder {
     personDto.getRoles().addAll(this.roles);
     return personDto;
   }
+
 }

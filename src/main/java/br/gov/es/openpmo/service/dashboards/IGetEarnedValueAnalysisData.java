@@ -6,6 +6,6 @@ import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.DashboardEarnedValueA
 @FunctionalInterface
 public interface IGetEarnedValueAnalysisData {
 
-    DashboardEarnedValueAnalysis get(DashboardParameters parameters);
+  DashboardEarnedValueAnalysis get(DashboardParameters parameters);
 
 }

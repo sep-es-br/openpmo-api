@@ -6,43 +6,44 @@ import java.math.BigDecimal;
 
 public class CostPerformanceIndexData {
 
-    private BigDecimal indexValue;
+  private BigDecimal indexValue;
 
-    private BigDecimal costVariation;
+  private BigDecimal costVariation;
 
-    public static CostPerformanceIndexData of(CostPerformanceIndex from) {
-        if (from == null) {
-            return null;
-        }
-
-        final CostPerformanceIndexData to = new CostPerformanceIndexData();
-
-        to.setIndexValue(from.getIndexValue());
-        to.setCostVariation(from.getCostVariation());
-
-        return to;
+  public static CostPerformanceIndexData of(final CostPerformanceIndex from) {
+    if(from == null) {
+      return null;
     }
 
-    public BigDecimal getIndexValue() {
-        return indexValue;
-    }
+    final CostPerformanceIndexData to = new CostPerformanceIndexData();
 
-    public void setIndexValue(BigDecimal indexValue) {
-        this.indexValue = indexValue;
-    }
+    to.setIndexValue(from.getIndexValue());
+    to.setCostVariation(from.getCostVariation());
 
-    public BigDecimal getCostVariation() {
-        return costVariation;
-    }
+    return to;
+  }
 
-    public void setCostVariation(BigDecimal costVariation) {
-        this.costVariation = costVariation;
-    }
+  public BigDecimal getIndexValue() {
+    return this.indexValue;
+  }
 
-    public CostPerformanceIndex getResponse() {
-        return new CostPerformanceIndex(
-                this.indexValue,
-                this.costVariation
-        );
-    }
+  public void setIndexValue(final BigDecimal indexValue) {
+    this.indexValue = indexValue;
+  }
+
+  public BigDecimal getCostVariation() {
+    return this.costVariation;
+  }
+
+  public void setCostVariation(final BigDecimal costVariation) {
+    this.costVariation = costVariation;
+  }
+
+  public CostPerformanceIndex getResponse() {
+    return new CostPerformanceIndex(
+      this.indexValue,
+      this.costVariation
+    );
+  }
+
 }

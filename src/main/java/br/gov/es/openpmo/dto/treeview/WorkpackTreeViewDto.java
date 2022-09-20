@@ -14,7 +14,10 @@ public class WorkpackTreeViewDto {
   private String icon;
   private Set<WorkpackTreeViewDto> children;
 
-  public static WorkpackTreeViewDto of(final Workpack workpack, final String workpackName) {
+  public static WorkpackTreeViewDto of(
+    final Workpack workpack,
+    final String workpackName
+  ) {
     final WorkpackTreeViewDto dto = new WorkpackTreeViewDto();
     dto.id = workpack.getId();
     dto.name = workpackName;
@@ -66,4 +69,5 @@ public class WorkpackTreeViewDto {
     final WorkpackTreeViewDto that = (WorkpackTreeViewDto) o;
     return this.id.equals(that.id);
   }
+
 }

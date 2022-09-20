@@ -110,4 +110,5 @@ public class RiskResponseUpdateDto {
   public Set<Long> getResponsible() {
     return Collections.unmodifiableSet(this.responsible);
   }
+
 }

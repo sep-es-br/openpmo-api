@@ -29,8 +29,12 @@ public class CanAccessOffice implements HasRole {
   private Office office;
 
   public CanAccessOffice(
-    final Long id, final String organization, final String role, final PermissionLevelEnum permissionLevel,
-    final Person person, final Office office
+    final Long id,
+    final String organization,
+    final String role,
+    final PermissionLevelEnum permissionLevel,
+    final Person person,
+    final Office office
   ) {
     this.id = id;
     this.organization = organization;
@@ -91,4 +95,5 @@ public class CanAccessOffice implements HasRole {
   public String getOfficeName() {
     return this.office.getName();
   }
+
 }

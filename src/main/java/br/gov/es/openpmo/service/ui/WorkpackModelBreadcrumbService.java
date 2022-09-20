@@ -63,12 +63,18 @@ public class WorkpackModelBreadcrumbService {
     return breadcrumbs;
   }
 
-  private static void addPlanModel(final Collection<? super BreadcrumbDto> breadcrumbs, final PlanModel planModel) {
+  private static void addPlanModel(
+    final Collection<? super BreadcrumbDto> breadcrumbs,
+    final PlanModel planModel
+  ) {
     final BreadcrumbDto breadcrumbPlanModelItem = planModelAsBreadcrumbItem(planModel);
     breadcrumbs.add(breadcrumbPlanModelItem);
   }
 
-  private static void addOfficeOfPlanModel(final Collection<? super BreadcrumbDto> breadcrumbs, final PlanModel planModel) {
+  private static void addOfficeOfPlanModel(
+    final Collection<? super BreadcrumbDto> breadcrumbs,
+    final PlanModel planModel
+  ) {
     final Office office = planModel.getOffice();
     final BreadcrumbDto breadcrumbOfficeItem = officeASBreadcrumbItem(office);
     breadcrumbs.add(breadcrumbOfficeItem);
@@ -87,7 +93,10 @@ public class WorkpackModelBreadcrumbService {
     return reverse(breadcrumbs);
   }
 
-  private void ifHasParentAdd(final List<BreadcrumbDto> breadcrumbs, final WorkpackModel workpackModel) {
+  private void ifHasParentAdd(
+    final List<BreadcrumbDto> breadcrumbs,
+    final WorkpackModel workpackModel
+  ) {
     if(workpackModel.hasParent()) {
       this.addWorkpackModelParentBreadcrumb(workpackModel.getParent(), breadcrumbs);
     }
@@ -109,7 +118,10 @@ public class WorkpackModelBreadcrumbService {
     });
   }
 
-  private void addPlanModelBreadcrumb(final Collection<? super BreadcrumbDto> breadcrumbs, final Long idPlanModel) {
+  private void addPlanModelBreadcrumb(
+    final Collection<? super BreadcrumbDto> breadcrumbs,
+    final Long idPlanModel
+  ) {
     final PlanModel planModel = this.findPlanModelById(idPlanModel);
     addPlanModel(breadcrumbs, planModel);
     addOfficeOfPlanModel(breadcrumbs, planModel);
@@ -118,4 +130,5 @@ public class WorkpackModelBreadcrumbService {
   private PlanModel findPlanModelById(final Long idPlanModel) {
     return this.planModelService.findById(idPlanModel);
   }
+
 }

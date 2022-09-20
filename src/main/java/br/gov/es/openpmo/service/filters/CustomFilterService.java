@@ -81,11 +81,10 @@ public class CustomFilterService {
     return buildCustomFilterDto(entity, new HashSet<>(rules));
   }
 
-  private List<Rules> createRules(final CustomFilter entity, final CustomFilterDto request) {
-    return this.rulesService.createAll(entity, request.getRules());
-  }
-
-  private static CustomFilterDto buildCustomFilterDto(final CustomFilter customFilter, final Collection<? extends Rules> rules) {
+  private static CustomFilterDto buildCustomFilterDto(
+    final CustomFilter customFilter,
+    final Collection<? extends Rules> rules
+  ) {
     final CustomFilterDto customFilterResponse = new CustomFilterDto();
     customFilterResponse.setFavorite(customFilter.isFavorite());
     customFilterResponse.setId(customFilter.getId());
@@ -94,6 +93,13 @@ public class CustomFilterService {
     customFilterResponse.setSortByDirection(customFilter.getDirection());
     customFilterResponse.setRules(buildCustomFilterRulesDto(rules));
     return customFilterResponse;
+  }
+
+  private List<Rules> createRules(
+    final CustomFilter entity,
+    final CustomFilterDto request
+  ) {
+    return this.rulesService.createAll(entity, request.getRules());
   }
 
   private static List<CustomFilterRulesDto> buildCustomFilterRulesDto(final Collection<? extends Rules> rules) {
@@ -138,16 +144,25 @@ public class CustomFilterService {
     return buildCustomFilterDto(customFilterToUpdate, customFilterToUpdate.getRules());
   }
 
-  private void updateRulesRelationship(final CustomFilter entity, final Collection<? extends CustomFilterRulesDto> rules) {
+  private void updateRulesRelationship(
+    final CustomFilter entity,
+    final Collection<? extends CustomFilterRulesDto> rules
+  ) {
     this.rulesService.update(entity, rules);
   }
 
-  public CustomFilter findById(final Long idCustomFilter, final Long idPerson) {
+  public CustomFilter findById(
+    final Long idCustomFilter,
+    final Long idPerson
+  ) {
     return this.customFilterRepository.findByIdAndPersonId(idCustomFilter, idPerson)
       .orElseThrow(() -> new NegocioException(CUSTOM_FILTER_NOT_FOUND));
   }
 
-  public List<CustomFilterDto> getCombo(final CustomFilterEnum customFilterEnum, final Long idPerson) {
+  public List<CustomFilterDto> getCombo(
+    final CustomFilterEnum customFilterEnum,
+    final Long idPerson
+  ) {
     final List<CustomFilter> customFilters = this.customFilterRepository.findByType(
       customFilterEnum,
       idPerson
@@ -160,20 +175,30 @@ public class CustomFilterService {
       .collect(Collectors.toList());
   }
 
-  public CustomFilterDto getById(final Long id, final Long idPerson) {
+  public CustomFilterDto getById(
+    final Long id,
+    final Long idPerson
+  ) {
     Objects.requireNonNull(idPerson, ID_NOT_NULL);
     final CustomFilter customFilter = this.findById(id, idPerson);
     final Set<Rules> rules = customFilter.getRules();
     return buildCustomFilterDto(customFilter, rules);
   }
 
-  public void delete(final Long id, final Long idPerson) {
+  public void delete(
+    final Long id,
+    final Long idPerson
+  ) {
     final CustomFilter customFilter = this.findById(id, idPerson);
     this.rulesService.deleteByCustomFilter(customFilter);
     this.customFilterRepository.delete(customFilter);
   }
 
-  public List<CustomFilterDto> getCombo(final Long workpackModelId, final CustomFilterEnum customFilterEnum, final Long idPerson) {
+  public List<CustomFilterDto> getCombo(
+    final Long workpackModelId,
+    final CustomFilterEnum customFilterEnum,
+    final Long idPerson
+  ) {
 
     final List<CustomFilter> customFilters = this.customFilterRepository.findByWorkpackModelIdAndType(
       workpackModelId,
@@ -188,4 +213,5 @@ public class CustomFilterService {
       })
       .collect(Collectors.toList());
   }
+
 }

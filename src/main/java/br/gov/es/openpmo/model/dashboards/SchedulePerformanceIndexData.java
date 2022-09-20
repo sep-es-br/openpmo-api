@@ -6,43 +6,44 @@ import java.math.BigDecimal;
 
 public class SchedulePerformanceIndexData {
 
-    private BigDecimal indexValue;
+  private BigDecimal indexValue;
 
-    private BigDecimal scheduleVariation;
+  private BigDecimal scheduleVariation;
 
-    public static SchedulePerformanceIndexData of(SchedulePerformanceIndex from) {
-        if (from == null) {
-            return null;
-        }
-
-        final SchedulePerformanceIndexData to = new SchedulePerformanceIndexData();
-
-        to.setIndexValue(from.getIndexValue());
-        to.setScheduleVariation(from.getScheduleVariation());
-
-        return to;
+  public static SchedulePerformanceIndexData of(final SchedulePerformanceIndex from) {
+    if(from == null) {
+      return null;
     }
 
-    public BigDecimal getIndexValue() {
-        return indexValue;
-    }
+    final SchedulePerformanceIndexData to = new SchedulePerformanceIndexData();
 
-    public void setIndexValue(BigDecimal indexValue) {
-        this.indexValue = indexValue;
-    }
+    to.setIndexValue(from.getIndexValue());
+    to.setScheduleVariation(from.getScheduleVariation());
 
-    public BigDecimal getScheduleVariation() {
-        return scheduleVariation;
-    }
+    return to;
+  }
 
-    public void setScheduleVariation(BigDecimal scheduleVariation) {
-        this.scheduleVariation = scheduleVariation;
-    }
+  public BigDecimal getIndexValue() {
+    return this.indexValue;
+  }
 
-    public SchedulePerformanceIndex getResponse() {
-        return new SchedulePerformanceIndex(
-                this.indexValue,
-                this.scheduleVariation
-        );
-    }
+  public void setIndexValue(final BigDecimal indexValue) {
+    this.indexValue = indexValue;
+  }
+
+  public BigDecimal getScheduleVariation() {
+    return this.scheduleVariation;
+  }
+
+  public void setScheduleVariation(final BigDecimal scheduleVariation) {
+    this.scheduleVariation = scheduleVariation;
+  }
+
+  public SchedulePerformanceIndex getResponse() {
+    return new SchedulePerformanceIndex(
+      this.indexValue,
+      this.scheduleVariation
+    );
+  }
+
 }

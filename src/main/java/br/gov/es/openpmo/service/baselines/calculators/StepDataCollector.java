@@ -14,63 +14,66 @@ import java.util.Set;
 @Component
 public class StepDataCollector implements IStepDataCollector {
 
-    private final ConsumesRepository consumesRepository;
+  private final ConsumesRepository consumesRepository;
 
-    @Autowired
-    public StepDataCollector(final ConsumesRepository consumesRepository) {
-        this.consumesRepository = consumesRepository;
+  @Autowired
+  public StepDataCollector(final ConsumesRepository consumesRepository) {
+    this.consumesRepository = consumesRepository;
+  }
+
+  private static void addStepDataToCollector(
+    final StepCollectedData stepCollectedData,
+    final Collection<? extends Consumes> consumesProposed,
+    final Collection<? extends Consumes> consumesCurrent
+  ) {
+    stepCollectedData.step.addCurrentValue(getTotalPlannedWorkOfStep(consumesCurrent));
+    stepCollectedData.step.addProposedValue(getTotalPlannedWorkOfStep(consumesProposed));
+    stepCollectedData.cost.addCurrentValue(getTotalCostOfStep(consumesCurrent));
+    stepCollectedData.cost.addProposedValue(getTotalCostOfStep(consumesProposed));
+  }
+
+  private static BigDecimal getTotalPlannedWorkOfStep(final Collection<? extends Consumes> consumesProposed) {
+    if(consumesProposed.isEmpty()) {
+      return null;
+    }
+    return consumesProposed.stream()
+      .map(Consumes::getStep)
+      .map(Step::getPlannedWork)
+      .reduce(BigDecimal.ZERO, BigDecimal::add);
+  }
+
+  private static BigDecimal getTotalCostOfStep(final Collection<? extends Consumes> consumes) {
+    if(consumes.isEmpty()) {
+      return null;
+    }
+    return consumes.stream()
+      .map(Consumes::getPlannedCost)
+      .reduce(BigDecimal.ZERO, BigDecimal::add);
+  }
+
+  @Override
+  public StepCollectedData collect(
+    final Long idBaseline,
+    final Long idBaselineReference,
+    final Iterable<? extends Step> steps
+  ) {
+    final StepCollectedData stepCollectedData = new StepCollectedData();
+    for(final Step stepMaster : steps) {
+      addStepDataToCollector(
+        stepCollectedData,
+        this.findConsumesSnapshotByStepMasterAndBaselineId(idBaseline, stepMaster),
+        this.findConsumesSnapshotByStepMasterAndBaselineId(idBaselineReference, stepMaster)
+      );
     }
 
-    @Override
-    public StepCollectedData collect(
-            final Long idBaseline,
-            final Long idBaselineReference,
-            final Iterable<? extends Step> steps
-    ) {
-        final StepCollectedData stepCollectedData = new StepCollectedData();
-        for (final Step stepMaster : steps) {
-            addStepDataToCollector(
-                    stepCollectedData,
-                    this.findConsumesSnapshotByStepMasterAndBaselineId(idBaseline, stepMaster),
-                    this.findConsumesSnapshotByStepMasterAndBaselineId(idBaselineReference, stepMaster)
-            );
-        }
+    return stepCollectedData;
+  }
 
-        return stepCollectedData;
-    }
-
-    private static void addStepDataToCollector(
-            final StepCollectedData stepCollectedData,
-            final Collection<? extends Consumes> consumesProposed,
-            final Collection<? extends Consumes> consumesCurrent
-    ) {
-        stepCollectedData.step.addCurrentValue(getTotalPlannedWorkOfStep(consumesCurrent));
-        stepCollectedData.step.addProposedValue(getTotalPlannedWorkOfStep(consumesProposed));
-        stepCollectedData.cost.addCurrentValue(getTotalCostOfStep(consumesCurrent));
-        stepCollectedData.cost.addProposedValue(getTotalCostOfStep(consumesProposed));
-    }
-
-    private Set<Consumes> findConsumesSnapshotByStepMasterAndBaselineId(final Long idBaseline, final Step stepMaster) {
-        return this.consumesRepository.findAllSnapshotConsumesOfStepMaster(idBaseline, stepMaster.getId());
-    }
-
-    private static BigDecimal getTotalPlannedWorkOfStep(final Collection<? extends Consumes> consumesProposed) {
-        if (consumesProposed.isEmpty()) {
-            return null;
-        }
-        return consumesProposed.stream()
-                .map(Consumes::getStep)
-                .map(Step::getPlannedWork)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-    private static BigDecimal getTotalCostOfStep(final Collection<? extends Consumes> consumes) {
-        if (consumes.isEmpty()) {
-            return null;
-        }
-        return consumes.stream()
-                .map(Consumes::getPlannedCost)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
+  private Set<Consumes> findConsumesSnapshotByStepMasterAndBaselineId(
+    final Long idBaseline,
+    final Step stepMaster
+  ) {
+    return this.consumesRepository.findAllSnapshotConsumesOfStepMaster(idBaseline, stepMaster.getId());
+  }
 
 }

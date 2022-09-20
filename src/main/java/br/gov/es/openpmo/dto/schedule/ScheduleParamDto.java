@@ -77,4 +77,5 @@ public class ScheduleParamDto {
   public void setCosts(final Set<CostSchedule> costs) {
     this.costs = costs;
   }
+
 }

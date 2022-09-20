@@ -14,7 +14,10 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_MODEL_NOT_FOUN
 
 public interface ApplyFilterUsingPropertyModel {
 
-  default String buildFilterRuleForWorkpack(final Rules rule, final String label) {
+  default String buildFilterRuleForWorkpack(
+    final Rules rule,
+    final String label
+  ) {
     final String propertyName = rule.getPropertyName();
     final String operador = rule.getRelationalOperator().getOperador();
 
@@ -31,7 +34,11 @@ public interface ApplyFilterUsingPropertyModel {
     return propertyName.chars().allMatch(Character::isDigit);
   }
 
-  default String getPropertyModelFilter(final String propertyName, final String operador, final String label) {
+  default String getPropertyModelFilter(
+    final String propertyName,
+    final String operador,
+    final String label
+  ) {
     final PropertyModel propertyModel = this.getPropertyModel(Long.valueOf(propertyName));
 
     final String propertyLinkedToPropertyModelTemplate = String.format(
@@ -104,7 +111,10 @@ public interface ApplyFilterUsingPropertyModel {
 
   PropertyModelRepository getPropertyModelRepository();
 
-  default void buildOrderingAndDirectionClauseForWorkpack(final CustomFilter filter, final StringBuilder query) {
+  default void buildOrderingAndDirectionClauseForWorkpack(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     final String field;
 
     if(this.isIdentifier(filter.getSortBy())) {
@@ -126,6 +136,7 @@ public interface ApplyFilterUsingPropertyModel {
       .append(" ")
       .append(filter.getDirection());
   }
+
   default String findPropertyValue(final String propertyName) {
     final Long propertyModelId = Long.valueOf(propertyName);
     final PropertyModel propertyModel = this.getPropertyModel(propertyModelId);

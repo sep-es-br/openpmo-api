@@ -19,10 +19,19 @@ public class EditBaselineService implements IEditBaselineService {
     this.baselineRepository = baselineRepository;
   }
 
+  private static void updateBaselineProperties(
+    final Baseline baseline,
+    final EditDraftBaselineRequest properties
+  ) {
+    baseline.setName(properties.getName());
+    baseline.setMessage(properties.getMessage());
+    baseline.setDescription(properties.getDescription());
+  }
+
   @Override
   public void edit(
-      final Long idBaseline,
-      final EditDraftBaselineRequest request
+    final Long idBaseline,
+    final EditDraftBaselineRequest request
   ) {
     final Baseline baseline = this.findBaselineById(idBaseline);
     baseline.ifIsNotDraftThrowsException();
@@ -36,21 +45,12 @@ public class EditBaselineService implements IEditBaselineService {
 
   private Baseline findBaselineById(final Long idBaseline) {
     return this.baselineRepository.findById(idBaseline)
-        .orElseThrow(() -> new NegocioException(ApplicationMessage.BASELINE_NOT_FOUND));
+      .orElseThrow(() -> new NegocioException(ApplicationMessage.BASELINE_NOT_FOUND));
   }
 
   private Workpack findWorkpackByIdBaseline(final Long idBaseline) {
     return this.baselineRepository.findWorkpackByBaselineId(idBaseline)
-        .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
-  }
-
-  private static void updateBaselineProperties(
-      final Baseline baseline,
-      final EditDraftBaselineRequest properties
-  ) {
-    baseline.setName(properties.getName());
-    baseline.setMessage(properties.getMessage());
-    baseline.setDescription(properties.getDescription());
+      .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
   }
 
   private void saveBaseline(final Baseline baseline) {

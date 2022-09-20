@@ -90,4 +90,5 @@ public class LocalityStoreDto {
   public void setType(final LocalityTypesEnum type) {
     this.type = type;
   }
+
 }

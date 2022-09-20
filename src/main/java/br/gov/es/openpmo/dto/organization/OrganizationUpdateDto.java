@@ -92,4 +92,5 @@ public class OrganizationUpdateDto {
   public void setSector(final OrganizationEnum sector) {
     this.sector = sector;
   }
+
 }

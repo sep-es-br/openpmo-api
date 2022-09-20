@@ -29,32 +29,35 @@ public class PersonStakeholderParamDto {
   public PersonStakeholderParamDto() {
   }
 
-  public PersonStakeholderParamDto(final String fullName, final String contactEmail) {
+  public PersonStakeholderParamDto(
+    final String fullName,
+    final String contactEmail
+  ) {
     this.fullName = fullName;
     this.contactEmail = contactEmail;
   }
 
   public String getKey() {
-    return key;
+    return this.key;
   }
 
-  public void setKey(String key) {
+  public void setKey(final String key) {
     this.key = key;
   }
 
   public Boolean getUser() {
-    return isUser;
+    return this.isUser;
   }
 
-  public void setUser(Boolean user) {
-    isUser = user;
+  public void setUser(final Boolean user) {
+    this.isUser = user;
   }
 
   public String getEmail() {
-    return email;
+    return this.email;
   }
 
-  public void setEmail(String email) {
+  public void setEmail(final String email) {
     this.email = email;
   }
 
@@ -127,10 +130,10 @@ public class PersonStakeholderParamDto {
   }
 
   public Boolean getAdministrator() {
-    return administrator;
+    return this.administrator;
   }
 
-  public void setAdministrator(Boolean administrator) {
+  public void setAdministrator(final Boolean administrator) {
     this.administrator = administrator;
   }
 

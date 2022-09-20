@@ -19,7 +19,10 @@ public class FilterOrganizationsController extends CreateAndUpdateUsingCommonFil
   private final TokenService tokenService;
 
   @Autowired
-  public FilterOrganizationsController(final CustomFilterService customFilterService, final TokenService tokenService) {
+  public FilterOrganizationsController(
+    final CustomFilterService customFilterService,
+    final TokenService tokenService
+  ) {
     this.customFilterService = customFilterService;
     this.tokenService = tokenService;
   }
@@ -29,7 +32,8 @@ public class FilterOrganizationsController extends CreateAndUpdateUsingCommonFil
     return this.customFilterService;
   }
 
-  @Override protected TokenService getTokenService() {
+  @Override
+  protected TokenService getTokenService() {
     return this.tokenService;
   }
 

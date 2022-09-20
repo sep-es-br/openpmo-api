@@ -15,7 +15,13 @@ public class MilestoneDataChart {
   private final Long onTime;
 
   @JsonCreator
-  public MilestoneDataChart(final Long quantity, final Long concluded, final Long lateConcluded, final Long late, final Long onTime) {
+  public MilestoneDataChart(
+    final Long quantity,
+    final Long concluded,
+    final Long lateConcluded,
+    final Long late,
+    final Long onTime
+  ) {
     this.quantity = quantity;
     this.concluded = concluded;
     this.lateConcluded = lateConcluded;

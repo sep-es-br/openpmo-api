@@ -8,6 +8,7 @@ import br.gov.es.openpmo.model.relations.IsSharedWith;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 
 public class PermissionDto {
+
   private Long id;
   private String role;
   private PermissionLevelEnum level;
@@ -18,7 +19,11 @@ public class PermissionDto {
   public PermissionDto() {
   }
 
-  public PermissionDto(final Long id, final String role, final PermissionLevelEnum level) {
+  public PermissionDto(
+    final Long id,
+    final String role,
+    final PermissionLevelEnum level
+  ) {
     this.id = id;
     this.role = role;
     this.level = level;
@@ -108,4 +113,5 @@ public class PermissionDto {
   public void setInheritedFrom(final String inheritedFrom) {
     this.inheritedFrom = inheritedFrom;
   }
+
 }

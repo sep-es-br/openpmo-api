@@ -6,58 +6,59 @@ import java.util.Set;
 
 public class StepUpdateDto {
 
-    private Long id;
-    private BigDecimal actualWork;
-    private BigDecimal plannedWork;
-    private LocalDate scheduleEnd;
-    private LocalDate scheduleStart;
-    private Set<ConsumesParamDto> consumes;
+  private Long id;
+  private BigDecimal actualWork;
+  private BigDecimal plannedWork;
+  private LocalDate scheduleEnd;
+  private LocalDate scheduleStart;
+  private Set<ConsumesParamDto> consumes;
 
-    public Long getId() {
-        return this.id;
-    }
+  public Long getId() {
+    return this.id;
+  }
 
-    public void setId(final Long id) {
-        this.id = id;
-    }
+  public void setId(final Long id) {
+    this.id = id;
+  }
 
-    public BigDecimal getActualWork() {
-        return this.actualWork;
-    }
+  public BigDecimal getActualWork() {
+    return this.actualWork;
+  }
 
-    public void setActualWork(final BigDecimal actualWork) {
-        this.actualWork = actualWork;
-    }
+  public void setActualWork(final BigDecimal actualWork) {
+    this.actualWork = actualWork;
+  }
 
-    public BigDecimal getPlannedWork() {
-        return this.plannedWork;
-    }
+  public BigDecimal getPlannedWork() {
+    return this.plannedWork;
+  }
 
-    public void setPlannedWork(final BigDecimal plannedWork) {
-        this.plannedWork = plannedWork;
-    }
+  public void setPlannedWork(final BigDecimal plannedWork) {
+    this.plannedWork = plannedWork;
+  }
 
-    public Set<ConsumesParamDto> getConsumes() {
-        return this.consumes;
-    }
+  public Set<ConsumesParamDto> getConsumes() {
+    return this.consumes;
+  }
 
-    public void setConsumes(final Set<ConsumesParamDto> consumes) {
-        this.consumes = consumes;
-    }
+  public void setConsumes(final Set<ConsumesParamDto> consumes) {
+    this.consumes = consumes;
+  }
 
-    public LocalDate getScheduleEnd() {
-        return scheduleEnd;
-    }
+  public LocalDate getScheduleEnd() {
+    return this.scheduleEnd;
+  }
 
-    public void setScheduleEnd(LocalDate scheduleEnd) {
-        this.scheduleEnd = scheduleEnd;
-    }
+  public void setScheduleEnd(final LocalDate scheduleEnd) {
+    this.scheduleEnd = scheduleEnd;
+  }
 
-    public LocalDate getScheduleStart() {
-        return scheduleStart;
-    }
+  public LocalDate getScheduleStart() {
+    return this.scheduleStart;
+  }
 
-    public void setScheduleStart(LocalDate scheduleStart) {
-        this.scheduleStart = scheduleStart;
-    }
+  public void setScheduleStart(final LocalDate scheduleStart) {
+    this.scheduleStart = scheduleStart;
+  }
+
 }

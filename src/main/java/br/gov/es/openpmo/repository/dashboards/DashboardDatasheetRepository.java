@@ -13,7 +13,8 @@ import java.util.Set;
 @Repository
 public interface DashboardDatasheetRepository extends Neo4jRepository<Workpack, Long> {
 
-  @Query("match (w:Workpack{deleted:false})<-[:IS_IN*]-(v:Workpack{deleted:false,canceled:false})-[:IS_INSTANCE_BY]->(m:WorkpackModel) " +
+  @Query("match (w:Workpack{deleted:false})<-[:IS_IN*]-(v:Workpack{deleted:false,canceled:false})-[:IS_INSTANCE_BY]->" +
+         "(m:WorkpackModel) " +
          "where id(w)=$workpackId and not (v)-[:IS_IN*..0]->(:Workpack{canceled:false})-[:IS_IN*..0]->(w) " +
          "with v, collect(distinct m) as modelList " +
          "with v, collect([n in modelList where id(n)=v.idWorkpackModel][0]) as modelGroup " +

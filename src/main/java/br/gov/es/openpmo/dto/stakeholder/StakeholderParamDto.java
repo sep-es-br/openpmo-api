@@ -55,4 +55,5 @@ public class StakeholderParamDto {
   public void setIdPlan(final Long idPlan) {
     this.idPlan = idPlan;
   }
+
 }

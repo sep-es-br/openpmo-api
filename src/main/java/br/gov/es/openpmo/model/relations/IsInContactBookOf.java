@@ -4,7 +4,11 @@ import br.gov.es.openpmo.dto.person.PersonDto;
 import br.gov.es.openpmo.dto.person.PersonUpdateDto;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.office.Office;
-import org.neo4j.ogm.annotation.*;
+import org.neo4j.ogm.annotation.EndNode;
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.RelationshipEntity;
+import org.neo4j.ogm.annotation.StartNode;
 import org.springframework.data.annotation.Transient;
 
 import java.util.Objects;
@@ -37,7 +41,11 @@ public class IsInContactBookOf {
     this.address = dto.getAddress();
   }
 
-  public IsInContactBookOf(final PersonDto personDto, final Office office, final Person person) {
+  public IsInContactBookOf(
+    final PersonDto personDto,
+    final Office office,
+    final Person person
+  ) {
     this.person = person;
     this.office = office;
     this.address = personDto.getAddress();
@@ -98,8 +106,8 @@ public class IsInContactBookOf {
 
   @Override
   public boolean equals(final Object o) {
-    if (this == o) return true;
-    if (o == null || this.getClass() != o.getClass()) return false;
+    if(this == o) return true;
+    if(o == null || this.getClass() != o.getClass()) return false;
     final IsInContactBookOf isInContactBookOf = (IsInContactBookOf) o;
     return this.id.equals(isInContactBookOf.id);
   }

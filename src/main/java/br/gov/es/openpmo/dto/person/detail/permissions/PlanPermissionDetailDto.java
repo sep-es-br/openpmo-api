@@ -59,4 +59,5 @@ public class PlanPermissionDetailDto {
     final PlanPermissionDetailDto that = (PlanPermissionDetailDto) o;
     return this.id.equals(that.id);
   }
+
 }

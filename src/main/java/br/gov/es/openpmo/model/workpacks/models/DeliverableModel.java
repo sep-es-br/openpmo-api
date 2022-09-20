@@ -28,4 +28,5 @@ public class DeliverableModel extends WorkpackModel {
   public void setShowCompletedManagement(final Boolean showCompletedManagement) {
     this.showCompletedManagement = showCompletedManagement;
   }
+
 }

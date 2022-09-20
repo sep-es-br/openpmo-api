@@ -71,4 +71,5 @@ public class Domain extends Entity {
   public Long getLocalityRootId() {
     return this.localityRoot.getId();
   }
+
 }

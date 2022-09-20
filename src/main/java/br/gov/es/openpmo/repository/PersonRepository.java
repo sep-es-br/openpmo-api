@@ -217,33 +217,36 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   );
 
   @Query("match (person:Person), (office:Office) " +
-    "where id(person)=$personId and id(office)=$officeId " +
-    "optional match (person)-[canAccessOffice:CAN_ACCESS_OFFICE]->(office) " +
-    "optional match (person)-[canAccessPlan:CAN_ACCESS_PLAN]->(plan)-[]->(office) " +
-    "optional match (person)-[canAccessWorkpack:CAN_ACCESS_WORKPACK]->(workpack)-[]->(plan)-[]->(office) " +
-    "optional match (person)-[isStakeholderIn:IS_STAKEHOLDER_IN]->(workpack)-[]->(plan)-[]->(office) " +
-    "optional match (person)-[isCCBMemberFor:IS_CCB_MEMBER_FOR{active: true}]->(workpack)-[]->(plan)-[]->(office) " +
-    "with " +
-    "    person, " +
-    "    office, " +
-    "    plan, " +
-    "    workpack, " +
-    "    canAccessOffice, " +
-    "    canAccessPlan, " +
-    "    canAccessWorkpack, " +
-    "    isStakeholderIn, " +
-    "    isCCBMemberFor " +
-    "return " +
-    "    person, " +
-    "    office, " +
-    "    plan, " +
-    "    workpack, " +
-    "    canAccessOffice, " +
-    "    canAccessPlan, " +
-    "    canAccessWorkpack, " +
-    "    isStakeholderIn, " +
-    "    isCCBMemberFor")
-  List<PersonPermissionDetailQuery> findPermissions(Long personId, Long officeId);
+         "where id(person)=$personId and id(office)=$officeId " +
+         "optional match (person)-[canAccessOffice:CAN_ACCESS_OFFICE]->(office) " +
+         "optional match (person)-[canAccessPlan:CAN_ACCESS_PLAN]->(plan)-[]->(office) " +
+         "optional match (person)-[canAccessWorkpack:CAN_ACCESS_WORKPACK]->(workpack)-[]->(plan)-[]->(office) " +
+         "optional match (person)-[isStakeholderIn:IS_STAKEHOLDER_IN]->(workpack)-[]->(plan)-[]->(office) " +
+         "optional match (person)-[isCCBMemberFor:IS_CCB_MEMBER_FOR{active: true}]->(workpack)-[]->(plan)-[]->(office) " +
+         "with " +
+         "    person, " +
+         "    office, " +
+         "    plan, " +
+         "    workpack, " +
+         "    canAccessOffice, " +
+         "    canAccessPlan, " +
+         "    canAccessWorkpack, " +
+         "    isStakeholderIn, " +
+         "    isCCBMemberFor " +
+         "return " +
+         "    person, " +
+         "    office, " +
+         "    plan, " +
+         "    workpack, " +
+         "    canAccessOffice, " +
+         "    canAccessPlan, " +
+         "    canAccessWorkpack, " +
+         "    isStakeholderIn, " +
+         "    isCCBMemberFor")
+  List<PersonPermissionDetailQuery> findPermissions(
+    Long personId,
+    Long officeId
+  );
 
   @Query("MATCH (person:Person)-[isAuthenticatedBy:IS_AUTHENTICATED_BY]->(authService:AuthService) " +
          "OPTIONAL MATCH (person)-[isInContactBookOf:IS_IN_CONTACT_BOOK_OF]->(office:Office) " +

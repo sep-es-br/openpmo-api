@@ -69,4 +69,5 @@ public class IssueResponseDetailDto {
   public Set<StakeholderCardViewDto> getResponsible() {
     return this.responsible;
   }
+
 }

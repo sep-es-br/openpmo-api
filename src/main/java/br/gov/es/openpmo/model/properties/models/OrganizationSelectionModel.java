@@ -29,4 +29,5 @@ public class OrganizationSelectionModel extends PropertyModel {
   public void setDefaultValue(final Set<Organization> defaultValue) {
     this.defaultValue = defaultValue;
   }
+
 }

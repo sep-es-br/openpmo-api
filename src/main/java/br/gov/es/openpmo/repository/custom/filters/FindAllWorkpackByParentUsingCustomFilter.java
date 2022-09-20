@@ -31,7 +31,10 @@ public class FindAllWorkpackByParentUsingCustomFilter extends FindAllUsingCustom
   }
 
   @Override
-  public void buildMatchClause(final CustomFilter filter, final StringBuilder query) {
+  public void buildMatchClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query.append("" +
                  "MATCH (node:Workpack{deleted:false})-[rf:BELONGS_TO]->(p:Plan)-[is:IS_STRUCTURED_BY]->(pm:PlanModel), " +
                  "(node)-[ii:IS_INSTANCE_BY]->(wm:WorkpackModel)<-[:FEATURES]-(propertyModel:PropertyModel), " +
@@ -45,7 +48,10 @@ public class FindAllWorkpackByParentUsingCustomFilter extends FindAllUsingCustom
   }
 
   @Override
-  public void buildWhereClause(final CustomFilter filter, final StringBuilder query) {
+  public void buildWhereClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query.append("WHERE (")
       .append("   id(p)=$idPlan ")
       .append("   AND (id(pm)=$idPlanModel OR $idPlanModel IS NULL) ")
@@ -72,20 +78,28 @@ public class FindAllWorkpackByParentUsingCustomFilter extends FindAllUsingCustom
   }
 
   @Override
-  protected String buildCustomFilterRule(final Rules rule, final String label) {
+  protected String buildCustomFilterRule(
+    final Rules rule,
+    final String label
+  ) {
     return this.buildFilterRuleForWorkpack(rule, label);
   }
 
-  @Override protected boolean hasAppendedBooleanBlock() {
-    return true;
-  }
-
-  @Override protected boolean hasToCloseAppendedBooleanBlock() {
+  @Override
+  protected boolean hasAppendedBooleanBlock() {
     return true;
   }
 
   @Override
-  protected void buildOrderingAndDirectionClause(final CustomFilter filter, final StringBuilder query) {
+  protected boolean hasToCloseAppendedBooleanBlock() {
+    return true;
+  }
+
+  @Override
+  protected void buildOrderingAndDirectionClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     this.buildOrderingAndDirectionClauseForWorkpack(filter, query);
   }
 
@@ -108,4 +122,5 @@ public class FindAllWorkpackByParentUsingCustomFilter extends FindAllUsingCustom
   public PropertyModelRepository getPropertyModelRepository() {
     return this.propertyModelRepository;
   }
+
 }

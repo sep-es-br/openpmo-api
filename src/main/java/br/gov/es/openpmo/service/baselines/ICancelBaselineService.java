@@ -5,6 +5,9 @@ import br.gov.es.openpmo.dto.baselines.SubmitCancellingRequest;
 
 public interface ICancelBaselineService {
 
-  EntityDto submit(SubmitCancellingRequest request, Long personId);
+  EntityDto submit(
+    SubmitCancellingRequest request,
+    Long personId
+  );
 
 }

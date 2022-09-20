@@ -10,7 +10,12 @@ public class WorkpackName {
   private final String name;
   private final String fullName;
 
-  public WorkpackName(final Long idWorkpackModel, final Long idWorkpack, final String name, final String fullName) {
+  public WorkpackName(
+    final Long idWorkpackModel,
+    final Long idWorkpack,
+    final String name,
+    final String fullName
+  ) {
     this.idWorkpackModel = idWorkpackModel;
     this.idWorkpack = idWorkpack;
     this.name = name;
@@ -41,4 +46,5 @@ public class WorkpackName {
   public String getFullName() {
     return this.fullName;
   }
+
 }

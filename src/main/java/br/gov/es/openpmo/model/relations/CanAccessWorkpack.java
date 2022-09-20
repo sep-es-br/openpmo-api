@@ -4,123 +4,128 @@ import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.scheduler.updateroles.HasRole;
-import org.neo4j.ogm.annotation.*;
+import org.neo4j.ogm.annotation.EndNode;
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.Property;
+import org.neo4j.ogm.annotation.RelationshipEntity;
+import org.neo4j.ogm.annotation.StartNode;
 import org.springframework.data.annotation.Transient;
 
 @RelationshipEntity(type = "CAN_ACCESS_WORKPACK")
 public class CanAccessWorkpack implements HasRole {
 
-    @Id
-    @GeneratedValue
-    private Long id;
-    private String organization;
-    private Long idPlan;
-    @Property("permitedRole")
-    private String role;
-    private PermissionLevelEnum permissionLevel;
+  @Id
+  @GeneratedValue
+  private Long id;
+  private String organization;
+  private Long idPlan;
+  @Property("permitedRole")
+  private String role;
+  private PermissionLevelEnum permissionLevel;
 
-    @StartNode
-    private Person person;
+  @StartNode
+  private Person person;
 
-    @EndNode
-    private Workpack workpack;
+  @EndNode
+  private Workpack workpack;
 
-    public CanAccessWorkpack() {
+  public CanAccessWorkpack() {
+  }
+
+  public CanAccessWorkpack(
+    final Long id,
+    final String organization,
+    final String role,
+    final PermissionLevelEnum permissionLevel,
+    final Person person,
+    final Workpack workpack,
+    final Long idPlan
+  ) {
+    this.id = id;
+    this.organization = organization;
+    this.role = role;
+    this.permissionLevel = permissionLevel;
+    this.person = person;
+    this.idPlan = idPlan;
+    this.workpack = workpack;
+  }
+
+  @Transient
+  public Long getIdWorkpack() {
+    if(this.workpack == null) {
+      return null;
     }
+    return this.workpack.getId();
+  }
 
-    public CanAccessWorkpack(
-            final Long id,
-            final String organization,
-            final String role,
-            final PermissionLevelEnum permissionLevel,
-            final Person person,
-            final Workpack workpack,
-            final Long idPlan
-    ) {
-        this.id = id;
-        this.organization = organization;
-        this.role = role;
-        this.permissionLevel = permissionLevel;
-        this.person = person;
-        this.idPlan = idPlan;
-        this.workpack = workpack;
+  @Transient
+  public String getWorkpackName() {
+    if(this.workpack == null) {
+      return null;
     }
+    return this.workpack.getWorkpackModelInstance().getModelName();
+  }
 
-    @Transient
-    public Long getIdWorkpack() {
-        if (this.workpack == null) {
-            return null;
-        }
-        return this.workpack.getId();
-    }
+  public Long getIdPlan() {
+    return this.idPlan;
+  }
 
-    @Transient
-    public String getWorkpackName() {
-        if (this.workpack == null) {
-            return null;
-        }
-        return this.workpack.getWorkpackModelInstance().getModelName();
-    }
+  public void setIdPlan(final Long idPlan) {
+    this.idPlan = idPlan;
+  }
 
-    public Long getIdPlan() {
-        return this.idPlan;
-    }
+  public Long getId() {
+    return this.id;
+  }
 
-    public void setIdPlan(final Long idPlan) {
-        this.idPlan = idPlan;
-    }
+  public void setId(final Long id) {
+    this.id = id;
+  }
 
-    public Long getId() {
-        return this.id;
-    }
+  public String getOrganization() {
+    return this.organization;
+  }
 
-    public void setId(final Long id) {
-        this.id = id;
-    }
+  public void setOrganization(final String organization) {
+    this.organization = organization;
+  }
 
-    public String getOrganization() {
-        return this.organization;
-    }
+  public String getRole() {
+    return this.role;
+  }
 
-    public void setOrganization(final String organization) {
-        this.organization = organization;
-    }
+  public void setRole(final String role) {
+    this.role = role;
+  }
 
-    public String getRole() {
-        return this.role;
-    }
+  public PermissionLevelEnum getPermissionLevel() {
+    return this.permissionLevel;
+  }
 
-    public void setRole(final String role) {
-        this.role = role;
-    }
+  public void setPermissionLevel(final PermissionLevelEnum permissionLevel) {
+    this.permissionLevel = permissionLevel;
+  }
 
-    public PermissionLevelEnum getPermissionLevel() {
-        return this.permissionLevel;
-    }
+  public Person getPerson() {
+    return this.person;
+  }
 
-    public void setPermissionLevel(final PermissionLevelEnum permissionLevel) {
-        this.permissionLevel = permissionLevel;
-    }
+  public void setPerson(final Person person) {
+    this.person = person;
+  }
 
-    public Person getPerson() {
-        return this.person;
-    }
+  public Workpack getWorkpack() {
+    return this.workpack;
+  }
 
-    public void setPerson(final Person person) {
-        this.person = person;
-    }
+  public void setWorkpack(final Workpack workpack) {
+    this.workpack = workpack;
+  }
 
-    public Workpack getWorkpack() {
-        return this.workpack;
-    }
-
-    public void setWorkpack(final Workpack workpack) {
-        this.workpack = workpack;
-    }
-
-    @Transient
-    public boolean hasSameUser(final Long idUser) {
-        return this.person.getId().equals(idUser);
-    }
+  @Transient
+  public boolean hasSameUser(final Long idUser) {
+    return this.person.getId().equals(idUser);
+  }
 
 }

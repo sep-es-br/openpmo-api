@@ -30,208 +30,214 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.INTERVAL_DATE_IN_BASELI
 @Service
 public class DashboardTripleConstraintService implements IDashboardTripleConstraintService {
 
-    private final WorkpackRepository workpackRepository;
-    private final BaselineRepository baselineRepository;
-    private final ScheduleRepository scheduleRepository;
-    private final IDashboardCostScopeService costScopeService;
+  private final WorkpackRepository workpackRepository;
+  private final BaselineRepository baselineRepository;
+  private final ScheduleRepository scheduleRepository;
+  private final IDashboardCostScopeService costScopeService;
 
-    public DashboardTripleConstraintService(
-            WorkpackRepository workpackRepository,
-            BaselineRepository baselineRepository,
-            ScheduleRepository scheduleRepository,
-            IDashboardCostScopeService costScopeService
-    ) {
-        this.workpackRepository = workpackRepository;
-        this.baselineRepository = baselineRepository;
-        this.scheduleRepository = scheduleRepository;
-        this.costScopeService = costScopeService;
+  public DashboardTripleConstraintService(
+    final WorkpackRepository workpackRepository,
+    final BaselineRepository baselineRepository,
+    final ScheduleRepository scheduleRepository,
+    final IDashboardCostScopeService costScopeService
+  ) {
+    this.workpackRepository = workpackRepository;
+    this.baselineRepository = baselineRepository;
+    this.scheduleRepository = scheduleRepository;
+    this.costScopeService = costScopeService;
+  }
+
+  @Override
+  public TripleConstraintDataChart build(final DashboardParameters parameters) {
+    final YearMonth yearMonth = parameters.getYearMonth();
+
+    if(yearMonth == null) {
+      return null;
     }
 
-    @Override
-    public TripleConstraintDataChart build(DashboardParameters parameters) {
-        final YearMonth yearMonth = parameters.getYearMonth();
+    final Long workpackId = parameters.getWorkpackId();
+    final Long baselineId = parameters.getBaselineId();
 
-        if (yearMonth == null) {
-            return null;
-        }
+    final Set<Long> deliverablesId = this.getDeliverablesId(workpackId);
+    return this.calculateForMonth(workpackId, baselineId, yearMonth, deliverablesId);
+  }
 
-        final Long workpackId = parameters.getWorkpackId();
-        final Long baselineId = parameters.getBaselineId();
+  @Override
+  @NonNull
+  public Optional<List<TripleConstraintDataChart>> calculate(@NonNull final Long workpackId) {
+    final List<Long> baselineIds = this.getActiveBaselineIds(workpackId);
 
-        final Set<Long> deliverablesId = getDeliverablesId(workpackId);
-        return calculateForMonth(workpackId, baselineId, yearMonth, deliverablesId);
+    return this.baselineRepository.fetchIntervalOfSchedules(workpackId, baselineIds)
+      .filter(DateIntervalQuery::isValid)
+      .map(DateIntervalQuery::toYearMonths)
+      .map(months -> this.calculateForAllMonths(workpackId, months));
+  }
+
+  private Set<Long> getDeliverablesId(final Long workpackId) {
+    final Set<Long> deliverablesId = this.workpackRepository.getDeliverablesId(workpackId);
+
+    if(this.workpackRepository.isDeliverable(workpackId)) {
+      deliverablesId.add(workpackId);
     }
 
-    private Set<Long> getDeliverablesId(Long workpackId) {
-        final Set<Long> deliverablesId = this.workpackRepository.getDeliverablesId(workpackId);
+    return deliverablesId;
+  }
 
-        if (this.workpackRepository.isDeliverable(workpackId)) {
-            deliverablesId.add(workpackId);
-        }
+  private TripleConstraintDataChart calculateForMonth(
+    final Long workpackId,
+    final Long baselineId,
+    final YearMonth yearMonth,
+    final Set<Long> deliverablesId
+  ) {
+    final TripleConstraintDataChart tripleConstraint = new TripleConstraintDataChart();
 
-        return deliverablesId;
+    tripleConstraint.setIdBaseline(baselineId);
+    tripleConstraint.setMesAno(this.getMesAno(yearMonth));
+
+    this.buildScheduleDataChart(baselineId, workpackId, tripleConstraint, yearMonth);
+
+    for(final Long deliverableId : deliverablesId) {
+        this.calculateForDeliverable(baselineId, tripleConstraint, deliverableId, yearMonth);
     }
 
-    private TripleConstraintDataChart calculateForMonth(
-      Long workpackId,
-      Long baselineId,
-      YearMonth yearMonth,
-      Set<Long> deliverablesId
-    ) {
-        final TripleConstraintDataChart tripleConstraint = new TripleConstraintDataChart();
+    return tripleConstraint;
+  }
 
-        tripleConstraint.setIdBaseline(baselineId);
-        tripleConstraint.setMesAno(getMesAno(yearMonth));
+  public LocalDate getMesAno(final YearMonth yearMonth) {
+    final LocalDate now = LocalDate.now();
+    if(yearMonth == null) {
+      return now;
+    }
+    final LocalDate endOfMonth = yearMonth.atEndOfMonth();
+    if(now.isBefore(endOfMonth)) {
+      return now;
+    }
+    return endOfMonth;
+  }
 
-        this.buildScheduleDataChart(baselineId, workpackId, tripleConstraint, yearMonth);
+  private List<TripleConstraintDataChart> calculateForAllMonths(
+    @NonNull final Long workpackId,
+    @NonNull final List<YearMonth> months
+  ) {
+    final ArrayList<TripleConstraintDataChart> charts = new ArrayList<>();
+    final Set<Long> deliverablesId = this.getDeliverablesId(workpackId);
 
-        for (Long deliverableId : deliverablesId) {
-            calculateForDeliverable(baselineId, tripleConstraint, deliverableId, yearMonth);
-        }
-
-        return tripleConstraint;
+    for(final Baseline baseline : this.getBaselines(workpackId)) {
+        this.calculateForBaseline(workpackId, baseline.getId(), months, deliverablesId, charts);
     }
 
-    public LocalDate getMesAno(YearMonth yearMonth) {
-        LocalDate now = LocalDate.now();
-        if (yearMonth == null) {
-            return now;
-        }
-        LocalDate endOfMonth = yearMonth.atEndOfMonth();
-        if (now.isBefore(endOfMonth)) {
-            return now;
-        }
-        return endOfMonth;
+    return charts;
+  }
+
+  private List<Baseline> getBaselines(final Long workpackId) {
+    final List<Baseline> baselines =
+      this.baselineRepository.findApprovedOrProposedBaselinesByAnyWorkpackId(workpackId);
+
+    if(this.workpackRepository.isProject(workpackId)) {
+      return baselines;
     }
 
-    @Override
-    @NonNull
-    public Optional<List<TripleConstraintDataChart>> calculate(@NonNull Long workpackId) {
-        final List<Long> baselineIds = getActiveBaselineIds(workpackId);
-
-        return this.baselineRepository.fetchIntervalOfSchedules(workpackId, baselineIds)
-          .filter(DateIntervalQuery::isValid)
-          .map(DateIntervalQuery::toYearMonths)
-          .map(months -> this.calculateForAllMonths(workpackId, months));
+    for(final Baseline baseline : baselines) {
+      if(baseline.isActive()) {
+        return Collections.singletonList(baseline);
+      }
     }
 
-    private List<TripleConstraintDataChart> calculateForAllMonths(
-      @NonNull Long workpackId,
-      @NonNull List<YearMonth> months
-    ) {
-        final ArrayList<TripleConstraintDataChart> charts = new ArrayList<>();
-        final Set<Long> deliverablesId = getDeliverablesId(workpackId);
+    return baselines.stream()
+      .max(Comparator.comparing(Baseline::getProposalDate))
+      .map(Collections::singletonList)
+      .orElse(null);
+  }
 
-        for (Baseline baseline : getBaselines(workpackId)) {
-            calculateForBaseline(workpackId, baseline.getId(), months, deliverablesId, charts);
-        }
-
-        return charts;
+  private void calculateForBaseline(
+    final Long workpackId,
+    final Long baselineId,
+    final List<YearMonth> months,
+    final Set<Long> deliverablesId,
+    final List<TripleConstraintDataChart> charts
+  ) {
+    for(final YearMonth month : months) {
+      charts.add(this.calculateForMonth(workpackId, baselineId, month, deliverablesId));
     }
+  }
 
-    private List<Baseline> getBaselines(Long workpackId) {
-        final List<Baseline> baselines =
-          this.baselineRepository.findApprovedOrProposedBaselinesByAnyWorkpackId(workpackId);
+  private void buildScheduleDataChart(
+    final Long baselineId,
+    final Long workpackId,
+    final TripleConstraintDataChart tripleConstraint,
+    final YearMonth yearMonth
+  ) {
+    final List<Long> baselineIds = Optional.ofNullable(baselineId)
+      .map(Collections::singletonList)
+      .orElse(this.getActiveBaselineIds(workpackId));
 
-        if (this.workpackRepository.isProject(workpackId)) {
-            return baselines;
-        }
+    final DateIntervalQuery plannedInterval = this.findIntervalInSnapshots(workpackId, baselineIds);
+    final DateIntervalQuery foreseenInterval = this.findIntervalInWorkpack(workpackId);
+    final ScheduleDataChart schedule = ScheduleDataChart.ofIntervals(plannedInterval, foreseenInterval, yearMonth);
+    tripleConstraint.setSchedule(schedule);
+  }
 
-        for (Baseline baseline : baselines) {
-            if (baseline.isActive()) {
-                return Collections.singletonList(baseline);
-            }
-        }
+  private void calculateForDeliverable(
+    final Long baselineId,
+    final TripleConstraintDataChart tripleConstraint,
+    final Long deliverableId,
+    final YearMonth yearMonth
+  ) {
+    final boolean canceled = this.workpackRepository.isCanceled(deliverableId);
+    this.scheduleRepository.findScheduleByWorkpackId(deliverableId).ifPresent(schedule ->
+                                                                                this.sumCostAndWorkOfSteps(baselineId,
+                                                                                                           tripleConstraint,
+                                                                                                           schedule.getSteps(),
+                                                                                                           yearMonth, canceled));
+  }
 
-        return baselines.stream()
-          .max(Comparator.comparing(Baseline::getProposalDate))
-          .map(Collections::singletonList)
-          .orElse(null);
-    }
+  private List<Long> getActiveBaselineIds(final Long workpackId) {
+    final List<Baseline> baselines = this.hasActiveBaseline(workpackId)
+      ? this.findActiveBaseline(workpackId)
+      : this.findAllActiveBaselines(workpackId);
 
-    private void calculateForBaseline(
-      Long workpackId,
-      Long baselineId,
-      List<YearMonth> months,
-      Set<Long> deliverablesId,
-      List<TripleConstraintDataChart> charts
-    ) {
-        for (YearMonth month : months) {
-            charts.add(calculateForMonth(workpackId, baselineId, month, deliverablesId));
-        }
-    }
+    return baselines.stream()
+      .map(Baseline::getId)
+      .collect(Collectors.toList());
+  }
 
-    private void buildScheduleDataChart(
-      final Long baselineId,
-      final Long workpackId,
-      final TripleConstraintDataChart tripleConstraint,
-            final YearMonth yearMonth
-    ) {
-        final List<Long> baselineIds = Optional.ofNullable(baselineId)
-                .map(Collections::singletonList)
-                .orElse(getActiveBaselineIds(workpackId));
+  private DateIntervalQuery findIntervalInSnapshots(
+    final Long workpackId,
+    final List<Long> baselineIds
+  ) {
+    return this.baselineRepository.fetchIntervalOfSchedules(workpackId, baselineIds)
+      .orElseThrow(() -> new NegocioException(INTERVAL_DATE_IN_BASELINE_NOT_FOUND));
+  }
 
-        final DateIntervalQuery plannedInterval = this.findIntervalInSnapshots(workpackId, baselineIds);
-        final DateIntervalQuery foreseenInterval = this.findIntervalInWorkpack(workpackId);
-        final ScheduleDataChart schedule = ScheduleDataChart.ofIntervals(plannedInterval, foreseenInterval, yearMonth);
-        tripleConstraint.setSchedule(schedule);
-    }
+  private void sumCostAndWorkOfSteps(
+    final Long baselineId,
+    final TripleConstraintDataChart tripleConstraint,
+    final Set<? extends Step> steps,
+    final YearMonth yearMonth,
+    final boolean canceled
+  ) {
+    final CostAndScopeData costAndScopeData = this.costScopeService.build(baselineId, yearMonth, steps, canceled);
+    tripleConstraint.sumCostData(costAndScopeData.getCostDataChart());
+    tripleConstraint.sumScopeData(costAndScopeData.getScopeDataChart());
+  }
 
-    private void calculateForDeliverable(
-            Long baselineId,
-            TripleConstraintDataChart tripleConstraint,
-            Long deliverableId,
-            YearMonth yearMonth
-    ) {
-        boolean canceled = this.workpackRepository.isCanceled(deliverableId);
-        this.scheduleRepository.findScheduleByWorkpackId(deliverableId).ifPresent(schedule ->
-                this.sumCostAndWorkOfSteps(baselineId, tripleConstraint, schedule.getSteps(), yearMonth, canceled));
-    }
+  private DateIntervalQuery findIntervalInWorkpack(final Long workpackId) {
+    return this.workpackRepository.findIntervalInSchedulesChildrenOf(workpackId)
+      .orElseThrow(() -> new NegocioException(INTERVAL_DATE_IN_BASELINE_NOT_FOUND));
+  }
 
-    private List<Long> getActiveBaselineIds(Long workpackId) {
-        List<Baseline> baselines = hasActiveBaseline(workpackId)
-                ? findActiveBaseline(workpackId)
-                : findAllActiveBaselines(workpackId);
+  private boolean hasActiveBaseline(final Long workpackId) {
+    return this.workpackRepository.hasActiveBaseline(workpackId);
+  }
 
-        return baselines.stream()
-                .map(Baseline::getId)
-                .collect(Collectors.toList());
-    }
+  private List<Baseline> findActiveBaseline(final Long workpackId) {
+    return this.baselineRepository.findActiveBaseline(workpackId)
+      .map(Collections::singletonList)
+      .orElseThrow(() -> new NegocioException(BASELINE_NOT_FOUND));
+  }
 
-    private DateIntervalQuery findIntervalInSnapshots(final Long workpackId, final List<Long> baselineIds) {
-        return this.baselineRepository.fetchIntervalOfSchedules(workpackId, baselineIds)
-                .orElseThrow(() -> new NegocioException(INTERVAL_DATE_IN_BASELINE_NOT_FOUND));
-    }
-
-    private void sumCostAndWorkOfSteps(
-            final Long baselineId,
-            final TripleConstraintDataChart tripleConstraint,
-            final Set<? extends Step> steps,
-            final YearMonth yearMonth,
-            boolean canceled
-    ) {
-        final CostAndScopeData costAndScopeData = this.costScopeService.build(baselineId, yearMonth, steps, canceled);
-        tripleConstraint.sumCostData(costAndScopeData.getCostDataChart());
-        tripleConstraint.sumScopeData(costAndScopeData.getScopeDataChart());
-    }
-
-    private DateIntervalQuery findIntervalInWorkpack(final Long workpackId) {
-        return this.workpackRepository.findIntervalInSchedulesChildrenOf(workpackId)
-                .orElseThrow(() -> new NegocioException(INTERVAL_DATE_IN_BASELINE_NOT_FOUND));
-    }
-
-    private boolean hasActiveBaseline(Long workpackId) {
-        return this.workpackRepository.hasActiveBaseline(workpackId);
-    }
-
-    private List<Baseline> findActiveBaseline(Long workpackId) {
-        return this.baselineRepository.findActiveBaseline(workpackId)
-                .map(Collections::singletonList)
-                .orElseThrow(() -> new NegocioException(BASELINE_NOT_FOUND));
-    }
-
-    private List<Baseline> findAllActiveBaselines(Long workpackId) {
-        return this.baselineRepository.findAllActiveBaselines(workpackId);
-    }
+  private List<Baseline> findAllActiveBaselines(final Long workpackId) {
+    return this.baselineRepository.findAllActiveBaselines(workpackId);
+  }
 
 }

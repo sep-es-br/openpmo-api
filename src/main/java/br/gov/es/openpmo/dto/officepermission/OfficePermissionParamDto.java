@@ -46,4 +46,5 @@ public class OfficePermissionParamDto {
   public void setPermissions(final List<PermissionDto> permissions) {
     this.permissions = permissions;
   }
+
 }

@@ -98,4 +98,5 @@ public class RiskUpdateDto {
   public LocalDate getHappenedIn() {
     return this.happenedIn;
   }
+
 }

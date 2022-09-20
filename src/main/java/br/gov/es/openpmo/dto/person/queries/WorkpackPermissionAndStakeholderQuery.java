@@ -36,4 +36,5 @@ public class WorkpackPermissionAndStakeholderQuery {
   public Set<IsStakeholderIn> getIsStakeholderIn() {
     return this.isStakeholderIn;
   }
+
 }

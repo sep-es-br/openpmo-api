@@ -60,7 +60,10 @@ public class ProcessService {
     this.customFilterService = customFilterService;
   }
 
-  public ProcessFromEDocsDto findProcessByProtocol(final String protocol, final Long idPerson) {
+  public ProcessFromEDocsDto findProcessByProtocol(
+    final String protocol,
+    final Long idPerson
+  ) {
     final ProcessResponse process = this.eDocsApi.findProcessByProtocol(protocol, idPerson);
     return ProcessFromEDocsDto.of(process);
   }
@@ -78,7 +81,10 @@ public class ProcessService {
   }
 
   @Transactional
-  public ProcessDetailDto update(final ProcessUpdateDto request, final Long idPerson) {
+  public ProcessDetailDto update(
+    final ProcessUpdateDto request,
+    final Long idPerson
+  ) {
     final Process process = this.maybeFindById(request)
       .orElseThrow(() -> new RegistroNaoEncontradoException(PROCESS_NOT_FOUND));
 
@@ -101,7 +107,10 @@ public class ProcessService {
   }
 
   @Transactional
-  public ProcessDetailDto findById(final Long idProcess, final Long idPerson) {
+  public ProcessDetailDto findById(
+    final Long idProcess,
+    final Long idPerson
+  ) {
     final Process process = this.repository.findById(idProcess)
       .orElseThrow(() -> new RegistroNaoEncontradoException(PROCESS_NOT_FOUND));
     final ProcessResponse processResponse = this.eDocsApi.findProcessByProtocol(process.getProcessNumber(), idPerson);
@@ -110,12 +119,19 @@ public class ProcessService {
     return ProcessDetailDto.of(processResponse, process);
   }
 
-  private void updateProcessState(final Process process, final ProcessResponse processResponse) {
+  private void updateProcessState(
+    final Process process,
+    final ProcessResponse processResponse
+  ) {
     process.updateUsingEDocsData(processResponse);
     this.repository.save(process, 0);
   }
 
-  public List<ProcessCardDto> findAllAsCardDto(final Long idWorkpack, final Long idFilter, final Long idPerson) {
+  public List<ProcessCardDto> findAllAsCardDto(
+    final Long idWorkpack,
+    final Long idFilter,
+    final Long idPerson
+  ) {
 
     if(idWorkpack == null) {
       throw new IllegalArgumentException(ID_WORKPACK_NOT_NULL);
@@ -129,7 +145,11 @@ public class ProcessService {
     return this.findUsingCustomFilter(idWorkpack, idFilter, idPerson);
   }
 
-  private List<ProcessCardDto> findUsingCustomFilter(final Long idWorkpack, final Long idFilter, final Long idPerson) {
+  private List<ProcessCardDto> findUsingCustomFilter(
+    final Long idWorkpack,
+    final Long idFilter,
+    final Long idPerson
+  ) {
     final CustomFilter filter = this.customFilterService.findById(idFilter, idPerson);
     final Map<String, Object> params = new HashMap<>();
     params.put("idWorkpack", idWorkpack);

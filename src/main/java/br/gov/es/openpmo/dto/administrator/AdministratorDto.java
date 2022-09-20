@@ -14,7 +14,13 @@ public class AdministratorDto {
   private final String email;
   private final Boolean administrator;
 
-  public AdministratorDto(final Long id, final String name, final String fullName, final String email, final Boolean administrator) {
+  public AdministratorDto(
+    final Long id,
+    final String name,
+    final String fullName,
+    final String email,
+    final Boolean administrator
+  ) {
     this.id = id;
     this.name = name;
     this.fullName = fullName;
@@ -22,7 +28,10 @@ public class AdministratorDto {
     this.administrator = administrator;
   }
 
-  public AdministratorDto(final Person person, final String serverName) {
+  public AdministratorDto(
+    final Person person,
+    final String serverName
+  ) {
     this.id = person.getId();
     this.name = person.getName();
     this.fullName = person.getFullName();
@@ -51,4 +60,5 @@ public class AdministratorDto {
   public Boolean getAdministrator() {
     return this.administrator;
   }
+
 }

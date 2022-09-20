@@ -7,7 +7,6 @@ import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Iterator;
 import java.util.function.Predicate;
 
 @Service
@@ -24,7 +23,10 @@ public class ParentWorkpackTypeVerifier {
     return !model.hasParent();
   }
 
-  public boolean verify(final Long id, final Predicate<WorkpackModel> typeVerifier) {
+  public boolean verify(
+    final Long id,
+    final Predicate<WorkpackModel> typeVerifier
+  ) {
     final WorkpackModel model = this.findByIdWithParents(id);
     if(hasNoParents(model)) return typeVerifier.test(model);
     return this.hasParentOfTypeProject(model, typeVerifier);
@@ -46,4 +48,5 @@ public class ParentWorkpackTypeVerifier {
     }
     return false;
   }
+
 }

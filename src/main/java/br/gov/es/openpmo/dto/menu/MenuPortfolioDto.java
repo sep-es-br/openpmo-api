@@ -3,6 +3,7 @@ package br.gov.es.openpmo.dto.menu;
 import java.util.List;
 
 public class MenuPortfolioDto {
+
   private Long id;
   private String nome;
   private String fullName;
@@ -40,4 +41,5 @@ public class MenuPortfolioDto {
   public void setWorkpack(final List<WorkpackMenuDto> workpack) {
     this.workpack = workpack;
   }
+
 }

@@ -24,7 +24,10 @@ public class FindAllLocalityUsingCustomFilter extends FindAllUsingCustomFilterBu
   }
 
   @Override
-  public void buildMatchClause(final CustomFilter filter, final StringBuilder query) {
+  public void buildMatchClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query.append("MATCH (domain:Domain)<-[:IS_ROOT_OF]-(")
       .append("root:Locality)")
       .append("\n")
@@ -34,7 +37,10 @@ public class FindAllLocalityUsingCustomFilter extends FindAllUsingCustomFilterBu
   }
 
   @Override
-  public void buildWhereClause(final CustomFilter filter, final StringBuilder query) {
+  public void buildWhereClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query.append("WHERE id(domain)=$idDomain")
       .append(" ");
   }
@@ -50,11 +56,13 @@ public class FindAllLocalityUsingCustomFilter extends FindAllUsingCustomFilterBu
       .append("]");
   }
 
-  @Override protected boolean hasAppendedBooleanBlock() {
+  @Override
+  protected boolean hasAppendedBooleanBlock() {
     return true;
   }
 
-  @Override protected boolean hasToCloseAppendedBooleanBlock() {
+  @Override
+  protected boolean hasToCloseAppendedBooleanBlock() {
     return true;
   }
 
@@ -62,4 +70,5 @@ public class FindAllLocalityUsingCustomFilter extends FindAllUsingCustomFilterBu
   public String[] getDefinedExternalParams() {
     return new String[]{"idDomain"};
   }
+
 }

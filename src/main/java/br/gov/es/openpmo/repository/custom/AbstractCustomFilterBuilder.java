@@ -20,7 +20,10 @@ public abstract class AbstractCustomFilterBuilder {
 
   protected abstract Session getSession();
 
-  protected String buildQuery(final CustomFilter filter, final Map<String, Object> params) {
+  protected String buildQuery(
+    final CustomFilter filter,
+    final Map<String, Object> params
+  ) {
     this.validateArgs(filter, params);
 
     final StringBuilder query = new StringBuilder();
@@ -40,9 +43,15 @@ public abstract class AbstractCustomFilterBuilder {
     return query.toString();
   }
 
-  protected abstract void buildMatchClause(CustomFilter filter, StringBuilder query);
+  protected abstract void buildMatchClause(
+    CustomFilter filter,
+    StringBuilder query
+  );
 
-  protected abstract void buildWhereClause(CustomFilter filter, StringBuilder query);
+  protected abstract void buildWhereClause(
+    CustomFilter filter,
+    StringBuilder query
+  );
 
   protected abstract void buildReturnClause(StringBuilder query);
 
@@ -106,7 +115,10 @@ public abstract class AbstractCustomFilterBuilder {
     return value;
   }
 
-  protected String buildCustomFilterRule(final Rules rule, final String label) {
+  protected String buildCustomFilterRule(
+    final Rules rule,
+    final String label
+  ) {
     return format("({0}.{1} {2} ${3}) ",
                   this.nodeName, rule.getPropertyName(), rule.getRelationalOperator().getOperador(), label
     );
@@ -117,7 +129,10 @@ public abstract class AbstractCustomFilterBuilder {
 
   protected abstract boolean hasToCloseAppendedBooleanBlock();
 
-  protected void buildOrderingAndDirectionClause(final CustomFilter filter, final StringBuilder query) {
+  protected void buildOrderingAndDirectionClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     this.appendStringIfTrue(
       filter.getSortBy() != null,
       builder -> builder.append(" ").append("ORDER BY ")
@@ -138,7 +153,10 @@ public abstract class AbstractCustomFilterBuilder {
     }
   }
 
-  protected void validateArgs(final CustomFilter filter, final Map<String, Object> params) {
+  protected void validateArgs(
+    final CustomFilter filter,
+    final Map<String, Object> params
+  ) {
     Objects.requireNonNull(params, "Parameters container must be not null");
     Objects.requireNonNull(filter, "Filter must be not null");
   }
@@ -152,4 +170,5 @@ public abstract class AbstractCustomFilterBuilder {
   }
 
   protected abstract String[] getDefinedExternalParams();
+
 }

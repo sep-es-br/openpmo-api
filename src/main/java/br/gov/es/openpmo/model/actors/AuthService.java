@@ -24,4 +24,5 @@ public class AuthService extends Entity {
   public void setEndPoint(final String endPoint) {
     this.endPoint = endPoint;
   }
+
 }

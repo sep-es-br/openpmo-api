@@ -52,4 +52,5 @@ public class PlanModelStoreDto {
   public Set<OfficeDto> getSharedWith() {
     return this.sharedWith;
   }
+
 }

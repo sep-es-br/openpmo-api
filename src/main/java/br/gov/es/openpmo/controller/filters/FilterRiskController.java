@@ -19,7 +19,10 @@ public class FilterRiskController extends CreateAndUpdateUsingWorkpackModelFilte
   private final TokenService tokenService;
 
   @Autowired
-  public FilterRiskController(final CustomFilterService customFilterService, final TokenService tokenService) {
+  public FilterRiskController(
+    final CustomFilterService customFilterService,
+    final TokenService tokenService
+  ) {
     this.customFilterService = customFilterService;
     this.tokenService = tokenService;
   }
@@ -29,7 +32,8 @@ public class FilterRiskController extends CreateAndUpdateUsingWorkpackModelFilte
     return this.customFilterService;
   }
 
-  @Override protected TokenService getTokenService() {
+  @Override
+  protected TokenService getTokenService() {
     return this.tokenService;
   }
 
@@ -37,4 +41,5 @@ public class FilterRiskController extends CreateAndUpdateUsingWorkpackModelFilte
   protected CustomFilterEnum getFilter() {
     return CustomFilterEnum.RISK;
   }
+
 }

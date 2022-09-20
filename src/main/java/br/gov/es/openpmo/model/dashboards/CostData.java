@@ -6,66 +6,66 @@ import java.math.BigDecimal;
 
 public class CostData {
 
-    private BigDecimal actualValue;
+  private BigDecimal actualValue;
 
-    private BigDecimal variation;
+  private BigDecimal variation;
 
-    private BigDecimal plannedValue;
+  private BigDecimal plannedValue;
 
-    private BigDecimal foreseenValue;
+  private BigDecimal foreseenValue;
 
-    public static CostData of(CostDataChart from) {
-        if (from == null) {
-            return null;
-        }
-
-        final CostData to = new CostData();
-        to.setActualValue(from.getActualValue());
-        to.setVariation(from.getVariation());
-        to.setPlannedValue(from.getPlannedValue());
-        to.setForeseenValue(from.getForeseenValue());
-        return to;
+  public static CostData of(final CostDataChart from) {
+    if(from == null) {
+      return null;
     }
 
-    public BigDecimal getActualValue() {
-        return actualValue;
-    }
+    final CostData to = new CostData();
+    to.setActualValue(from.getActualValue());
+    to.setVariation(from.getVariation());
+    to.setPlannedValue(from.getPlannedValue());
+    to.setForeseenValue(from.getForeseenValue());
+    return to;
+  }
 
-    public void setActualValue(BigDecimal actualValue) {
-        this.actualValue = actualValue;
-    }
+  public BigDecimal getActualValue() {
+    return this.actualValue;
+  }
 
-    public BigDecimal getVariation() {
-        return variation;
-    }
+  public void setActualValue(final BigDecimal actualValue) {
+    this.actualValue = actualValue;
+  }
 
-    public void setVariation(BigDecimal variation) {
-        this.variation = variation;
-    }
+  public BigDecimal getVariation() {
+    return this.variation;
+  }
 
-    public BigDecimal getPlannedValue() {
-        return plannedValue;
-    }
+  public void setVariation(final BigDecimal variation) {
+    this.variation = variation;
+  }
 
-    public void setPlannedValue(BigDecimal plannedValue) {
-        this.plannedValue = plannedValue;
-    }
+  public BigDecimal getPlannedValue() {
+    return this.plannedValue;
+  }
 
-    public BigDecimal getForeseenValue() {
-        return foreseenValue;
-    }
+  public void setPlannedValue(final BigDecimal plannedValue) {
+    this.plannedValue = plannedValue;
+  }
 
-    public void setForeseenValue(BigDecimal foreseenValue) {
-        this.foreseenValue = foreseenValue;
-    }
+  public BigDecimal getForeseenValue() {
+    return this.foreseenValue;
+  }
 
-    public CostDataChart getResponse() {
-        final CostDataChart costDataChart = new CostDataChart();
-        costDataChart.setActualValue(this.actualValue);
-        costDataChart.setForeseenValue(this.foreseenValue);
-        costDataChart.setPlannedValue(this.plannedValue);
-        costDataChart.setVariation(this.variation);
-        return costDataChart;
-    }
+  public void setForeseenValue(final BigDecimal foreseenValue) {
+    this.foreseenValue = foreseenValue;
+  }
+
+  public CostDataChart getResponse() {
+    final CostDataChart costDataChart = new CostDataChart();
+    costDataChart.setActualValue(this.actualValue);
+    costDataChart.setForeseenValue(this.foreseenValue);
+    costDataChart.setPlannedValue(this.plannedValue);
+    costDataChart.setVariation(this.variation);
+    return costDataChart;
+  }
 
 }

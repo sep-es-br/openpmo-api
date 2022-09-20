@@ -24,4 +24,5 @@ public class BaselineEvaluationRequest {
   public Decision getDecision() {
     return this.decision;
   }
+
 }

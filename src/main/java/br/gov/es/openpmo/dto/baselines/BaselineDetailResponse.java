@@ -127,4 +127,5 @@ public class BaselineDetailResponse {
   public void setUpdates(final List<UpdateResponse> updates) {
     this.updates = updates;
   }
+
 }

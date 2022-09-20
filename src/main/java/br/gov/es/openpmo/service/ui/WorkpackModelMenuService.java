@@ -16,65 +16,71 @@ import java.util.Set;
 @Service
 public class WorkpackModelMenuService {
 
-    private final OfficeRepository officeRepository;
+  private final OfficeRepository officeRepository;
 
-    private final PlanModelRepository planModelRepository;
+  private final PlanModelRepository planModelRepository;
 
-    public WorkpackModelMenuService(OfficeRepository officeRepository, PlanModelRepository planModelRepository) {
-        this.officeRepository = officeRepository;
-        this.planModelRepository = planModelRepository;
+  public WorkpackModelMenuService(
+    final OfficeRepository officeRepository,
+    final PlanModelRepository planModelRepository
+  ) {
+    this.officeRepository = officeRepository;
+    this.planModelRepository = planModelRepository;
+  }
+
+  public List<PlanModelMenuResponse> getResponses(final Long idOffice) {
+    final List<PlanModelMenuResponse> planModelMenuResponses = new ArrayList<>();
+    final List<PlanModel> planModels = this.officeRepository.findAllPlanModelsByOfficeId(idOffice);
+
+    for(final PlanModel planModel : planModels) {
+      final PlanModelMenuResponse planModelMenuResponse = new PlanModelMenuResponse();
+
+      planModelMenuResponse.setId(planModel.getId());
+      planModelMenuResponse.setName(planModel.getName());
+      planModelMenuResponse.setFullName(planModel.getFullName());
+
+      final List<WorkpackModel> workpackModels =
+        this.planModelRepository.findAllWorkpackModelsByPlanModelId(planModel.getId());
+
+      final Set<WorkpackModelMenuResponse> workpackModelMenuResponses = new HashSet<>();
+
+      for(final WorkpackModel workpackModel : workpackModels) {
+        final WorkpackModelMenuResponse response = this.getResponse(planModel, workpackModel);
+        workpackModelMenuResponses.add(response);
+      }
+
+      planModelMenuResponse.setWorkpackModels(workpackModelMenuResponses);
+      planModelMenuResponses.add(planModelMenuResponse);
     }
 
-    public List<PlanModelMenuResponse> getResponses(Long idOffice) {
-        List<PlanModelMenuResponse> planModelMenuResponses = new ArrayList<>();
-        List<PlanModel> planModels = this.officeRepository.findAllPlanModelsByOfficeId(idOffice);
+    return planModelMenuResponses;
+  }
 
-        for (PlanModel planModel : planModels) {
-            PlanModelMenuResponse planModelMenuResponse = new PlanModelMenuResponse();
+  private WorkpackModelMenuResponse getResponse(
+    final PlanModel planModel,
+    final WorkpackModel workpackModel
+  ) {
+    final WorkpackModelMenuResponse item = new WorkpackModelMenuResponse();
 
-            planModelMenuResponse.setId(planModel.getId());
-            planModelMenuResponse.setName(planModel.getName());
-            planModelMenuResponse.setFullName(planModel.getFullName());
+    item.setId(workpackModel.getId());
+    item.setIdPlanModel(planModel.getId());
+    item.setName(workpackModel.getModelName());
+    item.setFontIcon(workpackModel.getFontIcon());
 
-            List<WorkpackModel> workpackModels =
-                    this.planModelRepository.findAllWorkpackModelsByPlanModelId(planModel.getId());
+    final Set<WorkpackModelMenuResponse> children = new HashSet<>();
 
-            Set<WorkpackModelMenuResponse> workpackModelMenuResponses = new HashSet<>();
-
-            for (WorkpackModel workpackModel : workpackModels) {
-                WorkpackModelMenuResponse response = getResponse(planModel, workpackModel);
-                workpackModelMenuResponses.add(response);
-            }
-
-            planModelMenuResponse.setWorkpackModels(workpackModelMenuResponses);
-            planModelMenuResponses.add(planModelMenuResponse);
-        }
-
-        return planModelMenuResponses;
+    if(workpackModel.getChildren() == null) {
+      item.setChildren(null);
+      return item;
     }
 
-    private WorkpackModelMenuResponse getResponse(PlanModel planModel, WorkpackModel workpackModel) {
-        WorkpackModelMenuResponse item = new WorkpackModelMenuResponse();
-
-        item.setId(workpackModel.getId());
-        item.setIdPlanModel(planModel.getId());
-        item.setName(workpackModel.getModelName());
-        item.setFontIcon(workpackModel.getFontIcon());
-
-        Set<WorkpackModelMenuResponse> children = new HashSet<>();
-
-        if (workpackModel.getChildren() == null) {
-            item.setChildren(null);
-            return item;
-        }
-
-        for (WorkpackModel child : workpackModel.getChildren()) {
-            WorkpackModelMenuResponse response = getResponse(planModel, child);
-            children.add(response);
-        }
-
-        item.setChildren(children);
-        return item;
+    for(final WorkpackModel child : workpackModel.getChildren()) {
+      final WorkpackModelMenuResponse response = this.getResponse(planModel, child);
+      children.add(response);
     }
+
+    item.setChildren(children);
+    return item;
+  }
 
 }

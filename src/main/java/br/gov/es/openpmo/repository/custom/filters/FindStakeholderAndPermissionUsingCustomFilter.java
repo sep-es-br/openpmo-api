@@ -24,7 +24,10 @@ public class FindStakeholderAndPermissionUsingCustomFilter extends FindStakehold
   }
 
   @Override
-  public void buildMatchClause(final CustomFilter filter, final StringBuilder query) {
+  public void buildMatchClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query.append("MATCH (actor:Actor)-[isStakeholderIn:IS_STAKEHOLDER_IN]->(workpack:Workpack{deleted:false}) ")
       .append("OPTIONAL MATCH (workpack)-[belongsTo:BELONGS_TO]->(plan:Plan)\n")
       .append("OPTIONAL MATCH (person:Person)-[canAccessWorkpack:CAN_ACCESS_WORKPACK]->(workpack)\n")
@@ -34,7 +37,10 @@ public class FindStakeholderAndPermissionUsingCustomFilter extends FindStakehold
   }
 
   @Override
-  public void buildWhereClause(final CustomFilter filter, final StringBuilder query) {
+  public void buildWhereClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query
       .append(
         "WITH actor, isStakeholderIn, workpack, belongsTo, plan, person, canAccessWorkpack, contact, office, adoptedBy\n")
@@ -49,11 +55,13 @@ public class FindStakeholderAndPermissionUsingCustomFilter extends FindStakehold
       .append(" ");
   }
 
-  @Override protected boolean hasAppendedBooleanBlock() {
+  @Override
+  protected boolean hasAppendedBooleanBlock() {
     return true;
   }
 
-  @Override protected boolean hasToCloseAppendedBooleanBlock() {
+  @Override
+  protected boolean hasToCloseAppendedBooleanBlock() {
     return true;
   }
 
@@ -61,4 +69,5 @@ public class FindStakeholderAndPermissionUsingCustomFilter extends FindStakehold
   public String[] getDefinedExternalParams() {
     return new String[]{"idWorkpack"};
   }
+
 }

@@ -7,6 +7,7 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
 public class ProcessCreateDto {
+
   @NotNull(message = ApplicationMessage.ID_WORKPACK_NOT_NULL)
   private final Long idWorkpack;
   @NotNull
@@ -57,4 +58,5 @@ public class ProcessCreateDto {
   public ProcessReadonlyDetailDto getReadonlyDetail() {
     return this.readonlyDetail;
   }
+
 }

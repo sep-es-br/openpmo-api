@@ -17,7 +17,10 @@ public class FindAllWorkpackUsingCustomFilter extends FindAllUsingCustomFilterBu
   private final PropertyModelRepository propertyModelRepository;
 
   @Autowired
-  public FindAllWorkpackUsingCustomFilter(final WorkpackRepository repository, final PropertyModelRepository propertyModelRepository) {
+  public FindAllWorkpackUsingCustomFilter(
+    final WorkpackRepository repository,
+    final PropertyModelRepository propertyModelRepository
+  ) {
     this.repository = repository;
     this.propertyModelRepository = propertyModelRepository;
   }
@@ -28,7 +31,10 @@ public class FindAllWorkpackUsingCustomFilter extends FindAllUsingCustomFilterBu
   }
 
   @Override
-  public void buildMatchClause(final CustomFilter filter, final StringBuilder query) {
+  public void buildMatchClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query.append("MATCH (node:Workpack{deleted:false})-[rf:BELONGS_TO]->(p:Plan), " +
                  "(p)-[is:IS_STRUCTURED_BY]->(pm:PlanModel)<-[bt:BELONGS_TO]-(wm:WorkpackModel), " +
                  "(wm)<-[:FEATURES]-(propertyModel:PropertyModel), " +
@@ -43,7 +49,10 @@ public class FindAllWorkpackUsingCustomFilter extends FindAllUsingCustomFilterBu
   }
 
   @Override
-  public void buildWhereClause(final CustomFilter filter, final StringBuilder query) {
+  public void buildWhereClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query.append("WHERE (" +
                  "   id(p)=$idPlan " +
                  "   AND (id(pm)=$idPlanModel OR $idPlanModel IS NULL) " +
@@ -71,20 +80,28 @@ public class FindAllWorkpackUsingCustomFilter extends FindAllUsingCustomFilterBu
   }
 
   @Override
-  protected String buildCustomFilterRule(final Rules rule, final String label) {
+  protected String buildCustomFilterRule(
+    final Rules rule,
+    final String label
+  ) {
     return this.buildFilterRuleForWorkpack(rule, label);
   }
 
-  @Override protected boolean hasAppendedBooleanBlock() {
-    return true;
-  }
-
-  @Override protected boolean hasToCloseAppendedBooleanBlock() {
+  @Override
+  protected boolean hasAppendedBooleanBlock() {
     return true;
   }
 
   @Override
-  protected void buildOrderingAndDirectionClause(final CustomFilter filter, final StringBuilder query) {
+  protected boolean hasToCloseAppendedBooleanBlock() {
+    return true;
+  }
+
+  @Override
+  protected void buildOrderingAndDirectionClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     this.buildOrderingAndDirectionClauseForWorkpack(filter, query);
   }
 
@@ -107,4 +124,5 @@ public class FindAllWorkpackUsingCustomFilter extends FindAllUsingCustomFilterBu
   public PropertyModelRepository getPropertyModelRepository() {
     return this.propertyModelRepository;
   }
+
 }

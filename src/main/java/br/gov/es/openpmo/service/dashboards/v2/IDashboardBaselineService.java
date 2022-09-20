@@ -7,6 +7,6 @@ import java.util.List;
 @FunctionalInterface
 public interface IDashboardBaselineService {
 
-    List<DashboardBaselineResponse> getBaselines(Long workpackId);
+  List<DashboardBaselineResponse> getBaselines(Long workpackId);
 
 }

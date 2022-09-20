@@ -42,7 +42,11 @@ public class Consumes extends Entity {
     this.step = step;
   }
 
-  public Consumes(final Consumes consumes, final CostAccount costAccount, final Step step) {
+  public Consumes(
+    final Consumes consumes,
+    final CostAccount costAccount,
+    final Step step
+  ) {
     this.actualCost = consumes.actualCost;
     this.plannedCost = consumes.plannedCost;
     this.costAccount = costAccount;
@@ -130,4 +134,5 @@ public class Consumes extends Entity {
       .map(CostAccount::getId)
       .orElse(null);
   }
+
 }

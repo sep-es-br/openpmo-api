@@ -19,7 +19,10 @@ public class FilterUnitMeasuresController extends CreateAndUpdateUsingCommonFilt
   private final TokenService tokenService;
 
   @Autowired
-  public FilterUnitMeasuresController(final CustomFilterService customFilterService, final TokenService tokenService) {
+  public FilterUnitMeasuresController(
+    final CustomFilterService customFilterService,
+    final TokenService tokenService
+  ) {
     this.customFilterService = customFilterService;
     this.tokenService = tokenService;
   }
@@ -29,7 +32,8 @@ public class FilterUnitMeasuresController extends CreateAndUpdateUsingCommonFilt
     return this.customFilterService;
   }
 
-  @Override protected TokenService getTokenService() {
+  @Override
+  protected TokenService getTokenService() {
     return this.tokenService;
   }
 
@@ -37,4 +41,5 @@ public class FilterUnitMeasuresController extends CreateAndUpdateUsingCommonFilt
   protected CustomFilterEnum getFilter() {
     return CustomFilterEnum.UNIT_MEASURES;
   }
+
 }

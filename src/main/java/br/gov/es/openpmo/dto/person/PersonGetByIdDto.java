@@ -33,16 +33,23 @@ public class PersonGetByIdDto {
 
   private List<String> roles = Collections.singletonList("citizen");
 
-  public static PersonGetByIdDto from(final Person person, final Optional<IsInContactBookOf> maybeContact, final UriComponentsBuilder uriComponentsBuilder) {
+  public static PersonGetByIdDto from(
+    final Person person,
+    final Optional<IsInContactBookOf> maybeContact,
+    final UriComponentsBuilder uriComponentsBuilder
+  ) {
     final PersonGetByIdDto dto = from(person);
     maybeSetContact(maybeContact, dto);
-    if (person.getAvatar() != null) {
+    if(person.getAvatar() != null) {
       dto.setAvatar(new AvatarDto(person.getAvatar(), uriComponentsBuilder));
     }
     return dto;
   }
 
-  private static void maybeSetContact(final Optional<IsInContactBookOf> maybeContact, final PersonGetByIdDto dto) {
+  private static void maybeSetContact(
+    final Optional<IsInContactBookOf> maybeContact,
+    final PersonGetByIdDto dto
+  ) {
     maybeContact.ifPresent(contact -> {
       dto.setContactEmail(contact.getEmail());
       dto.setAddress(contact.getAddress());

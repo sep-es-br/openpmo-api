@@ -23,7 +23,10 @@ public class FindAllRiskUsingCustomFilter extends FindAllUsingCustomFilterBuilde
   }
 
   @Override
-  protected void buildMatchClause(final CustomFilter filter, final StringBuilder query) {
+  protected void buildMatchClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query.append("MATCH (")
       .append(this.nodeName)
       .append(":Risk)-[isReportedFor:IS_FORSEEN_ON]->(workpack:Workpack{deleted:false})")
@@ -31,7 +34,10 @@ public class FindAllRiskUsingCustomFilter extends FindAllUsingCustomFilterBuilde
   }
 
   @Override
-  protected void buildWhereClause(final CustomFilter filter, final StringBuilder query) {
+  protected void buildWhereClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query.append("WHERE ").append("id(workpack)=$idWorkpack").append("\n");
   }
 
@@ -40,11 +46,13 @@ public class FindAllRiskUsingCustomFilter extends FindAllUsingCustomFilterBuilde
     query.append("RETURN ").append(this.nodeName).append(", isReportedFor, workpack").append("\n");
   }
 
-  @Override protected boolean hasAppendedBooleanBlock() {
+  @Override
+  protected boolean hasAppendedBooleanBlock() {
     return true;
   }
 
-  @Override protected boolean hasToCloseAppendedBooleanBlock() {
+  @Override
+  protected boolean hasToCloseAppendedBooleanBlock() {
     return true;
   }
 
@@ -52,4 +60,5 @@ public class FindAllRiskUsingCustomFilter extends FindAllUsingCustomFilterBuilde
   protected String[] getDefinedExternalParams() {
     return new String[]{"idWorkpack"};
   }
+
 }

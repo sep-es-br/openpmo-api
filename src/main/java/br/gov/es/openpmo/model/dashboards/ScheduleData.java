@@ -7,138 +7,138 @@ import java.time.LocalDate;
 
 public class ScheduleData {
 
-    private LocalDate plannedStartDate;
+  private LocalDate plannedStartDate;
 
-    private LocalDate plannedEndDate;
+  private LocalDate plannedEndDate;
 
-    private LocalDate foreseenStartDate;
+  private LocalDate foreseenStartDate;
 
-    private LocalDate foreseenEndDate;
+  private LocalDate foreseenEndDate;
 
-    private LocalDate actualStartDate;
+  private LocalDate actualStartDate;
 
-    private LocalDate actualEndDate;
+  private LocalDate actualEndDate;
 
-    private BigDecimal variation;
+  private BigDecimal variation;
 
-    private BigDecimal plannedValue;
+  private BigDecimal plannedValue;
 
-    private BigDecimal foreseenValue;
+  private BigDecimal foreseenValue;
 
-    private BigDecimal actualValue;
+  private BigDecimal actualValue;
 
-    public static ScheduleData of(ScheduleDataChart from) {
-        if (from == null) {
-            return null;
-        }
-
-        final ScheduleData to = new ScheduleData();
-        to.setPlannedStartDate(from.getPlannedStartDate());
-        to.setPlannedEndDate(from.getPlannedEndDate());
-        to.setForeseenStartDate(from.getForeseenStartDate());
-        to.setForeseenEndDate(from.getForeseenEndDate());
-        to.setActualStartDate(from.getActualStartDate());
-        to.setActualEndDate(from.getActualEndDate());
-        to.setVariation(from.getVariation());
-        to.setPlannedValue(from.getPlannedValue());
-        to.setForeseenValue(from.getForeseenValue());
-        to.setActualValue(from.getActualValue());
-        return to;
+  public static ScheduleData of(final ScheduleDataChart from) {
+    if(from == null) {
+      return null;
     }
 
-    public LocalDate getPlannedStartDate() {
-        return plannedStartDate;
-    }
+    final ScheduleData to = new ScheduleData();
+    to.setPlannedStartDate(from.getPlannedStartDate());
+    to.setPlannedEndDate(from.getPlannedEndDate());
+    to.setForeseenStartDate(from.getForeseenStartDate());
+    to.setForeseenEndDate(from.getForeseenEndDate());
+    to.setActualStartDate(from.getActualStartDate());
+    to.setActualEndDate(from.getActualEndDate());
+    to.setVariation(from.getVariation());
+    to.setPlannedValue(from.getPlannedValue());
+    to.setForeseenValue(from.getForeseenValue());
+    to.setActualValue(from.getActualValue());
+    return to;
+  }
 
-    public void setPlannedStartDate(LocalDate plannedStartDate) {
-        this.plannedStartDate = plannedStartDate;
-    }
+  public LocalDate getPlannedStartDate() {
+    return this.plannedStartDate;
+  }
 
-    public LocalDate getPlannedEndDate() {
-        return plannedEndDate;
-    }
+  public void setPlannedStartDate(final LocalDate plannedStartDate) {
+    this.plannedStartDate = plannedStartDate;
+  }
 
-    public void setPlannedEndDate(LocalDate plannedEndDate) {
-        this.plannedEndDate = plannedEndDate;
-    }
+  public LocalDate getPlannedEndDate() {
+    return this.plannedEndDate;
+  }
 
-    public LocalDate getForeseenStartDate() {
-        return foreseenStartDate;
-    }
+  public void setPlannedEndDate(final LocalDate plannedEndDate) {
+    this.plannedEndDate = plannedEndDate;
+  }
 
-    public void setForeseenStartDate(LocalDate foreseenStartDate) {
-        this.foreseenStartDate = foreseenStartDate;
-    }
+  public LocalDate getForeseenStartDate() {
+    return this.foreseenStartDate;
+  }
 
-    public LocalDate getForeseenEndDate() {
-        return foreseenEndDate;
-    }
+  public void setForeseenStartDate(final LocalDate foreseenStartDate) {
+    this.foreseenStartDate = foreseenStartDate;
+  }
 
-    public void setForeseenEndDate(LocalDate foreseenEndDate) {
-        this.foreseenEndDate = foreseenEndDate;
-    }
+  public LocalDate getForeseenEndDate() {
+    return this.foreseenEndDate;
+  }
 
-    public LocalDate getActualStartDate() {
-        return actualStartDate;
-    }
+  public void setForeseenEndDate(final LocalDate foreseenEndDate) {
+    this.foreseenEndDate = foreseenEndDate;
+  }
 
-    public void setActualStartDate(LocalDate actualStartDate) {
-        this.actualStartDate = actualStartDate;
-    }
+  public LocalDate getActualStartDate() {
+    return this.actualStartDate;
+  }
 
-    public LocalDate getActualEndDate() {
-        return actualEndDate;
-    }
+  public void setActualStartDate(final LocalDate actualStartDate) {
+    this.actualStartDate = actualStartDate;
+  }
 
-    public void setActualEndDate(LocalDate actualEndDate) {
-        this.actualEndDate = actualEndDate;
-    }
+  public LocalDate getActualEndDate() {
+    return this.actualEndDate;
+  }
 
-    public BigDecimal getVariation() {
-        return variation;
-    }
+  public void setActualEndDate(final LocalDate actualEndDate) {
+    this.actualEndDate = actualEndDate;
+  }
 
-    public void setVariation(BigDecimal variation) {
-        this.variation = variation;
-    }
+  public BigDecimal getVariation() {
+    return this.variation;
+  }
 
-    public BigDecimal getPlannedValue() {
-        return plannedValue;
-    }
+  public void setVariation(final BigDecimal variation) {
+    this.variation = variation;
+  }
 
-    public void setPlannedValue(BigDecimal plannedValue) {
-        this.plannedValue = plannedValue;
-    }
+  public BigDecimal getPlannedValue() {
+    return this.plannedValue;
+  }
 
-    public BigDecimal getForeseenValue() {
-        return foreseenValue;
-    }
+  public void setPlannedValue(final BigDecimal plannedValue) {
+    this.plannedValue = plannedValue;
+  }
 
-    public void setForeseenValue(BigDecimal foreseenValue) {
-        this.foreseenValue = foreseenValue;
-    }
+  public BigDecimal getForeseenValue() {
+    return this.foreseenValue;
+  }
 
-    public BigDecimal getActualValue() {
-        return actualValue;
-    }
+  public void setForeseenValue(final BigDecimal foreseenValue) {
+    this.foreseenValue = foreseenValue;
+  }
 
-    public void setActualValue(BigDecimal actualValue) {
-        this.actualValue = actualValue;
-    }
+  public BigDecimal getActualValue() {
+    return this.actualValue;
+  }
 
-    public ScheduleDataChart getResponse() {
-        return new ScheduleDataChart(
-                this.plannedStartDate,
-                this.plannedEndDate,
-                this.foreseenStartDate,
-                this.foreseenEndDate,
-                this.actualStartDate,
-                this.actualEndDate,
-                this.variation,
-                this.plannedValue,
-                this.foreseenValue,
-                this.actualValue
-        );
-    }
+  public void setActualValue(final BigDecimal actualValue) {
+    this.actualValue = actualValue;
+  }
+
+  public ScheduleDataChart getResponse() {
+    return new ScheduleDataChart(
+      this.plannedStartDate,
+      this.plannedEndDate,
+      this.foreseenStartDate,
+      this.foreseenEndDate,
+      this.actualStartDate,
+      this.actualEndDate,
+      this.variation,
+      this.plannedValue,
+      this.foreseenValue,
+      this.actualValue
+    );
+  }
 
 }

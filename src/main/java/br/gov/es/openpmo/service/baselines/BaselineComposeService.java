@@ -13,18 +13,24 @@ public class BaselineComposeService implements IBaselineComposeService {
 
   @Autowired
   public BaselineComposeService(
-      final BaselineRepository baselineRepository
+    final BaselineRepository baselineRepository
   ) {
     this.baselineRepository = baselineRepository;
   }
 
   @Override
-  public boolean isSnapshotOfWorkpackComposingBaseline(final Baseline baseline, final Workpack workpack) {
+  public boolean isSnapshotOfWorkpackComposingBaseline(
+    final Baseline baseline,
+    final Workpack workpack
+  ) {
     return this.baselineRepository.isSnapshotOfWorkpackComposingBaseline(workpack.getId(), baseline.getId());
   }
 
   @Override
-  public boolean isSnapshotOfMasterComposingBaseline(final Baseline baseline, final Workpack workpack) {
+  public boolean isSnapshotOfMasterComposingBaseline(
+    final Baseline baseline,
+    final Workpack workpack
+  ) {
     return this.baselineRepository.isSnapshotOfMasterComposingBaseline(workpack.getId(), baseline.getId());
   }
 

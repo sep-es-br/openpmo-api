@@ -9,7 +9,10 @@ public class ScheduleInterval {
   private final LocalDate initialDate;
   private final LocalDate endDate;
 
-  public ScheduleInterval(final LocalDate initialDate, final LocalDate endDate) {
+  public ScheduleInterval(
+    final LocalDate initialDate,
+    final LocalDate endDate
+  ) {
     this.initialDate = initialDate;
     this.endDate = endDate;
   }
@@ -49,4 +52,5 @@ public class ScheduleInterval {
     }
     return null;
   }
+
 }

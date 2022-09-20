@@ -12,80 +12,80 @@ import java.util.Set;
 @NodeEntity
 public class Plan extends Entity {
 
-    @Relationship(type = "IS_ADOPTED_BY")
-    private Office office;
+  @Relationship(type = "IS_ADOPTED_BY")
+  private Office office;
 
-    @Relationship(type = "IS_STRUCTURED_BY")
-    private PlanModel planModel;
+  @Relationship(type = "IS_STRUCTURED_BY")
+  private PlanModel planModel;
 
-    @Relationship(type = "BELONGS_TO")
-    private Set<BelongsTo> belongsTo;
+  @Relationship(type = "BELONGS_TO")
+  private Set<BelongsTo> belongsTo;
 
-    private String name;
+  private String name;
 
-    private String fullName;
+  private String fullName;
 
-    private LocalDate start;
+  private LocalDate start;
 
-    private LocalDate finish;
+  private LocalDate finish;
 
-    public Plan() {
-    }
+  public Plan() {
+  }
 
-    public Set<BelongsTo> getBelongsTo() {
-        return this.belongsTo;
-    }
+  public Set<BelongsTo> getBelongsTo() {
+    return this.belongsTo;
+  }
 
-    public void setBelongsTo(final Set<BelongsTo> belongsTo) {
-        this.belongsTo = belongsTo;
-    }
+  public void setBelongsTo(final Set<BelongsTo> belongsTo) {
+    this.belongsTo = belongsTo;
+  }
 
-    public Office getOffice() {
-        return this.office;
-    }
+  public Office getOffice() {
+    return this.office;
+  }
 
-    public void setOffice(final Office office) {
-        this.office = office;
-    }
+  public void setOffice(final Office office) {
+    this.office = office;
+  }
 
-    public PlanModel getPlanModel() {
-        return this.planModel;
-    }
+  public PlanModel getPlanModel() {
+    return this.planModel;
+  }
 
-    public void setPlanModel(final PlanModel planModel) {
-        this.planModel = planModel;
-    }
+  public void setPlanModel(final PlanModel planModel) {
+    this.planModel = planModel;
+  }
 
-    public String getName() {
-        return this.name;
-    }
+  public String getName() {
+    return this.name;
+  }
 
-    public void setName(final String name) {
-        this.name = name;
-    }
+  public void setName(final String name) {
+    this.name = name;
+  }
 
-    public String getFullName() {
-        return this.fullName;
-    }
+  public String getFullName() {
+    return this.fullName;
+  }
 
-    public void setFullName(final String fullName) {
-        this.fullName = fullName;
-    }
+  public void setFullName(final String fullName) {
+    this.fullName = fullName;
+  }
 
-    public LocalDate getStart() {
-        return this.start;
-    }
+  public LocalDate getStart() {
+    return this.start;
+  }
 
-    public void setStart(final LocalDate start) {
-        this.start = start;
-    }
+  public void setStart(final LocalDate start) {
+    this.start = start;
+  }
 
-    public LocalDate getFinish() {
-        return this.finish;
-    }
+  public LocalDate getFinish() {
+    return this.finish;
+  }
 
-    public void setFinish(final LocalDate finish) {
-        this.finish = finish;
-    }
+  public void setFinish(final LocalDate finish) {
+    this.finish = finish;
+  }
 
 }

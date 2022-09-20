@@ -16,7 +16,11 @@ public class CCBMemberResponse {
 
   private Boolean active;
 
-  public CCBMemberResponse(final PersonResponse person, final List<? extends MemberAs> memberAs, final Boolean active) {
+  public CCBMemberResponse(
+    final PersonResponse person,
+    final List<? extends MemberAs> memberAs,
+    final Boolean active
+  ) {
     this.person = person;
     this.memberAs = memberAs;
     this.active = active;
@@ -46,4 +50,5 @@ public class CCBMemberResponse {
   public void addAllRoles(final Collection<? extends RoleResource> roles) {
     this.person.addAllRoles(roles);
   }
+
 }

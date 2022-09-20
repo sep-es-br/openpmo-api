@@ -9,8 +9,8 @@ import java.util.List;
 public interface IGetBaselineUpdatesFromAnotherBaselineService {
 
   List<UpdateResponse> getUpdates(
-      Baseline baseline,
-      Baseline anotherBaseline
+    Baseline baseline,
+    Baseline anotherBaseline
   );
 
 }

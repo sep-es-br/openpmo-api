@@ -68,13 +68,13 @@ public class AuthenticationService {
 
     final Optional<Person> person = this.personService.findByKey(key);
 
-    if (person.isPresent()) {
+    if(person.isPresent()) {
       final Person user = person.get();
       final String authenticationToken = this.tokenService.generateToken(user, key, email, TokenType.AUTHENTICATION);
       final String refreshToken = this.tokenService.generateToken(user, key, email, TokenType.REFRESH);
       return new AcessoDto(authenticationToken, refreshToken);
     }
-    if (this.administrators.contains(email)) {
+    if(this.administrators.contains(email)) {
       final Person user = this.createPerson(personInfo);
       final String authenticationToken = this.tokenService.generateToken(user, key, email, TokenType.AUTHENTICATION);
       final String refreshToken = this.tokenService.generateToken(user, key, email, TokenType.REFRESH);
@@ -88,9 +88,9 @@ public class AuthenticationService {
     final HttpUriRequest postRequest = new HttpPost(personInfoUri);
     postRequest.addHeader(AUTHORIZATION, BEARER + token);
 
-    try (CloseableHttpClient httpClient = HttpClients.createDefault();
-         CloseableHttpResponse response = httpClient.execute(postRequest)) {
-      if (response.getStatusLine().getStatusCode() == 200) {
+    try(final CloseableHttpClient httpClient = HttpClients.createDefault();
+        final CloseableHttpResponse response = httpClient.execute(postRequest)) {
+      if(response.getStatusLine().getStatusCode() == 200) {
         return new JSONObject(EntityUtils.toString(response.getEntity()));
       }
     }
@@ -120,29 +120,33 @@ public class AuthenticationService {
     return this.personService.save(user);
   }
 
-  public void signOut(final String authorizationHeader, final HttpServletResponse response) throws IOException {
+  public void signOut(
+    final String authorizationHeader,
+    final HttpServletResponse response
+  ) throws IOException {
     final String personInfoUri = this.issuerUri + "/connect/endsession";
     final HttpUriRequest postRequest = new HttpPost(personInfoUri);
     postRequest.addHeader(AUTHORIZATION, authorizationHeader);
 
-    try (CloseableHttpClient httpClient = HttpClients.createDefault();
-         CloseableHttpResponse closeResponse = httpClient.execute(postRequest)) {
+    try(final CloseableHttpClient httpClient = HttpClients.createDefault();
+        final CloseableHttpResponse closeResponse = httpClient.execute(postRequest)) {
       final int status = closeResponse.getStatusLine().getStatusCode();
-      if (status == 302 || status == 200) {
+      if(status == 302 || status == 200) {
         Arrays.asList(closeResponse.getAllHeaders())
           .forEach(header -> response.addHeader(header.getName(), header.getValue()));
         response.setHeader("Access-Control-Allow-Origin", "*");
         response.setHeader("Location", personInfoUri);
         response.setStatus(200);
         response.sendRedirect(personInfoUri);
-      } else {
+      }
+      else {
         throw new NegocioException();
       }
     }
   }
 
   public AcessoDto refresh(final String refreshToken) {
-    if (this.tokenService.isValidToken(refreshToken, TokenType.REFRESH)) {
+    if(this.tokenService.isValidToken(refreshToken, TokenType.REFRESH)) {
       final Claims claims = this.tokenService.getUser(refreshToken, TokenType.REFRESH);
 
       final PersonQuery user = this.personService
@@ -155,4 +159,5 @@ public class AuthenticationService {
     }
     throw new AutenticacaoException(ApplicationMessage.INVALID_TOKEN);
   }
+
 }

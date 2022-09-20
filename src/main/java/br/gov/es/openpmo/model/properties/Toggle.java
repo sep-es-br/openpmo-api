@@ -101,7 +101,8 @@ public class Toggle extends Property<Toggle, Boolean> {
     this.workpack = workpack;
   }
 
-  @Override public PropertyModel getPropertyModel() {
+  @Override
+  public PropertyModel getPropertyModel() {
     return this.getDriver();
   }
 

@@ -107,7 +107,8 @@ public class OrganizationSelection extends Property<OrganizationSelection, Set<O
     this.workpack = workpack;
   }
 
-  @Override public PropertyModel getPropertyModel() {
+  @Override
+  public PropertyModel getPropertyModel() {
     return this.getDriver();
   }
 

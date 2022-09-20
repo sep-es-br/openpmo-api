@@ -32,4 +32,5 @@ public class TextModel extends PropertyModel {
   public void setDefaultValue(final String defaultValue) {
     this.defaultValue = defaultValue;
   }
+
 }

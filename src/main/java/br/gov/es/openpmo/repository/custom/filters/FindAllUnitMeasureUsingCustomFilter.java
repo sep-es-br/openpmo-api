@@ -24,14 +24,20 @@ public class FindAllUnitMeasureUsingCustomFilter extends FindAllUsingCustomFilte
   }
 
   @Override
-  public void buildMatchClause(final CustomFilter filter, final StringBuilder query) {
+  public void buildMatchClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query.append("MATCH (").append(this.nodeName)
       .append(":UnitMeasure)-[a:AVAILABLE_IN]->(o:Office)")
       .append(" ");
   }
 
   @Override
-  public void buildWhereClause(final CustomFilter filter, final StringBuilder query) {
+  public void buildWhereClause(
+    final CustomFilter filter,
+    final StringBuilder query
+  ) {
     query.append("WHERE ID(o) = $idOffice").append(" ");
   }
 
@@ -40,11 +46,13 @@ public class FindAllUnitMeasureUsingCustomFilter extends FindAllUsingCustomFilte
     query.append("RETURN ").append(this.nodeName).append(",a,o");
   }
 
-  @Override protected boolean hasAppendedBooleanBlock() {
+  @Override
+  protected boolean hasAppendedBooleanBlock() {
     return true;
   }
 
-  @Override protected boolean hasToCloseAppendedBooleanBlock() {
+  @Override
+  protected boolean hasToCloseAppendedBooleanBlock() {
     return true;
   }
 

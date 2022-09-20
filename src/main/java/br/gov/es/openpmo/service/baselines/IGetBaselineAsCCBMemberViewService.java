@@ -4,6 +4,9 @@ import br.gov.es.openpmo.dto.baselines.ccbmemberview.BaselineDetailCCBMemberResp
 
 public interface IGetBaselineAsCCBMemberViewService {
 
-  BaselineDetailCCBMemberResponse getById(Long idBaseline, Long idPerson);
+  BaselineDetailCCBMemberResponse getById(
+    Long idBaseline,
+    Long idPerson
+  );
 
 }

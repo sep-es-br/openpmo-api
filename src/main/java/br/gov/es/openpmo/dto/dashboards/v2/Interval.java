@@ -8,42 +8,46 @@ import java.util.Optional;
 
 public class Interval {
 
-    @JsonFormat(pattern = "MM-yyyy")
-    private LocalDate startDate;
+  @JsonFormat(pattern = "MM-yyyy")
+  private LocalDate startDate;
 
-    @JsonFormat(pattern = "MM-yyyy")
-    private LocalDate endDate;
+  @JsonFormat(pattern = "MM-yyyy")
+  private LocalDate endDate;
 
-    public Interval(LocalDate startDate, LocalDate endDate) {
-        this.startDate = startDate;
-        this.endDate = endDate;
-    }
+  public Interval(
+    final LocalDate startDate,
+    final LocalDate endDate
+  ) {
+    this.startDate = startDate;
+    this.endDate = endDate;
+  }
 
-    public Interval(DateIntervalQuery intervalQuery) {
-        Optional.ofNullable(intervalQuery)
-                .filter(DateIntervalQuery::isValid)
-                .map(DateIntervalQuery::getInitialDate)
-                .ifPresent(this::setStartDate);
+  public Interval(final DateIntervalQuery intervalQuery) {
+    Optional.ofNullable(intervalQuery)
+      .filter(DateIntervalQuery::isValid)
+      .map(DateIntervalQuery::getInitialDate)
+      .ifPresent(this::setStartDate);
 
-        Optional.ofNullable(intervalQuery)
-                .filter(DateIntervalQuery::isValid)
-                .map(DateIntervalQuery::getEndDate)
-                .ifPresent(this::setEndDate);
-    }
+    Optional.ofNullable(intervalQuery)
+      .filter(DateIntervalQuery::isValid)
+      .map(DateIntervalQuery::getEndDate)
+      .ifPresent(this::setEndDate);
+  }
 
-    public LocalDate getStartDate() {
-        return startDate;
-    }
+  public LocalDate getStartDate() {
+    return this.startDate;
+  }
 
-    public void setStartDate(LocalDate startDate) {
-        this.startDate = startDate;
-    }
+  public void setStartDate(final LocalDate startDate) {
+    this.startDate = startDate;
+  }
 
-    public LocalDate getEndDate() {
-        return endDate;
-    }
+  public LocalDate getEndDate() {
+    return this.endDate;
+  }
 
-    public void setEndDate(LocalDate endDate) {
-        this.endDate = endDate;
-    }
+  public void setEndDate(final LocalDate endDate) {
+    this.endDate = endDate;
+  }
+
 }

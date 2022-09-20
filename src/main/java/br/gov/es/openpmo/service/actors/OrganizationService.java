@@ -44,7 +44,10 @@ public class OrganizationService {
     return this.repository.findByIdOffice(idOffice);
   }
 
-  public List<Organization> findAll(final Long idOffice, final Long idFilter) {
+  public List<Organization> findAll(
+    final Long idOffice,
+    final Long idFilter
+  ) {
     if(idFilter == null) {
       return this.repository.findByIdOffice(idOffice);
     }
@@ -63,7 +66,10 @@ public class OrganizationService {
     return this.repository.save(organization);
   }
 
-  public Organization save(final Organization organization, final Long idOffice) {
+  public Organization save(
+    final Organization organization,
+    final Long idOffice
+  ) {
     organization.setOffice(this.getOfficeById(idOffice));
     return this.repository.save(organization);
   }

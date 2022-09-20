@@ -10,9 +10,9 @@ import java.util.List;
 public interface IAnotherTimeSubmitBaselineService {
 
   void submit(
-      Baseline baseline,
-      Workpack workpack,
-      List<UpdateRequest> updates
+    Baseline baseline,
+    Workpack workpack,
+    List<UpdateRequest> updates
   );
 
 }

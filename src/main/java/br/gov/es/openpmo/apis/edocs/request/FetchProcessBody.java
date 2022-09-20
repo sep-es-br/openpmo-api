@@ -14,4 +14,5 @@ public class FetchProcessBody {
   public List<String> getProtocolos() {
     return this.protocolos;
   }
+
 }

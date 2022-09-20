@@ -3,6 +3,7 @@ package br.gov.es.openpmo.dto;
 import br.gov.es.openpmo.model.Entity;
 
 public class EntityDto {
+
   private Long id;
 
   public EntityDto() {
@@ -23,4 +24,5 @@ public class EntityDto {
   public void setId(final Long id) {
     this.id = id;
   }
+
 }

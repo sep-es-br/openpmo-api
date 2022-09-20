@@ -15,165 +15,206 @@ import java.util.Set;
 @Service
 public class DashboardMilestoneService implements IDashboardMilestoneService {
 
-    private final DashboardMilestoneRepository repository;
+  private final DashboardMilestoneRepository repository;
 
-    @Autowired
-    public DashboardMilestoneService(final DashboardMilestoneRepository repository) {
-        this.repository = repository;
+  @Autowired
+  public DashboardMilestoneService(final DashboardMilestoneRepository repository) {
+    this.repository = repository;
+  }
+
+  private static LocalDate getMinOfNowAnd(final YearMonth date) {
+    final LocalDate now = LocalDate.now();
+
+    if(date == null) {
+      return now;
     }
 
-    private static LocalDate getMinOfNowAnd(final YearMonth date) {
-        final LocalDate now = LocalDate.now();
+    final LocalDate endOfMonth = date.atEndOfMonth();
+    return now.isBefore(endOfMonth) ? now : endOfMonth;
+  }
 
-        if (date == null) {
-            return now;
-        }
+  @Override
+  public MilestoneDataChart build(final DashboardParameters parameters) {
+    final Long idBaseline = parameters.getBaselineId();
+    final Long idWorkpack = parameters.getWorkpackId();
+    final YearMonth yearMonth = parameters.getYearMonth();
+    final LocalDate refDate = getMinOfNowAnd(yearMonth);
 
-        final LocalDate endOfMonth = date.atEndOfMonth();
-        return now.isBefore(endOfMonth) ? now : endOfMonth;
+    final Long concluded = this.getConcluded(idBaseline, idWorkpack);
+    final Long lateConcluded = this.getLateConcluded(idBaseline, idWorkpack);
+    final Long late = this.getLate(idBaseline, idWorkpack, refDate);
+    final Long onTime = this.getOnTime(idBaseline, idWorkpack, refDate);
+    final Long quantity = this.getQuantity(concluded, lateConcluded, late, onTime);
+
+    return new MilestoneDataChart(
+      quantity,
+      concluded,
+      lateConcluded,
+      late,
+      onTime
+    );
+  }
+
+  @Override
+  public MilestoneDataChart build(
+    final Long worpackId,
+    final YearMonth yearMonth
+  ) {
+    final LocalDate refDate = getMinOfNowAnd(yearMonth);
+
+    final Long concluded = this.getConcluded(null, worpackId);
+    final Long lateConcluded = this.getLateConcluded(null, worpackId);
+    final Long late = this.getLate(null, worpackId, refDate);
+    final Long onTime = this.getOnTime(null, worpackId, refDate);
+    final Long quantity = this.getQuantity(concluded, lateConcluded, late, onTime);
+
+    return new MilestoneDataChart(
+      quantity,
+      concluded,
+      lateConcluded,
+      late,
+      onTime
+    );
+  }
+
+  private Long getQuantity(
+    final Long concluded,
+    final Long lateConcluded,
+    final Long late,
+    final Long onTime
+  ) {
+    return Optional.ofNullable(concluded).orElse(0L) +
+           Optional.ofNullable(lateConcluded).orElse(0L) +
+           Optional.ofNullable(late).orElse(0L) +
+           Optional.ofNullable(onTime).orElse(0L);
+  }
+
+  private Long getConcluded(
+    final Long baselineId,
+    final Long idWorkpack
+  ) {
+    final Set<Long> concluded = this.repository.concluded(idWorkpack);
+    final Set<Long> lateConcluded = this.repository.lateConcluded(idWorkpack);
+    concluded.removeAll(lateConcluded);
+
+    final Set<Long> concludedBaseline = Optional.ofNullable(baselineId)
+      .map(id -> this.repository.concluded(id, idWorkpack))
+      .orElse(new HashSet<>());
+
+    concluded.addAll(concludedBaseline);
+    return (long) concluded.size();
+  }
+
+  public boolean isConcluded(
+    final Long milestoneId,
+    final Long parentId,
+    final Long workpackId,
+    final Long baselineId
+  ) {
+    final Set<Long> concluded = this.repository.concluded(parentId);
+    final Set<Long> lateConcluded = this.repository.lateConcluded(baselineId, workpackId);
+    concluded.removeAll(lateConcluded);
+
+    final Set<Long> concludedBaseline = Optional.ofNullable(baselineId)
+      .map(id -> this.repository.concluded(id, workpackId))
+      .orElse(new HashSet<>());
+
+    concluded.addAll(concludedBaseline);
+    return concluded.contains(milestoneId);
+  }
+
+  private Long getLateConcluded(
+    final Long baselineId,
+    final Long idWorkpack
+  ) {
+    final Set<Long> lateConcluded = Optional.ofNullable(baselineId)
+      .map(id -> this.repository.lateConcluded(id, idWorkpack))
+      .orElse(this.repository.lateConcluded(idWorkpack));
+
+    return (long) lateConcluded.size();
+  }
+
+  public boolean isLateConcluded(
+    final Long milestoneId,
+    final Long workpackId,
+    final Long baselineId
+  ) {
+    final Set<Long> lateConcluded = this.repository.lateConcluded(baselineId, workpackId);
+    return lateConcluded.contains(milestoneId);
+  }
+
+  private Long getLate(
+    final Long baselineId,
+    final Long idWorkpack,
+    final LocalDate refDate
+  ) {
+    if(refDate == null) {
+      return null;
     }
 
-    @Override
-    public MilestoneDataChart build(final DashboardParameters parameters) {
-        final Long idBaseline = parameters.getBaselineId();
-        final Long idWorkpack = parameters.getWorkpackId();
-        final YearMonth yearMonth = parameters.getYearMonth();
-        final LocalDate refDate = getMinOfNowAnd(yearMonth);
+    final Set<Long> late = this.repository.late(idWorkpack, refDate);
 
-        Long concluded = this.getConcluded(idBaseline, idWorkpack);
-        Long lateConcluded = this.getLateConcluded(idBaseline, idWorkpack);
-        Long late = this.getLate(idBaseline, idWorkpack, refDate);
-        Long onTime = this.getOnTime(idBaseline, idWorkpack, refDate);
-        Long quantity = getQuantity(concluded, lateConcluded, late, onTime);
+    final Set<Long> lateBaseline = Optional.ofNullable(baselineId)
+      .map(id -> this.repository.late(id, idWorkpack, refDate))
+      .orElse(new HashSet<>());
 
-        return new MilestoneDataChart(
-                quantity,
-                concluded,
-                lateConcluded,
-                late,
-                onTime
-        );
+    late.addAll(lateBaseline);
+    return (long) late.size();
+  }
+
+  public boolean isLate(
+    final Long milestoneId,
+    final Long parentId,
+    final Long workpackId,
+    final Long baselineId
+  ) {
+    final LocalDate refDate = LocalDate.now();
+
+    final Set<Long> late = this.repository.late(parentId, refDate);
+
+    final Set<Long> lateBaseline = Optional.ofNullable(baselineId)
+      .map(id -> this.repository.late(id, workpackId, refDate))
+      .orElse(new HashSet<>());
+
+    late.addAll(lateBaseline);
+    return late.contains(milestoneId);
+  }
+
+  private Long getOnTime(
+    final Long baselineId,
+    final Long idWorkpack,
+    final LocalDate refDate
+  ) {
+    if(refDate == null) {
+      return null;
     }
 
-    @Override
-    public MilestoneDataChart build(final Long worpackId, final YearMonth yearMonth) {
-        final LocalDate refDate = getMinOfNowAnd(yearMonth);
+    final Set<Long> onTime = this.repository.onTime(idWorkpack, refDate);
 
-        Long concluded = this.getConcluded(null, worpackId);
-        Long lateConcluded = this.getLateConcluded(null, worpackId);
-        Long late = this.getLate(null, worpackId, refDate);
-        Long onTime = this.getOnTime(null, worpackId, refDate);
-        Long quantity = this.getQuantity(concluded, lateConcluded, late, onTime);
+    final Set<Long> onTimeBaseline = Optional.ofNullable(baselineId)
+      .map(id -> this.repository.onTime(id, idWorkpack, refDate))
+      .orElse(new HashSet<>());
 
-        return new MilestoneDataChart(
-                quantity,
-                concluded,
-                lateConcluded,
-                late,
-                onTime
-        );
-    }
+    onTime.addAll(onTimeBaseline);
+    return (long) onTime.size();
+  }
 
-    private Long getQuantity(Long concluded, Long lateConcluded, Long late, Long onTime) {
-        return Optional.ofNullable(concluded).orElse(0L) +
-                Optional.ofNullable(lateConcluded).orElse(0L) +
-                Optional.ofNullable(late).orElse(0L) +
-                Optional.ofNullable(onTime).orElse(0L);
-    }
+  public boolean isOnTime(
+    final Long milestoneId,
+    final Long parentId,
+    final Long workpackId,
+    final Long baselineId
+  ) {
+    final LocalDate refDate = LocalDate.now();
 
-    private Long getConcluded(final Long baselineId, final Long idWorkpack) {
-        Set<Long> concluded = this.repository.concluded(idWorkpack);
-        Set<Long> lateConcluded = this.repository.lateConcluded(idWorkpack);
-        concluded.removeAll(lateConcluded);
+    final Set<Long> onTime = this.repository.onTime(parentId, refDate);
 
-        Set<Long> concludedBaseline = Optional.ofNullable(baselineId)
-                .map(id -> this.repository.concluded(id, idWorkpack))
-                .orElse(new HashSet<>());
+    final Set<Long> onTimeBaseline = Optional.ofNullable(baselineId)
+      .map(id -> this.repository.onTime(id, workpackId, refDate))
+      .orElse(new HashSet<>());
 
-        concluded.addAll(concludedBaseline);
-        return (long) concluded.size();
-    }
-
-    public boolean isConcluded(final Long milestoneId, Long parentId, Long workpackId, Long baselineId) {
-        Set<Long> concluded = this.repository.concluded(parentId);
-        Set<Long> lateConcluded = this.repository.lateConcluded(baselineId, workpackId);
-        concluded.removeAll(lateConcluded);
-
-        Set<Long> concludedBaseline = Optional.ofNullable(baselineId)
-                .map(id -> this.repository.concluded(id, workpackId))
-                .orElse(new HashSet<>());
-
-        concluded.addAll(concludedBaseline);
-        return concluded.contains(milestoneId);
-    }
-
-    private Long getLateConcluded(final Long baselineId, final Long idWorkpack) {
-        Set<Long> lateConcluded = Optional.ofNullable(baselineId)
-                .map(id -> this.repository.lateConcluded(id, idWorkpack))
-                .orElse(this.repository.lateConcluded(idWorkpack));
-
-        return (long) lateConcluded.size();
-    }
-
-    public boolean isLateConcluded(final Long milestoneId, Long workpackId, Long baselineId) {
-        Set<Long> lateConcluded = this.repository.lateConcluded(baselineId, workpackId);
-        return lateConcluded.contains(milestoneId);
-    }
-
-    private Long getLate(final Long baselineId, final Long idWorkpack, final LocalDate refDate) {
-        if (refDate == null) {
-            return null;
-        }
-
-        Set<Long> late = this.repository.late(idWorkpack, refDate);
-
-        Set<Long> lateBaseline = Optional.ofNullable(baselineId)
-                .map(id -> this.repository.late(id, idWorkpack, refDate))
-                .orElse(new HashSet<>());
-
-        late.addAll(lateBaseline);
-        return (long) late.size();
-    }
-
-    public boolean isLate(final Long milestoneId, Long parentId, Long workpackId, Long baselineId) {
-        LocalDate refDate = LocalDate.now();
-
-        Set<Long> late = this.repository.late(parentId, refDate);
-
-        Set<Long> lateBaseline = Optional.ofNullable(baselineId)
-                .map(id -> this.repository.late(id, workpackId, refDate))
-                .orElse(new HashSet<>());
-
-        late.addAll(lateBaseline);
-        return late.contains(milestoneId);
-    }
-
-    private Long getOnTime(final Long baselineId, final Long idWorkpack, final LocalDate refDate) {
-        if (refDate == null) {
-            return null;
-        }
-
-        Set<Long> onTime = this.repository.onTime(idWorkpack, refDate);
-
-        Set<Long> onTimeBaseline = Optional.ofNullable(baselineId)
-                .map(id -> this.repository.onTime(id, idWorkpack, refDate))
-                .orElse(new HashSet<>());
-
-        onTime.addAll(onTimeBaseline);
-        return (long) onTime.size();
-    }
-
-    public boolean isOnTime(final Long milestoneId, Long parentId, Long workpackId, Long baselineId) {
-        LocalDate refDate = LocalDate.now();
-
-        Set<Long> onTime = this.repository.onTime(parentId, refDate);
-
-        Set<Long> onTimeBaseline = Optional.ofNullable(baselineId)
-                .map(id -> this.repository.onTime(id, workpackId, refDate))
-                .orElse(new HashSet<>());
-
-        onTime.addAll(onTimeBaseline);
-        return onTime.contains(milestoneId);
-    }
+    onTime.addAll(onTimeBaseline);
+    return onTime.contains(milestoneId);
+  }
 
 }

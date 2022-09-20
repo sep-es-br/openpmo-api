@@ -95,4 +95,5 @@ public class EvaluationItem {
   public void applySelfEvaluation(final Long idPerson) {
     this.myEvaluation = Objects.equals(this.id, idPerson);
   }
+
 }

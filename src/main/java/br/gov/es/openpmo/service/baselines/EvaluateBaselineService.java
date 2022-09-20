@@ -62,12 +62,15 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
   }
 
   private static void throwExceptionIfBaselineIsNotProposed(final Baseline baseline) {
-    if (baseline.getStatus() != PROPOSED) {
+    if(baseline.getStatus() != PROPOSED) {
       throw new NegocioException(BASELINE_IS_NOT_PROPOSED_INVALID_STATE_ERROR);
     }
   }
 
-  private static Person findCCBMember(final Long idPerson, final Collection<? extends Person> members) {
+  private static Person findCCBMember(
+    final Long idPerson,
+    final Collection<? extends Person> members
+  ) {
     return members.stream()
       .filter(person -> person.getId().equals(idPerson))
       .findFirst()
@@ -90,7 +93,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
       baseline
     );
 
-    if (request.getDecision() == REJECTED) {
+    if(request.getDecision() == REJECTED) {
       this.rejectBaseline(baseline);
       this.journalCreator.baseline(baseline, idPerson);
       return;
@@ -98,7 +101,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
 
     final boolean hasEvaluationsRemain = !this.evaluatedByRepository.wasEvaluatedByAllMembers(idBaseline);
 
-    if (hasEvaluationsRemain) {
+    if(hasEvaluationsRemain) {
       return;
     }
 
@@ -118,7 +121,10 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     this.repository.save(baseline, 0);
   }
 
-  private void updateBaselineStatus(final Baseline baseline, Long idPerson) {
+  private void updateBaselineStatus(
+    final Baseline baseline,
+    final Long idPerson
+  ) {
     this.inactivateBaselineIfHasPrevious(baseline);
     this.approveBaseline(baseline, idPerson);
   }
@@ -136,24 +142,33 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     this.saveEvaluation(evaluation);
   }
 
-  private void approveBaseline(Baseline baseline, Long idPerson) {
+  private void approveBaseline(
+    final Baseline baseline,
+    final Long idPerson
+  ) {
     baseline.approve();
     this.saveBaseline(baseline);
-    if (baseline.isCancelation()) {
-      cancelWorkpackByBaseline(baseline, idPerson);
+    if(baseline.isCancelation()) {
+      this.cancelWorkpackByBaseline(baseline, idPerson);
     }
   }
 
-  private void cancelWorkpackByBaseline(Baseline baseline, Long idPerson) {
-    Workpack workpack = this.repository.findWorkpackByBaselineId(baseline.getId())
+  private void cancelWorkpackByBaseline(
+    final Baseline baseline,
+    final Long idPerson
+  ) {
+    final Workpack workpack = this.repository.findWorkpackByBaselineId(baseline.getId())
       .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
     this.workpackService.cancel(workpack.getId());
     this.journalCreator.edition(workpack, JournalAction.CANCELLED, idPerson);
   }
 
-  private void verifyAlreadyEvaluationOfMember(final Long idPerson, final Long idBaseline) {
+  private void verifyAlreadyEvaluationOfMember(
+    final Long idPerson,
+    final Long idBaseline
+  ) {
     final Optional<IsEvaluatedBy> maybeEvaluation = this.evaluatedByRepository.findEvaluation(idBaseline, idPerson);
-    if (maybeEvaluation.isPresent()) {
+    if(maybeEvaluation.isPresent()) {
       throw new NegocioException(CCB_MEMBER_ALREADY_EVALUATED);
     }
   }
@@ -173,7 +188,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
 
   private void inactivateBaselineIfHasPrevious(final Baseline baseline) {
     final Optional<Baseline> maybeActiveBaseline = this.repository.findActiveBaseline(baseline.getIdWorkpack());
-    if (maybeActiveBaseline.isPresent()) {
+    if(maybeActiveBaseline.isPresent()) {
       final Baseline activeBaseline = maybeActiveBaseline.get();
       activeBaseline.setActive(false);
       this.saveBaseline(activeBaseline);

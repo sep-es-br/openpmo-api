@@ -7,8 +7,11 @@ import java.time.YearMonth;
 
 public interface IDashboardMilestoneService {
 
-    MilestoneDataChart build(final DashboardParameters parameters);
+  MilestoneDataChart build(final DashboardParameters parameters);
 
-    MilestoneDataChart build(final Long worpackId, final YearMonth yearMonth);
+  MilestoneDataChart build(
+    final Long worpackId,
+    final YearMonth yearMonth
+  );
 
 }

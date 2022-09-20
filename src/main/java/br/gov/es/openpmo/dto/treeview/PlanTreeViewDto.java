@@ -19,7 +19,11 @@ public class PlanTreeViewDto {
     this.name = plan.getName();
   }
 
-  public PlanTreeViewDto(final Long id, final String name, final Set<WorkpackTreeViewDto> workpacks) {
+  public PlanTreeViewDto(
+    final Long id,
+    final String name,
+    final Set<WorkpackTreeViewDto> workpacks
+  ) {
     this.id = id;
     this.name = name;
     this.workpacks = Collections.unmodifiableSet(workpacks);
@@ -61,4 +65,5 @@ public class PlanTreeViewDto {
     final PlanTreeViewDto that = (PlanTreeViewDto) o;
     return this.id.equals(that.id);
   }
+
 }

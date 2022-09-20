@@ -12,40 +12,41 @@ import java.util.Optional;
 
 public interface LocalityRepository extends Neo4jRepository<Locality, Long>, CustomRepository {
 
-    @Query("MATCH (d:Domain)<-[:BELONGS_TO]-(l:Locality)" + " WHERE id(d) = {0} RETURN l, "
-            + " [ [(l)<-[btl:IS_IN]-(lc:Locality)-[:BELONGS_TO]->(d) | [btl, lc] ] " + "]")
-    Collection<Locality> findAllByDomain(@Param("idDomain") Long idDomain);
+  @Query("MATCH (d:Domain)<-[:BELONGS_TO]-(l:Locality)" + " WHERE id(d) = {0} RETURN l, "
+         + " [ [(l)<-[btl:IS_IN]-(lc:Locality)-[:BELONGS_TO]->(d) | [btl, lc] ] " + "]")
+  Collection<Locality> findAllByDomain(@Param("idDomain") Long idDomain);
 
-    @Query("MATCH (domain:Domain)<-[isRootOf:IS_ROOT_OF]-(locality:Locality) " +
-            "WHERE id(domain)=$idDomain " +
-            "RETURN domain, isRootOf, locality")
-    Optional<Locality> findLocalityRootFromDomain(Long idDomain);
+  @Query("MATCH (domain:Domain)<-[isRootOf:IS_ROOT_OF]-(locality:Locality) " +
+         "WHERE id(domain)=$idDomain " +
+         "RETURN domain, isRootOf, locality")
+  Optional<Locality> findLocalityRootFromDomain(Long idDomain);
 
-    @Query("MATCH (d:Domain)<-[:IS_ROOT_OF]-(root:Locality)" +
-            "MATCH (root)<-[:IS_IN]-(locality:Locality)-[:BELONGS_TO]->(d) " +
-            "WHERE id(d)=$idDomain " +
-            "RETURN locality, [ " +
-            "    [(locality)<-[isIn:IS_IN]-(children:Locality)-[:BELONGS_TO]->(d) | [isIn, children] ] " +
-            "]")
-    Collection<Locality> findAllByDomainFirstLevel(@Param("idDomain") Long idDomain);
+  @Query("MATCH (d:Domain)<-[:IS_ROOT_OF]-(root:Locality)" +
+         "MATCH (root)<-[:IS_IN]-(locality:Locality)-[:BELONGS_TO]->(d) " +
+         "WHERE id(d)=$idDomain " +
+         "RETURN locality, [ " +
+         "    [(locality)<-[isIn:IS_IN]-(children:Locality)-[:BELONGS_TO]->(d) | [isIn, children] ] " +
+         "]")
+  Collection<Locality> findAllByDomainFirstLevel(@Param("idDomain") Long idDomain);
 
-    @Query("MATCH (d:Domain)<-[]-(l:Locality) " +
-            "WHERE id(d)={0} AND NOT (l)-[:IS_IN*1..]->(:Locality) " +
-            "RETURN l, " +
-            "    [ [(l)<-[btl:IS_IN*1..]-(lc:Locality)-[:BELONGS_TO]->(d) | [btl, lc] ] " +
-            "]")
-    Collection<Locality> findAllByDomainProperties(@Param("idDomain") Long idDomain);
+  @Query("MATCH (d:Domain)<-[]-(l:Locality) " +
+         "WHERE id(d)={0} AND NOT (l)-[:IS_IN*1..]->(:Locality) " +
+         "RETURN l, " +
+         "    [ [(l)<-[btl:IS_IN*1..]-(lc:Locality)-[:BELONGS_TO]->(d) | [btl, lc] ] " +
+         "]")
+  Collection<Locality> findAllByDomainProperties(@Param("idDomain") Long idDomain);
 
-    @Query("MATCH (l:Locality) WHERE id(l) = $id RETURN l, [ [(l)-[ii:IS_IN*]->(lc:Locality) | [ii, lc] ]]")
-    Optional<Locality> findByIdWithParent(@Param("id") Long id);
+  @Query("MATCH (l:Locality) WHERE id(l) = $id RETURN l, [ [(l)-[ii:IS_IN*]->(lc:Locality) | [ii, lc] ]]")
+  Optional<Locality> findByIdWithParent(@Param("id") Long id);
 
-    @Query("match (l:Locality) " +
-            "where id(l)=$idLocality " +
-            "optional match (l)-[:IS_ROOT_OF]->(d1:Domain) " +
-            "with l,d1 " +
-            "optional match (l)-[:BELONGS_TO]->(d2:Domain) " +
-            "with d1,d2 " +
-            "with case d1 when null then d2 else d1 end as domain " +
-            "return domain")
-    Optional<Domain> findDomainById(Long idLocality);
+  @Query("match (l:Locality) " +
+         "where id(l)=$idLocality " +
+         "optional match (l)-[:IS_ROOT_OF]->(d1:Domain) " +
+         "with l,d1 " +
+         "optional match (l)-[:BELONGS_TO]->(d2:Domain) " +
+         "with d1,d2 " +
+         "with case d1 when null then d2 else d1 end as domain " +
+         "return domain")
+  Optional<Domain> findDomainById(Long idLocality);
+
 }

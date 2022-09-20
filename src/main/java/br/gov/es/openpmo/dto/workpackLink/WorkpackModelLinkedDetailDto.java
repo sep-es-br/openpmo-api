@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.dto.workpackLink;
 
 public class WorkpackModelLinkedDetailDto {
+
   private Long idWorkpackModelLinked;
   private String nameWorkpackModelLinked;
   private String nameInPluralWorkpackModelLinked;
@@ -37,4 +38,5 @@ public class WorkpackModelLinkedDetailDto {
   public void setIdWorkpackModelOriginal(final Long idWorkpackModelOriginal) {
     this.idWorkpackModelOriginal = idWorkpackModelOriginal;
   }
+
 }

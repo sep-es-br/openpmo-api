@@ -12,7 +12,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.MediaTypeFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -22,45 +27,45 @@ import java.io.IOException;
 @RequestMapping("/evidence")
 public class EvidenceController {
 
-    private final EvidenceFinder evidenceFinder;
+  private final EvidenceFinder evidenceFinder;
 
-    private final EvidenceCreator evidenceCreator;
+  private final EvidenceCreator evidenceCreator;
 
-    private final ResponseHandler responseHandler;
+  private final ResponseHandler responseHandler;
 
-    @Autowired
-    public EvidenceController(
-            final EvidenceFinder evidenceFinder,
-            final EvidenceCreator evidenceCreator,
-            final ResponseHandler responseHandler
-    ) {
-        this.evidenceFinder = evidenceFinder;
-        this.evidenceCreator = evidenceCreator;
-        this.responseHandler = responseHandler;
-    }
+  @Autowired
+  public EvidenceController(
+    final EvidenceFinder evidenceFinder,
+    final EvidenceCreator evidenceCreator,
+    final ResponseHandler responseHandler
+  ) {
+    this.evidenceFinder = evidenceFinder;
+    this.evidenceCreator = evidenceCreator;
+    this.responseHandler = responseHandler;
+  }
 
-    @GetMapping("/image/{id-evidence}")
-    public ResponseEntity<UrlResource> getEvidence(@PathVariable("id-evidence") final Long idEvidence) throws IOException {
-        final UrlResource imagem = this.evidenceFinder.getEvidence(idEvidence);
+  private static MediaType getContentType(final Resource imagem) {
+    return MediaTypeFactory.getMediaType(imagem)
+      .orElse(MediaType.APPLICATION_OCTET_STREAM);
+  }
 
-        return ResponseEntity.ok()
-                .contentType(getContentType(imagem))
-                .body(imagem);
-    }
+  @GetMapping("/image/{id-evidence}")
+  public ResponseEntity<UrlResource> getEvidence(@PathVariable("id-evidence") final Long idEvidence) throws IOException {
+    final UrlResource imagem = this.evidenceFinder.getEvidence(idEvidence);
 
-    private static MediaType getContentType(final Resource imagem) {
-        return MediaTypeFactory.getMediaType(imagem)
-                .orElse(MediaType.APPLICATION_OCTET_STREAM);
-    }
+    return ResponseEntity.ok()
+      .contentType(getContentType(imagem))
+      .body(imagem);
+  }
 
-    @Transactional
-    @PostMapping("/{id-journal}")
-    public Response<Void> create(
-            @PathVariable("id-journal") final Long idJournal,
-            @RequestParam final MultipartFile file
-    ) throws IOException {
-        this.evidenceCreator.create(idJournal, file);
-        return this.responseHandler.success();
-    }
+  @Transactional
+  @PostMapping("/{id-journal}")
+  public Response<Void> create(
+    @PathVariable("id-journal") final Long idJournal,
+    @RequestParam final MultipartFile file
+  ) throws IOException {
+    this.evidenceCreator.create(idJournal, file);
+    return this.responseHandler.success();
+  }
 
 }

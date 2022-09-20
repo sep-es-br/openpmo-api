@@ -9,7 +9,11 @@ import org.neo4j.ogm.annotation.Relationship;
 import org.springframework.data.annotation.Transient;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 @NodeEntity
 public class JournalEntry extends Entity {
@@ -37,12 +41,12 @@ public class JournalEntry extends Entity {
   }
 
   public JournalEntry(
-      final JournalType type,
-      final JournalAction action,
-      final String nameItem,
-      final String description,
-      final Workpack workpack,
-      final Person person
+    final JournalType type,
+    final JournalAction action,
+    final String nameItem,
+    final String description,
+    final Workpack workpack,
+    final Person person
   ) {
     this.type = type;
     this.action = action;
@@ -55,7 +59,7 @@ public class JournalEntry extends Entity {
 
   @Transient
   public void addFiles(final Iterable<? extends File> files) {
-    if (Objects.isNull(files)) {
+    if(Objects.isNull(files)) {
       return;
     }
     files.forEach(this::addFile);
@@ -63,7 +67,7 @@ public class JournalEntry extends Entity {
 
   @Transient
   public void addFile(final File file) {
-    if (Objects.isNull(this.files)) {
+    if(Objects.isNull(this.files)) {
       this.files = new HashSet<>();
     }
 

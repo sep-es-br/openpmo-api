@@ -20,7 +20,10 @@ public class FilterIssueController extends CreateAndUpdateUsingWorkpackModelFilt
   private final TokenService tokenService;
 
   @Autowired
-  public FilterIssueController(final CustomFilterService customFilterService, final TokenService tokenService) {
+  public FilterIssueController(
+    final CustomFilterService customFilterService,
+    final TokenService tokenService
+  ) {
     this.customFilterService = customFilterService;
     this.tokenService = tokenService;
   }
@@ -36,7 +39,9 @@ public class FilterIssueController extends CreateAndUpdateUsingWorkpackModelFilt
     return this.customFilterService;
   }
 
-  @Override protected TokenService getTokenService() {
+  @Override
+  protected TokenService getTokenService() {
     return this.tokenService;
   }
+
 }

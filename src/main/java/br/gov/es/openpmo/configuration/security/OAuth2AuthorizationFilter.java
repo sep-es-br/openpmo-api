@@ -35,7 +35,11 @@ public class OAuth2AuthorizationFilter implements Filter {
   }
 
   @Override
-  public void doFilter(final ServletRequest servletRequest, final ServletResponse servletResponse, final FilterChain chain)
+  public void doFilter(
+    final ServletRequest servletRequest,
+    final ServletResponse servletResponse,
+    final FilterChain chain
+  )
     throws IOException, ServletException {
     final HttpServletRequest request = (HttpServletRequest) servletRequest;
     final HttpServletResponse response = (HttpServletResponse) servletResponse;
@@ -64,4 +68,5 @@ public class OAuth2AuthorizationFilter implements Filter {
   public void destroy() {
     //Método não implementado por não haver necessidade.
   }
+
 }

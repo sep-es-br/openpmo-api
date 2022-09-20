@@ -11,56 +11,57 @@ import java.math.BigDecimal;
 
 public class SimpleDashboard {
 
-    private final RiskDataChart risk;
+  private final RiskDataChart risk;
 
-    private final MilestoneDataChart milestone;
+  private final MilestoneDataChart milestone;
 
-    private final TripleConstraintDataChart tripleConstraint;
+  private final TripleConstraintDataChart tripleConstraint;
 
-    private final CostPerformanceIndex costPerformanceIndex;
+  private final CostPerformanceIndex costPerformanceIndex;
 
-    private final SchedulePerformanceIndex schedulePerformanceIndex;
+  private final SchedulePerformanceIndex schedulePerformanceIndex;
 
-    private final BigDecimal earnedValue;
+  private final BigDecimal earnedValue;
 
-    @JsonCreator
-    public SimpleDashboard(
-            RiskDataChart risk,
-            MilestoneDataChart milestone,
-            TripleConstraintDataChart tripleConstraint,
-            CostPerformanceIndex costPerformanceIndex,
-            SchedulePerformanceIndex schedulePerformanceIndex,
-            BigDecimal earnedValue
-    ) {
-        this.risk = risk;
-        this.milestone = milestone;
-        this.tripleConstraint = tripleConstraint;
-        this.costPerformanceIndex = costPerformanceIndex;
-        this.schedulePerformanceIndex = schedulePerformanceIndex;
-        this.earnedValue = earnedValue;
-    }
+  @JsonCreator
+  public SimpleDashboard(
+    final RiskDataChart risk,
+    final MilestoneDataChart milestone,
+    final TripleConstraintDataChart tripleConstraint,
+    final CostPerformanceIndex costPerformanceIndex,
+    final SchedulePerformanceIndex schedulePerformanceIndex,
+    final BigDecimal earnedValue
+  ) {
+    this.risk = risk;
+    this.milestone = milestone;
+    this.tripleConstraint = tripleConstraint;
+    this.costPerformanceIndex = costPerformanceIndex;
+    this.schedulePerformanceIndex = schedulePerformanceIndex;
+    this.earnedValue = earnedValue;
+  }
 
-    public RiskDataChart getRisk() {
-        return risk;
-    }
+  public RiskDataChart getRisk() {
+    return this.risk;
+  }
 
-    public MilestoneDataChart getMilestone() {
-        return milestone;
-    }
+  public MilestoneDataChart getMilestone() {
+    return this.milestone;
+  }
 
-    public TripleConstraintDataChart getTripleConstraint() {
-        return tripleConstraint;
-    }
+  public TripleConstraintDataChart getTripleConstraint() {
+    return this.tripleConstraint;
+  }
 
-    public CostPerformanceIndex getCostPerformanceIndex() {
-        return costPerformanceIndex;
-    }
+  public CostPerformanceIndex getCostPerformanceIndex() {
+    return this.costPerformanceIndex;
+  }
 
-    public SchedulePerformanceIndex getSchedulePerformanceIndex() {
-        return schedulePerformanceIndex;
-    }
+  public SchedulePerformanceIndex getSchedulePerformanceIndex() {
+    return this.schedulePerformanceIndex;
+  }
 
-    public BigDecimal getEarnedValue() {
-        return earnedValue;
-    }
+  public BigDecimal getEarnedValue() {
+    return this.earnedValue;
+  }
+
 }

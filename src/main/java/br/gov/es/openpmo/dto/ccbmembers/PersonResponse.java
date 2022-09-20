@@ -75,4 +75,5 @@ public class PersonResponse {
   public void addAllRoles(final Collection<? extends RoleResource> roles) {
     this.roles.addAll(roles);
   }
+
 }

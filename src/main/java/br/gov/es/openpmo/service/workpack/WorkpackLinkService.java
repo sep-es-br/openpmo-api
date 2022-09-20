@@ -23,7 +23,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.dto.permission.PermissionDto.of;
@@ -65,8 +71,11 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
     this.dashboardService = dashboardService;
   }
 
-  private static void ifNotSameModelTypeThrowException(final Workpack workpack, final WorkpackModel workpackModel) {
-    if (!workpack.hasSameModelType(workpackModel)) {
+  private static void ifNotSameModelTypeThrowException(
+    final Workpack workpack,
+    final WorkpackModel workpackModel
+  ) {
+    if(!workpack.hasSameModelType(workpackModel)) {
       throw new NegocioException(WORKPACK_MODEL_TYPE_MISMATCH);
     }
   }
@@ -78,9 +87,9 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
     final Set<WorkpackModel> linkedChildren = Optional.ofNullable(modelLinked.getChildren()).orElse(Collections.emptySet());
     final Iterable<WorkpackModel> modelChildrenLinked = new ArrayList<>(linkedChildren);
     final List<WorkpackModelLinkedDetailDto> childrenDetail = new ArrayList<>();
-    for (final WorkpackModel children : modelChildrenLinked) {
+    for(final WorkpackModel children : modelChildrenLinked) {
       final Optional<WorkpackModel> maybeOriginalEquivalent = findOriginalModelEquivalence(children, childrenOriginalModel);
-      if (maybeOriginalEquivalent.isPresent()) {
+      if(maybeOriginalEquivalent.isPresent()) {
         final WorkpackModelLinkedDetailDto dto = new WorkpackModelLinkedDetailDto();
         dto.setIdWorkpackModelOriginal(maybeOriginalEquivalent.get().getId());
         dto.setIdWorkpackModelLinked(children.getId());
@@ -92,7 +101,10 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
     return childrenDetail;
   }
 
-  private void makeWorkpackLinkedBelongTo(final Long idPlan, final Workpack workpack) {
+  private void makeWorkpackLinkedBelongTo(
+    final Long idPlan,
+    final Workpack workpack
+  ) {
     final Plan plan = this.planService.findById(idPlan);
     final BelongsTo belongsTo = new BelongsTo();
     belongsTo.setWorkpack(workpack);
@@ -101,25 +113,36 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
     this.belongsToRepository.save(belongsTo);
   }
 
-  public void linkWorkpackToWorkpackModel(final Long idWorkpack, final Long idworkpackModel, final Long idPlan, final Long idParent) {
+  public void linkWorkpackToWorkpackModel(
+    final Long idWorkpack,
+    final Long idworkpackModel,
+    final Long idPlan,
+    final Long idParent
+  ) {
     final Workpack workpack = this.workpackService.findById(idWorkpack);
     final WorkpackModel workpackModel = this.workpackModelService.findById(idworkpackModel);
     ifNotSameModelTypeThrowException(workpack, workpackModel);
     this.makeWorkpackLinkedBelongTo(idPlan, workpack);
     this.ifHasParentCreateRelationshipAsChildren(idParent, workpack);
     this.createLinkBetween(workpack, workpackModel);
-    this.workpackRepository.findAllInHierarchy(idWorkpack).forEach(dashboardService::calculate);
+    this.workpackRepository.findAllInHierarchy(idWorkpack).forEach(this.dashboardService::calculate);
   }
 
-  private void createLinkBetween(final Workpack workpack, final WorkpackModel workpackModel) {
+  private void createLinkBetween(
+    final Workpack workpack,
+    final WorkpackModel workpackModel
+  ) {
     final IsLinkedTo isLinkedTo = new IsLinkedTo();
     isLinkedTo.setWorkpack(workpack);
     isLinkedTo.setWorkpackModel(workpackModel);
     this.repository.save(isLinkedTo);
   }
 
-  private void ifHasParentCreateRelationshipAsChildren(final Long idParent, final Workpack workpack) {
-    if (Objects.nonNull(idParent)) {
+  private void ifHasParentCreateRelationshipAsChildren(
+    final Long idParent,
+    final Workpack workpack
+  ) {
+    if(Objects.nonNull(idParent)) {
       final Workpack parent = this.workpackService.findById(idParent);
       parent.addChildren(workpack);
       this.workpackService.saveDefault(workpack);
@@ -162,23 +185,29 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
     workpackModel.setProperties(filteredProperties);
   }
 
-  public void delete(final Long idWorkpack, final Long idworkpackModel) {
+  public void delete(
+    final Long idWorkpack,
+    final Long idworkpackModel
+  ) {
     final Optional<IsLinkedTo> maybeLinkedTo = this.repository.findByIdWorkpackAndIdWorkpackModel(
       idWorkpack,
       idworkpackModel
     );
-    if (!maybeLinkedTo.isPresent()) {
+    if(!maybeLinkedTo.isPresent()) {
       throw new NegocioException("Link not found.");
     }
 
     this.repository.delete(maybeLinkedTo.get());
   }
 
-  private boolean compareProperties(final PropertyModel property, final Iterable<? extends PropertyModel> linkedPropertiesModel) {
-    if (linkedPropertiesModel == null) return false;
-    for (final PropertyModel linkedPropertyModel : linkedPropertiesModel) {
-      if (property.hasSameType(linkedPropertyModel) &&
-        linkedPropertyModel.getName().equalsIgnoreCase(property.getName())) {
+  private boolean compareProperties(
+    final PropertyModel property,
+    final Iterable<? extends PropertyModel> linkedPropertiesModel
+  ) {
+    if(linkedPropertiesModel == null) return false;
+    for(final PropertyModel linkedPropertyModel : linkedPropertiesModel) {
+      if(property.hasSameType(linkedPropertyModel) &&
+         linkedPropertyModel.getName().equalsIgnoreCase(property.getName())) {
         return true;
       }
     }
@@ -198,11 +227,15 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
     return dto;
   }
 
-  private List<PermissionDto> buildPermissions(final Workpack workpack, final Long idWorkpackModelLinked) {
-    if (TRUE.equals(workpack.getPublicShared())) {
+  private List<PermissionDto> buildPermissions(
+    final Workpack workpack,
+    final Long idWorkpackModelLinked
+  ) {
+    if(TRUE.equals(workpack.getPublicShared())) {
       return Collections.singletonList(of(workpack));
     }
-    final Optional<IsSharedWith> sharedPermissions = this.workpackSharedRepository.commonSharedWithBetweenLinkedWorkpackModelAndWorkpack(
+    final Optional<IsSharedWith> sharedPermissions =
+      this.workpackSharedRepository.commonSharedWithBetweenLinkedWorkpackModelAndWorkpack(
       workpack.getId(),
       idWorkpackModelLinked
     );
@@ -220,13 +253,19 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
   }
 
   @Override
-  public WorkpackModel findWorkpackModelLinkedByWorkpackAndPlan(final Long idWorkpack, final Long idPlan) {
+  public WorkpackModel findWorkpackModelLinkedByWorkpackAndPlan(
+    final Long idWorkpack,
+    final Long idPlan
+  ) {
     return this.repository.findWorkpackModelLinkedByWorkpackAndPlan(idWorkpack, idPlan)
       .orElseThrow(() -> new NegocioException(WORKPACKMODEL_NOT_FOUND));
   }
 
   @Override
-  public Optional<IsLinkedTo> findWorkpackParentLinked(final Long idWorkpack, final Long idPlan) {
+  public Optional<IsLinkedTo> findWorkpackParentLinked(
+    final Long idWorkpack,
+    final Long idPlan
+  ) {
     return this.repository.findWorkpackParentLinked(idWorkpack, idPlan);
   }
 
@@ -240,6 +279,7 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
     this.repository.unlinkPermissions(idPlan, idWorkpackModel, idWorkpack);
     this.repository.unlinkParentRelation(idPlan, idWorkpackModel, idWorkpack);
     this.repository.unlinkWorkpackModelAndPlan(idPlan, idWorkpackModel, idWorkpack);
-    this.workpackRepository.findAllInHierarchy(idWorkpack).forEach(dashboardService::calculate);
+    this.workpackRepository.findAllInHierarchy(idWorkpack).forEach(this.dashboardService::calculate);
   }
+
 }

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class OfficeDto {
+
   private Long id;
   private String name;
   private String fullName;
@@ -62,4 +63,5 @@ public class OfficeDto {
     officeDto.setFullName(office.getFullName());
     return officeDto;
   }
+
 }

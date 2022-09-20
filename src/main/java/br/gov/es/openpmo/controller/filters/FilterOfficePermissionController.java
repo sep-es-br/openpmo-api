@@ -19,7 +19,10 @@ public class FilterOfficePermissionController extends CreateAndUpdateUsingCommon
   private final TokenService tokenService;
 
   @Autowired
-  public FilterOfficePermissionController(final CustomFilterService customFilterService, final TokenService tokenService) {
+  public FilterOfficePermissionController(
+    final CustomFilterService customFilterService,
+    final TokenService tokenService
+  ) {
     this.customFilterService = customFilterService;
     this.tokenService = tokenService;
   }
@@ -29,7 +32,8 @@ public class FilterOfficePermissionController extends CreateAndUpdateUsingCommon
     return this.customFilterService;
   }
 
-  @Override protected TokenService getTokenService() {
+  @Override
+  protected TokenService getTokenService() {
     return this.tokenService;
   }
 
@@ -37,4 +41,5 @@ public class FilterOfficePermissionController extends CreateAndUpdateUsingCommon
   protected CustomFilterEnum getFilter() {
     return CustomFilterEnum.OFFICE_PERMISSIONS;
   }
+
 }

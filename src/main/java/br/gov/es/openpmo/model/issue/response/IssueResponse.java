@@ -39,12 +39,12 @@ public class IssueResponse extends Entity {
   }
 
   public IssueResponse(
-      final String name,
-      final String plan,
-      final LocalDate date,
-      final IssueResponseStatus status,
-      final Issue issue,
-      final Set<Person> responsible
+    final String name,
+    final String plan,
+    final LocalDate date,
+    final IssueResponseStatus status,
+    final Issue issue,
+    final Set<Person> responsible
   ) {
     this.name = name;
     this.plan = plan;
@@ -54,29 +54,32 @@ public class IssueResponse extends Entity {
     this.responsible = responsible;
   }
 
-  public static IssueResponse of(final RiskResponse response, final Issue issue) {
+  public static IssueResponse of(
+    final RiskResponse response,
+    final Issue issue
+  ) {
     return new IssueResponse(
-        response.getName(),
-        response.getPlan(),
-        LocalDate.now(),
-        IssueResponseStatus.RUNNING,
-        issue,
-        response.getResponsible()
+      response.getName(),
+      response.getPlan(),
+      LocalDate.now(),
+      IssueResponseStatus.RUNNING,
+      issue,
+      response.getResponsible()
     );
   }
 
   public static IssueResponse of(
-      final IssueResponseCreateDto request,
-      final Issue issue,
-      final Set<Person> responsible
+    final IssueResponseCreateDto request,
+    final Issue issue,
+    final Set<Person> responsible
   ) {
     return new IssueResponse(
-        request.getName(),
-        request.getPlan(),
-        request.getDate(),
-        request.getStatus(),
-        issue,
-        responsible
+      request.getName(),
+      request.getPlan(),
+      request.getDate(),
+      request.getStatus(),
+      issue,
+      responsible
     );
   }
 
@@ -123,10 +126,10 @@ public class IssueResponse extends Entity {
 
   @Transient
   public Set<StakeholderCardViewDto> getResponsibleAsCardView() {
-    if (this.responsible == null) return Collections.emptySet();
+    if(this.responsible == null) return Collections.emptySet();
     return this.responsible.stream()
-        .map(StakeholderCardViewDto::of)
-        .collect(Collectors.toSet());
+      .map(StakeholderCardViewDto::of)
+      .collect(Collectors.toSet());
   }
 
   @Transient

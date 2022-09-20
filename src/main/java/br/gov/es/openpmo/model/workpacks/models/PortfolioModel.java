@@ -19,4 +19,5 @@ public class PortfolioModel extends WorkpackModel {
   public void setInstances(final Set<Portfolio> instances) {
     this.instances = instances;
   }
+
 }

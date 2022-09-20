@@ -42,207 +42,221 @@ import static org.apache.http.entity.ContentType.APPLICATION_JSON;
 @Component
 public class EDocsApiImpl implements EDocsApi {
 
-    private static final String AUTHORIZATION = "Authorization";
+  private static final String AUTHORIZATION = "Authorization";
 
-    private static final String BEARER = "Bearer ";
+  private static final String BEARER = "Bearer ";
 
-    private static final int HTTP_OK = 200;
+  private static final int HTTP_OK = 200;
 
-    private final JournalCreator journalCreator;
+  private final JournalCreator journalCreator;
 
-    private final Logger logger;
+  private final Logger logger;
 
-    private final OrganogramaApi organogramaApi;
+  private final OrganogramaApi organogramaApi;
+  @Value("${api.e-docs.identificador-externo.processo-prioritario}")
+  public String identificadorExterno;
+  @Value("${api.e-docs.grant_type}")
+  private String grantType;
+  @Value("${api.e-docs.scope}")
+  private String scopes;
+  @Value("${api.e-docs.client-id}")
+  private String clientId;
+  @Value("${api.e-docs.client-secret}")
+  private String clientSecret;
+  @Value("${api.e-docs.uri.webapi}")
+  private String edocsUriWebApi;
+  @Value("${api.e-docs.uri.token}")
+  private String edocsUriToken;
 
-    @Value("${api.e-docs.grant_type}")
-    private String grantType;
+  @Autowired
+  public EDocsApiImpl(
+    final JournalCreator journalCreator,
+    final Logger logger,
+    final OrganogramaApi organogramaApi
+  ) {
+    this.journalCreator = journalCreator;
+    this.logger = logger;
+    this.organogramaApi = organogramaApi;
+  }
 
-    @Value("${api.e-docs.scope}")
-    private String scopes;
+  @Override
+  public ProcessResponse findProcessByProtocol(
+    final String protocol,
+    final Long idPerson
+  ) {
+    final ProcessResponse processResponse = this.fetchProcessByProtocol(
+      protocol,
+      ProcessResponse::new,
+      idPerson
+    );
 
-    @Value("${api.e-docs.client-id}")
-    private String clientId;
+    final boolean processPriority = this.isProcessPriority(processResponse.getId(), idPerson);
+    processResponse.setPriority(processPriority);
 
-    @Value("${api.e-docs.client-secret}")
-    private String clientSecret;
+    final List<ProcessHistoryResponse> processHistory = this.findProcessHistoryById(processResponse.getId(), idPerson);
+    processResponse.addHistory(processHistory);
 
-    @Value("${api.e-docs.uri.webapi}")
-    private String edocsUriWebApi;
+    return processResponse;
+  }
 
-    @Value("${api.e-docs.uri.token}")
-    private String edocsUriToken;
-
-    @Value("${api.e-docs.identificador-externo.processo-prioritario}")
-    public String identificadorExterno;
-
-    @Autowired
-    public EDocsApiImpl(final JournalCreator journalCreator, final Logger logger, OrganogramaApi organogramaApi) {
-        this.journalCreator = journalCreator;
-        this.logger = logger;
-        this.organogramaApi = organogramaApi;
-    }
-
-    @Override
-    public ProcessResponse findProcessByProtocol(final String protocol, final Long idPerson) {
-        final ProcessResponse processResponse = this.fetchProcessByProtocol(
-                protocol,
-                ProcessResponse::new,
-                idPerson
-        );
-
-        boolean processPriority = this.isProcessPriority(processResponse.getId(), idPerson);
-        processResponse.setPriority(processPriority);
-
-        final List<ProcessHistoryResponse> processHistory = this.findProcessHistoryById(processResponse.getId(), idPerson);
-        processResponse.addHistory(processHistory);
-
-        return processResponse;
-    }
-
-    private ProcessResponse fetchProcessByProtocol(
-            final String protocol,
-            final Function<JSONObject, ProcessResponse> mapper,
-            final Long idPerson
-    ) {
-        final String token = this.fetchClientToken(idPerson);
-
-        final String uri = this.edocsUriWebApi.concat("/v2/processos/search");
-        this.logger.info("Executing POST in {}", uri);
-        final HttpPost postRequest = new HttpPost(uri);
-
-        postRequest.addHeader(AUTHORIZATION, BEARER + token);
-
-        final JSONObject request = this.buildBody(protocol);
-
-        final HttpEntity stringEntity = new StringEntity(request.toString(), APPLICATION_JSON);
-        this.logger.info("Body: {}", request);
-        postRequest.setEntity(stringEntity);
-
-        try (CloseableHttpClient httpClient = HttpClients.createDefault();
-             CloseableHttpResponse response = httpClient.execute(postRequest)) {
-            if (this.isNotHttp200(response)) {
-                response.getStatusLine().getReasonPhrase();
-                throw new IllegalStateException(FAILED_FETCH_STATUS_NOT_OK);
-            }
-            final JSONObject json = new JSONObject(EntityUtils.toString(response.getEntity()))
-                    .getJSONArray("value")
-                    .getJSONObject(0);
-            return mapper.apply(json);
-        } catch (final IOException e) {
-            this.journalCreator.failure(idPerson);
-            throw new IllegalStateException(FAILED_FETCH_EXTERNAL_DATA);
+  @Override
+  public List<ProcessHistoryResponse> findProcessHistoryById(
+    final String id,
+    final Long idPerson
+  ) {
+    return this.getList(
+      "/v2/processos/" + id + "/atos",
+      (array, list) -> array.forEach(element -> {
+        if(element instanceof JSONObject) {
+          final JSONObject obj = (JSONObject) element;
+          list.add(new ProcessHistoryResponse(obj, this.organogramaApi));
         }
-    }
+      }),
+      idPerson
+    );
+  }
 
-    private JSONObject buildBody(final String protocol) {
-        final JSONArray array = new JSONArray();
-        array.put(protocol);
-        final JSONObject request = new JSONObject();
-        request.put("protocolos", array);
-        return request;
-    }
-
-    private String fetchClientToken(final Long idPerson) {
-        final String basicToken = this.clientId + ":" + this.clientSecret;
-
-        this.logger.info("Executing POST in {}", this.edocsUriToken);
-        final HttpPost postRequest = new HttpPost(this.edocsUriToken);
-
-        final List<NameValuePair> parameters = new ArrayList<>();
-
-        parameters.add(new BasicNameValuePair("grant_type", this.grantType));
-        parameters.add(new BasicNameValuePair("scope", this.scopes));
-
-        postRequest.addHeader(
-                AUTHORIZATION,
-                "Basic " + Base64.getEncoder().encodeToString(basicToken.getBytes())
-        );
-
-        postRequest.setEntity(new UrlEncodedFormEntity(parameters, Consts.UTF_8));
-
-        try (CloseableHttpClient httpClient = HttpClients.createDefault();
-             CloseableHttpResponse response = httpClient.execute(postRequest)) {
-            if (this.isNotHttp200(response)) {
-                throw new IllegalStateException(FAILED_FETCH_STATUS_NOT_OK);
-            }
-
-            final JSONObject result = new JSONObject(EntityUtils.toString(response.getEntity()));
-            this.logger.info("Token received successfully");
-            return result.getString("access_token");
-        } catch (final IOException e) {
-            this.journalCreator.failure(idPerson);
-            throw new NegocioException(FAILED_FETCH_TOKEN_ACESSO_CIDADAO);
-        }
-    }
-
-    private boolean isNotHttp200(final HttpResponse response) {
-        return response.getStatusLine().getStatusCode() != HTTP_OK;
-    }
-
-    @Override
-    public List<ProcessHistoryResponse> findProcessHistoryById(final String id, final Long idPerson) {
-        return this.getList(
-                "/v2/processos/" + id + "/atos",
-                (array, list) -> array.forEach(element -> {
-                    if (element instanceof JSONObject) {
-                        final JSONObject obj = (JSONObject) element;
-                        list.add(new ProcessHistoryResponse(obj, this.organogramaApi));
-                    }
-                }),
-                idPerson
-        );
-    }
-
-    @Override
-    public boolean isProcessPriority(String processId, Long personId) {
-        String uri = this.edocsUriWebApi.concat("/v2/processos/").concat(processId).concat("/sinalizacao");
-        this.logger.info("Executing GET in {}", uri);
-        HttpUriRequest getRequest = new HttpGet(uri);
-        getRequest.addHeader(AUTHORIZATION, BEARER + this.fetchClientToken(personId));
-        try (CloseableHttpClient httpClient = HttpClients.createDefault();
-             CloseableHttpResponse response = httpClient.execute(getRequest)) {
-            StatusLine statusLine = response.getStatusLine();
-            if (statusLine.getStatusCode() != HTTP_OK) {
-                return false;
-            }
-            final Iterable<Object> array = new JSONArray(EntityUtils.toString(response.getEntity()));
-            for (Object element : array) {
-                if (element instanceof JSONObject) {
-                    final JSONObject obj = (JSONObject) element;
-                    if (obj.optString("identificadorExterno").equals(this.identificadorExterno)) {
-                        return true;
-                    }
-                }
-            }
-        } catch (IOException e) {
-            return false;
-        }
+  @Override
+  public boolean isProcessPriority(
+    final String processId,
+    final Long personId
+  ) {
+    final String uri = this.edocsUriWebApi.concat("/v2/processos/").concat(processId).concat("/sinalizacao");
+    this.logger.info("Executing GET in {}", uri);
+    final HttpUriRequest getRequest = new HttpGet(uri);
+    getRequest.addHeader(AUTHORIZATION, BEARER + this.fetchClientToken(personId));
+    try(final CloseableHttpClient httpClient = HttpClients.createDefault();
+        final CloseableHttpResponse response = httpClient.execute(getRequest)) {
+      final StatusLine statusLine = response.getStatusLine();
+      if(statusLine.getStatusCode() != HTTP_OK) {
         return false;
-    }
-
-    private List<ProcessHistoryResponse> getList(final String url, final BiConsumer<JSONArray, List<ProcessHistoryResponse>> mapper, final Long idPerson) {
-        final String token = this.fetchClientToken(idPerson);
-
-        final String uri = this.edocsUriWebApi.concat(url);
-        this.logger.info("Executing GET in {}", uri);
-        final HttpUriRequest getRequest = new HttpGet(uri);
-        getRequest.addHeader(AUTHORIZATION, BEARER + token);
-
-        try (CloseableHttpClient httpClient = HttpClients.createDefault();
-             CloseableHttpResponse response = httpClient.execute(getRequest)) {
-
-            if (this.isNotHttp200(response)) {
-                throw new IllegalStateException(FAILED_FETCH_STATUS_NOT_OK);
-            }
-
-            final JSONArray array = new JSONArray(EntityUtils.toString(response.getEntity()));
-            final List<ProcessHistoryResponse> history = new ArrayList<>();
-            mapper.accept(array, history);
-            return history;
-        } catch (final IOException e) {
-            this.journalCreator.failure(idPerson);
+      }
+      final Iterable<Object> array = new JSONArray(EntityUtils.toString(response.getEntity()));
+      for(final Object element : array) {
+        if(element instanceof JSONObject) {
+          final JSONObject obj = (JSONObject) element;
+          if(obj.optString("identificadorExterno").equals(this.identificadorExterno)) {
+            return true;
+          }
         }
-        return new ArrayList<>();
+      }
     }
+    catch(final IOException e) {
+      return false;
+    }
+    return false;
+  }
+
+  private ProcessResponse fetchProcessByProtocol(
+    final String protocol,
+    final Function<JSONObject, ProcessResponse> mapper,
+    final Long idPerson
+  ) {
+    final String token = this.fetchClientToken(idPerson);
+
+    final String uri = this.edocsUriWebApi.concat("/v2/processos/search");
+    this.logger.info("Executing POST in {}", uri);
+    final HttpPost postRequest = new HttpPost(uri);
+
+    postRequest.addHeader(AUTHORIZATION, BEARER + token);
+
+    final JSONObject request = this.buildBody(protocol);
+
+    final HttpEntity stringEntity = new StringEntity(request.toString(), APPLICATION_JSON);
+    this.logger.info("Body: {}", request);
+    postRequest.setEntity(stringEntity);
+
+    try(final CloseableHttpClient httpClient = HttpClients.createDefault();
+        final CloseableHttpResponse response = httpClient.execute(postRequest)) {
+      if(this.isNotHttp200(response)) {
+        response.getStatusLine().getReasonPhrase();
+        throw new IllegalStateException(FAILED_FETCH_STATUS_NOT_OK);
+      }
+      final JSONObject json = new JSONObject(EntityUtils.toString(response.getEntity()))
+        .getJSONArray("value")
+        .getJSONObject(0);
+      return mapper.apply(json);
+    }
+    catch(final IOException e) {
+      this.journalCreator.failure(idPerson);
+      throw new IllegalStateException(FAILED_FETCH_EXTERNAL_DATA);
+    }
+  }
+
+  private JSONObject buildBody(final String protocol) {
+    final JSONArray array = new JSONArray();
+    array.put(protocol);
+    final JSONObject request = new JSONObject();
+    request.put("protocolos", array);
+    return request;
+  }
+
+  private String fetchClientToken(final Long idPerson) {
+    final String basicToken = this.clientId + ":" + this.clientSecret;
+
+    this.logger.info("Executing POST in {}", this.edocsUriToken);
+    final HttpPost postRequest = new HttpPost(this.edocsUriToken);
+
+    final List<NameValuePair> parameters = new ArrayList<>();
+
+    parameters.add(new BasicNameValuePair("grant_type", this.grantType));
+    parameters.add(new BasicNameValuePair("scope", this.scopes));
+
+    postRequest.addHeader(
+      AUTHORIZATION,
+      "Basic " + Base64.getEncoder().encodeToString(basicToken.getBytes())
+    );
+
+    postRequest.setEntity(new UrlEncodedFormEntity(parameters, Consts.UTF_8));
+
+    try(final CloseableHttpClient httpClient = HttpClients.createDefault();
+        final CloseableHttpResponse response = httpClient.execute(postRequest)) {
+      if(this.isNotHttp200(response)) {
+        throw new IllegalStateException(FAILED_FETCH_STATUS_NOT_OK);
+      }
+
+      final JSONObject result = new JSONObject(EntityUtils.toString(response.getEntity()));
+      this.logger.info("Token received successfully");
+      return result.getString("access_token");
+    }
+    catch(final IOException e) {
+      this.journalCreator.failure(idPerson);
+      throw new NegocioException(FAILED_FETCH_TOKEN_ACESSO_CIDADAO);
+    }
+  }
+
+  private boolean isNotHttp200(final HttpResponse response) {
+    return response.getStatusLine().getStatusCode() != HTTP_OK;
+  }
+
+  private List<ProcessHistoryResponse> getList(
+    final String url,
+    final BiConsumer<JSONArray, List<ProcessHistoryResponse>> mapper,
+    final Long idPerson
+  ) {
+    final String token = this.fetchClientToken(idPerson);
+
+    final String uri = this.edocsUriWebApi.concat(url);
+    this.logger.info("Executing GET in {}", uri);
+    final HttpUriRequest getRequest = new HttpGet(uri);
+    getRequest.addHeader(AUTHORIZATION, BEARER + token);
+
+    try(final CloseableHttpClient httpClient = HttpClients.createDefault();
+        final CloseableHttpResponse response = httpClient.execute(getRequest)) {
+
+      if(this.isNotHttp200(response)) {
+        throw new IllegalStateException(FAILED_FETCH_STATUS_NOT_OK);
+      }
+
+      final JSONArray array = new JSONArray(EntityUtils.toString(response.getEntity()));
+      final List<ProcessHistoryResponse> history = new ArrayList<>();
+      mapper.accept(array, history);
+      return history;
+    }
+    catch(final IOException e) {
+      this.journalCreator.failure(idPerson);
+    }
+    return new ArrayList<>();
+  }
 
 }

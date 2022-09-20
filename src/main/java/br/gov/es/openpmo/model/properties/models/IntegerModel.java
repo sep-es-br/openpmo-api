@@ -32,4 +32,5 @@ public class IntegerModel extends PropertyModel {
   public void setDefaultValue(final Long defaultValue) {
     this.defaultValue = defaultValue;
   }
+
 }

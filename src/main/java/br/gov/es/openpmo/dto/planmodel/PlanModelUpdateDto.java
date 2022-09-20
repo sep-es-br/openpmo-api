@@ -8,6 +8,7 @@ import javax.validation.constraints.NotNull;
 import java.util.Set;
 
 public class PlanModelUpdateDto {
+
   @NotNull(message = ApplicationMessage.ID_NOT_NULL)
   private Long id;
   @NotNull(message = ApplicationMessage.OFFICE_NOT_NULL)
@@ -67,4 +68,5 @@ public class PlanModelUpdateDto {
   public void setSharedWith(final Set<OfficeDto> sharedWith) {
     this.sharedWith = sharedWith;
   }
+
 }

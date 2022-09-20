@@ -4,6 +4,9 @@ import br.gov.es.openpmo.dto.workpack.EndDeliverableManagementRequest;
 
 public interface IDeliverableEndManagementService {
 
-    void apply(Long idDeliverable, EndDeliverableManagementRequest request);
+  void apply(
+    Long idDeliverable,
+    EndDeliverableManagementRequest request
+  );
 
 }

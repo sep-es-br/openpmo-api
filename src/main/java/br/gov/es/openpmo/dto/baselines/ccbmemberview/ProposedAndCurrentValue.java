@@ -38,4 +38,5 @@ public class ProposedAndCurrentValue {
   public boolean isNull() {
     return this.proposedValue == null && this.currentValue == null;
   }
+
 }

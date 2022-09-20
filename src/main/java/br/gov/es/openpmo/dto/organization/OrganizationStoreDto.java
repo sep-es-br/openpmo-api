@@ -92,4 +92,5 @@ public class OrganizationStoreDto {
   public void setWebsite(final String website) {
     this.website = website;
   }
+
 }

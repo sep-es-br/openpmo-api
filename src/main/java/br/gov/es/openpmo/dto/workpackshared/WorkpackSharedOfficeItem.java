@@ -47,4 +47,5 @@ public class WorkpackSharedOfficeItem {
   public String getFullName() {
     return this.fullName;
   }
+
 }

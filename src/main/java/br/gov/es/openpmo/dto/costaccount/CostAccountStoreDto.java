@@ -16,7 +16,10 @@ public class CostAccountStoreDto {
   private List<? extends PropertyDto> properties;
 
 
-  public CostAccountStoreDto(final Long idWorkpack, final List<? extends PropertyDto> properties) {
+  public CostAccountStoreDto(
+    final Long idWorkpack,
+    final List<? extends PropertyDto> properties
+  ) {
     this.idWorkpack = idWorkpack;
     this.properties = Optional.ofNullable(properties)
       .map(Collections::unmodifiableList)
@@ -38,4 +41,5 @@ public class CostAccountStoreDto {
   public void setProperties(final List<? extends PropertyDto> properties) {
     this.properties = properties;
   }
+
 }

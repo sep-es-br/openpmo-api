@@ -101,4 +101,5 @@ public class IssueDetailDto {
   public Set<IssueResponseDetailDto> getResponses() {
     return this.responses;
   }
+
 }

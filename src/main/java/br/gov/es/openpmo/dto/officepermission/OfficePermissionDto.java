@@ -40,4 +40,5 @@ public class OfficePermissionDto {
   public void addAllRoles(final List<? extends RoleResource> roles) {
     this.person.addAllRoles(roles);
   }
+
 }

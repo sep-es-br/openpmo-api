@@ -17,4 +17,5 @@ public class UnitSelectionModel extends PropertyModel {
   public void setDefaultValue(final UnitMeasure defaultValue) {
     this.defaultValue = defaultValue;
   }
+
 }

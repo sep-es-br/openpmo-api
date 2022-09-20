@@ -10,16 +10,16 @@ import java.util.List;
 @Service
 public class DashboardBaselineService implements IDashboardBaselineService {
 
-    private final DashboardBaselineRepository baselineRepository;
+  private final DashboardBaselineRepository baselineRepository;
 
-    @Autowired
-    public DashboardBaselineService(final DashboardBaselineRepository baselineRepository) {
-        this.baselineRepository = baselineRepository;
-    }
+  @Autowired
+  public DashboardBaselineService(final DashboardBaselineRepository baselineRepository) {
+    this.baselineRepository = baselineRepository;
+  }
 
-    @Override
-    public List<DashboardBaselineResponse> getBaselines(final Long workpackId) {
-        return this.baselineRepository.findAllByWorkpackId(workpackId);
-    }
+  @Override
+  public List<DashboardBaselineResponse> getBaselines(final Long workpackId) {
+    return this.baselineRepository.findAllByWorkpackId(workpackId);
+  }
 
 }

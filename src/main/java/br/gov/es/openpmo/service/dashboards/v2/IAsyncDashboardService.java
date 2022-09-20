@@ -5,8 +5,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 public interface IAsyncDashboardService {
 
-    @Async
-    @Transactional
-    void calculate(Long worpackId);
+  @Async
+  @Transactional
+  void calculate(Long worpackId);
 
 }

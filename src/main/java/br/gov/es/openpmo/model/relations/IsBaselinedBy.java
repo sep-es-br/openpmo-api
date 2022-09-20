@@ -26,7 +26,10 @@ public class IsBaselinedBy {
   public IsBaselinedBy() {
   }
 
-  public IsBaselinedBy(final Baseline baseline, final Workpack workpack) {
+  public IsBaselinedBy(
+    final Baseline baseline,
+    final Workpack workpack
+  ) {
     this.workpack = workpack;
     this.baseline = baseline;
   }
@@ -64,4 +67,5 @@ public class IsBaselinedBy {
   public Long getIdBaseline() {
     return this.baseline.getId();
   }
+
 }

@@ -60,4 +60,5 @@ public class ConsumesDto {
       .map(EntityDto::getId)
       .orElse(null);
   }
+
 }

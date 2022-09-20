@@ -30,7 +30,10 @@ public class OrganizationController {
   private final ModelMapper modelMapper;
 
   @Autowired
-  public OrganizationController(final OrganizationService organizationService, final ModelMapper modelMapper) {
+  public OrganizationController(
+    final OrganizationService organizationService,
+    final ModelMapper modelMapper
+  ) {
     this.organizationService = organizationService;
     this.modelMapper = modelMapper;
   }
@@ -71,7 +74,8 @@ public class OrganizationController {
 
   @PutMapping
   public ResponseEntity<ResponseBase<EntityDto>> update(@Valid @RequestBody final OrganizationUpdateDto organizationUpdateDto) {
-    final Organization organization = this.organizationService.save(this.organizationService.getOrganization(organizationUpdateDto));
+    final Organization organization =
+      this.organizationService.save(this.organizationService.getOrganization(organizationUpdateDto));
     final ResponseBase<EntityDto> entity = new ResponseBase<EntityDto>().setMessage(OPERATION_SUCCESS).setData(new EntityDto(
         organization.getId()))
       .setSuccess(true);
@@ -84,4 +88,5 @@ public class OrganizationController {
     this.organizationService.delete(organization);
     return ResponseEntity.ok().build();
   }
+
 }

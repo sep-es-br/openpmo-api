@@ -18,7 +18,10 @@ public interface WorkpackSharedRepository extends Neo4jRepository<IsSharedWith, 
   List<IsSharedWith> findSharedWithDataByWorkpackId(@Param("idWorkpack") Long idWorkpack);
 
   @Query("MATCH (n:Workpack)-[is:IS_SHARED_WITH]->(o:Office) WHERE id(n) = $idWorkpack AND id(o) = $idOffice RETURN n,o,is")
-  Optional<IsSharedWith> findByIdWorkpackAndIdOffice(@Param("idWorkpack") Long idWorkpack, @Param("idOffice") Long idOffice);
+  Optional<IsSharedWith> findByIdWorkpackAndIdOffice(
+    @Param("idWorkpack") Long idWorkpack,
+    @Param("idOffice") Long idOffice
+  );
 
   @Query(
     "MATCH (office:Office)<-[:IS_ADOPTED_BY]-(planModel:PlanModel)<-[:BELONGS_TO]-(model:WorkpackModel), "
@@ -28,9 +31,9 @@ public interface WorkpackSharedRepository extends Neo4jRepository<IsSharedWith, 
     + "WITH office, planModel, model, sharedWith, workpack, instanceBy, instance, isInInstance, instanceChildren "
     + "WHERE id(model) = $idWorkpackModel "
     + "RETURN office, planModel, sharedWith, workpack, instanceBy, instance, model, isInInstance, instanceChildren, [ "
-      + "    [(workpack)-[bt:BELONGS_TO{linked:false}]->(originalPlan:Plan) | [bt, originalPlan]], "
-      + "    [(originalPlan:Plan)-[iab:IS_ADOPTED_BY]->(originalOffice:Office) | [iab, originalOffice]] " +
-      "]"
+    + "    [(workpack)-[bt:BELONGS_TO{linked:false}]->(originalPlan:Plan) | [bt, originalPlan]], "
+    + "    [(originalPlan:Plan)-[iab:IS_ADOPTED_BY]->(originalOffice:Office) | [iab, originalOffice]] " +
+    "]"
   )
   List<IsSharedWith> listAllWorkpacksShared(Long idWorkpackModel);
 
@@ -85,7 +88,10 @@ public interface WorkpackSharedRepository extends Neo4jRepository<IsSharedWith, 
     "    WHEN parentBelongsTo.linked = true THEN parent " +
     "END"
   )
-  Optional<Workpack> findSharedWorkpackByIdPlan(Long idWorkpack, Long idPlan);
+  Optional<Workpack> findSharedWorkpackByIdPlan(
+    Long idWorkpack,
+    Long idPlan
+  );
 
 
   @Query(
@@ -95,7 +101,10 @@ public interface WorkpackSharedRepository extends Neo4jRepository<IsSharedWith, 
     "WHERE id(workpack)=$idWorkpack AND id(workpackModel)=$idWorkpackModelLinked " +
     "RETURN workpack, isSharedWith, office"
   )
-  Optional<IsSharedWith> commonSharedWithBetweenLinkedWorkpackModelAndWorkpack(Long idWorkpack, Long idWorkpackModelLinked);
+  Optional<IsSharedWith> commonSharedWithBetweenLinkedWorkpackModelAndWorkpack(
+    Long idWorkpack,
+    Long idWorkpackModelLinked
+  );
 
   @Query(
     "MATCH (workpack:Workpack)   " +
@@ -107,7 +116,10 @@ public interface WorkpackSharedRepository extends Neo4jRepository<IsSharedWith, 
     "WHERE id(workpack)=$idWorkpack AND (id(office)=$idOffice OR $idOffice IS NULL)  " +
     "DETACH DELETE isLinkedTo"
   )
-  void deleteExternalLinkedRelationship(Long idWorkpack, Long idOffice);
+  void deleteExternalLinkedRelationship(
+    Long idWorkpack,
+    Long idOffice
+  );
 
   @Query(
     "MATCH (workpack:Workpack)   " +
@@ -118,7 +130,10 @@ public interface WorkpackSharedRepository extends Neo4jRepository<IsSharedWith, 
     "WHERE id(workpack)=$idWorkpack AND (id(office)=$idOffice OR $idOffice IS NULL)  " +
     "DETACH DELETE shared, belongsTo "
   )
-  void deleteSharedRelationship(Long idWorkpack, Long idOffice);
+  void deleteSharedRelationship(
+    Long idWorkpack,
+    Long idOffice
+  );
 
   @Query(
     "MATCH (workpack:Workpack)  " +
@@ -134,7 +149,10 @@ public interface WorkpackSharedRepository extends Neo4jRepository<IsSharedWith, 
     "WHERE id(workpack)=$idWorkpack AND (id(office)=$idOffice OR $idOffice  IS NULL) " +
     "DETACH DELETE permission, childrenPermission"
   )
-  void deleteExternalPermission(Long idWorkpack, Long idOffice);
+  void deleteExternalPermission(
+    Long idWorkpack,
+    Long idOffice
+  );
 
   @Query(
     "MATCH (workpack:Workpack) " +
@@ -147,6 +165,9 @@ public interface WorkpackSharedRepository extends Neo4jRepository<IsSharedWith, 
     "WHERE (parent)-[:BELONGS_TO]-(plan) " +
     "DETACH DELETE isIn"
   )
-  void deleteExternalParent(Long idWorkpack, Long idOffice);
+  void deleteExternalParent(
+    Long idWorkpack,
+    Long idOffice
+  );
 
 }

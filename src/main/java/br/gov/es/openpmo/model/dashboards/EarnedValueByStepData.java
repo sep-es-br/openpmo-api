@@ -7,65 +7,66 @@ import java.time.YearMonth;
 
 public class EarnedValueByStepData {
 
-    private BigDecimal plannedValue;
+  private BigDecimal plannedValue;
 
-    private BigDecimal actualCost;
+  private BigDecimal actualCost;
 
-    private BigDecimal earnedValue;
+  private BigDecimal earnedValue;
 
-    private YearMonth date;
+  private YearMonth date;
 
-    public static EarnedValueByStepData of(EarnedValueByStep from) {
-        if (from == null) {
-            return null;
-        }
-
-        final EarnedValueByStepData to = new EarnedValueByStepData();
-        to.setPlannedValue(from.getPlannedValue());
-        to.setActualCost(from.getActualCost());
-        to.setEarnedValue(from.getEarnedValue());
-        to.setDate(from.getDate());
-        return to;
+  public static EarnedValueByStepData of(final EarnedValueByStep from) {
+    if(from == null) {
+      return null;
     }
 
-    public BigDecimal getPlannedValue() {
-        return plannedValue;
-    }
+    final EarnedValueByStepData to = new EarnedValueByStepData();
+    to.setPlannedValue(from.getPlannedValue());
+    to.setActualCost(from.getActualCost());
+    to.setEarnedValue(from.getEarnedValue());
+    to.setDate(from.getDate());
+    return to;
+  }
 
-    public void setPlannedValue(BigDecimal plannedValue) {
-        this.plannedValue = plannedValue;
-    }
+  public BigDecimal getPlannedValue() {
+    return this.plannedValue;
+  }
 
-    public BigDecimal getActualCost() {
-        return actualCost;
-    }
+  public void setPlannedValue(final BigDecimal plannedValue) {
+    this.plannedValue = plannedValue;
+  }
 
-    public void setActualCost(BigDecimal actualCost) {
-        this.actualCost = actualCost;
-    }
+  public BigDecimal getActualCost() {
+    return this.actualCost;
+  }
 
-    public BigDecimal getEarnedValue() {
-        return earnedValue;
-    }
+  public void setActualCost(final BigDecimal actualCost) {
+    this.actualCost = actualCost;
+  }
 
-    public void setEarnedValue(BigDecimal earnedValue) {
-        this.earnedValue = earnedValue;
-    }
+  public BigDecimal getEarnedValue() {
+    return this.earnedValue;
+  }
 
-    public YearMonth getDate() {
-        return date;
-    }
+  public void setEarnedValue(final BigDecimal earnedValue) {
+    this.earnedValue = earnedValue;
+  }
 
-    public void setDate(YearMonth date) {
-        this.date = date;
-    }
+  public YearMonth getDate() {
+    return this.date;
+  }
 
-    public EarnedValueByStep getResponse() {
-        final EarnedValueByStep step = new EarnedValueByStep();
-        step.setActualCost(this.actualCost);
-        step.setPlannedValue(this.plannedValue);
-        step.setEarnedValue(this.earnedValue);
-        step.setDate(this.date);
-        return step;
-    }
+  public void setDate(final YearMonth date) {
+    this.date = date;
+  }
+
+  public EarnedValueByStep getResponse() {
+    final EarnedValueByStep step = new EarnedValueByStep();
+    step.setActualCost(this.actualCost);
+    step.setPlannedValue(this.plannedValue);
+    step.setEarnedValue(this.earnedValue);
+    step.setDate(this.date);
+    return step;
+  }
+
 }

@@ -13,8 +13,8 @@ public class DatasheetResponse {
   private final Set<DatasheetStakeholderResponse> stakeholders;
 
   public DatasheetResponse(
-          final DatasheetTotalizers datasheetTotalizers,
-          final Set<DatasheetStakeholderResponse> stakeholders
+    final DatasheetTotalizers datasheetTotalizers,
+    final Set<DatasheetStakeholderResponse> stakeholders
   ) {
     this.datasheetTotalizers = datasheetTotalizers;
     this.stakeholders = Collections.unmodifiableSet(stakeholders);

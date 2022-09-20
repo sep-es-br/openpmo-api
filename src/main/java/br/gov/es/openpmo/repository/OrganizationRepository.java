@@ -15,4 +15,5 @@ public interface OrganizationRepository extends CrudRepository<Organization, Lon
 
   @Query("MATCH (p:Organization)-[is:IS_STAKEHOLDER_IN]->(o:Workpack) WHERE ID(o) = $idWorkpack RETURN p")
   List<Organization> findByIdWorkpackReturnDistinctOrganization(@Param("idWorkpack") Long idWorkpack);
+
 }

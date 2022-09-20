@@ -6,74 +6,75 @@ import java.time.LocalDate;
 
 public class TripleConstraintDataChart {
 
-    private Long idBaseline;
+  private Long idBaseline;
 
-    @JsonFormat(pattern = "MM-yyyy")
-    private LocalDate mesAno;
+  @JsonFormat(pattern = "MM-yyyy")
+  private LocalDate mesAno;
 
-    private CostDataChart cost;
+  private CostDataChart cost;
 
-    private ScheduleDataChart schedule;
+  private ScheduleDataChart schedule;
 
-    private ScopeDataChart scope;
+  private ScopeDataChart scope;
 
-    public CostDataChart getCost() {
-        return this.cost;
+  public CostDataChart getCost() {
+    return this.cost;
+  }
+
+  public void setCost(final CostDataChart cost) {
+    this.cost = cost;
+  }
+
+  public ScheduleDataChart getSchedule() {
+    return this.schedule;
+  }
+
+  public void setSchedule(final ScheduleDataChart schedule) {
+    this.schedule = schedule;
+  }
+
+  public ScopeDataChart getScope() {
+    return this.scope;
+  }
+
+  public void setScope(final ScopeDataChart scope) {
+    this.scope = scope;
+  }
+
+  public void sumCostData(final CostDataChart cost) {
+    if(this.cost == null) {
+      this.cost = new CostDataChart();
     }
+    this.cost.sumCostData(cost);
+  }
 
-    public void setCost(final CostDataChart cost) {
-        this.cost = cost;
+  public void sumScopeData(final ScopeDataChart scopeData) {
+    if(this.scope == null) {
+      this.scope = new ScopeDataChart();
     }
+    this.scope.sumScopeData(scopeData);
+  }
 
-    public ScheduleDataChart getSchedule() {
-        return this.schedule;
-    }
+  public void round() {
+    this.cost.round();
+    this.schedule.round();
+    this.scope.round();
+  }
 
-    public void setSchedule(final ScheduleDataChart schedule) {
-        this.schedule = schedule;
-    }
+  public Long getIdBaseline() {
+    return this.idBaseline;
+  }
 
-    public ScopeDataChart getScope() {
-        return this.scope;
-    }
+  public void setIdBaseline(final Long idBaseline) {
+    this.idBaseline = idBaseline;
+  }
 
-    public void setScope(final ScopeDataChart scope) {
-        this.scope = scope;
-    }
+  public LocalDate getMesAno() {
+    return this.mesAno;
+  }
 
-    public void sumCostData(final CostDataChart cost) {
-        if (this.cost == null) {
-            this.cost = new CostDataChart();
-        }
-        this.cost.sumCostData(cost);
-    }
+  public void setMesAno(final LocalDate mesAno) {
+    this.mesAno = mesAno;
+  }
 
-    public void sumScopeData(final ScopeDataChart scopeData) {
-        if (this.scope == null) {
-            this.scope = new ScopeDataChart();
-        }
-        this.scope.sumScopeData(scopeData);
-    }
-
-    public void round() {
-        this.cost.round();
-        this.schedule.round();
-        this.scope.round();
-    }
-
-    public Long getIdBaseline() {
-        return idBaseline;
-    }
-
-    public void setIdBaseline(Long idBaseline) {
-        this.idBaseline = idBaseline;
-    }
-
-    public LocalDate getMesAno() {
-        return mesAno;
-    }
-
-    public void setMesAno(LocalDate mesAno) {
-        this.mesAno = mesAno;
-    }
 }

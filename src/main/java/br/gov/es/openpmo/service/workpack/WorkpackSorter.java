@@ -75,7 +75,10 @@ public class WorkpackSorter {
     return compare(getValueProperty(propertySorter1), getValueProperty(propertySorter2)) * direction.getOrder();
   }
 
-  private static Property getPropertySorter(final Workpack workpack, final String sortBy) {
+  private static Property getPropertySorter(
+    final Workpack workpack,
+    final String sortBy
+  ) {
     final Long propertyModelId = Long.parseLong(sortBy);
     return workpack.getProperties().stream()
       .filter(property -> property.getPropertyModel().getId().equals(propertyModelId))
@@ -83,7 +86,10 @@ public class WorkpackSorter {
       .orElse(null);
   }
 
-  private static void sortWorkpacks(final List<? extends Workpack> workpacks, final WorkpackModel workpackModel) {
+  private static void sortWorkpacks(
+    final List<? extends Workpack> workpacks,
+    final WorkpackModel workpackModel
+  ) {
     workpacks.sort((a, b) -> compare(
       getValueProperty(a, workpackModel.getSortBy()),
       getValueProperty(b, workpackModel.getSortBy())
@@ -106,6 +112,7 @@ public class WorkpackSorter {
   }
 
   public static class WorkpackSorterRequest {
+
     private final Long idPlan;
     private final Long idPlanModel;
     private final Long idWorkpackModel;
@@ -152,5 +159,7 @@ public class WorkpackSorter {
     public List<Workpack> getWorkpacks() {
       return this.workpacks;
     }
+
   }
+
 }

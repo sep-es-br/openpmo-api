@@ -30,7 +30,10 @@ public class UnitMeasureController {
   private final ModelMapper modelMapper;
 
   @Autowired
-  public UnitMeasureController(final UnitMeasureService unitMeasureService, final ModelMapper modelMapper) {
+  public UnitMeasureController(
+    final UnitMeasureService unitMeasureService,
+    final ModelMapper modelMapper
+  ) {
     this.unitMeasureService = unitMeasureService;
     this.modelMapper = modelMapper;
   }

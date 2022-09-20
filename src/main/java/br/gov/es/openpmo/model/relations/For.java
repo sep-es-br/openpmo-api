@@ -16,7 +16,10 @@ public class For extends Entity {
   @StartNode
   private CustomFilter customFilter;
 
-  public For(final Person person, final CustomFilter customFilter) {
+  public For(
+    final Person person,
+    final CustomFilter customFilter
+  ) {
     this.person = person;
     this.customFilter = customFilter;
   }

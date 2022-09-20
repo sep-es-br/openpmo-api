@@ -19,7 +19,10 @@ public class FilterPlanPermissionController extends CreateAndUpdateUsingCommonFi
   private final TokenService tokenService;
 
   @Autowired
-  public FilterPlanPermissionController(final CustomFilterService customFilterService, final TokenService tokenService) {
+  public FilterPlanPermissionController(
+    final CustomFilterService customFilterService,
+    final TokenService tokenService
+  ) {
     this.customFilterService = customFilterService;
     this.tokenService = tokenService;
   }
@@ -29,7 +32,8 @@ public class FilterPlanPermissionController extends CreateAndUpdateUsingCommonFi
     return this.customFilterService;
   }
 
-  @Override protected TokenService getTokenService() {
+  @Override
+  protected TokenService getTokenService() {
     return this.tokenService;
   }
 
@@ -37,4 +41,5 @@ public class FilterPlanPermissionController extends CreateAndUpdateUsingCommonFi
   protected CustomFilterEnum getFilter() {
     return CustomFilterEnum.PLAN_PERMISSIONS;
   }
+
 }

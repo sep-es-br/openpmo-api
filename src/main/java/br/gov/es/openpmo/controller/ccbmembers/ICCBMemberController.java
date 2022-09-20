@@ -4,7 +4,13 @@ import br.gov.es.openpmo.dto.Response;
 import br.gov.es.openpmo.dto.ccbmembers.CCBMemberRequest;
 import br.gov.es.openpmo.dto.ccbmembers.CCBMemberResponse;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
@@ -15,9 +21,9 @@ public interface ICCBMemberController {
 
   @GetMapping
   Response<CCBMemberResponse> getCCBMember(
-      @RequestParam("id-person") Long idPerson,
-      @RequestParam("id-workpack") Long idWorkpack,
-      @RequestParam("id-plan") Long idPlan
+    @RequestParam("id-person") Long idPerson,
+    @RequestParam("id-workpack") Long idWorkpack,
+    @RequestParam("id-plan") Long idPlan
   );
 
   @Transactional
@@ -31,8 +37,8 @@ public interface ICCBMemberController {
   @Transactional
   @DeleteMapping
   Response<Void> delete(
-      @RequestParam("id-person") Long idPerson,
-      @RequestParam("id-workpack") Long idWorkpack
+    @RequestParam("id-person") Long idPerson,
+    @RequestParam("id-workpack") Long idWorkpack
   );
 
 }
