@@ -14,8 +14,8 @@ public class ScheduleDto {
   private LocalDate start;
   private LocalDate baselineEnd;
   private LocalDate baselineStart;
-  private BigDecimal baselinePlaned;
-  private BigDecimal baselineCost;
+  private BigDecimal baselinePlaned = BigDecimal.ZERO;
+  private BigDecimal baselineCost = BigDecimal.ZERO;
   private List<GroupStepDto> groupStep;
   private Long idWorkpack;
 
