@@ -13,6 +13,7 @@ import org.springframework.data.annotation.Transient;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.temporal.TemporalAdjusters;
 import java.util.Objects;
 import java.util.Set;
 
@@ -197,6 +198,29 @@ public class Step extends Entity implements Snapshotable<Step> {
   @Transient
   public Long getScheduleId() {
     return this.schedule.getId();
+  }
+
+
+  @Transient
+  public LocalDate getScheduleStart() {
+    return this.schedule.getStart();
+  }
+
+  @Transient
+  public LocalDate getScheduleEnd() {
+    return this.schedule.getEnd();
+  }
+
+  private LocalDate relativeToSchedule() {
+    return this.getScheduleStart().plusMonths(this.periodFromStart)
+      .with(TemporalAdjusters.lastDayOfMonth());
+  }
+
+  @Transient
+  public boolean equivalent(final Step another) {
+    final LocalDate anotherRelativeToSchedule = another.relativeToSchedule();
+    final LocalDate relativeToSchedule = this.relativeToSchedule();
+    return relativeToSchedule.compareTo(anotherRelativeToSchedule) == 0;
   }
 
 }

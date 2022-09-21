@@ -41,6 +41,7 @@ public class ScheduleService {
   private final StepRepository stepRepository;
   private final ScheduleRepository scheduleRepository;
   private final IAsyncDashboardService dashboardService;
+  private final IGetEquivalentStepSnapshot getEquivalentStepSnapshot;
   private final CostAccountService costAccountService;
   private final WorkpackService workpackService;
   private final ModelMapper modelMapper;
@@ -50,6 +51,7 @@ public class ScheduleService {
     final StepRepository stepRepository,
     final ScheduleRepository scheduleRepository,
     final IAsyncDashboardService dashboardService,
+    final IGetEquivalentStepSnapshot getEquivalentStepSnapshot,
     final CostAccountService costAccountService,
     final WorkpackService workpackService,
     final ModelMapper modelMapper
@@ -57,6 +59,7 @@ public class ScheduleService {
     this.stepRepository = stepRepository;
     this.scheduleRepository = scheduleRepository;
     this.dashboardService = dashboardService;
+    this.getEquivalentStepSnapshot = getEquivalentStepSnapshot;
     this.costAccountService = costAccountService;
     this.workpackService = workpackService;
     this.modelMapper = modelMapper;
@@ -231,7 +234,7 @@ public class ScheduleService {
   private static void addsConsumesToStep(
     final Step step,
     final CostAccount costAccount,
-    final Pair<BigDecimal, BigDecimal> pair,
+    final Pair<? extends BigDecimal, ? extends BigDecimal> pair,
     final boolean includeActualCost
   ) {
     BigDecimal actualCost = BigDecimal.ZERO;
@@ -256,15 +259,15 @@ public class ScheduleService {
     final List<ScheduleDto> list = new ArrayList<>();
 
     for(final Schedule schedule : schedules) {
-      final ScheduleDto scheduleDto = this.mapsToSheduleDto(schedule);
+      final ScheduleDto scheduleDto = this.mapsToScheduleDto(schedule);
       list.add(scheduleDto);
     }
 
     return list;
   }
 
-  public ScheduleDto mapsToSheduleDto(final Schedule schedule) {
-    final ScheduleDto scheduleDto = this.mapsToScheduleDto(schedule);
+  public ScheduleDto mapsToScheduleDto(final Schedule schedule) {
+    final ScheduleDto scheduleDto = this.mapsToScheduleDtoUsingModelMapper(schedule);
 
     if(Objects.nonNull(schedule.getSteps())) {
       this.setScheduleDtoGroupStep(schedule, scheduleDto);
@@ -292,7 +295,7 @@ public class ScheduleService {
     return scheduleDto;
   }
 
-  private <T> ScheduleDto mapsToScheduleDto(final T source) {
+  private <T> ScheduleDto mapsToScheduleDtoUsingModelMapper(final T source) {
     return this.modelMapper.map(source, ScheduleDto.class);
   }
 
@@ -357,28 +360,9 @@ public class ScheduleService {
     }
   }
 
-  private void addsStepToGroupSteps(
-    final Collection<? super StepDto> groupSteps,
-    final Step step
-  ) {
-    final StepDto dto = this.mapsToStepDto(step);
-    final Step snapshotStep = this.stepRepository.findSnapshotOfActiveBaseline(step.getId()).orElse(null);
-    dto.setBaselinePlannedWork(Optional.ofNullable(snapshotStep).map(Step::getPlannedWork).orElse(null));
-
-    for(final ConsumesDto consumes : dto.getConsumes()) {
-      consumes.setBaselinePlannedCost(null);
-      Optional.ofNullable(snapshotStep)
-        .map(Step::getConsumes)
-        .flatMap(consumesSnapshot -> this.getBaselinePlannedCost(consumes, consumesSnapshot))
-        .ifPresent(consumes::setBaselinePlannedCost);
-    }
-
-    groupSteps.add(dto);
-  }
-
-  private Optional<BigDecimal> getBaselinePlannedCost(
+  private static Optional<BigDecimal> getBaselinePlannedCost(
     final ConsumesDto consumes,
-    final Set<Consumes> consumesSnapshot
+    final Iterable<? extends Consumes> consumesSnapshot
   ) {
     for(final Consumes snapshot : consumesSnapshot) {
       if(snapshot.getIdCostAccountMaster().equals(consumes.getIdCostAccount())) {
@@ -387,6 +371,27 @@ public class ScheduleService {
       }
     }
     return Optional.empty();
+  }
+
+  private void addsStepToGroupSteps(
+    final Collection<? super StepDto> groupSteps,
+    final Step step
+  ) {
+    final StepDto dto = this.mapsToStepDto(step);
+
+    final Optional<Step> maybeEquivalentSnapshot = this.getEquivalentStepSnapshot.execute(step);
+
+    dto.setBaselinePlannedWork(maybeEquivalentSnapshot.map(Step::getPlannedWork).orElse(null));
+
+    for(final ConsumesDto consumes : dto.getConsumes()) {
+      consumes.setBaselinePlannedCost(null);
+      maybeEquivalentSnapshot
+        .map(Step::getConsumes)
+        .flatMap(consumesSnapshot -> getBaselinePlannedCost(consumes, consumesSnapshot))
+        .ifPresent(consumes::setBaselinePlannedCost);
+    }
+
+    groupSteps.add(dto);
   }
 
   private StepDto mapsToStepDto(final Step step) {
@@ -422,7 +427,7 @@ public class ScheduleService {
     return schedule;
   }
 
-  public void updateDashboards(final List<Deliverable> deliverables) {
+  private void updateDashboards(final Iterable<? extends Deliverable> deliverables) {
     final List<Long> deliverablesId = new ArrayList<>();
     for(final Deliverable deliverable : deliverables) {
       final Long deliverableId = deliverable.getId();

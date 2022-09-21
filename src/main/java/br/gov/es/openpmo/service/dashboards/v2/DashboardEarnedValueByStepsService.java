@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -70,19 +71,23 @@ public class DashboardEarnedValueByStepsService implements IDashboardEarnedValue
 
   @Override
   public List<EarnedValueByStep> calculate(final Long workpackId) {
-    final List<Long> baselineIds = this.getBaselines(workpackId)
-      .stream()
-      .map(Baseline::getId)
-      .collect(Collectors.toList());
+    final Optional<List<Long>> maybeBaselineIds = Optional.ofNullable(this.getBaselines(workpackId))
+      .map(Collection::stream)
+      .map(b -> b.map(Baseline::getId))
+      .map(b -> b.collect(Collectors.toList()));
 
-    final DateIntervalQuery interval = this.findIntervalInSnapshots(workpackId, baselineIds);
+    if(!maybeBaselineIds.isPresent()) {
+      return new ArrayList<>();
+    }
+
+    final DateIntervalQuery interval = this.findIntervalInSnapshots(workpackId, maybeBaselineIds.get());
 
     final List<EarnedValueByStep> list = new ArrayList<>();
     final EarnedValueByStep accumulate = EarnedValueByStep.zeroValue();
 
     for(final YearMonth month : interval.toYearMonths()) {
       final EarnedValueByStepQueryResult value =
-        this.getEarnedValueByStep(workpackId, baselineIds, month);
+        this.getEarnedValueByStep(workpackId, maybeBaselineIds.get(), month);
 
       accumulate.add(value.toEarnedValueByStep());
       list.add(accumulate.copy(true));

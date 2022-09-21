@@ -31,4 +31,11 @@ public final class TripleConstraintUtils {
       .orElse(null);
   }
 
+  public static BigDecimal getOneIfValueZero(final BigDecimal value) {
+    if(value == null || BigDecimal.ZERO.compareTo(value) == 0) {
+      return BigDecimal.ONE;
+    }
+    return value;
+  }
+
 }

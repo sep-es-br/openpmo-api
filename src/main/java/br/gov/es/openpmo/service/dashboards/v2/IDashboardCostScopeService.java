@@ -6,6 +6,7 @@ import br.gov.es.openpmo.model.schedule.Step;
 import java.time.YearMonth;
 import java.util.Set;
 
+@FunctionalInterface
 public interface IDashboardCostScopeService {
 
   CostAndScopeData build(

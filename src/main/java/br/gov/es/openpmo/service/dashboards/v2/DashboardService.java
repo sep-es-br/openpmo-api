@@ -128,7 +128,7 @@ public class DashboardService implements IDashboardService {
     final List<? extends Baseline> baselines
   ) {
     if(baselines == null) {
-      return false;
+      return true;
     }
 
     if(Objects.equals(dataChart.getIdBaseline(), baselineId)) {

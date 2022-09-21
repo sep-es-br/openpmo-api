@@ -97,7 +97,7 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
     this.buildScheduleDataChart(baselineId, workpackId, tripleConstraint, yearMonth);
 
     for(final Long deliverableId : deliverablesId) {
-        this.calculateForDeliverable(baselineId, tripleConstraint, deliverableId, yearMonth);
+      this.calculateForDeliverable(baselineId, tripleConstraint, deliverableId, yearMonth);
     }
 
     return tripleConstraint;
@@ -123,7 +123,7 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
     final Set<Long> deliverablesId = this.getDeliverablesId(workpackId);
 
     for(final Baseline baseline : this.getBaselines(workpackId)) {
-        this.calculateForBaseline(workpackId, baseline.getId(), months, deliverablesId, charts);
+      this.calculateForBaseline(workpackId, baseline.getId(), months, deliverablesId, charts);
     }
 
     return charts;
@@ -154,7 +154,7 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
     final Long baselineId,
     final List<YearMonth> months,
     final Set<Long> deliverablesId,
-    final List<TripleConstraintDataChart> charts
+    final List<? super TripleConstraintDataChart> charts
   ) {
     for(final YearMonth month : months) {
       charts.add(this.calculateForMonth(workpackId, baselineId, month, deliverablesId));
@@ -184,11 +184,14 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
     final YearMonth yearMonth
   ) {
     final boolean canceled = this.workpackRepository.isCanceled(deliverableId);
-    this.scheduleRepository.findScheduleByWorkpackId(deliverableId).ifPresent(schedule ->
-                                                                                this.sumCostAndWorkOfSteps(baselineId,
-                                                                                                           tripleConstraint,
-                                                                                                           schedule.getSteps(),
-                                                                                                           yearMonth, canceled));
+    this.scheduleRepository.findScheduleByWorkpackId(deliverableId)
+      .ifPresent(schedule ->
+                   this.sumCostAndWorkOfSteps(
+                     baselineId,
+                     tripleConstraint,
+                     schedule.getSteps(),
+                     yearMonth, canceled
+                   ));
   }
 
   private List<Long> getActiveBaselineIds(final Long workpackId) {

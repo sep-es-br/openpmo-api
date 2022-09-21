@@ -101,7 +101,7 @@ public class DashboardCostScopeService implements IDashboardCostScopeService {
     final Function<? super T, BigDecimal> mapper
   ) {
     if(itens == null || itens.isEmpty()) {
-      return null;
+      return BigDecimal.ZERO;
     }
 
     return itens.stream()

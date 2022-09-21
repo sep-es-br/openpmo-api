@@ -68,7 +68,8 @@ public interface ScheduleRepository extends Neo4jRepository<Schedule, Long> {
          "WHERE id(m)=$idSchedule " +
          "RETURN s, [ " +
          "  [ (s)<-[cs:COMPOSES]-(st:Step) | [ cs, st] ], " +
-         "  [ (s)<-[cs2:COMPOSES]-(:Step)-[c1:CONSUMES]->(ca:CostAccount) | [ c1, ca ] ]" +
+         "  [ (s)<-[cs2:COMPOSES]-(st2:Step)-[c1:CONSUMES]->(ca:CostAccount) | [ c1, ca, st2 ] ], " +
+         "  [ (ca)-[cas:IS_SNAPSHOT_OF]->(mca:CostAccount) | [ cas, mca ] ] " +
          "]")
   Optional<Schedule> findSnapshotByMasterId(Long idSchedule);
 

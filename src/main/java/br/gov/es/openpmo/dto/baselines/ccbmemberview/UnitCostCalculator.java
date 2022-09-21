@@ -3,6 +3,8 @@ package br.gov.es.openpmo.dto.baselines.ccbmemberview;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+import static br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintUtils.getOneIfValueZero;
+
 public final class UnitCostCalculator {
 
   private final BigDecimal foreseenCost;
@@ -22,32 +24,26 @@ public final class UnitCostCalculator {
     this.plannedWork = plannedWork;
   }
 
-  private static boolean HasNoCurrentNorProposedValueToCalculateUnitCost(
-    final Comparable<? super BigDecimal> forseenCost,
+  private static boolean hasNoCurrentNorProposedValueToCalculateUnitCost(
+    final Comparable<? super BigDecimal> foreseenCost,
     final Comparable<? super BigDecimal> plannedCost
   ) {
-    return hasValue(forseenCost) && hasValue(plannedCost);
+    return !hasValue(foreseenCost) && !hasValue(plannedCost);
   }
 
   private static boolean hasValue(final Comparable<? super BigDecimal> value) {
-    return value != null && value.compareTo(BigDecimal.ZERO) == 0;
+    return value != null && value.compareTo(BigDecimal.ZERO) != 0;
   }
 
-  private static BigDecimal getOneIfValueZero(final BigDecimal value) {
-    if(BigDecimal.ZERO.compareTo(value) == 0) {
-      return BigDecimal.ONE;
-    }
-    return value;
-  }
 
   public BigDecimal calculate() {
-    if(HasNoCurrentNorProposedValueToCalculateUnitCost(this.foreseenCost, this.plannedCost)) {
+    if(hasNoCurrentNorProposedValueToCalculateUnitCost(this.foreseenCost, this.plannedCost)) {
       return BigDecimal.ONE;
     }
-    if(this.plannedCost != null) {
+    if(hasValue(this.plannedCost)) {
       return this.plannedCost.divide(getOneIfValueZero(this.plannedWork), 6, RoundingMode.HALF_UP);
     }
-    if(this.foreseenCost != null) {
+    if(hasValue(this.foreseenCost)) {
       return this.foreseenCost.divide(getOneIfValueZero(this.foreseenWork), 6, RoundingMode.HALF_UP);
     }
     return BigDecimal.ONE;

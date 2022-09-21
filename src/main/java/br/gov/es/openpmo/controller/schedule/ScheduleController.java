@@ -47,7 +47,7 @@ public class ScheduleController {
   @GetMapping("/{id}")
   public ResponseEntity<ResponseBase<ScheduleDto>> findById(@PathVariable final Long id) {
     final Schedule schedule = this.scheduleService.findById(id);
-    final ScheduleDto scheduleDto = this.scheduleService.mapsToSheduleDto(schedule);
+    final ScheduleDto scheduleDto = this.scheduleService.mapsToScheduleDto(schedule);
     return ResponseEntity.ok(ResponseBase.of(scheduleDto));
   }
 
