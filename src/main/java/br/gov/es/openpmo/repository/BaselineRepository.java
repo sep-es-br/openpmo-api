@@ -213,7 +213,7 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long> {
          "WITH w, ibb, b, ibb2, b2 " +
          "WHERE b2.activationDate < b.proposalDate " +
          "RETURN w, ibb2, b2 " +
-         "ORDER BY b.activationDate DESC " +
+         "ORDER BY b2.activationDate DESC " +
          "LIMIT 1")
   Optional<Baseline> findPreviousBaseline(
     Long idBaseline,

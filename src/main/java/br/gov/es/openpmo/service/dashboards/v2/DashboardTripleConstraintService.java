@@ -190,7 +190,9 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
                      baselineId,
                      tripleConstraint,
                      schedule.getSteps(),
-                     yearMonth, canceled
+                     schedule.getId(),
+                     yearMonth,
+                     canceled
                    ));
   }
 
@@ -216,10 +218,11 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
     final Long baselineId,
     final TripleConstraintDataChart tripleConstraint,
     final Set<? extends Step> steps,
+    final Long idSchedule,
     final YearMonth yearMonth,
     final boolean canceled
   ) {
-    final CostAndScopeData costAndScopeData = this.costScopeService.build(baselineId, yearMonth, steps, canceled);
+    final CostAndScopeData costAndScopeData = this.costScopeService.build(baselineId, idSchedule, yearMonth, steps, canceled);
     tripleConstraint.sumCostData(costAndScopeData.getCostDataChart());
     tripleConstraint.sumScopeData(costAndScopeData.getScopeDataChart());
   }

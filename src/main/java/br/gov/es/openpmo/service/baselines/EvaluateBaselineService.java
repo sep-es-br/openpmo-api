@@ -4,6 +4,8 @@ import br.gov.es.openpmo.dto.baselines.BaselineEvaluationRequest;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.baselines.Baseline;
+import br.gov.es.openpmo.model.baselines.Decision;
+import br.gov.es.openpmo.model.baselines.Status;
 import br.gov.es.openpmo.model.journals.JournalAction;
 import br.gov.es.openpmo.model.relations.IsEvaluatedBy;
 import br.gov.es.openpmo.model.workpacks.Workpack;
@@ -20,7 +22,6 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 
-import static br.gov.es.openpmo.model.baselines.Decision.REJECTED;
 import static br.gov.es.openpmo.model.baselines.Status.PROPOSED;
 import static br.gov.es.openpmo.model.relations.IsEvaluatedBy.fromMemberEvaluation;
 import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_IS_NOT_PROPOSED_INVALID_STATE_ERROR;
@@ -61,8 +62,8 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     this.journalCreator = journalCreator;
   }
 
-  private static void throwExceptionIfBaselineIsNotProposed(final Baseline baseline) {
-    if(baseline.getStatus() != PROPOSED) {
+  private static void throwExceptionIfBaselineIsNotProposedOrReject(final Baseline baseline) {
+    if(baseline.getStatus() != PROPOSED && baseline.getStatus() != Status.REJECTED) {
       throw new NegocioException(BASELINE_IS_NOT_PROPOSED_INVALID_STATE_ERROR);
     }
   }
@@ -84,7 +85,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     final BaselineEvaluationRequest request
   ) {
     final Baseline baseline = this.findBaselineById(idBaseline);
-    throwExceptionIfBaselineIsNotProposed(baseline);
+    throwExceptionIfBaselineIsNotProposedOrReject(baseline);
 
     this.saveEvaluation(
       idPerson,
@@ -93,7 +94,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
       baseline
     );
 
-    if(request.getDecision() == REJECTED) {
+    if(request.getDecision() == Decision.REJECTED) {
       this.rejectBaseline(baseline);
       this.journalCreator.baseline(baseline, idPerson);
       return;
@@ -105,6 +106,9 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
       return;
     }
 
+    final boolean alreadyRejected = this.isAlreadyRejected(idBaseline);
+    if(alreadyRejected) return;
+
     this.updateBaselineStatus(baseline, idPerson);
     this.journalCreator.baseline(baseline, idPerson);
 
@@ -112,7 +116,14 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
       .forEach(this.dashboardService::calculate);
   }
 
+  private boolean isAlreadyRejected(final Long idBaseline) {
+    final Set<IsEvaluatedBy> evaluations = this.evaluatedByRepository.findAllEvaluations(idBaseline);
+    return evaluations.stream()
+      .anyMatch(evaluation -> Decision.REJECTED.equals(evaluation.getDecision()));
+  }
+
   private void rejectBaseline(final Baseline baseline) {
+    if(baseline.getStatus() == Status.REJECTED) return;
     baseline.reject();
     this.saveBaseline(baseline);
   }

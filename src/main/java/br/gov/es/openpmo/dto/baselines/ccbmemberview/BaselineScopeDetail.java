@@ -1,5 +1,7 @@
 package br.gov.es.openpmo.dto.baselines.ccbmemberview;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -7,7 +9,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintUtils.ONE_HUNDRED;
 import static br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintUtils.roundOneDecimal;
@@ -18,6 +19,12 @@ public class BaselineScopeDetail {
   private BigDecimal currentScopePercent = ONE_HUNDRED;
   private BigDecimal variation;
   private BigDecimal proposedScopePercent;
+  @JsonIgnore
+  private BigDecimal totalUnitCost;
+  @JsonIgnore
+  private BigDecimal totalVariation;
+  @JsonIgnore
+  private BigDecimal totalCurrentValue;
 
   public BigDecimal getVariation() {
     return this.variation;
@@ -46,31 +53,33 @@ public class BaselineScopeDetail {
 
   private void calculateVariation() {
 
-    final BigDecimal sumOfTotalPartialVariation = this.scopeDetails.stream()
+    this.totalVariation = this.scopeDetails.stream()
       .map(ScopeDetailItem::getVariationValue)
       .filter(Objects::nonNull)
       .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-    final List<BigDecimal> totalCost = this.scopeDetails.stream()
-      .map(ScopeDetailItem::getCostCurrent)
+    this.totalUnitCost = this.scopeDetails.stream()
+      .map(ScopeDetailItem::getUnitCost)
       .filter(Objects::nonNull)
-      .collect(Collectors.toList());
-
-    if(totalCost.isEmpty()) {
-      this.proposedScopePercent = ONE_HUNDRED;
-      this.currentScopePercent = null;
-      return;
-    }
-
-    final BigDecimal sumOfTotalCost = totalCost.stream()
       .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-    this.variation = sumOfTotalPartialVariation
-      .divide(sumOfTotalCost, 6, RoundingMode.HALF_UP)
+    this.totalCurrentValue = this.scopeDetails.stream()
+      .map(ScopeDetailItem::getCurrentWork)
+      .filter(Objects::nonNull)
+      .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    this.variation = this.totalVariation.divide(this.totalUnitCost, 6, RoundingMode.HALF_UP)
       .multiply(ONE_HUNDRED);
 
-    this.proposedScopePercent = this.currentScopePercent.subtract(this.variation);
-    this.currentScopePercent = ONE_HUNDRED;
+    if(this.totalCurrentValue.compareTo(BigDecimal.ZERO) == 0) {
+      this.proposedScopePercent = ONE_HUNDRED;
+      this.currentScopePercent = null;
+      this.variation = null;
+    }
+    else {
+      this.currentScopePercent = ONE_HUNDRED;
+      this.proposedScopePercent = this.currentScopePercent.add(this.variation);
+    }
   }
 
 

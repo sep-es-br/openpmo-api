@@ -11,6 +11,7 @@ public interface IDashboardCostScopeService {
 
   CostAndScopeData build(
     Long baselineId,
+    Long idSchedule,
     YearMonth referenceDate,
     Set<? extends Step> steps,
     boolean canceled

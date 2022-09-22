@@ -11,7 +11,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
-import static br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintUtils.ONE_HUNDRED;
 import static br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintUtils.ONE_MONTH;
 import static br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintUtils.daysBetween;
 import static br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintUtils.roundOneDecimal;
@@ -27,6 +26,19 @@ public class BaselineScheduleDetail {
   private LocalDate proposedEndDate;
   private BigDecimal currentValue;
   private BigDecimal proposedValue;
+
+  private static BigDecimal calculateValue(
+    final Temporal startDate,
+    final Temporal endDate
+  ) {
+    final BigDecimal intervalDateInDays = daysBetween(startDate, endDate);
+
+    if(intervalDateInDays == null) {
+      return null;
+    }
+    return intervalDateInDays
+      .divide(ONE_MONTH, 1, RoundingMode.HALF_UP);
+  }
 
   void addScheduleItem(final ScheduleDetailItem item) {
     this.scheduleDetails.add(item);
@@ -59,44 +71,12 @@ public class BaselineScheduleDetail {
     this.currentValue = calculateValue(this.currentStartDate, this.currentEndDate);
   }
 
-  private static BigDecimal calculateValue(
-    final Temporal startDate,
-    final Temporal endDate
-  ) {
-    final BigDecimal intervalDateInDays = daysBetween(startDate, endDate);
-
-    if(intervalDateInDays == null) {
-      return null;
-    }
-    return intervalDateInDays
-      .divide(ONE_MONTH, 1, RoundingMode.HALF_EVEN);
-  }
-
   private void updateVariation() {
-    if(this.currentEndDate == null || this.proposedEndDate == null || this.currentStartDate == null) {
+    if(this.currentEndDate == null || this.proposedEndDate == null) {
       return;
     }
 
-    final BigDecimal daysBetweenProposedAndInitialCurrent = daysBetween(
-      this.currentStartDate,
-      this.proposedEndDate
-    );
-
-    final BigDecimal daysBetweenCurrentAndInitialCurrent = daysBetween(
-      this.currentStartDate,
-      this.currentEndDate
-    );
-
-
-    if(BigDecimal.ZERO.compareTo(daysBetweenCurrentAndInitialCurrent) == 0
-       || BigDecimal.ZERO.compareTo(daysBetweenProposedAndInitialCurrent) == 0) {
-      this.variation = null;
-      return;
-    }
-    this.variation = daysBetweenProposedAndInitialCurrent
-      .divide(daysBetweenCurrentAndInitialCurrent, 6, RoundingMode.HALF_EVEN)
-      .subtract(BigDecimal.ONE)
-      .multiply(ONE_HUNDRED);
+    this.variation = daysBetween(this.currentEndDate, this.proposedEndDate);
   }
 
   private void updateProposedDate() {

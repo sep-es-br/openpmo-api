@@ -1,6 +1,5 @@
 package br.gov.es.openpmo.repository;
 
-import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.schedule.Schedule;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
@@ -35,7 +34,11 @@ public interface ScheduleRepository extends Neo4jRepository<Schedule, Long> {
 
   @Query("MATCH (m:Schedule)<-[i:IS_SNAPSHOT_OF]-(s:Schedule)-[c:COMPOSES]->(b:Baseline) " +
          "WHERE id(m)=$idSchedule AND id(b)=$idBaseline " +
-         "RETURN s")
+         "RETURN s, [ " +
+         "  [ (s)<-[cs:COMPOSES]-(st:Step) | [ cs, st] ], " +
+         "  [ (s)<-[cs2:COMPOSES]-(st2:Step)-[c1:CONSUMES]->(ca:CostAccount) | [ c1, ca, st2 ] ], " +
+         "  [ (ca)-[cas:IS_SNAPSHOT_OF]->(mca:CostAccount) | [ cas, mca ] ] " +
+         "]")
   Optional<Schedule> findSnapshotByMasterIdAndBaselineId(
     Long idSchedule,
     Long idBaseline
@@ -61,8 +64,9 @@ public interface ScheduleRepository extends Neo4jRepository<Schedule, Long> {
 
   @Query("MATCH (schedule:Schedule)<-[:IS_SNAPSHOT_OF]-(snapshot:Schedule)-[:COMPOSES]->(baseline:Baseline{active:true}) " +
          "WHERE id(schedule)=$idSchedule " +
-         "RETURN baseline")
-  Optional<Baseline> findActiveBaseline(Long idSchedule);
+         "RETURN id(baseline)"
+  )
+  Long findActiveBaseline(Long idSchedule);
 
   @Query("MATCH (m:Schedule)<-[i:IS_SNAPSHOT_OF]-(s:Schedule)-[c:COMPOSES]->(b:Baseline{active:true}) " +
          "WHERE id(m)=$idSchedule " +

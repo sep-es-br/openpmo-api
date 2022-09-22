@@ -189,7 +189,12 @@ public class StepService {
         .sorted(Comparator.comparing(Step::getPeriodFromStart))
         .collect(Collectors.toList());
 
-      sortedSteps.forEach(step -> step.setPeriodFromStart(step.getPeriodFromStart() + months));
+      long updatedPeriodFromStart = months;
+      for(final Step step : sortedSteps) {
+        step.setPeriodFromStart(updatedPeriodFromStart);
+        updatedPeriodFromStart++;
+      }
+
       this.stepRepository.saveAll(sortedSteps);
     }
 

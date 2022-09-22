@@ -20,6 +20,13 @@ public interface IsEvaluatedByRepository extends Neo4jRepository<IsEvaluatedBy, 
     Long idPerson
   );
 
+
+  @Query("MATCH (person:Person)<-[isEvaluatedBy:IS_EVALUATED_BY]-(baseline:Baseline) " +
+         "WHERE id(baseline)=$idBaseline " +
+         "RETURN person, isEvaluatedBy, baseline")
+  Set<IsEvaluatedBy> findAllEvaluations(Long idBaseline);
+
+
   @Query("MATCH (person:Person)<-[isEvaluatedBy:IS_EVALUATED_BY]-(baseline:Baseline)" +
          "<-[isBaselinedBy:IS_BASELINED_BY]-(workpack:Workpack) " +
          "WHERE id(baseline)=$idBaseline " +

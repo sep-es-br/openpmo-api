@@ -1,69 +1,86 @@
 package br.gov.es.openpmo.dto.baselines.ccbmemberview;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Optional;
 
 import static br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintUtils.ONE_HUNDRED;
 import static br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintUtils.roundOneDecimal;
+import static java.math.BigDecimal.ONE;
+import static java.math.BigDecimal.ZERO;
 
 public class ScopeDetailItem {
 
   private final String icon;
   private final String description;
-  private final BigDecimal currentValue;
-  private final BigDecimal proposedValue;
+  @JsonProperty("currentValue")
+  private final BigDecimal currentWork;
+  @JsonProperty("proposedValue")
+  private final BigDecimal proposedWork;
   @JsonIgnore
-  private final BigDecimal costCurrent;
+  private final BigDecimal currentCost;
   @JsonIgnore
-  private final BigDecimal costProposed;
+  private final BigDecimal proposedCost;
   private final String unitName;
+  @JsonIgnore
+  private final BigDecimal unitCost;
+  @JsonIgnore
+  private final boolean hasPreviousBaseline;
   private BigDecimal variation;
   @JsonIgnore
   private BigDecimal variationValue;
-  @JsonIgnore
-  private BigDecimal difference;
-  @JsonIgnore
-  private final BigDecimal unitCost;
+
 
   public ScopeDetailItem(
     final String icon,
     final String description,
     final String unitName,
-    final StepCollectedData stepCollectedData
+    final StepCollectedData stepCollectedData,
+    final boolean hasPreviousBaseline
   ) {
     this.icon = icon;
     this.description = description;
-    this.currentValue = stepCollectedData.step.getCurrentValue();
-    this.proposedValue = stepCollectedData.step.getProposedValue();
-    this.costCurrent = stepCollectedData.cost.getCurrentValue();
-    this.costProposed = stepCollectedData.cost.getProposedValue();
+    this.currentWork = stepCollectedData.work.getCurrentValue();
+    this.proposedWork = stepCollectedData.work.getProposedValue();
+    this.currentCost = stepCollectedData.cost.getCurrentValue();
+    this.proposedCost = stepCollectedData.cost.getProposedValue();
     this.unitName = unitName;
+    this.hasPreviousBaseline = hasPreviousBaseline;
     this.unitCost = new UnitCostCalculator(
-      this.costCurrent,
-      this.currentValue,
-      this.costProposed,
-      this.proposedValue
+      this.proposedCost,
+      this.proposedWork,
+      this.currentCost,
+      this.currentWork
     ).calculate();
     this.calculateVariation();
   }
 
   private void calculateVariation() {
-    if((this.proposedValue == null && this.currentValue == null)) {
+    if((this.proposedWork == null && this.currentWork == null)) {
       this.variation = null;
       return;
     }
 
-    this.difference = this.currentValue == null ? this.proposedValue.negate() : this.currentValue.subtract(this.proposedValue);
+    if(this.currentWork == null || this.currentWork.compareTo(ZERO) == 0) {
+      this.variation = this.hasPreviousBaseline ? ONE_HUNDRED : ZERO;
+      this.variationValue = this.unitCost;
+      return;
+    }
 
-    this.variationValue = this.unitCost.multiply(this.difference);
+    final BigDecimal plannedProportional = Optional.ofNullable(this.proposedWork)
+      .orElse(ZERO)
+      .divide(this.currentWork, 6, RoundingMode.HALF_UP);
 
-    if(this.currentValue == null) return;
+    this.variationValue = plannedProportional.subtract(ONE)
+      .multiply(this.unitCost);
+    this.variation = plannedProportional.subtract(ONE).multiply(ONE_HUNDRED);
+  }
 
-    this.variation = this.difference
-      .divide(this.currentValue, 6, RoundingMode.HALF_UP)
-      .multiply(ONE_HUNDRED);
+  public BigDecimal getVariationValue() {
+    return this.variationValue;
   }
 
   public String getUnitName() {
@@ -78,37 +95,31 @@ public class ScopeDetailItem {
     return this.description;
   }
 
-  public BigDecimal getCurrentValue() {
-    return this.currentValue;
+  public BigDecimal getCurrentWork() {
+    return this.currentWork;
   }
 
-  public BigDecimal getProposedValue() {
-    return this.proposedValue;
+  public BigDecimal getProposedWork() {
+    return this.proposedWork;
   }
 
   public BigDecimal getVariation() {
     return this.variation;
   }
 
-  public BigDecimal getCostCurrent() {
-    return this.costCurrent;
+  public BigDecimal getCurrentCost() {
+    return this.currentCost;
   }
 
-  public BigDecimal getDifference() {
-    return this.difference;
-  }
 
-  public BigDecimal getCostProposed() {
-    return this.costProposed;
+  public BigDecimal getProposedCost() {
+    return this.proposedCost;
   }
 
   public BigDecimal getUnitCost() {
     return this.unitCost;
   }
 
-  public BigDecimal getVariationValue() {
-    return this.variationValue;
-  }
 
   public void roundData() {
     this.variation = roundOneDecimal(this.variation);

@@ -57,13 +57,15 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
     final Workpack master,
     final String name,
     final StepCollectedData stepCollectedData,
-    final String unitName
+    final String unitName,
+    final boolean hasPreviousBaseline
   ) {
     return new ScopeDetailItem(
       master.getIcon(),
       name,
       unitName,
-      stepCollectedData
+      stepCollectedData,
+      hasPreviousBaseline
     );
   }
 
@@ -85,8 +87,8 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
     final Collection<? extends Consumes> consumesProposed,
     final Collection<? extends Consumes> consumesCurrent
   ) {
-    stepCollectedData.step.addCurrentValue(getTotalPlannedWorkOfStep(consumesCurrent));
-    stepCollectedData.step.addProposedValue(getTotalPlannedWorkOfStep(consumesProposed));
+    stepCollectedData.work.addCurrentValue(getTotalPlannedWorkOfStep(consumesCurrent));
+    stepCollectedData.work.addProposedValue(getTotalPlannedWorkOfStep(consumesProposed));
 
     stepCollectedData.cost.addCurrentValue(getTotalCostOfStep(consumesCurrent));
     stepCollectedData.cost.addProposedValue(getTotalCostOfStep(consumesProposed));
@@ -218,14 +220,15 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
       proposedInterval,
       currentInterval
     ));
-    this.addCostAndScopeItem(master, tripleConstraint, name, stepCollectedData);
+    this.addCostAndScopeItem(master, tripleConstraint, name, stepCollectedData, idBaselineReference != null);
   }
 
   private void addCostAndScopeItem(
     final Workpack master,
     final TripleConstraintOutput tripleConstraint,
     final String name,
-    final StepCollectedData stepCollectedData
+    final StepCollectedData stepCollectedData,
+    final boolean hasPreviousBaseline
   ) {
     final CostDetailItem costItem = buildCostItem(master, stepCollectedData.cost, name);
     tripleConstraint.addCostDetail(costItem);
@@ -235,7 +238,8 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
       master,
       name,
       stepCollectedData,
-      unitName
+      unitName,
+      hasPreviousBaseline
     );
     tripleConstraint.addScopeDetail(scopeItem);
   }
@@ -302,7 +306,7 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
     final StepCollectedData stepCollectedData = this.stepDataCollector.collect(
       idBaseline,
       idBaselineReference,
-      masterSchedule.getSteps()
+      masterSchedule.getId()
     );
 
     if(stepCollectedData.isNull()) return;
@@ -321,7 +325,8 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
       master,
       tripleConstraint,
       name,
-      stepCollectedData
+      stepCollectedData,
+      idBaselineReference != null
     );
   }
 
