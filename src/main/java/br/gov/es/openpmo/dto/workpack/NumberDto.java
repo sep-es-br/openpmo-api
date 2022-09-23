@@ -25,7 +25,7 @@ public class NumberDto extends PropertyDto {
 
   @Override
   public String getType() {
-    return "Number";
+    return "Num";
   }
 
   @Override

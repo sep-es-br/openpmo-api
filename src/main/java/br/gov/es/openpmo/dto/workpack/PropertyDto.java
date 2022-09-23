@@ -17,7 +17,7 @@ import static com.fasterxml.jackson.annotation.JsonSubTypes.Type;
   @Type(value = UnitSelectionDto.class, name = "UnitSelection"),
   @Type(value = SelectionDto.class, name = "Selection"),
   @Type(value = TextAreaDto.class, name = "TextArea"),
-  @Type(value = NumberDto.class, name = "Number"),
+  @Type(value = NumberDto.class, name = "Num"),
   @Type(value = CurrencyDto.class, name = "Currency"),
   @Type(value = LocalitySelectionDto.class, name = "LocalitySelection"),
   @Type(value = GroupDto.class, name = "Group"),
