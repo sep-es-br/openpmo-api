@@ -12,23 +12,24 @@ import javax.validation.constraints.NotNull;
 import java.util.function.Supplier;
 
 @JsonTypeInfo(use = Id.NAME, property = "type")
-@JsonSubTypes({@JsonSubTypes.Type(value = IntegerModelDto.class, name = "Integerc"),
-  @JsonSubTypes.Type(value = TextModelDto.class, name = "Text"),
-  @JsonSubTypes.Type(value = DateModelDto.class, name = "Date"),
-  @JsonSubTypes.Type(value = ToggleModelDto.class, name = "Togglec"),
-  @JsonSubTypes.Type(value = UnitSelectionModelDto.class, name = "UnitSelection"),
-  @JsonSubTypes.Type(value = SelectionModelDto.class, name = "Selection"),
-  @JsonSubTypes.Type(value = TextAreaModelDto.class, name = "TextArea"),
-  @JsonSubTypes.Type(value = NumberModelDto.class, name = "Num"),
-  @JsonSubTypes.Type(value = CurrencyModelDto.class, name = "Currency"),
-  @JsonSubTypes.Type(value = LocalitySelectionModelDto.class, name = "LocalitySelection"),
-  @JsonSubTypes.Type(value = GroupModelDto.class, name = "Group"),
-  @JsonSubTypes.Type(value = OrganizationSelectionModelDto.class, name = "OrganizationSelection")})
+@JsonSubTypes({@JsonSubTypes.Type(value = IntegerModelDto.class, name = "IntegerModel"),
+  @JsonSubTypes.Type(value = TextModelDto.class, name = "TextModel"),
+  @JsonSubTypes.Type(value = DateModelDto.class, name = "DateModel"),
+  @JsonSubTypes.Type(value = ToggleModelDto.class, name = "ToggleModel"),
+  @JsonSubTypes.Type(value = UnitSelectionModelDto.class, name = "UnitSelectionModel"),
+  @JsonSubTypes.Type(value = SelectionModelDto.class, name = "SelectionModel"),
+  @JsonSubTypes.Type(value = TextAreaModelDto.class, name = "TextAreaModel"),
+  @JsonSubTypes.Type(value = NumberModelDto.class, name = "NumberModel"),
+  @JsonSubTypes.Type(value = CurrencyModelDto.class, name = "CurrencyModel"),
+  @JsonSubTypes.Type(value = LocalitySelectionModelDto.class, name = "LocalitySelectionModel"),
+  @JsonSubTypes.Type(value = GroupModelDto.class, name = "GroupModel"),
+  @JsonSubTypes.Type(value = OrganizationSelectionModelDto.class, name = "OrganizationSelectionModel")})
 @ApiModel(subTypes = {IntegerModelDto.class, TextModelDto.class, DateModelDto.class, ToggleModelDto.class,
   UnitSelectionModelDto.class, SelectionModelDto.class, TextAreaModelDto.class, NumberModelDto.class, CurrencyModelDto.class,
   LocalitySelectionModelDto.class, GroupModelDto.class,
   OrganizationSelectionModelDto.class}, discriminator = "type", description = "Supertype of all PropertyModel.")
 public class PropertyModelDto {
+
 
   private Long id;
 
