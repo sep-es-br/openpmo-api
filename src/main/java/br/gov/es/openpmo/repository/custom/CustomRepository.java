@@ -1,7 +1,9 @@
 package br.gov.es.openpmo.repository.custom;
 
+import org.neo4j.driver.Session;
 
-import org.neo4j.ogm.session.Session;
+//mport org.neo4j.ogm.session.Session;
+
 
 public interface CustomRepository {
 

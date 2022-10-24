@@ -2,7 +2,7 @@ package br.gov.es.openpmo.dto.person.queries;
 
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.service.actors.IGetPersonFromAuthorization;
-import org.springframework.data.neo4j.annotation.QueryResult;
+import org.springframework.data.neo4j.repository.query.QueryResult;
 
 @QueryResult
 public class PersonQuery implements IGetPersonFromAuthorization.PersonDataResponse {

@@ -1,7 +1,7 @@
 package br.gov.es.openpmo.dto.treeview;
 
 import br.gov.es.openpmo.model.office.plan.Plan;
-import org.springframework.data.neo4j.annotation.QueryResult;
+import org.springframework.data.neo4j.repository.query.QueryResult;
 
 import java.util.Collections;
 import java.util.Objects;

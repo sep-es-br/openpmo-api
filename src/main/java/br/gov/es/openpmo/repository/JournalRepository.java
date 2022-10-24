@@ -4,8 +4,9 @@ import br.gov.es.openpmo.model.actors.File;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.journals.JournalEntry;
 import br.gov.es.openpmo.model.journals.JournalType;
-import org.springframework.data.neo4j.annotation.Query;
+//import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
+import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;

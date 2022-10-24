@@ -1,6 +1,6 @@
 package br.gov.es.openpmo.dto.dashboards.tripleconstraint;
 
-import org.springframework.data.neo4j.annotation.QueryResult;
+import org.springframework.data.neo4j.repository.query.QueryResult;
 
 import java.time.LocalDate;
 import java.time.Period;

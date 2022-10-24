@@ -1,15 +1,17 @@
 package br.gov.es.openpmo.model.workpacks.models;
 
 import br.gov.es.openpmo.model.workpacks.Portfolio;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
+
+import static org.springframework.data.neo4j.core.schema.Relationship.Direction.INCOMING;
 
 import java.util.Set;
 
-@NodeEntity
+@Node
 public class PortfolioModel extends WorkpackModel {
 
-  @Relationship(value = "IS_INSTANCE_BY", direction = Relationship.INCOMING)
+  @Relationship(value = "IS_INSTANCE_BY", direction = INCOMING)
   private Set<Portfolio> instances;
 
   public Set<Portfolio> getInstances() {

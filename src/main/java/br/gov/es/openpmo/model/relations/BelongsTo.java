@@ -2,26 +2,26 @@ package br.gov.es.openpmo.model.relations;
 
 import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.workpacks.Workpack;
-import org.neo4j.ogm.annotation.EndNode;
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.RelationshipEntity;
-import org.neo4j.ogm.annotation.StartNode;
+
 import org.springframework.data.annotation.Transient;
 
-@RelationshipEntity(type = "BELONGS_TO")
+import org.springframework.data.neo4j.core.schema.RelationshipProperties;
+import org.springframework.data.neo4j.core.schema.RelationshipId;
+import org.springframework.data.neo4j.core.schema.TargetNode;
+
+
+@RelationshipProperties() //(type = "BELONGS_TO")
 public class BelongsTo {
 
-  @Id
-  @GeneratedValue
+  @RelationshipId
   private Long id;
 
   private Boolean linked;
 
-  @StartNode
-  private Workpack workpack;
+  //@Node
+  //private Workpack workpack;
 
-  @EndNode
+  @TargetNode
   private Plan plan;
 
   public BelongsTo() {
@@ -43,6 +43,7 @@ public class BelongsTo {
     this.linked = linked;
   }
 
+  /*
   public Workpack getWorkpack() {
     return this.workpack;
   }
@@ -50,7 +51,7 @@ public class BelongsTo {
   public void setWorkpack(final Workpack workpack) {
     this.workpack = workpack;
   }
-
+*/
   public Plan getPlan() {
     return this.plan;
   }

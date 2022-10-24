@@ -3,7 +3,7 @@ package br.gov.es.openpmo.repository;
 import br.gov.es.openpmo.dto.workpack.MilestoneDateQueryResult;
 import br.gov.es.openpmo.model.properties.Date;
 import br.gov.es.openpmo.model.workpacks.Milestone;
-import org.springframework.data.neo4j.annotation.Query;
+import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,14 +1,15 @@
 plugins {
-    id 'org.springframework.boot' version '2.2.6.RELEASE'
-    id 'io.spring.dependency-management' version '1.0.8.RELEASE'
+    id 'org.springframework.boot' version '2.7.5'
+    id 'io.spring.dependency-management' version '1.1.0'
     id 'java'
-    id 'org.sonarqube' version '2.7'
+    id 'org.sonarqube' version '3.4.0.2513'
     id 'jacoco'
 }
 
 group = 'br.gov.es'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '11'
+targetCompatibility = '11'
 
 repositories {
     mavenCentral()
@@ -18,26 +19,30 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-data-neo4j'
+    //    implementation 'org.springframework.boot:spring-boot-starter-data-neo4j'
+    
+    implementation 'org.springframework.data:spring-data-neo4j:6.3.5'
+
+
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
-    implementation 'org.modelmapper:modelmapper:2.3.6'
-    implementation 'org.apache.commons:commons-lang3:3.9'
-    implementation 'org.apache.httpcomponents:httpclient:4.5.12'
-    implementation 'org.json:json:20190722'
+    implementation 'org.modelmapper:modelmapper:3.1.0'
+    implementation 'org.apache.commons:commons-lang3'
+    implementation 'org.apache.httpcomponents:httpclient'
+    implementation 'org.json:json:20220924'
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
-    implementation 'io.jsonwebtoken:jjwt:0.7.0'
-    implementation 'javax.xml.bind:jaxb-api:2.3.1'
-    implementation group: 'com.google.code.gson', name: 'gson', version: '2.8.9'
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    implementation 'javax.xml.bind:jaxb-api'
+    implementation 'com.google.code.gson:gson'
+    // implementation group: 'com.google.code.gson', name: 'gson', version: '2.8.9'
     implementation 'org.zalando:logbook-spring-boot-starter:2.14.0'
 
-    implementation 'io.springfox:springfox-swagger2:2.9.2'
-    implementation 'io.springfox:springfox-swagger-ui:2.9.2'
-    implementation 'io.springfox:springfox-bean-validators:2.9.2'
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.11.3'
-    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.9'
+    implementation 'io.springfox:springfox-swagger2:3.0.0'
+    implementation 'io.springfox:springfox-swagger-ui:3.0.0'
+    implementation 'io.springfox:springfox-bean-validators:3.0.0'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
     //compile group: 'io.springfox', name: 'springfox-swagger2', version: '2.9.2'
     //compile group: 'io.springfox', name: 'springfox-swagger-ui', version: '2.9.2'

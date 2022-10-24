@@ -4,20 +4,17 @@ import br.gov.es.openpmo.dto.person.PersonDto;
 import br.gov.es.openpmo.dto.person.PersonUpdateDto;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.office.Office;
-import org.neo4j.ogm.annotation.EndNode;
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.RelationshipEntity;
-import org.neo4j.ogm.annotation.StartNode;
+import org.springframework.data.neo4j.core.schema.RelationshipProperties;
+import org.springframework.data.neo4j.core.schema.RelationshipId;
+import org.springframework.data.neo4j.core.schema.TargetNode;
 import org.springframework.data.annotation.Transient;
 
 import java.util.Objects;
 
-@RelationshipEntity(type = "IS_IN_CONTACT_BOOK_OF")
+@RelationshipProperties
 public class IsInContactBookOf {
 
-  @Id
-  @GeneratedValue
+  @RelationshipId
   private Long id;
 
   private String email;
@@ -26,10 +23,9 @@ public class IsInContactBookOf {
 
   private String phoneNumber;
 
-  @StartNode
   private Person person;
 
-  @EndNode
+  @TargetNode
   private Office office;
 
   public IsInContactBookOf() {

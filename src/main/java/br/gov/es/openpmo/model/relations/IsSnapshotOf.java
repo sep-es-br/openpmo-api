@@ -1,24 +1,22 @@
 package br.gov.es.openpmo.model.relations;
 
-import org.neo4j.ogm.annotation.EndNode;
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.StartNode;
+import org.springframework.data.neo4j.core.schema.RelationshipProperties;
+import org.springframework.data.neo4j.core.schema.RelationshipId;
+import org.springframework.data.neo4j.core.schema.TargetNode;
 
 import java.time.LocalDateTime;
 
+@RelationshipProperties
 public abstract class IsSnapshotOf<T> {
 
-  @StartNode
   private final T snapshot;
 
-  @EndNode
+  @TargetNode
   private final T master;
 
   private final LocalDateTime date;
 
-  @Id
-  @GeneratedValue
+  @RelationshipId
   private Long id;
 
   protected IsSnapshotOf(

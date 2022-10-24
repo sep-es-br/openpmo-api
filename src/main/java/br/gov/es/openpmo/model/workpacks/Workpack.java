@@ -26,8 +26,8 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.swagger.annotations.ApiModel;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+//import org.springframework.data.neo4j.core.schema.Node;
+//import org.springframework.data.neo4j.core.schema.Relationship;
 import org.springframework.data.annotation.Transient;
 import org.springframework.util.ObjectUtils;
 
@@ -45,7 +45,12 @@ import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_ORGAN
 import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_PORTFOLIO;
 import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_PROGRAM;
 import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_PROJECT;
-import static org.neo4j.ogm.annotation.Relationship.INCOMING;
+//import static org.springframework.data.neo4j.core.schema.Relationship.Direction.INCOMING;
+
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
+
+import static org.springframework.data.neo4j.core.schema.Relationship.Direction.INCOMING;
 
 @JsonTypeInfo(use = Id.NAME, property = "type")
 @JsonSubTypes({
@@ -64,10 +69,10 @@ import static org.neo4j.ogm.annotation.Relationship.INCOMING;
   Project.class,
   Milestone.class
 }, discriminator = "type", description = "Supertype of all Workpack.")
-@NodeEntity
+@Node
 public class Workpack extends Entity implements Snapshotable<Workpack> {
 
-  @org.neo4j.ogm.annotation.Property("public")
+  @org.springframework.data.neo4j.core.schema.Property("public")
   private Boolean publicShared;
 
   private PermissionLevelEnum publicLevel;
@@ -111,10 +116,10 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
   @Relationship(type = "FEATURES", direction = INCOMING)
   private Schedule schedule;
 
-  @org.neo4j.ogm.annotation.Property("cancelable")
+  @org.springframework.data.neo4j.core.schema.Property("cancelable")
   private boolean isCancelable;
 
-  @org.neo4j.ogm.annotation.Property("canceled")
+  @org.springframework.data.neo4j.core.schema.Property("canceled")
   private boolean isCanceled;
 
   private boolean deleted;

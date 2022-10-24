@@ -3,7 +3,7 @@ package br.gov.es.openpmo.repository.custom;
 import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.model.filter.LogicOperatorEnum;
 import br.gov.es.openpmo.model.filter.Rules;
-import org.neo4j.ogm.session.Session;
+import org.neo4j.driver.Session;
 
 import java.util.Arrays;
 import java.util.Comparator;

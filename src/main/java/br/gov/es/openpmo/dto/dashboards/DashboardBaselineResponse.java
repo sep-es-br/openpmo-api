@@ -2,7 +2,7 @@ package br.gov.es.openpmo.dto.dashboards;
 
 import br.gov.es.openpmo.model.baselines.Status;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.springframework.data.neo4j.annotation.QueryResult;
+import org.springframework.data.neo4j.repository.query.QueryResult;
 
 @QueryResult
 public class DashboardBaselineResponse {

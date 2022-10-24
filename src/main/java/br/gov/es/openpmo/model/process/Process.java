@@ -6,10 +6,10 @@ import br.gov.es.openpmo.dto.process.ProcessUpdateDto;
 import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.utils.ObjectUtils;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
-@NodeEntity
+@Node
 public class Process extends Entity {
 
   private String name;

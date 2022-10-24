@@ -6,15 +6,15 @@ import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.office.plan.PlanModel;
 import br.gov.es.openpmo.model.relations.IsInContactBookOf;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 import org.springframework.data.annotation.Transient;
+
+import static org.springframework.data.neo4j.core.schema.Relationship.Direction.INCOMING;
 
 import java.util.Set;
 
-import static org.neo4j.ogm.annotation.Relationship.INCOMING;
-
-@NodeEntity
+@Node
 public class Office extends Entity {
 
   private String name;

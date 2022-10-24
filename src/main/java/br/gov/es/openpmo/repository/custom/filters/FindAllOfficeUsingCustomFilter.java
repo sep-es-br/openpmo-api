@@ -3,7 +3,7 @@ package br.gov.es.openpmo.repository.custom.filters;
 import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.repository.OfficeRepository;
 import br.gov.es.openpmo.repository.custom.FindAllUsingCustomFilterBuilder;
-import org.neo4j.ogm.session.Session;
+import org.neo4j.driver.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

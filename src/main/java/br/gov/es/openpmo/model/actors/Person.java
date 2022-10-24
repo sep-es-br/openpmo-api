@@ -3,8 +3,12 @@ package br.gov.es.openpmo.model.actors;
 import br.gov.es.openpmo.dto.ccbmembers.PersonResponse;
 import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
 import br.gov.es.openpmo.model.relations.IsInContactBookOf;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
+
+import static org.springframework.data.neo4j.core.schema.Relationship.Direction.INCOMING;
+
 import org.springframework.data.annotation.Transient;
 
 import java.util.Collections;
@@ -13,7 +17,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-@NodeEntity
+@Node
 public class Person extends Actor {
 
   private boolean administrator;
@@ -24,7 +28,7 @@ public class Person extends Actor {
   @Relationship(type = "IS_IN_CONTACT_BOOK_OF")
   private Set<IsInContactBookOf> isInContactBookOf;
 
-  @Relationship(type = "IS_A_PORTRAIT_OF", direction = Relationship.INCOMING)
+  @Relationship(type = "IS_A_PORTRAIT_OF", direction = INCOMING)
   private File avatar;
 
   @Transient

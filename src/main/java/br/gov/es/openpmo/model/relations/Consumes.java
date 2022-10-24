@@ -1,28 +1,29 @@
 package br.gov.es.openpmo.model.relations;
 
-import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.schedule.Step;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
-import org.neo4j.ogm.annotation.EndNode;
-import org.neo4j.ogm.annotation.RelationshipEntity;
-import org.neo4j.ogm.annotation.StartNode;
+import org.springframework.data.neo4j.core.schema.RelationshipProperties;
+import org.springframework.data.neo4j.core.schema.RelationshipId;
+import org.springframework.data.neo4j.core.schema.TargetNode;
 import org.springframework.data.annotation.Transient;
 
 import java.math.BigDecimal;
 import java.util.Objects;
 import java.util.Optional;
 
-@RelationshipEntity(type = "CONSUMES")
-public class Consumes extends Entity {
+@RelationshipProperties
+public class Consumes {
+
+  @RelationshipId
+  private Long id;
 
   private BigDecimal actualCost;
 
   private BigDecimal plannedCost;
 
-  @EndNode
+  @TargetNode
   private CostAccount costAccount;
 
-  @StartNode
   private Step step;
 
   public Consumes() {
@@ -51,6 +52,14 @@ public class Consumes extends Entity {
     this.plannedCost = consumes.plannedCost;
     this.costAccount = costAccount;
     this.step = step;
+  }
+
+  public Long getId() {
+    return this.id;
+  }
+
+  public void setId(final Long id) {
+    this.id = id;
   }
 
   public CostAccount getCostAccount() {

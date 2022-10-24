@@ -1,10 +1,10 @@
 package br.gov.es.openpmo.model.properties.models;
 
-import org.neo4j.ogm.annotation.NodeEntity;
+import org.springframework.data.neo4j.core.schema.Node;
 
 import java.math.BigDecimal;
 
-@NodeEntity
+@Node
 public class CurrencyModel extends PropertyModel {
 
   private BigDecimal defaultValue;

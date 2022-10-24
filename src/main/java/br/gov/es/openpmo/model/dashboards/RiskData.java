@@ -2,10 +2,10 @@ package br.gov.es.openpmo.model.dashboards;
 
 import br.gov.es.openpmo.dto.dashboards.RiskDataChart;
 import br.gov.es.openpmo.model.Entity;
-import org.neo4j.ogm.annotation.NodeEntity;
+import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.annotation.Transient;
 
-@NodeEntity
+@Node
 public class RiskData extends Entity {
 
   private Long total;

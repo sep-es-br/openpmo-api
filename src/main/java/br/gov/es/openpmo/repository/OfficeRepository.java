@@ -4,7 +4,7 @@ import br.gov.es.openpmo.dto.treeview.query.OfficeTreeViewQuery;
 import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.office.plan.PlanModel;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
-import org.springframework.data.neo4j.annotation.Query;
+import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 
 import java.util.List;

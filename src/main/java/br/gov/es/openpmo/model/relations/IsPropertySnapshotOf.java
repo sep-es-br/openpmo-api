@@ -1,9 +1,9 @@
 package br.gov.es.openpmo.model.relations;
 
 import br.gov.es.openpmo.model.properties.Property;
-import org.neo4j.ogm.annotation.RelationshipEntity;
+import org.springframework.data.neo4j.core.schema.RelationshipProperties;
 
-@RelationshipEntity(type = "IS_SNAPSHOT_OF")
+@RelationshipProperties
 public class IsPropertySnapshotOf extends IsSnapshotOf<Property> {
 
   public IsPropertySnapshotOf(

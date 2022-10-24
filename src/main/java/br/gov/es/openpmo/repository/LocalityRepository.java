@@ -3,7 +3,7 @@ package br.gov.es.openpmo.repository;
 import br.gov.es.openpmo.model.office.Domain;
 import br.gov.es.openpmo.model.office.Locality;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
-import org.springframework.data.neo4j.annotation.Query;
+import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 

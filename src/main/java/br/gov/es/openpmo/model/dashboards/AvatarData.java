@@ -2,9 +2,9 @@ package br.gov.es.openpmo.model.dashboards;
 
 import br.gov.es.openpmo.dto.dashboards.datasheet.DatasheetAvatar;
 import br.gov.es.openpmo.model.Entity;
-import org.neo4j.ogm.annotation.NodeEntity;
+import org.springframework.data.neo4j.core.schema.Node;
 
-@NodeEntity
+@Node
 public class AvatarData extends Entity {
 
   private Long idAvatar;

@@ -2,12 +2,12 @@ package br.gov.es.openpmo.model.dashboards;
 
 import br.gov.es.openpmo.dto.dashboards.datasheet.DatasheetActor;
 import br.gov.es.openpmo.model.Entity;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
 import static br.gov.es.openpmo.model.dashboards.DashboardUtils.apply;
 
-@NodeEntity
+@Node
 public class ActorData extends Entity {
 
   private Long idActor;

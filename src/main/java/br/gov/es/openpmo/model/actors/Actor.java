@@ -1,9 +1,9 @@
 package br.gov.es.openpmo.model.actors;
 
 import br.gov.es.openpmo.model.Entity;
-import org.neo4j.ogm.annotation.NodeEntity;
+import org.springframework.data.neo4j.core.schema.Node;
 
-@NodeEntity
+@Node
 public abstract class Actor extends Entity {
 
   private String name;

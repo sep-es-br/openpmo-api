@@ -3,7 +3,7 @@ package br.gov.es.openpmo.dto.issue;
 import br.gov.es.openpmo.model.issue.Issue;
 import br.gov.es.openpmo.model.issue.StatusOfIssue;
 import br.gov.es.openpmo.model.risk.Importance;
-import org.springframework.data.neo4j.annotation.QueryResult;
+import org.springframework.data.neo4j.repository.query.QueryResult;
 
 @QueryResult
 public class IssueCardDto {

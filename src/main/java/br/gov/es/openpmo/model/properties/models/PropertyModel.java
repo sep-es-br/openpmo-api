@@ -5,7 +5,7 @@ import br.gov.es.openpmo.model.Entity;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.annotations.ApiModel;
-import org.neo4j.ogm.annotation.NodeEntity;
+import org.springframework.data.neo4j.core.schema.Node;
 
 import java.beans.Transient;
 import java.util.Objects;
@@ -27,7 +27,7 @@ import java.util.Objects;
   UnitSelectionModel.class, SelectionModel.class, TextAreaModel.class, NumberModel.class, CurrencyModel.class,
   LocalitySelectionModel.class,
   OrganizationSelectionModel.class, GroupModel.class}, discriminator = "type", description = "Supertype of all PropertyModel.")
-@NodeEntity
+@Node
 public class PropertyModel extends Entity {
 
   private Long sortIndex;

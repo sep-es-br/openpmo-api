@@ -2,7 +2,7 @@ package br.gov.es.openpmo.dto.stakeholder;
 
 import br.gov.es.openpmo.model.relations.CanAccessWorkpack;
 import br.gov.es.openpmo.model.relations.IsStakeholderIn;
-import org.springframework.data.neo4j.annotation.QueryResult;
+import org.springframework.data.neo4j.repository.query.QueryResult;
 
 import java.util.ArrayList;
 import java.util.HashSet;

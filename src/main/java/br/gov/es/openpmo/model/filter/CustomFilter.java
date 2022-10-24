@@ -4,14 +4,16 @@ import br.gov.es.openpmo.dto.filter.CustomFilterDto;
 import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
+
+import static org.springframework.data.neo4j.core.schema.Relationship.Direction.INCOMING;
 
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-@NodeEntity
+@Node
 public class CustomFilter extends Entity {
 
   private String name;
@@ -24,10 +26,10 @@ public class CustomFilter extends Entity {
 
   private SortByDirectionEnum direction;
 
-  @Relationship(value = "HAS", direction = Relationship.INCOMING)
+  @Relationship(value = "HAS", direction = INCOMING)
   private Person person;
 
-  @Relationship(value = "HAS", direction = Relationship.INCOMING)
+  @Relationship(value = "HAS", direction = INCOMING)
   private Set<Rules> rules;
 
   @Relationship("FOR")

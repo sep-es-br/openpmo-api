@@ -7,16 +7,16 @@ import br.gov.es.openpmo.model.baselines.Snapshotable;
 import br.gov.es.openpmo.model.properties.Property;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.relations.IsCostAccountSnapshotOf;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 import org.springframework.data.annotation.Transient;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.neo4j.ogm.annotation.Relationship.INCOMING;
+import static org.springframework.data.neo4j.core.schema.Relationship.Direction.INCOMING;
 
-@NodeEntity
+@Node
 public class CostAccount extends Entity implements Snapshotable<CostAccount> {
 
   @Relationship(type = "IS_SNAPSHOT_OF")
@@ -28,7 +28,7 @@ public class CostAccount extends Entity implements Snapshotable<CostAccount> {
   @Relationship(type = "COMPOSES")
   private Baseline baseline;
 
-  @Relationship(type = "FEATURES", direction = Relationship.INCOMING)
+  @Relationship(type = "FEATURES", direction = INCOMING)
   private Set<Property> properties;
 
   @Relationship(type = "APPLIES_TO")

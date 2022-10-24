@@ -1,7 +1,7 @@
 package br.gov.es.openpmo.dto.person.queries;
 
 import br.gov.es.openpmo.model.actors.File;
-import org.springframework.data.neo4j.annotation.QueryResult;
+import org.springframework.data.neo4j.repository.query.QueryResult;
 
 @QueryResult
 public class AllPersonInOfficeQuery {

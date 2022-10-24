@@ -1,12 +1,12 @@
 package br.gov.es.openpmo.model.properties.models;
 
 import br.gov.es.openpmo.model.actors.Organization;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
 import java.util.Set;
 
-@NodeEntity
+@Node
 public class OrganizationSelectionModel extends PropertyModel {
 
   private boolean multipleSelection;

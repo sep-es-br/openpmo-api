@@ -10,10 +10,12 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.swagger.annotations.ApiModel;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 import org.springframework.data.annotation.Transient;
 import org.springframework.util.ObjectUtils;
+
+import static org.springframework.data.neo4j.core.schema.Relationship.Direction.INCOMING;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -32,7 +34,7 @@ import java.util.Set;
 @ApiModel(subTypes = {PortfolioModel.class, ProgramModel.class, OrganizerModel.class, DeliverableModel.class,
   ProjectModel.class, MilestoneModel.class}, discriminator = "type", description = "Supertype of all WorkpackModel."
 )
-@NodeEntity
+@Node
 public class WorkpackModel extends Entity {
 
   private String fontIcon;
@@ -78,10 +80,10 @@ public class WorkpackModel extends Entity {
   @Relationship(type = "BELONGS_TO")
   private PlanModel planModel;
 
-  @Relationship(type = "FEATURES", direction = Relationship.INCOMING)
+  @Relationship(type = "FEATURES", direction = INCOMING)
   private Set<PropertyModel> properties;
 
-  @Relationship(type = "IS_IN", direction = Relationship.INCOMING)
+  @Relationship(type = "IS_IN", direction = INCOMING)
   private Set<WorkpackModel> children;
 
   @Transient

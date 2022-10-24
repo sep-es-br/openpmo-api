@@ -1,9 +1,9 @@
 package br.gov.es.openpmo.model.relations;
 
 import br.gov.es.openpmo.model.schedule.Step;
-import org.neo4j.ogm.annotation.RelationshipEntity;
+import org.springframework.data.neo4j.core.schema.RelationshipProperties;
 
-@RelationshipEntity(type = "IS_SNAPSHOT_OF")
+@RelationshipProperties
 public class IsStepSnapshotOf extends IsSnapshotOf<Step> {
 
   public IsStepSnapshotOf(

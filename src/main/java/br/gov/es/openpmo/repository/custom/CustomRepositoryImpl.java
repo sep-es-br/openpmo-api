@@ -1,6 +1,6 @@
 package br.gov.es.openpmo.repository.custom;
 
-import org.neo4j.ogm.session.Session;
+import org.neo4j.driver.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class CustomRepositoryImpl implements CustomRepository {

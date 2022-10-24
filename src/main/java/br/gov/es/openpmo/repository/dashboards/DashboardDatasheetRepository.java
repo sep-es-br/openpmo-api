@@ -3,7 +3,7 @@ package br.gov.es.openpmo.repository.dashboards;
 import br.gov.es.openpmo.dto.dashboards.datasheet.DatasheetStakeholderQueryResult;
 import br.gov.es.openpmo.dto.dashboards.datasheet.WorkpackByModelQueryResult;
 import br.gov.es.openpmo.model.workpacks.Workpack;
-import org.springframework.data.neo4j.annotation.Query;
+import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.stereotype.Repository;
 

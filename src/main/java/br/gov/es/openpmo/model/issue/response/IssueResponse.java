@@ -8,8 +8,10 @@ import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.issue.Issue;
 import br.gov.es.openpmo.model.risk.response.RiskResponse;
 import br.gov.es.openpmo.utils.ObjectUtils;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
+
+import static org.springframework.data.neo4j.core.schema.Relationship.Direction.INCOMING;
 import org.springframework.data.annotation.Transient;
 
 import java.time.LocalDate;
@@ -18,7 +20,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@NodeEntity
+@Node
 public class IssueResponse extends Entity {
 
   private String name;
@@ -32,7 +34,7 @@ public class IssueResponse extends Entity {
   @Relationship("ADDRESSES")
   private Issue issue;
 
-  @Relationship(value = "IS_RESPONSIBLE_FOR", direction = Relationship.INCOMING)
+  @Relationship(value = "IS_RESPONSIBLE_FOR", direction = INCOMING)
   private Set<Person> responsible;
 
   public IssueResponse() {

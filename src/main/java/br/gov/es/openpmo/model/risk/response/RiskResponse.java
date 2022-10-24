@@ -8,8 +8,8 @@ import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.risk.Risk;
 import br.gov.es.openpmo.utils.ObjectUtils;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 import org.springframework.data.annotation.Transient;
 
 import java.time.LocalDate;
@@ -19,9 +19,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static org.springframework.data.neo4j.core.schema.Relationship.Direction.INCOMING;
 import static br.gov.es.openpmo.utils.ApplicationMessage.START_DATE_AFTER_END_DATE;
 
-@NodeEntity
+@Node
 public class RiskResponse extends Entity {
 
   private String name;
@@ -43,7 +44,7 @@ public class RiskResponse extends Entity {
   @Relationship("MITIGATES")
   private Risk risk;
 
-  @Relationship(value = "IS_RESPONSIBLE_FOR", direction = Relationship.INCOMING)
+  @Relationship(value = "IS_RESPONSIBLE_FOR", direction = INCOMING)
   private Set<Person> responsible;
 
   public RiskResponse() {

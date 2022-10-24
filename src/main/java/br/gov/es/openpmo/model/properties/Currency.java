@@ -5,13 +5,13 @@ import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.properties.models.CurrencyModel;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.workpacks.Workpack;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
 import java.math.BigDecimal;
 import java.util.Objects;
 
-@NodeEntity
+@Node
 public class Currency extends Property<Currency, BigDecimal> {
 
   private BigDecimal value;

@@ -4,25 +4,22 @@ import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
-import org.neo4j.ogm.annotation.EndNode;
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.RelationshipEntity;
-import org.neo4j.ogm.annotation.StartNode;
+import org.springframework.data.neo4j.core.schema.RelationshipProperties;
+import org.springframework.data.neo4j.core.schema.RelationshipId;
+import org.springframework.data.neo4j.core.schema.TargetNode;
 import org.springframework.data.annotation.Transient;
 
-@RelationshipEntity(type = "IS_SHARED_WITH")
+@RelationshipProperties
 public class IsSharedWith {
 
-  @Id
-  @GeneratedValue
+  @RelationshipId
   private Long id;
+
   private PermissionLevelEnum permissionLevel;
 
-  @StartNode
   private Workpack workpack;
 
-  @EndNode
+  @TargetNode
   private Office office;
 
   public IsSharedWith() {

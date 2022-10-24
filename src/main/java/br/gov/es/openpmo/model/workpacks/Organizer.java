@@ -1,10 +1,10 @@
 package br.gov.es.openpmo.model.workpacks;
 
 import br.gov.es.openpmo.model.workpacks.models.OrganizerModel;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
-@NodeEntity
+@Node
 public class Organizer extends Workpack {
 
   @Relationship("IS_INSTANCE_BY")

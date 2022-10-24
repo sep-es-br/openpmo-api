@@ -1,19 +1,20 @@
 package br.gov.es.openpmo.model.relations;
 
-import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.filter.CustomFilter;
-import org.neo4j.ogm.annotation.EndNode;
-import org.neo4j.ogm.annotation.RelationshipEntity;
-import org.neo4j.ogm.annotation.StartNode;
+import org.springframework.data.neo4j.core.schema.RelationshipProperties;
+import org.springframework.data.neo4j.core.schema.RelationshipId;
+import org.springframework.data.neo4j.core.schema.TargetNode;
 
-@RelationshipEntity(type = "FOR")
-public class For extends Entity {
+@RelationshipProperties
+public class For {
 
-  @EndNode
+  @RelationshipId
+  private Long id;
+
+  @TargetNode
   private Person person;
 
-  @StartNode
   private CustomFilter customFilter;
 
   public For(
@@ -24,6 +25,14 @@ public class For extends Entity {
     this.customFilter = customFilter;
   }
 
+  public Long getId() {
+    return this.id;
+  }
+
+  public void setId(final Long id) {
+    this.id = id;
+  }
+  
   public Person getPerson() {
     return this.person;
   }

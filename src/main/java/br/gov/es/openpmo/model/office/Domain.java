@@ -1,25 +1,27 @@
 package br.gov.es.openpmo.model.office;
 
 import br.gov.es.openpmo.model.Entity;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 import org.springframework.data.annotation.Transient;
+
+import static org.springframework.data.neo4j.core.schema.Relationship.Direction.INCOMING;
 
 import java.util.Set;
 
-@NodeEntity
+@Node
 public class Domain extends Entity {
 
   private String name;
   private String fullName;
 
-  @Relationship(type = "IS_ROOT_OF", direction = Relationship.INCOMING)
+  @Relationship(type = "IS_ROOT_OF", direction = INCOMING)
   private Locality localityRoot;
 
   @Relationship(type = "APPLIES_TO")
   private Office office;
 
-  @Relationship(type = "BELONGS_TO", direction = Relationship.INCOMING)
+  @Relationship(type = "BELONGS_TO", direction = INCOMING)
   private Set<Locality> localities;
 
   public Set<Locality> getLocalities() {

@@ -4,7 +4,7 @@ package br.gov.es.openpmo.dto.person.queries;
 import br.gov.es.openpmo.model.relations.CanAccessOffice;
 import br.gov.es.openpmo.model.relations.CanAccessPlan;
 import br.gov.es.openpmo.model.relations.CanAccessWorkpack;
-import org.springframework.data.neo4j.annotation.QueryResult;
+import org.springframework.data.neo4j.repository.query.QueryResult;
 
 import java.util.Collections;
 import java.util.Set;

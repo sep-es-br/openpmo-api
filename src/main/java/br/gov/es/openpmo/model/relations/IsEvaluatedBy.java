@@ -4,19 +4,16 @@ import br.gov.es.openpmo.dto.baselines.BaselineEvaluationRequest;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.baselines.Decision;
-import org.neo4j.ogm.annotation.EndNode;
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.RelationshipEntity;
-import org.neo4j.ogm.annotation.StartNode;
+import org.springframework.data.neo4j.core.schema.RelationshipProperties;
+import org.springframework.data.neo4j.core.schema.RelationshipId;
+import org.springframework.data.neo4j.core.schema.TargetNode;
 
 import java.time.LocalDateTime;
 
-@RelationshipEntity("IS_EVALUATED_BY")
+@RelationshipProperties
 public class IsEvaluatedBy {
 
-  @Id
-  @GeneratedValue
+  @RelationshipId
   private Long id;
 
   private Decision decision;
@@ -24,11 +21,9 @@ public class IsEvaluatedBy {
   private LocalDateTime when;
   private String comment;
 
-
-  @StartNode
   private Baseline baseline;
 
-  @EndNode
+  @TargetNode
   private Person person;
 
   public IsEvaluatedBy() {

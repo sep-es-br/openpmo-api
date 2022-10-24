@@ -9,8 +9,10 @@ import br.gov.es.openpmo.model.risk.Importance;
 import br.gov.es.openpmo.model.risk.Risk;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.utils.ObjectUtils;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
+
+import static org.springframework.data.neo4j.core.schema.Relationship.Direction.INCOMING;
 import org.springframework.data.annotation.Transient;
 
 import java.util.Collections;
@@ -20,7 +22,7 @@ import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_NOT_NULL;
 
-@NodeEntity
+@Node
 public class Issue extends Entity {
 
   private String name;
@@ -39,7 +41,7 @@ public class Issue extends Entity {
   @Relationship("IS_TRIGGERED_BY")
   private Risk triggeredBy;
 
-  @Relationship(value = "ADDRESSES", direction = Relationship.INCOMING)
+  @Relationship(value = "ADDRESSES", direction = INCOMING)
   private Set<IssueResponse> responses;
 
   public Issue() {

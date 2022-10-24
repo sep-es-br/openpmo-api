@@ -2,25 +2,21 @@ package br.gov.es.openpmo.model.relations;
 
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
-import org.neo4j.ogm.annotation.EndNode;
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.RelationshipEntity;
-import org.neo4j.ogm.annotation.StartNode;
+import org.springframework.data.neo4j.core.schema.RelationshipProperties;
+import org.springframework.data.neo4j.core.schema.RelationshipId;
+import org.springframework.data.neo4j.core.schema.TargetNode;
 
 import java.beans.Transient;
 
-@RelationshipEntity(type = "IS_LINKED_TO")
+@RelationshipProperties
 public class IsLinkedTo {
 
-  @Id
-  @GeneratedValue
+  @RelationshipId
   private Long id;
 
-  @StartNode
   private Workpack workpack;
 
-  @EndNode
+  @TargetNode
   private WorkpackModel workpackModel;
 
   public IsLinkedTo() {

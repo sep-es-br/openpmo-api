@@ -1,11 +1,11 @@
 package br.gov.es.openpmo.model.properties.models;
 
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
 import java.util.Set;
 
-@NodeEntity
+@Node
 public class GroupModel extends PropertyModel {
 
   @Relationship(type = "GROUPS")

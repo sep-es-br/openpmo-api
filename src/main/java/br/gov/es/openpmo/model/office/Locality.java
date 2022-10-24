@@ -2,13 +2,15 @@ package br.gov.es.openpmo.model.office;
 
 import br.gov.es.openpmo.enumerator.LocalityTypesEnum;
 import br.gov.es.openpmo.model.Entity;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
+
+import static org.springframework.data.neo4j.core.schema.Relationship.Direction.INCOMING;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
 
-@NodeEntity
+@Node
 public class Locality extends Entity {
 
   private String name;
@@ -27,7 +29,7 @@ public class Locality extends Entity {
   @Relationship(type = "IS_ROOT_OF")
   private Domain domainRoot;
 
-  @Relationship(type = "IS_IN", direction = Relationship.INCOMING)
+  @Relationship(type = "IS_IN", direction = INCOMING)
   private Set<Locality> children;
 
   public Locality getParent() {

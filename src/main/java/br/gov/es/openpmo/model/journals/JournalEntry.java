@@ -4,8 +4,10 @@ import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.actors.File;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.workpacks.Workpack;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
+
+import static org.springframework.data.neo4j.core.schema.Relationship.Direction.INCOMING;
 import org.springframework.data.annotation.Transient;
 
 import java.time.LocalDateTime;
@@ -15,7 +17,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-@NodeEntity
+@Node
 public class JournalEntry extends Entity {
 
   private LocalDateTime date;
@@ -34,7 +36,7 @@ public class JournalEntry extends Entity {
   @Relationship("IS_RECORDED_BY")
   private Person person;
 
-  @Relationship(value = "IS_EVIDENCE_OF", direction = Relationship.INCOMING)
+  @Relationship(value = "IS_EVIDENCE_OF", direction = INCOMING)
   private Set<File> files;
 
   public JournalEntry() {

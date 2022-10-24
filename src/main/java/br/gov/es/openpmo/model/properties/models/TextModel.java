@@ -1,8 +1,8 @@
 package br.gov.es.openpmo.model.properties.models;
 
-import org.neo4j.ogm.annotation.NodeEntity;
+import org.springframework.data.neo4j.core.schema.Node;
 
-@NodeEntity
+@Node
 public class TextModel extends PropertyModel {
 
   private Long min;

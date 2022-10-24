@@ -12,8 +12,8 @@ import br.gov.es.openpmo.model.issue.response.IssueResponse;
 import br.gov.es.openpmo.model.risk.response.RiskResponse;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.utils.ObjectUtils;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 import org.springframework.data.annotation.Transient;
 
 import java.time.LocalDate;
@@ -27,8 +27,10 @@ import static br.gov.es.openpmo.model.risk.response.When.POST_OCCURRENCE;
 import static br.gov.es.openpmo.utils.ApplicationMessage.HAPPEN_FROM_AFTER_HAPPEN_TO;
 import static br.gov.es.openpmo.utils.ApplicationMessage.HAPPEN_TO_BEFORE_HAPPEN_FROM;
 
+import static org.springframework.data.neo4j.core.schema.Relationship.Direction.INCOMING;
 
-@NodeEntity
+
+@Node
 public class Risk extends Entity {
 
   private String name;
@@ -43,7 +45,7 @@ public class Risk extends Entity {
   @Relationship("IS_FORSEEN_ON")
   private Workpack workpack;
 
-  @Relationship(value = "MITIGATES", direction = Relationship.INCOMING)
+  @Relationship(value = "MITIGATES", direction = INCOMING)
   private Set<RiskResponse> responses;
 
   public Risk() {

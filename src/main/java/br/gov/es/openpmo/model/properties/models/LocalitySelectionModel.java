@@ -2,14 +2,14 @@ package br.gov.es.openpmo.model.properties.models;
 
 import br.gov.es.openpmo.model.office.Domain;
 import br.gov.es.openpmo.model.office.Locality;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
 import java.beans.Transient;
 import java.util.Optional;
 import java.util.Set;
 
-@NodeEntity
+@Node
 public class LocalitySelectionModel extends PropertyModel {
 
   private boolean multipleSelection;

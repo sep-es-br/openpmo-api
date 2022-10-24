@@ -4,28 +4,24 @@ import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.scheduler.updateroles.HasRole;
-import org.neo4j.ogm.annotation.EndNode;
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.Property;
-import org.neo4j.ogm.annotation.RelationshipEntity;
-import org.neo4j.ogm.annotation.StartNode;
 
-@RelationshipEntity(type = "CAN_ACCESS_OFFICE")
+import org.springframework.data.neo4j.core.schema.RelationshipProperties;
+import org.springframework.data.neo4j.core.schema.RelationshipId;
+import org.springframework.data.neo4j.core.schema.TargetNode;
+import org.springframework.data.neo4j.core.schema.Property;
+
+@RelationshipProperties //(type = "CAN_ACCESS_OFFICE")
 public class CanAccessOffice implements HasRole {
 
-  @Id
-  @GeneratedValue
+  @RelationshipId
   private Long id;
   private String organization;
+  
   @Property("permitedRole")
   private String role;
   private PermissionLevelEnum permissionLevel;
 
-  @StartNode
-  private Person person;
-
-  @EndNode
+  @TargetNode
   private Office office;
 
   public CanAccessOffice(
@@ -40,7 +36,6 @@ public class CanAccessOffice implements HasRole {
     this.organization = organization;
     this.role = role;
     this.permissionLevel = permissionLevel;
-    this.person = person;
     this.office = office;
   }
 
@@ -74,14 +69,6 @@ public class CanAccessOffice implements HasRole {
 
   public void setPermissionLevel(final PermissionLevelEnum permissionLevel) {
     this.permissionLevel = permissionLevel;
-  }
-
-  public Person getPerson() {
-    return this.person;
-  }
-
-  public void setPerson(final Person person) {
-    this.person = person;
   }
 
   public Office getOffice() {

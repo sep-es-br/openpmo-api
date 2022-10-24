@@ -1,6 +1,6 @@
 package br.gov.es.openpmo.scheduler.updatestatus;
 
-import org.springframework.data.neo4j.annotation.QueryResult;
+import org.springframework.data.neo4j.core.mapping;
 
 @QueryResult
 public class ProjectAndProgramParentResult {

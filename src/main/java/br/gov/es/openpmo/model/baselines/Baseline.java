@@ -9,9 +9,11 @@ import br.gov.es.openpmo.model.relations.IsEvaluatedBy;
 import br.gov.es.openpmo.model.relations.IsProposedBy;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 import org.springframework.data.annotation.Transient;
+
+import static org.springframework.data.neo4j.core.schema.Relationship.Direction.INCOMING;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -22,7 +24,7 @@ import static br.gov.es.openpmo.model.baselines.Status.DRAFT;
 import static br.gov.es.openpmo.model.baselines.Status.REJECTED;
 import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_IS_NOT_DRAFT_INVALID_STATE_ERROR;
 
-@NodeEntity
+@Node
 public class Baseline extends Entity {
 
   private String name;
@@ -41,10 +43,10 @@ public class Baseline extends Entity {
 
   private boolean active;
 
-  @Relationship(type = "IS_BASELINED_BY", direction = Relationship.INCOMING)
+  @Relationship(type = "IS_BASELINED_BY", direction = INCOMING)
   private IsBaselinedBy baselinedBy;
 
-  @Relationship(type = "IS_PROPOSED_BY", direction = Relationship.INCOMING)
+  @Relationship(type = "IS_PROPOSED_BY", direction = INCOMING)
   private IsProposedBy proposer;
 
   @Relationship(type = "IS_EVALUATED_BY")

@@ -6,17 +6,17 @@ import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.baselines.Snapshotable;
 import br.gov.es.openpmo.model.relations.IsScheduleSnapshotOf;
 import br.gov.es.openpmo.model.workpacks.Workpack;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 import org.springframework.data.annotation.Transient;
 
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.neo4j.ogm.annotation.Relationship.INCOMING;
+import static org.springframework.data.neo4j.core.schema.Relationship.Direction.INCOMING;
 
-@NodeEntity
+@Node
 public class Schedule extends Entity implements Snapshotable<Schedule> {
 
   private LocalDate end;
@@ -35,7 +35,7 @@ public class Schedule extends Entity implements Snapshotable<Schedule> {
   @Relationship(type = "IS_SNAPSHOT_OF", direction = INCOMING)
   private Set<IsScheduleSnapshotOf> snapshots;
 
-  @Relationship(type = "COMPOSES", direction = Relationship.INCOMING)
+  @Relationship(type = "COMPOSES", direction = INCOMING)
   private Set<Step> steps;
 
   private CategoryEnum category;

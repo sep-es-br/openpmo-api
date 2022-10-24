@@ -3,13 +3,13 @@ package br.gov.es.openpmo.model.office.plan;
 import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.relations.BelongsTo;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
 import java.time.LocalDate;
 import java.util.Set;
 
-@NodeEntity
+@Node
 public class Plan extends Entity {
 
   @Relationship(type = "IS_ADOPTED_BY")
