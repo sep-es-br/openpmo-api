@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
+
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -141,7 +141,7 @@ public class WorkpackPermissionVerifier {
     if(permissionsWorkpack != null && !permissionsWorkpack.isEmpty()) {
       return permissionsWorkpack.stream().filter(permission -> permission.getIdPlan().equals(idPlan)).collect(Collectors.toList());
     }
-    return CollectionUtils.isEmpty(permissionsPlan) ? permissionsOffice : permissionsPlan;
+    return (permissionsPlan).isEmpty() ? permissionsOffice : permissionsPlan;
   }
 
   private List<PermissionDto> verifyLinkedPermission(

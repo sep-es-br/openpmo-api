@@ -28,12 +28,12 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
          "RETURN " +
          "person AS person, " +
          "isAuthenticatedBy.key AS key, " +
-         "isAuthenticatedBy.email AS email, " +
-         "isAuthenticatedBy, " +
-         "authService")
+         "isAuthenticatedBy.email AS email ") //+
+//         "isAuthenticatedBy, " +
+//         "authService")
   Optional<PersonQuery> findByIdPersonWithRelationshipAuthServiceAcessoCidadao(
-    Long id,
-    String authenticationServiceName
+    @Param("id") Long id,
+    @Param("authenticationServiceName") String authenticationServiceName
   );
 
   @Query("MATCH (p:Person)-[is:CAN_ACCESS_OFFICE]->(o:Office) " +

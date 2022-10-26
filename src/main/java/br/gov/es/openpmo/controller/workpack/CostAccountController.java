@@ -16,7 +16,7 @@ import io.swagger.annotations.Api;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.CollectionUtils;
+
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -93,14 +93,14 @@ public class CostAccountController {
   private CostAccount getCostAccount(final Object cost) {
     Set<Property> properties = null;
     if(cost instanceof CostAccountStoreDto) {
-      if(!CollectionUtils.isEmpty(((CostAccountStoreDto) cost).getProperties())) {
+      if(!(((CostAccountStoreDto) cost).getProperties()).isEmpty()) {
         final CostAccountStoreDto store = (CostAccountStoreDto) cost;
         properties = this.workpackService.getProperties(store.getProperties());
         store.setProperties(null);
       }
     }
     else {
-      if(!CollectionUtils.isEmpty(((CostAccountUpdateDto) cost).getProperties())) {
+      if(!(((CostAccountUpdateDto) cost).getProperties()).isEmpty()) {
         final CostAccountUpdateDto update = (CostAccountUpdateDto) cost;
         properties = this.workpackService.getProperties(update.getProperties());
         update.setProperties(null);

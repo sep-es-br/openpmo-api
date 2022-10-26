@@ -5,7 +5,7 @@ import br.gov.es.openpmo.model.properties.Number;
 import br.gov.es.openpmo.model.properties.*;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.workpacks.Workpack;
-import org.springframework.util.CollectionUtils;
+
 
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.*;
 
@@ -18,7 +18,7 @@ public final class GetPropertyByModel {
     final Workpack workpack,
     final PropertyModel propertyModel
   ) {
-    if(workpack == null || CollectionUtils.isEmpty(workpack.getProperties())) {
+    if(workpack == null || (workpack.getProperties()).isEmpty()) {
       return null;
     }
     for(final Property property : workpack.getProperties()) {

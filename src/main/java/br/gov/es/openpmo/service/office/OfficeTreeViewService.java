@@ -13,7 +13,7 @@ import br.gov.es.openpmo.repository.OfficeRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
+
 
 import java.util.HashSet;
 import java.util.Set;
@@ -39,7 +39,7 @@ public class OfficeTreeViewService {
   }
 
   private static boolean hasChildren(final Workpack workpack) {
-    return !CollectionUtils.isEmpty(workpack.getChildren());
+    return !(workpack.getChildren()).isEmpty();
   }
 
   public OfficeTreeViewDto findOfficeTreeViewById(final Long idOffice) {
