@@ -220,7 +220,7 @@ public class OfficePermissionService {
         this.delete(permissionDatabase);
       }
     });
-    if(!(request.getPermissions()).isEmpty()) {
+    if(request.getPermissions() != null && !(request.getPermissions()).isEmpty()) {
       request.getPermissions().forEach(permission -> {
         if(permission.getId() == null && officesPermissionsDataBase.stream().noneMatch(
           pbd -> permission.getRole() != null && permission.getRole().equals(pbd.getRole()))) {

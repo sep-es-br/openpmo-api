@@ -77,9 +77,9 @@ public class ScheduleDto {
 
   private BigDecimal calculatePlannedWork(final Function<? super StepDto, ? extends BigDecimal> dataToSum) {
     BigDecimal planed = BigDecimal.ZERO;
-    if(!this.groupStep.isEmpty()) {
+    if(this.groupStep != null && !this.groupStep.isEmpty()) {
       for(final GroupStepDto group : this.groupStep) {
-        if(!(group.getSteps()).isEmpty()) {
+        if(group.getSteps() != null && !(group.getSteps()).isEmpty()) {
           for(final StepDto step : group.getSteps()) {
             final BigDecimal data = dataToSum.apply(step);
             if(data != null) {
@@ -94,11 +94,11 @@ public class ScheduleDto {
 
   private BigDecimal calculatePlannedCost(final Function<? super ConsumesDto, ? extends BigDecimal> dataToSum) {
     BigDecimal planedCost = BigDecimal.ZERO;
-    if(!this.groupStep.isEmpty()) {
+    if(this.groupStep != null && !this.groupStep.isEmpty()) {
       for(final GroupStepDto group : this.groupStep) {
-        if(!(group.getSteps()).isEmpty()) {
+        if(group.getSteps() != null && !(group.getSteps()).isEmpty()) {
           for(final StepDto step : group.getSteps()) {
-            if(!(step.getConsumes()).isEmpty()) {
+            if(step.getConsumes() != null && !(step.getConsumes()).isEmpty()) {
               for(final ConsumesDto consume : step.getConsumes()) {
                 final BigDecimal data = dataToSum.apply(consume);
                 if(data != null) {
@@ -119,9 +119,9 @@ public class ScheduleDto {
 
   public BigDecimal getActual() {
     BigDecimal actual = BigDecimal.ZERO;
-    if(!this.groupStep.isEmpty()) {
+    if(this.groupStep != null && !this.groupStep.isEmpty()) {
       for(final GroupStepDto group : this.groupStep) {
-        if(!(group.getSteps()).isEmpty()) {
+        if(group.getSteps() != null && !(group.getSteps()).isEmpty()) {
           for(final StepDto step : group.getSteps()) {
             if(step.getActualWork() != null) {
               actual = actual.add(step.getActualWork());
@@ -139,11 +139,11 @@ public class ScheduleDto {
 
   public BigDecimal getActualCost() {
     BigDecimal planedCost = BigDecimal.ZERO;
-    if(!this.groupStep.isEmpty()) {
+    if(this.groupStep != null && !this.groupStep.isEmpty()) {
       for(final GroupStepDto group : this.groupStep) {
-        if(!(group.getSteps()).isEmpty()) {
+        if(group.getSteps() != null && !(group.getSteps()).isEmpty()) {
           for(final StepDto step : group.getSteps()) {
-            if(!(step.getConsumes()).isEmpty()) {
+            if(step.getConsumes() != null && !(step.getConsumes()).isEmpty()) {
               for(final ConsumesDto consume : step.getConsumes()) {
                 if(consume.getActualCost() != null) {
                   planedCost = planedCost.add(consume.getActualCost());

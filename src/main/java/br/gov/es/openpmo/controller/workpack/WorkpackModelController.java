@@ -91,7 +91,7 @@ public class WorkpackModelController {
   ) {
     final WorkpackModel workpackModel = this.workpackModelService.findById(id);
 
-    if(!(workpackModel.getProperties()).isEmpty()) {
+    if(workpackModel.getProperties() != null && !(workpackModel.getProperties()).isEmpty()) {
       workpackModel.setProperties(new LinkedHashSet<>(workpackModel.getProperties().stream().sorted(Comparator.comparing(
         PropertyModel::getSortIndex)).collect(
         Collectors.toCollection(LinkedHashSet::new))));

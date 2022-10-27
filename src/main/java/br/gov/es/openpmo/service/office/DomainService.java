@@ -106,7 +106,7 @@ public class DomainService {
   }
 
   public void delete(final Domain domain) {
-    if(!(domain.getLocalities()).isEmpty()) {
+    if(domain.getLocalities() != null && !(domain.getLocalities()).isEmpty()) {
       throw new NegocioException(DOMAIN_DELETE_RELATIONSHIP_ERROR);
     }
     this.domainRepository.delete(domain);

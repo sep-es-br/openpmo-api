@@ -140,7 +140,7 @@ public class StakeholderService {
 
     final Workpack workpack = this.serviceWorkpack.findById(request.getIdWorkpack());
 
-    if(!(request.getRoles()).isEmpty()) {
+    if(request.getRoles() != null && !(request.getRoles()).isEmpty()) {
       request.getRoles().forEach(role -> this.repository.save(
         this.buildIsStakeholderIn(
           person,
@@ -153,7 +153,7 @@ public class StakeholderService {
         )));
     }
 
-    if(!(request.getPermissions()).isEmpty()) {
+    if(request.getPermissions() != null && !(request.getPermissions()).isEmpty()) {
       this.saveIsInContactBook(request, person);
       request.getPermissions().forEach(permission -> this.workpackPermissionRepository.save(
         this.buildCanAccessWorkpack(
@@ -327,7 +327,7 @@ public class StakeholderService {
       }
     }
 
-    if(!(request.getRoles()).isEmpty()) {
+    if(request.getRoles() != null && !(request.getRoles()).isEmpty()) {
       request.getRoles().forEach(role -> {
         if(stakeholderIns.stream().noneMatch(
           rb -> rb.getRole() != null && rb.getRole().equals(role.getRole()))) {
@@ -354,7 +354,7 @@ public class StakeholderService {
       }
     });
 
-    if(!(request.getPermissions()).isEmpty()) {
+    if(request.getPermissions() != null && !(request.getPermissions()).isEmpty()) {
       request.getPermissions().forEach(permission -> {
         if(this.isNewWorkpackPermission(canAccessWorkpacks, permission)) {
           this.saveIsInContactBook(request, person);
@@ -451,7 +451,7 @@ public class StakeholderService {
         this.repository.delete(r);
       }
     });
-    if(!(request.getRoles()).isEmpty()) {
+    if(request.getRoles() != null && !(request.getRoles()).isEmpty()) {
       request.getRoles().forEach(role -> {
         if(rolesBd.stream().noneMatch(rb -> rb.getRole() != null && rb.getRole().equals(role.getRole()))) {
           this.repository.save(

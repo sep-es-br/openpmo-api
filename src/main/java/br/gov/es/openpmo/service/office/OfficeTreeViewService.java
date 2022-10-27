@@ -39,7 +39,7 @@ public class OfficeTreeViewService {
   }
 
   private static boolean hasChildren(final Workpack workpack) {
-    return !(workpack.getChildren()).isEmpty();
+    return (workpack.getChildren() != null && !(workpack.getChildren()).isEmpty());
   }
 
   public OfficeTreeViewDto findOfficeTreeViewById(final Long idOffice) {

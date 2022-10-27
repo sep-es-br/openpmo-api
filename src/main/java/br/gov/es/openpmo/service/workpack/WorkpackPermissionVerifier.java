@@ -141,7 +141,7 @@ public class WorkpackPermissionVerifier {
     if(permissionsWorkpack != null && !permissionsWorkpack.isEmpty()) {
       return permissionsWorkpack.stream().filter(permission -> permission.getIdPlan().equals(idPlan)).collect(Collectors.toList());
     }
-    return (permissionsPlan).isEmpty() ? permissionsOffice : permissionsPlan;
+    return (permissionsPlan == null || permissionsPlan.isEmpty()) ? permissionsOffice : permissionsPlan;
   }
 
   private List<PermissionDto> verifyLinkedPermission(

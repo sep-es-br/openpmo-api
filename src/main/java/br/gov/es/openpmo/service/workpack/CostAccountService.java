@@ -95,7 +95,7 @@ public class CostAccountService {
     if(costAccount.getWorkpack() != null) {
       dto.setIdWorkpack(costAccount.getWorkpackId());
     }
-    if(!(costAccount.getProperties()).isEmpty()) {
+    if(costAccount.getProperties() != null && !(costAccount.getProperties()).isEmpty()) {
       dto.setProperties(this.getPropertiesDto(costAccount.getProperties(), dto));
     }
     return dto;
@@ -127,7 +127,7 @@ public class CostAccountService {
 
   private List<CostAccount> fetchCostAccountFromWorkpack(final Workpack workpack) {
     final List<CostAccount> costs = new ArrayList<>();
-    if(!(workpack.getCosts()).isEmpty()) {
+    if(workpack.getCosts() != null && !(workpack.getCosts()).isEmpty()) {
       costs.addAll(workpack.getCosts());
     }
     if(workpack.getParent() != null) {
@@ -159,7 +159,7 @@ public class CostAccountService {
 
     this.maybeSetWorkpackNameData(costAccountDto, costAccount.getWorkpackId());
 
-    if(!(costAccount.getProperties()).isEmpty()) {
+    if(costAccount.getProperties() != null && !(costAccount.getProperties()).isEmpty()) {
       costAccountDto.setProperties(
         this.getPropertiesDto(costAccount.getProperties(), costAccountDto));
     }
@@ -206,7 +206,7 @@ public class CostAccountService {
     final Collection<? extends Property> properties,
     final CostAccountDto costAccountDto
   ) {
-    if((properties).isEmpty()) {return null;}
+    if(properties == null || properties.isEmpty()) {return null;}
     costAccountDto.setModels(new ArrayList<>());
     final List<PropertyDto> list = new ArrayList<>();
     properties.forEach(property -> {

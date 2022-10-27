@@ -259,7 +259,7 @@ public class StepService {
       stepUpdate.setPeriodFromStart(step.getPeriodFromStart());
     }
 
-    if(!(stepUpdate.getConsumes()).isEmpty()) {
+    if(stepUpdate.getConsumes() != null && !(stepUpdate.getConsumes()).isEmpty()) {
       final Set<Consumes> consumesDelete = stepUpdate.getConsumes().stream()
         .filter(consumes -> step.getConsumes() == null ||
                             step.getConsumes().stream().noneMatch(c -> Objects.nonNull(c.getId()) && c.getId().equals(consumes.getId())))
@@ -270,13 +270,13 @@ public class StepService {
       }
     }
 
-    if(!(step.getConsumes()).isEmpty()) {
+    if(step.getConsumes() != null && !(step.getConsumes()).isEmpty()) {
       for(final Consumes consumes : step.getConsumes()) {
         if(consumes.getId() == null) {
           if(consumes.getCostAccount() == null || consumes.getCostAccount().getId() == null) {
             throw new NegocioException(CONSUMES_COST_ACCOUNT_NOT_NULL);
           }
-          if(!(stepUpdate.getConsumes()).isEmpty() || stepUpdate.getConsumes().stream()
+          if((stepUpdate.getConsumes() != null && !(stepUpdate.getConsumes()).isEmpty()) || stepUpdate.getConsumes().stream()
             .anyMatch(c -> Objects.nonNull(c.getCostAccount()) && Objects.nonNull(c.getCostAccount().getId())
                            && c.getCostAccount().getId().equals(consumes.getCostAccount().getId()))) {
             throw new NegocioException(CONSUMES_COST_ACCOUNT_ALREADY_EXISTS);
@@ -290,7 +290,7 @@ public class StepService {
           stepUpdate.getConsumes().add(consumes);
           continue;
         }
-        if(!(stepUpdate.getConsumes()).isEmpty()) {
+        if(stepUpdate.getConsumes() != null && !(stepUpdate.getConsumes()).isEmpty()) {
           final Consumes consumesUpdate = stepUpdate.getConsumes().stream()
             .filter(c -> Objects.nonNull(c.getId()) && c.getId().equals(consumes.getId())).findFirst()
             .orElse(null);
