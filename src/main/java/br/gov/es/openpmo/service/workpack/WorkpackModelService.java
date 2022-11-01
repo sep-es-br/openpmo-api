@@ -38,7 +38,7 @@ import br.gov.es.openpmo.utils.WorkpackModelInstanceType;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
+
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -401,7 +401,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
     if(workpackModel != null) {
       workpackModel.dashboardConfiguration(workpackModelParamDto.getDashboardConfiguration());
       workpackModel.setProperties(propertyModels);
-      if(workpackModelParamDto.getSortBy() != null && !CollectionUtils.isEmpty(workpackModel.getProperties())) {
+      if(workpackModelParamDto.getSortBy() != null && workpackModel.getProperties() != null && !(workpackModel.getProperties()).isEmpty()) {
         workpackModel.setSortBy(
           workpackModel.getProperties().stream()
             .filter(p -> p.getSession() == Session.PROPERTIES)
@@ -438,7 +438,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
       workpackModel.setParent(null);
     }
     List<? extends PropertyModelDto> properties = null;
-    if(!CollectionUtils.isEmpty(workpackModel.getProperties())) {
+    if(workpackModel.getProperties() != null && !(workpackModel.getProperties()).isEmpty()) {
       properties = this.getPropertyModelDto(workpackModel);
     }
     if(workpackModel.getSortBy() != null) {
@@ -457,9 +457,10 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
   }
 
   private List<? extends PropertyModelDto> getPropertyModelDto(final WorkpackModel workpackModel) {
-    if(!CollectionUtils.isEmpty(workpackModel.getProperties())) {
-      final List<PropertyModelDto> list = new ArrayList<>();
-      workpackModel.getProperties().forEach(propertyModel -> list.add(this.getPropertyModelDto(propertyModel)));
+    if(workpackModel.getProperties() != null && !(workpackModel.getProperties()).isEmpty()) {
+      List<PropertyModelDto> list = new ArrayList<>();
+      workpackModel.getProperties()
+        .forEach(propertyModel -> list.add(this.getPropertyModelDto(propertyModel)));
       list.sort(Comparator.comparing(PropertyModelDto::getSortIndex));
       return list;
     }
@@ -494,7 +495,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
       case TYPE_NAME_MODEL_LOCALITY_SELECTION:
         final LocalitySelectionModelDto localityDto = LocalitySelectionModelDto.of(propertyModel);
         final LocalitySelectionModel localityModel = (LocalitySelectionModel) propertyModel;
-        if(!CollectionUtils.isEmpty(localityModel.getDefaultValue())) {
+        if(localityModel.getDefaultValue() != null && !(localityModel.getDefaultValue()).isEmpty()) {
           localityDto.setDefaults(new ArrayList<>());
           localityModel.getDefaultValue().forEach(l -> localityDto.getDefaults().add(l.getId()));
         }
@@ -505,7 +506,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
       case TYPE_NAME_MODEL_ORGANIZATION_SELECTION:
         final OrganizationSelectionModelDto organizationDto = OrganizationSelectionModelDto.of(propertyModel);
         final OrganizationSelectionModel organizationModel = (OrganizationSelectionModel) propertyModel;
-        if(!CollectionUtils.isEmpty(organizationModel.getDefaultValue())) {
+        if(organizationModel.getDefaultValue() != null && !(organizationModel.getDefaultValue().isEmpty())) {
           organizationDto.setDefaults(new ArrayList<>());
           organizationModel.getDefaultValue().forEach(
             l -> organizationDto.getDefaults().add(l.getId()));
@@ -668,7 +669,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
         if(localityDto.getIdDomain() != null) {
           localitySelectionModel.setDomain(this.domainService.findById(localityDto.getIdDomain()));
         }
-        if(!CollectionUtils.isEmpty(localityDto.getDefaults())) {
+        if(localityDto.getDefaults() != null && !(localityDto.getDefaults()).isEmpty()) {
           localitySelectionModel.setDefaultValue(new HashSet<>());
           localityDto.getDefaults().forEach(
             l -> localitySelectionModel.getDefaultValue().add(this.localityService.findById(l)));
@@ -681,7 +682,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
           OrganizationSelectionModel.class
         );
         final OrganizationSelectionModelDto organizationDto = (OrganizationSelectionModelDto) property;
-        if(!CollectionUtils.isEmpty(organizationDto.getDefaults())) {
+        if(organizationDto.getDefaults() != null && !(organizationDto.getDefaults()).isEmpty()) {
           organizationSelectionModel.setDefaultValue(new HashSet<>());
           organizationDto.getDefaults().forEach(
             o -> organizationSelectionModel.getDefaultValue().add(this.organizationService.findById(o)));

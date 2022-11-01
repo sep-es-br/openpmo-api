@@ -11,7 +11,7 @@ import br.gov.es.openpmo.repository.custom.filters.FindAllDomainUsingCustomFilte
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -106,7 +106,7 @@ public class DomainService {
   }
 
   public void delete(final Domain domain) {
-    if(!CollectionUtils.isEmpty(domain.getLocalities())) {
+    if(domain.getLocalities() != null && !(domain.getLocalities()).isEmpty()) {
       throw new NegocioException(DOMAIN_DELETE_RELATIONSHIP_ERROR);
     }
     this.domainRepository.delete(domain);

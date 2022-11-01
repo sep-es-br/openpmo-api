@@ -19,7 +19,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
+
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -259,7 +259,7 @@ public class StepService {
       stepUpdate.setPeriodFromStart(step.getPeriodFromStart());
     }
 
-    if(!CollectionUtils.isEmpty(stepUpdate.getConsumes())) {
+    if(stepUpdate.getConsumes() != null && !(stepUpdate.getConsumes()).isEmpty()) {
       final Set<Consumes> consumesDelete = stepUpdate.getConsumes().stream()
         .filter(consumes -> step.getConsumes() == null ||
                             step.getConsumes().stream().noneMatch(c -> Objects.nonNull(c.getId()) && c.getId().equals(consumes.getId())))
@@ -270,13 +270,13 @@ public class StepService {
       }
     }
 
-    if(!CollectionUtils.isEmpty(step.getConsumes())) {
+    if(step.getConsumes() != null && !(step.getConsumes()).isEmpty()) {
       for(final Consumes consumes : step.getConsumes()) {
         if(consumes.getId() == null) {
           if(consumes.getCostAccount() == null || consumes.getCostAccount().getId() == null) {
             throw new NegocioException(CONSUMES_COST_ACCOUNT_NOT_NULL);
           }
-          if(!CollectionUtils.isEmpty(stepUpdate.getConsumes()) || stepUpdate.getConsumes().stream()
+          if((stepUpdate.getConsumes() != null && !(stepUpdate.getConsumes()).isEmpty()) || stepUpdate.getConsumes().stream()
             .anyMatch(c -> Objects.nonNull(c.getCostAccount()) && Objects.nonNull(c.getCostAccount().getId())
                            && c.getCostAccount().getId().equals(consumes.getCostAccount().getId()))) {
             throw new NegocioException(CONSUMES_COST_ACCOUNT_ALREADY_EXISTS);
@@ -290,7 +290,7 @@ public class StepService {
           stepUpdate.getConsumes().add(consumes);
           continue;
         }
-        if(!CollectionUtils.isEmpty(stepUpdate.getConsumes())) {
+        if(stepUpdate.getConsumes() != null && !(stepUpdate.getConsumes()).isEmpty()) {
           final Consumes consumesUpdate = stepUpdate.getConsumes().stream()
             .filter(c -> Objects.nonNull(c.getId()) && c.getId().equals(consumes.getId())).findFirst()
             .orElse(null);

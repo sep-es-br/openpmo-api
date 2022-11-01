@@ -24,7 +24,7 @@ import br.gov.es.openpmo.service.ui.BreadcrumbPlanHelper;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -190,7 +190,7 @@ public class PlanService implements BreadcrumbPlanHelper {
     if(officePermissions.stream().anyMatch(c -> PermissionLevelEnum.EDIT.equals(c.getLevel()))) {
       return officePermissions;
     }
-    return CollectionUtils.isEmpty(planPermissions) ? officePermissions : planPermissions;
+    return (planPermissions == null || planPermissions.isEmpty()) ? officePermissions : planPermissions;
   }
 
   private List<PermissionDto> getPermissionReadWorkpack(

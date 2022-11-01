@@ -24,7 +24,7 @@ import br.gov.es.openpmo.service.actors.PersonService;
 import br.gov.es.openpmo.service.office.OfficeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
+
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -220,7 +220,7 @@ public class OfficePermissionService {
         this.delete(permissionDatabase);
       }
     });
-    if(!CollectionUtils.isEmpty(request.getPermissions())) {
+    if(request.getPermissions() != null && !(request.getPermissions()).isEmpty()) {
       request.getPermissions().forEach(permission -> {
         if(permission.getId() == null && officesPermissionsDataBase.stream().noneMatch(
           pbd -> permission.getRole() != null && permission.getRole().equals(pbd.getRole()))) {

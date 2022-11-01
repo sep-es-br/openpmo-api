@@ -12,7 +12,7 @@ import br.gov.es.openpmo.repository.custom.filters.FindAllLocalityUsingCustomFil
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -101,7 +101,7 @@ public class LocalityService {
     }
     if(locality.getParent() != null) {
       final Locality parent = this.findById(locality.getParent().getId());
-      if(!CollectionUtils.isEmpty(parent.getChildren())) {
+      if(parent.getChildren() != null && !(parent.getChildren()).isEmpty()) {
         if(locality.getId() != null && parent.getChildren().stream().anyMatch(l -> l.getId() != null && !l.getId().equals(
           locality.getId()) && !l.getType().equals(locality.getType()))) {
           throw new NegocioException(LOCALITY_TYPE_ERROR);
@@ -182,7 +182,7 @@ public class LocalityService {
   }
 
   public void delete(final Locality locality) {
-    if(!CollectionUtils.isEmpty(locality.getChildren())) {
+    if(locality.getChildren() != null && !(locality.getChildren()).isEmpty()) {
       throw new NegocioException(LOCALITY_DELETE_RELATIONSHIP_ERROR);
     }
     this.localityRepository.delete(locality);

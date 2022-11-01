@@ -15,7 +15,7 @@ public interface PlanRepository extends Neo4jRepository<Plan, Long>, CustomRepos
   @Query("MATCH (p: Plan)-[r:IS_ADOPTED_BY]->(o:Office) "
          + ", (p)-[sb:IS_STRUCTURED_BY]->(pm:PlanModel) "
          + "WHERE id(o)= $id RETURN p,r,o,sb,pm")
-  List<Plan> findAllInOffice(@Param("id") Long id);
+  List<Plan> findAllInOffice(Long id);
 
   @Query("MATCH (workpack:Workpack)-[belongsTo:BELONGS_TO]->(plan:Plan) " +
          "MATCH (plan)-[adoptedBy:IS_ADOPTED_BY]->(office:Office) " +

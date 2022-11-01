@@ -45,7 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
+
 
 import javax.validation.Valid;
 import java.time.LocalDate;
@@ -140,7 +140,7 @@ public class StakeholderService {
 
     final Workpack workpack = this.serviceWorkpack.findById(request.getIdWorkpack());
 
-    if(!CollectionUtils.isEmpty(request.getRoles())) {
+    if(request.getRoles() != null && !(request.getRoles()).isEmpty()) {
       request.getRoles().forEach(role -> this.repository.save(
         this.buildIsStakeholderIn(
           person,
@@ -153,7 +153,7 @@ public class StakeholderService {
         )));
     }
 
-    if(!CollectionUtils.isEmpty(request.getPermissions())) {
+    if(request.getPermissions() != null && !(request.getPermissions()).isEmpty()) {
       this.saveIsInContactBook(request, person);
       request.getPermissions().forEach(permission -> this.workpackPermissionRepository.save(
         this.buildCanAccessWorkpack(
@@ -327,7 +327,7 @@ public class StakeholderService {
       }
     }
 
-    if(!CollectionUtils.isEmpty(request.getRoles())) {
+    if(request.getRoles() != null && !(request.getRoles()).isEmpty()) {
       request.getRoles().forEach(role -> {
         if(stakeholderIns.stream().noneMatch(
           rb -> rb.getRole() != null && rb.getRole().equals(role.getRole()))) {
@@ -354,7 +354,7 @@ public class StakeholderService {
       }
     });
 
-    if(!CollectionUtils.isEmpty(request.getPermissions())) {
+    if(request.getPermissions() != null && !(request.getPermissions()).isEmpty()) {
       request.getPermissions().forEach(permission -> {
         if(this.isNewWorkpackPermission(canAccessWorkpacks, permission)) {
           this.saveIsInContactBook(request, person);
@@ -451,7 +451,7 @@ public class StakeholderService {
         this.repository.delete(r);
       }
     });
-    if(!CollectionUtils.isEmpty(request.getRoles())) {
+    if(request.getRoles() != null && !(request.getRoles()).isEmpty()) {
       request.getRoles().forEach(role -> {
         if(rolesBd.stream().noneMatch(rb -> rb.getRole() != null && rb.getRole().equals(role.getRole()))) {
           this.repository.save(

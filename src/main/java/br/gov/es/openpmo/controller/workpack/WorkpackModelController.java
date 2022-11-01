@@ -20,7 +20,7 @@ import br.gov.es.openpmo.service.workpack.WorkpackModelService;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.CollectionUtils;
+
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -91,7 +91,7 @@ public class WorkpackModelController {
   ) {
     final WorkpackModel workpackModel = this.workpackModelService.findById(id);
 
-    if(!CollectionUtils.isEmpty(workpackModel.getProperties())) {
+    if(workpackModel.getProperties() != null && !(workpackModel.getProperties()).isEmpty()) {
       workpackModel.setProperties(new LinkedHashSet<>(workpackModel.getProperties().stream().sorted(Comparator.comparing(
         PropertyModel::getSortIndex)).collect(
         Collectors.toCollection(LinkedHashSet::new))));

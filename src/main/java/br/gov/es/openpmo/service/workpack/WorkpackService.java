@@ -52,7 +52,7 @@ import br.gov.es.openpmo.service.ui.BreadcrumbWorkpackHelper;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
+
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -576,7 +576,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final Collection<Property> propertiesToUpdate,
     final Collection<? extends Property> properties
   ) {
-    if(!CollectionUtils.isEmpty(properties)) {
+    if(properties != null && !properties.isEmpty()) {
       for(final Property property : properties) {
         if(property.getId() == null) {
           if(propertiesToUpdate == null) {
@@ -717,7 +717,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
       }
     }
 
-    if(!CollectionUtils.isEmpty(workpack.getProperties())) {
+    if(workpack.getProperties() != null && !(workpack.getProperties()).isEmpty()) {
       properties = this.getPropertiesDto(workpack.getProperties());
       propertySet = new HashSet<>(workpack.getProperties());
       workpack.setProperties(null);
@@ -844,7 +844,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
   }
 
   public void delete(final Workpack workpack) {
-    if(!CollectionUtils.isEmpty(workpack.getChildren())) {
+    if(workpack.getChildren() != null && !(workpack.getChildren()).isEmpty()) {
       throw new NegocioException(WORKPACK_DELETE_RELATIONSHIP_ERROR);
     }
 
@@ -940,7 +940,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
   }
 
   private List<? extends PropertyDto> getPropertiesDto(final Collection<? extends Property> properties) {
-    if(!CollectionUtils.isEmpty(properties)) {
+    if(properties != null && !properties.isEmpty()) {
       final List<PropertyDto> list = new ArrayList<>();
       properties.parallelStream().forEach(property -> {
         final String typeName = property.getClass().getTypeName();
@@ -1067,7 +1067,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
           childrenChild = this.getChildren(workpack.getChildren());
         }
         workpack.setChildren(null);
-        if(!CollectionUtils.isEmpty(workpack.getProperties())) {
+        if(workpack.getProperties() != null && !(workpack.getProperties()).isEmpty()) {
           properties = this.getPropertiesDto(workpack.getProperties());
           propertySet = new HashSet<>(workpack.getProperties());
           workpack.setProperties(null);
