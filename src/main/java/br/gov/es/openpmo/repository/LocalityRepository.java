@@ -12,7 +12,7 @@ import java.util.Optional;
 
 public interface LocalityRepository extends Neo4jRepository<Locality, Long>, CustomRepository {
 
-  @Query("MATCH (d:Domain)<-[:BELONGS_TO]-(l:Locality)" + " WHERE id(d) = {0} RETURN l, "
+  @Query("MATCH (d:Domain)<-[:BELONGS_TO]-(l:Locality)" + " WHERE id(d) = $idDomain RETURN l, "
          + " [ [(l)<-[btl:IS_IN]-(lc:Locality)-[:BELONGS_TO]->(d) | [btl, lc] ] " + "]")
   Collection<Locality> findAllByDomain(@Param("idDomain") Long idDomain);
 
@@ -30,7 +30,7 @@ public interface LocalityRepository extends Neo4jRepository<Locality, Long>, Cus
   Collection<Locality> findAllByDomainFirstLevel(@Param("idDomain") Long idDomain);
 
   @Query("MATCH (d:Domain)<-[]-(l:Locality) " +
-         "WHERE id(d)={0} AND NOT (l)-[:IS_IN*1..]->(:Locality) " +
+         "WHERE id(d)=$idDomain AND NOT (l)-[:IS_IN*1..]->(:Locality) " +
          "RETURN l, " +
          "    [ [(l)<-[btl:IS_IN*1..]-(lc:Locality)-[:BELONGS_TO]->(d) | [btl, lc] ] " +
          "]")
