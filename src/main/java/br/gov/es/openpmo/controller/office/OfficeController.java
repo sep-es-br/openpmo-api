@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.controller.office;
 
+import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.office.OfficeDto;
@@ -11,6 +12,7 @@ import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.office.OfficeService;
 import br.gov.es.openpmo.service.office.OfficeTreeViewService;
+import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import io.swagger.annotations.Api;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,18 +33,21 @@ public class OfficeController {
   private final OfficeTreeViewService officeTreeViewService;
   private final ModelMapper modelMapper;
   private final TokenService tokenService;
+  private final ICanAccessService canAccessService;
 
   @Autowired
   public OfficeController(
     final OfficeService officeService,
     final OfficeTreeViewService officeTreeViewService,
     final ModelMapper modelMapper,
-    final TokenService tokenService
+    final TokenService tokenService,
+    final ICanAccessService canAccessService 
   ) {
     this.officeService = officeService;
     this.officeTreeViewService = officeTreeViewService;
     this.modelMapper = modelMapper;
     this.tokenService = tokenService;
+    this.canAccessService = canAccessService;
   }
 
   @GetMapping
@@ -84,19 +89,23 @@ public class OfficeController {
   }
 
   @PostMapping
-  public ResponseEntity<ResponseBase<EntityDto>> save(@Valid @RequestBody final OfficeStoreDto officeStoreDto) {
+  public ResponseEntity<ResponseBase<EntityDto>> save(@Valid @RequestBody final OfficeStoreDto officeStoreDto,
+    @Authorization final String authorization) {
+
+    this.canAccessService.ensureIsAdministrator(authorization);
+   
     final Office office = this.officeService.save(this.getOffice(officeStoreDto));
     final ResponseBase<EntityDto> entity = new ResponseBase<EntityDto>().setData(new EntityDto(office.getId())).setSuccess(
       true);
     return ResponseEntity.status(200).body(entity);
   }
-
-  private Office getOffice(final Object object) {
-    return this.modelMapper.map(object, Office.class);
-  }
-
+  
   @PutMapping
-  public ResponseEntity<ResponseBase<EntityDto>> update(@RequestBody @Valid final OfficeUpdateDto officeUpdateDto) {
+  public ResponseEntity<ResponseBase<EntityDto>> update(@RequestBody @Valid final OfficeUpdateDto officeUpdateDto,
+    @Authorization final String authorization) {
+    
+    this.canAccessService.ensureIsAdministrator(authorization);
+    
     final Office office = this.officeService.save(this.getOffice(officeUpdateDto));
     final ResponseBase<EntityDto> entity = new ResponseBase<EntityDto>().setData(new EntityDto(office.getId())).setSuccess(
       true);
@@ -104,10 +113,20 @@ public class OfficeController {
   }
 
   @DeleteMapping("{id}")
-  public ResponseEntity<Void> delete(@PathVariable final Long id) {
+  public ResponseEntity<Void> delete(@PathVariable final Long id,
+    @Authorization final String authorization) {
+
+    this.canAccessService.ensureIsAdministrator(authorization);
+    
     final Office office = this.officeService.findById(id);
     this.officeService.delete(office);
     return ResponseEntity.ok().build();
   }
+
+
+  private Office getOffice(final Object object) {
+    return this.modelMapper.map(object, Office.class);
+  }
+
 
 }
