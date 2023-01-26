@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
@@ -21,24 +22,24 @@ public interface ICCBMemberController {
 
   @GetMapping
   Response<CCBMemberResponse> getCCBMember(
-    @RequestParam("id-person") Long idPerson,
-    @RequestParam("id-workpack") Long idWorkpack,
-    @RequestParam("id-plan") Long idPlan
-  );
+      @RequestParam("id-person") Long idPerson,
+      @RequestParam("id-workpack") Long idWorkpack,
+      @RequestParam("id-plan") Long idPlan);
 
   @Transactional
   @PostMapping
-  Response<Void> createRelationship(@RequestBody CCBMemberRequest request);
+  Response<Void> createRelationship(@RequestBody CCBMemberRequest request,
+      @RequestHeader(name = "Authorization") final String authorization);
 
   @Transactional
   @PutMapping
-  Response<Void> updateRelationship(@RequestBody CCBMemberRequest request);
+  Response<Void> updateRelationship(@RequestBody CCBMemberRequest request,
+      @RequestHeader(name = "Authorization") final String authorization);
 
   @Transactional
   @DeleteMapping
   Response<Void> delete(
-    @RequestParam("id-person") Long idPerson,
-    @RequestParam("id-workpack") Long idWorkpack
-  );
+      @RequestParam("id-person") Long idPerson,
+      @RequestParam("id-workpack") Long idWorkpack, @RequestHeader(name = "Authorization") final String authorization);
 
 }

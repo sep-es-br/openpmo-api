@@ -9,6 +9,7 @@ import br.gov.es.openpmo.model.journals.JournalType;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.journals.JournalCreator;
 import br.gov.es.openpmo.service.journals.JournalFinder;
+import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.utils.ResponseHandler;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,30 +42,32 @@ public class JournalController {
 
   private final JournalCreator journalCreator;
 
+  private final ICanAccessService canAccessService;
+
   @Autowired
   public JournalController(
-    final TokenService tokenService,
-    final ResponseHandler responseHandler,
-    final JournalFinder journalFinder,
-    final JournalCreator journalCreator
-  ) {
+      final TokenService tokenService,
+      final ResponseHandler responseHandler,
+      final JournalFinder journalFinder,
+      final JournalCreator journalCreator,
+      final ICanAccessService canAccessService) {
     this.tokenService = tokenService;
     this.responseHandler = responseHandler;
     this.journalFinder = journalFinder;
     this.journalCreator = journalCreator;
+    this.canAccessService = canAccessService;
   }
 
   @GetMapping
   public PageResponse<JournalResponse> getJournals(
-    @RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") final LocalDate from,
-    @RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") final LocalDate to,
-    @RequestParam(required = false) final List<Integer> scope,
-    @RequestParam final List<JournalType> type,
-    final UriComponentsBuilder uriComponentsBuilder,
-    final Pageable pageable
-  ) {
-    final Page<JournalResponse> responsePage =
-      this.journalFinder.getAll(from, to, type, scope, uriComponentsBuilder, pageable);
+      @RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") final LocalDate from,
+      @RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") final LocalDate to,
+      @RequestParam(required = false) final List<Integer> scope,
+      @RequestParam final List<JournalType> type,
+      final UriComponentsBuilder uriComponentsBuilder,
+      final Pageable pageable) {
+    final Page<JournalResponse> responsePage = this.journalFinder.getAll(from, to, type, scope, uriComponentsBuilder,
+        pageable);
 
     return PageResponse.of(responsePage);
   }
@@ -72,9 +75,10 @@ public class JournalController {
   @Transactional
   @PostMapping
   public Response<EntityDto> newInformation(
-    @RequestBody final JournalRequest journalRequest,
-    @RequestHeader(name = "Authorization") final String authorization
-  ) {
+      @RequestBody final JournalRequest journalRequest,
+      @RequestHeader(name = "Authorization") final String authorization) {
+
+    this.canAccessService.ensureCanEditResource(journalRequest.getWorkpackId(), authorization);
     final Long idPerson = this.tokenService.getUserId(authorization);
     final EntityDto information = this.journalCreator.newInformation(journalRequest, idPerson);
     return this.responseHandler.success(information);

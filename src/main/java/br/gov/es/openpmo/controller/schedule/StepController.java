@@ -7,6 +7,7 @@ import br.gov.es.openpmo.dto.schedule.StepStoreParamDto;
 import br.gov.es.openpmo.dto.schedule.StepUpdateDto;
 import br.gov.es.openpmo.model.schedule.Step;
 import br.gov.es.openpmo.model.workpacks.Deliverable;
+import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.schedule.StepService;
 import br.gov.es.openpmo.service.schedule.UpdateStatusService;
 import io.swagger.annotations.Api;
@@ -35,13 +36,16 @@ public class StepController {
 
   private final UpdateStatusService status;
 
+  private final ICanAccessService canAccessService;
+
   @Autowired
   public StepController(
-    final StepService stepService,
-    final UpdateStatusService status
-  ) {
+      final StepService stepService,
+      final UpdateStatusService status,
+      final ICanAccessService canAccessService) {
     this.stepService = stepService;
     this.status = status;
+    this.canAccessService = canAccessService;
   }
 
   @GetMapping("/{id}")
@@ -52,7 +56,10 @@ public class StepController {
   }
 
   @PutMapping
-  public ResponseEntity<ResponseBase<EntityDto>> update(@RequestBody @Valid final StepUpdateDto stepUpdateDto) {
+  public ResponseEntity<ResponseBase<EntityDto>> update(@RequestBody @Valid final StepUpdateDto stepUpdateDto,
+      final String authorization) {
+
+    this.canAccessService.ensureCanEditResource(stepUpdateDto.getId(), authorization);
     final Step step = this.stepService.update(stepUpdateDto);
     final List<Deliverable> deliverables = this.status.getDeliverablesByStepId(step.getId());
     this.status.update(deliverables);
@@ -62,7 +69,10 @@ public class StepController {
   }
 
   @PostMapping
-  public ResponseEntity<Void> save(@Valid @RequestBody final StepStoreParamDto stepStoreParamDto) {
+  public ResponseEntity<Void> save(@Valid @RequestBody final StepStoreParamDto stepStoreParamDto,
+      final String authorization) {
+
+    this.canAccessService.ensureCanEditResource(stepStoreParamDto.getIdSchedule(), authorization);
     final List<Deliverable> deliverables = this.status.getDeliverablesByScheduleId(stepStoreParamDto.getIdSchedule());
     this.stepService.save(stepStoreParamDto);
     this.status.update(deliverables);
@@ -70,7 +80,9 @@ public class StepController {
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> delete(@PathVariable final Long id) {
+  public ResponseEntity<Void> delete(@PathVariable final Long id, final String authorization) {
+
+    this.canAccessService.ensureCanEditResource(id, authorization);
     final List<Deliverable> deliverables = this.status.getDeliverablesByStepId(id);
     this.stepService.delete(id);
     this.status.update(deliverables);

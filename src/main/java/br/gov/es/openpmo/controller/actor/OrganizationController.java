@@ -102,6 +102,7 @@ public class OrganizationController {
       @Authorization final String authorization) {
 
     this.canAccessService.ensureIsAdministrator(authorization);
+
     final Organization organization = this.organizationService.findById(id);
     this.organizationService.delete(organization);
     return ResponseEntity.ok().build();

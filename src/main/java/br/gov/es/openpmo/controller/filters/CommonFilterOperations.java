@@ -1,6 +1,5 @@
 package br.gov.es.openpmo.controller.filters;
 
-
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.ResponseBaseItens;
 import br.gov.es.openpmo.dto.filter.CustomFilterDto;
@@ -19,9 +18,9 @@ public abstract class CommonFilterOperations {
 
   @DeleteMapping("/{idCustomFilter}")
   public ResponseEntity<ResponseBase<Void>> delete(
-    @PathVariable final Long idCustomFilter,
-    @RequestHeader("Authorization") final String authorization
-  ) {
+      @PathVariable final Long idCustomFilter,
+      @RequestHeader("Authorization") final String authorization) {
+
     final Long idPerson = this.getTokenService().getUserId(authorization);
     this.getCustomFilterService().delete(idCustomFilter, idPerson);
     return ResponseEntity.ok(ResponseBase.of());
@@ -33,8 +32,7 @@ public abstract class CommonFilterOperations {
 
   @GetMapping
   public ResponseEntity<ResponseBaseItens<CustomFilterDto>> getCombo(
-    @RequestHeader(name = "Authorization") final String authorization
-  ) {
+      @RequestHeader(name = "Authorization") final String authorization) {
     final Long idPerson = this.getTokenService().getUserId(authorization);
     final List<CustomFilterDto> customFilterItens = this.getCustomFilterService().getCombo(this.getFilter(), idPerson);
     return ResponseEntity.ok(ResponseBaseItens.of(customFilterItens));
@@ -44,9 +42,8 @@ public abstract class CommonFilterOperations {
 
   @GetMapping("/{idCustomFilter}")
   public ResponseEntity<ResponseBase<CustomFilterDto>> getById(
-    @PathVariable final Long idCustomFilter,
-    @RequestHeader("Authorization") final String authorization
-  ) {
+      @PathVariable final Long idCustomFilter,
+      @RequestHeader("Authorization") final String authorization) {
     final Long idPerson = this.getTokenService().getUserId(authorization);
     final CustomFilterDto dto = this.getCustomFilterService().getById(idCustomFilter, idPerson);
     return ResponseEntity.ok(ResponseBase.of(dto));

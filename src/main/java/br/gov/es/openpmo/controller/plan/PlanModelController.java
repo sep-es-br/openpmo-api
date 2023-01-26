@@ -8,6 +8,7 @@ import br.gov.es.openpmo.dto.planmodel.PlanModelUpdateDto;
 import br.gov.es.openpmo.model.office.plan.PlanModel;
 import br.gov.es.openpmo.service.office.plan.PlanModelService;
 import br.gov.es.openpmo.service.office.plan.SharedPlanModelService;
+import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -26,25 +27,26 @@ public class PlanModelController {
 
   private final PlanModelService planModelService;
   private final SharedPlanModelService sharedPlanModelService;
+  private final ICanAccessService canAccessService;
 
   @Autowired
   public PlanModelController(
-    final PlanModelService planModelService,
-    final SharedPlanModelService sharedPlanModelService
-  ) {
+      final PlanModelService planModelService,
+      final SharedPlanModelService sharedPlanModelService,
+      final ICanAccessService canAccessService) {
     this.planModelService = planModelService;
     this.sharedPlanModelService = sharedPlanModelService;
+    this.canAccessService = canAccessService;
   }
 
   @GetMapping
   public ResponseEntity<ResponseBase<List<PlanModelDto>>> indexBase(
-    @RequestParam("id-office") final Long idOffice,
-    @RequestParam(required = false) final Long idFilter
-  ) {
+      @RequestParam("id-office") final Long idOffice,
+      @RequestParam(required = false) final Long idFilter) {
     final List<PlanModelDto> planModels = new ArrayList<>();
 
     this.planModelService.findAllInOffice(idOffice, idFilter)
-      .forEach(registro -> planModels.add(new PlanModelDto(registro)));
+        .forEach(registro -> planModels.add(new PlanModelDto(registro)));
 
     return ResponseEntity.ok(ResponseBase.of(planModels));
   }
@@ -56,7 +58,8 @@ public class PlanModelController {
   }
 
   @GetMapping("/shareds")
-  public ResponseEntity<ResponseBase<List<PlanModelDto>>> findAllSharedWithOffice(@RequestParam("id-office") final Long idOffice) {
+  public ResponseEntity<ResponseBase<List<PlanModelDto>>> findAllSharedWithOffice(
+      @RequestParam("id-office") final Long idOffice) {
     final List<PlanModelDto> sharedWithOffice = this.planModelService.findAllSharedWithOffice(idOffice);
     return ResponseEntity.ok(ResponseBase.of(sharedWithOffice));
   }
@@ -64,27 +67,37 @@ public class PlanModelController {
   @Transactional
   @PostMapping("/{idOffice}/create-from-shared/{idPlanModelShared}")
   public ResponseEntity<ResponseBase<EntityDto>> createFromShared(
-    @PathVariable("idOffice") final Long idOffice,
-    @PathVariable("idPlanModelShared") final Long idPlanModelShared
-  ) {
+      @PathVariable("idOffice") final Long idOffice,
+      @PathVariable("idPlanModelShared") final Long idPlanModelShared,
+      final String authorization) {
+
+    this.canAccessService.ensureCanEditResource(idOffice.longValue(), authorization);
+    this.canAccessService.ensureCanEditResource(idPlanModelShared.longValue(), authorization);
     final EntityDto entityDto = this.sharedPlanModelService.createFromShared(idOffice, idPlanModelShared);
     return ResponseEntity.ok(ResponseBase.of(entityDto));
   }
 
   @PostMapping
-  public ResponseEntity<ResponseBase<EntityDto>> save(@RequestBody @Valid final PlanModelStoreDto planModelStoreDto) {
+  public ResponseEntity<ResponseBase<EntityDto>> save(@RequestBody @Valid final PlanModelStoreDto planModelStoreDto, final String authorization) {
+
+    this.canAccessService.ensureCanEditResource(planModelStoreDto.getIdOffice(), authorization);
     final PlanModel planModel = this.planModelService.store(planModelStoreDto);
     return ResponseEntity.ok(ResponseBase.of(new EntityDto(planModel.getId())));
   }
 
   @PutMapping
-  public ResponseEntity<ResponseBase<EntityDto>> update(@RequestBody @Valid final PlanModelUpdateDto planModelUpdateDto) {
+  public ResponseEntity<ResponseBase<EntityDto>> update(@RequestBody @Valid final PlanModelUpdateDto planModelUpdateDto,
+      final String authorization) {
+
+    this.canAccessService.ensureCanEditResource(planModelUpdateDto.getId(), authorization);
     final PlanModel planModel = this.planModelService.update(planModelUpdateDto);
     return ResponseEntity.ok(ResponseBase.of(new EntityDto(planModel.getId())));
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> delete(@PathVariable final Long id) {
+  public ResponseEntity<Void> delete(@PathVariable final Long id, final String authorization) {
+
+    this.canAccessService.ensureCanEditResource(id, authorization);
     final PlanModel planModel = this.planModelService.findById(id);
     this.planModelService.delete(planModel);
     return ResponseEntity.ok().build();

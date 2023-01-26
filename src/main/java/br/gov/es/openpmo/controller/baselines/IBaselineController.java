@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.controller.baselines;
 
+import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.Response;
 import br.gov.es.openpmo.dto.baselines.BaselineDetailResponse;
@@ -31,7 +32,8 @@ public interface IBaselineController {
   Response<List<GetAllBaselinesResponse>> getAllByWorkpackId(@RequestParam("id-workpack") Long idWorkpack);
 
   @GetMapping("/ccb-member")
-  Response<List<GetAllCCBMemberBaselineResponse>> getAllByPersonId(@RequestHeader(name = "Authorization") String authorization);
+  Response<List<GetAllCCBMemberBaselineResponse>> getAllByPersonId(
+      @RequestHeader(name = "Authorization") String authorization);
 
   @GetMapping("/updates")
   Response<List<UpdateResponse>> getUpdates(@RequestParam("id-workpack") Long idWorkpack);
@@ -39,53 +41,47 @@ public interface IBaselineController {
   @Transactional
   @PostMapping
   Response<EntityDto> create(
-    @RequestBody IncludeBaselineRequest request,
-    @RequestHeader(name = "Authorization") String authorization
-  );
+      @RequestBody IncludeBaselineRequest request,
+      @RequestHeader(name = "Authorization") String authorization);
 
   @Transactional
   @PutMapping("/{id-baseline}/submit")
   Response<Void> submit(
-    @PathVariable("id-baseline") Long idBaseline,
-    @RequestBody SubmitBaselineRequest request,
-    String authorization
-  );
+      @PathVariable("id-baseline") Long idBaseline,
+      @RequestBody SubmitBaselineRequest request,
+      @RequestHeader(name = "Authorization") String authorization);
 
   @Transactional
   @PutMapping("/{id-baseline}")
-  Response<Void> edit(
-    @PathVariable("id-baseline") Long idBaseline,
-    @RequestBody EditDraftBaselineRequest request
-  );
+  Response<Void> edit(@PathVariable("id-baseline") Long idBaseline,
+      @RequestBody EditDraftBaselineRequest request,
+      @RequestHeader(name = "Authorization") String authorization);
 
   @Transactional
   @DeleteMapping("/{id-baseline}")
-  Response<Void> delete(@PathVariable("id-baseline") Long idBaseline);
+  Response<Void> delete(@PathVariable("id-baseline") Long idBaseline,
+      @RequestHeader(name = "Authorization") String authorization);
 
   @Transactional
   @PostMapping("/submit-cancelling")
   Response<EntityDto> submitCancelling(
-    @RequestBody @Valid SubmitCancellingRequest request,
-    @RequestHeader(name = "Authorization") String authorization
-  );
+      @RequestBody @Valid SubmitCancellingRequest request,
+      @RequestHeader(name = "Authorization") String authorization);
 
   @GetMapping("/{id-baseline}")
   Response<BaselineDetailResponse> getById(
-    @PathVariable("id-baseline") Long idBaseline
-  );
+      @PathVariable("id-baseline") Long idBaseline);
 
   @GetMapping("/{id-baseline}/ccb-member-view")
   Response<BaselineDetailCCBMemberResponse> getBaselineByIdAsCCBMemberView(
-    @RequestHeader(name = "Authorization") String authorization,
-    @PathVariable("id-baseline") Long idBaseline
-  );
+      @RequestHeader(name = "Authorization") String authorization,
+      @PathVariable("id-baseline") Long idBaseline);
 
   @Transactional
   @PutMapping("/{id-baseline}/evaluate")
   Response<Void> evaluateBaseline(
-    @RequestHeader(name = "Authorization") String authorization,
-    @PathVariable("id-baseline") Long idBaseline,
-    @RequestBody BaselineEvaluationRequest request
-  );
+      @RequestHeader(name = "Authorization") String authorization,
+      @PathVariable("id-baseline") Long idBaseline,
+      @RequestBody BaselineEvaluationRequest request);
 
 }

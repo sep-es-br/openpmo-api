@@ -11,6 +11,7 @@ import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.office.OfficeService;
 import br.gov.es.openpmo.service.office.plan.PlanModelService;
 import br.gov.es.openpmo.service.office.plan.PlanService;
+import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import io.swagger.annotations.Api;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,37 +33,37 @@ public class PlanController {
   private final PlanModelService planModelService;
   private final ModelMapper modelMapper;
   private final TokenService tokenService;
+  private final ICanAccessService canAccessService;
 
   @Autowired
   public PlanController(
-    final PlanService planService,
-    final OfficeService officeService,
-    final PlanModelService planModelService,
-    final ModelMapper modelMapper,
-    final TokenService tokenService
-  ) {
+      final PlanService planService,
+      final OfficeService officeService,
+      final PlanModelService planModelService,
+      final ModelMapper modelMapper,
+      final TokenService tokenService,
+      final ICanAccessService canAccessService) {
     this.planService = planService;
     this.officeService = officeService;
     this.planModelService = planModelService;
     this.modelMapper = modelMapper;
     this.tokenService = tokenService;
+    this.canAccessService = canAccessService;
   }
 
   @GetMapping
   public ResponseEntity<ResponseBase<List<PlanDto>>> indexBase(
-    @RequestParam("id-office") final Long idOffice,
-    @RequestParam(required = false) final Long idFilter,
-    @RequestHeader(name = "Authorization") final String autorization
-  ) {
+      @RequestParam("id-office") final Long idOffice,
+      @RequestParam(required = false) final Long idFilter,
+      @RequestHeader(name = "Authorization") final String autorization) {
     final String token = autorization.substring(7);
     final Long idUser = this.tokenService.getPersonId(token, TokenType.AUTHENTICATION);
     List<PlanDto> plans = this.planService.findAllInOffice(idOffice, idFilter)
-      .stream()
-      .map(PlanDto::of)
-      .collect(Collectors.toList());
+        .stream()
+        .map(PlanDto::of)
+        .collect(Collectors.toList());
     plans = this.planService.chekPermission(plans, idUser, idOffice);
-    final ResponseBase<List<PlanDto>> response =
-      new ResponseBase<List<PlanDto>>().setData(plans).setSuccess(true);
+    final ResponseBase<List<PlanDto>> response = new ResponseBase<List<PlanDto>>().setData(plans).setSuccess(true);
     return ResponseEntity.status(200).body(response);
   }
 
@@ -74,24 +75,34 @@ public class PlanController {
   }
 
   @PostMapping
-  public ResponseEntity<ResponseBase<EntityDto>> save(@RequestBody @Valid final PlanStoreDto planStoreDto) {
+  public ResponseEntity<ResponseBase<EntityDto>> save(@RequestBody @Valid final PlanStoreDto planStoreDto,
+      final String authorization) {
+
+    this.canAccessService.ensureCanEditResource(planStoreDto.getIdOffice(), authorization);
     Plan plan = this.modelMapper.map(planStoreDto, Plan.class);
     plan.setOffice(this.officeService.findById(planStoreDto.getIdOffice()));
     plan.setPlanModel(this.planModelService.findById(planStoreDto.getIdPlanModel()));
     plan = this.planService.save(plan);
-    final ResponseBase<EntityDto> entity = new ResponseBase<EntityDto>().setData(new EntityDto(plan.getId())).setSuccess(true);
+    final ResponseBase<EntityDto> entity = new ResponseBase<EntityDto>().setData(new EntityDto(plan.getId()))
+        .setSuccess(true);
     return ResponseEntity.status(200).body(entity);
   }
 
   @PutMapping
-  public ResponseEntity<ResponseBase<EntityDto>> update(@RequestBody @Valid final PlanUpdateDto planParamDto) {
+  public ResponseEntity<ResponseBase<EntityDto>> update(@RequestBody @Valid final PlanUpdateDto planParamDto,
+      final String authorization) {
+
+    this.canAccessService.ensureCanEditResource(planParamDto.getId(), authorization);
     final Plan plan = this.planService.save(this.planService.getPlan(planParamDto));
-    final ResponseBase<EntityDto> entity = new ResponseBase<EntityDto>().setData(new EntityDto(plan.getId())).setSuccess(true);
+    final ResponseBase<EntityDto> entity = new ResponseBase<EntityDto>().setData(new EntityDto(plan.getId()))
+        .setSuccess(true);
     return ResponseEntity.status(200).body(entity);
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> delete(@PathVariable final Long id) {
+  public ResponseEntity<Void> delete(@PathVariable final Long id, final String authorization) {
+
+    this.canAccessService.ensureCanEditResource(id, authorization);
     final Plan plan = this.planService.findById(id);
     this.planService.delete(plan);
     return ResponseEntity.ok().build();
