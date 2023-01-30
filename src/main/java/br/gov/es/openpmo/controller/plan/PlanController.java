@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.controller.plan;
 
+import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.plan.PlanDto;
@@ -76,7 +77,7 @@ public class PlanController {
 
   @PostMapping
   public ResponseEntity<ResponseBase<EntityDto>> save(@RequestBody @Valid final PlanStoreDto planStoreDto,
-      final String authorization) {
+  @Authorization final String authorization) {
 
     this.canAccessService.ensureCanEditResource(planStoreDto.getIdOffice(), authorization);
     Plan plan = this.modelMapper.map(planStoreDto, Plan.class);
@@ -90,7 +91,7 @@ public class PlanController {
 
   @PutMapping
   public ResponseEntity<ResponseBase<EntityDto>> update(@RequestBody @Valid final PlanUpdateDto planParamDto,
-      final String authorization) {
+  @Authorization final String authorization) {
 
     this.canAccessService.ensureCanEditResource(planParamDto.getId(), authorization);
     final Plan plan = this.planService.save(this.planService.getPlan(planParamDto));
@@ -100,7 +101,8 @@ public class PlanController {
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> delete(@PathVariable final Long id, final String authorization) {
+  public ResponseEntity<Void> delete(@PathVariable final Long id,  
+  @Authorization final String authorization) {
 
     this.canAccessService.ensureCanEditResource(id, authorization);
     final Plan plan = this.planService.findById(id);
