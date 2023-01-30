@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -48,13 +49,12 @@ public class WorkpackModelController {
 
   @Autowired
   public WorkpackModelController(
-    final WorkpackModelService workpackModelService,
-    final WorkpackModelReuseService workpackModelReuseService,
-    final ParentWorkpackTypeVerifier projectParentVerifier,
-    final WorkpackModelDeleteService deleteService,
-    final WorkpackModelPatchCompletedStatus patchCompletedStatus,
-    final ICanAccessService canAccessService
-  ) {
+      final WorkpackModelService workpackModelService,
+      final WorkpackModelReuseService workpackModelReuseService,
+      final ParentWorkpackTypeVerifier projectParentVerifier,
+      final WorkpackModelDeleteService deleteService,
+      final WorkpackModelPatchCompletedStatus patchCompletedStatus,
+      final ICanAccessService canAccessService) {
     this.workpackModelService = workpackModelService;
     this.workpackModelReuseService = workpackModelReuseService;
     this.projectParentVerifier = projectParentVerifier;
@@ -65,36 +65,36 @@ public class WorkpackModelController {
 
   @GetMapping
   public ResponseEntity<ResponseBaseWorkpackModel> indexBase(
-    @RequestParam("id-plan-model") final Long idPlanModel,
-    @RequestHeader("Authorization") final String authorization
-  ) {
+      @RequestParam("id-plan-model") final Long idPlanModel,
+      @RequestHeader("Authorization") final String authorization) {
     final List<WorkpackModel> list = this.workpackModelService.findAll(idPlanModel);
 
     final List<WorkpackModelDto> worList = new ArrayList<>();
 
     list.forEach(w -> worList.add(this.workpackModelService.getWorkpackModelDto(w)));
 
-    if(worList.isEmpty()) {
+    if (worList.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
     final ResponseBaseWorkpackModel base = new ResponseBaseWorkpackModel()
-      .setData(worList)
-      .setMessage("Sucesso")
-      .setSuccess(true);
+        .setData(worList)
+        .setMessage("Sucesso")
+        .setSuccess(true);
     return ResponseEntity.status(200).body(base);
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<ResponseBaseWorkpackModelDetail> find(
-    @PathVariable final Long id,
-    @RequestHeader("Authorization") final String authorization
-  ) {
+      @PathVariable final Long id,
+      @RequestHeader("Authorization") final String authorization) {
     final WorkpackModel workpackModel = this.workpackModelService.findById(id);
 
-    if(workpackModel.getProperties() != null && !(workpackModel.getProperties()).isEmpty()) {
-      workpackModel.setProperties(new LinkedHashSet<>(workpackModel.getProperties().stream().sorted(Comparator.comparing(
-        PropertyModel::getSortIndex)).collect(
-        Collectors.toCollection(LinkedHashSet::new))));
+    if (workpackModel.getProperties() != null && !(workpackModel.getProperties()).isEmpty()) {
+      workpackModel.setProperties(new LinkedHashSet<>(workpackModel.getProperties().stream()
+          .sorted(Comparator.comparing(
+              PropertyModel::getSortIndex))
+          .collect(
+              Collectors.toCollection(LinkedHashSet::new))));
     }
     final WorkpackModelDetailDto modelDetailDto = this.workpackModelService.getWorkpackModelDetailDto(workpackModel);
     return ResponseEntity.ok(success(modelDetailDto));
@@ -102,9 +102,12 @@ public class WorkpackModelController {
 
   @PostMapping
   public ResponseEntity<ResponseBase<EntityDto>> save(
-    @RequestBody @Valid final WorkpackModelParamDto workpackModelParamDto,
-    @RequestHeader("Authorization") final String authorization
-  ) {
+      @RequestBody @Valid final WorkpackModelParamDto workpackModelParamDto,
+      @RequestHeader("Authorization") final String authorization) {
+
+    this.canAccessService.ensureCanAccessManagementOrSelfResource(
+        Arrays.asList(workpackModelParamDto.getId()), authorization);
+
     WorkpackModel workpackModel = this.workpackModelService.getWorkpackModel(workpackModelParamDto);
     workpackModel = this.workpackModelService.save(workpackModel, workpackModelParamDto.getIdParent());
     return ResponseEntity.ok(ResponseBase.of(new EntityDto(workpackModel.getId())));
@@ -112,9 +115,12 @@ public class WorkpackModelController {
 
   @PutMapping
   public ResponseEntity<ResponseBase<EntityDto>> update(
-    @RequestBody @Valid final WorkpackModelParamDto workpackModelParamDto,
-    @RequestHeader("Authorization") final String authorization
-  ) {
+      @RequestBody @Valid final WorkpackModelParamDto workpackModelParamDto,
+      @RequestHeader("Authorization") final String authorization) {
+
+    this.canAccessService.ensureCanAccessManagementOrSelfResource(
+        Arrays.asList(workpackModelParamDto.getId()), authorization);
+
     WorkpackModel workpackModel = this.workpackModelService.getWorkpackModel(workpackModelParamDto);
     workpackModel = this.workpackModelService.update(workpackModel);
     return ResponseEntity.ok(ResponseBase.of(new EntityDto(workpackModel.getId())));
@@ -122,10 +128,13 @@ public class WorkpackModelController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> delete(
-    @PathVariable final Long id,
-    @RequestParam(required = false) final Long idParent,
-    @RequestHeader("Authorization") final String authorization
-  ) {
+      @PathVariable final Long id,
+      @RequestParam(required = false) final Long idParent,
+      @RequestHeader("Authorization") final String authorization) {
+
+    this.canAccessService.ensureCanAccessManagementOrSelfResource(
+        Arrays.asList(id), authorization);
+
     final WorkpackModel workpackModel = this.workpackModelService.findById(id);
     final WorkpackModel workpackModelParent = idParent != null ? this.workpackModelService.findById(idParent) : null;
     this.deleteService.delete(workpackModel, workpackModelParent);
@@ -134,21 +143,18 @@ public class WorkpackModelController {
 
   @GetMapping("/{idWorkpackModel}/parent-project")
   public ResponseEntity<ResponseBase<Boolean>> parentProject(
-    @PathVariable final Long idWorkpackModel,
-    @RequestHeader("Authorization") final String authorization
-  ) {
+      @PathVariable final Long idWorkpackModel,
+      @RequestHeader("Authorization") final String authorization) {
     final Boolean isParentProject = this.projectParentVerifier.verify(
-      idWorkpackModel,
-      TYPE_NAME_MODEL_PROGRAM::isTypeOf
-    );
+        idWorkpackModel,
+        TYPE_NAME_MODEL_PROGRAM::isTypeOf);
     return ResponseEntity.ok(ResponseBase.of(isParentProject));
   }
 
   @GetMapping("/can-delete-property/{id}")
   public ResponseEntity<ResponseBase<Boolean>> canDelete(
-    @PathVariable final Long id,
-    @RequestHeader("Authorization") final String authorization
-  ) {
+      @PathVariable final Long id,
+      @RequestHeader("Authorization") final String authorization) {
     final Boolean canDelete = this.workpackModelService.isCanDeleteProperty(id);
     return ResponseEntity.ok(ResponseBase.of(canDelete));
   }
@@ -161,35 +167,35 @@ public class WorkpackModelController {
 
   @GetMapping("/{idWorkpackModelParent}/reuse/{idWorkpackModel}")
   public ResponseEntity<ResponseBase<WorkpackModelDetailDto>> reuseWorkpack(
-    @PathVariable final Long idWorkpackModelParent,
-    @PathVariable final Long idWorkpackModel
-  ) {
+      @PathVariable final Long idWorkpackModelParent,
+      @PathVariable final Long idWorkpackModel) {
     final WorkpackModel workpackReused = this.workpackModelReuseService.reuse(
-      idWorkpackModelParent,
-      idWorkpackModel
-    );
+        idWorkpackModelParent,
+        idWorkpackModel);
     final WorkpackModelDetailDto workpackDetail = this.workpackModelService
-      .getWorkpackModelDetailDto(workpackReused);
+        .getWorkpackModelDetailDto(workpackReused);
     return ResponseEntity.ok(ResponseBase.of(workpackDetail));
   }
 
   @GetMapping("/{idWorkpackModel}/reusable")
   public ResponseEntity<ResponseBase<List<ReusableWorkpackModelHierarchyDto>>> findReusable(
-    @PathVariable final Long idWorkpackModel,
-    @RequestParam("id-plan-model") final Long idPlanModel
-  ) {
+      @PathVariable final Long idWorkpackModel,
+      @RequestParam("id-plan-model") final Long idPlanModel) {
     final List<ReusableWorkpackModelHierarchyDto> workpacks = this.workpackModelReuseService.findWorkpackModelReusable(
-      idWorkpackModel,
-      idPlanModel
-    );
+        idWorkpackModel,
+        idPlanModel);
     return ResponseEntity.ok(ResponseBase.of(workpacks));
   }
 
   @PatchMapping("/{id-workpack-model}")
   public ResponseEntity<ResponseBase<Void>> patchCompletedStatus(
-    @PathVariable("id-workpack-model") final Long idWorkpackModel,
-    @Valid @RequestBody final WorkpackModelCompletedUpdateRequest request
-  ) {
+      @PathVariable("id-workpack-model") final Long idWorkpackModel,
+      @Valid @RequestBody final WorkpackModelCompletedUpdateRequest request,
+      @RequestHeader("Authorization") final String authorization) {
+
+    this.canAccessService.ensureCanAccessManagementOrSelfResource(
+        Arrays.asList(idWorkpackModel), authorization);
+
     this.patchCompletedStatus.patch(request, idWorkpackModel);
     return ResponseEntity.ok(ResponseBase.success());
   }
