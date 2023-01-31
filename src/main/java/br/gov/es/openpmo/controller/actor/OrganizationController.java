@@ -45,7 +45,11 @@ public class OrganizationController {
   @GetMapping
   public ResponseEntity<ResponseBase<List<OrganizationDto>>> indexBase(
       @RequestParam("id-office") final Long idOffice,
-      @RequestParam(required = false) final Long idFilter) {
+      @RequestParam(required = false) final Long idFilter,
+      @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(idOffice, authorization);
+
     final List<OrganizationDto> organizations = new ArrayList<>();
     this.organizationService.findAll(idOffice, idFilter)
         .forEach(registro -> organizations.add(
@@ -57,7 +61,11 @@ public class OrganizationController {
   }
 
   @GetMapping("{id}")
-  public ResponseEntity<ResponseBase<OrganizationDto>> findById(@PathVariable final Long id) {
+  public ResponseEntity<ResponseBase<OrganizationDto>> findById(@PathVariable final Long id,
+  @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(id, authorization);
+
     final OrganizationDto officeDto = new OrganizationDto(this.organizationService.findById(id));
     final ResponseBase<OrganizationDto> response = new ResponseBase<OrganizationDto>().setData(officeDto)
         .setSuccess(true);
@@ -69,7 +77,8 @@ public class OrganizationController {
       @Valid @RequestBody final OrganizationStoreDto organizationStoreDto,
       @Authorization final String authorization) {
 
-    this.canAccessService.ensureIsAdministrator(authorization);
+
+    this.canAccessService.ensureCanEditResource(organizationStoreDto.getIdOffice(), authorization);
 
     final Organization organization = this.organizationService.save(
         this.modelMapper.map(organizationStoreDto, Organization.class),
@@ -86,7 +95,7 @@ public class OrganizationController {
       @Valid @RequestBody final OrganizationUpdateDto organizationUpdateDto,
       @Authorization final String authorization) {
 
-    this.canAccessService.ensureIsAdministrator(authorization);
+    this.canAccessService.ensureCanEditResource(organizationUpdateDto.getId(), authorization);
 
     final Organization organization = this.organizationService
         .save(this.organizationService.getOrganization(organizationUpdateDto));
@@ -101,7 +110,7 @@ public class OrganizationController {
   public ResponseEntity<Void> delete(@PathVariable final Long id,
       @Authorization final String authorization) {
 
-    this.canAccessService.ensureIsAdministrator(authorization);
+    this.canAccessService.ensureCanEditResource(id, authorization);
 
     final Organization organization = this.organizationService.findById(id);
     this.organizationService.delete(organization);

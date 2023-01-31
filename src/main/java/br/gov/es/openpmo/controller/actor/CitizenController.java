@@ -6,6 +6,7 @@ import br.gov.es.openpmo.dto.person.CitizenByNameQuery;
 import br.gov.es.openpmo.dto.person.CitizenDto;
 import br.gov.es.openpmo.service.actors.CitizenService;
 import br.gov.es.openpmo.service.authentication.TokenService;
+import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -29,15 +30,19 @@ public class CitizenController {
 
   private final TokenService tokenService;
 
+  private final ICanAccessService canAccessService;
+
   @Autowired
   public CitizenController(
     final CitizenService service,
     final AcessoCidadaoApi acessoCidadaoApi,
-    final TokenService tokenService
+    final TokenService tokenService,
+    final ICanAccessService canAccessService
   ) {
     this.service = service;
     this.acessoCidadaoApi = acessoCidadaoApi;
     this.tokenService = tokenService;
+    this.canAccessService = canAccessService;
   }
 
   @GetMapping("/name")
@@ -59,6 +64,9 @@ public class CitizenController {
     @RequestParam(required = false) final Long idOffice,
     @RequestHeader(name = "Authorization") final String authorization
   ) {
+
+    this.canAccessService.ensureCanEditResource(idOffice, authorization);
+    
     final Long idPerson = this.tokenService.getUserId(authorization);
     final CitizenDto citizenDto = this.service.findCitizenBySub(sub, idOffice, idPerson);
 
@@ -75,6 +83,9 @@ public class CitizenController {
     @RequestParam(required = false) final Long idOffice,
     @RequestHeader(name = "Authorization") final String authorization
   ) {
+
+    this.canAccessService.ensureCanEditResource(idOffice, authorization);
+    
     final Long idPerson = this.tokenService.getUserId(authorization);
     final CitizenDto citizen = this.service.findPersonByCpf(cpf, idOffice, idPerson);
     return ResponseEntity.ok(citizen);

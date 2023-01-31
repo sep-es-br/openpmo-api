@@ -70,14 +70,21 @@ public class OfficeController {
   }
 
   @GetMapping("{id}")
-  public ResponseEntity<ResponseBase<OfficeDto>> findById(@PathVariable final Long id) {
+  public ResponseEntity<ResponseBase<OfficeDto>> findById(@PathVariable final Long id,
+  @Authorization final String authorization) {
+    
+    this.canAccessService.ensureCanReadResource(id, authorization);
+
     final OfficeDto officeDto = this.modelMapper.map(this.officeService.findById(id), OfficeDto.class);
     final ResponseBase<OfficeDto> response = new ResponseBase<OfficeDto>().setData(officeDto).setSuccess(true);
     return ResponseEntity.status(200).body(response);
   }
 
   @GetMapping("/{id-office}/tree-view")
-  public ResponseEntity<ResponseBase<OfficeTreeViewDto>> findTreeViewById(@PathVariable("id-office") final Long idOffice) {
+  public ResponseEntity<ResponseBase<OfficeTreeViewDto>> findTreeViewById(@PathVariable("id-office") final Long idOffice,
+  @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(idOffice, authorization);
 
     final OfficeTreeViewDto officeTreeViewDto = this.officeTreeViewService.findOfficeTreeViewById(idOffice);
 

@@ -143,6 +143,9 @@ public class PersonController {
     @RequestParam("fullName") final String partialName,
     @RequestParam final Long idWorkpack
   ) {
+
+
+    
     final List<PersonDto> persons =
       this.personService.findPersonsByFullNameAndWorkpack(partialName, idWorkpack);
 
