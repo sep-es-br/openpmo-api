@@ -75,8 +75,10 @@ public class WorkpackLinkController {
   public ResponseEntity<ResponseBaseItens<Void>> unlinkWorkpack(
     @PathVariable("id-workpack") final Long idWorkpack,
     @PathVariable("id-workpack-model") final Long idWorkpackModel,
-    @RequestParam("id-plan") final Long idPlan
+    @RequestParam("id-plan") final Long idPlan,
+    @RequestHeader("Authorization") final String authorization
   ) {
+    this.canAccessService.ensureCanEditResource(idWorkpack, authorization);
     this.workpackLinkService.unlink(idWorkpack, idWorkpackModel, idPlan);
     return ResponseEntity.ok(ResponseBaseItens.empty());
   }

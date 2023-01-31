@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.controller.workpack;
 
+import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.ResponseBaseItens;
@@ -10,13 +11,13 @@ import br.gov.es.openpmo.dto.costaccount.CostDto;
 import br.gov.es.openpmo.model.properties.Property;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
 import br.gov.es.openpmo.model.workpacks.Workpack;
+import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.workpack.CostAccountService;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
 import io.swagger.annotations.Api;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -33,16 +34,20 @@ public class CostAccountController {
   private final CostAccountService costAccountService;
   private final WorkpackService workpackService;
   private final ModelMapper modelMapper;
+  private final ICanAccessService canAccessService;
 
   @Autowired
   public CostAccountController(
     final CostAccountService costAccountService,
     final WorkpackService workpackService,
-    final ModelMapper modelMapper
+    final ModelMapper modelMapper,
+    final ICanAccessService canAccessService
+   
   ) {
     this.costAccountService = costAccountService;
     this.workpackService = workpackService;
     this.modelMapper = modelMapper;
+    this.canAccessService = canAccessService;
   }
 
   @GetMapping
@@ -79,7 +84,11 @@ public class CostAccountController {
   }
 
   @PostMapping
-  public ResponseEntity<ResponseBase<EntityDto>> save(@Valid @RequestBody final CostAccountStoreDto costAccountStoreDto) {
+  public ResponseEntity<ResponseBase<EntityDto>> save(@Valid @RequestBody final CostAccountStoreDto costAccountStoreDto,
+  @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanEditResource(costAccountStoreDto.getIdWorkpack(), authorization);
+
     final CostAccount costAccount = this.getCostAccount(costAccountStoreDto);
     final Workpack workpack = this.workpackService.findById(costAccountStoreDto.getIdWorkpack());
     if(workpack.getCosts() == null) {
@@ -113,15 +122,21 @@ public class CostAccountController {
 
   @PutMapping
   public ResponseEntity<ResponseBase<EntityDto>> update(
-    @RequestBody @Valid final CostAccountUpdateDto costAccountUpdateDto
+    @RequestBody @Valid final CostAccountUpdateDto costAccountUpdateDto,
+    @Authorization final String authorization
   ) {
+    this.canAccessService.ensureCanEditResource(costAccountUpdateDto.getIdWorkpack(), authorization);
+
     final CostAccount costAccount = this.getCostAccount(costAccountUpdateDto);
     this.costAccountService.save(costAccount);
     return ResponseEntity.ok(ResponseBase.of(EntityDto.of(costAccount)));
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> delete(@PathVariable final Long id) {
+  public ResponseEntity<Void> delete(@PathVariable final Long id,  @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanEditResource(id, authorization);
+    
     final CostAccount costAccount = this.costAccountService.findById(id);
     this.costAccountService.delete(costAccount);
     return ResponseEntity.ok().build();

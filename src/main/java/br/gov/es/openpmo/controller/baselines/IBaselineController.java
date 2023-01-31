@@ -1,6 +1,5 @@
 package br.gov.es.openpmo.controller.baselines;
 
-import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.Response;
 import br.gov.es.openpmo.dto.baselines.BaselineDetailResponse;
