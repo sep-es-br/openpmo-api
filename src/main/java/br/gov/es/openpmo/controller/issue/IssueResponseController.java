@@ -52,7 +52,10 @@ public class IssueResponseController {
   }
 
   @GetMapping("/{idIssueResponse}")
-  public ResponseEntity<ResponseBase<IssueResponseDetailDto>> findById(@PathVariable("idIssueResponse") final Long id) {
+  public ResponseEntity<ResponseBase<IssueResponseDetailDto>> findById(@PathVariable("idIssueResponse") final Long id,
+      @RequestHeader(name = "Authorization") final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(id, authorization);
     final IssueResponseDetailDto response = this.service.findByIdAsDetail(id);
     return ResponseEntity.ok(ResponseBase.of(response));
   }

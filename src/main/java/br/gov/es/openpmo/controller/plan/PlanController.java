@@ -56,7 +56,10 @@ public class PlanController {
   public ResponseEntity<ResponseBase<List<PlanDto>>> indexBase(
       @RequestParam("id-office") final Long idOffice,
       @RequestParam(required = false) final Long idFilter,
-      @RequestHeader(name = "Authorization") final String autorization) {
+      @RequestHeader(name = "Authorization") final String autorization,
+      @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(idFilter, authorization);
     final String token = autorization.substring(7);
     final Long idUser = this.tokenService.getPersonId(token, TokenType.AUTHENTICATION);
     List<PlanDto> plans = this.planService.findAllInOffice(idOffice, idFilter)
@@ -69,7 +72,10 @@ public class PlanController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<ResponseBase<PlanDto>> findById(@PathVariable final Long id) {
+  public ResponseEntity<ResponseBase<PlanDto>> findById(@PathVariable final Long id,
+      @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(id, authorization);
     final PlanDto planDto = PlanDto.of(this.planService.findById(id));
     final ResponseBase<PlanDto> response = new ResponseBase<PlanDto>().setData(planDto).setSuccess(true);
     return ResponseEntity.status(200).body(response);
@@ -77,7 +83,7 @@ public class PlanController {
 
   @PostMapping
   public ResponseEntity<ResponseBase<EntityDto>> save(@RequestBody @Valid final PlanStoreDto planStoreDto,
-  @Authorization final String authorization) {
+      @Authorization final String authorization) {
 
     this.canAccessService.ensureCanEditResource(planStoreDto.getIdOffice(), authorization);
     Plan plan = this.modelMapper.map(planStoreDto, Plan.class);
@@ -91,7 +97,7 @@ public class PlanController {
 
   @PutMapping
   public ResponseEntity<ResponseBase<EntityDto>> update(@RequestBody @Valid final PlanUpdateDto planParamDto,
-  @Authorization final String authorization) {
+      @Authorization final String authorization) {
 
     this.canAccessService.ensureCanEditResource(planParamDto.getId(), authorization);
     final Plan plan = this.planService.save(this.planService.getPlan(planParamDto));
@@ -101,8 +107,8 @@ public class PlanController {
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> delete(@PathVariable final Long id,  
-  @Authorization final String authorization) {
+  public ResponseEntity<Void> delete(@PathVariable final Long id,
+      @Authorization final String authorization) {
 
     this.canAccessService.ensureCanEditResource(id, authorization);
     final Plan plan = this.planService.findById(id);

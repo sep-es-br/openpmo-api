@@ -54,8 +54,11 @@ public class EvidenceController {
   }
 
   @GetMapping("/image/{id-evidence}")
-  public ResponseEntity<UrlResource> getEvidence(@PathVariable("id-evidence") final Long idEvidence)
+  public ResponseEntity<UrlResource> getEvidence(@PathVariable("id-evidence") final Long idEvidence,
+      final String authorization)
       throws IOException {
+
+    this.canAccessService.ensureCanReadResource(idEvidence, authorization);
     final UrlResource imagem = this.evidenceFinder.getEvidence(idEvidence);
 
     return ResponseEntity.ok()

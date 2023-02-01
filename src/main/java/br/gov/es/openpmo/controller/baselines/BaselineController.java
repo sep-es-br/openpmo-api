@@ -161,7 +161,11 @@ public class BaselineController implements IBaselineController {
   }
 
   @Override
-  public Response<BaselineDetailResponse> getById(final Long idBaseline) {
+  public Response<BaselineDetailResponse> getById(final Long idBaseline,
+      @RequestHeader(name = "Authorization") final String authorization) {
+
+    this.canAccessService.ensureCanEditResource(idBaseline, authorization);
+
     final BaselineDetailResponse response = this.getBaselineService.getById(idBaseline);
     return this.responseHandler.success(response);
   }
@@ -170,6 +174,8 @@ public class BaselineController implements IBaselineController {
   public Response<BaselineDetailCCBMemberResponse> getBaselineByIdAsCCBMemberView(
       @RequestHeader(name = "Authorization") final String authorization,
       final Long idBaseline) {
+
+    this.canAccessService.ensureCanEditResource(idBaseline, authorization);
     final Long idPerson = this.tokenService.getUserId(authorization);
     final BaselineDetailCCBMemberResponse response = this.getBaselineAsCCBMemberViewService.getById(idBaseline,
         idPerson);

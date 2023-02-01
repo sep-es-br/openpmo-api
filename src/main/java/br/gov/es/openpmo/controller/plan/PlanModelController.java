@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.controller.plan;
 
+import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.planmodel.PlanModelDto;
@@ -42,7 +43,10 @@ public class PlanModelController {
   @GetMapping
   public ResponseEntity<ResponseBase<List<PlanModelDto>>> indexBase(
       @RequestParam("id-office") final Long idOffice,
-      @RequestParam(required = false) final Long idFilter) {
+      @RequestParam(required = false) final Long idFilter,
+      @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(idOffice, authorization);
     final List<PlanModelDto> planModels = new ArrayList<>();
 
     this.planModelService.findAllInOffice(idOffice, idFilter)
@@ -52,14 +56,20 @@ public class PlanModelController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<ResponseBase<PlanModelDto>> findById(@PathVariable final Long id) {
+  public ResponseEntity<ResponseBase<PlanModelDto>> findById(@PathVariable final Long id,
+      @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(id, authorization);
     final PlanModelDto planModelDto = new PlanModelDto(this.planModelService.findById(id));
     return ResponseEntity.ok(ResponseBase.of(planModelDto));
   }
 
   @GetMapping("/shareds")
   public ResponseEntity<ResponseBase<List<PlanModelDto>>> findAllSharedWithOffice(
-      @RequestParam("id-office") final Long idOffice) {
+      @RequestParam("id-office") final Long idOffice,
+      @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(idOffice, authorization);
     final List<PlanModelDto> sharedWithOffice = this.planModelService.findAllSharedWithOffice(idOffice);
     return ResponseEntity.ok(ResponseBase.of(sharedWithOffice));
   }
@@ -78,7 +88,8 @@ public class PlanModelController {
   }
 
   @PostMapping
-  public ResponseEntity<ResponseBase<EntityDto>> save(@RequestBody @Valid final PlanModelStoreDto planModelStoreDto, final String authorization) {
+  public ResponseEntity<ResponseBase<EntityDto>> save(@RequestBody @Valid final PlanModelStoreDto planModelStoreDto,
+      final String authorization) {
 
     this.canAccessService.ensureCanEditResource(planModelStoreDto.getIdOffice(), authorization);
     final PlanModel planModel = this.planModelService.store(planModelStoreDto);

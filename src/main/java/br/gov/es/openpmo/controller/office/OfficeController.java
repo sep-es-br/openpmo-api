@@ -37,12 +37,11 @@ public class OfficeController {
 
   @Autowired
   public OfficeController(
-    final OfficeService officeService,
-    final OfficeTreeViewService officeTreeViewService,
-    final ModelMapper modelMapper,
-    final TokenService tokenService,
-    final ICanAccessService canAccessService 
-  ) {
+      final OfficeService officeService,
+      final OfficeTreeViewService officeTreeViewService,
+      final ModelMapper modelMapper,
+      final TokenService tokenService,
+      final ICanAccessService canAccessService) {
     this.officeService = officeService;
     this.officeTreeViewService = officeTreeViewService;
     this.modelMapper = modelMapper;
@@ -52,27 +51,30 @@ public class OfficeController {
 
   @GetMapping
   public ResponseEntity<ResponseBase<List<OfficeDto>>> indexBase(
-    @RequestHeader(name = "Authorization") final String autorization,
-    @RequestParam(required = false) final Long idFilter
-  ) {
+      @RequestHeader(name = "Authorization") final String autorization,
+      @RequestParam(required = false) final Long idFilter,
+      @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(idFilter, authorization);
     final String token = autorization.substring(7);
     final Long idUser = this.tokenService.getPersonId(token, TokenType.AUTHENTICATION);
     List<OfficeDto> offices = this.officeService.findAll(idFilter)
-      .stream()
-      .map(o -> this.modelMapper.map(o, OfficeDto.class))
-      .collect(Collectors.toList());
-    if(offices.isEmpty()) {
+        .stream()
+        .map(o -> this.modelMapper.map(o, OfficeDto.class))
+        .collect(Collectors.toList());
+    if (offices.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
     offices = this.officeService.checkPermission(offices, idUser);
-    final ResponseBase<List<OfficeDto>> response = new ResponseBase<List<OfficeDto>>().setData(offices).setSuccess(true);
+    final ResponseBase<List<OfficeDto>> response = new ResponseBase<List<OfficeDto>>().setData(offices)
+        .setSuccess(true);
     return ResponseEntity.status(200).body(response);
   }
 
   @GetMapping("{id}")
   public ResponseEntity<ResponseBase<OfficeDto>> findById(@PathVariable final Long id,
-  @Authorization final String authorization) {
-    
+      @Authorization final String authorization) {
+
     this.canAccessService.ensureCanReadResource(id, authorization);
 
     final OfficeDto officeDto = this.modelMapper.map(this.officeService.findById(id), OfficeDto.class);
@@ -81,59 +83,60 @@ public class OfficeController {
   }
 
   @GetMapping("/{id-office}/tree-view")
-  public ResponseEntity<ResponseBase<OfficeTreeViewDto>> findTreeViewById(@PathVariable("id-office") final Long idOffice,
-  @Authorization final String authorization) {
+  public ResponseEntity<ResponseBase<OfficeTreeViewDto>> findTreeViewById(
+      @PathVariable("id-office") final Long idOffice,
+      @Authorization final String authorization) {
 
     this.canAccessService.ensureCanReadResource(idOffice, authorization);
 
     final OfficeTreeViewDto officeTreeViewDto = this.officeTreeViewService.findOfficeTreeViewById(idOffice);
 
     final ResponseBase<OfficeTreeViewDto> response = new ResponseBase<OfficeTreeViewDto>()
-      .setData(officeTreeViewDto)
-      .setSuccess(true);
+        .setData(officeTreeViewDto)
+        .setSuccess(true);
 
     return ResponseEntity.ok(response);
   }
 
   @PostMapping
   public ResponseEntity<ResponseBase<EntityDto>> save(@Valid @RequestBody final OfficeStoreDto officeStoreDto,
-    @Authorization final String authorization) {
+      @Authorization final String authorization) {
 
     this.canAccessService.ensureIsAdministrator(authorization);
-   
+
     final Office office = this.officeService.save(this.getOffice(officeStoreDto));
-    final ResponseBase<EntityDto> entity = new ResponseBase<EntityDto>().setData(new EntityDto(office.getId())).setSuccess(
-      true);
+    final ResponseBase<EntityDto> entity = new ResponseBase<EntityDto>().setData(new EntityDto(office.getId()))
+        .setSuccess(
+            true);
     return ResponseEntity.status(200).body(entity);
   }
-  
+
   @PutMapping
   public ResponseEntity<ResponseBase<EntityDto>> update(@RequestBody @Valid final OfficeUpdateDto officeUpdateDto,
-    @Authorization final String authorization) {
-    
+      @Authorization final String authorization) {
+
     this.canAccessService.ensureIsAdministrator(authorization);
-    
+
     final Office office = this.officeService.save(this.getOffice(officeUpdateDto));
-    final ResponseBase<EntityDto> entity = new ResponseBase<EntityDto>().setData(new EntityDto(office.getId())).setSuccess(
-      true);
+    final ResponseBase<EntityDto> entity = new ResponseBase<EntityDto>().setData(new EntityDto(office.getId()))
+        .setSuccess(
+            true);
     return ResponseEntity.status(200).body(entity);
   }
 
   @DeleteMapping("{id}")
   public ResponseEntity<Void> delete(@PathVariable final Long id,
-    @Authorization final String authorization) {
+      @Authorization final String authorization) {
 
     this.canAccessService.ensureIsAdministrator(authorization);
-    
+
     final Office office = this.officeService.findById(id);
     this.officeService.delete(office);
     return ResponseEntity.ok().build();
   }
 
-
   private Office getOffice(final Object object) {
     return this.modelMapper.map(object, Office.class);
   }
-
 
 }

@@ -42,7 +42,10 @@ public class LocalityController {
   }
 
   @GetMapping
-  public ResponseEntity<ResponseBase<List<LocalityDto>>> indexBase(@RequestParam("id-domain") final Long idDomain) {
+  public ResponseEntity<ResponseBase<List<LocalityDto>>> indexBase(@RequestParam("id-domain") final Long idDomain,
+      @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(idDomain, authorization);
     final List<LocalityDto> localities = this.localityService.findAll(idDomain).stream()
         .map(o -> this.modelMapper.map(o, LocalityDto.class))
         .collect(Collectors.toList());
@@ -55,7 +58,10 @@ public class LocalityController {
   @GetMapping("/firstLevel")
   public ResponseEntity<ResponseBase<List<LocalityDto>>> indexBaseFirstLevel(
       @RequestParam("id-domain") final Long idDomain,
-      @RequestParam(required = false) final Long idFilter) {
+      @RequestParam(required = false) final Long idFilter,
+      @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(idFilter, authorization);
     final List<LocalityDto> localities = this.localityService.findAllFirstLevel(idDomain, idFilter)
         .stream()
         .map(o -> this.modelMapper.map(o, LocalityDto.class))
@@ -68,7 +74,10 @@ public class LocalityController {
 
   @GetMapping("/listProperty")
   public ResponseEntity<ResponseBase<List<LocalityPropertyDto>>> listProperty(
-      @RequestParam("id-domain") final Long idDomain) {
+      @RequestParam("id-domain") final Long idDomain,
+      @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(idDomain, authorization);
     final List<LocalityPropertyDto> localities = this.localityService.findAllByDomainProperties(idDomain).stream()
         .map(locality -> this.modelMapper.map(locality, LocalityPropertyDto.class))
         .collect(Collectors.toList());
@@ -81,7 +90,10 @@ public class LocalityController {
   @GetMapping("{id}")
   public ResponseEntity<ResponseBase<LocalityDetailDto>> findById(
       @PathVariable final Long id,
-      @RequestParam(required = false) final Long idFilter) {
+      @RequestParam(required = false) final Long idFilter,
+      @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(idFilter, authorization);
     final LocalityDetailDto localityDto = this.modelMapper.map(
         this.localityService.findById(id, idFilter),
         LocalityDetailDto.class);
@@ -97,7 +109,7 @@ public class LocalityController {
   public ResponseEntity<ResponseBase<EntityDto>> save(@Valid @RequestBody final LocalityStoreDto localityParamDto,
       @Authorization final String authorization) {
 
-    this.canAccessService.ensureIsAdministrator(authorization);
+    this.canAccessService.ensureCanEditResource(localityParamDto.getId(), authorization);
 
     Locality locality = this.localityService.getLocality(localityParamDto);
     locality = this.localityService.save(locality);
@@ -110,7 +122,7 @@ public class LocalityController {
   public ResponseEntity<ResponseBase<EntityDto>> update(@RequestBody @Valid final LocalityUpdateDto localityUpdateDto,
       @Authorization final String authorization) {
 
-    this.canAccessService.ensureIsAdministrator(authorization);
+    this.canAccessService.ensureCanEditResource(localityUpdateDto.getId(), authorization);
 
     Locality locality = this.localityService.getLocality(localityUpdateDto);
     locality = this.localityService.update(locality);
@@ -123,7 +135,7 @@ public class LocalityController {
   public ResponseEntity<Void> delete(@PathVariable final Long id,
       @Authorization final String authorization) {
 
-    this.canAccessService.ensureIsAdministrator(authorization);
+    this.canAccessService.ensureCanEditResource(id, authorization);
 
     final Locality locality = this.localityService.findById(id);
     this.localityService.delete(locality);

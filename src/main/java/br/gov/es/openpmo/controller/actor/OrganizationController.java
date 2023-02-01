@@ -62,7 +62,7 @@ public class OrganizationController {
 
   @GetMapping("{id}")
   public ResponseEntity<ResponseBase<OrganizationDto>> findById(@PathVariable final Long id,
-  @Authorization final String authorization) {
+      @Authorization final String authorization) {
 
     this.canAccessService.ensureCanReadResource(id, authorization);
 
@@ -76,7 +76,6 @@ public class OrganizationController {
   public ResponseEntity<ResponseBase<EntityDto>> save(
       @Valid @RequestBody final OrganizationStoreDto organizationStoreDto,
       @Authorization final String authorization) {
-
 
     this.canAccessService.ensureCanEditResource(organizationStoreDto.getIdOffice(), authorization);
 

@@ -55,7 +55,9 @@ public class CCBMemberController implements ICCBMemberController {
   }
 
   @Override
-  public Response<List<CCBMemberResponse>> getAll(final Long workpackId) {
+  public Response<List<CCBMemberResponse>> getAll(final Long workpackId, final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(workpackId, authorization);
     final List<CCBMemberResponse> ccbMemberResponses = this.getAllService.getAll(workpackId);
     return this.controllerHelper.success(ccbMemberResponses);
   }
@@ -93,6 +95,12 @@ public class CCBMemberController implements ICCBMemberController {
     this.canAccessService.ensureCanEditResource(idWorkpack, authorization);
     this.deleteCCBMemberService.delete(idPerson, idWorkpack);
     return this.controllerHelper.success();
+  }
+
+  @Override
+  public Response<CCBMemberResponse> getCCBMember(Long idPerson, Long idWorkpack, Long idPlan, String authorization) {
+    // TODO Auto-generated method stub
+    return null;
   }
 
 }

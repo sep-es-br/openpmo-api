@@ -65,7 +65,9 @@ public class JournalController {
       @RequestParam(required = false) final List<Integer> scope,
       @RequestParam final List<JournalType> type,
       final UriComponentsBuilder uriComponentsBuilder,
-      final Pageable pageable) {
+      final Pageable pageable,
+      final String authorization) {
+
     final Page<JournalResponse> responsePage = this.journalFinder.getAll(from, to, type, scope, uriComponentsBuilder,
         pageable);
 

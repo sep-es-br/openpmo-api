@@ -75,7 +75,10 @@ public class RiskResponseController {
   }
 
   @GetMapping("/{idRiskResponse}")
-  public ResponseEntity<ResponseBase<RiskResponseDetailDto>> findById(@PathVariable final Long idRiskResponse) {
+  public ResponseEntity<ResponseBase<RiskResponseDetailDto>> findById(@PathVariable final Long idRiskResponse,
+      @RequestHeader(name = "Authorization") final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(idRiskResponse, authorization);
     final RiskResponseDetailDto risk = this.service.findRiskByIdAsDetailDto(idRiskResponse);
     return ResponseEntity.ok(ResponseBase.of(risk));
   }

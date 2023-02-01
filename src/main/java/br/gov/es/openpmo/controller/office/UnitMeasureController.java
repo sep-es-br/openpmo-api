@@ -45,7 +45,10 @@ public class UnitMeasureController {
   @GetMapping
   public ResponseEntity<ResponseBase<List<UnitMeasureDto>>> indexBase(
       @RequestParam final Long idOffice,
-      @RequestParam(required = false) final Long idFilter) {
+      @RequestParam(required = false) final Long idFilter,
+      @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(idOffice, authorization);
     final List<UnitMeasureDto> unitMeasures = new ArrayList<>();
     this.unitMeasureService.findAll(idOffice, idFilter)
         .forEach(registro -> unitMeasures.add(new UnitMeasureDto(registro)));
@@ -55,7 +58,10 @@ public class UnitMeasureController {
   }
 
   @GetMapping("{id}")
-  public ResponseEntity<ResponseBase<UnitMeasureDto>> findById(@PathVariable final Long id) {
+  public ResponseEntity<ResponseBase<UnitMeasureDto>> findById(@PathVariable final Long id,
+      @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(id, authorization);
     final UnitMeasureDto officeDto = new UnitMeasureDto(this.unitMeasureService.findById(id));
     final ResponseBase<UnitMeasureDto> response = new ResponseBase<UnitMeasureDto>().setData(officeDto)
         .setSuccess(true);
@@ -66,7 +72,7 @@ public class UnitMeasureController {
   public ResponseEntity<ResponseBase<EntityDto>> save(@RequestBody final UnitMeasureStoreDto unitMeasureStoreDto,
       @Authorization final String authorization) {
 
-    this.canAccessService.ensureIsAdministrator(authorization);
+    this.canAccessService.ensureCanEditResource(unitMeasureStoreDto.getIdOffice(), authorization);
 
     UnitMeasure unitMeasure = this.modelMapper.map(unitMeasureStoreDto, UnitMeasure.class);
     unitMeasure.setOffice(new Office());
@@ -83,7 +89,7 @@ public class UnitMeasureController {
   public ResponseEntity<ResponseBase<EntityDto>> update(@RequestBody final UnitMeasureUpdateDto unitMeasureUpdateDto,
       @Authorization final String authorization) {
 
-    this.canAccessService.ensureIsAdministrator(authorization);
+    this.canAccessService.ensureCanEditResource(unitMeasureUpdateDto.getId(), authorization);
 
     final UnitMeasure unitMeasure = this.unitMeasureService
         .save(this.unitMeasureService.getUnitMeasure(unitMeasureUpdateDto));
@@ -98,7 +104,7 @@ public class UnitMeasureController {
   public ResponseEntity<Void> delete(@PathVariable final Long id,
       @Authorization final String authorization) {
 
-    this.canAccessService.ensureIsAdministrator(authorization);
+    this.canAccessService.ensureCanEditResource(id, authorization);
 
     final UnitMeasure unitMeasure = this.unitMeasureService.findById(id);
     this.unitMeasureService.delete(unitMeasure);

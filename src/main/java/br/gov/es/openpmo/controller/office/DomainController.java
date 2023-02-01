@@ -42,7 +42,10 @@ public class DomainController {
   @GetMapping
   public ResponseEntity<ResponseBase<List<DomainDto>>> indexBase(
       @RequestParam(value = "id-office", required = false) final Long idOffice,
-      @RequestParam(value = "idFilter", required = false) final Long idFilter) {
+      @RequestParam(value = "idFilter", required = false) final Long idFilter,
+      @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(idOffice, authorization);
     final List<DomainDto> domains = this.domainService.findAll(idOffice, idFilter)
         .stream()
         .map(o -> this.modelMapper.map(o, DomainDto.class))
@@ -56,7 +59,9 @@ public class DomainController {
   }
 
   @GetMapping("{id}")
-  public ResponseEntity<ResponseBase<DomainDto>> findById(@PathVariable final Long id) {
+  public ResponseEntity<ResponseBase<DomainDto>> findById(@PathVariable final Long id,
+      @Authorization final String authorization) {
+    this.canAccessService.ensureCanReadResource(id, authorization);
     final DomainDto domainDto = this.modelMapper.map(this.domainService.findById(id), DomainDto.class);
     final ResponseBase<DomainDto> response = new ResponseBase<DomainDto>()
         .setData(domainDto)
@@ -68,7 +73,7 @@ public class DomainController {
   public ResponseEntity<ResponseBase<EntityDto>> save(@Valid @RequestBody final DomainStoreDto domainStoreDto,
       @Authorization final String authorization) {
 
-    this.canAccessService.ensureIsAdministrator(authorization);
+    this.canAccessService.ensureCanEditResource(domainStoreDto.getIdOffice(), authorization);
 
     final Domain domain = this.domainService.save(domainStoreDto);
 
@@ -83,7 +88,7 @@ public class DomainController {
   public ResponseEntity<ResponseBase<EntityDto>> update(@RequestBody @Valid final DomainUpdateDto domainUpdateDto,
       @Authorization final String authorization) {
 
-    this.canAccessService.ensureIsAdministrator(authorization);
+    this.canAccessService.ensureCanEditResource(domainUpdateDto.getId(), authorization);
 
     final Domain domain = this.domainService.update(this.getDomain(domainUpdateDto));
 
@@ -102,7 +107,7 @@ public class DomainController {
   public ResponseEntity<Void> delete(@PathVariable final Long id,
       @Authorization final String authorization) {
 
-    this.canAccessService.ensureIsAdministrator(authorization);
+    this.canAccessService.ensureCanEditResource(id, authorization);
 
     final Domain domain = this.domainService.findById(id);
     this.domainService.delete(domain);

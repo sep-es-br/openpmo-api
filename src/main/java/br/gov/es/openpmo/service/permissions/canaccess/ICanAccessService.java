@@ -2,45 +2,41 @@ package br.gov.es.openpmo.service.permissions.canaccess;
 
 import java.util.List;
 
+import javax.validation.Valid;
+
+import br.gov.es.openpmo.dto.domain.LocalityStoreDto;
+
 public interface ICanAccessService {
 
   void ensureCanReadResource(
-    Long id,
-    String authorization
-  );
+      Long id,
+      String authorization);
 
   void ensureCanEditResource(
-    Long id,
-    String authorization
-  );
+      @Valid Long long1,
+      String authorization);
 
   void ensureIsAdministrator(String authorization);
 
   void ensureCanAccessSelfResource(
-    Long idPerson,
-    String authorization
-  );
+      Long idPerson,
+      String authorization);
 
   void ensureCanAccessManagementResource(
-    Long id,
-    String authorization
-  );
-
+      Long id,
+      String authorization);
 
   void ensureCanAccessManagementOrSelfResource(
-    List<Long> ids,
-    String authorization
-  );
+      List<Long> ids,
+      String authorization);
 
   void ensureCanReadManagementResource(
-    Long idOffice,
-    String key,
-    String authorization
-  );
+      Long idOffice,
+      String key,
+      String authorization);
 
   void ensureCanEditResource(
-    List<Long> ids,
-    String authorization
-  );
+      List<Long> ids,
+      String authorization);
 
 }

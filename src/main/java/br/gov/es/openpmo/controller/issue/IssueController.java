@@ -60,7 +60,10 @@ public class IssueController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<ResponseBase<IssueDetailDto>> findById(@PathVariable final Long id) {
+  public ResponseEntity<ResponseBase<IssueDetailDto>> findById(@PathVariable final Long id,
+      @RequestHeader(name = "Authorization") final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(id, authorization);
     final IssueDetailDto response = this.service.findIssueDetailById(id);
     return ResponseEntity.ok(ResponseBase.of(response));
   }
@@ -71,6 +74,11 @@ public class IssueController {
       @RequestParam(required = false) final Long idRisk,
       @RequestParam(required = false) final Long idFilter,
       @RequestHeader("Authorization") final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
+    this.canAccessService.ensureCanReadResource(idRisk, authorization);
+    this.canAccessService.ensureCanReadResource(idFilter, authorization);
+
     final Long idPerson = this.tokenService.getUserId(authorization);
     final List<IssueCardDto> response = this.service.findAllAsCardDto(idWorkpack, idRisk, idFilter, idPerson);
     return ResponseEntity.ok(ResponseBase.of(response));

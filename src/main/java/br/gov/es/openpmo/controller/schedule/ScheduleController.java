@@ -39,7 +39,10 @@ public class ScheduleController {
   }
 
   @GetMapping
-  public ResponseEntity<ResponseBase<List<ScheduleDto>>> findAll(@RequestParam("id-workpack") final Long idWorkpack) {
+  public ResponseEntity<ResponseBase<List<ScheduleDto>>> findAll(@RequestParam("id-workpack") final Long idWorkpack,
+      @RequestHeader(name = "Authorization") final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
     final List<ScheduleDto> schedules = this.scheduleService.findAll(idWorkpack);
     if (schedules.isEmpty()) {
       return ResponseEntity.noContent().build();
@@ -48,7 +51,10 @@ public class ScheduleController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<ResponseBase<ScheduleDto>> findById(@PathVariable final Long id) {
+  public ResponseEntity<ResponseBase<ScheduleDto>> findById(@PathVariable final Long id,
+      @RequestHeader(name = "Authorization") final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(id, authorization);
     final Schedule schedule = this.scheduleService.findById(id);
     final ScheduleDto scheduleDto = this.scheduleService.mapsToScheduleDto(schedule);
     return ResponseEntity.ok(ResponseBase.of(scheduleDto));

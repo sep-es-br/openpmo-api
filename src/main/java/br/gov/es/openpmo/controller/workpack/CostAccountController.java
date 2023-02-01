@@ -38,11 +38,11 @@ public class CostAccountController {
 
   @Autowired
   public CostAccountController(
-    final CostAccountService costAccountService,
-    final WorkpackService workpackService,
-    final ModelMapper modelMapper,
-    final ICanAccessService canAccessService
-   
+      final CostAccountService costAccountService,
+      final WorkpackService workpackService,
+      final ModelMapper modelMapper,
+      final ICanAccessService canAccessService
+
   ) {
     this.costAccountService = costAccountService;
     this.workpackService = workpackService;
@@ -52,14 +52,15 @@ public class CostAccountController {
 
   @GetMapping
   public ResponseEntity<ResponseBaseItens<CostAccountDto>> indexBase(
-    @RequestParam("id-workpack") final Long idWorkpack,
-    @RequestParam(required = false) final Long idFilter
-  ) {
+      @RequestParam("id-workpack") final Long idWorkpack,
+      @RequestParam(required = false) final Long idFilter,
+      @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
     final List<CostAccountDto> costs = this.costAccountService.findAllByIdWorkpack(
-      idWorkpack,
-      idFilter
-    );
-    if(costs.isEmpty()) {
+        idWorkpack,
+        idFilter);
+    if (costs.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
     return ResponseEntity.ok(ResponseBaseItens.of(costs));
@@ -67,31 +68,36 @@ public class CostAccountController {
 
   @GetMapping("/workpack")
   public ResponseEntity<ResponseBase<CostDto>> getCostsByWorkpack(
-    @RequestParam(value = "id", required = false) final Long id,
-    @RequestParam("id-workpack") final Long idWorkpack
-  ) {
+      @RequestParam(value = "id", required = false) final Long id,
+      @RequestParam("id-workpack") final Long idWorkpack,
+      @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
     final CostDto costDto = this.costAccountService.getCost(id, idWorkpack);
-    if(costDto == null) {
+    if (costDto == null) {
       return ResponseEntity.noContent().build();
     }
     return ResponseEntity.ok(ResponseBase.of(costDto));
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<ResponseBase<CostAccountDto>> findById(@PathVariable final Long id) {
+  public ResponseEntity<ResponseBase<CostAccountDto>> findById(@PathVariable final Long id,
+      @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(id, authorization);
     final CostAccountDto response = this.costAccountService.findByIdAsDto(id);
     return ResponseEntity.ok(ResponseBase.of(response));
   }
 
   @PostMapping
   public ResponseEntity<ResponseBase<EntityDto>> save(@Valid @RequestBody final CostAccountStoreDto costAccountStoreDto,
-  @Authorization final String authorization) {
+      @Authorization final String authorization) {
 
     this.canAccessService.ensureCanEditResource(costAccountStoreDto.getIdWorkpack(), authorization);
 
     final CostAccount costAccount = this.getCostAccount(costAccountStoreDto);
     final Workpack workpack = this.workpackService.findById(costAccountStoreDto.getIdWorkpack());
-    if(workpack.getCosts() == null) {
+    if (workpack.getCosts() == null) {
       workpack.setCosts(new HashSet<>());
     }
     workpack.getCosts().add(costAccount);
@@ -101,15 +107,16 @@ public class CostAccountController {
 
   private CostAccount getCostAccount(final Object cost) {
     Set<Property> properties = null;
-    if(cost instanceof CostAccountStoreDto) {
-      if(((CostAccountStoreDto) cost).getProperties() != null && !(((CostAccountStoreDto) cost).getProperties()).isEmpty()) {
+    if (cost instanceof CostAccountStoreDto) {
+      if (((CostAccountStoreDto) cost).getProperties() != null
+          && !(((CostAccountStoreDto) cost).getProperties()).isEmpty()) {
         final CostAccountStoreDto store = (CostAccountStoreDto) cost;
         properties = this.workpackService.getProperties(store.getProperties());
         store.setProperties(null);
       }
-    }
-    else {
-      if((((CostAccountUpdateDto) cost).getProperties()) != null && !(((CostAccountUpdateDto) cost).getProperties()).isEmpty()) {
+    } else {
+      if ((((CostAccountUpdateDto) cost).getProperties()) != null
+          && !(((CostAccountUpdateDto) cost).getProperties()).isEmpty()) {
         final CostAccountUpdateDto update = (CostAccountUpdateDto) cost;
         properties = this.workpackService.getProperties(update.getProperties());
         update.setProperties(null);
@@ -122,9 +129,8 @@ public class CostAccountController {
 
   @PutMapping
   public ResponseEntity<ResponseBase<EntityDto>> update(
-    @RequestBody @Valid final CostAccountUpdateDto costAccountUpdateDto,
-    @Authorization final String authorization
-  ) {
+      @RequestBody @Valid final CostAccountUpdateDto costAccountUpdateDto,
+      @Authorization final String authorization) {
     this.canAccessService.ensureCanEditResource(costAccountUpdateDto.getIdWorkpack(), authorization);
 
     final CostAccount costAccount = this.getCostAccount(costAccountUpdateDto);
@@ -133,10 +139,10 @@ public class CostAccountController {
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> delete(@PathVariable final Long id,  @Authorization final String authorization) {
+  public ResponseEntity<Void> delete(@PathVariable final Long id, @Authorization final String authorization) {
 
     this.canAccessService.ensureCanEditResource(id, authorization);
-    
+
     final CostAccount costAccount = this.costAccountService.findById(id);
     this.costAccountService.delete(costAccount);
     return ResponseEntity.ok().build();

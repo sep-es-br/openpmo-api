@@ -49,7 +49,10 @@ public class StepController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<ResponseBase<StepDto>> findById(@PathVariable final Long id) {
+  public ResponseEntity<ResponseBase<StepDto>> findById(@PathVariable final Long id,
+      final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(id, authorization);
     final Step step = this.stepService.findById(id);
     final StepDto stepDto = this.stepService.mapToStepDto(step);
     return ResponseEntity.ok(ResponseBase.of(stepDto));
