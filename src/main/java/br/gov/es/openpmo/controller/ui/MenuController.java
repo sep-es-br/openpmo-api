@@ -1,11 +1,13 @@
 package br.gov.es.openpmo.controller.ui;
 
+import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.ResponseBaseItens;
 import br.gov.es.openpmo.dto.menu.MenuOfficeDto;
 import br.gov.es.openpmo.dto.menu.PlanModelMenuResponse;
 import br.gov.es.openpmo.dto.menu.PortfolioMenuRequest;
 import br.gov.es.openpmo.dto.menu.WorkpackMenuDto;
 import br.gov.es.openpmo.service.authentication.TokenService;
+import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.ui.MenuService;
 import br.gov.es.openpmo.service.ui.WorkpackModelMenuService;
 import io.swagger.annotations.Api;
@@ -29,26 +31,29 @@ public class MenuController {
   private final MenuService menuService;
   private final TokenService tokenService;
   private final WorkpackModelMenuService workpackModelMenuService;
+  private final ICanAccessService canAccessService;
 
   @Autowired
   public MenuController(
-    final MenuService menuService,
-    final TokenService tokenService,
-    final WorkpackModelMenuService workpackModelMenuService
-  ) {
+      final MenuService menuService,
+      final TokenService tokenService,
+      final WorkpackModelMenuService workpackModelMenuService,
+      final ICanAccessService canAccessService) {
     this.menuService = menuService;
     this.tokenService = tokenService;
     this.workpackModelMenuService = workpackModelMenuService;
+    this.canAccessService = canAccessService;
   }
 
   @GetMapping("/office")
   public ResponseEntity<ResponseBaseItens<MenuOfficeDto>> indexOffice(
-    @RequestHeader(name = "Authorization") final String autorization
-  ) {
+      @RequestHeader(name = "Authorization") final String autorization,
+      @Authorization final String authorization) {
+
     final Long idUser = this.tokenService.getUserId(autorization);
     final List<MenuOfficeDto> offices = this.menuService.findAllOffice(idUser);
 
-    if(offices.isEmpty()) {
+    if (offices.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
 
@@ -57,15 +62,17 @@ public class MenuController {
 
   @GetMapping("/portfolio")
   public ResponseEntity<ResponseBaseItens<WorkpackMenuDto>> indexPortfolio(
-    @RequestParam("id-office") final Long idOffice,
-    @RequestParam(value = "id-plan", required = false) final Long idPlan,
-    @RequestHeader(name = "Authorization") final String autorization
-  ) {
-    final Long idUser = this.tokenService.getUserId(autorization);
-    final List<WorkpackMenuDto> portfolios =
-      this.menuService.findAllPortfolio(new PortfolioMenuRequest(idOffice, idPlan, idUser));
+      @RequestParam("id-office") final Long idOffice,
+      @RequestParam(value = "id-plan", required = false) final Long idPlan,
+      @RequestHeader(name = "Authorization") final String autorization,
+      @Authorization final String authorization) {
 
-    if(portfolios.isEmpty()) {
+    this.canAccessService.ensureCanReadResource(idOffice, authorization);
+    final Long idUser = this.tokenService.getUserId(autorization);
+    final List<WorkpackMenuDto> portfolios = this.menuService
+        .findAllPortfolio(new PortfolioMenuRequest(idOffice, idPlan, idUser));
+
+    if (portfolios.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
 
@@ -74,11 +81,13 @@ public class MenuController {
 
   @GetMapping("/planModels")
   public ResponseEntity<ResponseBaseItens<PlanModelMenuResponse>> indexWorkpackModels(
-    @RequestParam("id-office") final Long idOffice
-  ) {
+      @RequestParam("id-office") final Long idOffice,
+      @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(idOffice, authorization);
     final List<PlanModelMenuResponse> responses = this.workpackModelMenuService.getResponses(idOffice);
 
-    if(responses.isEmpty()) {
+    if (responses.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
 
