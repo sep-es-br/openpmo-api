@@ -177,7 +177,8 @@ public class WorkpackController {
       @RequestParam(value = "idFilter", required = false) final Long idFilter,
       @RequestParam(value = "workpackLinked", required = false) final boolean workpackLinked,
       @Authorization final String authorization) {
-    this.canAccessService.ensureCanReadResource(idWorkpackParent, authorization);
+
+    this.canAccessService.ensureCanReadResource(idPlan, authorization);
 
     final Long idUser = this.tokenService.getUserId(authorization);
 
@@ -218,6 +219,7 @@ public class WorkpackController {
       @PathVariable final Long idWorkpack,
       @RequestParam(value = "id-plan", required = false) final Long idPlan,
       @Authorization final String authorization) {
+
     this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
 
     final Long idPerson = this.tokenService.getUserId(authorization);
@@ -239,9 +241,9 @@ public class WorkpackController {
   public ResponseEntity<ResponseBase<EntityDto>> save(
       @RequestBody @Valid final WorkpackParamDto request,
       @Authorization final String authorization) {
-    this.canAccessService.ensureCanEditResource(
-        Arrays.asList(request.getIdPlan(), request.getIdParent()),
-        authorization);
+
+    this.canAccessService.ensureCanEditResource( request.getIdParent(),   authorization);
+  
     final Workpack workpack = this.workpackService.getWorkpack(request);
     final EntityDto response = this.workpackService.save(workpack, request.getIdPlan(), request.getIdParent());
 
@@ -258,7 +260,9 @@ public class WorkpackController {
   public ResponseEntity<ResponseBase<EntityDto>> update(
       @RequestBody @Valid final WorkpackParamDto request,
       @Authorization final String authorization) {
+
     this.canAccessService.ensureCanEditResource(request.getId(), authorization);
+
     final Workpack workpack = this.workpackService.update(this.workpackService.getWorkpack(request));
     final Long idPerson = this.tokenService.getUserId(authorization);
     this.journalCreator.edition(workpack, JournalAction.EDITED, idPerson);
