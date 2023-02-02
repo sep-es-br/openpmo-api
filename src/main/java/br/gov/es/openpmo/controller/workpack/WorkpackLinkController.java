@@ -69,7 +69,8 @@ public class WorkpackLinkController {
       @RequestParam("id-plan") final Long idPlan,
       @RequestParam(value = "id-parent", required = false) final Long idParent,
       @RequestHeader("Authorization") final String authorization) {
-    this.canAccessService.ensureCanEditResource(idWorkpack, authorization);
+
+    this.canAccessService.ensureCanEditResource(idParent, authorization);
     this.workpackLinkService.linkWorkpackToWorkpackModel(idWorkpack, idworkpackModel, idPlan, idParent);
     return ResponseEntity.ok(ResponseBaseItens.of(null));
   }

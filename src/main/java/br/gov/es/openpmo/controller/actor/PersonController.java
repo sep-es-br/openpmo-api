@@ -163,7 +163,7 @@ public class PersonController {
       @PathVariable("id-person") final Long idPerson,
       @RequestBody final NameRequest nameRequest,
       @Authorization final String authorization) {
-    this.canAccessService.ensureIsAdministrator(authorization);
+    this.canAccessService.ensureCanEditResource(idPerson, authorization);
     this.personService.updateName(idPerson, nameRequest.getName());
     return this.responseHandler.success();
   }

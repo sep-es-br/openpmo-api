@@ -56,7 +56,10 @@ public class BreadcrumbController {
   @GetMapping("/workpack/{id-workpack}")
   public ResponseEntity<ResponseBaseItens<BreadcrumbDto>> workpack(
       @PathVariable("id-workpack") final Long idWorkpack,
-      @RequestParam("id-plan") final Long idPlan) {
+      @RequestParam("id-plan") final Long idPlan,
+      @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
     final Collection<BreadcrumbDto> breadcrumbItens = this.workpackBreadcrumbService.buildWorkpackHierarchyAsBreadcrumb(
         idWorkpack,
         idPlan);

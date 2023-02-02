@@ -47,8 +47,7 @@ public class MenuController {
 
   @GetMapping("/office")
   public ResponseEntity<ResponseBaseItens<MenuOfficeDto>> indexOffice(
-      @RequestHeader(name = "Authorization") final String autorization,
-      @Authorization final String authorization) {
+      @RequestHeader(name = "Authorization") final String autorization) {
 
     final Long idUser = this.tokenService.getUserId(autorization);
     final List<MenuOfficeDto> offices = this.menuService.findAllOffice(idUser);
@@ -64,10 +63,8 @@ public class MenuController {
   public ResponseEntity<ResponseBaseItens<WorkpackMenuDto>> indexPortfolio(
       @RequestParam("id-office") final Long idOffice,
       @RequestParam(value = "id-plan", required = false) final Long idPlan,
-      @RequestHeader(name = "Authorization") final String autorization,
-      @Authorization final String authorization) {
+      @RequestHeader(name = "Authorization") final String autorization) {
 
-    this.canAccessService.ensureCanReadResource(idOffice, authorization);
     final Long idUser = this.tokenService.getUserId(autorization);
     final List<WorkpackMenuDto> portfolios = this.menuService
         .findAllPortfolio(new PortfolioMenuRequest(idOffice, idPlan, idUser));
@@ -81,10 +78,8 @@ public class MenuController {
 
   @GetMapping("/planModels")
   public ResponseEntity<ResponseBaseItens<PlanModelMenuResponse>> indexWorkpackModels(
-      @RequestParam("id-office") final Long idOffice,
-      @Authorization final String authorization) {
+      @RequestParam("id-office") final Long idOffice) {
 
-    this.canAccessService.ensureCanReadResource(idOffice, authorization);
     final List<PlanModelMenuResponse> responses = this.workpackModelMenuService.getResponses(idOffice);
 
     if (responses.isEmpty()) {
