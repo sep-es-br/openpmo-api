@@ -52,10 +52,9 @@ public class OfficeController {
   @GetMapping
   public ResponseEntity<ResponseBase<List<OfficeDto>>> indexBase(
       @RequestHeader(name = "Authorization") final String autorization,
-      @RequestParam(required = false) final Long idFilter,
-      @Authorization final String authorization) {
+      @RequestParam(required = false) final Long idFilter) {
 
-    this.canAccessService.ensureCanReadResource(idFilter, authorization);
+    this.canAccessService.ensureCanReadResource(idFilter, autorization);
     final String token = autorization.substring(7);
     final Long idUser = this.tokenService.getPersonId(token, TokenType.AUTHENTICATION);
     List<OfficeDto> offices = this.officeService.findAll(idFilter)
