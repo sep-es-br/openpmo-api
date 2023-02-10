@@ -29,19 +29,18 @@ public class StakeholderController {
 
   @Autowired
   public StakeholderController(
-    final StakeholderService stakeholderService,
-    final ICanAccessService canAccessService
-  ) {
+      final StakeholderService stakeholderService,
+      final ICanAccessService canAccessService) {
     this.stakeholderService = stakeholderService;
     this.canAccessService = canAccessService;
   }
 
   @GetMapping
   public ResponseEntity<ResponseBase<List<StakeholderDto>>> index(
-    @Authorization final String authorization,
-    @RequestParam(name = "id-workpack") final Long idWorkpack,
-    @RequestParam(required = false) final Long idFilter
-  ) {
+      @Authorization final String authorization,
+      @RequestParam(name = "id-workpack") final Long idWorkpack,
+      @RequestParam(required = false) final Long idFilter) {
+
     this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
     final List<StakeholderDto> isStakeHolderIn = this.stakeholderService.findAll(idWorkpack, idFilter);
     return ResponseEntity.ok(ResponseBase.of(isStakeHolderIn));
@@ -49,12 +48,11 @@ public class StakeholderController {
 
   @GetMapping("/responsibles")
   public ResponseEntity<ResponseBase<Set<StakeholderCardViewDto>>> findAllPersonStakeholderByIdWorkpack(
-    @RequestParam("id-workpack") final Long idWorkpack,
-    @Authorization final String authorization
-  ) {
+      @RequestParam("id-workpack") final Long idWorkpack,
+      @Authorization final String authorization) {
     this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
     final Set<StakeholderCardViewDto> stakeholders = this.stakeholderService
-      .findAllPersonStakeholderByWorkpackId(idWorkpack);
+        .findAllPersonStakeholderByWorkpackId(idWorkpack);
     final ResponseBase<Set<StakeholderCardViewDto>> response = ResponseBase.of(stakeholders);
     return ResponseEntity.ok(response);
   }

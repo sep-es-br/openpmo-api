@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.controller.workpack;
 
+import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.ComboDto;
 import br.gov.es.openpmo.dto.ResponseBaseItens;
 import br.gov.es.openpmo.dto.workpack.ResponseBaseWorkpackDetail;
@@ -39,12 +40,11 @@ public class WorkpackLinkController {
 
   @Autowired
   public WorkpackLinkController(
-    final WorkpackSharedService workpackSharedService,
-    final WorkpackLinkService workpackLinkService,
-    final TokenService tokenService,
-    final WorkpackPermissionVerifier workpackPermissionVerifier,
-    final ICanAccessService canAccessService
-  ) {
+      final WorkpackSharedService workpackSharedService,
+      final WorkpackLinkService workpackLinkService,
+      final TokenService tokenService,
+      final WorkpackPermissionVerifier workpackPermissionVerifier,
+      final ICanAccessService canAccessService) {
     this.workpackSharedService = workpackSharedService;
     this.workpackLinkService = workpackLinkService;
     this.tokenService = tokenService;
@@ -53,62 +53,65 @@ public class WorkpackLinkController {
   }
 
   @GetMapping("/can-be-linked")
-  public ResponseEntity<ResponseBaseItens<ComboDto>> getAllWorkpackCanBeLinked(@RequestParam("id-workpack-model") final Long idworkpackModel) {
+  public ResponseEntity<ResponseBaseItens<ComboDto>> getAllWorkpackCanBeLinked(
+      @RequestParam("id-workpack-model") final Long idworkpackModel,
+      @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanEditResource(idworkpackModel.longValue(), authorization);
     final List<ComboDto> response = this.workpackSharedService.getSharedWorkpacks(idworkpackModel);
     return ResponseEntity.ok(ResponseBaseItens.of(response));
   }
 
   @PostMapping("/{id-workpack}/link/to/workpackModel/{id-workpack-model}")
   public ResponseEntity<ResponseBaseItens<ComboDto>> createLink(
-    @PathVariable("id-workpack") final Long idWorkpack,
-    @PathVariable("id-workpack-model") final Long idworkpackModel,
-    @RequestParam("id-plan") final Long idPlan,
-    @RequestParam(value = "id-parent", required = false) final Long idParent,
-    @RequestHeader("Authorization") final String authorization
-  ) {
-    this.canAccessService.ensureCanEditResource(idWorkpack, authorization);
+      @PathVariable("id-workpack") final Long idWorkpack,
+      @PathVariable("id-workpack-model") final Long idworkpackModel,
+      @RequestParam("id-plan") final Long idPlan,
+      @RequestParam(value = "id-parent", required = false) final Long idParent,
+      @RequestHeader("Authorization") final String authorization) {
+
+    this.canAccessService.ensureCanEditResource(idParent, authorization);
     this.workpackLinkService.linkWorkpackToWorkpackModel(idWorkpack, idworkpackModel, idPlan, idParent);
     return ResponseEntity.ok(ResponseBaseItens.of(null));
   }
 
   @PostMapping("/{id-workpack}/unlink/to/workpackModel/{id-workpack-model}")
   public ResponseEntity<ResponseBaseItens<Void>> unlinkWorkpack(
-    @PathVariable("id-workpack") final Long idWorkpack,
-    @PathVariable("id-workpack-model") final Long idWorkpackModel,
-    @RequestParam("id-plan") final Long idPlan
-  ) {
+      @PathVariable("id-workpack") final Long idWorkpack,
+      @PathVariable("id-workpack-model") final Long idWorkpackModel,
+      @RequestParam("id-plan") final Long idPlan,
+      @RequestHeader("Authorization") final String authorization) {
+
+    this.canAccessService.ensureCanEditResource(idWorkpack, authorization);
     this.workpackLinkService.unlink(idWorkpack, idWorkpackModel, idPlan);
     return ResponseEntity.ok(ResponseBaseItens.empty());
   }
 
   @GetMapping("/linked/{id-workpack}")
   public ResponseEntity<ResponseBaseWorkpackDetail> getById(
-    @PathVariable("id-workpack") final Long idWorkpack,
-    @RequestParam("id-workpack-model") final Long idWorpackModelLinked,
-    @RequestParam("id-plan") final Long idPlan,
-    @RequestHeader(name = "Authorization") final String authorization
-  ) {
+      @PathVariable("id-workpack") final Long idWorkpack,
+      @RequestParam("id-workpack-model") final Long idWorpackModelLinked,
+      @RequestParam("id-plan") final Long idPlan,
+      @RequestHeader(name = "Authorization") final String authorization) {
+
     this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
 
     final Long idUser = this.tokenService.getUserId(authorization);
 
     final WorkpackDetailDto response = this.workpackLinkService.getByIdWorkpack(
-      idWorkpack,
-      idWorpackModelLinked
-    );
+        idWorkpack,
+        idWorpackModelLinked);
 
     response.setPermissions(this.workpackPermissionVerifier.fetchPermissions(
-      idUser,
-      idPlan,
-      response.getId()
-    ));
+        idUser,
+        idPlan,
+        response.getId()));
 
     return ResponseEntity.ok(
-      new ResponseBaseWorkpackDetail()
-        .setData(response)
-        .setMessage(OPERATION_SUCCESS)
-        .setSuccess(true)
-    );
+        new ResponseBaseWorkpackDetail()
+            .setData(response)
+            .setMessage(OPERATION_SUCCESS)
+            .setSuccess(true));
   }
 
 }

@@ -3,6 +3,7 @@ package br.gov.es.openpmo.controller.journals;
 import br.gov.es.openpmo.dto.Response;
 import br.gov.es.openpmo.service.journals.EvidenceCreator;
 import br.gov.es.openpmo.service.journals.EvidenceFinder;
+import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.utils.ResponseHandler;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,37 +34,46 @@ public class EvidenceController {
 
   private final ResponseHandler responseHandler;
 
+  private final ICanAccessService canAccessService;
+
   @Autowired
   public EvidenceController(
-    final EvidenceFinder evidenceFinder,
-    final EvidenceCreator evidenceCreator,
-    final ResponseHandler responseHandler
-  ) {
+      final EvidenceFinder evidenceFinder,
+      final EvidenceCreator evidenceCreator,
+      final ResponseHandler responseHandler,
+      final ICanAccessService canAccessService) {
     this.evidenceFinder = evidenceFinder;
     this.evidenceCreator = evidenceCreator;
     this.responseHandler = responseHandler;
+    this.canAccessService = canAccessService;
   }
 
   private static MediaType getContentType(final Resource imagem) {
     return MediaTypeFactory.getMediaType(imagem)
-      .orElse(MediaType.APPLICATION_OCTET_STREAM);
+        .orElse(MediaType.APPLICATION_OCTET_STREAM);
   }
 
   @GetMapping("/image/{id-evidence}")
-  public ResponseEntity<UrlResource> getEvidence(@PathVariable("id-evidence") final Long idEvidence) throws IOException {
+  public ResponseEntity<UrlResource> getEvidence(@PathVariable("id-evidence") final Long idEvidence,
+      final String authorization)
+      throws IOException {
+
+    this.canAccessService.ensureCanReadResource(idEvidence, authorization);
     final UrlResource imagem = this.evidenceFinder.getEvidence(idEvidence);
 
     return ResponseEntity.ok()
-      .contentType(getContentType(imagem))
-      .body(imagem);
+        .contentType(getContentType(imagem))
+        .body(imagem);
   }
 
   @Transactional
   @PostMapping("/{id-journal}")
   public Response<Void> create(
-    @PathVariable("id-journal") final Long idJournal,
-    @RequestParam final MultipartFile file
-  ) throws IOException {
+      @PathVariable("id-journal") final Long idJournal,
+      @RequestParam final MultipartFile file,
+      final String authorization) throws IOException {
+
+    this.canAccessService.ensureCanEditResource(idJournal, authorization);
     this.evidenceCreator.create(idJournal, file);
     return this.responseHandler.success();
   }

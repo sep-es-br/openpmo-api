@@ -33,11 +33,10 @@ public class WorkpackPasteController {
 
   @Autowired
   public WorkpackPasteController(
-    final CheckPasteWorkpackService checkPasteWorkpackService,
-    final PasteToWorkpackService pasteToWorkpackService,
-    final ResponseHandler responseHandler,
-    final ICanAccessService canAccessService
-  ) {
+      final CheckPasteWorkpackService checkPasteWorkpackService,
+      final PasteToWorkpackService pasteToWorkpackService,
+      final ResponseHandler responseHandler,
+      final ICanAccessService canAccessService) {
     this.checkPasteWorkpackService = checkPasteWorkpackService;
     this.pasteToWorkpackService = pasteToWorkpackService;
     this.responseHandler = responseHandler;
@@ -46,15 +45,16 @@ public class WorkpackPasteController {
 
   @GetMapping("/{idWorkpack}/check-paste/{idWorkpackModelTo}")
   public Response<WorkpackPasteResponse> checksIfCanPasteWorkpack(
-    @PathVariable final Long idWorkpack,
-    @PathVariable final Long idWorkpackModelTo,
-    @RequestParam final Long idWorkpackModelFrom
-  ) {
+      @PathVariable final Long idWorkpack,
+      @PathVariable final Long idWorkpackModelTo,
+      @RequestParam final Long idWorkpackModelFrom,
+      @RequestHeader("Authorization") final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
     final WorkpackPasteResponse response = this.checkPasteWorkpackService.checksIfCanPasteWorkpack(
-      idWorkpack,
-      idWorkpackModelTo,
-      idWorkpackModelFrom
-    );
+        idWorkpack,
+        idWorkpackModelTo,
+        idWorkpackModelFrom);
 
     return this.responseHandler.success(response);
   }
@@ -62,40 +62,38 @@ public class WorkpackPasteController {
   @Transactional
   @PostMapping("/{idWorkpack}/paste-to/{idWorkpackModelTo}")
   public Response<Void> pastesWorkpackTo(
-    @PathVariable final Long idWorkpack,
-    @RequestParam final Long idPlanFrom,
-    @RequestParam final Long idPlanTo,
-    @RequestParam final Long idWorkpackModelFrom,
-    @PathVariable final Long idWorkpackModelTo,
-    @RequestParam(required = false) final Long idParentFrom,
-    @RequestParam(required = false) final Long idParentTo,
-    @RequestHeader("Authorization") final String authorization
-  ) {
+      @PathVariable final Long idWorkpack,
+      @RequestParam final Long idPlanFrom,
+      @RequestParam final Long idPlanTo,
+      @RequestParam final Long idWorkpackModelFrom,
+      @PathVariable final Long idWorkpackModelTo,
+      @RequestParam(required = false) final Long idParentFrom,
+      @RequestParam(required = false) final Long idParentTo,
+      @RequestHeader("Authorization") final String authorization) {
+
+    this.canAccessService.ensureCanEditResource(idParentTo, authorization);
     this.ensureCanReadResource(
-      idWorkpack,
-      Optional
-        .ofNullable(idParentTo)
-        .orElse(idPlanTo),
-      authorization
-    );
+        idWorkpack,
+        Optional
+            .ofNullable(idParentTo)
+            .orElse(idPlanTo),
+        authorization);
     this.pasteToWorkpackService.pastesWorkpackTo(
-      idWorkpack,
-      idPlanFrom,
-      idParentFrom,
-      idWorkpackModelFrom,
-      idPlanTo,
-      idParentTo,
-      idWorkpackModelTo
-    );
+        idWorkpack,
+        idPlanFrom,
+        idParentFrom,
+        idWorkpackModelFrom,
+        idPlanTo,
+        idParentTo,
+        idWorkpackModelTo);
 
     return this.responseHandler.success();
   }
 
   private void ensureCanReadResource(
-    final Long idWorkpack,
-    final Long idTargetTo,
-    final String authorization
-  ) {
+      final Long idWorkpack,
+      final Long idTargetTo,
+      final String authorization) {
     this.canAccessService.ensureCanEditResource(idWorkpack, authorization);
     this.canAccessService.ensureCanEditResource(idTargetTo, authorization);
   }

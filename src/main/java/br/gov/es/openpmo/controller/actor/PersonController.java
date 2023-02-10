@@ -46,11 +46,10 @@ public class PersonController {
 
   @Autowired
   public PersonController(
-    final PersonService personService,
-    final PersonPermissionsService personPermissionsService,
-    final ResponseHandler responseHandler,
-    final ICanAccessService canAccessService
-  ) {
+      final PersonService personService,
+      final PersonPermissionsService personPermissionsService,
+      final ResponseHandler responseHandler,
+      final ICanAccessService canAccessService) {
     this.personService = personService;
     this.personPermissionsService = personPermissionsService;
     this.responseHandler = responseHandler;
@@ -59,80 +58,72 @@ public class PersonController {
 
   @GetMapping("/{key}")
   public ResponseEntity<ResponseBase<PersonGetByIdDto>> findByKey(
-    @PathVariable final String key,
-    @RequestParam(required = false) final Long idOffice,
-    final UriComponentsBuilder uriComponentsBuilder
-  ) {
-    final Optional<PersonGetByIdDto> maybePerson =
-      this.personService.maybeFindPersonDataByKey(key, idOffice, uriComponentsBuilder);
+      @PathVariable final String key,
+      @RequestParam(required = false) final Long idOffice,
+      final UriComponentsBuilder uriComponentsBuilder) {
+    final Optional<PersonGetByIdDto> maybePerson = this.personService.maybeFindPersonDataByKey(key, idOffice,
+        uriComponentsBuilder);
 
     return maybePerson
-      .map(personGetByIdDto -> ResponseEntity.ok(ResponseBase.of(personGetByIdDto)))
-      .orElseGet(() -> ResponseEntity.noContent().build());
+        .map(personGetByIdDto -> ResponseEntity.ok(ResponseBase.of(personGetByIdDto)))
+        .orElseGet(() -> ResponseEntity.noContent().build());
   }
 
   @GetMapping("/office/{officeScope}")
   public ResponseEntity<ResponseBase<List<PersonListDto>>> findAll(
-    @PathVariable final Long officeScope,
-    @RequestParam(value = "stakeholderStatus", required = false, defaultValue = "ALL") final StakeholderFilterEnum stakeholderStatus,
-    @RequestParam(value = "userStatus", required = false, defaultValue = "ALL") final UserFilterEnum userStatus,
-    @RequestParam(value = "ccbMemberStatus", required = false, defaultValue = "ALL") final CcbMemberFilterEnum ccbMemberStatus,
-    @RequestParam(value = "name", required = false) final String name,
-    @RequestParam(value = "planScope", required = false) final Long[] planScope,
-    @RequestParam(value = "workpackScope", required = false) final Long[] workpackScope,
-    final UriComponentsBuilder uriComponentsBuilder,
-    @Authorization final String authorization
-  ) {
+      @PathVariable final Long officeScope,
+      @RequestParam(value = "stakeholderStatus", required = false, defaultValue = "ALL") final StakeholderFilterEnum stakeholderStatus,
+      @RequestParam(value = "userStatus", required = false, defaultValue = "ALL") final UserFilterEnum userStatus,
+      @RequestParam(value = "ccbMemberStatus", required = false, defaultValue = "ALL") final CcbMemberFilterEnum ccbMemberStatus,
+      @RequestParam(value = "name", required = false) final String name,
+      @RequestParam(value = "planScope", required = false) final Long[] planScope,
+      @RequestParam(value = "workpackScope", required = false) final Long[] workpackScope,
+      final UriComponentsBuilder uriComponentsBuilder,
+      @Authorization final String authorization) {
     this.canAccessService.ensureCanAccessManagementResource(officeScope, authorization);
     final List<PersonListDto> persons = this.personService.findAll(
-      stakeholderStatus,
-      userStatus,
-      ccbMemberStatus,
-      name,
-      officeScope,
-      planScope,
-      workpackScope,
-      uriComponentsBuilder
-    );
+        stakeholderStatus,
+        userStatus,
+        ccbMemberStatus,
+        name,
+        officeScope,
+        planScope,
+        workpackScope,
+        uriComponentsBuilder);
 
     return ResponseEntity.ok(ResponseBase.of(persons));
   }
 
   @GetMapping("/{personId}/office/{officeId}")
   public ResponseEntity<ResponseBase<PersonDetailDto>> findById(
-    @PathVariable("personId") final Long personId,
-    @PathVariable("officeId") final Long officeId,
-    final UriComponentsBuilder uriComponentsBuilder,
-    @Authorization final String authorization
-  ) {
+      @PathVariable("personId") final Long personId,
+      @PathVariable("officeId") final Long officeId,
+      final UriComponentsBuilder uriComponentsBuilder,
+      @Authorization final String authorization) {
     this.canAccessService.ensureCanAccessManagementOrSelfResource(Arrays.asList(personId, officeId), authorization);
     final PersonDetailDto personDetailDto = this.personService.findPersonDetailsById(
-      personId,
-      officeId,
-      uriComponentsBuilder
-    );
+        personId,
+        officeId,
+        uriComponentsBuilder);
     return ResponseEntity.ok(ResponseBase.of(personDetailDto));
   }
 
   @PutMapping("/office")
   public ResponseEntity<ResponseBase<EntityDto>> update(
-    @RequestBody @Valid final PersonUpdateDto personUpdateDto,
-    @Authorization final String authorization
-  ) {
+      @RequestBody @Valid final PersonUpdateDto personUpdateDto,
+      @Authorization final String authorization) {
     this.canAccessService.ensureCanAccessManagementOrSelfResource(
-      Arrays.asList(personUpdateDto.getId(), personUpdateDto.getIdOffice()),
-      authorization
-    );
+        Arrays.asList(personUpdateDto.getId(), personUpdateDto.getIdOffice()),
+        authorization);
     final Person person = this.personService.update(personUpdateDto);
     return ResponseEntity.ok().body(ResponseBase.of(new EntityDto(person.getId())));
   }
 
   @DeleteMapping("/{idPerson}/office/{idOffice}/permissions")
   public ResponseEntity<ResponseBase<Void>> deleteAllPermissions(
-    @PathVariable final Long idPerson,
-    @PathVariable final Long idOffice,
-    @Authorization final String authorization
-  ) {
+      @PathVariable final Long idPerson,
+      @PathVariable final Long idOffice,
+      @Authorization final String authorization) {
     this.canAccessService.ensureCanAccessManagementResource(idPerson, authorization);
     this.personPermissionsService.deleteAllPermissions(idPerson, idOffice);
     return ResponseEntity.ok().build();
@@ -140,22 +131,18 @@ public class PersonController {
 
   @GetMapping("/fullname")
   public ResponseEntity<ResponseBase<List<PersonDto>>> findPersonByFullname(
-    @RequestParam("fullName") final String partialName,
-    @RequestParam final Long idWorkpack
-  ) {
-    final List<PersonDto> persons =
-      this.personService.findPersonsByFullNameAndWorkpack(partialName, idWorkpack);
+      @RequestParam("fullName") final String partialName,
+      @RequestParam final Long idWorkpack) {
 
-    return persons == null ?
-      ResponseEntity.noContent().build() :
-      ResponseEntity.ok(ResponseBase.of(persons));
+    final List<PersonDto> persons = this.personService.findPersonsByFullNameAndWorkpack(partialName, idWorkpack);
+
+    return persons == null ? ResponseEntity.noContent().build() : ResponseEntity.ok(ResponseBase.of(persons));
   }
 
   @GetMapping("/{idPerson}/offices")
   public ResponseEntity<ResponseBase<List<ComboDto>>> findAllOfficesByPerson(
-    @PathVariable final Long idPerson,
-    @Authorization final String authorization
-  ) {
+      @PathVariable final Long idPerson,
+      @Authorization final String authorization) {
     this.canAccessService.ensureCanAccessManagementOrSelfResource(Collections.singletonList(idPerson), authorization);
     final List<ComboDto> offices = this.personService.findOfficesByPersonId(idPerson);
     return ResponseEntity.ok(ResponseBase.of(offices));
@@ -163,9 +150,8 @@ public class PersonController {
 
   @PostMapping
   public ResponseEntity<ResponseBase<EntityDto>> save(
-    @Valid @RequestBody final PersonCreateRequest request,
-    @Authorization final String authorization
-  ) {
+      @Valid @RequestBody final PersonCreateRequest request,
+      @Authorization final String authorization) {
     this.canAccessService.ensureIsAdministrator(authorization);
     final Person person = this.personService.create(request);
     return ResponseEntity.ok(ResponseBase.of(new EntityDto(person.getId())));
@@ -174,11 +160,10 @@ public class PersonController {
   @Transactional
   @PatchMapping("/{id-person}")
   public Response<Void> updateName(
-    @PathVariable("id-person") final Long idPerson,
-    @RequestBody final NameRequest nameRequest,
-    @Authorization final String authorization
-  ) {
-    this.canAccessService.ensureIsAdministrator(authorization);
+      @PathVariable("id-person") final Long idPerson,
+      @RequestBody final NameRequest nameRequest,
+      @Authorization final String authorization) {
+    this.canAccessService.ensureCanEditResource(idPerson, authorization);
     this.personService.updateName(idPerson, nameRequest.getName());
     return this.responseHandler.success();
   }

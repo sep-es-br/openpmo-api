@@ -6,6 +6,7 @@ import br.gov.es.openpmo.dto.person.CitizenByNameQuery;
 import br.gov.es.openpmo.dto.person.CitizenDto;
 import br.gov.es.openpmo.service.actors.CitizenService;
 import br.gov.es.openpmo.service.authentication.TokenService;
+import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -29,52 +30,59 @@ public class CitizenController {
 
   private final TokenService tokenService;
 
+  private final ICanAccessService canAccessService;
+
   @Autowired
   public CitizenController(
-    final CitizenService service,
-    final AcessoCidadaoApi acessoCidadaoApi,
-    final TokenService tokenService
-  ) {
+      final CitizenService service,
+      final AcessoCidadaoApi acessoCidadaoApi,
+      final TokenService tokenService,
+      final ICanAccessService canAccessService) {
     this.service = service;
     this.acessoCidadaoApi = acessoCidadaoApi;
     this.tokenService = tokenService;
+    this.canAccessService = canAccessService;
   }
 
   @GetMapping("/name")
   public ResponseEntity<ResponseBase<List<CitizenByNameQuery>>> findCitizenNameAndSub(
-    @RequestParam final String name,
-    @RequestHeader(name = "Authorization") final String authorization
-  ) {
+      @RequestParam final String name,
+      @RequestHeader(name = "Authorization") final String authorization) {
+
     final Long idPerson = this.tokenService.getUserId(authorization);
     final List<CitizenByNameQuery> personDto = this.service.findPersonByName(name, idPerson);
     final ResponseBase<List<CitizenByNameQuery>> response = new ResponseBase<List<CitizenByNameQuery>>()
-      .setData(personDto)
-      .setSuccess(true);
+        .setData(personDto)
+        .setSuccess(true);
     return ResponseEntity.ok(response);
   }
 
   @GetMapping("/{sub}")
   public ResponseEntity<ResponseBase<CitizenDto>> findPersonBySub(
-    @PathVariable final String sub,
-    @RequestParam(required = false) final Long idOffice,
-    @RequestHeader(name = "Authorization") final String authorization
-  ) {
+      @PathVariable final String sub,
+      @RequestParam(required = false) final Long idOffice,
+      @RequestHeader(name = "Authorization") final String authorization) {
+
+    this.canAccessService.ensureCanEditResource(idOffice, authorization);
+
     final Long idPerson = this.tokenService.getUserId(authorization);
     final CitizenDto citizenDto = this.service.findCitizenBySub(sub, idOffice, idPerson);
 
     final ResponseBase<CitizenDto> response = new ResponseBase<CitizenDto>()
-      .setData(citizenDto)
-      .setSuccess(true);
+        .setData(citizenDto)
+        .setSuccess(true);
 
     return ResponseEntity.ok(response);
   }
 
   @GetMapping("/cpf")
   public ResponseEntity<CitizenDto> findPersonByCpf(
-    @RequestParam final String cpf,
-    @RequestParam(required = false) final Long idOffice,
-    @RequestHeader(name = "Authorization") final String authorization
-  ) {
+      @RequestParam final String cpf,
+      @RequestParam(required = false) final Long idOffice,
+      @RequestHeader(name = "Authorization") final String authorization) {
+
+    this.canAccessService.ensureCanEditResource(idOffice, authorization);
+
     final Long idPerson = this.tokenService.getUserId(authorization);
     final CitizenDto citizen = this.service.findPersonByCpf(cpf, idOffice, idPerson);
     return ResponseEntity.ok(citizen);
@@ -82,8 +90,7 @@ public class CitizenController {
 
   @GetMapping("/load")
   public ResponseEntity<Void> load(
-    @RequestHeader(name = "Authorization") final String authorization
-  ) {
+      @RequestHeader(name = "Authorization") final String authorization) {
     final Long idPerson = this.tokenService.getUserId(authorization);
     this.acessoCidadaoApi.load(idPerson);
     return ResponseEntity.ok().build();

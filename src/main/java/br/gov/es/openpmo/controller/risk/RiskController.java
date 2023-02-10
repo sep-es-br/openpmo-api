@@ -37,10 +37,9 @@ public class RiskController {
   private final ICanAccessService canAccessService;
 
   public RiskController(
-    final RiskService service,
-    final TokenService tokenService,
-    final ICanAccessService canAccessService
-  ) {
+      final RiskService service,
+      final TokenService tokenService,
+      final ICanAccessService canAccessService) {
     this.service = service;
     this.tokenService = tokenService;
     this.canAccessService = canAccessService;
@@ -48,10 +47,9 @@ public class RiskController {
 
   @GetMapping
   public ResponseEntity<ResponseBase<List<RiskCardDto>>> findAll(
-    @RequestParam("id-workpack") final Long idWorkpack,
-    @RequestParam(required = false) final Long idFilter,
-    @Authorization final String authorization
-  ) {
+      @RequestParam("id-workpack") final Long idWorkpack,
+      @RequestParam(required = false) final Long idFilter,
+      @Authorization final String authorization) {
     this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
     final Long idPerson = this.tokenService.getUserId(authorization);
     final List<RiskCardDto> risks = this.service.findAllAsCardDto(idWorkpack, idFilter, idPerson);
@@ -61,9 +59,8 @@ public class RiskController {
 
   @GetMapping("/{idRisk}")
   public ResponseEntity<ResponseBase<RiskDetailDto>> findById(
-    @PathVariable final Long idRisk,
-    @Authorization final String authorization
-  ) {
+      @PathVariable final Long idRisk,
+      @Authorization final String authorization) {
     this.canAccessService.ensureCanReadResource(idRisk, authorization);
     final RiskDetailDto risks = this.service.findByIdAsRiskDetail(idRisk);
     final ResponseBase<RiskDetailDto> response = ResponseBase.of(risks);
@@ -72,9 +69,8 @@ public class RiskController {
 
   @PostMapping
   public ResponseEntity<ResponseBase<EntityDto>> create(
-    @Valid @RequestBody final RiskCreateDto request,
-    @Authorization final String authorization
-  ) {
+      @Valid @RequestBody final RiskCreateDto request,
+      @Authorization final String authorization) {
     this.canAccessService.ensureCanEditResource(request.getIdWorkpack(), authorization);
     final Long idPerson = this.tokenService.getUserId(authorization);
     final Risk risk = this.service.create(request, idPerson);
@@ -84,9 +80,8 @@ public class RiskController {
 
   @PutMapping
   public ResponseEntity<ResponseBase<RiskDetailDto>> update(
-    @Valid @RequestBody final RiskUpdateDto request,
-    @Authorization final String authorization
-  ) {
+      @Valid @RequestBody final RiskUpdateDto request,
+      @Authorization final String authorization) {
     this.canAccessService.ensureCanEditResource(request.getId(), authorization);
     final Long idPerson = this.tokenService.getUserId(authorization);
     final RiskDetailDto risk = this.service.update(request, idPerson);
@@ -96,9 +91,8 @@ public class RiskController {
 
   @DeleteMapping("/{riskId}")
   public ResponseEntity<ResponseBase<Void>> delete(
-    @PathVariable final Long riskId,
-    @Authorization final String authorization
-  ) {
+      @PathVariable final Long riskId,
+      @Authorization final String authorization) {
     this.canAccessService.ensureCanEditResource(riskId, authorization);
     this.service.deleteById(riskId);
     return ResponseEntity.ok().build();

@@ -60,20 +60,18 @@ public class WorkpackController {
   private final IDashboardService dashboardService;
   private final ICanAccessService canAccessService;
 
-
   @Autowired
   public WorkpackController(
-    final ResponseHandler responseHandler,
-    final WorkpackService workpackService,
-    final TokenService tokenService,
-    final WorkpackPermissionVerifier workpackPermissionVerifier,
-    final JournalCreator journalCreator,
-    final GetWorkpackName getWorkpackName,
-    final ICompleteDeliverableService completeDeliverableService,
-    final IDeliverableEndManagementService deliverableEndManagementService,
-    final IDashboardService dashboardService,
-    final ICanAccessService canAccessService
-  ) {
+      final ResponseHandler responseHandler,
+      final WorkpackService workpackService,
+      final TokenService tokenService,
+      final WorkpackPermissionVerifier workpackPermissionVerifier,
+      final JournalCreator journalCreator,
+      final GetWorkpackName getWorkpackName,
+      final ICompleteDeliverableService completeDeliverableService,
+      final IDeliverableEndManagementService deliverableEndManagementService,
+      final IDashboardService dashboardService,
+      final ICanAccessService canAccessService) {
     this.responseHandler = responseHandler;
     this.workpackService = workpackService;
     this.tokenService = tokenService;
@@ -95,55 +93,50 @@ public class WorkpackController {
   }
 
   private static void sortWorkpacks(
-    final List<? extends Workpack> workpacks,
-    final WorkpackModel workpackModel
-  ) {
+      final List<? extends Workpack> workpacks,
+      final WorkpackModel workpackModel) {
     workpacks.sort((a, b) -> compare(
-      getValueProperty(a, workpackModel.getSortBy()),
-      getValueProperty(b, workpackModel.getSortBy())
-    ));
+        getValueProperty(a, workpackModel.getSortBy()),
+        getValueProperty(b, workpackModel.getSortBy())));
   }
 
   @GetMapping
   public ResponseEntity<ResponseBaseWorkpack> indexBase(
-    @RequestParam("id-plan") final Long idPlan,
-    @RequestParam(value = "id-plan-model", required = false) final Long idPlanModel,
-    @RequestParam(value = "id-workpack-model", required = false) final Long idWorkpackModel,
-    @RequestParam(value = "idFilter", required = false) final Long idFilter,
-    @Authorization final String authorization
-  ) {
+      @RequestParam("id-plan") final Long idPlan,
+      @RequestParam(value = "id-plan-model", required = false) final Long idPlanModel,
+      @RequestParam(value = "id-workpack-model", required = false) final Long idWorkpackModel,
+      @RequestParam(value = "idFilter", required = false) final Long idFilter,
+      @Authorization final String authorization) {
 
     this.canAccessService.ensureCanReadResource(idPlan, authorization);
 
     final Long idUser = this.tokenService.getUserId(authorization);
 
     final List<Workpack> workpacks = this.findAllWorkpacks(
-      idPlan,
-      idPlanModel,
-      idWorkpackModel,
-      idFilter
-    );
+        idPlan,
+        idPlanModel,
+        idWorkpackModel,
+        idFilter);
 
-    if(workpacks.isEmpty()) {
+    if (workpacks.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
 
-    if(isNotNull(idWorkpackModel)) {
+    if (isNotNull(idWorkpackModel)) {
       final WorkpackModel workpackModel = this.workpackService.getWorkpackModelById(idWorkpackModel);
-      if(workpackModelHasSortBy(workpackModel)) {
+      if (workpackModelHasSortBy(workpackModel)) {
         sortWorkpacks(workpacks, workpackModel);
       }
     }
 
     final List<WorkpackDetailDto> workpackDetailDtos = workpacks.parallelStream()
-      .map(workpack -> this.mapToWorkpackDetailDto(workpack, idWorkpackModel))
-      .collect(Collectors.toList());
+        .map(workpack -> this.mapToWorkpackDetailDto(workpack, idWorkpackModel))
+        .collect(Collectors.toList());
 
     final List<WorkpackDetailDto> verify = this.workpackPermissionVerifier.verify(
-      workpackDetailDtos,
-      idUser,
-      idPlan
-    );
+        workpackDetailDtos,
+        idUser,
+        idPlan);
 
     verify.parallelStream().forEach(workpackDetailDto -> {
       final SimpleDashboard dashboard = this.dashboardService.buildSimple(workpackDetailDto.getId());
@@ -151,28 +144,25 @@ public class WorkpackController {
     });
 
     return verify.isEmpty()
-      ? ResponseEntity.noContent().build()
-      : ResponseEntity.ok(new ResponseBaseWorkpack().setData(verify).setMessage(SUCESSO).setSuccess(true));
+        ? ResponseEntity.noContent().build()
+        : ResponseEntity.ok(new ResponseBaseWorkpack().setData(verify).setMessage(SUCESSO).setSuccess(true));
   }
 
   private List<Workpack> findAllWorkpacks(
-    final Long idPlan,
-    final Long idPlanModel,
-    final Long idWorkPackModel,
-    final Long idFilter
-  ) {
+      final Long idPlan,
+      final Long idPlanModel,
+      final Long idWorkPackModel,
+      final Long idFilter) {
     return this.workpackService.findAll(
-      idPlan,
-      idPlanModel,
-      idWorkPackModel,
-      idFilter
-    );
+        idPlan,
+        idPlanModel,
+        idWorkPackModel,
+        idFilter);
   }
 
   private WorkpackDetailDto mapToWorkpackDetailDto(
-    final Workpack workpack,
-    final Long idWorkpackModel
-  ) {
+      final Workpack workpack,
+      final Long idWorkpackModel) {
     final WorkpackDetailDto itemDetail = this.workpackService.getWorkpackDetailDto(workpack);
     itemDetail.applyLinkedStatus(workpack, idWorkpackModel);
     return itemDetail;
@@ -180,58 +170,56 @@ public class WorkpackController {
 
   @GetMapping("/parent")
   public ResponseEntity<ResponseBaseWorkpack> indexBase(
-    @RequestParam("id-plan") final Long idPlan,
-    @RequestParam("id-workpack-parent") final Long idWorkpackParent,
-    @RequestParam(value = "id-plan-model", required = false) final Long idPlanModel,
-    @RequestParam(value = "id-workpack-model", required = false) final Long idWorkpackModel,
-    @RequestParam(value = "idFilter", required = false) final Long idFilter,
-    @RequestParam(value = "workpackLinked", required = false) final boolean workpackLinked,
-    @Authorization final String authorization
-  ) {
-    this.canAccessService.ensureCanReadResource(idWorkpackParent, authorization);
+      @RequestParam("id-plan") final Long idPlan,
+      @RequestParam("id-workpack-parent") final Long idWorkpackParent,
+      @RequestParam(value = "id-plan-model", required = false) final Long idPlanModel,
+      @RequestParam(value = "id-workpack-model", required = false) final Long idWorkpackModel,
+      @RequestParam(value = "idFilter", required = false) final Long idFilter,
+      @RequestParam(value = "workpackLinked", required = false) final boolean workpackLinked,
+      @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(idPlan, authorization);
 
     final Long idUser = this.tokenService.getUserId(authorization);
 
     final List<Workpack> workpacks = this.workpackService.findAllUsingParent(
-      idPlan,
-      idPlanModel,
-      idWorkpackModel,
-      idWorkpackParent,
-      idFilter,
-      workpackLinked
-    );
+        idPlan,
+        idPlanModel,
+        idWorkpackModel,
+        idWorkpackParent,
+        idFilter,
+        workpackLinked);
 
     final List<WorkpackDetailDto> workpackList = workpacks.parallelStream()
-      .map(workpack -> this.mapToWorkpackDetailDto(workpack, idWorkpackModel))
-      .collect(Collectors.toList());
+        .map(workpack -> this.mapToWorkpackDetailDto(workpack, idWorkpackModel))
+        .collect(Collectors.toList());
 
-    if(workpackList.isEmpty()) {
+    if (workpackList.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
 
     final List<WorkpackDetailDto> verify = this.workpackPermissionVerifier.verify(
-      workpackList,
-      idUser,
-      idPlan
-    );
+        workpackList,
+        idUser,
+        idPlan);
 
     verify.parallelStream().filter(workpackDetailDto -> !workpackDetailDto.isCanceled())
-      .forEach(workpackDetailDto -> {
-        final SimpleDashboard dashboard = this.dashboardService.buildSimple(workpackDetailDto.getId());
-        workpackDetailDto.setDashboard(dashboard);
-      });
+        .forEach(workpackDetailDto -> {
+          final SimpleDashboard dashboard = this.dashboardService.buildSimple(workpackDetailDto.getId());
+          workpackDetailDto.setDashboard(dashboard);
+        });
 
     return verify.isEmpty()
-      ? ResponseEntity.noContent().build()
-      : ResponseEntity.ok(new ResponseBaseWorkpack().setData(verify).setMessage(SUCESSO).setSuccess(true));
+        ? ResponseEntity.noContent().build()
+        : ResponseEntity.ok(new ResponseBaseWorkpack().setData(verify).setMessage(SUCESSO).setSuccess(true));
   }
 
   @GetMapping("/{idWorkpack}")
   public ResponseEntity<ResponseBaseWorkpackDetail> find(
-    @PathVariable final Long idWorkpack,
-    @RequestParam(value = "id-plan", required = false) final Long idPlan,
-    @Authorization final String authorization
-  ) {
+      @PathVariable final Long idWorkpack,
+      @RequestParam(value = "id-plan", required = false) final Long idPlan,
+      @Authorization final String authorization) {
+
     this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
 
     final Long idPerson = this.tokenService.getUserId(authorization);
@@ -240,10 +228,9 @@ public class WorkpackController {
     final WorkpackDetailDto workpackDetailDto = this.workpackService.getWorkpackDetailDto(workpack, idPlan);
 
     final List<PermissionDto> permissions = this.workpackPermissionVerifier.fetchPermissions(
-      idPerson,
-      idPlan,
-      idWorkpack
-    );
+        idPerson,
+        idPlan,
+        idWorkpack);
 
     workpackDetailDto.setPermissions(permissions);
 
@@ -252,44 +239,44 @@ public class WorkpackController {
 
   @PostMapping
   public ResponseEntity<ResponseBase<EntityDto>> save(
-    @RequestBody @Valid final WorkpackParamDto request,
-    @Authorization final String authorization
-  ) {
-    this.canAccessService.ensureCanEditResource(
-      Arrays.asList(request.getIdPlan(), request.getIdParent()),
-      authorization
-    );
+      @RequestBody @Valid final WorkpackParamDto request,
+      @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanEditResource( request.getIdParent(),   authorization);
+  
     final Workpack workpack = this.workpackService.getWorkpack(request);
     final EntityDto response = this.workpackService.save(workpack, request.getIdPlan(), request.getIdParent());
 
     final Long idPerson = this.tokenService.getUserId(authorization);
     this.journalCreator.edition(workpack, JournalAction.CREATED, idPerson);
 
-    if(workpack instanceof Milestone) this.workpackService.calculateDashboard(workpack);
+    if (workpack instanceof Milestone)
+      this.workpackService.calculateDashboard(workpack);
 
     return ResponseEntity.ok(ResponseBase.of(response));
   }
 
   @PutMapping
   public ResponseEntity<ResponseBase<EntityDto>> update(
-    @RequestBody @Valid final WorkpackParamDto request,
-    @Authorization final String authorization
-  ) {
+      @RequestBody @Valid final WorkpackParamDto request,
+      @Authorization final String authorization) {
+
     this.canAccessService.ensureCanEditResource(request.getId(), authorization);
+
     final Workpack workpack = this.workpackService.update(this.workpackService.getWorkpack(request));
     final Long idPerson = this.tokenService.getUserId(authorization);
     this.journalCreator.edition(workpack, JournalAction.EDITED, idPerson);
 
-    if(workpack instanceof Milestone) this.workpackService.calculateDashboard(workpack);
+    if (workpack instanceof Milestone)
+      this.workpackService.calculateDashboard(workpack);
 
     return ResponseEntity.ok(ResponseBase.of(EntityDto.of(workpack)));
   }
 
   @PatchMapping("/{id}/cancel")
   public ResponseEntity<Void> cancel(
-    @PathVariable("id") final Long idWorkpack,
-    @Authorization final String authorization
-  ) {
+      @PathVariable("id") final Long idWorkpack,
+      @Authorization final String authorization) {
     this.canAccessService.ensureCanEditResource(idWorkpack, authorization);
     final Workpack workpack = this.workpackService.cancel(idWorkpack);
     final Long idPerson = this.tokenService.getUserId(authorization);
@@ -299,9 +286,8 @@ public class WorkpackController {
 
   @PatchMapping("/{id}/restore")
   public ResponseEntity<Void> restore(
-    @PathVariable("id") final Long idWorkpack,
-    @Authorization final String authorization
-  ) {
+      @PathVariable("id") final Long idWorkpack,
+      @Authorization final String authorization) {
     this.canAccessService.ensureCanEditResource(idWorkpack, authorization);
     this.workpackService.restore(idWorkpack);
     return ResponseEntity.ok().build();
@@ -309,9 +295,8 @@ public class WorkpackController {
 
   @DeleteMapping("/{idWorkpack}")
   public ResponseEntity<Void> delete(
-    @PathVariable final Long idWorkpack,
-    @Authorization final String authorization
-  ) {
+      @PathVariable final Long idWorkpack,
+      @Authorization final String authorization) {
     this.canAccessService.ensureCanEditResource(idWorkpack, authorization);
     final Workpack workpack = this.workpackService.findById(idWorkpack);
     this.workpackService.delete(workpack);
@@ -321,10 +306,10 @@ public class WorkpackController {
   @Transactional
   @PatchMapping("/complete-deliverable/{id-deliverable}")
   public Response<Void> completeDeliverable(
-    @PathVariable("id-deliverable") final Long idDeliverable,
-    @RequestBody final CompleteDeliverableRequest request,
-    @Authorization final String authorization
-  ) {
+      @PathVariable("id-deliverable") final Long idDeliverable,
+      @RequestBody final CompleteDeliverableRequest request,
+      @Authorization final String authorization) {
+
     this.canAccessService.ensureCanEditResource(idDeliverable, authorization);
     this.completeDeliverableService.apply(idDeliverable, request);
     return this.responseHandler.success();
@@ -333,10 +318,9 @@ public class WorkpackController {
   @Transactional
   @PatchMapping("/end-deliverable-management/{id-deliverable}")
   public Response<Void> endDeliverableManagement(
-    @PathVariable("id-deliverable") final Long idDeliverable,
-    @RequestBody final EndDeliverableManagementRequest request,
-    @Authorization final String authorization
-  ) {
+      @PathVariable("id-deliverable") final Long idDeliverable,
+      @RequestBody final EndDeliverableManagementRequest request,
+      @Authorization final String authorization) {
     this.canAccessService.ensureCanEditResource(idDeliverable, authorization);
     this.deliverableEndManagementService.apply(idDeliverable, request);
     return this.responseHandler.success();
@@ -344,13 +328,11 @@ public class WorkpackController {
 
   @GetMapping("/{idWorkpack}/name")
   public ResponseEntity<WorkpackNameResponse> getWorkpackName(
-    @PathVariable final Long idWorkpack,
-    @Authorization final String authorization
-  ) {
+      @PathVariable final Long idWorkpack,
+      @Authorization final String authorization) {
     this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
     final WorkpackNameResponse response = this.getWorkpackName.execute(idWorkpack);
     return ResponseEntity.ok(response);
   }
-
 
 }

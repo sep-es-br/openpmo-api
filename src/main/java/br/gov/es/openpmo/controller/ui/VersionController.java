@@ -1,6 +1,5 @@
 package br.gov.es.openpmo.controller.ui;
 
-
 import br.gov.es.openpmo.dto.ResponseBase;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,8 +19,8 @@ public class VersionController {
   @GetMapping
   public ResponseEntity<ResponseBase<VersionDto>> currentVersion() {
     final ResponseBase<VersionDto> response = new ResponseBase<VersionDto>()
-      .setSuccess(true)
-      .setData(new VersionDto(this.version));
+        .setSuccess(true)
+        .setData(new VersionDto(this.version));
 
     return ResponseEntity.ok(response);
   }

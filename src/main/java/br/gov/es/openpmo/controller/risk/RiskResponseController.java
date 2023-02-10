@@ -7,6 +7,7 @@ import br.gov.es.openpmo.dto.risk.response.RiskResponseDetailDto;
 import br.gov.es.openpmo.dto.risk.response.RiskResponseUpdateDto;
 import br.gov.es.openpmo.model.risk.response.RiskResponse;
 import br.gov.es.openpmo.service.authentication.TokenService;
+import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.risk.RiskResponseService;
 import io.swagger.annotations.Api;
 import org.springframework.http.ResponseEntity;
@@ -29,19 +30,23 @@ public class RiskResponseController {
 
   private final TokenService tokenService;
 
+  private final ICanAccessService canAccessService;
+
   public RiskResponseController(
-    final RiskResponseService service,
-    final TokenService tokenService
-  ) {
+      final RiskResponseService service,
+      final TokenService tokenService,
+      final ICanAccessService canAccessService) {
     this.service = service;
     this.tokenService = tokenService;
+    this.canAccessService = canAccessService;
   }
 
   @PostMapping
   public ResponseEntity<ResponseBase<EntityDto>> create(
-    @RequestBody final RiskResponseCreateDto request,
-    @RequestHeader(name = "Authorization") final String authorization
-  ) {
+      @RequestBody final RiskResponseCreateDto request,
+      @RequestHeader(name = "Authorization") final String authorization) {
+
+    this.canAccessService.ensureCanEditResource(request.getIdRisk(), authorization);
     final Long idPerson = this.tokenService.getUserId(authorization);
     final RiskResponse riskResponse = this.service.create(request, idPerson);
     final ResponseBase<EntityDto> response = ResponseBase.of(new EntityDto(riskResponse.getId()));
@@ -50,9 +55,10 @@ public class RiskResponseController {
 
   @PutMapping
   public ResponseEntity<ResponseBase<RiskResponseDetailDto>> update(
-    @RequestBody final RiskResponseUpdateDto request,
-    @RequestHeader(name = "Authorization") final String authorization
-  ) {
+      @RequestBody final RiskResponseUpdateDto request,
+      @RequestHeader(name = "Authorization") final String authorization) {
+
+    this.canAccessService.ensureCanEditResource(request.getIdRisk(), authorization);
     final Long idPerson = this.tokenService.getUserId(authorization);
     final RiskResponseDetailDto dto = this.service.update(request, idPerson);
     final ResponseBase<RiskResponseDetailDto> response = ResponseBase.of(dto);
@@ -60,13 +66,19 @@ public class RiskResponseController {
   }
 
   @DeleteMapping("/{idRiskResponse}")
-  public ResponseEntity<ResponseBase<Void>> delete(@PathVariable final Long idRiskResponse) {
+  public ResponseEntity<ResponseBase<Void>> delete(@PathVariable final Long idRiskResponse,
+      @RequestHeader(name = "Authorization") final String authorization) {
+
+    this.canAccessService.ensureCanEditResource(idRiskResponse, authorization);
     this.service.deleteById(idRiskResponse);
     return ResponseEntity.ok().build();
   }
 
   @GetMapping("/{idRiskResponse}")
-  public ResponseEntity<ResponseBase<RiskResponseDetailDto>> findById(@PathVariable final Long idRiskResponse) {
+  public ResponseEntity<ResponseBase<RiskResponseDetailDto>> findById(@PathVariable final Long idRiskResponse,
+      @RequestHeader(name = "Authorization") final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(idRiskResponse, authorization);
     final RiskResponseDetailDto risk = this.service.findRiskByIdAsDetailDto(idRiskResponse);
     return ResponseEntity.ok(ResponseBase.of(risk));
   }
