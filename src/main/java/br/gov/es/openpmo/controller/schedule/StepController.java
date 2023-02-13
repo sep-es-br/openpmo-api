@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.controller.schedule;
 
+import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.schedule.StepDto;
@@ -50,7 +51,7 @@ public class StepController {
 
   @GetMapping("/{id}")
   public ResponseEntity<ResponseBase<StepDto>> findById(@PathVariable final Long id,
-      final String authorization) {
+  @Authorization final String authorization) {
 
     this.canAccessService.ensureCanReadResource(id, authorization);
     final Step step = this.stepService.findById(id);
@@ -60,7 +61,7 @@ public class StepController {
 
   @PutMapping
   public ResponseEntity<ResponseBase<EntityDto>> update(@RequestBody @Valid final StepUpdateDto stepUpdateDto,
-      final String authorization) {
+  @Authorization final String authorization) {
 
     this.canAccessService.ensureCanEditResource(stepUpdateDto.getId(), authorization);
     final Step step = this.stepService.update(stepUpdateDto);
@@ -73,7 +74,7 @@ public class StepController {
 
   @PostMapping
   public ResponseEntity<Void> save(@Valid @RequestBody final StepStoreParamDto stepStoreParamDto,
-      final String authorization) {
+  @Authorization final String authorization) {
 
     this.canAccessService.ensureCanEditResource(stepStoreParamDto.getIdSchedule(), authorization);
     final List<Deliverable> deliverables = this.status.getDeliverablesByScheduleId(stepStoreParamDto.getIdSchedule());
@@ -83,7 +84,7 @@ public class StepController {
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> delete(@PathVariable final Long id, final String authorization) {
+  public ResponseEntity<Void> delete(@PathVariable final Long id, @Authorization final String authorization) {
 
     this.canAccessService.ensureCanEditResource(id, authorization);
     final List<Deliverable> deliverables = this.status.getDeliverablesByStepId(id);
