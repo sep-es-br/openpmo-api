@@ -79,26 +79,27 @@ public class PlanModelController {
   public ResponseEntity<ResponseBase<EntityDto>> createFromShared(
       @PathVariable("idOffice") final Long idOffice,
       @PathVariable("idPlanModelShared") final Long idPlanModelShared,
-      final String authorization) {
+      @Authorization final String authorization) {
 
-    this.canAccessService.ensureCanEditResource(idOffice.longValue(), authorization);
-    this.canAccessService.ensureCanEditResource(idPlanModelShared.longValue(), authorization);
+    this.canAccessService.ensureCanEditResource(idOffice, authorization);
+
     final EntityDto entityDto = this.sharedPlanModelService.createFromShared(idOffice, idPlanModelShared);
     return ResponseEntity.ok(ResponseBase.of(entityDto));
   }
 
   @PostMapping
   public ResponseEntity<ResponseBase<EntityDto>> save(@RequestBody @Valid final PlanModelStoreDto planModelStoreDto,
-      final String authorization) {
+      @Authorization final String authorization) {
 
-    this.canAccessService.ensureCanEditResource(planModelStoreDto.getIdOffice(), authorization);
+    this.canAccessService.ensureCanEditResource(planModelStoreDto.getIdOffice(),
+        authorization);
     final PlanModel planModel = this.planModelService.store(planModelStoreDto);
     return ResponseEntity.ok(ResponseBase.of(new EntityDto(planModel.getId())));
   }
 
   @PutMapping
   public ResponseEntity<ResponseBase<EntityDto>> update(@RequestBody @Valid final PlanModelUpdateDto planModelUpdateDto,
-      final String authorization) {
+      @Authorization final String authorization) {
 
     this.canAccessService.ensureCanEditResource(planModelUpdateDto.getId(), authorization);
     final PlanModel planModel = this.planModelService.update(planModelUpdateDto);
@@ -106,7 +107,7 @@ public class PlanModelController {
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> delete(@PathVariable final Long id, final String authorization) {
+  public ResponseEntity<Void> delete(@PathVariable final Long id, @Authorization final String authorization) {
 
     this.canAccessService.ensureCanEditResource(id, authorization);
     final PlanModel planModel = this.planModelService.findById(id);

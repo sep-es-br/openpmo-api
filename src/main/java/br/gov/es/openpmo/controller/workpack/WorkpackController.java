@@ -242,8 +242,8 @@ public class WorkpackController {
       @RequestBody @Valid final WorkpackParamDto request,
       @Authorization final String authorization) {
 
-    this.canAccessService.ensureCanEditResource( request.getIdParent(),   authorization);
-  
+    this.canAccessService.ensureCanEditResource(request.getIdPlan(), authorization);
+
     final Workpack workpack = this.workpackService.getWorkpack(request);
     final EntityDto response = this.workpackService.save(workpack, request.getIdPlan(), request.getIdParent());
 

@@ -55,7 +55,7 @@ public class WorkpackLinkController {
   @GetMapping("/can-be-linked")
   public ResponseEntity<ResponseBaseItens<ComboDto>> getAllWorkpackCanBeLinked(
       @RequestParam("id-workpack-model") final Long idworkpackModel,
-      @Authorization final String authorization) {
+      @RequestHeader("Authorization") final String authorization) {
 
     this.canAccessService.ensureCanEditResource(idworkpackModel.longValue(), authorization);
     final List<ComboDto> response = this.workpackSharedService.getSharedWorkpacks(idworkpackModel);

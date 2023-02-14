@@ -51,10 +51,10 @@ public class OfficeController {
 
   @GetMapping
   public ResponseEntity<ResponseBase<List<OfficeDto>>> indexBase(
-      @RequestHeader(name = "Authorization") final String autorization,
+      @RequestHeader(name = "Authorization") final String authorization,
       @RequestParam(required = false) final Long idFilter) {
 
-    final String token = autorization.substring(7);
+    final String token = authorization.substring(7);
     final Long idUser = this.tokenService.getPersonId(token, TokenType.AUTHENTICATION);
     List<OfficeDto> offices = this.officeService.findAll(idFilter)
         .stream()
@@ -71,7 +71,7 @@ public class OfficeController {
 
   @GetMapping("{id}")
   public ResponseEntity<ResponseBase<OfficeDto>> findById(@PathVariable final Long id,
-      @Authorization final String authorization) {
+      @RequestHeader(name = "Authorization") final String authorization) {
 
     this.canAccessService.ensureCanReadResource(id, authorization);
 
@@ -83,7 +83,7 @@ public class OfficeController {
   @GetMapping("/{id-office}/tree-view")
   public ResponseEntity<ResponseBase<OfficeTreeViewDto>> findTreeViewById(
       @PathVariable("id-office") final Long idOffice,
-      @Authorization final String authorization) {
+      @RequestHeader(name = "Authorization") final String authorization) {
 
     this.canAccessService.ensureCanReadResource(idOffice, authorization);
 
@@ -98,7 +98,7 @@ public class OfficeController {
 
   @PostMapping
   public ResponseEntity<ResponseBase<EntityDto>> save(@Valid @RequestBody final OfficeStoreDto officeStoreDto,
-      @Authorization final String authorization) {
+      @RequestHeader(name = "Authorization") final String authorization) {
 
     this.canAccessService.ensureIsAdministrator(authorization);
 
@@ -111,7 +111,7 @@ public class OfficeController {
 
   @PutMapping
   public ResponseEntity<ResponseBase<EntityDto>> update(@RequestBody @Valid final OfficeUpdateDto officeUpdateDto,
-      @Authorization final String authorization) {
+      @RequestHeader(name = "Authorization") final String authorization) {
 
     this.canAccessService.ensureIsAdministrator(authorization);
 
@@ -124,7 +124,7 @@ public class OfficeController {
 
   @DeleteMapping("{id}")
   public ResponseEntity<Void> delete(@PathVariable final Long id,
-      @Authorization final String authorization) {
+      @RequestHeader(name = "Authorization") final String authorization) {
 
     this.canAccessService.ensureIsAdministrator(authorization);
 

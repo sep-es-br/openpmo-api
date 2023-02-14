@@ -76,8 +76,6 @@ public class IssueController {
       @RequestHeader("Authorization") final String authorization) {
 
     this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
-    this.canAccessService.ensureCanReadResource(idRisk, authorization);
-    this.canAccessService.ensureCanReadResource(idFilter, authorization);
 
     final Long idPerson = this.tokenService.getUserId(authorization);
     final List<IssueCardDto> response = this.service.findAllAsCardDto(idWorkpack, idRisk, idFilter, idPerson);

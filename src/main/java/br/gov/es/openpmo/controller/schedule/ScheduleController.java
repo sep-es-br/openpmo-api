@@ -64,7 +64,7 @@ public class ScheduleController {
   public ResponseEntity<ResponseBase<EntityDto>> save(@Valid @RequestBody final ScheduleParamDto scheduleParamDto,
       @RequestHeader(name = "Authorization") final String authorization) {
 
-    this.canAccessService.ensureCanEditResource(scheduleParamDto.getId(), authorization);
+    this.canAccessService.ensureCanEditResource(scheduleParamDto.getIdWorkpack(), authorization);
     final Schedule schedule = this.scheduleService.save(scheduleParamDto);
     return ResponseEntity.ok(ResponseBase.of(new EntityDto(schedule.getId())));
   }

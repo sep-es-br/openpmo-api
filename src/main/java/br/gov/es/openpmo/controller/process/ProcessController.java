@@ -47,7 +47,7 @@ public class ProcessController {
       @RequestParam(value = "idFilter", required = false) final Long idFilter,
       @RequestHeader("Authorization") final String authorization) {
 
-    this.canAccessService.ensureCanReadResource(idFilter, authorization);
+    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
     final Long idPerson = this.tokenService.getUserId(authorization);
     final List<ProcessCardDto> processes = this.service.findAllAsCardDto(idWorkpack, idFilter, idPerson);
     final ResponseBase<List<ProcessCardDto>> response = ResponseBase.of(processes);

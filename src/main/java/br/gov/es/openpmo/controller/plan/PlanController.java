@@ -59,7 +59,7 @@ public class PlanController {
       @RequestHeader(name = "Authorization") final String autorization,
       @Authorization final String authorization) {
 
-    this.canAccessService.ensureCanReadResource(idFilter, authorization);
+    this.canAccessService.ensureCanReadResource(idOffice, authorization);
     final String token = autorization.substring(7);
     final Long idUser = this.tokenService.getPersonId(token, TokenType.AUTHENTICATION);
     List<PlanDto> plans = this.planService.findAllInOffice(idOffice, idFilter)

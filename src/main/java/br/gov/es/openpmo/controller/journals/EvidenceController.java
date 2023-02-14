@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.controller.journals;
 
+import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.Response;
 import br.gov.es.openpmo.service.journals.EvidenceCreator;
 import br.gov.es.openpmo.service.journals.EvidenceFinder;
@@ -55,7 +56,7 @@ public class EvidenceController {
 
   @GetMapping("/image/{id-evidence}")
   public ResponseEntity<UrlResource> getEvidence(@PathVariable("id-evidence") final Long idEvidence,
-      final String authorization)
+      @Authorization final String authorization)
       throws IOException {
 
     this.canAccessService.ensureCanReadResource(idEvidence, authorization);
@@ -71,7 +72,7 @@ public class EvidenceController {
   public Response<Void> create(
       @PathVariable("id-journal") final Long idJournal,
       @RequestParam final MultipartFile file,
-      final String authorization) throws IOException {
+      @Authorization final String authorization) throws IOException {
 
     this.canAccessService.ensureCanEditResource(idJournal, authorization);
     this.evidenceCreator.create(idJournal, file);

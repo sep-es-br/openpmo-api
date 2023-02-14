@@ -89,6 +89,7 @@ public class BaselineController implements IBaselineController {
   public Response<List<GetAllBaselinesResponse>> getAllByWorkpackId(final Long idWorkpack) {
     final List<GetAllBaselinesResponse> baselines = this.getAllBaselinesService.getAllByWorkpackId(idWorkpack);
     return this.responseHandler.success(baselines);
+
   }
 
   public Response<List<GetAllCCBMemberBaselineResponse>> getAllByPersonId(final String authorization) {
@@ -131,7 +132,7 @@ public class BaselineController implements IBaselineController {
   public Response<Void> edit(
       final Long idBaseline,
       final EditDraftBaselineRequest request,
-      final String authorization) {
+      @RequestHeader(name = "Authorization") final String authorization) {
 
     this.canAccessService.ensureCanEditResource(idBaseline, authorization);
 
@@ -140,7 +141,8 @@ public class BaselineController implements IBaselineController {
   }
 
   @Override
-  public Response<Void> delete(final Long idBaseline, final String authorization) {
+  public Response<Void> delete(final Long idBaseline,
+      @RequestHeader(name = "Authorization") final String authorization) {
 
     this.canAccessService.ensureCanEditResource(idBaseline, authorization);
 
@@ -151,7 +153,7 @@ public class BaselineController implements IBaselineController {
   @Override
   public Response<EntityDto> submitCancelling(
       final SubmitCancellingRequest request,
-      final String authorization) {
+      @RequestHeader(name = "Authorization") final String authorization) {
 
     this.canAccessService.ensureCanEditResource(request.getIdWorkpack(), authorization);
 
