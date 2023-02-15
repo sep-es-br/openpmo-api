@@ -122,7 +122,7 @@ public class BaselineController implements IBaselineController {
       final SubmitBaselineRequest request,
       @RequestHeader(name = "Authorization") final String authorization) {
 
-    this.canAccessService.ensureCanEditResource(idBaseline, authorization);
+    // this.canAccessService.ensureCanEditResource(idBaseline, authorization);
     final Long idPerson = this.tokenService.getUserId(authorization);
     this.submitBaselineService.submit(idBaseline, request, idPerson);
     return this.responseHandler.success();
