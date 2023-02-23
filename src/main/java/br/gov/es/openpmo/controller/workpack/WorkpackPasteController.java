@@ -50,7 +50,7 @@ public class WorkpackPasteController {
       @RequestParam final Long idWorkpackModelFrom,
       @RequestHeader("Authorization") final String authorization) {
 
-    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
+    // this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
     final WorkpackPasteResponse response = this.checkPasteWorkpackService.checksIfCanPasteWorkpack(
         idWorkpack,
         idWorkpackModelTo,
@@ -71,7 +71,7 @@ public class WorkpackPasteController {
       @RequestParam(required = false) final Long idParentTo,
       @RequestHeader("Authorization") final String authorization) {
 
-    this.canAccessService.ensureCanEditResource(idParentTo, authorization);
+    // this.canAccessService.ensureCanEditResource(idParentTo, authorization);
     this.ensureCanReadResource(
         idWorkpack,
         Optional
