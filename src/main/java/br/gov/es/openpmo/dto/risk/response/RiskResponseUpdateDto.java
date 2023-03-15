@@ -10,6 +10,7 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 public class RiskResponseUpdateDto {
@@ -64,7 +65,7 @@ public class RiskResponseUpdateDto {
     this.status = status;
     this.trigger = trigger;
     this.plan = plan;
-    this.responsible = responsible;
+    this.responsible = (responsible == null) ? new HashSet<Long>() : responsible;
   }
 
   public Long getId() {

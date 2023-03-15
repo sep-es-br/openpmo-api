@@ -89,6 +89,7 @@ public class BaselineController implements IBaselineController {
   public Response<List<GetAllBaselinesResponse>> getAllByWorkpackId(final Long idWorkpack) {
     final List<GetAllBaselinesResponse> baselines = this.getAllBaselinesService.getAllByWorkpackId(idWorkpack);
     return this.responseHandler.success(baselines);
+
   }
 
   public Response<List<GetAllCCBMemberBaselineResponse>> getAllByPersonId(final String authorization) {
@@ -108,7 +109,8 @@ public class BaselineController implements IBaselineController {
       final IncludeBaselineRequest request,
       @RequestHeader(name = "Authorization") final String authorization) {
 
-    this.canAccessService.ensureCanEditResource(request.getIdWorkpack(), authorization);
+    // this.canAccessService.ensureCanReadResource(request.getIdWorkpack(),
+    // authorization);
 
     final Long idPerson = this.tokenService.getUserId(authorization);
     final Long idBaseline = this.createBaselineService.create(request, idPerson);
@@ -121,7 +123,7 @@ public class BaselineController implements IBaselineController {
       final SubmitBaselineRequest request,
       @RequestHeader(name = "Authorization") final String authorization) {
 
-    this.canAccessService.ensureCanEditResource(idBaseline, authorization);
+    // this.canAccessService.ensureCanReadResource(idBaseline, authorization);
     final Long idPerson = this.tokenService.getUserId(authorization);
     this.submitBaselineService.submit(idBaseline, request, idPerson);
     return this.responseHandler.success();
@@ -131,16 +133,17 @@ public class BaselineController implements IBaselineController {
   public Response<Void> edit(
       final Long idBaseline,
       final EditDraftBaselineRequest request,
-      final String authorization) {
+      @RequestHeader(name = "Authorization") final String authorization) {
 
-    this.canAccessService.ensureCanEditResource(idBaseline, authorization);
+    this.canAccessService.ensureCanReadResource(idBaseline, authorization);
 
     this.editBaselineService.edit(idBaseline, request);
     return this.responseHandler.success();
   }
 
   @Override
-  public Response<Void> delete(final Long idBaseline, final String authorization) {
+  public Response<Void> delete(final Long idBaseline,
+      @RequestHeader(name = "Authorization") final String authorization) {
 
     this.canAccessService.ensureCanEditResource(idBaseline, authorization);
 
@@ -151,9 +154,10 @@ public class BaselineController implements IBaselineController {
   @Override
   public Response<EntityDto> submitCancelling(
       final SubmitCancellingRequest request,
-      final String authorization) {
+      @RequestHeader(name = "Authorization") final String authorization) {
 
-    this.canAccessService.ensureCanEditResource(request.getIdWorkpack(), authorization);
+    // this.canAccessService.ensureCanEditResource(request.getIdWorkpack(),
+    // authorization);
 
     final Long personId = this.tokenService.getUserId(authorization);
     final EntityDto baselineProposed = this.cancelBaselineService.submit(request, personId);
@@ -164,7 +168,7 @@ public class BaselineController implements IBaselineController {
   public Response<BaselineDetailResponse> getById(final Long idBaseline,
       @RequestHeader(name = "Authorization") final String authorization) {
 
-    this.canAccessService.ensureCanEditResource(idBaseline, authorization);
+    this.canAccessService.ensureCanReadResource(idBaseline, authorization);
 
     final BaselineDetailResponse response = this.getBaselineService.getById(idBaseline);
     return this.responseHandler.success(response);
@@ -175,7 +179,7 @@ public class BaselineController implements IBaselineController {
       @RequestHeader(name = "Authorization") final String authorization,
       final Long idBaseline) {
 
-    this.canAccessService.ensureCanEditResource(idBaseline, authorization);
+    // this.canAccessService.ensureCanReadResource(idBaseline, authorization);
     final Long idPerson = this.tokenService.getUserId(authorization);
     final BaselineDetailCCBMemberResponse response = this.getBaselineAsCCBMemberViewService.getById(idBaseline,
         idPerson);
@@ -188,7 +192,7 @@ public class BaselineController implements IBaselineController {
       final Long idBaseline,
       final BaselineEvaluationRequest request) {
 
-    this.canAccessService.ensureCanEditResource(idBaseline, authorization);
+    // this.canAccessService.ensureCanEditResource(idBaseline, authorization);
 
     final Long idPerson = this.tokenService.getUserId(authorization);
     this.evaluateBaselineService.evaluate(idPerson, idBaseline, request);

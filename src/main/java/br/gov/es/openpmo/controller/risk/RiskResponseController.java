@@ -58,7 +58,7 @@ public class RiskResponseController {
       @RequestBody final RiskResponseUpdateDto request,
       @RequestHeader(name = "Authorization") final String authorization) {
 
-    this.canAccessService.ensureCanEditResource(request.getIdRisk(), authorization);
+    this.canAccessService.ensureCanEditResource(request.getId(), authorization);
     final Long idPerson = this.tokenService.getUserId(authorization);
     final RiskResponseDetailDto dto = this.service.update(request, idPerson);
     final ResponseBase<RiskResponseDetailDto> response = ResponseBase.of(dto);

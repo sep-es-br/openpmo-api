@@ -24,18 +24,16 @@ public class WorkpackSharedController {
 
   @Autowired
   public WorkpackSharedController(
-    final WorkpackSharedService service,
-    final ICanAccessService canAccessService
-  ) {
+      final WorkpackSharedService service,
+      final ICanAccessService canAccessService) {
     this.service = service;
     this.canAccessService = canAccessService;
   }
 
   @GetMapping
   public ResponseEntity<ResponseBase<List<WorkpackSharedDto>>> getAll(
-    @PathVariable("idWorkpack") final Long idWorkpack,
-    @RequestHeader("Authorization") final String authorization
-  ) {
+      @PathVariable("idWorkpack") final Long idWorkpack,
+      @RequestHeader("Authorization") final String authorization) {
     this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
     final List<WorkpackSharedDto> response = this.service.getAll(idWorkpack);
     return ResponseEntity.ok(ResponseBase.of(response));
@@ -43,21 +41,19 @@ public class WorkpackSharedController {
 
   @GetMapping("/{id}")
   public ResponseEntity<ResponseBase<WorkpackSharedDto>> getById(
-    @PathVariable("idWorkpack") final Long ignored,
-    @PathVariable("id") final Long id,
-    @RequestHeader("Authorization") final String authorization
-  ) {
-    this.canAccessService.ensureCanReadResource(id, authorization);
+      @PathVariable("idWorkpack") final Long ignored,
+      @PathVariable("id") final Long id,
+      @RequestHeader("Authorization") final String authorization) {
+    this.canAccessService.ensureCanReadResource(ignored, authorization);
     final WorkpackSharedDto dto = this.service.getById(id);
     return ResponseEntity.ok(ResponseBase.of(dto));
   }
 
   @PostMapping
   public ResponseEntity<ResponseBase<List<WorkpackSharedDto>>> store(
-    @PathVariable("idWorkpack") final Long idWorkpack,
-    @Valid @RequestBody final List<WorkpackSharedParamDto> request,
-    @RequestHeader("Authorization") final String authorization
-  ) {
+      @PathVariable("idWorkpack") final Long idWorkpack,
+      @Valid @RequestBody final List<WorkpackSharedParamDto> request,
+      @RequestHeader("Authorization") final String authorization) {
     this.canAccessService.ensureCanEditResource(idWorkpack, authorization);
     this.service.store(idWorkpack, request);
     final List<WorkpackSharedDto> response = this.service.getAll(idWorkpack);
@@ -66,10 +62,9 @@ public class WorkpackSharedController {
 
   @DeleteMapping
   public ResponseEntity<Void> delete(
-    @PathVariable("idWorkpack") final Long idWorkpack,
-    @RequestParam(value = "id-shared-with", required = false) final Long idSharedWith,
-    @RequestHeader("Authorization") final String authorization
-  ) {
+      @PathVariable("idWorkpack") final Long idWorkpack,
+      @RequestParam(value = "id-shared-with", required = false) final Long idSharedWith,
+      @RequestHeader("Authorization") final String authorization) {
     this.canAccessService.ensureCanEditResource(idWorkpack, authorization);
     this.service.revokeShare(idSharedWith, idWorkpack);
     return ResponseEntity.ok().build();

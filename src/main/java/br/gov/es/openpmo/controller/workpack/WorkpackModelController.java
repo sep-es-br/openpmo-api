@@ -68,7 +68,7 @@ public class WorkpackModelController {
       @RequestParam("id-plan-model") final Long idPlanModel,
       @RequestHeader("Authorization") final String authorization) {
 
-    this.canAccessService.ensureCanEditResource(idPlanModel, authorization);
+    this.canAccessService.ensureCanReadResource(idPlanModel, authorization);
     final List<WorkpackModel> list = this.workpackModelService.findAll(idPlanModel);
 
     final List<WorkpackModelDto> worList = new ArrayList<>();
@@ -90,7 +90,7 @@ public class WorkpackModelController {
       @PathVariable final Long id,
       @RequestHeader("Authorization") final String authorization) {
 
-    this.canAccessService.ensureCanEditResource(id, authorization);
+    this.canAccessService.ensureCanReadResource(id, authorization);
     final WorkpackModel workpackModel = this.workpackModelService.findById(id);
 
     if (workpackModel.getProperties() != null && !(workpackModel.getProperties()).isEmpty()) {
@@ -109,7 +109,7 @@ public class WorkpackModelController {
       @RequestBody @Valid final WorkpackModelParamDto workpackModelParamDto,
       @RequestHeader("Authorization") final String authorization) {
 
-    this.canAccessService.ensureCanEditResource(workpackModelParamDto.getIdParent(), authorization);
+    this.canAccessService.ensureCanEditResource(workpackModelParamDto.getIdPlanModel(), authorization);
 
     WorkpackModel workpackModel = this.workpackModelService.getWorkpackModel(workpackModelParamDto);
     workpackModel = this.workpackModelService.save(workpackModel, workpackModelParamDto.getIdParent());
@@ -160,7 +160,7 @@ public class WorkpackModelController {
       @PathVariable final Long id,
       @RequestHeader("Authorization") final String authorization) {
 
-    this.canAccessService.ensureCanEditResource(id, authorization);
+    this.canAccessService.ensureCanReadResource(id, authorization);
     final Boolean canDelete = this.workpackModelService.isCanDeleteProperty(id);
     return ResponseEntity.ok(ResponseBase.of(canDelete));
   }
@@ -169,7 +169,7 @@ public class WorkpackModelController {
   public ResponseEntity<Void> deleteProperty(@PathVariable final Long id,
       @RequestHeader("Authorization") final String authorization) {
 
-    this.canAccessService.ensureCanEditResource(id, authorization);
+    this.canAccessService.ensureCanReadResource(id, authorization);
     this.workpackModelService.deleteProperty(id);
     return ResponseEntity.ok().build();
   }
@@ -180,7 +180,7 @@ public class WorkpackModelController {
       @PathVariable final Long idWorkpackModel,
       @RequestHeader("Authorization") final String authorization) {
 
-    this.canAccessService.ensureCanEditResource(idWorkpackModelParent, authorization);
+    this.canAccessService.ensureCanReadResource(idWorkpackModelParent, authorization);
     final WorkpackModel workpackReused = this.workpackModelReuseService.reuse(
         idWorkpackModelParent,
         idWorkpackModel);
@@ -195,7 +195,7 @@ public class WorkpackModelController {
       @RequestParam("id-plan-model") final Long idPlanModel,
       @RequestHeader("Authorization") final String authorization) {
 
-    this.canAccessService.ensureCanEditResource(idWorkpackModel, authorization);
+    this.canAccessService.ensureCanReadResource(idWorkpackModel, authorization);
     final List<ReusableWorkpackModelHierarchyDto> workpacks = this.workpackModelReuseService.findWorkpackModelReusable(
         idWorkpackModel,
         idPlanModel);

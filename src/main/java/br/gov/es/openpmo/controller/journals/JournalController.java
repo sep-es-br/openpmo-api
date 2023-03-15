@@ -66,7 +66,7 @@ public class JournalController {
       @RequestParam final List<JournalType> type,
       final UriComponentsBuilder uriComponentsBuilder,
       final Pageable pageable,
-      final String authorization) {
+      @RequestHeader(name = "Authorization") final String authorization) {
 
     final Page<JournalResponse> responsePage = this.journalFinder.getAll(from, to, type, scope, uriComponentsBuilder,
         pageable);
