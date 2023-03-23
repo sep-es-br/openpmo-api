@@ -18,16 +18,14 @@ public class CanAccessDataResponse implements ICanAccessDataResponse {
   private final String key;
   private final ICanAccessManagementDataResponse canAccessManagement;
 
-
   public CanAccessDataResponse(
-    final Boolean edit,
-    final Boolean read,
-    final Boolean basicRead,
-    final Boolean admin,
-    final Boolean self,
-    final String key,
-    final ICanAccessManagementDataResponse canAccessManagement
-  ) {
+      final Boolean edit,
+      final Boolean read,
+      final Boolean basicRead,
+      final Boolean admin,
+      final Boolean self,
+      final String key,
+      final ICanAccessManagementDataResponse canAccessManagement) {
     this.edit = edit;
     this.read = read;
     this.basicRead = basicRead;
@@ -64,50 +62,64 @@ public class CanAccessDataResponse implements ICanAccessDataResponse {
 
   @Override
   public Boolean canEditResource() {
-    if(Boolean.TRUE.equals(this.admin)) return true;
+    if (Boolean.TRUE.equals(this.admin))
+      return true;
     return this.edit;
   }
 
   @Override
   public Boolean canReadResource() {
-    if(Boolean.TRUE.equals(this.admin)) return true;
-    if(Boolean.TRUE.equals(this.edit)) return true;
+    if (Boolean.TRUE.equals(this.admin))
+      return true;
+    if (Boolean.TRUE.equals(this.edit))
+      return true;
     return this.read || this.basicRead;
   }
 
   @Override
   public void ensureCanReadResource() {
-    if(Boolean.FALSE.equals(this.canReadResource())) {
+    if (Boolean.FALSE.equals(this.canReadResource())) {
       throw new CannotAccessResourceException(CANNOT_READ_RESOURCE);
     }
   }
 
   @Override
   public void ensureCanEditResource() {
-    if(Boolean.FALSE.equals(this.canEditResource())) {
+    if (Boolean.FALSE.equals(this.canEditResource())) {
       throw new CannotAccessResourceException(CANNOT_EDIT_RESOURCE);
     }
   }
 
   @Override
   public void ensureCanAccessAdminResource() {
-    if(Boolean.FALSE.equals(this.getAdmin())) {
+    if (Boolean.FALSE.equals(this.getAdmin())) {
       throw new CannotAccessResourceException(CANNOT_ACCESS_ADMIN_RESOURCE);
     }
   }
 
   @Override
   public void ensureCanAccessSelfResource() {
-    if(Boolean.TRUE.equals(this.admin)) return;
-    if(Boolean.FALSE.equals(this.self)) {
+    if (Boolean.TRUE.equals(this.admin))
+      return;
+    if (Boolean.FALSE.equals(this.self)) {
       throw new CannotAccessResourceException(CANNOT_ACCESS_PERSONAL_RESOURCE);
     }
   }
 
   @Override
   public void ensureCanAccessManagementResource() {
-    if(Boolean.TRUE.equals(this.admin)) return;
-    if(Boolean.FALSE.equals(this.canAccessManagement.getEdit())) {
+    if (Boolean.TRUE.equals(this.admin))
+      return;
+    if (Boolean.FALSE.equals(this.canAccessManagement.getEdit())) {
+      throw new CannotAccessResourceException(ApplicationMessage.CANNOT_ACCESS_MANAGEMENT_RESOURCE);
+    }
+  }
+
+  @Override
+  public void ensureCanAccessManagementOrReadResource() {
+    if (Boolean.TRUE.equals(this.admin))
+      return;
+    if (Boolean.FALSE.equals(this.canAccessManagement.getRead())) {
       throw new CannotAccessResourceException(ApplicationMessage.CANNOT_ACCESS_MANAGEMENT_RESOURCE);
     }
   }
@@ -127,5 +139,9 @@ public class CanAccessDataResponse implements ICanAccessDataResponse {
     return this.self;
   }
 
+  @Override
+  public Boolean getManagementOrReadResource() {
+    return this.canAccessManagement.getRead();
+  }
 
 }

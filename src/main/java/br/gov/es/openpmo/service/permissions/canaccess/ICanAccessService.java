@@ -8,35 +8,39 @@ import br.gov.es.openpmo.dto.domain.LocalityStoreDto;
 
 public interface ICanAccessService {
 
-  void ensureCanReadResource(
-      Long id,
-      String authorization);
+        void ensureCanReadResource(
+                        Long id,
+                        String authorization);
 
-  void ensureCanEditResource(
-      @Valid Long long1,
-      String authorization);
+        void ensureCanAccessManagementOrReadResource(
+                        Long idOffice,
+                        String authorization);
 
-  void ensureIsAdministrator(String authorization);
+        void ensureCanEditResource(
+                        @Valid Long long1,
+                        String authorization);
 
-  void ensureCanAccessSelfResource(
-      Long idPerson,
-      String authorization);
+        void ensureIsAdministrator(String authorization);
 
-  void ensureCanAccessManagementResource(
-      Long id,
-      String authorization);
+        void ensureCanAccessSelfResource(
+                        Long idPerson,
+                        String authorization);
 
-  void ensureCanAccessManagementOrSelfResource(
-      List<Long> ids,
-      String authorization);
+        void ensureCanAccessManagementResource(
+                        Long id,
+                        String authorization);
 
-  void ensureCanReadManagementResource(
-      Long idOffice,
-      String key,
-      String authorization);
+        void ensureCanAccessManagementOrSelfResource(
+                        List<Long> ids,
+                        String authorization);
 
-  void ensureCanEditResource(
-      List<Long> ids,
-      String authorization);
+        void ensureCanReadManagementResource(
+                        Long idOffice,
+                        String key,
+                        String authorization);
+
+        void ensureCanEditResource(
+                        List<Long> ids,
+                        String authorization);
 
 }
