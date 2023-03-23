@@ -169,6 +169,11 @@ public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineS
     final Workpack workpackSnapshot = this.createSnapshot(baseline, workpack);
     this.snapshotChildren(baseline, workpack, workpackSnapshot, updates);
     this.changeStatusToProposed(baseline);
+    
+    // Added this line to repair the broken relationships
+    baseline.getBaselinedBy().setId(null);
+    baseline.getProposer().setId(null);
+    this.baselineRepository.save(baseline);
   }
 
   public Workpack createSnapshot(
