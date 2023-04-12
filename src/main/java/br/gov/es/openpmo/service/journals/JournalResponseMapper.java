@@ -75,8 +75,7 @@ public class JournalResponseMapper {
       .path(getEndpoint(file))
       .build()
       .toUri()
-      .toString()
-      .replace("http://", "https://");
+      .toString();
   }
 
   private List<File> getFiles(final JournalEntry journalEntry) {
