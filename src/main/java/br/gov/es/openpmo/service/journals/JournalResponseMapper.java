@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Transient;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.text.MessageFormat;
@@ -27,6 +28,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
 
 @Service
 public class JournalResponseMapper {
@@ -73,6 +76,7 @@ public class JournalResponseMapper {
   ) {
     return uriComponentsBuilder.cloneBuilder()
       .path(getEndpoint(file))
+      .scheme(ServletUriComponentsBuilder.fromCurrentContextPath().build().getScheme())
       .build()
       .toUri()
       .toString();
