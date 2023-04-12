@@ -8,6 +8,7 @@ import br.gov.es.openpmo.dto.domain.DomainStoreDto;
 import br.gov.es.openpmo.dto.domain.DomainUpdateDto;
 import br.gov.es.openpmo.model.office.Domain;
 import br.gov.es.openpmo.service.office.DomainService;
+import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessManagementData;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import io.swagger.annotations.Api;
 import org.modelmapper.ModelMapper;
@@ -33,7 +34,8 @@ public class DomainController {
   public DomainController(
       final DomainService domainService,
       final ModelMapper modelMapper,
-      final ICanAccessService canAccessService) {
+      final ICanAccessService canAccessService,
+      final ICanAccessManagementData canAccessManagementData) {
     this.domainService = domainService;
     this.modelMapper = modelMapper;
     this.canAccessService = canAccessService;
@@ -45,7 +47,7 @@ public class DomainController {
       @RequestParam(value = "idFilter", required = false) final Long idFilter,
       @Authorization final String authorization) {
 
-    this.canAccessService.ensureCanReadResource(idOffice, authorization);
+    this.canAccessService.ensureCanAccessManagementOrReadResource(idOffice, authorization);
     final List<DomainDto> domains = this.domainService.findAll(idOffice, idFilter)
         .stream()
         .map(o -> this.modelMapper.map(o, DomainDto.class))
