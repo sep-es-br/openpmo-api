@@ -17,6 +17,7 @@ import br.gov.es.openpmo.repository.WorkpackModelRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.annotation.Transient;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
 
 @Service
 public class JournalResponseMapper {
@@ -39,6 +39,9 @@ public class JournalResponseMapper {
   private final WorkpackModelRepository workpackModelRepository;
 
   private final JournalRepository journalRepository;
+
+  @Value("${app.homeURI}")
+  private String homeURI;
 
   @Autowired
   public JournalResponseMapper(
@@ -51,7 +54,7 @@ public class JournalResponseMapper {
     this.journalRepository = journalRepository;
   }
 
-  private static EvidenceField getEvidenceField(
+  private EvidenceField getEvidenceField(
     final File file,
     final UriComponentsBuilder uriComponentsBuilder
   ) {
@@ -59,7 +62,7 @@ public class JournalResponseMapper {
     evidenceField.setId(file.getId());
     evidenceField.setMimeType(file.getMimeType());
     evidenceField.setName(file.getUserGivenName());
-    evidenceField.setUrl(getUrl(file, uriComponentsBuilder));
+    evidenceField.setUrl(this.getUrl(file, uriComponentsBuilder));
     return evidenceField;
   }
 
@@ -70,13 +73,14 @@ public class JournalResponseMapper {
     return informationField;
   }
 
-  private static String getUrl(
+  private String getUrl(
     final File file,
     final UriComponentsBuilder uriComponentsBuilder
   ) {
+    String homeScheme = this.homeURI.split("://")[0];
     return uriComponentsBuilder.cloneBuilder()
       .path(getEndpoint(file))
-      .scheme(ServletUriComponentsBuilder.fromCurrentContextPath().build().getScheme())
+      .scheme(homeScheme)
       .build()
       .toUri()
       .toString();
