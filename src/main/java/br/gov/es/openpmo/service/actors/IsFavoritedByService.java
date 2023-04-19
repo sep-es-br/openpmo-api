@@ -15,6 +15,8 @@ import br.gov.es.openpmo.service.workpack.GetWorkpackName;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.stereotype.Component;
 
+import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -58,7 +60,8 @@ public class IsFavoritedByService {
     final Set<Workpack> workpacks = this.personRepository.findAllFavoriteWorkpackByPersonIdAndPlanId(idPerson, idPlan);
     return workpacks.stream()
       .map(workpack -> this.buildFavWorkpackResponse(workpack, authorization))
-      .collect(Collectors.toSet());
+      .sorted(Comparator.comparing(WorkpackFavoritedDetail::getName))
+      .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
   private WorkpackFavoritedDetail buildFavWorkpackResponse(
