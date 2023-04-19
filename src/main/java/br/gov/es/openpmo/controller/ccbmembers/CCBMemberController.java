@@ -1,6 +1,5 @@
 package br.gov.es.openpmo.controller.ccbmembers;
 
-import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.Response;
 import br.gov.es.openpmo.dto.ccbmembers.CCBMemberRequest;
 import br.gov.es.openpmo.dto.ccbmembers.CCBMemberResponse;
@@ -13,7 +12,6 @@ import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.utils.ResponseHandler;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -58,24 +56,28 @@ public class CCBMemberController implements ICCBMemberController {
 
   @Override
   public Response<List<CCBMemberResponse>> getAll(final Long workpackId,
-      @RequestHeader(name = "Authorization") final String authorization) {
+                                                  final String authorization) {
 
     this.canAccessService.ensureCanReadResource(workpackId, authorization);
     final List<CCBMemberResponse> ccbMemberResponses = this.getAllService.getAll(workpackId);
     return this.controllerHelper.success(ccbMemberResponses);
   }
 
+  @Override
   public Response<CCBMemberResponse> getCCBMember(
       final Long idPerson,
       final Long idWorkpack,
-      final Long idPlan) {
+      final Long idPlan,
+      final String authorization
+  ) {
+    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
     final CCBMemberResponse ccbMemberResponse = this.getByIdCCBMemberService.getById(idPerson, idWorkpack, idPlan);
     return this.controllerHelper.success(ccbMemberResponse);
   }
 
   @Override
   public Response<Void> createRelationship(final CCBMemberRequest request,
-      @RequestHeader(name = "Authorization") final String authorization) {
+                                           final String authorization) {
 
     this.canAccessService.ensureCanEditResource(request.getIdWorkpack(), authorization);
     this.createRelationshipService.createRelationship(request);
@@ -84,7 +86,7 @@ public class CCBMemberController implements ICCBMemberController {
 
   @Override
   public Response<Void> updateRelationship(final CCBMemberRequest request,
-      @RequestHeader(name = "Authorization") final String authorization) {
+                                           final String authorization) {
 
     this.canAccessService.ensureCanEditResource(request.getIdWorkpack(), authorization);
     this.updateCCBMemberRelationshipService.updateRelationship(request);
@@ -95,18 +97,11 @@ public class CCBMemberController implements ICCBMemberController {
   public Response<Void> delete(
       final Long idPerson,
       final Long idWorkpack,
-      @Authorization final String authorization) {
+      final String authorization) {
 
     this.canAccessService.ensureCanEditResource(idWorkpack, authorization);
     this.deleteCCBMemberService.delete(idPerson, idWorkpack);
     return this.controllerHelper.success();
-  }
-
-  @Override
-  public Response<CCBMemberResponse> getCCBMember(Long idPerson, Long idWorkpack, Long idPlan,
-      @RequestHeader(name = "Authorization") final String authorization) {
-    // TODO Auto-generated method stub
-    return null;
   }
 
 }

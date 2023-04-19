@@ -23,4 +23,8 @@ public class Deliverable extends Workpack {
     return new Deliverable();
   }
 
+  @Override
+  public String getType() {
+    return "Deliverable";
+  }
 }

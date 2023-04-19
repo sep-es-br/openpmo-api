@@ -14,7 +14,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.temporal.TemporalAdjusters;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import static org.neo4j.ogm.annotation.Relationship.INCOMING;
@@ -66,7 +68,8 @@ public class Step extends Entity implements Snapshotable<Step> {
   }
 
   public Set<Consumes> getConsumes() {
-    return this.consumes;
+    return Optional.ofNullable(this.consumes)
+      .orElseGet(HashSet::new);
   }
 
   public void setConsumes(final Set<Consumes> consumes) {

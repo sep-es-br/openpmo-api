@@ -28,7 +28,7 @@ public class FindAllProcessUsingCustomFilter extends FindAllUsingCustomFilterBui
     final StringBuilder query
   ) {
     query.append("MATCH (").append(this.nodeName)
-      .append(":Process)-[isReportedFor:IS_BELONG_TO]->(workpack:Workpack{deleted:false})\n");
+      .append(":Process)-[isReportedFor:IS_BELONGS_TO]->(workpack:Workpack{deleted:false})\n");
   }
 
   @Override

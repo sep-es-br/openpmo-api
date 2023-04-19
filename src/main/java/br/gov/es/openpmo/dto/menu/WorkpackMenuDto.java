@@ -2,6 +2,8 @@ package br.gov.es.openpmo.dto.menu;
 
 import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.model.workpacks.Workpack;
+import br.gov.es.openpmo.service.properties.SorterProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.HashSet;
 import java.util.List;
@@ -11,10 +13,13 @@ public class WorkpackMenuDto {
 
   private Long id;
   private Long idPlan;
+  private Long idWorkpackModel;
   private String name;
   private String fontIcon;
   private List<PermissionDto> permissions;
   private Long idWorkpackModelLinked;
+  @JsonIgnore
+  private SorterProperty<?> sorter;
   private Set<WorkpackMenuDto> children = new HashSet<>(0);
 
   public WorkpackMenuDto(
@@ -23,7 +28,9 @@ public class WorkpackMenuDto {
     final String name,
     final List<PermissionDto> permissions,
     final String fontIcon,
-    final Long idWorkpackModelLinked
+    final Long idWorkpackModelLinked,
+    final Long idWorkpackModel,
+    final SorterProperty<?> sorter
   ) {
     this.id = id;
     this.idPlan = idPlan;
@@ -31,13 +38,16 @@ public class WorkpackMenuDto {
     this.permissions = permissions;
     this.fontIcon = fontIcon;
     this.idWorkpackModelLinked = idWorkpackModelLinked;
+    this.idWorkpackModel = idWorkpackModel;
+    this.sorter = sorter;
   }
 
   public WorkpackMenuDto() {}
 
   public static WorkpackMenuDto of(
     final Workpack workpack,
-    final Long idPlan
+    final Long idPlan,
+    final SorterProperty<?> sorter
   ) {
     return new WorkpackMenuDto(
       workpack.getId(),
@@ -45,7 +55,9 @@ public class WorkpackMenuDto {
       workpack.getName(),
       null,
       workpack.getIcon(),
-      null
+      null,
+      workpack.getIdWorkpackModel(),
+      sorter
     );
   }
 
@@ -103,6 +115,27 @@ public class WorkpackMenuDto {
 
   public void setIdWorkpackModelLinked(final Long idWorkpackModelLinked) {
     this.idWorkpackModelLinked = idWorkpackModelLinked;
+  }
+
+  public Long getIdWorkpackModel() {
+    return this.idWorkpackModel;
+  }
+
+  public void setIdWorkpackModel(final Long idWorkpackModel) {
+    this.idWorkpackModel = idWorkpackModel;
+  }
+
+  public boolean isEmpty() {
+    return this.children.isEmpty();
+  }
+
+  public SorterProperty<?> getSorter() {
+    return this.sorter;
+  }
+
+  public boolean sameModel(final WorkpackMenuDto menu) {
+    if (menu == null) return false;
+    return this.idWorkpackModel.equals(menu.idWorkpackModel);
   }
 
 }

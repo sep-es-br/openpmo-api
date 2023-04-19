@@ -24,9 +24,9 @@ public interface ScheduleRepository extends Neo4jRepository<Schedule, Long> {
          + "]")
   Optional<Schedule> findByIdSchedule(@Param("id") Long id);
 
-  @Query("MATCH (s:Schedule)-[:FEATURES]->(w:Workpack) " +
+  @Query("MATCH (s:Schedule)-[f:FEATURES]->(w:Workpack) " +
          "WHERE id(w)=$idWorkpack " +
-         "RETURN s, [" +
+         "RETURN s, f, w, [" +
          "  [(s)<-[c:COMPOSES]-(st:Step) | [c, st] ]," +
          "  [(s)<-[:COMPOSES]-(:Step)-[c1:CONSUMES]->(ca:CostAccount) | [c1, ca] ]  " +
          "]")

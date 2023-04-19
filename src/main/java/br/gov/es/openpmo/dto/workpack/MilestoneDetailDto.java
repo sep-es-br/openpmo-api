@@ -12,13 +12,20 @@ public class MilestoneDetailDto extends WorkpackDetailDto {
 
   private LocalDate milestoneDate;
 
+  private LocalDate baselineDate;
+
+  private Long delayInDays;
+
   @JsonFormat(pattern = "dd/MM/yyyy")
   private LocalDate expirationDate;
 
   private boolean isWithinAWeek;
 
   public static MilestoneDetailDto of(final Workpack workpack) {
-    return (MilestoneDetailDto) WorkpackDetailDto.of(workpack, MilestoneDetailDto::new);
+    return (MilestoneDetailDto) WorkpackDetailDto.of(
+      workpack,
+      MilestoneDetailDto::new
+    );
   }
 
   public MilestoneStatus getMilestoneStatus() {
@@ -51,6 +58,22 @@ public class MilestoneDetailDto extends WorkpackDetailDto {
 
   public void setMilestoneDate(final LocalDate milestoneDate) {
     this.milestoneDate = milestoneDate;
+  }
+
+  public LocalDate getBaselineDate() {
+    return baselineDate;
+  }
+
+  public void setBaselineDate(LocalDate baselineDate) {
+    this.baselineDate = baselineDate;
+  }
+
+  public Long getDelayInDays() {
+    return delayInDays;
+  }
+
+  public void setDelayInDays(Long delayInDays) {
+    this.delayInDays = delayInDays;
   }
 
 }

@@ -32,4 +32,20 @@ public interface BaselineHelperWorkpackRepository extends Neo4jRepository<Workpa
     Long scheduleId
   );
 
+  @Query(
+    "MATCH (snapshot) WHERE id(snapshot)=$snapshotId " +
+    "MATCH (baseline:Baseline) WHERE id(baseline)=$baselineId " +
+    "CREATE (baseline)<-[:COMPOSES]-(snapshot) "
+  )
+  void createBaselineComposesRelationship(Long baselineId, Long snapshotId);
+
+  @Query(
+    "match (stepMaster:Step)-[consumes:CONSUMES]->(costAccountMaster:CostAccount) " +
+    "where id(stepMaster)=$stepId and id(costAccountMaster)=$costAccountId " +
+    "match (step:Step) where id(step)=$stepSnapshotId " +
+    "match (costAccount:CostAccount) where id(costAccount)=$costAccountSnapshotId " +
+    "create (costAccount)<-[:CONSUMES{ actualCost: consumes.actualCost, plannedCost: consumes.plannedCost }]-(step) "
+  )
+  void createCostAccountConsumesRelationship(Long stepId, Long costAccountId, Long stepSnapshotId, Long costAccountSnapshotId);
+
 }

@@ -13,11 +13,19 @@ import br.gov.es.openpmo.model.journals.JournalType;
 import br.gov.es.openpmo.model.risk.Risk;
 import br.gov.es.openpmo.model.risk.response.RiskResponse;
 import br.gov.es.openpmo.model.workpacks.Workpack;
-import br.gov.es.openpmo.repository.*;
+import br.gov.es.openpmo.repository.BaselineRepository;
+import br.gov.es.openpmo.repository.IssueRepository;
+import br.gov.es.openpmo.repository.IssueResponseRepository;
+import br.gov.es.openpmo.repository.JournalRepository;
+import br.gov.es.openpmo.repository.PersonRepository;
+import br.gov.es.openpmo.repository.RiskRepository;
+import br.gov.es.openpmo.repository.RiskResponseRepository;
+import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Service
@@ -78,12 +86,15 @@ public class JournalCreator {
   }
 
   private Long getWorkpackIdByBaseline(final Baseline baseline) {
-      return Optional.ofNullable(baseline.getIdWorkpack())
-              .orElseGet(() -> this.findWorkpackIdByBaselineId(baseline));
+    return Optional.ofNullable(baseline.getIdWorkpack())
+      .orElseGet(() -> this.findWorkpackIdByBaselineId(baseline));
   }
 
   private JournalEntry saveJournal(final JournalEntry journalEntry) {
-    return this.journalRepository.save(journalEntry, 1);
+    return this.journalRepository.save(
+      journalEntry,
+      1
+    );
   }
 
   private Long findWorkpackIdByBaselineId(final Baseline baseline) {
@@ -92,7 +103,7 @@ public class JournalCreator {
   }
 
   public void failure(final Long personId) {
-    if(personId == null) {
+    if (personId == null) {
       return;
     }
 
@@ -121,11 +132,38 @@ public class JournalCreator {
     final Workpack workpack,
     final Person person
   ) {
+    return this.create(
+      type,
+      action,
+      nameItem,
+      description,
+      null,
+      null,
+      null,
+      workpack,
+      person
+    );
+  }
+
+  public JournalEntry create(
+    final JournalType type,
+    final JournalAction action,
+    final String nameItem,
+    final String description,
+    final String reason,
+    final LocalDate newDate,
+    final LocalDate previousDate,
+    final Workpack workpack,
+    final Person person
+  ) {
     final JournalEntry journalEntry = new JournalEntry(
       type,
       action,
       nameItem,
       description,
+      reason,
+      newDate,
+      previousDate,
       workpack,
       person
     );
@@ -141,9 +179,33 @@ public class JournalCreator {
     final Long workpackId,
     final Long personId
   ) {
+    return this.create(
+      type,
+      action,
+      nameItem,
+      description,
+      null,
+      null,
+      null,
+      workpackId,
+      personId
+    );
+  }
+
+  public JournalEntry create(
+    final JournalType type,
+    final JournalAction action,
+    final String nameItem,
+    final String description,
+    final String reason,
+    final LocalDate newDate,
+    final LocalDate previousDate,
+    final Long workpackId,
+    final Long personId
+  ) {
     Workpack workpack = null;
 
-    if(type != JournalType.FAIL) {
+    if (type != JournalType.FAIL) {
       workpack = this.findWorkpackById(workpackId);
     }
 
@@ -154,6 +216,9 @@ public class JournalCreator {
       action,
       nameItem,
       description,
+      reason,
+      newDate,
+      previousDate,
       workpack,
       person
     );
@@ -284,6 +349,27 @@ public class JournalCreator {
       journalAction,
       null,
       null,
+      workpack.getId(),
+      personId
+    );
+  }
+
+  public void dateChanged(
+    final Workpack workpack,
+    final JournalAction journalAction,
+    final String reason,
+    final LocalDate newDate,
+    final LocalDate previousDate,
+    final Long personId
+  ) {
+    this.create(
+      JournalType.DATE_CHANGED,
+      journalAction,
+      null,
+      null,
+      reason,
+      newDate,
+      previousDate,
       workpack.getId(),
       personId
     );

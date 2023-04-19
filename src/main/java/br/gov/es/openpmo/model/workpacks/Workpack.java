@@ -12,6 +12,7 @@ import br.gov.es.openpmo.model.properties.Property;
 import br.gov.es.openpmo.model.relations.BelongsTo;
 import br.gov.es.openpmo.model.relations.CanAccessWorkpack;
 import br.gov.es.openpmo.model.relations.IsBaselinedBy;
+import br.gov.es.openpmo.model.relations.IsFavoritedBy;
 import br.gov.es.openpmo.model.relations.IsLinkedTo;
 import br.gov.es.openpmo.model.relations.IsSharedWith;
 import br.gov.es.openpmo.model.relations.IsSnapshotOf;
@@ -33,7 +34,6 @@ import org.springframework.util.ObjectUtils;
 
 import java.time.LocalDate;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
@@ -111,6 +111,9 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
   @Relationship(type = "FEATURES", direction = INCOMING)
   private Schedule schedule;
 
+  @Relationship(type = "IS_FAVORITED_BY")
+  private Set<IsFavoritedBy> isFavoritedBy;
+
   @org.neo4j.ogm.annotation.Property("cancelable")
   private boolean isCancelable;
 
@@ -135,13 +138,25 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
   @JsonIgnore
   private Long idWorkpackModel;
 
+  @Transient
+  @JsonIgnore
+  private boolean reasonRequired;
+
+  @Transient
+  @JsonIgnore
+  private LocalDate newDate;
+
+  @Transient
+  @JsonIgnore
+  private LocalDate previousDate;
+
   public Workpack() {
   }
 
   @Transient
   public boolean hasSameModelType(final WorkpackModel workpackModel) {
     final WorkpackModel instance = this.getWorkpackModelInstance();
-    if(Objects.isNull(instance) || Objects.isNull(workpackModel)) {
+    if (Objects.isNull(instance) || Objects.isNull(workpackModel)) {
       return false;
     }
     return instance.isTypeOf(this.getClassName(workpackModel));
@@ -149,7 +164,7 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
 
   @Transient
   public WorkpackModel getWorkpackModelInstance() {
-    switch(this.getClass().getTypeName()) {
+    switch (this.getClass().getTypeName()) {
       case TYPE_MODEL_NAME_PORTFOLIO:
         return ((Portfolio) this).getInstance();
       case TYPE_MODEL_NAME_PROGRAM:
@@ -281,38 +296,46 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
     this.schedule = schedule;
   }
 
+  public Set<IsFavoritedBy> getIsFavoritedBy() {
+    return this.isFavoritedBy;
+  }
+
+  public void setIsFavoritedBy(final Set<IsFavoritedBy> isFavoritedBy) {
+    this.isFavoritedBy = isFavoritedBy;
+  }
+
   @Transient
-  public void addParent(final Collection<? extends Workpack> parent) {
+  public void addParent(final Iterable<? extends Workpack> parent) {
     parent.forEach(this::addParent);
   }
 
   @Transient
   public boolean containsChild(final Workpack child) {
-    if(this.children == null) return false;
+    if (this.children == null) return false;
     return this.children.contains(child);
   }
 
   @Transient
   public boolean containsParent(final Workpack parent) {
-    if(this.parent == null) return false;
+    if (this.parent == null) return false;
     return this.parent.contains(parent);
   }
 
   @Transient
   public void addParent(final Workpack parent) {
-    if(parent == null) return;
-    if(this.parent == null) this.parent = new HashSet<>();
+    if (parent == null) return;
+    if (this.parent == null) this.parent = new HashSet<>();
     this.parent.add(parent);
-    if(!parent.containsChild(this)) {
+    if (!parent.containsChild(this)) {
       parent.addChildren(this);
     }
   }
 
   @Transient
   public void addChildren(final Workpack child) {
-    if(this.children == null) this.children = new HashSet<>();
+    if (this.children == null) this.children = new HashSet<>();
     this.children.add(child);
-    if(!child.containsParent(this)) {
+    if (!child.containsParent(this)) {
       child.addParent(this);
     }
   }
@@ -357,6 +380,11 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
   }
 
   @Transient
+  private boolean canBeCanceled() {
+    return !this.isProject() && !this.isCanceled;
+  }
+
+  @Transient
   public boolean isMilestone() {
     return TYPE_MODEL_NAME_MILESTONE.equals(this.getClass().getTypeName());
   }
@@ -381,14 +409,9 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
   public void setCancelable(final boolean cancelable) {
     this.isCancelable = cancelable;
 
-    if(this.children != null) {
+    if (this.children != null) {
       this.children.forEach(child -> child.setCancelable(cancelable));
     }
-  }
-
-  @Transient
-  private boolean canBeCanceled() {
-    return !this.isProject() && !this.isCanceled;
   }
 
   public Set<IsBaselinedBy> getBaselinedBy() {
@@ -438,7 +461,7 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
   }
 
   public Workpack ifIsNotProjectThrowsException() {
-    if(this.isProject()) {
+    if (this.isProject()) {
       return this;
     }
     throw new NegocioException(ApplicationMessage.WORKPACK_IS_NOT_PROJECT_INVALID_STATE_ERROR);
@@ -517,6 +540,12 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
   }
 
   @Transient
+  public Optional<Office> getOriginalOffice() {
+    return this.getOriginalPlan()
+      .map(Plan::getOffice);
+  }
+
+  @Transient
   public Optional<Plan> getOriginalPlan() {
     return Optional.ofNullable(this.belongsTo)
       .flatMap(relation -> relation.stream()
@@ -524,12 +553,6 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
         .findFirst()
       )
       .map(BelongsTo::getPlan);
-  }
-
-  @Transient
-  public Optional<Office> getOriginalOffice() {
-    return this.getOriginalPlan()
-      .map(Plan::getOffice);
   }
 
   @Transient
@@ -557,6 +580,34 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
   @Transient
   public boolean hasInstance() {
     return this.getWorkpackModelInstance() != null;
+  }
+
+  public boolean isReasonRequired() {
+    return this.reasonRequired;
+  }
+
+  public void setReasonRequired(final boolean reasonRequired) {
+    this.reasonRequired = reasonRequired;
+  }
+
+  public LocalDate getNewDate() {
+    return newDate;
+  }
+
+  public void setNewDate(LocalDate newDate) {
+    this.newDate = newDate;
+  }
+
+  public LocalDate getPreviousDate() {
+    return previousDate;
+  }
+
+  public void setPreviousDate(LocalDate previousDate) {
+    this.previousDate = previousDate;
+  }
+
+  public String getType() {
+    throw new UnsupportedOperationException();
   }
 
 }

@@ -5,7 +5,6 @@ import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.baselines.Status;
 import br.gov.es.openpmo.model.properties.Property;
-import br.gov.es.openpmo.model.relations.Consumes;
 import br.gov.es.openpmo.model.relations.IsCostAccountSnapshotOf;
 import br.gov.es.openpmo.model.relations.IsPropertySnapshotOf;
 import br.gov.es.openpmo.model.relations.IsScheduleSnapshotOf;
@@ -137,17 +136,14 @@ public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineS
     final Step stepSnapshot,
     final CostAccount costAccountSnapshot
   ) {
-    final Consumes consumes = this.getConsumesByStepIdAndCostAccountId(step, costAccount);
-    this.consumesRepository.save(new Consumes(consumes, costAccountSnapshot, stepSnapshot));
+    this.baselineHelper.createCostAccountConsumesRelationship(
+      step.getId(),
+      costAccount.getId(),
+      stepSnapshot.getId(),
+      costAccountSnapshot.getId()
+    );
   }
 
-  private Consumes getConsumesByStepIdAndCostAccountId(
-    final Step step,
-    final CostAccount costAccount
-  ) {
-    return this.consumesRepository.findByStepIdAndCostAccountId(step.getId(), costAccount.getId())
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.STEP_DOES_NOT_CONSUME_COST_ACCOUNT_INVALID_STATE_ERROR));
-  }
 
   private void snapshotChildren(
     final Baseline baseline,
@@ -169,7 +165,7 @@ public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineS
     final Workpack workpackSnapshot = this.createSnapshot(baseline, workpack);
     this.snapshotChildren(baseline, workpack, workpackSnapshot, updates);
     this.changeStatusToProposed(baseline);
-    
+
     // Added this line to repair the broken relationships
     baseline.getBaselinedBy().setId(null);
     baseline.getProposer().setId(null);
@@ -226,7 +222,7 @@ public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineS
     final Property propertySnapshot
   ) {
     propertySnapshot.setWorkpack(workpackSnapshot);
-    this.propertyRepository.save(propertySnapshot);
+    this.workpackRepository.createFeaturesRelationship(workpackSnapshot.getId(), propertySnapshot.getId());
   }
 
   private void createMasterSnapshotRelationship(
@@ -248,7 +244,7 @@ public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineS
   ) {
     this.getScheduleByWorkpackId(workpack).ifPresent(schedule -> {
       final Schedule scheduleSnapshot = this.baselineHelper.createSnapshot(schedule, this.scheduleRepository);
-      this.baselineHelper.createBaselineSnapshotRelationship(baseline, scheduleSnapshot, this.scheduleRepository);
+      this.baselineHelper.createBaselineSnapshotRelationship(baseline, scheduleSnapshot);
       this.baselineHelper.createFeatureRelationship(workpackSnapshot, scheduleSnapshot);
       this.createMasterSnapshotRelationship(schedule, scheduleSnapshot);
       this.createStepScheduleRelationship(baseline, schedule, scheduleSnapshot, workpackSnapshot);
@@ -265,7 +261,8 @@ public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineS
     final Schedule scheduleSnapshot,
     final Workpack workpackSnapshot
   ) {
-    for(final Step step : this.stepRepository.findAllByScheduleId(schedule.getId())) {
+    final List<Step> steps = this.stepRepository.findAllByScheduleId(schedule.getId());
+    for(final Step step : steps) {
       final Step stepSnapshot = this.baselineHelper.createSnapshot(step, this.stepRepository);
       this.baselineHelper.createBaselineSnapshotRelationship(baseline, stepSnapshot, this.stepRepository);
       this.baselineHelper.createComposesRelationship(scheduleSnapshot, stepSnapshot);
@@ -280,7 +277,8 @@ public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineS
     final Step stepSnapshot,
     final Workpack workpackSnapshot
   ) {
-    for(final CostAccount costAccount : this.costAccountRepository.findAllByStepId(step.getId())) {
+    final List<CostAccount> costAccounts = this.costAccountRepository.findAllByStepId(step.getId());
+    for(final CostAccount costAccount : costAccounts) {
       final Optional<CostAccount> snapshot = this.getSnapshot(baseline, costAccount);
 
       if(snapshot.isPresent()) {
@@ -289,7 +287,7 @@ public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineS
       }
 
       final CostAccount costAccountSnapshot = this.baselineHelper.createSnapshot(costAccount, this.costAccountRepository);
-      this.baselineHelper.createBaselineSnapshotRelationship(baseline, costAccountSnapshot, this.costAccountRepository);
+      this.baselineHelper.createBaselineSnapshotRelationship(baseline, costAccountSnapshot);
       this.baselineHelper.createAppliesToRelationship(workpackSnapshot, costAccountSnapshot);
       this.createConsumesRelationship(step, costAccount, stepSnapshot, costAccountSnapshot);
       this.createMasterSnapshotRelationship(costAccount, costAccountSnapshot);

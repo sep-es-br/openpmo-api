@@ -382,6 +382,7 @@ public class ScheduleService {
     final Optional<Step> maybeEquivalentSnapshot = this.getEquivalentStepSnapshot.execute(step);
 
     dto.setBaselinePlannedWork(maybeEquivalentSnapshot.map(Step::getPlannedWork).orElse(null));
+    dto.setBaselinePeriodFromStart(maybeEquivalentSnapshot.map(Step::getPeriodFromStartDate).orElse(null));
 
     for(final ConsumesDto consumes : dto.getConsumes()) {
       consumes.setBaselinePlannedCost(null);
@@ -407,12 +408,15 @@ public class ScheduleService {
     stepDto.setPeriodFromStart(step.getPeriodFromStartDate());
     stepDto.setConsumes(new HashSet<>());
 
-    for(final Consumes consumes : step.getConsumes()) {
+    final Set<Consumes> consumesRelationship = Optional.ofNullable(step.getConsumes())
+      .orElseGet(HashSet::new);
+
+    for(final Consumes relation : consumesRelationship) {
       final ConsumesDto consumesDto = new ConsumesDto();
-      consumesDto.setId(consumes.getId());
-      consumesDto.setActualCost(consumes.getActualCost());
-      consumesDto.setPlannedCost(consumes.getPlannedCost());
-      consumesDto.setCostAccount(EntityDto.of(consumes.getCostAccount()));
+      consumesDto.setId(relation.getId());
+      consumesDto.setActualCost(relation.getActualCost());
+      consumesDto.setPlannedCost(relation.getPlannedCost());
+      consumesDto.setCostAccount(EntityDto.of(relation.getCostAccount()));
       stepDto.getConsumes().add(consumesDto);
     }
 

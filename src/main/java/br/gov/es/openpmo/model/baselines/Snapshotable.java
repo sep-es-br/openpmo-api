@@ -4,6 +4,8 @@ import br.gov.es.openpmo.enumerator.CategoryEnum;
 
 public interface Snapshotable<T> {
 
+  Long getId();
+
   T snapshot();
 
   Baseline getBaseline();

@@ -23,4 +23,8 @@ public class Program extends Workpack {
     return new Program();
   }
 
+  @Override
+  public String getType() {
+    return "Program";
+  }
 }

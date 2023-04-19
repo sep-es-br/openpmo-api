@@ -5,6 +5,7 @@ import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.office.plan.PlanModel;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
+import br.gov.es.openpmo.model.workpacks.Workpack;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -83,6 +84,9 @@ public class WorkpackModel extends Entity {
 
   @Relationship(type = "IS_IN", direction = Relationship.INCOMING)
   private Set<WorkpackModel> children;
+
+  @Relationship(type = "IS_INSTANCE_BY", direction = Relationship.INCOMING)
+  private Set<Workpack> workpacks;
 
   @Transient
   private Long idParent;
@@ -247,35 +251,35 @@ public class WorkpackModel extends Entity {
 
   @Transient
   public void addParent(final Collection<? extends WorkpackModel> parent) {
-    for(final WorkpackModel model : parent) {
+    for (final WorkpackModel model : parent) {
       this.addParent(model);
     }
   }
 
   public boolean containsChild(final WorkpackModel child) {
-    if(this.children == null) return false;
+    if (this.children == null) return false;
     return this.children.contains(child);
   }
 
   public boolean containsParent(final WorkpackModel parent) {
-    if(this.parent == null) return false;
+    if (this.parent == null) return false;
     return this.parent.contains(parent);
   }
 
   @Transient
   public void addParent(final WorkpackModel parent) {
-    if(this.parent == null) this.parent = new HashSet<>();
+    if (this.parent == null) this.parent = new HashSet<>();
     this.parent.add(parent);
-    if(!parent.containsChild(this)) {
+    if (!parent.containsChild(this)) {
       parent.addChildren(this);
     }
   }
 
   @Transient
   public void addChildren(final WorkpackModel child) {
-    if(this.children == null) this.children = new HashSet<>();
+    if (this.children == null) this.children = new HashSet<>();
     this.children.add(child);
-    if(!child.containsParent(this)) {
+    if (!child.containsParent(this)) {
       child.addParent(this);
     }
   }
@@ -290,13 +294,13 @@ public class WorkpackModel extends Entity {
 
   @Transient
   public boolean hasSameType(final WorkpackModel model) {
-    if(model == null) return false;
+    if (model == null) return false;
     return this.getClass().getTypeName().equals(model.getClass().getTypeName());
   }
 
   @Transient
   public boolean hasSameName(final WorkpackModel model) {
-    if(model == null) return false;
+    if (model == null) return false;
     return this.modelName.equals(model.modelName);
   }
 
@@ -396,6 +400,18 @@ public class WorkpackModel extends Entity {
   @Transient
   public boolean hasProperties() {
     return !ObjectUtils.isEmpty(this.properties);
+  }
+
+  public Set<Workpack> getWorkpacks() {
+    return workpacks;
+  }
+
+  public void setWorkpacks(Set<Workpack> workpacks) {
+    this.workpacks = workpacks;
+  }
+
+  public String getType() {
+    throw new UnsupportedOperationException();
   }
 
 }

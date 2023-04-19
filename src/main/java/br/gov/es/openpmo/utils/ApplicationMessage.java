@@ -56,6 +56,8 @@ public class ApplicationMessage {
 
   public static final String WORKPACK_NOT_FOUND = "workpack.not.found";
 
+  public static final String WORKPACK_NAME_NOT_FOUND = "workpack.name.not.found";
+
   public static final String WORKPACK_DELETE_RELATIONSHIP_ERROR = "workpack.delete.relationship.error";
 
   public static final String PROPERTY_MODEL_NOT_FOUND = "propertyModel.not.found";
@@ -158,7 +160,11 @@ public class ApplicationMessage {
 
   public static final String FAILED_FETCH_STATUS_NOT_OK = "failed.fetch.http.response.different.200";
 
-  public static final String PROCESS_HISTORY_EMPTY = "process.history.empty";
+  public static final String REASON_NOT_PRESENT = "reason.not.present";
+
+  public static final String DATE_NOT_PRESENT = "date.not.present";
+
+  public static final String DATE_NOT_FOUND = "date.not.found";
 
   public static final String PROCESS_HISTORY_ITEM_NULL = "process.history.item.null";
 
@@ -172,6 +178,8 @@ public class ApplicationMessage {
                                                                                       ".invalid-state.error";
 
   public static final String WORKPACK_MODEL_TYPE_MISMATCH = "workpackModel.type.mismatch";
+
+  public static final String WORKPACK_TYPE_MISMATCH = "workpack.type.mismatch";
 
   public static final String WORKPACK_IS_NOT_PROJECT_INVALID_STATE_ERROR = "workpack.is.not.project.invalid-state.error";
 
@@ -255,15 +263,27 @@ public class ApplicationMessage {
   public static final String SCHEDULE_SESSION_ACTIVE_INVALID_STATE_ERROR = "schedule.session.active.invalid-state-error";
 
   public static final String PLAN_DELETE_RELATIONSHIP_ERROR = "plan.delete.relationship.error";
+
   public static final String CANNOT_READ_RESOURCE = "permission.cannot.read.resource";
+
   public static final String CANNOT_EDIT_RESOURCE = "permission.cannot.edit.resource";
+
   public static final String CANNOT_ACCESS_ADMIN_RESOURCE = "permission.cannot.access.admin.resource";
+
   public static final String CANNOT_ACCESS_PERSONAL_RESOURCE = "permission.cannot.access.personal.resource";
+
   public static final String CANNOT_ACCESS_MANAGEMENT_RESOURCE = "permission.cannot.access.management.resource";
+
   public static final String AVATAR_CREATE_ERROR = "avatar.create.error";
+
   public static final String AVATAR_DELETE_ERROR = "avatar.delete.error";
+
   public static final String AVATAR_ALREADY_EXISTS = "avatar.already.exists";
+
   public static final String STEP_PLANNED_WORK_CANNOT_BE_NULL_OR_ZERO = "step.planned-work.cannot.be.null-or-zero";
+  public static final String WORKPACK_SORTER_PROPERTY_NOT_FOUND = "workpack.sorter.property.not-found";
+
+  public static final String DATE_IS_IN_FUTURE = "date.is.in.future";
 
   private ApplicationMessage() {
   }

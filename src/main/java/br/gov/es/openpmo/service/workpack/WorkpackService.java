@@ -12,6 +12,7 @@ import br.gov.es.openpmo.model.actors.Organization;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.model.office.Locality;
+import br.gov.es.openpmo.model.office.UnitMeasure;
 import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.properties.Currency;
 import br.gov.es.openpmo.model.properties.Date;
@@ -37,6 +38,7 @@ import br.gov.es.openpmo.model.workpacks.models.ProjectModel;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.BelongsToRepository;
 import br.gov.es.openpmo.repository.CustomFilterRepository;
+import br.gov.es.openpmo.repository.MilestoneRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllWorkpackByParentUsingCustomFilter;
 import br.gov.es.openpmo.repository.custom.filters.FindAllWorkpackUsingCustomFilter;
@@ -53,8 +55,11 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.*;
@@ -112,6 +117,8 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
 
   private final HasScheduleSessionActive hasScheduleSessionActive;
 
+  private final MilestoneRepository milestoneRepository;
+
   @Autowired
   public WorkpackService(
     final WorkpackModelService workpackModelService,
@@ -131,7 +138,8 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final JournalDeleter journalDeleter,
     final WorkpackSorter workpackSorter,
     final IAsyncDashboardService dashboardService,
-    final HasScheduleSessionActive hasScheduleSessionActive
+    final HasScheduleSessionActive hasScheduleSessionActive,
+    final MilestoneRepository milestoneRepository
   ) {
     this.workpackModelService = workpackModelService;
     this.planService = planService;
@@ -151,13 +159,14 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     this.workpackSorter = workpackSorter;
     this.dashboardService = dashboardService;
     this.hasScheduleSessionActive = hasScheduleSessionActive;
+    this.milestoneRepository = milestoneRepository;
   }
 
   private static void addSharedWith(
     final Workpack workpack,
     final WorkpackDetailDto detailDto
   ) {
-    if(TRUE.equals(workpack.getPublicShared())) {
+    if (TRUE.equals(workpack.getPublicShared())) {
       detailDto.setSharedWith(Collections.singletonList(WorkpackSharedDto.of(workpack)));
       return;
     }
@@ -173,46 +182,49 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
 
   private static void validateWorkpack(final Workpack workpack) {
     final Collection<PropertyModel> models = new HashSet<>();
-    switch(workpack.getClass().getTypeName()) {
+    switch (workpack.getClass().getTypeName()) {
       case TYPE_NAME_PORTFOLIO:
         final Portfolio portfolio = (Portfolio) workpack;
-        if(portfolio.getInstance().getProperties() != null) {
+        if (portfolio.getInstance().getProperties() != null) {
           models.addAll(portfolio.getInstance().getProperties());
         }
         break;
       case TYPE_NAME_PROGRAM:
         final Program program = (Program) workpack;
-        if(program.getInstance().getProperties() != null) {
+        if (program.getInstance().getProperties() != null) {
           models.addAll(program.getInstance().getProperties());
         }
         break;
       case TYPE_NAME_ORGANIZER:
         final Organizer organizer = (Organizer) workpack;
-        if(organizer.getInstance().getProperties() != null) {
+        if (organizer.getInstance().getProperties() != null) {
           models.addAll(organizer.getInstance().getProperties());
         }
         break;
       case TYPE_NAME_DELIVERABLE:
         final Deliverable deliverable = (Deliverable) workpack;
-        if(deliverable.getInstance().getProperties() != null) {
+        if (deliverable.getInstance().getProperties() != null) {
           models.addAll(deliverable.getInstance().getProperties());
         }
         break;
       case TYPE_NAME_PROJECT:
         final Project project = (Project) workpack;
-        if(project.getInstance().getProperties() != null) {
+        if (project.getInstance().getProperties() != null) {
           models.addAll(project.getInstance().getProperties());
         }
         break;
       case TYPE_NAME_MILESTONE:
         final Milestone milestone = (Milestone) workpack;
-        if(milestone.getInstance().getProperties() != null) {
+        if (milestone.getInstance().getProperties() != null) {
           models.addAll(milestone.getInstance().getProperties());
         }
         break;
     }
     models.stream().filter(m -> m.getSession() == Session.PROPERTIES && m.isActive())
-      .forEach(m -> validateProperty(workpack, m));
+      .forEach(m -> validateProperty(
+        workpack,
+        m
+      ));
 
   }
 
@@ -221,24 +233,24 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final PropertyModel propertyModel
   ) {
     boolean propertyModelFound = false;
-    if(workpack.getProperties() != null && !workpack.getProperties().isEmpty()) {
-      for(final Property property : workpack.getProperties()) {
-        switch(property.getClass().getTypeName()) {
+    if (workpack.getProperties() != null && !workpack.getProperties().isEmpty()) {
+      for (final Property property : workpack.getProperties()) {
+        switch (property.getClass().getTypeName()) {
           case TYPE_MODEL_NAME_INTEGER:
             final Integer integer = (Integer) property;
-            if(integer.getDriver().getId().equals(propertyModel.getId())) {
+            if (integer.getDriver().getId().equals(propertyModel.getId())) {
               propertyModelFound = true;
-              if(integer.getDriver().isRequired() && integer.getValue() == null) {
+              if (integer.getDriver().isRequired() && integer.getValue() == null) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_NULL + "$" + propertyModel.getLabel());
               }
-              if(integer.getDriver().getMin() != null
-                 && integer.getDriver().getMin() > integer.getValue()) {
+              if (integer.getDriver().getMin() != null
+                  && integer.getDriver().getMin() > integer.getValue()) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_MIN + "$" + propertyModel.getLabel());
               }
-              if(integer.getDriver().getMax() != null
-                 && integer.getDriver().getMax() < integer.getValue()) {
+              if (integer.getDriver().getMax() != null
+                  && integer.getDriver().getMax() < integer.getValue()) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_MAX + "$" + propertyModel.getLabel());
               }
@@ -246,20 +258,20 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
             break;
           case TYPE_MODEL_NAME_TEXT:
             final Text text = (Text) property;
-            if(text.getDriver().getId().equals(propertyModel.getId())) {
+            if (text.getDriver().getId().equals(propertyModel.getId())) {
               propertyModelFound = true;
-              if(text.getDriver().isRequired()
-                 && (text.getValue() == null || text.getValue().isEmpty())) {
+              if (text.getDriver().isRequired()
+                  && (text.getValue() == null || text.getValue().isEmpty())) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_EMPTY + "$" + propertyModel.getLabel());
               }
-              if(text.getDriver().getMin() != null
-                 && text.getDriver().getMin() > text.getValue().length()) {
+              if (text.getDriver().getMin() != null
+                  && text.getDriver().getMin() > text.getValue().length()) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_MIN + "$" + propertyModel.getLabel());
               }
-              if(text.getDriver().getMax() != null
-                 && text.getDriver().getMax() < text.getValue().length()) {
+              if (text.getDriver().getMax() != null
+                  && text.getDriver().getMax() < text.getValue().length()) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_MAX + "$" + propertyModel.getLabel());
               }
@@ -267,19 +279,19 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
             break;
           case TYPE_MODEL_NAME_DATE:
             final Date date = (Date) property;
-            if(date.getDriver().getId().equals(propertyModel.getId())) {
+            if (date.getDriver().getId().equals(propertyModel.getId())) {
               propertyModelFound = true;
-              if(date.getDriver().isRequired() && date.getValue() == null) {
+              if (date.getDriver().isRequired() && date.getValue() == null) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_NULL + "$" + propertyModel.getLabel());
               }
-              if(date.getDriver().getMin() != null
-                 && date.getDriver().getMin().isAfter(date.getValue())) {
+              if (date.getDriver().getMin() != null
+                  && date.getDriver().getMin().isAfter(date.getValue())) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_MIN + "$" + propertyModel.getLabel());
               }
-              if(date.getDriver().getMax() != null
-                 && date.getDriver().getMax().isBefore(date.getValue())) {
+              if (date.getDriver().getMax() != null
+                  && date.getDriver().getMax().isBefore(date.getValue())) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_MAX + "$" + propertyModel.getLabel());
               }
@@ -287,15 +299,15 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
             break;
           case TYPE_MODEL_NAME_TOGGLE:
             final Toggle toggle = (Toggle) property;
-            if(toggle.getDriver().getId().equals(propertyModel.getId())) {
+            if (toggle.getDriver().getId().equals(propertyModel.getId())) {
               propertyModelFound = true;
             }
             break;
           case TYPE_MODEL_NAME_UNIT_SELECTION:
             final UnitSelection unitSelection = (UnitSelection) property;
-            if(unitSelection.getDriver().getId().equals(propertyModel.getId())) {
+            if (unitSelection.getDriver().getId().equals(propertyModel.getId())) {
               propertyModelFound = true;
-              if(unitSelection.getDriver().isRequired() && unitSelection.getValue() == null) {
+              if (unitSelection.getDriver().isRequired() && unitSelection.getValue() == null) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_NULL + "$" + propertyModel.getLabel());
               }
@@ -303,10 +315,10 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
             break;
           case TYPE_MODEL_NAME_SELECTION:
             final Selection selection = (Selection) property;
-            if(selection.getDriver().getId().equals(propertyModel.getId())) {
+            if (selection.getDriver().getId().equals(propertyModel.getId())) {
               propertyModelFound = true;
-              if(selection.getDriver().isRequired()
-                 && (selection.getValue() == null || selection.getValue().isEmpty())) {
+              if (selection.getDriver().isRequired()
+                  && (selection.getValue() == null || selection.getValue().isEmpty())) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_NULL + "$" + propertyModel.getLabel());
               }
@@ -314,20 +326,20 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
             break;
           case TYPE_MODEL_NAME_TEXT_AREA:
             final TextArea textArea = (TextArea) property;
-            if(textArea.getDriver().getId().equals(propertyModel.getId())) {
+            if (textArea.getDriver().getId().equals(propertyModel.getId())) {
               propertyModelFound = true;
-              if(textArea.getDriver().isRequired()
-                 && (textArea.getValue() == null || textArea.getValue().isEmpty())) {
+              if (textArea.getDriver().isRequired()
+                  && (textArea.getValue() == null || textArea.getValue().isEmpty())) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_EMPTY + "$" + propertyModel.getLabel());
               }
-              if(textArea.getDriver().getMin() != null
-                 && textArea.getDriver().getMin() > textArea.getValue().length()) {
+              if (textArea.getDriver().getMin() != null
+                  && textArea.getDriver().getMin() > textArea.getValue().length()) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_MIN + "$" + propertyModel.getLabel());
               }
-              if(textArea.getDriver().getMax() != null
-                 && textArea.getDriver().getMax() < textArea.getValue().length()) {
+              if (textArea.getDriver().getMax() != null
+                  && textArea.getDriver().getMax() < textArea.getValue().length()) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_MAX + "$" + propertyModel.getLabel());
               }
@@ -335,58 +347,58 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
             break;
           case TYPE_MODEL_NAME_NUMBER:
             final Number decimal = (Number) property;
-            if(decimal.getDriver().getId().equals(propertyModel.getId())) {
+            if (decimal.getDriver().getId().equals(propertyModel.getId())) {
               propertyModelFound = true;
-              if(decimal.getDriver().isRequired() && decimal.getValue() == null) {
+              if (decimal.getDriver().isRequired() && decimal.getValue() == null) {
                 throw new NegocioException(PROPERTY_VALUE_NOT_NULL + "$" + propertyModel.getLabel());
               }
-              if(decimal.getDriver().getMin() != null
-                 && decimal.getDriver().getMin() > decimal.getValue()) {
+              if (decimal.getDriver().getMin() != null
+                  && decimal.getDriver().getMin() > decimal.getValue()) {
                 throw new NegocioException(PROPERTY_VALUE_NOT_MIN + "$" + propertyModel.getLabel());
               }
-              if(decimal.getDriver().getMax() != null
-                 && decimal.getDriver().getMax() < decimal.getValue()) {
+              if (decimal.getDriver().getMax() != null
+                  && decimal.getDriver().getMax() < decimal.getValue()) {
                 throw new NegocioException(PROPERTY_VALUE_NOT_MAX + "$" + propertyModel.getLabel());
               }
             }
             break;
           case TYPE_MODEL_NAME_CURRENCY:
             final Currency currency = (Currency) property;
-            if(currency.getDriver().getId().equals(propertyModel.getId())) {
+            if (currency.getDriver().getId().equals(propertyModel.getId())) {
               propertyModelFound = true;
-              if(currency.getDriver().isRequired() && currency.getValue() == null) {
+              if (currency.getDriver().isRequired() && currency.getValue() == null) {
                 throw new NegocioException(PROPERTY_VALUE_NOT_NULL + "$" + propertyModel.getLabel());
               }
             }
             break;
           case TYPE_MODEL_NAME_LOCALITY_SELECTION:
             final LocalitySelection localitySelection = (LocalitySelection) property;
-            if(localitySelection.getDriver().getId().equals(propertyModel.getId())) {
+            if (localitySelection.getDriver().getId().equals(propertyModel.getId())) {
               propertyModelFound = true;
-              if(localitySelection.getDriver().isRequired() && (localitySelection.getValue() == null
-                                                                || localitySelection.getValue().isEmpty())) {
+              if (localitySelection.getDriver().isRequired() && (localitySelection.getValue() == null
+                                                                 || localitySelection.getValue().isEmpty())) {
                 throw new NegocioException(PROPERTY_VALUE_NOT_NULL + "$" + propertyModel.getLabel());
               }
             }
             break;
           case TYPE_MODEL_NAME_ORGANIZATION_SELECTION:
             final OrganizationSelection organizationSelection = (OrganizationSelection) property;
-            if(organizationSelection.getDriver().getId().equals(propertyModel.getId())) {
+            if (organizationSelection.getDriver().getId().equals(propertyModel.getId())) {
               propertyModelFound = true;
-              if(organizationSelection.getDriver().isRequired()
-                 && (organizationSelection.getValue() == null
-                     || organizationSelection.getValue().isEmpty())) {
+              if (organizationSelection.getDriver().isRequired()
+                  && (organizationSelection.getValue() == null
+                      || organizationSelection.getValue().isEmpty())) {
                 throw new NegocioException(PROPERTY_VALUE_NOT_NULL + "$" + propertyModel.getLabel());
               }
             }
             break;
         }
-        if(propertyModelFound) {
+        if (propertyModelFound) {
           break;
         }
       }
     }
-    if(!propertyModelFound && propertyModel.isRequired()) {
+    if (!propertyModelFound && propertyModel.isRequired()) {
       throw new NegocioException(PROPERTY_REQUIRED_NOT_FOUND + "$" + propertyModel.getLabel());
     }
   }
@@ -404,25 +416,44 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final boolean workpackLinked
   ) {
 
-    if(idFilter == null) {
-      return this.findAllUsingParent(idPlan, idWorkpackModel, idWorkpackParent, workpackLinked);
+    if (idFilter == null) {
+      return this.findAllUsingParent(
+        idPlan,
+        idWorkpackModel,
+        idWorkpackParent,
+        workpackLinked
+      );
     }
 
     final CustomFilter filter = this.findCustomFilterById(idFilter);
 
     final Map<String, Object> params = new HashMap<>();
-    params.put("idPlan", idPlan);
-    params.put("idPlanModel", idPlanModel);
-    params.put("idWorkPackModel", idWorkpackModel);
-    params.put("idWorkPackParent", idWorkpackParent);
+    params.put(
+      "idPlan",
+      idPlan
+    );
+    params.put(
+      "idPlanModel",
+      idPlanModel
+    );
+    params.put(
+      "idWorkPackModel",
+      idWorkpackModel
+    );
+    params.put(
+      "idWorkPackParent",
+      idWorkpackParent
+    );
 
-    final List<Workpack> workpacks = this.findAllWorkpackByParent.execute(filter, params);
+    final List<Workpack> workpacks = this.findAllWorkpackByParent.execute(
+      filter,
+      params
+    );
 
     return this.workpackSorter.sort(new WorkpackSorter.WorkpackSorterRequest(
       idPlan,
       idPlanModel,
       idWorkpackModel,
-      idWorkpackParent,
       idFilter,
       workpacks
     ));
@@ -434,11 +465,19 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final Long idWorkPackParent,
     final boolean workpackLinked
   ) {
-    if(workpackLinked) {
-      return this.workpackRepository.findAllUsingParentLinked(idWorkPackModel, idWorkPackParent, idPlan);
+    if (workpackLinked) {
+      return this.workpackRepository.findAllUsingParentLinked(
+        idWorkPackModel,
+        idWorkPackParent,
+        idPlan
+      );
     }
 
-    return this.workpackRepository.findAllUsingParent(idWorkPackModel, idWorkPackParent, idPlan);
+    return this.workpackRepository.findAllUsingParent(
+      idWorkPackModel,
+      idWorkPackParent,
+      idPlan
+    );
   }
 
   private CustomFilter findCustomFilterById(final Long idFilter) {
@@ -456,18 +495,41 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final Long idWorkpackModel,
     final Long idFilter
   ) {
-    if(idFilter == null) {
-      return this.findAll(idPlan, idPlanModel, idWorkpackModel);
+    if (idFilter == null) {
+      return this.findAll(
+        idPlan,
+        idPlanModel,
+        idWorkpackModel
+      );
     }
 
     final CustomFilter filter = this.findCustomFilterById(idFilter);
 
     final Map<String, Object> params = new HashMap<>();
-    params.put("idPlan", idPlan);
-    params.put("idPlanModel", idPlanModel);
-    params.put("idWorkPackModel", idWorkpackModel);
+    params.put(
+      "idPlan",
+      idPlan
+    );
+    params.put(
+      "idPlanModel",
+      idPlanModel
+    );
+    params.put(
+      "idWorkPackModel",
+      idWorkpackModel
+    );
 
-    return this.findAllWorkpack.execute(filter, params);
+    final List<Workpack> workpacks = this.findAllWorkpack.execute(
+      filter,
+      params
+    );
+    return this.workpackSorter.sort(new WorkpackSorter.WorkpackSorterRequest(
+      idPlan,
+      idPlanModel,
+      idWorkpackModel,
+      idFilter,
+      workpacks
+    ));
   }
 
   public List<Workpack> findAll(
@@ -475,11 +537,15 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final Long idPlanModel,
     final Long idWorkPackModel
   ) {
-    return this.workpackRepository.findAll(idPlan, idPlanModel, idWorkPackModel);
+    return this.workpackRepository.findAll(
+      idPlan,
+      idPlanModel,
+      idWorkPackModel
+    );
   }
 
-  public Workpack saveDefault(final Workpack workpack) {
-    return this.save(workpack);
+  public void saveDefault(final Workpack workpack) {
+    this.save(workpack);
   }
 
   private Workpack save(final Workpack workpack) {
@@ -491,7 +557,11 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final Long idPlan,
     final Long idParent
   ) {
-    this.ifNewWorkpackAddRelationship(workpack, idPlan, idParent);
+    this.ifNewWorkpackAddRelationship(
+      workpack,
+      idPlan,
+      idParent
+    );
     validateWorkpack(workpack);
     this.save(workpack);
     return EntityDto.of(workpack);
@@ -502,14 +572,14 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final Long idPlan,
     final Long idParent
   ) {
-    if(idPlan != null) {
+    if (idPlan != null) {
       final BelongsTo belongsTo = new BelongsTo();
       belongsTo.setLinked(false);
       belongsTo.setPlan(this.planService.findById(idPlan));
       belongsTo.setWorkpack(workpack);
       this.belongsToRepository.save(belongsTo);
     }
-    if(idParent != null) {
+    if (idParent != null) {
       final Workpack parent = this.findById(idParent);
       parent.addChildren(workpack);
       this.workpackRepository.save(parent);
@@ -521,172 +591,188 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
       .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
   }
 
-  public WorkpackModel getWorkpackModelByParent(final Long idWorkpackParent) {
-    final Workpack workpack = this.findById(idWorkpackParent);
-    WorkpackModel workpackModel = null;
-    switch(workpack.getClass().getTypeName()) {
-      case TYPE_NAME_PORTFOLIO:
-        workpackModel = ((Portfolio) workpack).getInstance();
-        break;
-      case TYPE_NAME_PROGRAM:
-        workpackModel = ((Program) workpack).getInstance();
-        break;
-      case TYPE_NAME_ORGANIZER:
-        workpackModel = ((Organizer) workpack).getInstance();
-        break;
-      case TYPE_NAME_DELIVERABLE:
-        workpackModel = ((Deliverable) workpack).getInstance();
-        break;
-      case TYPE_NAME_PROJECT:
-        workpackModel = ((Project) workpack).getInstance();
-        break;
-      case TYPE_NAME_MILESTONE:
-        workpackModel = ((Milestone) workpack).getInstance();
-        break;
-    }
-    if(workpackModel != null) {
-      workpackModel = this.workpackModelService.findById(workpackModel.getId());
-    }
-    return workpackModel;
-  }
-
   public Workpack update(final Workpack workpack) {
-    final Workpack workpackUpdate = this.findById(workpack.getId());
-
+    final Long workpackId = workpack.getId();
+    final Workpack workpackUpdate = this.findById(workpackId);
     final Set<Property> propertiesToUpdate = workpackUpdate.getProperties();
     final Set<Property> properties = workpack.getProperties();
-
     this.verifyForPropertiesToDelete(
       propertiesToUpdate,
       properties
     );
-
-    this.verifyForPropertiesToUpdate(
+    final Predicate<Long> dateHasChanged = this.verifyForPropertiesToUpdate(
+      workpack,
       () -> workpackUpdate.setProperties(new HashSet<>()),
       propertiesToUpdate,
       properties
     );
-
     validateWorkpack(workpackUpdate);
-    return this.save(workpackUpdate);
+    final Workpack savedWorkpack = this.save(workpackUpdate);
+    if (workpack instanceof Milestone) {
+      final boolean concluded = milestoneRepository.isConcluded(workpackId);
+      final boolean onActualBaseline = milestoneRepository.isOnActualBaseline(workpackId);
+      savedWorkpack.setReasonRequired(!concluded && onActualBaseline && dateHasChanged.test(workpackId));
+    } else {
+      savedWorkpack.setReasonRequired(false);
+    }
+    savedWorkpack.setNewDate(workpack.getNewDate());
+    savedWorkpack.setPreviousDate(workpack.getPreviousDate());
+    return savedWorkpack;
   }
 
-  private void verifyForPropertiesToUpdate(
+  private Predicate<Long> verifyForPropertiesToUpdate(
+    final Workpack workpack,
     final Runnable createPropertyList,
     final Collection<Property> propertiesToUpdate,
     final Collection<? extends Property> properties
   ) {
-    if(properties != null && !properties.isEmpty()) {
-      for(final Property property : properties) {
-        if(property.getId() == null) {
-          if(propertiesToUpdate == null) {
-            createPropertyList.run();
-          }
-          propertiesToUpdate.add(property);
-          continue;
+    if (properties == null || properties.isEmpty()) {
+      return alwaysFalse -> false;
+    }
+    Predicate<Long> hasAnyDateChanged = alwaysFalse -> false;
+    for (final Property property : properties) {
+      if (property.getId() == null) {
+        if (propertiesToUpdate == null) {
+          createPropertyList.run();
         }
-        if(propertiesToUpdate != null) {
-          propertiesToUpdate.stream().filter(p -> p.getId() != null && p.getId().equals(property.getId()))
-            .findFirst().ifPresent(propertyUpdate -> this.loadPropertyUpdate(propertyUpdate, property));
+        Objects.requireNonNull(
+          propertiesToUpdate,
+          "Propriedades para atualizar são nulas!"
+        );
+        propertiesToUpdate.add(property);
+        continue;
+      }
+      if (propertiesToUpdate != null) {
+        final Optional<Property> maybeProperty = propertiesToUpdate.stream()
+          .filter(p -> p.getId() != null && p.getId().equals(property.getId()))
+          .findFirst();
+        if (maybeProperty.isPresent()) {
+          final Property propertyToUpdate = maybeProperty.get();
+          final Predicate<Long> hasDateChanged = this.loadPropertyUpdate(
+            workpack,
+            propertyToUpdate,
+            property
+          );
+          hasAnyDateChanged = hasAnyDateChanged.or(hasDateChanged);
         }
       }
     }
+    return hasAnyDateChanged;
   }
 
   private void verifyForPropertiesToDelete(
     final Collection<? extends Property> propertiesToUpdate,
     final Collection<? extends Property> properties
   ) {
-    if(propertiesToUpdate != null && !propertiesToUpdate.isEmpty()) {
+    if (propertiesToUpdate != null && !propertiesToUpdate.isEmpty()) {
       final Set<Property> propertiesToDelete = propertiesToUpdate.stream()
         .filter(property -> properties == null || properties.stream()
           .noneMatch(p -> p.getId() != null && p.getId().equals(property.getId())))
         .collect(Collectors.toSet());
-      if(!propertiesToDelete.isEmpty()) {
+      if (!propertiesToDelete.isEmpty()) {
         this.verifyForGroupedPropertiesToDelete(propertiesToDelete);
         this.propertyService.delete(propertiesToDelete);
       }
     }
   }
 
-  private void loadPropertyUpdate(
+  private Predicate<Long> loadPropertyUpdate(
+    final Workpack workpack,
     final Property propertyToUpdate,
     final Property property
   ) {
-    if(!property.getClass().getTypeName().equals(propertyToUpdate.getClass().getTypeName())) {
+    if (!property.getClass().getTypeName().equals(propertyToUpdate.getClass().getTypeName())) {
       throw new NegocioException(PROPERTY_UPDATE_TYPE_ERROR);
     }
-    switch(propertyToUpdate.getClass().getTypeName()) {
+    Predicate<Long> hasDataChanged = alwaysFalse -> false;
+    switch (propertyToUpdate.getClass().getTypeName()) {
       case TYPE_MODEL_NAME_INTEGER:
-        final Integer integerUpdate = (Integer) propertyToUpdate;
+        final HasValue<Long> integerUpdate = (Integer) propertyToUpdate;
         final Integer integer = (Integer) property;
         integerUpdate.setValue(integer.getValue());
         break;
       case TYPE_MODEL_NAME_TEXT:
-        final Text textUpdate = (Text) propertyToUpdate;
+        final HasValue<String> textUpdate = (Text) propertyToUpdate;
         final Text text = (Text) property;
         textUpdate.setValue(text.getValue());
         break;
       case TYPE_MODEL_NAME_DATE:
-        final Date dateUpdate = (Date) propertyToUpdate;
+        final HasValue<LocalDateTime> dateUpdate = (Date) propertyToUpdate;
         final Date date = (Date) property;
-        dateUpdate.setValue(date.getValue());
+        final LocalDateTime newDate = date.getValue();
+        final LocalDateTime previousDate = dateUpdate.getValue();
+        if (workpack != null) {
+          workpack.setNewDate(newDate.toLocalDate());
+          workpack.setPreviousDate(previousDate.toLocalDate());
+        }
+        final boolean dateChanged =
+          !previousDate.isEqual(newDate) && !LocalDate.now().atStartOfDay().isEqual(newDate);
+        hasDataChanged = idWorkpack ->
+          dateChanged &&
+          milestoneRepository.hasBaselineDateChanged(
+            idWorkpack,
+            newDate
+          );
+        dateUpdate.setValue(newDate);
         break;
       case TYPE_MODEL_NAME_TOGGLE:
-        final Toggle toggleUpdate = (Toggle) propertyToUpdate;
+        final HasValue<Boolean> toggleUpdate = (Toggle) propertyToUpdate;
         final Toggle toggle = (Toggle) property;
         toggleUpdate.setValue(toggle.getValue());
         break;
       case TYPE_MODEL_NAME_UNIT_SELECTION:
-        final UnitSelection unitSelectionUpdate = (UnitSelection) propertyToUpdate;
+        final HasValue<UnitMeasure> unitSelectionUpdate = (UnitSelection) propertyToUpdate;
         final UnitSelection unitSelection = (UnitSelection) property;
         unitSelectionUpdate.setValue(unitSelection.getValue());
         break;
       case TYPE_MODEL_NAME_SELECTION:
-        final Selection selectionUpdate = (Selection) propertyToUpdate;
+        final HasValue<String> selectionUpdate = (Selection) propertyToUpdate;
         final Selection selection = (Selection) property;
         selectionUpdate.setValue(selection.getValue());
         break;
       case TYPE_MODEL_NAME_TEXT_AREA:
-        final TextArea textAreaUpdate = (TextArea) propertyToUpdate;
+        final HasValue<String> textAreaUpdate = (TextArea) propertyToUpdate;
         final TextArea textArea = (TextArea) property;
         textAreaUpdate.setValue(textArea.getValue());
         break;
       case TYPE_MODEL_NAME_NUMBER:
-        final Number decimalUpdate = (Number) propertyToUpdate;
+        final HasValue<Double> decimalUpdate = (Number) propertyToUpdate;
         final Number decimal = (Number) property;
         decimalUpdate.setValue(decimal.getValue());
         break;
       case TYPE_MODEL_NAME_CURRENCY:
-        final Currency currencyUpdate = (Currency) propertyToUpdate;
+        final HasValue<BigDecimal> currencyUpdate = (Currency) propertyToUpdate;
         final Currency currency = (Currency) property;
         currencyUpdate.setValue(currency.getValue());
         break;
       case TYPE_MODEL_NAME_LOCALITY_SELECTION:
-        final LocalitySelection localitySelectionUpdate = (LocalitySelection) propertyToUpdate;
+        final HasValue<Set<Locality>> localitySelectionUpdate = (LocalitySelection) propertyToUpdate;
         final LocalitySelection localitySelection = (LocalitySelection) property;
         localitySelectionUpdate.setValue(localitySelection.getValue());
         break;
       case TYPE_MODEL_NAME_ORGANIZATION_SELECTION:
-        final OrganizationSelection organizationSelectionUpdate = (OrganizationSelection) propertyToUpdate;
+        final HasValue<Set<Organization>> organizationSelectionUpdate = (OrganizationSelection) propertyToUpdate;
         final OrganizationSelection organizationSelection = (OrganizationSelection) property;
         organizationSelectionUpdate.setValue(organizationSelection.getValue());
         break;
       case TYPE_MODEL_NAME_GROUP:
         final Group groupToUpdate = (Group) propertyToUpdate;
         final Group group = (Group) property;
-
         final Set<Property> groupedPropertiesToUpdate = groupToUpdate.getGroupedProperties();
         final Set<Property> groupedProperties = group.getGroupedProperties();
-
-        this.verifyForPropertiesToDelete(groupedPropertiesToUpdate, groupedProperties);
-        this.verifyForPropertiesToUpdate(() -> groupToUpdate.setGroupedProperties(new HashSet<>()),
-                                         groupedPropertiesToUpdate, groupedProperties
+        this.verifyForPropertiesToDelete(
+          groupedPropertiesToUpdate,
+          groupedProperties
         );
-
+        this.verifyForPropertiesToUpdate(
+          null,
+          () -> groupToUpdate.setGroupedProperties(new HashSet<>()),
+          groupedPropertiesToUpdate,
+          groupedProperties
+        );
         break;
     }
-
+    return hasDataChanged;
   }
 
   public Workpack findByIdDefault(final Long id) {
@@ -704,34 +790,34 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     Set<Workpack> child = null;
     Set<Property> propertySet = null;
     List<? extends PropertyDto> properties = null;
-    if(workpack.getChildren() != null) {
+    if (workpack.getChildren() != null) {
       child = new HashSet<>(workpack.getChildren());
       children = this.getChildren(workpack.getChildren());
     }
-
     Set<CostAccountDto> costs = null;
-    if(workpack.getCosts() != null) {
+    if (workpack.getCosts() != null) {
       costs = new HashSet<>();
-      for(final CostAccount costAccount : workpack.getCosts()) {
+      for (final CostAccount costAccount : workpack.getCosts()) {
         costs.add(CostAccountDto.of(costAccount));
       }
     }
-
-    if(workpack.getProperties() != null && !(workpack.getProperties()).isEmpty()) {
+    if (workpack.getProperties() != null && !(workpack.getProperties()).isEmpty()) {
       properties = this.getPropertiesDto(workpack.getProperties());
       propertySet = new HashSet<>(workpack.getProperties());
       workpack.setProperties(null);
     }
-
     workpack.setChildren(null);
     final WorkpackDetailDto detailDto = this.convertWorkpackDetailDto(workpack);
-    if(detailDto != null) {
+    if (detailDto != null) {
       final PlanDto plan = this.findNotLinkedBelongsTo(workpack);
       detailDto.setPlan(plan);
       detailDto.setChildren(children);
       detailDto.setCosts(costs);
       detailDto.setProperties(properties);
-      addSharedWith(workpack, detailDto);
+      addSharedWith(
+        workpack,
+        detailDto
+      );
     }
     workpack.setChildren(child);
     workpack.setProperties(propertySet);
@@ -746,7 +832,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     WorkpackModel workpackModel = null;
     WorkpackDetailDto workpackDetailDto = null;
     final String typeName = workpack.getClass().getTypeName();
-    switch(typeName) {
+    switch (typeName) {
       case TYPE_NAME_PORTFOLIO:
         workpackModel = ((Portfolio) workpack).getInstance();
         workpackDetailDto = PortfolioDetailDto.of(workpack);
@@ -770,17 +856,26 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
       case TYPE_NAME_MILESTONE:
         workpackModel = ((Milestone) workpack).getInstance();
         workpackDetailDto = MilestoneDetailDto.of(workpack);
-        this.milestoneService.addDate(workpack.getId(), (MilestoneDetailDto) workpackDetailDto);
-        this.milestoneService.addStatus(workpack.getId(), (MilestoneDetailDto) workpackDetailDto);
+        this.milestoneService.addDate(
+          workpack.getId(),
+          (MilestoneDetailDto) workpackDetailDto
+        );
+        this.milestoneService.addStatus(
+          workpack.getId(),
+          (MilestoneDetailDto) workpackDetailDto
+        );
         break;
     }
-    if(workpackDetailDto != null) {
-      this.applyBaselineStatus(typeName, workpackDetailDto);
+    if (workpackDetailDto != null) {
+      this.applyBaselineStatus(
+        typeName,
+        workpackDetailDto
+      );
       workpackDetailDto.setCanceled(workpack.isCanceled());
       workpackDetailDto.setCancelable(this.isCancelable(workpack));
       workpackDetailDto.setCanBeDeleted(this.workpackRepository.canBeDeleted(workpack.getId()));
       workpackDetailDto.setHasScheduleSectionActive(this.hasScheduleSectionActive(workpack));
-      if(workpackModel != null) {
+      if (workpackModel != null) {
         workpackDetailDto.setModel(this.workpackModelService.getWorkpackModelDetailDto(workpackModel));
       }
       return workpackDetailDto;
@@ -793,13 +888,13 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
   }
 
   private boolean isCancelable(final Workpack workpack) {
-    if(workpack.isProject()) {
+    if (workpack.isProject()) {
       return false;
     }
-    if(workpack.isCanceled()) {
+    if (workpack.isCanceled()) {
       return false;
     }
-    if(this.workpackRepository.hasChildrenWithActiveBaseline(workpack.getId())) {
+    if (this.workpackRepository.hasChildrenWithActiveBaseline(workpack.getId())) {
       return false;
     }
     return this.workpackRepository.isPresentInBaseline(workpack.getId());
@@ -811,32 +906,25 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
   ) {
     workpackDetailDto.setHasActiveBaseline(false);
     workpackDetailDto.setPendingBaseline(false);
-
     final Long idWorkpack = workpackDetailDto.getId();
-
-    if(type.equals(TYPE_NAME_PROJECT)) {
+    if (type.equals(TYPE_NAME_PROJECT)) {
       final boolean hasActiveBaseline = this.workpackRepository.hasActiveBaseline(idWorkpack);
       final boolean pendingBaseline = this.workpackRepository.hasProposedBaseline(idWorkpack);
       final boolean cancelPropose = this.workpackRepository.hasCancelPropose(idWorkpack);
-
       workpackDetailDto.setHasActiveBaseline(hasActiveBaseline);
       workpackDetailDto.setPendingBaseline(pendingBaseline);
       workpackDetailDto.setCancelPropose(cancelPropose);
-
-      if(hasActiveBaseline) {
+      if (hasActiveBaseline) {
         this.workpackRepository.findActiveBaseline(idWorkpack)
           .map(Baseline::getName)
           .ifPresent(workpackDetailDto::setActiveBaselineName);
       }
-
       return;
     }
-
     final List<Baseline> activeBaselines =
       type.equals(TYPE_NAME_DELIVERABLE) || type.equals(TYPE_NAME_MILESTONE)
         ? this.workpackRepository.findActiveBaselineFromProjectChildren(idWorkpack)
         : this.workpackRepository.findActiveBaselineFromProjectParent(idWorkpack);
-
     activeBaselines.stream().findFirst().ifPresent(activeBaseline -> {
       workpackDetailDto.setActiveBaselineName(activeBaseline.getName());
       workpackDetailDto.setHasActiveBaseline(true);
@@ -844,15 +932,13 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
   }
 
   public void delete(final Workpack workpack) {
-    if(workpack.getChildren() != null && !(workpack.getChildren()).isEmpty()) {
+    if (workpack.getChildren() != null && !(workpack.getChildren()).isEmpty()) {
       throw new NegocioException(WORKPACK_DELETE_RELATIONSHIP_ERROR);
     }
-
-    if(this.hasSnapshot(workpack)) {
+    if (this.hasSnapshot(workpack)) {
       this.updateWorkpackDeleteStatus(workpack);
       return;
     }
-
     this.verifyForGroupedPropertiesToDelete(workpack.getProperties());
     this.journalDeleter.deleteJournalsByWorkpackId(workpack.getId());
     this.workpackRepository.delete(workpack);
@@ -869,14 +955,11 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
 
   private void verifyForGroupedPropertiesToDelete(final Collection<? extends Property> propertiesToDelete) {
     final Set<Property> groupedProperties = extractGroupedPropertyIfExists(propertiesToDelete);
-
-    if(!groupedProperties.isEmpty()) {
+    if (!groupedProperties.isEmpty()) {
       final Set<Property> groupedPropertiesToDelete = new HashSet<>();
-
-      for(final Property property : groupedProperties) {
+      for (final Property property : groupedProperties) {
         groupedPropertiesToDelete.addAll(((Group) property).getGroupedProperties());
       }
-
       this.propertyService.delete(groupedPropertiesToDelete);
     }
   }
@@ -884,39 +967,56 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
   public Workpack getWorkpack(final WorkpackParamDto workpackParamDto) {
     Workpack workpack = null;
     Set<Property> properties = null;
-    if(workpackParamDto.getProperties() != null && !workpackParamDto.getProperties().isEmpty()) {
+    if (workpackParamDto.getProperties() != null && !workpackParamDto.getProperties().isEmpty()) {
       properties = this.getProperties(workpackParamDto.getProperties());
     }
     workpackParamDto.setProperties(null);
     final WorkpackModel workpackModel = this.workpackModelService.findById(workpackParamDto.getIdWorkpackModel());
-
-    switch(workpackParamDto.getClass().getTypeName()) {
+    switch (workpackParamDto.getClass().getTypeName()) {
       case "br.gov.es.openpmo.dto.workpack.PortfolioParamDto":
-        workpack = this.modelMapper.map(workpackParamDto, Portfolio.class);
+        workpack = this.modelMapper.map(
+          workpackParamDto,
+          Portfolio.class
+        );
         ((Portfolio) workpack).setInstance((PortfolioModel) workpackModel);
         break;
       case "br.gov.es.openpmo.dto.workpack.ProgramParamDto":
-        workpack = this.modelMapper.map(workpackParamDto, Program.class);
+        workpack = this.modelMapper.map(
+          workpackParamDto,
+          Program.class
+        );
         ((Program) workpack).setInstance((ProgramModel) workpackModel);
         break;
       case "br.gov.es.openpmo.dto.workpack.OrganizerParamDto":
-        workpack = this.modelMapper.map(workpackParamDto, Organizer.class);
+        workpack = this.modelMapper.map(
+          workpackParamDto,
+          Organizer.class
+        );
         ((Organizer) workpack).setInstance((OrganizerModel) workpackModel);
         break;
       case "br.gov.es.openpmo.dto.workpack.DeliverableParamDto":
-        workpack = this.modelMapper.map(workpackParamDto, Deliverable.class);
+        workpack = this.modelMapper.map(
+          workpackParamDto,
+          Deliverable.class
+        );
         ((Deliverable) workpack).setInstance((DeliverableModel) workpackModel);
         break;
       case "br.gov.es.openpmo.dto.workpack.ProjectParamDto":
-        workpack = this.modelMapper.map(workpackParamDto, Project.class);
+        workpack = this.modelMapper.map(
+          workpackParamDto,
+          Project.class
+        );
         ((Project) workpack).setInstance((ProjectModel) workpackModel);
         break;
       case "br.gov.es.openpmo.dto.workpack.MilestoneParamDto":
-        workpack = this.modelMapper.map(workpackParamDto, Milestone.class);
+        workpack = this.modelMapper.map(
+          workpackParamDto,
+          Milestone.class
+        );
         ((Milestone) workpack).setInstance((MilestoneModel) workpackModel);
         break;
     }
-    if(workpack != null) {
+    if (workpack != null) {
       workpack.setProperties(properties);
     }
     return workpack;
@@ -927,7 +1027,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final Long idPlan
   ) {
     final WorkpackDetailDto workpackDetailDto = this.getWorkpackDetailDto(workpack);
-    if(idPlan != null) {
+    if (idPlan != null) {
       final Plan plan = this.planService.findById(idPlan);
       workpackDetailDto.setPlan(PlanDto.of(plan));
     }
@@ -940,84 +1040,84 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
   }
 
   private List<? extends PropertyDto> getPropertiesDto(final Collection<? extends Property> properties) {
-    if(properties != null && !properties.isEmpty()) {
+    if (properties != null && !properties.isEmpty()) {
       final List<PropertyDto> list = new ArrayList<>();
       properties.parallelStream().forEach(property -> {
         final String typeName = property.getClass().getTypeName();
-        switch(typeName) {
+        switch (typeName) {
           case TYPE_MODEL_NAME_INTEGER:
             final IntegerDto integerDto = IntegerDto.of(property);
-            if(((Integer) property).getDriver() != null) {
+            if (((Integer) property).getDriver() != null) {
               integerDto.setIdPropertyModel(((Integer) property).getDriver().getId());
             }
             list.add(integerDto);
             break;
           case TYPE_MODEL_NAME_TEXT:
             final TextDto textDto = TextDto.of(property);
-            if(((Text) property).getDriver() != null) {
+            if (((Text) property).getDriver() != null) {
               textDto.setIdPropertyModel(((Text) property).getDriver().getId());
             }
             list.add(textDto);
             break;
           case TYPE_MODEL_NAME_DATE:
             final DateDto dateDto = DateDto.of(property);
-            if(((Date) property).getDriver() != null) {
+            if (((Date) property).getDriver() != null) {
               dateDto.setIdPropertyModel(((Date) property).getDriver().getId());
             }
             list.add(dateDto);
             break;
           case TYPE_MODEL_NAME_TOGGLE:
             final ToggleDto toggleDto = ToggleDto.of(property);
-            if(((Toggle) property).getDriver() != null) {
+            if (((Toggle) property).getDriver() != null) {
               toggleDto.setIdPropertyModel(((Toggle) property).getDriver().getId());
             }
             list.add(toggleDto);
             break;
           case TYPE_MODEL_NAME_UNIT_SELECTION:
             final UnitSelectionDto unitSelectionDto = UnitSelectionDto.of(property);
-            if(((UnitSelection) property).getDriver() != null) {
+            if (((UnitSelection) property).getDriver() != null) {
               unitSelectionDto.setIdPropertyModel(((UnitSelection) property).getDriver().getId());
             }
-            if(((UnitSelection) property).getValue() != null) {
+            if (((UnitSelection) property).getValue() != null) {
               unitSelectionDto.setSelectedValue(((UnitSelection) property).getValue().getId());
             }
             list.add(unitSelectionDto);
             break;
           case TYPE_MODEL_NAME_SELECTION:
             final SelectionDto selectionDto = SelectionDto.of(property);
-            if(((Selection) property).getDriver() != null) {
+            if (((Selection) property).getDriver() != null) {
               selectionDto.setIdPropertyModel(((Selection) property).getDriver().getId());
             }
             list.add(selectionDto);
             break;
           case TYPE_MODEL_NAME_TEXT_AREA:
             final TextAreaDto textAreaDto = TextAreaDto.of(property);
-            if(((TextArea) property).getDriver() != null) {
+            if (((TextArea) property).getDriver() != null) {
               textAreaDto.setIdPropertyModel(((TextArea) property).getDriver().getId());
             }
             list.add(textAreaDto);
             break;
           case TYPE_MODEL_NAME_NUMBER:
             final NumberDto numberDto = NumberDto.of(property);
-            if(((Number) property).getDriver() != null) {
+            if (((Number) property).getDriver() != null) {
               numberDto.setIdPropertyModel(((Number) property).getDriver().getId());
             }
             list.add(numberDto);
             break;
           case TYPE_MODEL_NAME_CURRENCY:
             final CurrencyDto currencyDto = CurrencyDto.of(property);
-            if(((Currency) property).getDriver() != null) {
+            if (((Currency) property).getDriver() != null) {
               currencyDto.setIdPropertyModel(((Currency) property).getDriver().getId());
             }
             list.add(currencyDto);
             break;
           case TYPE_MODEL_NAME_LOCALITY_SELECTION:
             final LocalitySelectionDto localitySelectionDto = LocalitySelectionDto.of(property);
-            if(((LocalitySelection) property).getDriver() != null) {
+            if (((LocalitySelection) property).getDriver() != null) {
               localitySelectionDto.setIdPropertyModel(((LocalitySelection) property).getDriver().getId());
             }
             final Set<Locality> localities = ((LocalitySelection) property).getValue();
-            if(localities != null) {
+            if (localities != null) {
               localitySelectionDto.setSelectedValues(new HashSet<>());
               localities.forEach(o -> localitySelectionDto.getSelectedValues().add(o.getId()));
             }
@@ -1026,12 +1126,12 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
           case TYPE_MODEL_NAME_ORGANIZATION_SELECTION:
             final OrganizationSelectionDto organizationSelectionDto =
               OrganizationSelectionDto.of(property);
-            if(((OrganizationSelection) property).getDriver() != null) {
+            if (((OrganizationSelection) property).getDriver() != null) {
               organizationSelectionDto
                 .setIdPropertyModel(((OrganizationSelection) property).getDriver().getId());
             }
             final Set<Organization> organizations = ((OrganizationSelection) property).getValue();
-            if(organizations != null) {
+            if (organizations != null) {
               organizationSelectionDto.setSelectedValues(new HashSet<>());
               organizations.forEach(o -> organizationSelectionDto.getSelectedValues().add(o.getId()));
             }
@@ -1039,7 +1139,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
             break;
           case TYPE_MODEL_NAME_GROUP:
             final GroupDto groupDto = (GroupDto) GroupDto.of(property);
-            if(((Group) property).getDriver() != null) {
+            if (((Group) property).getDriver() != null) {
               groupDto.setIdPropertyModel(((Group) property).getDriver().getId());
             }
             final List<? extends PropertyDto> groupedPropertiesDto = this
@@ -1055,28 +1155,31 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
   }
 
   public Set<WorkpackDetailDto> getChildren(final Collection<? extends Workpack> childrens) {
-    if(childrens != null && !childrens.isEmpty()) {
+    if (childrens != null && !childrens.isEmpty()) {
       final Set<WorkpackDetailDto> workpacksDetail = new HashSet<>();
       childrens.parallelStream().forEach(workpack -> {
         Set<WorkpackDetailDto> childrenChild = null;
         Set<Workpack> child = null;
         Set<Property> propertySet = null;
         List<? extends PropertyDto> properties = null;
-        if(workpack.getChildren() != null && !workpack.getChildren().isEmpty()) {
+        if (workpack.getChildren() != null && !workpack.getChildren().isEmpty()) {
           child = new HashSet<>(workpack.getChildren());
           childrenChild = this.getChildren(workpack.getChildren());
         }
         workpack.setChildren(null);
-        if(workpack.getProperties() != null && !(workpack.getProperties()).isEmpty()) {
+        if (workpack.getProperties() != null && !(workpack.getProperties()).isEmpty()) {
           properties = this.getPropertiesDto(workpack.getProperties());
           propertySet = new HashSet<>(workpack.getProperties());
           workpack.setProperties(null);
         }
         final WorkpackDetailDto detailDto = this.convertWorkpackDetailDto(workpack);
-        if(detailDto != null) {
+        if (detailDto != null) {
           detailDto.setChildren(childrenChild);
           detailDto.setProperties(properties);
-          addSharedWith(workpack, detailDto);
+          addSharedWith(
+            workpack,
+            detailDto
+          );
           workpacksDetail.add(detailDto);
         }
         workpack.setProperties(propertySet);
@@ -1090,7 +1193,10 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
 
   public Set<Property> getProperties(final Iterable<? extends PropertyDto> properties) {
     final Set<Property> propertiesExtracted = new HashSet<>();
-    properties.forEach(property -> this.extractProperty(propertiesExtracted, property));
+    properties.forEach(property -> this.extractProperty(
+      propertiesExtracted,
+      property
+    ));
     return propertiesExtracted;
   }
 
@@ -1098,65 +1204,95 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final Collection<? super Property> properties,
     final PropertyDto propertyDto
   ) {
-    if(propertyDto.getIdPropertyModel() == null) {
+    if (propertyDto.getIdPropertyModel() == null) {
       throw new NegocioException(PROPERTY_RELATIONSHIP_MODEL_NOT_FOUND);
     }
     final PropertyModel propertyModel = this.propertyModelService.findById(propertyDto.getIdPropertyModel());
-    switch(propertyDto.getClass().getTypeName()) {
+    switch (propertyDto.getClass().getTypeName()) {
       case "br.gov.es.openpmo.dto.workpack.IntegerDto":
-        final Integer integer = this.modelMapper.map(propertyDto, Integer.class);
+        final Integer integer = this.modelMapper.map(
+          propertyDto,
+          Integer.class
+        );
         integer.setDriver((IntegerModel) propertyModel);
         properties.add(integer);
         break;
       case "br.gov.es.openpmo.dto.workpack.TextDto":
-        final Text text = this.modelMapper.map(propertyDto, Text.class);
+        final Text text = this.modelMapper.map(
+          propertyDto,
+          Text.class
+        );
         text.setDriver((TextModel) propertyModel);
         properties.add(text);
         break;
       case "br.gov.es.openpmo.dto.workpack.DateDto":
-        final Date date = this.modelMapper.map(propertyDto, Date.class);
+        final Date date = this.modelMapper.map(
+          propertyDto,
+          Date.class
+        );
         date.setDriver((DateModel) propertyModel);
         properties.add(date);
         break;
       case "br.gov.es.openpmo.dto.workpack.ToggleDto":
-        final Toggle toggle = this.modelMapper.map(propertyDto, Toggle.class);
+        final Toggle toggle = this.modelMapper.map(
+          propertyDto,
+          Toggle.class
+        );
         toggle.setDriver((ToggleModel) propertyModel);
         properties.add(toggle);
         break;
       case "br.gov.es.openpmo.dto.workpack.UnitSelectionDto":
-        final UnitSelection unitSelection = this.modelMapper.map(propertyDto, UnitSelection.class);
+        final UnitSelection unitSelection = this.modelMapper.map(
+          propertyDto,
+          UnitSelection.class
+        );
         unitSelection.setDriver((UnitSelectionModel) propertyModel);
         final Long selectedValue = ((UnitSelectionDto) propertyDto).getSelectedValue();
-        if(selectedValue != null) {
+        if (selectedValue != null) {
           unitSelection.setValue(this.unitMeasureService.findById(selectedValue));
         }
         properties.add(unitSelection);
         break;
       case "br.gov.es.openpmo.dto.workpack.SelectionDto":
-        final Selection selection = this.modelMapper.map(propertyDto, Selection.class);
+        final Selection selection = this.modelMapper.map(
+          propertyDto,
+          Selection.class
+        );
         selection.setDriver((SelectionModel) propertyModel);
         properties.add(selection);
         break;
       case "br.gov.es.openpmo.dto.workpack.TextAreaDto":
-        final TextArea textArea = this.modelMapper.map(propertyDto, TextArea.class);
+        final TextArea textArea = this.modelMapper.map(
+          propertyDto,
+          TextArea.class
+        );
         textArea.setDriver((TextAreaModel) propertyModel);
         properties.add(textArea);
         break;
       case "br.gov.es.openpmo.dto.workpack.NumberDto":
-        final Number number = this.modelMapper.map(propertyDto, Number.class);
+        final Number number = this.modelMapper.map(
+          propertyDto,
+          Number.class
+        );
         number.setDriver((NumberModel) propertyModel);
         properties.add(number);
         break;
       case "br.gov.es.openpmo.dto.workpack.CurrencyDto":
-        final Currency currency = this.modelMapper.map(propertyDto, Currency.class);
+        final Currency currency = this.modelMapper.map(
+          propertyDto,
+          Currency.class
+        );
         currency.setDriver((CurrencyModel) propertyModel);
         properties.add(currency);
         break;
       case "br.gov.es.openpmo.dto.workpack.LocalitySelectionDto":
-        final LocalitySelection localitySelection = this.modelMapper.map(propertyDto, LocalitySelection.class);
+        final LocalitySelection localitySelection = this.modelMapper.map(
+          propertyDto,
+          LocalitySelection.class
+        );
         localitySelection.setDriver((LocalitySelectionModel) propertyModel);
         final Set<Long> localitySelectedValues = ((LocalitySelectionDto) propertyDto).getSelectedValues();
-        if(localitySelectedValues != null && localitySelectedValues.stream().anyMatch(Objects::nonNull)) {
+        if (localitySelectedValues != null && localitySelectedValues.stream().anyMatch(Objects::nonNull)) {
           localitySelection.setValue(new HashSet<>());
           localitySelectedValues.stream()
             .filter(Objects::nonNull)
@@ -1171,7 +1307,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
         );
         organizationSelection.setDriver((OrganizationSelectionModel) propertyModel);
         final Set<Long> organizationSelectedValues = ((OrganizationSelectionDto) propertyDto).getSelectedValues();
-        if(organizationSelectedValues != null && organizationSelectedValues.stream().anyMatch(Objects::nonNull)) {
+        if (organizationSelectedValues != null && organizationSelectedValues.stream().anyMatch(Objects::nonNull)) {
           organizationSelection.setValue(new HashSet<>());
           organizationSelectedValues.stream()
             .filter(Objects::nonNull)
@@ -1182,16 +1318,15 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
       case "br.gov.es.openpmo.dto.workpack.GroupDto":
         final GroupDto groupDto = (GroupDto) propertyDto;
         final GroupModel groupModel = (GroupModel) propertyModel;
-
         final Group group = new Group();
         group.setId(groupDto.getId());
         group.setDriver(groupModel);
-
         final Set<Property> groupedProperties = new HashSet<>();
-
-        groupDto.getGroupedProperties().forEach(dto -> this.extractProperty(groupedProperties, dto));
+        groupDto.getGroupedProperties().forEach(dto -> this.extractProperty(
+          groupedProperties,
+          dto
+        ));
         group.setGroupedProperties(groupedProperties);
-
         properties.add(group);
         break;
     }
@@ -1201,22 +1336,25 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final Long idPlan,
     final Long idUser
   ) {
-    return this.workpackRepository.findAllWorkpacksWithPermissions(idPlan, idUser);
+    return this.workpackRepository.findAllWorkpacksWithPermissions(
+      idPlan,
+      idUser
+    );
   }
 
   public Workpack cancel(final Long idWorkpack) {
     final Workpack workpack = this.workpackRepository.findByIdWithChildren(idWorkpack)
       .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
-
     final Set<Workpack> workpacks = new HashSet<>();
-    this.addWorkpackRecursively(workpack, workpacks);
+    this.addWorkpackRecursively(
+      workpack,
+      workpacks
+    );
     workpacks.forEach(w -> w.setCanceled(true));
     this.workpackRepository.saveAll(workpacks);
-
     final Set<Workpack> parents = new HashSet<>();
     workpacks.stream().map(Entity::getId).map(this.workpackRepository::findParentsById).forEach(parents::addAll);
     parents.stream().map(Entity::getId).forEach(this.dashboardService::calculate);
-
     return workpack;
   }
 
@@ -1226,27 +1364,30 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
   ) {
     workpacks.add(workpack);
     final Set<Workpack> children = workpack.getChildren();
-    if(children == null || children.isEmpty()) {
+    if (children == null || children.isEmpty()) {
       return;
     }
-    for(final Workpack child : children) {
-      this.addWorkpackRecursively(child, workpacks);
+    for (final Workpack child : children) {
+      this.addWorkpackRecursively(
+        child,
+        workpacks
+      );
     }
   }
 
   public void restore(final Long idWorkpack) {
     final Workpack workpack = this.workpackRepository.findByIdWithChildren(idWorkpack)
       .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
-
-    if(!workpack.isRestaurable()) {
+    if (!workpack.isRestaurable()) {
       return;
     }
-
     final Set<Workpack> workpacks = new HashSet<>();
-    this.addWorkpackRecursively(workpack, workpacks);
+    this.addWorkpackRecursively(
+      workpack,
+      workpacks
+    );
     workpacks.forEach(w -> w.setCanceled(false));
     this.workpackRepository.saveAll(workpacks);
-
     final Set<Workpack> parents = new HashSet<>();
     workpacks.stream().map(Entity::getId).map(this.workpackRepository::findParentsById).forEach(parents::addAll);
     parents.stream().map(Entity::getId).forEach(this.dashboardService::calculate);
@@ -1256,7 +1397,10 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final Long idWorkpack,
     final Long idPlan
   ) {
-    return this.workpackRepository.findWorkpackModeLinkedByWorkpackAndPlan(idWorkpack, idPlan)
+    return this.workpackRepository.findWorkpackModeLinkedByWorkpackAndPlan(
+        idWorkpack,
+        idPlan
+      )
       .orElseThrow(() -> new NegocioException(WORKPACKMODEL_NOT_FOUND));
   }
 

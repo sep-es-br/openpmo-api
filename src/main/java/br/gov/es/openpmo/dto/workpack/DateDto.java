@@ -8,7 +8,10 @@ import java.time.LocalDateTime;
 public class DateDto extends PropertyDto {
 
   private String type = "Date";
+
   private LocalDateTime value;
+
+  private String reason;
 
   public static DateDto of(final Property property) {
     final DateDto dateDto = new DateDto();
@@ -34,6 +37,14 @@ public class DateDto extends PropertyDto {
   @Override
   public void setType(final String type) {
     this.type = type;
+  }
+
+  public String getReason() {
+    return reason;
+  }
+
+  public void setReason(String reason) {
+    this.reason = reason;
   }
 
 }

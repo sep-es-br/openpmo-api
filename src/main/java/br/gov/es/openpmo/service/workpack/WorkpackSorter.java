@@ -25,17 +25,14 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACKMODEL_NOT_FOUND
 @Component
 public class WorkpackSorter {
 
-  private final WorkpackRepository workpackRepository;
   private final WorkpackModelRepository workpackModelRepository;
   private final CustomFilterRepository customFilterRepository;
 
   @Autowired
   public WorkpackSorter(
-    final WorkpackRepository workpackRepository,
     final WorkpackModelRepository workpackModelRepository,
     final CustomFilterRepository customFilterRepository
   ) {
-    this.workpackRepository = workpackRepository;
     this.workpackModelRepository = workpackModelRepository;
     this.customFilterRepository = customFilterRepository;
   }
@@ -52,9 +49,6 @@ public class WorkpackSorter {
     }
 
     final CustomFilter customFilter = this.findCustomFilterById(request.getIdFilter());
-
-    //    final Map<Long, Set<PropertyModel>> propertiesByWorkpackModel = request.getWorkpacks().stream()
-    //      .collect(Collectors.toMap(Workpack::getId, ));
 
     return request.getWorkpacks().stream()
       .sorted((w1, w2) -> compareUsing(w1, w2, customFilter))
@@ -116,7 +110,6 @@ public class WorkpackSorter {
     private final Long idPlan;
     private final Long idPlanModel;
     private final Long idWorkpackModel;
-    private final Long idWorkpackParent;
     private final Long idFilter;
     private final List<Workpack> workpacks;
 
@@ -124,14 +117,12 @@ public class WorkpackSorter {
       final Long idPlan,
       final Long idPlanModel,
       final Long idWorkpackModel,
-      final Long idWorkpackParent,
       final Long idFilter,
       final List<Workpack> workpacks
     ) {
       this.idPlan = idPlan;
       this.idPlanModel = idPlanModel;
       this.idWorkpackModel = idWorkpackModel;
-      this.idWorkpackParent = idWorkpackParent;
       this.idFilter = idFilter;
       this.workpacks = workpacks;
     }
@@ -146,10 +137,6 @@ public class WorkpackSorter {
 
     public Long getIdWorkpackModel() {
       return this.idWorkpackModel;
-    }
-
-    public Long getIdWorkpackParent() {
-      return this.idWorkpackParent;
     }
 
     public Long getIdFilter() {

@@ -4,11 +4,13 @@ import br.gov.es.openpmo.model.relations.Consumes;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+@Repository
 public interface ConsumesRepository extends Neo4jRepository<Consumes, Long> {
 
   @Query("MATCH (c:CostAccount)<-[co:CONSUMES]-(s:Step)"

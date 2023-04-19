@@ -10,6 +10,7 @@ public enum JournalType {
   ISSUE,
   ISSUE_RESPONSE,
   RISK,
-  RISK_RESPONSE
+  RISK_RESPONSE,
+  DATE_CHANGED
 
 }

@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.model.workpacks.models;
 
 import br.gov.es.openpmo.model.workpacks.Deliverable;
+import br.gov.es.openpmo.utils.WorkpackModelInstanceType;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -10,6 +11,7 @@ import java.util.Set;
 public class DeliverableModel extends WorkpackModel {
 
   private Boolean showCompletedManagement;
+
   @Relationship(value = "IS_INSTANCE_BY", direction = Relationship.INCOMING)
   private Set<Deliverable> instances;
 
@@ -27,6 +29,10 @@ public class DeliverableModel extends WorkpackModel {
 
   public void setShowCompletedManagement(final Boolean showCompletedManagement) {
     this.showCompletedManagement = showCompletedManagement;
+  }
+
+  public String getType() {
+    return WorkpackModelInstanceType.TYPE_NAME_MODEL_DELIVERABLE.getShortName();
   }
 
 }

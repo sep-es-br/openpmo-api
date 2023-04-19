@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.model.workpacks.models;
 
 import br.gov.es.openpmo.model.workpacks.Milestone;
+import br.gov.es.openpmo.utils.WorkpackModelInstanceType;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -18,6 +19,10 @@ public class MilestoneModel extends WorkpackModel {
 
   public void setInstances(final Set<Milestone> instances) {
     this.instances = instances;
+  }
+
+  public String getType() {
+    return WorkpackModelInstanceType.TYPE_NAME_MODEL_MILESTONE.getShortName();
   }
 
 }

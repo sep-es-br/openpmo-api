@@ -1,6 +1,5 @@
 package br.gov.es.openpmo.controller.office;
 
-import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.office.OfficeDto;
@@ -113,7 +112,7 @@ public class OfficeController {
   public ResponseEntity<ResponseBase<EntityDto>> update(@RequestBody @Valid final OfficeUpdateDto officeUpdateDto,
       @RequestHeader(name = "Authorization") final String authorization) {
 
-    this.canAccessService.ensureIsAdministrator(authorization);
+    this.canAccessService.ensureCanEditResource(officeUpdateDto.getId(), authorization);
 
     final Office office = this.officeService.save(this.getOffice(officeUpdateDto));
     final ResponseBase<EntityDto> entity = new ResponseBase<EntityDto>().setData(new EntityDto(office.getId()))

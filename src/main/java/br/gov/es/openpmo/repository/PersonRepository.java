@@ -12,6 +12,7 @@ import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.relations.IsInContactBookOf;
 import br.gov.es.openpmo.model.relations.IsStakeholderIn;
+import br.gov.es.openpmo.model.workpacks.Workpack;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
@@ -28,9 +29,10 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
          "RETURN " +
          "person AS person, " +
          "isAuthenticatedBy.key AS key, " +
-         "isAuthenticatedBy.email AS email ") //+
-//         "isAuthenticatedBy, " +
-//         "authService")
+         "isAuthenticatedBy.email AS email ")
+    //+
+    //         "isAuthenticatedBy, " +
+    //         "authService")
   Optional<PersonQuery> findByIdPersonWithRelationshipAuthServiceAcessoCidadao(
     @Param("id") Long id,
     @Param("authenticationServiceName") String authenticationServiceName
@@ -179,7 +181,8 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   @Query("MATCH (person:Person)-[isInContactBookOf:IS_IN_CONTACT_BOOK_OF]->(office:Office) " +
          "OPTIONAL MATCH (person)-[canAccessOffice:CAN_ACCESS_OFFICE]->(office) " +
          "OPTIONAL MATCH (person)-[canAccessPlan:CAN_ACCESS_PLAN]->(plan:Plan)-[isAdoptedBy:IS_ADOPTED_BY]->(office) " +
-         "OPTIONAL MATCH (person)-[canAccessWorkpack:CAN_ACCESS_WORKPACK]->(workpack:Workpack)-[belongsTo:BELONGS_TO]->(plan) " +
+         "OPTIONAL MATCH (person)-[canAccessWorkpack:CAN_ACCESS_WORKPACK]->(workpack:Workpack)" +
+         "-[belongsTo:BELONGS_TO]->(plan) " +
          "WITH person, isInContactBookOf, office, canAccessPlan, plan, " +
          "isAdoptedBy, canAccessWorkpack, workpack, belongsTo, canAccessOffice " +
          "WHERE person.fullName=$fullName " +
@@ -216,14 +219,15 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
     Long idWorkpack
   );
 
-  @Query("match (person:Person), (office:Office) " +
-         "where id(person)=$personId and id(office)=$officeId " +
-         "optional match (person)-[canAccessOffice:CAN_ACCESS_OFFICE]->(office) " +
-         "optional match (person)-[canAccessPlan:CAN_ACCESS_PLAN]->(plan)-[]->(office) " +
-         "optional match (person)-[canAccessWorkpack:CAN_ACCESS_WORKPACK]->(workpack)-[]->(plan)-[]->(office) " +
-         "optional match (person)-[isStakeholderIn:IS_STAKEHOLDER_IN]->(workpack)-[]->(plan)-[]->(office) " +
-         "optional match (person)-[isCCBMemberFor:IS_CCB_MEMBER_FOR{active: true}]->(workpack)-[]->(plan)-[]->(office) " +
-         "with " +
+  @Query("MATCH (person:Person), (office:Office) " +
+         "WHERE id(person)=$personId AND id(office)=$officeId " +
+         "OPTIONAL MATCH (person)-[canAccessOffice:CAN_ACCESS_OFFICE]->(office) " +
+         "OPTIONAL MATCH (person)-[canAccessPlan:CAN_ACCESS_PLAN]->(plan)-[]->(office) " +
+         "OPTIONAL MATCH (person)-[canAccessWorkpack:CAN_ACCESS_WORKPACK]->(workpack)-[]->(plan)-[]->(office) " +
+         "OPTIONAL MATCH (person)-[isStakeholderIn:IS_STAKEHOLDER_IN]->(workpack)-[]->(plan)-[]->(office) " +
+         "OPTIONAL MATCH (person)-[isCCBMemberFor:IS_CCB_MEMBER_FOR{active: true}]->(workpack)-[]->(plan)-[]->" +
+         "(office) " +
+         "WITH " +
          "    person, " +
          "    office, " +
          "    plan, " +
@@ -233,7 +237,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
          "    canAccessWorkpack, " +
          "    isStakeholderIn, " +
          "    isCCBMemberFor " +
-         "return " +
+         "RETURN " +
          "    person, " +
          "    office, " +
          "    plan, " +
@@ -255,5 +259,24 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
          "WHERE isAuthenticatedBy.key=$key " +
          "RETURN person, isAuthenticatedBy, authService, isInContactBookOf, office, isPortraitOf, avatar")
   Optional<Person> findByKey(String key);
+
+  @Query("MATCH (person:Person)<-[:IS_FAVORITED_BY]-(workpack:Workpack) " +
+         "MATCH (workpack)-[instanceBy:IS_INSTANCE_BY]->(workpackModel:WorkpackModel) " +
+         "MATCH (workpack)-[belongsTo:BELONGS_TO]->(plan:Plan)" +
+         "WHERE id(person)=$personId " +
+         "AND id(plan)=$planId " +
+         "RETURN workpack, instanceBy, workpackModel")
+  Set<Workpack> findAllFavoriteWorkpackByPersonIdAndPlanId(
+    Long personId,
+    Long planId
+  );
+
+  @Query("MATCH (person:Person)  " +
+         "OPTIONAL MATCH (workpack:Workpack)-[isFavoritedBy:IS_FAVORITED_BY]->(person) " +
+         "OPTIONAL MATCH (workpack)-[belongsTo:BELONGS_TO]->(plan:Plan) " +
+         "WITH * " +
+         "WHERE id(person)=$personId " +
+         "RETURN person, belongsTo, isFavoritedBy, plan, workpack")
+  Optional<Person> findPersonWithFavoriteWorkpacks(Long personId);
 
 }

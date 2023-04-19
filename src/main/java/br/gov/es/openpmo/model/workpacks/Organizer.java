@@ -23,4 +23,8 @@ public class Organizer extends Workpack {
     return new Organizer();
   }
 
+  @Override
+  public String getType() {
+    return "Organizer";
+  }
 }

@@ -23,4 +23,8 @@ public class Portfolio extends Workpack {
     return new Portfolio();
   }
 
+  @Override
+  public String getType() {
+    return "Portfolio";
+  }
 }

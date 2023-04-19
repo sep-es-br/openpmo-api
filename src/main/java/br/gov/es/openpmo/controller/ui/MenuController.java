@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Set;
 
 @Api
 @RestController
@@ -63,10 +64,10 @@ public class MenuController {
   public ResponseEntity<ResponseBaseItens<WorkpackMenuDto>> indexPortfolio(
       @RequestParam("id-office") final Long idOffice,
       @RequestParam(value = "id-plan", required = false) final Long idPlan,
-      @RequestHeader(name = "Authorization") final String autorization) {
+      @RequestHeader(name = "Authorization") final String authorization) {
 
-    final Long idUser = this.tokenService.getUserId(autorization);
-    final List<WorkpackMenuDto> portfolios = this.menuService
+    final Long idUser = this.tokenService.getUserId(authorization);
+    final Set<WorkpackMenuDto> portfolios = this.menuService
         .findAllPortfolio(new PortfolioMenuRequest(idOffice, idPlan, idUser));
 
     if (portfolios.isEmpty()) {

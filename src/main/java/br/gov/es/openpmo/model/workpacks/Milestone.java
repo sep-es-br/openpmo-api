@@ -23,4 +23,8 @@ public class Milestone extends Workpack {
     return new Milestone();
   }
 
+  @Override
+  public String getType() {
+    return "Milestone";
+  }
 }

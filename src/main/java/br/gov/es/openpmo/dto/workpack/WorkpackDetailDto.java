@@ -74,6 +74,8 @@ public abstract class WorkpackDetailDto {
 
   private boolean cancelPropose;
 
+  private boolean isFavoritedBy;
+
   private Boolean hasScheduleSectionActive;
 
   private String activeBaselineName;
@@ -100,6 +102,10 @@ public abstract class WorkpackDetailDto {
     instance.setReason(workpack.getReason());
     instance.setCompleted(workpack.getCompleted());
     return instance;
+  }
+
+  public void setCanBeDeleted(final boolean canBeDeleted) {
+    this.canBeDeleted = canBeDeleted;
   }
 
   public boolean isHasActiveBaseline() {
@@ -243,10 +249,6 @@ public abstract class WorkpackDetailDto {
     return this.canBeDeleted;
   }
 
-  public void setCanBeDeleted(final boolean canBeDeleted) {
-    this.canBeDeleted = canBeDeleted;
-  }
-
   public boolean getPendingBaseline() {
     return this.pendingBaseline;
   }
@@ -261,6 +263,14 @@ public abstract class WorkpackDetailDto {
 
   public void setCancelPropose(final boolean cancelPropose) {
     this.cancelPropose = cancelPropose;
+  }
+
+  public boolean isFavoritedBy() {
+    return this.isFavoritedBy;
+  }
+
+  public void setFavoritedBy(final boolean favoritedBy) {
+    this.isFavoritedBy = favoritedBy;
   }
 
   public LocalDate getEndManagementDate() {

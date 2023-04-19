@@ -8,6 +8,7 @@ import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 import org.springframework.data.annotation.Transient;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashSet;
@@ -28,6 +29,12 @@ public class JournalEntry extends Entity {
 
   private String description;
 
+  private String reason;
+
+  private LocalDate newDate;
+
+  private LocalDate previousDate;
+
   @Relationship("SCOPE_TO")
   private Workpack workpack;
 
@@ -45,6 +52,9 @@ public class JournalEntry extends Entity {
     final JournalAction action,
     final String nameItem,
     final String description,
+    final String reason,
+    final LocalDate newDate,
+    final LocalDate previousDate,
     final Workpack workpack,
     final Person person
   ) {
@@ -52,6 +62,9 @@ public class JournalEntry extends Entity {
     this.action = action;
     this.nameItem = nameItem;
     this.description = description;
+    this.reason = reason;
+    this.newDate = newDate;
+    this.previousDate = previousDate;
     this.workpack = workpack;
     this.person = person;
     this.date = LocalDateTime.now();
@@ -59,7 +72,7 @@ public class JournalEntry extends Entity {
 
   @Transient
   public void addFiles(final Iterable<? extends File> files) {
-    if(Objects.isNull(files)) {
+    if (Objects.isNull(files)) {
       return;
     }
     files.forEach(this::addFile);
@@ -67,7 +80,7 @@ public class JournalEntry extends Entity {
 
   @Transient
   public void addFile(final File file) {
-    if(Objects.isNull(this.files)) {
+    if (Objects.isNull(this.files)) {
       this.files = new HashSet<>();
     }
 
@@ -151,6 +164,30 @@ public class JournalEntry extends Entity {
 
   public void setAction(final JournalAction action) {
     this.action = action;
+  }
+
+  public String getReason() {
+    return reason;
+  }
+
+  public void setReason(String reason) {
+    this.reason = reason;
+  }
+
+  public LocalDate getNewDate() {
+    return newDate;
+  }
+
+  public void setNewDate(LocalDate newDate) {
+    this.newDate = newDate;
+  }
+
+  public LocalDate getPreviousDate() {
+    return previousDate;
+  }
+
+  public void setPreviousDate(LocalDate previousDate) {
+    this.previousDate = previousDate;
   }
 
 }

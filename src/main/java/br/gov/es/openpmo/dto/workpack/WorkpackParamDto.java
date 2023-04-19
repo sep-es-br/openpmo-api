@@ -7,6 +7,7 @@ import io.swagger.annotations.ApiModel;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Optional;
 
 @JsonTypeInfo(use = Id.NAME, property = "type")
 @JsonSubTypes({@JsonSubTypes.Type(value = PortfolioParamDto.class, name = "Portfolio"),
@@ -70,6 +71,18 @@ public abstract class WorkpackParamDto {
 
   public void setProperties(final List<? extends PropertyDto> properties) {
     this.properties = properties;
+  }
+
+  public String getReason() {
+    if (this.properties == null || this.properties.isEmpty()) {
+      return null;
+    }
+    final Optional<DateDto> dateDto = this.properties.stream()
+      .filter(DateDto.class::isInstance)
+      .map(DateDto.class::cast)
+      .findFirst();
+    return dateDto.map(DateDto::getReason)
+      .orElse(null);
   }
 
 }

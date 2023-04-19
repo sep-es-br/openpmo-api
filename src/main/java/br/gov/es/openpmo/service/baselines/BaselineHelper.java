@@ -39,7 +39,7 @@ public class BaselineHelper {
     final T obj,
     final String message
   ) {
-    if(Objects.isNull(obj)) {
+    if (Objects.isNull(obj)) {
       throw new NegocioException(message);
     }
   }
@@ -72,6 +72,14 @@ public class BaselineHelper {
   ) {
     snapshot.setBaseline(baseline);
     repository.save(snapshot);
+  }
+
+  public <T extends Snapshotable<T>> void createBaselineSnapshotRelationship(
+    final Baseline baseline,
+    final T snapshot
+    ) {
+    snapshot.setBaseline(baseline);
+    this.baselineHelperWorkpackRepository.createBaselineComposesRelationship(baseline.getId(), snapshot.getId());
   }
 
   public void createIsInRelationship(
@@ -116,6 +124,20 @@ public class BaselineHelper {
     final Long scheduleId = schedule.getId();
     final Long stepId = step.getId();
     this.baselineHelperScheduleRepository.createComposesRelationship(scheduleId, stepId);
+  }
+
+  public void createCostAccountConsumesRelationship(
+    final Long stepId,
+    final Long costAccountId,
+    final Long stepSnapshotId,
+    final Long costAccountSnapshotId
+  ) {
+    this.baselineHelperWorkpackRepository.createCostAccountConsumesRelationship(
+      stepId,
+      costAccountId,
+      stepSnapshotId,
+      costAccountSnapshotId
+    );
   }
 
 }

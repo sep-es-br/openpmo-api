@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.model.workpacks.models;
 
 import br.gov.es.openpmo.model.workpacks.Project;
+import br.gov.es.openpmo.utils.WorkpackModelInstanceType;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -20,4 +21,7 @@ public class ProjectModel extends WorkpackModel {
     this.instances = instances;
   }
 
+  public String getType() {
+    return WorkpackModelInstanceType.TYPE_NAME_MODEL_PROJECT.getShortName();
+  }
 }

@@ -23,4 +23,8 @@ public class Project extends Workpack {
     return new Project();
   }
 
+  @Override
+  public String getType() {
+    return "Project";
+  }
 }

@@ -31,20 +31,23 @@ public abstract class FindStakeholderAndPermissionUsingCustomFilterBuilder exten
   }
 
   private StakeholderAndPermissionQuery getPermissionQuery(final Map<String, Object> objectMap) {
+    return new StakeholderAndPermissionQuery(this.getStakeholders(objectMap), this.getPermissions(objectMap));
+  }
+
+  private ArrayList<CanAccessWorkpack> getPermissions(final Map<String, Object> objectMap) {
     try {
-      return new StakeholderAndPermissionQuery(this.getStakeholders(objectMap), this.getPermissions(objectMap));
-    }
-    catch(final ClassCastException classCastException) {
-      return null;
+      return (ArrayList<CanAccessWorkpack>) objectMap.get("permissions");
+    } catch (ClassCastException exception) {
+      return new ArrayList<>();
     }
   }
 
-  private ArrayList<CanAccessWorkpack> getPermissions(final Map<String, Object> objectMap) throws ClassCastException {
-    return (ArrayList<CanAccessWorkpack>) objectMap.get("permissions");
-  }
-
-  private ArrayList<IsStakeholderIn> getStakeholders(final Map<String, Object> objectMap) throws ClassCastException {
-    return (ArrayList<IsStakeholderIn>) objectMap.get("stakeholders");
+  private ArrayList<IsStakeholderIn> getStakeholders(final Map<String, Object> objectMap) {
+    try {
+      return (ArrayList<IsStakeholderIn>) objectMap.get("stakeholders");
+    } catch (ClassCastException exception) {
+      return new ArrayList<>();
+    }
   }
 
   @Override
@@ -232,7 +235,7 @@ public abstract class FindStakeholderAndPermissionUsingCustomFilterBuilder exten
         final String label
       ) {
         return String.format(
-          "(lower(%s.%s) %s lower($%s))",
+          "(toLower(%s.%s) %s toLower($%s))",
           this.firstNode, this.property, operator, label
         );
       }

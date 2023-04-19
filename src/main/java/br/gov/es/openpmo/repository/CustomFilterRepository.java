@@ -23,6 +23,18 @@ public interface CustomFilterRepository extends Neo4jRepository<CustomFilter, Lo
     @Param("idPerson") Long idPerson
   );
 
+  @Query("MATCH (person:Person)-[has1:HAS]->(customFilter:CustomFilter {favorite: true} ) " +
+         "MATCH (customFilter)-[:FOR]->(workpackModel:WorkpackModel)<-[:IS_INSTANCE_BY]-(workpack:Workpack) " +
+         "OPTIONAL MATCH (customFilter)<-[has2:HAS]-(rules:Rules) " +
+         "WITH * " +
+         "WHERE ID(person)=$idPerson and id(workpack)=$idWorkpack " +
+         "RETURN person, has1, customFilter, has2, rules")
+  Optional<CustomFilter> findDefaultByTypeAndWorkpackId(
+    @Param("idPerson") Long idPerson,
+    @Param("idWorkpack") Long idWorkpack
+  );
+
+
   @Query("MATCH (workpackModel:WorkpackModel)<-[for:FOR]-(customFilter:CustomFilter)" +
          "MATCH (customFilter)<-[:HAS]-(person:Person) " +
          "OPTIONAL MATCH (customFilter)<-[has:HAS]-(rules:Rules) " +

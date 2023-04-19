@@ -12,9 +12,11 @@ public class StepDto {
   private BigDecimal plannedWork;
   private BigDecimal baselinePlannedWork;
   private LocalDate periodFromStart;
+  private LocalDate baselinePeriodFromStart;
   private Set<ConsumesDto> consumes;
   private LocalDate scheduleEnd;
   private LocalDate scheduleStart;
+
 
   public Long getId() {
     return this.id;
@@ -86,6 +88,14 @@ public class StepDto {
 
   public void setScheduleStart(final LocalDate scheduleStart) {
     this.scheduleStart = scheduleStart;
+  }
+
+  public void setBaselinePeriodFromStart(LocalDate baselinePeriodFromStart) {
+    this.baselinePeriodFromStart = baselinePeriodFromStart;
+  }
+
+  public LocalDate getBaselinePeriodFromStart() {
+    return this.baselinePeriodFromStart;
   }
 
 }

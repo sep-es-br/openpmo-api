@@ -50,7 +50,7 @@ public class FindStakeholderAndPermissionUsingCustomFilter extends FindStakehold
   @Override
   public void buildReturnClause(final StringBuilder query) {
     query
-      .append("RETURN collect(DISTINCT isStakeholderIn) as stakeholders, collect(DISTINCT person) as persons, ")
+      .append("RETURN collect(DISTINCT actor) as actors, collect(DISTINCT isStakeholderIn) as stakeholders, collect(DISTINCT person) as persons, ")
       .append("collect(DISTINCT workpack) as workpacks, collect(DISTINCT canAccessWorkpack) as permissions ")
       .append(" ");
   }

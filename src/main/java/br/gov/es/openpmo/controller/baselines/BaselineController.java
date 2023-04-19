@@ -107,11 +107,8 @@ public class BaselineController implements IBaselineController {
   @Override
   public Response<EntityDto> create(
       final IncludeBaselineRequest request,
-      @RequestHeader(name = "Authorization") final String authorization) {
-
-    // this.canAccessService.ensureCanReadResource(request.getIdWorkpack(),
-    // authorization);
-
+      @RequestHeader(name = "Authorization") final String authorization
+  ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
     final Long idBaseline = this.createBaselineService.create(request, idPerson);
     return this.responseHandler.success(new EntityDto(idBaseline));
@@ -122,8 +119,6 @@ public class BaselineController implements IBaselineController {
       final Long idBaseline,
       final SubmitBaselineRequest request,
       @RequestHeader(name = "Authorization") final String authorization) {
-
-    // this.canAccessService.ensureCanReadResource(idBaseline, authorization);
     final Long idPerson = this.tokenService.getUserId(authorization);
     this.submitBaselineService.submit(idBaseline, request, idPerson);
     return this.responseHandler.success();
@@ -133,10 +128,9 @@ public class BaselineController implements IBaselineController {
   public Response<Void> edit(
       final Long idBaseline,
       final EditDraftBaselineRequest request,
-      @RequestHeader(name = "Authorization") final String authorization) {
-
+      @RequestHeader(name = "Authorization") final String authorization
+  ) {
     this.canAccessService.ensureCanReadResource(idBaseline, authorization);
-
     this.editBaselineService.edit(idBaseline, request);
     return this.responseHandler.success();
   }
@@ -154,11 +148,8 @@ public class BaselineController implements IBaselineController {
   @Override
   public Response<EntityDto> submitCancelling(
       final SubmitCancellingRequest request,
-      @RequestHeader(name = "Authorization") final String authorization) {
-
-    // this.canAccessService.ensureCanEditResource(request.getIdWorkpack(),
-    // authorization);
-
+      @RequestHeader(name = "Authorization") final String authorization
+  ) {
     final Long personId = this.tokenService.getUserId(authorization);
     final EntityDto baselineProposed = this.cancelBaselineService.submit(request, personId);
     return this.responseHandler.success(baselineProposed);
@@ -178,8 +169,6 @@ public class BaselineController implements IBaselineController {
   public Response<BaselineDetailCCBMemberResponse> getBaselineByIdAsCCBMemberView(
       @RequestHeader(name = "Authorization") final String authorization,
       final Long idBaseline) {
-
-    // this.canAccessService.ensureCanReadResource(idBaseline, authorization);
     final Long idPerson = this.tokenService.getUserId(authorization);
     final BaselineDetailCCBMemberResponse response = this.getBaselineAsCCBMemberViewService.getById(idBaseline,
         idPerson);
@@ -190,10 +179,8 @@ public class BaselineController implements IBaselineController {
   public Response<Void> evaluateBaseline(
       @RequestHeader(name = "Authorization") final String authorization,
       final Long idBaseline,
-      final BaselineEvaluationRequest request) {
-
-    // this.canAccessService.ensureCanEditResource(idBaseline, authorization);
-
+      final BaselineEvaluationRequest request
+  ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
     this.evaluateBaselineService.evaluate(idPerson, idBaseline, request);
     return this.responseHandler.success();
