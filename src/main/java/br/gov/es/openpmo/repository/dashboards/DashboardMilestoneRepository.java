@@ -11,19 +11,19 @@ import java.util.Set;
 @Repository
 public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone, Long> {
 
-  @Query("match (m:Milestone{deleted:false,canceled:false})-[IS_IN]->(w:Workpack{deleted:false,canceled:false}) " +
+  @Query("match (m:Milestone{deleted:false,canceled:false})-[:IS_IN]->(w:Workpack{deleted:false,canceled:false}) " +
          "where id(m)=$milestoneId " +
          "return id(w)")
   Long findParentIdByMilestoneId(Long milestoneId);
 
-  @Query("match (m:Milestone{deleted:false,canceled:false})-[IS_IN*]->(w:Workpack{deleted:false,canceled:false})" +
+  @Query("match (m:Milestone{deleted:false,canceled:false})-[:IS_IN*]->(w:Workpack{deleted:false,canceled:false})" +
          "-[:IS_BASELINED_BY]->(b:Baseline{active: true}) " +
          "where id(m)=$milestoneId " +
          "return id(w) " +
          "limit 1")
   Long findWorkpackIdByMilestoneId(Long milestoneId);
 
-  @Query("match (m:Milestone{deleted:false,canceled:false})-[IS_IN*]->(w:Workpack{deleted:false,canceled:false})" +
+  @Query("match (m:Milestone{deleted:false,canceled:false})-[:IS_IN*]->(w:Workpack{deleted:false,canceled:false})" +
          "-[:IS_BASELINED_BY]->(b:Baseline{active: true}) " +
          "where id(m)=$milestoneId " +
          "return id(b) " +

@@ -11,7 +11,6 @@ import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,18 +36,20 @@ public class GetWorkpackBreakdownStructure {
     }
     Workpack workpack = workpackRepository.findWorkpackWithModelStructureById(idWorkpack)
       .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
-    final WorkpackBreakdownStructure rootStructure = new WorkpackBreakdownStructure();
-    rootStructure.setRepresentation(getWorkpackRepresentation.execute(workpack));
     final WorkpackModel model = workpack.getWorkpackModelInstance();
+    final WorkpackBreakdownStructure rootStructure = new WorkpackBreakdownStructure();
     if (model == null) {
-      rootStructure.setWorkpackModels(Collections.emptyList());
-      return rootStructure;
+      return null;
     }
     final List<WorkpackModelBreakdownStructure> children = getChildren(
       workpack,
       model
     );
+    if (children.isEmpty()) {
+      return null;
+    }
     rootStructure.setWorkpackModels(children);
+    rootStructure.setRepresentation(getWorkpackRepresentation.execute(workpack));
     return rootStructure;
   }
 
