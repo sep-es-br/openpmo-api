@@ -35,15 +35,15 @@ public class FindAllCostAccountUsingCustomFilter extends FindAllUsingCustomFilte
     final CustomFilter filter,
     final StringBuilder query
   ) {
-    query.append("" +
+    query.append(
                  "MATCH (workpack:Workpack{deleted:false})<-[i:APPLIES_TO]-(node:CostAccount), " +
                  "(workpack)-[belongsTo:BELONGS_TO]->(plan:Plan), " +
                  "(workpack)-[:IS_INSTANCE_BY]->(wm:WorkpackModel)<-[:FEATURES]-(propertyModel:PropertyModel), " +
                  "(workpack)<-[:FEATURES]-(property:Property)-[:IS_DRIVEN_BY]->(propertyModel) " +
                  "OPTIONAL MATCH (propertyModel)-[:GROUPS]->(groupedProperty:PropertyModel) " +
                  "OPTIONAL MATCH (workpack)<-[:FEATURES]-(:Property)-[:VALUES]->(values) " +
-                 "WITH workpack, i, node, belongsTo, plan, wm, propertyModel, groupedProperty, property, " +
-                 "collect( property.value ) as properties, " +
+                 "WITH *, " +
+                 "collect( property ) as properties, " +
                  "collect( id(values) ) as selectedValues ");
   }
 

@@ -54,8 +54,8 @@ public class CostAccountController {
   public ResponseEntity<ResponseBaseItens<CostAccountDto>> indexBase(
       @RequestParam("id-workpack") final Long idWorkpack,
       @RequestParam(required = false) final Long idFilter,
-      @Authorization final String authorization) {
-
+      @Authorization final String authorization
+  ) {
     this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
     final List<CostAccountDto> costs = this.costAccountService.findAllByIdWorkpack(
         idWorkpack,
