@@ -8,6 +8,7 @@ import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.baselines.Snapshotable;
 import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.office.plan.Plan;
+import br.gov.es.openpmo.model.properties.Number;
 import br.gov.es.openpmo.model.properties.Property;
 import br.gov.es.openpmo.model.relations.BelongsTo;
 import br.gov.es.openpmo.model.relations.CanAccessWorkpack;
@@ -608,6 +609,19 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
 
   public String getType() {
     throw new UnsupportedOperationException();
+  }
+
+  @Transient
+  public Double getNumber() {
+    if (this.properties == null || this.properties.isEmpty()) {
+      return null;
+    }
+    for (Property property : this.properties) {
+      if (property instanceof Number) {
+        return ((Number) property).getValue();
+      }
+    }
+    return null;
   }
 
 }

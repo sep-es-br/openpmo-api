@@ -11,6 +11,7 @@ import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -84,6 +85,7 @@ public class GetWorkpackBreakdownStructure {
         );
         workpackBreakdownStructures.add(structure);
       }
+      workpackBreakdownStructures.sort(Comparator.comparing(WorkpackBreakdownStructure::getOrder, Comparator.nullsLast(Comparator.naturalOrder())));
       workpackModelBreakdownStructure.setWorkpacks(workpackBreakdownStructures);
       structures.add(workpackModelBreakdownStructure);
     }
@@ -112,6 +114,7 @@ public class GetWorkpackBreakdownStructure {
     WorkpackModel child
   ) {
     final WorkpackBreakdownStructure structure = new WorkpackBreakdownStructure();
+    structure.setOrder(workpack.getNumber());
     structure.setRepresentation(getWorkpackRepresentation.execute(workpack));
     final List<WorkpackModelBreakdownStructure> children = getChildren(
       workpack,

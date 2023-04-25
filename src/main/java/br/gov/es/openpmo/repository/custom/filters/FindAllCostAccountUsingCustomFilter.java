@@ -60,7 +60,7 @@ public class FindAllCostAccountUsingCustomFilter extends FindAllUsingCustomFilte
 
   @Override
   public void buildReturnClause(final StringBuilder query) {
-    query.append("RETURN workpack, [ ")
+    query.append("RETURN workpack, i, node, [ ")
       .append("  [(workpack)<-[appliesTo:APPLIES_TO]-(node) | [appliesTo, node] ], ")
       .append("  [(node)<-[f1:FEATURES]-(p1:Property)-[d1:IS_DRIVEN_BY]->(pm1:PropertyModel) | [f1, p1, d1, pm1] ], ")
       .append("  [(p2)-[v1:VALUES]->(o:Organization) | [v1, o] ], ")

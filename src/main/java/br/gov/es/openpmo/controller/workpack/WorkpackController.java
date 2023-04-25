@@ -225,12 +225,21 @@ public class WorkpackController {
       idFilter,
       workpackLinked
     );
+
+    if (isNotNull(idWorkpackModel)) {
+      final WorkpackModel workpackModel = this.workpackService.getWorkpackModelById(idWorkpackModel);
+      if (workpackModelHasSortBy(workpackModel) && Objects.isNull(idFilter)) {
+        sortWorkpacks(
+          workpacks,
+          workpackModel
+        );
+      }
+    }
+
     final List<WorkpackDetailDto> workpackList = workpacks.parallelStream()
-      .map(workpack -> this.mapToWorkpackDetailDto(
-        workpack,
-        idWorkpackModel
-      ))
+      .map(workpack -> this.mapToWorkpackDetailDto(workpack, idWorkpackModel))
       .collect(Collectors.toList());
+
     if (workpackList.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
@@ -239,6 +248,7 @@ public class WorkpackController {
       idUser,
       idPlan
     );
+
     verify.parallelStream().filter(workpackDetailDto -> !workpackDetailDto.isCanceled())
       .forEach(workpackDetailDto -> {
         final SimpleDashboard dashboard = this.dashboardService.buildSimple(workpackDetailDto.getId());

@@ -31,8 +31,9 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
          "WHERE id(w1)=$id " +
          "RETURN w1, [ " +
          " [(w1)-[iib1:IS_INSTANCE_BY]->(wm1:WorkpackModel)<-[ii1:IS_IN*]-(wm2:WorkpackModel)<-[iib2:IS_INSTANCE_BY]-" +
-         "(w2:Workpack)" +
-         "-[ii2:IS_IN*]->(w1) | [iib1, wm1, ii1, wm2, iib2, w2, ii2]] " +
+         "(w2:Workpack)-[ii2:IS_IN*]->(w1) | [iib1, wm1, ii1, wm2, iib2, w2, ii2]], " +
+         " [(w1)<-[f1:FEATURES]-(p1) | [f1, p1]], " +
+         " [(w1)<-[:IS_IN*]-(w2)<-[f2:FEATURES]-(p2:Number) | [f2, p2]] " +
          "]")
   Optional<Workpack> findWorkpackWithModelStructureById(Long id);
 

@@ -107,6 +107,7 @@ public class CostAccountController {
 
   private CostAccount getCostAccount(final Object cost) {
     Set<Property> properties = null;
+    Long idCostAccount = null;
     if (cost instanceof CostAccountStoreDto) {
       if (((CostAccountStoreDto) cost).getProperties() != null
           && !(((CostAccountStoreDto) cost).getProperties()).isEmpty()) {
@@ -115,6 +116,7 @@ public class CostAccountController {
         store.setProperties(null);
       }
     } else {
+      idCostAccount = ((CostAccountUpdateDto) cost).getId();
       if ((((CostAccountUpdateDto) cost).getProperties()) != null
           && !(((CostAccountUpdateDto) cost).getProperties()).isEmpty()) {
         final CostAccountUpdateDto update = (CostAccountUpdateDto) cost;
@@ -122,7 +124,12 @@ public class CostAccountController {
         update.setProperties(null);
       }
     }
-    final CostAccount costAccount = this.modelMapper.map(cost, CostAccount.class);
+    final CostAccount costAccount;
+    if (idCostAccount == null) {
+      costAccount = this.modelMapper.map(cost, CostAccount.class);
+    } else {
+      costAccount = costAccountService.findById(idCostAccount);
+    }
     costAccount.setProperties(properties);
     return costAccount;
   }
