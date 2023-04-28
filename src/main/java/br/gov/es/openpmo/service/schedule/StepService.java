@@ -246,6 +246,7 @@ public class StepService {
     return intervalInMonths(scheduleStart, schedule.getStart());
   }
 
+  @Transactional
   public Step update(final StepUpdateDto stepUpdateDto) {
     final Step step = this.getStepForUpdate(stepUpdateDto);
     final Step stepUpdate = this.findById(step.getId());

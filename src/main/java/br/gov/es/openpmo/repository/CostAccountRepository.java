@@ -12,7 +12,7 @@ import java.util.Optional;
 
 public interface CostAccountRepository extends Neo4jRepository<CostAccount, Long>, CustomRepository {
 
-  @Query("MATCH (workpack:Workpack)-[belongsTo:BELONGS_TO]->(plan:Plan) "
+  @Query("MATCH (workpack:Workpack{deleted: false})-[belongsTo:BELONGS_TO]->(plan:Plan) "
          + " WHERE id(workpack) = $idWorkpack "
          + " AND belongsTo.linked=false "
          + " RETURN workpack, [ "

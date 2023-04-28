@@ -706,7 +706,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
           workpack.setPreviousDate(previousDate.toLocalDate());
         }
         final boolean dateChanged =
-          !previousDate.isEqual(newDate) && !LocalDate.now().atStartOfDay().isEqual(newDate);
+          !previousDate.toLocalDate().isEqual(newDate.toLocalDate()) && !LocalDate.now().isEqual(newDate.toLocalDate());
         hasDataChanged = idWorkpack ->
           dateChanged &&
           milestoneRepository.hasBaselineDateChanged(

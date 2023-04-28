@@ -13,7 +13,6 @@ import br.gov.es.openpmo.model.process.Process;
 import br.gov.es.openpmo.model.relations.CanAccessOffice;
 import br.gov.es.openpmo.model.relations.CanAccessPlan;
 import br.gov.es.openpmo.model.risk.Risk;
-import br.gov.es.openpmo.model.workpacks.CostAccount;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 
 public enum CustomFilterEnum {
@@ -27,7 +26,7 @@ public enum CustomFilterEnum {
   PLAN_PERMISSIONS("CanAccessPlan", CanAccessPlan.class),
   UNIT_MEASURES("UnitMeasure", UnitMeasure.class),
   WORKPACK("Workpack", Workpack.class),
-  COST_ACCOUNT("CostAccount", CostAccount.class),
+  COST_ACCOUNT("CostAccount", Workpack.class),
   RISK("Risk", Risk.class),
   STAKEHOLDER("IsStakeholderIn", StakeholderAndPermissionQuery.class),
   ISSUE("Issue", Issue.class),

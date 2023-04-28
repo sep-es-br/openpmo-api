@@ -23,6 +23,7 @@ import br.gov.es.openpmo.utils.Pair;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -180,7 +181,7 @@ public class ScheduleService {
     final long months,
     final BigDecimal decimal
   ) {
-    if(decimal == null) {
+    if(decimal == null || decimal.equals(BigDecimal.ZERO)) {
       return BigDecimal.ZERO;
     }
     return decimal.divide(new BigDecimal(months), 2, RoundingMode.HALF_UP);
@@ -423,6 +424,7 @@ public class ScheduleService {
     return stepDto;
   }
 
+  @Transactional
   public Schedule save(final ScheduleParamDto scheduleParamDto) {
     this.validatesScheduleParamDto(scheduleParamDto);
     final Schedule schedule = this.scheduleRepository.save(this.mapToSchedule(scheduleParamDto));

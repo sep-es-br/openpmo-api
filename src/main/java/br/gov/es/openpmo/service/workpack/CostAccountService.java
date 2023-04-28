@@ -94,9 +94,11 @@ public class CostAccountService {
     );
 
     final List<CostAccount> costAccounts = this.findAllCostAccount.execute(
-      filter,
-      params
-    );
+        filter,
+        params
+      ).stream()
+      .flatMap(workpack -> this.fetchCostAccountFromWorkpack((Workpack) workpack).stream())
+      .collect(Collectors.toList());
 
     final List<CostAccount> costAccountsSorted = this.costAccountSorter.sort(new CostAccountSorter.CostAccountSorterRequest(
       idFilter,

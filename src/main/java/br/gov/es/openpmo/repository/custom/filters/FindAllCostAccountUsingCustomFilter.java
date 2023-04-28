@@ -36,8 +36,7 @@ public class FindAllCostAccountUsingCustomFilter extends FindAllUsingCustomFilte
     final StringBuilder query
   ) {
     query.append(
-                 "MATCH (workpack:Workpack{deleted:false})<-[i:APPLIES_TO]-(node:CostAccount), " +
-                 "(workpack)-[belongsTo:BELONGS_TO]->(plan:Plan), " +
+                 "MATCH (workpack:Workpack{deleted: false})-[belongsTo:BELONGS_TO]->(plan:Plan), " +
                  "(workpack)-[:IS_INSTANCE_BY]->(wm:WorkpackModel)<-[:FEATURES]-(propertyModel:PropertyModel), " +
                  "(workpack)<-[:FEATURES]-(property:Property)-[:IS_DRIVEN_BY]->(propertyModel) " +
                  "OPTIONAL MATCH (propertyModel)-[:GROUPS]->(groupedProperty:PropertyModel) " +
@@ -60,8 +59,8 @@ public class FindAllCostAccountUsingCustomFilter extends FindAllUsingCustomFilte
 
   @Override
   public void buildReturnClause(final StringBuilder query) {
-    query.append("RETURN workpack, i, node, [ ")
-      .append("  [(workpack)<-[appliesTo:APPLIES_TO]-(node) | [appliesTo, node] ], ")
+    query.append("RETURN workpack, [ ")
+      .append("  [(workpack)<-[appliesTo:APPLIES_TO]-(node:CostAccount) | [appliesTo, node] ], ")
       .append("  [(node)<-[f1:FEATURES]-(p1:Property)-[d1:IS_DRIVEN_BY]->(pm1:PropertyModel) | [f1, p1, d1, pm1] ], ")
       .append("  [(p2)-[v1:VALUES]->(o:Organization) | [v1, o] ], ")
       .append("  [(p2)-[v2:VALUES]-(l:Locality) | [v2, l] ], ")
