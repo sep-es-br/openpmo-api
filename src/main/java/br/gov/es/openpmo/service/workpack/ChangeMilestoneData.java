@@ -2,6 +2,7 @@ package br.gov.es.openpmo.service.workpack;
 
 import br.gov.es.openpmo.dto.workpack.ChangeMilestoneDateRequest;
 import br.gov.es.openpmo.exception.NegocioException;
+import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.properties.Date;
 import br.gov.es.openpmo.model.workpacks.Milestone;
 import br.gov.es.openpmo.model.workpacks.Workpack;
@@ -12,6 +13,7 @@ import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -54,6 +56,10 @@ public class ChangeMilestoneData {
       if (baselineDate != null && !previousDate.isEqual(newDate)) {
         milestone.setReasonRequired(true);
       }
+    }
+    final List<Baseline> maybeBaseline = this.milestoneRepository.fetchBaselineById(idMilestone);
+    if (maybeBaseline.isEmpty()) {
+      milestone.setReasonRequired(false);
     }
     milestone.setNewDate(newDate);
     milestone.setPreviousDate(previousDate);

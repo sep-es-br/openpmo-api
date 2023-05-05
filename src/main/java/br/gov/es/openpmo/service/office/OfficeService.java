@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -69,6 +70,7 @@ public class OfficeService {
   public List<Office> findAll() {
     final List<Office> offices = new ArrayList<>();
     this.officeRepository.findAll().forEach(offices::add);
+    offices.sort(Comparator.comparing(Office::getName));
     return offices;
   }
 

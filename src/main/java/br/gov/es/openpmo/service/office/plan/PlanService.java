@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -95,7 +96,9 @@ public class PlanService implements BreadcrumbPlanHelper {
   }
 
   public List<Plan> findAllInOffice(final Long idOffice) {
-    return this.planRepository.findAllInOffice(idOffice);
+    final List<Plan> plans = this.planRepository.findAllInOffice(idOffice);
+    plans.sort(Comparator.comparing(Plan::getStart).reversed());
+    return plans;
   }
 
   public Plan save(final Plan plan) {

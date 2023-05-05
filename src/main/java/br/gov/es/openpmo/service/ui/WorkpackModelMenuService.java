@@ -9,9 +9,13 @@ import br.gov.es.openpmo.repository.PlanModelRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class WorkpackModelMenuService {
@@ -42,17 +46,21 @@ public class WorkpackModelMenuService {
       final List<WorkpackModel> workpackModels =
         this.planModelRepository.findAllWorkpackModelsByPlanModelId(planModel.getId());
 
-      final Set<WorkpackModelMenuResponse> workpackModelMenuResponses = new HashSet<>();
+      final Collection<WorkpackModelMenuResponse> workpackModelMenuResponses = new HashSet<>();
 
       for(final WorkpackModel workpackModel : workpackModels) {
         final WorkpackModelMenuResponse response = this.getResponse(planModel, workpackModel);
         workpackModelMenuResponses.add(response);
       }
 
-      planModelMenuResponse.setWorkpackModels(workpackModelMenuResponses);
+      final Set<WorkpackModelMenuResponse> sortedWorkpackModels = workpackModelMenuResponses.stream()
+        .sorted(Comparator.comparing(WorkpackModelMenuResponse::getName))
+        .collect(Collectors.toCollection(LinkedHashSet::new));
+      planModelMenuResponse.setWorkpackModels(sortedWorkpackModels);
       planModelMenuResponses.add(planModelMenuResponse);
     }
 
+    planModelMenuResponses.sort(Comparator.comparing(PlanModelMenuResponse::getName));
     return planModelMenuResponses;
   }
 

@@ -13,7 +13,7 @@ public class WorkpackBreakdownStructure {
   private List<WorkpackModelBreakdownStructure> workpackModels;
 
   @JsonIgnore
-  private Double order;
+  private Comparable order;
 
   public WorkpackRepresentation getRepresentation() {
     return representation;
@@ -31,11 +31,11 @@ public class WorkpackBreakdownStructure {
     this.workpackModels = workpackModels;
   }
 
-  public Double getOrder() {
+  public Comparable getOrder() {
     return order;
   }
 
-  public void setOrder(Double order) {
+  public void setOrder(Comparable order) {
     this.order = order;
   }
 

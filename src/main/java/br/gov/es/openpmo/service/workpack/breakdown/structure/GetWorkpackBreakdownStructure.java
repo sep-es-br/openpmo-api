@@ -89,6 +89,7 @@ public class GetWorkpackBreakdownStructure {
       workpackModelBreakdownStructure.setWorkpacks(workpackBreakdownStructures);
       structures.add(workpackModelBreakdownStructure);
     }
+    structures.sort(Comparator.comparing(WorkpackModelBreakdownStructure::getName, Comparator.nullsLast(Comparator.naturalOrder())));
     return structures;
   }
 
@@ -114,7 +115,7 @@ public class GetWorkpackBreakdownStructure {
     WorkpackModel child
   ) {
     final WorkpackBreakdownStructure structure = new WorkpackBreakdownStructure();
-    structure.setOrder(workpack.getNumber());
+    structure.setOrder(workpack.getOrder());
     structure.setRepresentation(getWorkpackRepresentation.execute(workpack));
     final List<WorkpackModelBreakdownStructure> children = getChildren(
       workpack,

@@ -1,8 +1,10 @@
 package br.gov.es.openpmo.dto.workpack.breakdown.structure;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
 import java.util.List;
+import java.util.Optional;
 
 public class WorkpackModelBreakdownStructure {
 
@@ -25,6 +27,13 @@ public class WorkpackModelBreakdownStructure {
 
   public void setWorkpacks(List<WorkpackBreakdownStructure> workpacks) {
     this.workpacks = workpacks;
+  }
+
+  @JsonIgnore
+  public String getName() {
+    return Optional.ofNullable(this.representation)
+      .map(WorkpackModelRepresentation::getWorkpackModelName)
+      .orElse(null);
   }
 
 }

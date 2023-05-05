@@ -45,6 +45,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -452,6 +453,12 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
       detailDto.setParent(parent);
       detailDto.setProperties(properties);
       detailDto.setSortBy(sortBy);
+    }
+    if (detailDto != null && detailDto.getChildren() != null) {
+      final LinkedHashSet<WorkpackModelDetailDto> sortedChildren = detailDto.getChildren().stream()
+        .sorted(Comparator.comparing(WorkpackModelDetailDto::getModelName))
+        .collect(Collectors.toCollection(LinkedHashSet::new));
+      detailDto.setChildren(sortedChildren);
     }
     return detailDto;
   }

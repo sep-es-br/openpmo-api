@@ -8,8 +8,8 @@ import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.baselines.Snapshotable;
 import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.office.plan.Plan;
-import br.gov.es.openpmo.model.properties.Number;
 import br.gov.es.openpmo.model.properties.Property;
+import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.relations.BelongsTo;
 import br.gov.es.openpmo.model.relations.CanAccessWorkpack;
 import br.gov.es.openpmo.model.relations.IsBaselinedBy;
@@ -472,6 +472,10 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
     return this.parent != null && !this.parent.isEmpty();
   }
 
+  public boolean hasChildren() {
+    return this.children != null && !this.children.isEmpty();
+  }
+
   public IsWorkpackSnapshotOf getMaster() {
     return this.master;
   }
@@ -612,14 +616,22 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
   }
 
   @Transient
-  public Double getNumber() {
+  public Comparable getOrder() {
     if (this.properties == null || this.properties.isEmpty()) {
       return null;
     }
-    for (Property property : this.properties) {
-      if (property instanceof Number) {
-        return ((Number) property).getValue();
+    try {
+      final WorkpackModel workpackModel = this.getWorkpackModelInstance();
+      for (Property property : this.properties) {
+        final PropertyModel propertyModel = property.getPropertyModel();
+        final WorkpackModel sorts = propertyModel.getSorts();
+        if (workpackModel == sorts) {
+          return (Comparable) property.getValue();
+        }
       }
+    }
+    catch (ClassCastException e) {
+      return null;
     }
     return null;
   }

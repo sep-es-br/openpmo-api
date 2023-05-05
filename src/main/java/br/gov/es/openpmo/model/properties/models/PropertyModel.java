@@ -2,13 +2,17 @@ package br.gov.es.openpmo.model.properties.models;
 
 import br.gov.es.openpmo.enumerator.Session;
 import br.gov.es.openpmo.model.Entity;
+import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.annotations.ApiModel;
 import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Relationship;
 
 import java.beans.Transient;
 import java.util.Objects;
+
+import static org.neo4j.ogm.annotation.Relationship.INCOMING;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({@JsonSubTypes.Type(value = IntegerModel.class, name = "IntegerModel"),
@@ -43,6 +47,9 @@ public class PropertyModel extends Entity {
   private boolean fullLine;
 
   private boolean required;
+
+  @Relationship(type = "IS_SORTED_BY", direction = INCOMING)
+  private WorkpackModel sorts;
 
   public Long getSortIndex() {
     return this.sortIndex;
@@ -98,6 +105,14 @@ public class PropertyModel extends Entity {
 
   public void setRequired(final boolean required) {
     this.required = required;
+  }
+
+  public WorkpackModel getSorts() {
+    return sorts;
+  }
+
+  public void setSorts(WorkpackModel sorts) {
+    this.sorts = sorts;
   }
 
   @Override

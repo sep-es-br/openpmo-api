@@ -20,12 +20,11 @@ import br.gov.es.openpmo.service.workpack.WorkpackModelService;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -78,6 +77,7 @@ public class WorkpackModelController {
     if (worList.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
+    worList.sort(Comparator.comparing(WorkpackModelDto::getModelName));
     final ResponseBaseWorkpackModel base = new ResponseBaseWorkpackModel()
         .setData(worList)
         .setMessage("Sucesso")
@@ -209,7 +209,7 @@ public class WorkpackModelController {
       @RequestHeader("Authorization") final String authorization) {
 
     this.canAccessService.ensureCanAccessManagementOrSelfResource(
-        Arrays.asList(idWorkpackModel), authorization);
+      Collections.singletonList(idWorkpackModel), authorization);
 
     this.patchCompletedStatus.patch(request, idWorkpackModel);
     return ResponseEntity.ok(ResponseBase.success());

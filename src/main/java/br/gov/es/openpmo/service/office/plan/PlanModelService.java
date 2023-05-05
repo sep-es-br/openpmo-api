@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -82,7 +83,9 @@ public class PlanModelService {
   }
 
   public List<PlanModel> findAllInOffice(final Long id) {
-    return this.planModelRepository.findAllInOffice(id);
+    final List<PlanModel> planModels = this.planModelRepository.findAllInOffice(id);
+    planModels.sort(Comparator.comparing(PlanModel::getName));
+    return planModels;
   }
 
   public void delete(final PlanModel planModel) {
@@ -179,7 +182,10 @@ public class PlanModelService {
 
   public List<PlanModelDto> findAllSharedWithOffice(final Long idOffice) {
     final List<PlanModel> sharedWithOffice = this.planModelRepository.findAllSharedWithOffice(idOffice);
-    return sharedWithOffice.stream().map(PlanModelDto::new).collect(Collectors.toList());
+    return sharedWithOffice.stream()
+      .map(PlanModelDto::new)
+      .sorted(Comparator.comparing(PlanModelDto::getName))
+      .collect(Collectors.toList());
   }
 
 }

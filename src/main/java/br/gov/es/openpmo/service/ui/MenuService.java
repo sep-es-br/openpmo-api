@@ -226,14 +226,21 @@ public class MenuService {
         item.setPlans(new HashSet<>());
         final List<Plan> plans = this.findAllPlansInOffice(office.getId());
 
+        final Set<PlanMenuDto> planMenuDtos = item.getPlans();
         for (final Plan plan : plans) {
           if (hasPermission || this.planService.hasPermissionPlanWorkpack(plan.getId(), idUser)) {
-            item.getPlans().add(PlanMenuDto.of(plan));
+            planMenuDtos.add(PlanMenuDto.of(plan));
           }
         }
+        final Set<PlanMenuDto> sortedPlans = planMenuDtos.stream()
+          .sorted(Comparator.comparing(PlanMenuDto::getStart).reversed())
+          .collect(Collectors.toCollection(LinkedHashSet::new));
+        item.setPlans(sortedPlans);
         menus.add(item);
       }
     });
+
+    menus.sort(Comparator.comparing(MenuOfficeDto::getName));
     return menus;
   }
 

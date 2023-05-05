@@ -2,7 +2,7 @@ package br.gov.es.openpmo.dto.menu;
 
 import br.gov.es.openpmo.model.office.Office;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class MenuOfficeDto {
@@ -10,10 +10,7 @@ public class MenuOfficeDto {
   private Long id;
   private String name;
   private String fullName;
-  private Set<PlanMenuDto> plans = new HashSet<>(0);
-
-
-  public MenuOfficeDto() {}
+  private Set<PlanMenuDto> plans;
 
   public MenuOfficeDto(
     final Long id,
@@ -23,6 +20,7 @@ public class MenuOfficeDto {
     this.id = id;
     this.name = name;
     this.fullName = fullName;
+    this.plans = new LinkedHashSet<>();
   }
 
   public static MenuOfficeDto of(final Office office) {

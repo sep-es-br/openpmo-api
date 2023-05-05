@@ -2,25 +2,29 @@ package br.gov.es.openpmo.dto.menu;
 
 import br.gov.es.openpmo.model.office.plan.Plan;
 
+import java.time.LocalDate;
 import java.util.Objects;
 
 public class PlanMenuDto {
 
   private Long id;
   private String name;
+  private LocalDate start;
 
   public PlanMenuDto() {}
 
   public PlanMenuDto(
-    final Long id,
-    final String name
+    Long id,
+    String name,
+    LocalDate start
   ) {
     this.id = id;
     this.name = name;
+    this.start = start;
   }
 
   public static PlanMenuDto of(final Plan plan) {
-    return new PlanMenuDto(plan.getId(), plan.getName());
+    return new PlanMenuDto(plan.getId(), plan.getName(), plan.getStart());
   }
 
   public Long getId() {
@@ -37,6 +41,14 @@ public class PlanMenuDto {
 
   public void setName(final String name) {
     this.name = name;
+  }
+
+  public LocalDate getStart() {
+    return start;
+  }
+
+  public void setStart(LocalDate start) {
+    this.start = start;
   }
 
   @Override

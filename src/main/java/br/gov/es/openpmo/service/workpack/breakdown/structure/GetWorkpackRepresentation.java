@@ -115,7 +115,7 @@ public class GetWorkpackRepresentation {
     final Optional<Workpack> workpackUnitMeasure = this.workpackRepository.findWorkpackUnitMeasure(workpackId);
     return workpackUnitMeasure
       .map(Workpack::getProperties)
-      .flatMap(properties -> properties.stream().findFirst())
+      .flatMap(properties -> properties.stream().filter(property -> property.getValue() instanceof UnitMeasure).findFirst())
       .map(HasValue::getValue)
       .map(unitMeasure -> ScheduleMeasureUnit.of((UnitMeasure) unitMeasure))
       .orElse(null);

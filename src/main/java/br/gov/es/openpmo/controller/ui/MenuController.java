@@ -1,13 +1,11 @@
 package br.gov.es.openpmo.controller.ui;
 
-import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.ResponseBaseItens;
 import br.gov.es.openpmo.dto.menu.MenuOfficeDto;
 import br.gov.es.openpmo.dto.menu.PlanModelMenuResponse;
 import br.gov.es.openpmo.dto.menu.PortfolioMenuRequest;
 import br.gov.es.openpmo.dto.menu.WorkpackMenuDto;
 import br.gov.es.openpmo.service.authentication.TokenService;
-import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.ui.MenuService;
 import br.gov.es.openpmo.service.ui.WorkpackModelMenuService;
 import io.swagger.annotations.Api;
@@ -32,18 +30,15 @@ public class MenuController {
   private final MenuService menuService;
   private final TokenService tokenService;
   private final WorkpackModelMenuService workpackModelMenuService;
-  private final ICanAccessService canAccessService;
 
   @Autowired
   public MenuController(
       final MenuService menuService,
       final TokenService tokenService,
-      final WorkpackModelMenuService workpackModelMenuService,
-      final ICanAccessService canAccessService) {
+      final WorkpackModelMenuService workpackModelMenuService) {
     this.menuService = menuService;
     this.tokenService = tokenService;
     this.workpackModelMenuService = workpackModelMenuService;
-    this.canAccessService = canAccessService;
   }
 
   @GetMapping("/office")
