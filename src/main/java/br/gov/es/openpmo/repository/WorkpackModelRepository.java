@@ -83,42 +83,52 @@ public interface WorkpackModelRepository extends Neo4jRepository<WorkpackModel, 
          "targetPropertyGroup, targetGroup ")
   void deleteCascadeAllNodesRelated(Long id);
 
-  @Query("match (w:Workpack)-[i:IS_INSTANCE_BY]->(m:WorkpackModel) " +
-         "where id(w)=$idWorkpack and id(m)=$idWorkpackModel " +
-         "return count(i)>0")
+  @Query("MATCH (w:Workpack)-[i:IS_INSTANCE_BY]->(m:WorkpackModel) " +
+         "WHERE id(w)=$idWorkpack AND id(m)=$idWorkpackModel " +
+         "RETURN count(i)>0")
   boolean isWorkpackInstanceByModel(
     Long idWorkpack,
     Long idWorkpackModel
   );
 
-  @Query("match (wm:WorkpackModel) " +
-         "where id(wm)=$idWorkpackModel " +
-         "return wm, [ " +
+  @Query("MATCH (wm:WorkpackModel) " +
+         "WHERE id(wm)=$idWorkpackModel " +
+         "RETURN wm, [ " +
          "    [ (wm)<-[f:FEATURES]-(pm:PropertyModel) | [f,pm] ], " +
          "    [ (wm)<-[i:IS_IN*]-(wmc:WorkpackModel) | [i,wmc] ], " +
          "    [ (wmc)<-[fc:FEATURES]-(pmc:PropertyModel) | [fc,pmc] ] " +
          "]")
   Optional<WorkpackModel> findByIdWorkpackWithChildren(Long idWorkpackModel);
 
-  @Query("match (w:Workpack)-[i:IS_INSTANCE_BY]->(:WorkpackModel) " +
-         "where id(w)=$workpackId " +
-         "detach delete i")
+  @Query("MATCH (w:Workpack)-[i:IS_INSTANCE_BY]->(:WorkpackModel) " +
+         "WHERE id(w)=$workpackId " +
+         "DETACH DELETE i")
   void deleteRelationshipByWorkpackId(Long workpackId);
 
-  @Query("match (w:Workpack), (m:WorkpackModel) " +
-         "where id(w)=$workpackId and id(m)=$workpackModelId " +
-         "create (w)-[:IS_INSTANCE_BY]->(m)")
+  @Query("MATCH (w:Workpack), (m:WorkpackModel) " +
+         "WHERE id(w)=$workpackId AND id(m)=$workpackModelId " +
+         "CREATE (w)-[:IS_INSTANCE_BY]->(m)")
   void createRelationshipByWorkpackIdAndModelId(
     Long workpackId,
     Long workpackModelId
   );
 
-  @Query("match (w:WorkpackModel), (p:PropertyModel) " +
-         "where id(w)=$workpackModelId and id(p)=$propertyModelId " +
-         "create (w)<-[:FEATURES]-(p)")
+  @Query("MATCH (w:WorkpackModel), (p:PropertyModel) " +
+         "WHERE id(w)=$workpackModelId AND id(p)=$propertyModelId " +
+         "CREATE (w)<-[:FEATURES]-(p)")
   void createFeaturesRelationship(
     Long workpackModelId,
     Long propertyModelId
   );
+
+  @Query(
+    "MATCH (model:WorkpackModel)-[:BELONGS_TO]->(planModel:PlanModel) " +
+    "WHERE id(model)=$idWorkpackModel " +
+    "OPTIONAL MATCH (model)-[:IS_IN*1..]->(parent:WorkpackModel)-[:BELONGS_TO]->(parentPlanModel:PlanModel) " +
+    "WITH *, collect(id(parent)) + collect(id(planModel)) + collect(id(parentPlanModel)) as hierarchyGroup " +
+    "UNWIND hierarchyGroup as hierarchy " +
+    "RETURN hierarchy"
+  )
+  Set<Long> findWorkpackModelParentsHierarchy(@Param("idWorkpackModel") Long idWorkpackModel);
 
 }

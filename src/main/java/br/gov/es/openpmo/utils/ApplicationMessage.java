@@ -285,6 +285,8 @@ public class ApplicationMessage {
 
   public static final String DATE_IS_IN_FUTURE = "date.is.in.future";
 
+  public static final String WORKPACK_PARENT_PLAN_MISMATCH = "workpack.parent.plan.mismatch";
+
   private ApplicationMessage() {
   }
 

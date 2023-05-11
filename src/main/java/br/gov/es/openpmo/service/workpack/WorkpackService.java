@@ -51,6 +51,7 @@ import br.gov.es.openpmo.service.office.plan.PlanService;
 import br.gov.es.openpmo.service.properties.PropertyModelService;
 import br.gov.es.openpmo.service.properties.PropertyService;
 import br.gov.es.openpmo.service.ui.BreadcrumbWorkpackHelper;
+import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -572,6 +573,12 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final Long idPlan,
     final Long idParent
   ) {
+    if(idPlan != null && idParent != null) {
+      final Plan workpackParentPlan = this.planService.findNotLinkedBelongsTo(idParent);
+      if (!idPlan.equals(workpackParentPlan.getId())) {
+        throw new NegocioException(ApplicationMessage.WORKPACK_PARENT_PLAN_MISMATCH);
+      }
+    }
     if (idPlan != null) {
       final BelongsTo belongsTo = new BelongsTo();
       belongsTo.setLinked(false);

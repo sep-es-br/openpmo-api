@@ -235,8 +235,8 @@ public class PlanService implements BreadcrumbPlanHelper {
     return this.planPermissionRepository.hasPermissionPlan(idPlan, idUser);
   }
 
-  public Plan findNotLinkedBelongsTo(final Long id) {
-    return this.planRepository.findPlanWithNotLinkedBelongsToRelationship(id)
+  public Plan findNotLinkedBelongsTo(final Long idWorkpack) {
+    return this.planRepository.findPlanWithNotLinkedBelongsToRelationship(idWorkpack)
       .orElseThrow(() -> new NegocioException(PLAN_NOT_FOUND));
   }
 

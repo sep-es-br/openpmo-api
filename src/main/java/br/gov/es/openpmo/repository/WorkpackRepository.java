@@ -551,4 +551,16 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
     Long idPlan
   );
 
+  @Query(
+    "MATCH (workpack:Workpack) " +
+    "WHERE id(workpack)=$idWorkpack " +
+    "MATCH (workpack)-[:IS_IN*1..]->(parent:Workpack)-[:BELONGS_TO]->(plan:Plan) " +
+    "WHERE id(plan)=$idPlan " +
+    "RETURN parent"
+  )
+  Set<Workpack> findWorkpackParentsHierarchy(
+    @Param("idPlan") Long idPlan,
+    @Param("idWorkpack") Long idWorkpack
+  );
+
 }
