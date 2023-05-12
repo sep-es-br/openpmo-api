@@ -223,18 +223,19 @@ public class MenuService {
 
       if (this.hasOfficePermission(idUser, hasPermission, office.getId())) {
         final MenuOfficeDto item = MenuOfficeDto.of(office);
-        item.setPlans(new HashSet<>());
+        item.setPlans(new ArrayList<>());
         final List<Plan> plans = this.findAllPlansInOffice(office.getId());
 
-        final Set<PlanMenuDto> planMenuDtos = item.getPlans();
+        final List<PlanMenuDto> planMenuDtos = item.getPlans();
         for (final Plan plan : plans) {
           if (hasPermission || this.planService.hasPermissionPlanWorkpack(plan.getId(), idUser)) {
             planMenuDtos.add(PlanMenuDto.of(plan));
           }
         }
-        final Set<PlanMenuDto> sortedPlans = planMenuDtos.stream()
+        final List<PlanMenuDto> sortedPlans = planMenuDtos.stream()
+          .distinct()
           .sorted(Comparator.comparing(PlanMenuDto::getStart).reversed())
-          .collect(Collectors.toCollection(LinkedHashSet::new));
+          .collect(Collectors.toList());
         item.setPlans(sortedPlans);
         menus.add(item);
       }
