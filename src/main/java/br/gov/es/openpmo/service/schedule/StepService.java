@@ -37,7 +37,6 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.CONSUMES_COST_ACCOUNT_A
 import static br.gov.es.openpmo.utils.ApplicationMessage.CONSUMES_COST_ACCOUNT_NOT_NULL;
 import static br.gov.es.openpmo.utils.ApplicationMessage.SCHEDULE_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.STEP_NOT_FOUND;
-import static br.gov.es.openpmo.utils.ApplicationMessage.STEP_PLANNED_WORK_CANNOT_BE_NULL_OR_ZERO;
 
 @Service
 public class StepService {
@@ -81,10 +80,6 @@ public class StepService {
 
   public Step findById(final Long id) {
     return this.stepRepository.findById(id).orElseThrow(() -> new NegocioException(STEP_NOT_FOUND));
-  }
-
-  public Schedule findScheduleById(final Long id) {
-    return this.scheduleRepository.findByIdSchedule(id).orElseThrow(() -> new NegocioException(SCHEDULE_NOT_FOUND));
   }
 
   public StepDto mapToStepDto(final Step step) {
@@ -134,7 +129,7 @@ public class StepService {
     final long months = this.getMonths(stepStoreParamDto, schedule);
 
     final Set<ConsumesParamDto> consumes = stepStoreParamDto.getConsumes();
-    ifPlannedWorkIsZeroOrNullThrowException(stepStoreParamDto.getPlannedWork());
+
     final boolean isEndStep = stepStoreParamDto.getEndStep();
     if (!isEndStep) {
       final List<Step> sortedSteps = scheduleSteps.stream()
@@ -170,10 +165,14 @@ public class StepService {
     final Step step = this.getStepForUpdate(stepUpdateDto);
     final Step stepUpdate = this.findById(step.getId());
 
-    ifPlannedWorkIsZeroOrNullThrowException(step.getPlannedWork());
-
-    stepUpdate.setActualWork(step.getActualWork());
-    stepUpdate.setPlannedWork(step.getPlannedWork());
+    stepUpdate.setActualWork(
+      Optional.ofNullable(step.getActualWork())
+        .orElse(BigDecimal.ZERO)
+    );
+    stepUpdate.setPlannedWork(
+      Optional.ofNullable(step.getPlannedWork())
+        .orElse(BigDecimal.ZERO)
+    );
 
     if (Objects.nonNull(step.getPeriodFromStart())) {
       stepUpdate.setPeriodFromStart(step.getPeriodFromStart());
@@ -229,6 +228,10 @@ public class StepService {
     return this.stepRepository.save(stepUpdate);
   }
 
+  private Schedule findScheduleById(final Long id) {
+    return this.scheduleRepository.findByIdSchedule(id).orElseThrow(() -> new NegocioException(SCHEDULE_NOT_FOUND));
+  }
+
   private Step getStepForUpdate(final StepUpdateDto stepUpdateDto) {
     final Step step = this.mapsToStep(stepUpdateDto);
     step.getConsumes().removeIf(consumes -> consumes.getId() == null);
@@ -268,24 +271,10 @@ public class StepService {
     return intervalInMonths(scheduleStart, schedule.getStart());
   }
 
-  private boolean isSameEndMonth(
-    final Step stepUpdate,
-    final Schedule schedule
-  ) {
-    return stepUpdate.getPeriodFromStartDate().getMonthValue() == schedule.getEnd().getMonthValue();
-  }
-
-  private boolean isSameEndYear(
-    final Step stepUpdate,
-    final Schedule schedule
-  ) {
-    return stepUpdate.getPeriodFromStartDate().getYear() == schedule.getEnd().getYear();
-  }
-
   private Step mapsToStep(final StepStoreParamDto in) {
     final Step out = new Step();
-    out.setActualWork(in.getActualWork());
-    out.setPlannedWork(in.getPlannedWork());
+    out.setActualWork(Optional.ofNullable(in.getActualWork()).orElse(BigDecimal.ZERO));
+    out.setPlannedWork(Optional.ofNullable(in.getPlannedWork()).orElse(BigDecimal.ZERO));
     return out;
   }
 
@@ -326,50 +315,10 @@ public class StepService {
     return ChronoUnit.MONTHS.between(start.withDayOfMonth(1), end.withDayOfMonth(1));
   }
 
-  private static boolean isStart(
-    final Step step,
-    final Schedule schedule
+  private static boolean costAccountConsumesAlreadyExists(
+    final Consumes consumes,
+    final Collection<? extends Consumes> existingConsumes
   ) {
-    return isSameStartYear(step, schedule) && isSameStartMonth(step, schedule);
-  }
-
-  private static void setStart(
-    final Schedule schedule,
-    final Long periodFromStart
-  ) {
-    final LocalDate localDate = schedule.getStart().plusMonths(periodFromStart);
-    schedule.setStart(localDate);
-  }
-
-  private static void setEnd(
-    final Schedule schedule,
-    final Long periodFromStart
-  ) {
-    final LocalDate localDate = schedule.getStart().plusMonths(periodFromStart);
-    schedule.setEnd(localDate);
-  }
-
-  private static boolean isSameStartYear(
-    final Step step,
-    final Schedule schedule
-  ) {
-    return step.getPeriodFromStartDate().getYear() == schedule.getStart().getYear();
-  }
-
-  private static boolean isSameStartMonth(
-    final Step step,
-    final Schedule schedule
-  ) {
-    return step.getPeriodFromStartDate().getMonthValue() == schedule.getStart().getMonthValue();
-  }
-
-  private static void ifPlannedWorkIsZeroOrNullThrowException(final Comparable<? super BigDecimal> plannedWork) {
-    if (Objects.isNull(plannedWork) || plannedWork.compareTo(BigDecimal.ZERO) == 0) {
-      throw new NegocioException(STEP_PLANNED_WORK_CANNOT_BE_NULL_OR_ZERO);
-    }
-  }
-
-  private static boolean costAccountConsumesAlreadyExists(final Consumes consumes, final Collection<? extends Consumes> existingConsumes) {
     if (CollectionUtils.isEmpty(existingConsumes)) {
       return false;
     }

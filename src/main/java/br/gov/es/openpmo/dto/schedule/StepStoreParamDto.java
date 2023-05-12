@@ -1,12 +1,9 @@
 package br.gov.es.openpmo.dto.schedule;
 
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Set;
-
-import static br.gov.es.openpmo.utils.ApplicationMessage.STEP_PLANNED_WORK_CANNOT_BE_NULL_OR_ZERO;
 
 public class StepStoreParamDto {
 
@@ -15,8 +12,6 @@ public class StepStoreParamDto {
 
   private BigDecimal actualWork;
 
-  @NotNull(message = STEP_PLANNED_WORK_CANNOT_BE_NULL_OR_ZERO)
-  @Min(value = 1, message = STEP_PLANNED_WORK_CANNOT_BE_NULL_OR_ZERO)
   private BigDecimal plannedWork;
 
   @NotNull
