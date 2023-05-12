@@ -86,8 +86,10 @@ public class WorkpackModelMenuService {
       final WorkpackModelMenuResponse response = this.getResponse(planModel, child);
       children.add(response);
     }
-
-    item.setChildren(children);
+    final Set<WorkpackModelMenuResponse> sortedChildren = children.stream()
+      .sorted(Comparator.comparing(WorkpackModelMenuResponse::getName))
+      .collect(Collectors.toCollection(LinkedHashSet::new));
+    item.setChildren(sortedChildren);
     return item;
   }
 
