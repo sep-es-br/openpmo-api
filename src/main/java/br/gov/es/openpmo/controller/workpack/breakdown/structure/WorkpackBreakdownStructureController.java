@@ -24,9 +24,9 @@ public class WorkpackBreakdownStructureController {
   private final ResponseHandler responseHandler;
 
   public WorkpackBreakdownStructureController(
-    GetWorkpackBreakdownStructure getWorkpackBreakdownStructure,
-    CanAccessService canAccessService,
-    ResponseHandler responseHandler
+    final GetWorkpackBreakdownStructure getWorkpackBreakdownStructure,
+    final CanAccessService canAccessService,
+    final ResponseHandler responseHandler
   ) {
     this.getWorkpackBreakdownStructure = getWorkpackBreakdownStructure;
     this.canAccessService = canAccessService;
@@ -35,15 +35,15 @@ public class WorkpackBreakdownStructureController {
 
   @GetMapping("/{idWorkpack}")
   public Response<WorkpackBreakdownStructure> getWorkpackBreakdownStructure(
-    @PathVariable Long idWorkpack,
-    @Authorization String authorization
+    @PathVariable final Long idWorkpack,
+    @Authorization final String authorization
   ) {
-    canAccessService.ensureCanReadResource(
+    this.canAccessService.ensureCanReadResource(
       idWorkpack,
       authorization
     );
-    final WorkpackBreakdownStructure structure = getWorkpackBreakdownStructure.execute(idWorkpack);
-    return responseHandler.success(structure);
+    final WorkpackBreakdownStructure structure = this.getWorkpackBreakdownStructure.execute(idWorkpack);
+    return this.responseHandler.success(structure);
   }
 
 }

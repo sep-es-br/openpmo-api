@@ -180,9 +180,10 @@ public class StepService {
 
     if (stepUpdate.getConsumes() != null && !(stepUpdate.getConsumes()).isEmpty()) {
       final Set<Consumes> consumesDelete = stepUpdate.getConsumes().stream()
-        .filter(consumes -> step.getConsumes() == null ||
-                            step.getConsumes().stream().noneMatch(c -> Objects.nonNull(c.getId()) && c.getId().equals(consumes.getId())))
-        .collect(Collectors.toSet());
+        .filter(consumes ->
+                  step.getConsumes() == null ||
+                  step.getConsumes().stream().noneMatch(c -> Objects.nonNull(c.getId()) && c.getId().equals(consumes.getId()))
+        ).collect(Collectors.toSet());
 
       if (!consumesDelete.isEmpty()) {
         this.consumesRepository.deleteAll(consumesDelete);

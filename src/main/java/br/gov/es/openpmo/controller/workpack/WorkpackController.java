@@ -11,6 +11,7 @@ import br.gov.es.openpmo.dto.workpack.EndDeliverableManagementRequest;
 import br.gov.es.openpmo.dto.workpack.ResponseBaseWorkpack;
 import br.gov.es.openpmo.dto.workpack.ResponseBaseWorkpackDetail;
 import br.gov.es.openpmo.dto.workpack.WorkpackDetailDto;
+import br.gov.es.openpmo.dto.workpack.WorkpackHasEapResponse;
 import br.gov.es.openpmo.dto.workpack.WorkpackNameResponse;
 import br.gov.es.openpmo.dto.workpack.WorkpackParamDto;
 import br.gov.es.openpmo.exception.NegocioException;
@@ -26,6 +27,7 @@ import br.gov.es.openpmo.service.dashboards.v2.IDashboardService;
 import br.gov.es.openpmo.service.journals.JournalCreator;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.workpack.GetWorkpackName;
+import br.gov.es.openpmo.service.workpack.WorkpackHasChildren;
 import br.gov.es.openpmo.service.workpack.WorkpackPermissionVerifier;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
@@ -72,6 +74,8 @@ public class WorkpackController {
 
   private final ICanAccessService canAccessService;
 
+  private final WorkpackHasChildren workpackHasChildren;
+
   private final IsFavoritedByService isFavoritedByService;
 
   @Autowired
@@ -86,6 +90,7 @@ public class WorkpackController {
     final IDeliverableEndManagementService deliverableEndManagementService,
     final IDashboardService dashboardService,
     final ICanAccessService canAccessService,
+    final WorkpackHasChildren workpackHasChildren,
     final IsFavoritedByService isFavoritedByService
   ) {
     this.responseHandler = responseHandler;
@@ -98,6 +103,7 @@ public class WorkpackController {
     this.deliverableEndManagementService = deliverableEndManagementService;
     this.dashboardService = dashboardService;
     this.canAccessService = canAccessService;
+    this.workpackHasChildren = workpackHasChildren;
     this.isFavoritedByService = isFavoritedByService;
   }
 
@@ -448,6 +454,20 @@ public class WorkpackController {
     );
     final WorkpackNameResponse response = this.getWorkpackName.execute(idWorkpack);
     return ResponseEntity.ok(response);
+  }
+
+  @GetMapping("/{id-workpack}/has-children")
+  public ResponseEntity<ResponseBase<WorkpackHasEapResponse>> hasChildren(
+    @Authorization final String authorization,
+    @PathVariable("id-workpack") final Long idWorkpack
+  ) {
+    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
+
+    final boolean hasChildren = this.workpackHasChildren.execute(idWorkpack);
+
+    final WorkpackHasEapResponse response = new WorkpackHasEapResponse(hasChildren);
+
+    return ResponseEntity.ok(ResponseBase.of(response));
   }
 
 }

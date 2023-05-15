@@ -41,17 +41,20 @@ public class StepController {
 
   @Autowired
   public StepController(
-      final StepService stepService,
-      final UpdateStatusService status,
-      final ICanAccessService canAccessService) {
+    final StepService stepService,
+    final UpdateStatusService status,
+    final ICanAccessService canAccessService
+  ) {
     this.stepService = stepService;
     this.status = status;
     this.canAccessService = canAccessService;
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<ResponseBase<StepDto>> findById(@PathVariable final Long id,
-  @Authorization final String authorization) {
+  public ResponseEntity<ResponseBase<StepDto>> findById(
+    @PathVariable final Long id,
+    @Authorization final String authorization
+  ) {
 
     this.canAccessService.ensureCanReadResource(id, authorization);
     final Step step = this.stepService.findById(id);
@@ -60,9 +63,10 @@ public class StepController {
   }
 
   @PutMapping
-  public ResponseEntity<ResponseBase<EntityDto>> update(@RequestBody @Valid final StepUpdateDto stepUpdateDto,
-  @Authorization final String authorization) {
-
+  public ResponseEntity<ResponseBase<EntityDto>> update(
+    @RequestBody @Valid final StepUpdateDto stepUpdateDto,
+    @Authorization final String authorization
+  ) {
     this.canAccessService.ensureCanEditResource(stepUpdateDto.getId(), authorization);
     final Step step = this.stepService.update(stepUpdateDto);
     final List<Deliverable> deliverables = this.status.getDeliverablesByStepId(step.getId());
@@ -73,9 +77,10 @@ public class StepController {
   }
 
   @PostMapping
-  public ResponseEntity<Void> save(@Valid @RequestBody final StepStoreParamDto stepStoreParamDto,
-  @Authorization final String authorization) {
-
+  public ResponseEntity<Void> save(
+    @Valid @RequestBody final StepStoreParamDto stepStoreParamDto,
+    @Authorization final String authorization
+  ) {
     this.canAccessService.ensureCanEditResource(stepStoreParamDto.getIdSchedule(), authorization);
     final List<Deliverable> deliverables = this.status.getDeliverablesByScheduleId(stepStoreParamDto.getIdSchedule());
     this.stepService.save(stepStoreParamDto);

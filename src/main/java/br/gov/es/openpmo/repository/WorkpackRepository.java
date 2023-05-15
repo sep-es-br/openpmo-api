@@ -563,4 +563,13 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
     @Param("idWorkpack") Long idWorkpack
   );
 
+  @Query(
+    "MATCH (workpack:Workpack) " +
+    "OPTIONAL MATCH (children:Workpack)-[:IS_IN]->(workpack) " +
+    "WITH * " +
+    "WHERE id(workpack)=$idWorkpack " +
+    "RETURN count(children) > 0"
+  )
+  boolean hasChildren(@Param("idWorkpack") Long idWorkpack);
+
 }

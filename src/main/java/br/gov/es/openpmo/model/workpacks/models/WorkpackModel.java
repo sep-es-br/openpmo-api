@@ -19,6 +19,7 @@ import org.springframework.util.ObjectUtils;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @JsonTypeInfo(use = Id.NAME, property = "type")
@@ -403,15 +404,21 @@ public class WorkpackModel extends Entity {
   }
 
   public Set<Workpack> getWorkpacks() {
-    return workpacks;
+    return this.workpacks;
   }
 
-  public void setWorkpacks(Set<Workpack> workpacks) {
+  public void setWorkpacks(final Set<Workpack> workpacks) {
     this.workpacks = workpacks;
   }
 
   public String getType() {
     throw new UnsupportedOperationException();
+  }
+
+  public boolean sortByWasChanged(final PropertyModel sortBy) {
+    Objects.requireNonNull(sortBy);
+    if (Objects.isNull(this.sortBy)) return true;
+    return !this.sortBy.getId().equals(sortBy.getId());
   }
 
 }

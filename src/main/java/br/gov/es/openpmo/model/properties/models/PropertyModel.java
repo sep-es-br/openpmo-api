@@ -108,10 +108,10 @@ public class PropertyModel extends Entity {
   }
 
   public WorkpackModel getSorts() {
-    return sorts;
+    return this.sorts;
   }
 
-  public void setSorts(WorkpackModel sorts) {
+  public void setSorts(final WorkpackModel sorts) {
     this.sorts = sorts;
   }
 
@@ -124,13 +124,13 @@ public class PropertyModel extends Entity {
 
   @Override
   public boolean equals(final Object o) {
-    if(this == o) {
+    if (this == o) {
       return true;
     }
-    if(o == null || this.getClass() != o.getClass()) {
+    if (o == null || this.getClass() != o.getClass()) {
       return false;
     }
-    if(!super.equals(o)) {
+    if (!super.equals(o)) {
       return false;
     }
     final PropertyModel that = (PropertyModel) o;
@@ -141,7 +141,7 @@ public class PropertyModel extends Entity {
 
   @Transient
   public boolean hasSameType(final PropertyModel property) {
-    if(property == null) return false;
+    if (property == null) return false;
     return this.getTypeName().equals(property.getTypeName());
   }
 
@@ -152,19 +152,24 @@ public class PropertyModel extends Entity {
 
   @Transient
   public boolean hasSameName(final PropertyModel property) {
-    if(property == null) return false;
+    if (property == null) return false;
     return this.name.equals(property.name);
   }
 
   @Transient
   public boolean hasSameSession(final PropertyModel property) {
-    if(property == null) return false;
+    if (property == null) return false;
     return this.session.equals(property.session);
   }
 
   @Transient
   public boolean isCompatibleWith(final PropertyModel other) {
     return this.hasSameType(other) && this.hasSameName(other) && this.hasSameSession(other);
+  }
+
+  @Transient
+  public boolean isSortProperty() {
+    return Objects.nonNull(this.sorts);
   }
 
 }
