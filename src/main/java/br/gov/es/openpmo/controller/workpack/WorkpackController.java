@@ -11,7 +11,7 @@ import br.gov.es.openpmo.dto.workpack.EndDeliverableManagementRequest;
 import br.gov.es.openpmo.dto.workpack.ResponseBaseWorkpack;
 import br.gov.es.openpmo.dto.workpack.ResponseBaseWorkpackDetail;
 import br.gov.es.openpmo.dto.workpack.WorkpackDetailDto;
-import br.gov.es.openpmo.dto.workpack.WorkpackHasEapResponse;
+import br.gov.es.openpmo.dto.workpack.WorkpackHasChildrenResponse;
 import br.gov.es.openpmo.dto.workpack.WorkpackNameResponse;
 import br.gov.es.openpmo.dto.workpack.WorkpackParamDto;
 import br.gov.es.openpmo.exception.NegocioException;
@@ -457,7 +457,7 @@ public class WorkpackController {
   }
 
   @GetMapping("/{id-workpack}/has-children")
-  public ResponseEntity<ResponseBase<WorkpackHasEapResponse>> hasChildren(
+  public ResponseEntity<ResponseBase<WorkpackHasChildrenResponse>> hasChildren(
     @Authorization final String authorization,
     @PathVariable("id-workpack") final Long idWorkpack
   ) {
@@ -465,7 +465,7 @@ public class WorkpackController {
 
     final boolean hasChildren = this.workpackHasChildren.execute(idWorkpack);
 
-    final WorkpackHasEapResponse response = new WorkpackHasEapResponse(hasChildren);
+    final WorkpackHasChildrenResponse response = new WorkpackHasChildrenResponse(hasChildren);
 
     return ResponseEntity.ok(ResponseBase.of(response));
   }
