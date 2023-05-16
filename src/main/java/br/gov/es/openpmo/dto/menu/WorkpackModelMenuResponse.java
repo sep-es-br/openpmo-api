@@ -6,9 +6,17 @@ import java.util.Set;
 public class WorkpackModelMenuResponse {
 
   private Long id;
+
   private Long idPlanModel;
+
   private String name;
+
+  private String nameInPlural;
+
   private String fontIcon;
+
+  private String type;
+
   private Set<WorkpackModelMenuResponse> children;
 
   public Long getId() {
@@ -51,17 +59,33 @@ public class WorkpackModelMenuResponse {
     this.children = children;
   }
 
+  public String getNameInPlural() {
+    return this.nameInPlural;
+  }
+
+  public void setNameInPlural(final String nameInPlural) {
+    this.nameInPlural = nameInPlural;
+  }
+
+  public String getType() {
+    return this.type;
+  }
+
+  public void setType(final String type) {
+    this.type = type;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.id);
+  }
+
   @Override
   public boolean equals(final Object o) {
     if (this == o) return true;
     if (o == null || this.getClass() != o.getClass()) return false;
     final WorkpackModelMenuResponse that = (WorkpackModelMenuResponse) o;
     return Objects.equals(this.id, that.id);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.id);
   }
 
 }

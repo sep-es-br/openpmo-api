@@ -72,8 +72,10 @@ public class WorkpackModelMenuService {
 
     item.setId(workpackModel.getId());
     item.setIdPlanModel(planModel.getId());
+    item.setNameInPlural(workpackModel.getModelNameInPlural());
     item.setName(workpackModel.getModelName());
     item.setFontIcon(workpackModel.getFontIcon());
+    item.setType(workpackModel.getType());
 
     final Set<WorkpackModelMenuResponse> children = new HashSet<>();
 
