@@ -10,6 +10,7 @@ import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -35,14 +36,14 @@ public class UpdateStatusService {
     return this.stepRepository.findAllDeliverablesByStepId(stepId);
   }
 
-  public List<Deliverable> getDeliverablesByScheduleId(final Long stepId) {
-    return this.stepRepository.findDeliverablesByScheduleId(stepId);
+  public List<Deliverable> getDeliverablesByScheduleId(final Long scheduleId) {
+    return this.stepRepository.findDeliverablesByScheduleId(scheduleId);
   }
 
   public void update(final List<Deliverable> deliverables) {
-    final List<Workpack> completedDeliverables = new ArrayList<>();
-    for(final Deliverable deliverable : deliverables) {
-      if(Optional.ofNullable(deliverable.getCompleted()).orElse(false)) {
+    final Collection<Workpack> completedDeliverables = new ArrayList<>();
+    for (final Deliverable deliverable : deliverables) {
+      if (Optional.ofNullable(deliverable.getCompleted()).orElse(false)) {
         this.updateIfCompleted(deliverable, completedDeliverables);
       }
     }
@@ -52,7 +53,7 @@ public class UpdateStatusService {
 
   private void updateIfCompleted(
     final Deliverable deliverable,
-    final List<Workpack> completedDeliverables
+    final Collection<? super Workpack> completedDeliverables
   ) {
     final boolean hasScheduleRelated = this.hasScheduleRelated(deliverable);
     if(!hasScheduleRelated) {
@@ -102,7 +103,7 @@ public class UpdateStatusService {
     return this.stepRepository.hasWorkToCompleteComparingWithMaster(idDeliverable);
   }
 
-  public void updateDashboards(final List<Deliverable> deliverables) {
+  private void updateDashboards(final Collection<? extends Deliverable> deliverables) {
     final List<Long> deliverablesId = deliverables.stream()
       .map(Deliverable::getId)
       .collect(Collectors.toList());

@@ -9,7 +9,7 @@ import br.gov.es.openpmo.model.schedule.Schedule;
 import br.gov.es.openpmo.model.schedule.Step;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.schedule.ScheduleService;
-import br.gov.es.openpmo.service.schedule.StepService;
+import br.gov.es.openpmo.service.schedule.UpdateStep;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -26,18 +26,18 @@ public class ScheduleController {
 
   private final ScheduleService scheduleService;
 
-  private final StepService stepService;
+  private final UpdateStep updateStep;
 
   private final ICanAccessService canAccessService;
 
   @Autowired
   public ScheduleController(
     final ScheduleService scheduleService,
-    final StepService stepService,
+    final UpdateStep updateStep,
     final ICanAccessService canAccessService
   ) {
     this.scheduleService = scheduleService;
-    this.stepService = stepService;
+    this.updateStep = updateStep;
     this.canAccessService = canAccessService;
   }
 
@@ -94,7 +94,7 @@ public class ScheduleController {
       stepUpdateDto.getId(),
       authorization
     );
-    final Step step = this.stepService.update(stepUpdateDto);
+    final Step step = this.updateStep.execute(stepUpdateDto);
     return ResponseEntity.ok(ResponseBase.of(new EntityDto(step.getId())));
   }
 

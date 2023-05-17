@@ -3,17 +3,21 @@ package br.gov.es.openpmo.controller.schedule;
 import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.ResponseBase;
+import br.gov.es.openpmo.dto.ResponseBaseItens;
 import br.gov.es.openpmo.dto.schedule.StepDto;
 import br.gov.es.openpmo.dto.schedule.StepStoreParamDto;
 import br.gov.es.openpmo.dto.schedule.StepUpdateDto;
 import br.gov.es.openpmo.model.schedule.Step;
 import br.gov.es.openpmo.model.workpacks.Deliverable;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
+import br.gov.es.openpmo.service.schedule.BatchUpdateStep;
 import br.gov.es.openpmo.service.schedule.StepService;
 import br.gov.es.openpmo.service.schedule.UpdateStatusService;
+import br.gov.es.openpmo.service.schedule.UpdateStep;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Api
 @RestController
@@ -37,16 +42,24 @@ public class StepController {
 
   private final UpdateStatusService status;
 
+  private final BatchUpdateStep batchUpdateStep;
+
+  private final UpdateStep updateStep;
+
   private final ICanAccessService canAccessService;
 
   @Autowired
   public StepController(
     final StepService stepService,
     final UpdateStatusService status,
+    final BatchUpdateStep batchUpdateStep,
+    final UpdateStep updateStep,
     final ICanAccessService canAccessService
   ) {
     this.stepService = stepService;
     this.status = status;
+    this.batchUpdateStep = batchUpdateStep;
+    this.updateStep = updateStep;
     this.canAccessService = canAccessService;
   }
 
@@ -63,17 +76,36 @@ public class StepController {
   }
 
   @PutMapping
+  @Transactional
   public ResponseEntity<ResponseBase<EntityDto>> update(
     @RequestBody @Valid final StepUpdateDto stepUpdateDto,
     @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanEditResource(stepUpdateDto.getId(), authorization);
-    final Step step = this.stepService.update(stepUpdateDto);
-    final List<Deliverable> deliverables = this.status.getDeliverablesByStepId(step.getId());
-    this.status.update(deliverables);
-    final Long idSchedule = step.getId();
-    final EntityDto entityDto = new EntityDto(idSchedule);
-    return ResponseEntity.ok(ResponseBase.of(entityDto));
+
+    final Step step = this.updateStep.execute(stepUpdateDto);
+
+    return ResponseEntity.ok(ResponseBase.of(new EntityDto(step.getId())));
+  }
+
+  @Transactional
+  @PutMapping("/batch")
+  public ResponseEntity<ResponseBaseItens<Long>> batchUpdate(
+    @RequestBody final List<? extends @Valid StepUpdateDto> stepUpdates,
+    @Authorization final String authorization
+  ) {
+    final List<Long> stepIds = stepUpdates.stream()
+      .map(StepUpdateDto::getId)
+      .collect(Collectors.toList());
+
+    this.canAccessService.ensureCanEditResource(
+      stepIds,
+      authorization
+    );
+
+    final List<Long> ids = this.batchUpdateStep.execute(stepUpdates);
+
+    return ResponseEntity.ok(ResponseBaseItens.of(ids));
   }
 
   @PostMapping
