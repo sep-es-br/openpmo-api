@@ -8,6 +8,7 @@ import br.gov.es.openpmo.service.actors.IsFavoritedByService;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import io.swagger.annotations.Api;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -38,6 +39,7 @@ public class IsFavoritedByController {
     this.canAccessService = canAccessService;
   }
 
+  @Transactional
   @PatchMapping("/{id-workpack}/favorite")
   public ResponseEntity<ResponseBase<Void>> favorite(
     @PathVariable("id-workpack") final Long idWorkpack,

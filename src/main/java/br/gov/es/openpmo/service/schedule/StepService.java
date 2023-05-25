@@ -15,6 +15,7 @@ import br.gov.es.openpmo.repository.ConsumesRepository;
 import br.gov.es.openpmo.repository.ScheduleRepository;
 import br.gov.es.openpmo.repository.StepRepository;
 import br.gov.es.openpmo.service.workpack.CostAccountService;
+import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -73,13 +74,27 @@ public class StepService {
   @Transactional
   public void delete(final Long id) {
     final Step step = this.findById(id);
+    final Schedule schedule = this.findScheduleById(step.getScheduleId());
+
     this.stepRepository.delete(step);
+
+    final boolean isLastStep = schedule.getSteps().size() - 1 == 0;
+    if (isLastStep) {
+      final Long activeBaselineId = this.scheduleRepository.findActiveBaseline(schedule.getId());
+      if (activeBaselineId != null) {
+        throw new NegocioException(ApplicationMessage.SCHEDULE_HAS_ACTIVE_BASELINE);
+      }
+      this.scheduleRepository.delete(schedule);
+      return;
+    }
+
     final List<Step> steps = this.recalculateStepsAfterRemove.execute(step);
     this.stepRepository.saveAll(steps);
   }
 
   public Step findById(final Long id) {
-    return this.stepRepository.findById(id).orElseThrow(() -> new NegocioException(STEP_NOT_FOUND));
+    return this.stepRepository.findById(id)
+      .orElseThrow(() -> new NegocioException(STEP_NOT_FOUND));
   }
 
   public StepDto mapToStepDto(final Step step) {
