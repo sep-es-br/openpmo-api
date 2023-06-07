@@ -11,10 +11,18 @@ import java.util.List;
 @Repository
 public interface ProcessRepository extends Neo4jRepository<Process, Long>, CustomRepository {
 
-  @Query("MATCH (process:Process)-[:IS_BELONGS_TO]->(workpack:Workpack) " +
-         "WHERE id(workpack)=$idWorkpack " +
-         "RETURN process"
+  @Query("MATCH (process:Process)-[:IS_BELONGS_TO]->(workpack:Workpack{deleted:false}) " +
+         "WITH *, apoc.text.levenshteinSimilarity(apoc.text.clean(process.name + process.subject), apoc.text.clean($term)) as score " +
+         "WHERE id(workpack)=$idWorkpack AND ($term is null OR $term = '' OR score > $searchCutOffScore) " +
+         "RETURN process " +
+         "ORDER BY score, process.name DESC"
   )
-  List<Process> findAllByWorkpack(Long idWorkpack);
+  List<Process> findAllByWorkpack(
+    Long idWorkpack,
+    String term,
+    Double searchCutOffScore
+  );
+
+
 
 }

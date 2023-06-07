@@ -4,6 +4,9 @@ package br.gov.es.openpmo.repository.custom.filters;
 import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.repository.PlanRepository;
 import br.gov.es.openpmo.repository.custom.FindAllUsingCustomFilterBuilder;
+
+import java.util.Map;
+
 import org.neo4j.ogm.session.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,12 +42,26 @@ public class FindAllPlanUsingCustomFilter extends FindAllUsingCustomFilterBuilde
     final CustomFilter filter,
     final StringBuilder query
   ) {
-    query.append("WHERE ID(o)=$idOffice").append(" ");
+	query.append("WHERE ID(o)=$idOffice").append(" ");
+	String complementWITH = ", r, o, sb, pm";
+	buildFilterBySimilarity(filter, query, complementWITH);	
   }
 
   @Override
   public void buildReturnClause(final StringBuilder query) {
     query.append("RETURN ").append(this.nodeName).append(", r, o, sb, pm");
+  }
+  
+  @Override
+  public void buildOrderingAndDirectionClause(
+    final CustomFilter filter,
+    Map<String, Object> params,
+    final StringBuilder query
+  ) {
+	  if (filter.isSimilarityFilter()) {
+		  query.append(" ").append("ORDER BY ");
+		  buildOrderingBySimilarity(filter, query);
+	  }
   }
 
   @Override
@@ -59,7 +76,7 @@ public class FindAllPlanUsingCustomFilter extends FindAllUsingCustomFilterBuilde
 
   @Override
   public String[] getDefinedExternalParams() {
-    return new String[]{"idOffice"};
+    return new String[]{"idOffice", "term", "searchCutOffScore"};
   }
 
 }

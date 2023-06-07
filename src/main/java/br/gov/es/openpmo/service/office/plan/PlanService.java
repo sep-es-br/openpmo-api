@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.service.office.plan;
 
+import br.gov.es.openpmo.configuration.properties.AppProperties;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.dto.plan.PlanDto;
 import br.gov.es.openpmo.dto.plan.PlanUpdateDto;
@@ -22,6 +23,8 @@ import br.gov.es.openpmo.service.office.OfficeService;
 import br.gov.es.openpmo.service.permissions.OfficePermissionService;
 import br.gov.es.openpmo.service.ui.BreadcrumbPlanHelper;
 import br.gov.es.openpmo.utils.ApplicationMessage;
+
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -49,6 +52,7 @@ public class PlanService implements BreadcrumbPlanHelper {
   private final CustomFilterRepository customFilterRepository;
   private final FindAllPlanUsingCustomFilter findAllPlan;
   private final WorkpackRepository workpackRepository;
+  private final AppProperties appProperties;
 
   @Autowired
   public PlanService(
@@ -59,7 +63,8 @@ public class PlanService implements BreadcrumbPlanHelper {
     final OfficeService officeService,
     final CustomFilterRepository customFilterRepository,
     final FindAllPlanUsingCustomFilter findAllPlan,
-    final WorkpackRepository workpackRepository
+    final WorkpackRepository workpackRepository,
+    final AppProperties appProperties
   ) {
     this.planRepository = planRepository;
     this.personService = personService;
@@ -69,6 +74,7 @@ public class PlanService implements BreadcrumbPlanHelper {
     this.customFilterRepository = customFilterRepository;
     this.findAllPlan = findAllPlan;
     this.workpackRepository = workpackRepository;
+    this.appProperties = appProperties;
   }
 
   public List<Plan> findAll() {
@@ -79,19 +85,24 @@ public class PlanService implements BreadcrumbPlanHelper {
 
   public List<Plan> findAllInOffice(
     final Long idOffice,
-    final Long idFilter
+    final Long idFilter,
+    final String term
   ) {
     if(idFilter == null) {
-      return this.findAllInOffice(idOffice);
+    	if (StringUtils.isBlank(term)) return this.findAllInOffice(idOffice);
+    	else return findAllInOfficeByTerm(idOffice, term);
     }
     final CustomFilter filter = this.customFilterRepository
       .findById(idFilter)
       .orElseThrow(() -> new NegocioException(CUSTOM_FILTER_NOT_FOUND));
 
     final Map<String, Object> params = new HashMap<>();
-
     params.put("idOffice", idOffice);
-
+    params.put("term", term);
+    params.put("searchCutOffScore", appProperties.getSearchCutOffScore());
+    
+    if (StringUtils.isNotBlank(term)) filter.setSimilarityFilter(true);
+    
     return this.findAllPlan.execute(filter, params);
   }
 
@@ -99,6 +110,10 @@ public class PlanService implements BreadcrumbPlanHelper {
     final List<Plan> plans = this.planRepository.findAllInOffice(idOffice);
     plans.sort(Comparator.comparing(Plan::getStart).reversed());
     return plans;
+  }
+  
+  public List<Plan> findAllInOfficeByTerm(final Long idOffice, final String term) {
+    return this.planRepository.findAllInOfficeByTerm(idOffice, term, this.appProperties.getSearchCutOffScore());
   }
 
   public Plan save(final Plan plan) {

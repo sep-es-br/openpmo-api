@@ -3,6 +3,7 @@ package br.gov.es.openpmo.repository;
 import br.gov.es.openpmo.dto.dashboards.tripleconstraint.DateIntervalQuery;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.workpacks.Workpack;
+import br.gov.es.openpmo.repository.custom.CustomRepository;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.stereotype.Repository;
@@ -12,7 +13,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @Repository
-public interface BaselineRepository extends Neo4jRepository<Baseline, Long> {
+public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, CustomRepository {
 
   @Query("MATCH (w:Workpack{deleted:false})-[ibb:IS_BASELINED_BY]->(b:Baseline) " +
          "WHERE id(b)=$idBaseline " +
@@ -379,6 +380,54 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long> {
   Optional<DateIntervalQuery> fetchIntervalOfSchedules(
     Long workpackId,
     List<Long> baselineIds
+  );
+
+  @Query("match (w:Workpack)-[ii:IS_BASELINED_BY]->(b:Baseline), (p:Person)-[c:IS_CCB_MEMBER_FOR{active:true}]->(w) " +
+         "with *, apoc.text.levenshteinSimilarity(apoc.text.clean(b.name + b.description), apoc.text.clean($term)) AS score " +
+         "where id(p)=$personId and b.status='APPROVED' " +
+         "and ($term is null OR $term = '' OR score > $searchCutOffScore) " +
+         "return b, w, ii, p, c " +
+         "order by b.proposalDate")
+  List<Baseline> findAllApprovedByPersonId(
+    Long personId,
+    String term,
+    Double searchCutOffScore
+  );
+
+  @Query("match (w:Workpack)-[ii:IS_BASELINED_BY]->(b:Baseline), (p:Person)-[c:IS_CCB_MEMBER_FOR{active:true}]->(w) " +
+         "with *, apoc.text.levenshteinSimilarity(apoc.text.clean(b.name + b.description), apoc.text.clean($term)) AS score " +
+         "where id(p)=$personId and b.status='REJECTED' " +
+         "and ($term is null OR $term = '' OR score > $searchCutOffScore) " +
+         "return b, w, ii, p, c " +
+         "order by b.proposalDate")
+  List<Baseline> findAllRejectedByPersonId(
+    Long personId,
+    String term,
+    Double searchCutOffScore
+  );
+
+  @Query("match (w:Workpack)-[ii:IS_BASELINED_BY]->(b:Baseline), (p:Person)-[c:IS_CCB_MEMBER_FOR{active:true}]->(w) " +
+         "with *, apoc.text.levenshteinSimilarity(apoc.text.clean(b.name + b.description), apoc.text.clean($term)) AS score " +
+         "where id(p)=$personId and b.status='PROPOSED' and not (b)-[:IS_EVALUATED_BY]->(p) " +
+         "and ($term is null OR $term = '' OR score > $searchCutOffScore) " +
+         "return b, w, ii, p, c " +
+         "order by b.proposalDate")
+  List<Baseline> findAllWaitingMyEvaluationByPersonId(
+    Long personId,
+    String term,
+    Double searchCutOffScore
+  );
+
+  @Query("match (w:Workpack)-[ii:IS_BASELINED_BY]->(b:Baseline), (p:Person)-[c:IS_CCB_MEMBER_FOR{active:true}]->(w) " +
+         "with *, apoc.text.levenshteinSimilarity(apoc.text.clean(b.name + b.description), apoc.text.clean($term)) AS score " +
+         "where id(p)=$personId and b.status='PROPOSED' and (b)-[:IS_EVALUATED_BY]->(p) " +
+         "and ($term is null OR $term = '' OR score > $searchCutOffScore) " +
+         "return b, w, ii, p, c " +
+         "order by b.proposalDate")
+  List<Baseline> findAllWaitingOthersEvaluationByPersonId(
+    Long personId,
+    String term,
+    Double searchCutOffScore
   );
 
 }

@@ -5,6 +5,7 @@ import br.gov.es.openpmo.dto.workpackmodel.WorkpackModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.DashboardConfiguration;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.PropertyModelDto;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -13,12 +14,14 @@ import io.swagger.annotations.ApiModel;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", visible = true)
 @JsonSubTypes({
@@ -80,6 +83,8 @@ public abstract class WorkpackModelDetailDto {
 
   private Collection<WorkpackModelDto> parent;
 
+  private Long position;
+
   private PropertyModelDto sortBy;
 
   private Boolean journalManagementSessionActive;
@@ -108,6 +113,7 @@ public abstract class WorkpackModelDetailDto {
     instance.setOrganizationRoles(new ArrayList<>(workpackModel.getOrganizationRoles()));
     instance.setJournalManagementSessionActive(workpackModel.getJournalManagementSessionActive());
     instance.setDashboardSessionActive(workpackModel.getDashboardSessionActive());
+    instance.setPosition(workpackModel.getPosition());
     return instance;
   }
 
@@ -202,6 +208,19 @@ public abstract class WorkpackModelDetailDto {
     this.sortBy = sortBy;
   }
 
+  public Long getPosition() {
+    return this.position;
+  }
+
+  @JsonIgnore
+  public Long getPositionOrElseZero() {
+    return this.position == null ? 0 : this.position;
+  }
+
+  public void setPosition(final Long position) {
+    this.position = position;
+  }
+
   public Boolean getCostSessionActive() {
     return this.costSessionActive;
   }
@@ -279,14 +298,21 @@ public abstract class WorkpackModelDetailDto {
   }
 
   public void dashboardConfiguration(final WorkpackModel workpackModel) {
-    if(Objects.isNull(workpackModel)) return;
+    if (Objects.isNull(workpackModel)) return;
+    final Set<String> dashboardShowStakeholders = Optional.of(workpackModel)
+      .map(WorkpackModel::getDashboardShowStakeholders)
+      .map(role -> role.stream()
+        .sorted(
+          Comparator.comparing(workpackModel::isOrganizationRole)
+            .thenComparing(String::compareTo)
+        )
+        .collect(Collectors.toCollection(LinkedHashSet::new)))
+      .orElse(new LinkedHashSet<>());
     this.dashboardConfiguration = new DashboardConfiguration(
       workpackModel.getDashboardShowRisks(),
       workpackModel.getDashboardShowEva(),
       workpackModel.getDashboardShowMilestones(),
-      Optional.of(workpackModel)
-        .map(WorkpackModel::getDashboardShowStakeholders)
-        .orElse(new HashSet<>())
+      dashboardShowStakeholders
     );
   }
 

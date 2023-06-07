@@ -49,10 +49,11 @@ public class RiskController {
   public ResponseEntity<ResponseBase<List<RiskCardDto>>> findAll(
       @RequestParam("id-workpack") final Long idWorkpack,
       @RequestParam(required = false) final Long idFilter,
+      @RequestParam(required = false) final String term,
       @Authorization final String authorization) {
     this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
     final Long idPerson = this.tokenService.getUserId(authorization);
-    final List<RiskCardDto> risks = this.service.findAllAsCardDto(idWorkpack, idFilter, idPerson);
+    final List<RiskCardDto> risks = this.service.findAllAsCardDto(idWorkpack, idFilter, term, idPerson);
     final ResponseBase<List<RiskCardDto>> response = ResponseBase.of(risks);
     return ResponseEntity.ok(response);
   }

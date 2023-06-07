@@ -6,9 +6,12 @@ import org.neo4j.ogm.annotation.NodeEntity;
 public class NumberModel extends PropertyModel {
 
   private Double defaultValue;
+
   private Double min;
+
   private Double max;
-  private Integer decimals;
+
+  private Integer precision;
 
   public Double getDefaultValue() {
     return this.defaultValue;
@@ -34,12 +37,12 @@ public class NumberModel extends PropertyModel {
     this.max = max;
   }
 
-  public Integer getDecimals() {
-    return this.decimals;
+  public Integer getPrecision() {
+    return this.precision;
   }
 
-  public void setDecimals(final Integer decimals) {
-    this.decimals = decimals;
+  public void setPrecision(final Integer precision) {
+    this.precision = precision;
   }
 
 }

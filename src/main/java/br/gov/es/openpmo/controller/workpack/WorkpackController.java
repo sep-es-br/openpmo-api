@@ -4,7 +4,7 @@ import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.Response;
 import br.gov.es.openpmo.dto.ResponseBase;
-import br.gov.es.openpmo.dto.completed.CompleteDeliverableRequest;
+import br.gov.es.openpmo.dto.completed.CompleteWorkpackRequest;
 import br.gov.es.openpmo.dto.dashboards.v2.SimpleDashboard;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.dto.workpack.EndDeliverableManagementRequest;
@@ -18,10 +18,9 @@ import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.journals.JournalAction;
 import br.gov.es.openpmo.model.workpacks.Milestone;
 import br.gov.es.openpmo.model.workpacks.Workpack;
-import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.service.actors.IsFavoritedByService;
 import br.gov.es.openpmo.service.authentication.TokenService;
-import br.gov.es.openpmo.service.completed.ICompleteDeliverableService;
+import br.gov.es.openpmo.service.completed.ICompleteWorkpackService;
 import br.gov.es.openpmo.service.completed.IDeliverableEndManagementService;
 import br.gov.es.openpmo.service.dashboards.v2.IDashboardService;
 import br.gov.es.openpmo.service.journals.JournalCreator;
@@ -40,11 +39,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
-
-import static br.gov.es.openpmo.service.workpack.GetPropertyValue.getValueProperty;
-import static br.gov.es.openpmo.service.workpack.PropertyComparator.compare;
 
 @Api
 @RestController
@@ -66,7 +61,7 @@ public class WorkpackController {
 
   private final GetWorkpackName getWorkpackName;
 
-  private final ICompleteDeliverableService completeDeliverableService;
+  private final ICompleteWorkpackService completeDeliverableService;
 
   private final IDeliverableEndManagementService deliverableEndManagementService;
 
@@ -86,7 +81,7 @@ public class WorkpackController {
     final WorkpackPermissionVerifier workpackPermissionVerifier,
     final JournalCreator journalCreator,
     final GetWorkpackName getWorkpackName,
-    final ICompleteDeliverableService completeDeliverableService,
+    final ICompleteWorkpackService completeDeliverableService,
     final IDeliverableEndManagementService deliverableEndManagementService,
     final IDashboardService dashboardService,
     final ICanAccessService canAccessService,
@@ -113,6 +108,7 @@ public class WorkpackController {
     @RequestParam(value = "id-plan-model", required = false) final Long idPlanModel,
     @RequestParam(value = "id-workpack-model", required = false) final Long idWorkpackModel,
     @RequestParam(value = "idFilter", required = false) final Long idFilter,
+    @RequestParam(required = false) final String term,
     @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanReadResource(
@@ -120,80 +116,40 @@ public class WorkpackController {
       authorization
     );
     final Long idUser = this.tokenService.getUserId(authorization);
-    final List<Workpack> workpacks = this.findAllWorkpacks(
+
+    final List<Workpack> workpacks = this.workpackService.findAll(
       idPlan,
       idPlanModel,
       idWorkpackModel,
-      idFilter
+      idFilter,
+      term
     );
+
     if (workpacks.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
-    if (isNotNull(idWorkpackModel)) {
-      final WorkpackModel workpackModel = this.workpackService.getWorkpackModelById(idWorkpackModel);
-      if (workpackModelHasSortBy(workpackModel) && Objects.isNull(idFilter)) {
-        sortWorkpacks(
-          workpacks,
-          workpackModel
-        );
-      }
-    }
+
     final List<WorkpackDetailDto> workpackDetailDtos = workpacks.parallelStream()
       .map(workpack -> this.mapToWorkpackDetailDto(
         workpack,
         idWorkpackModel
       ))
       .collect(Collectors.toList());
+
     final List<WorkpackDetailDto> verify = this.workpackPermissionVerifier.verify(
       workpackDetailDtos,
       idUser,
       idPlan
     );
+
     verify.parallelStream().forEach(workpackDetailDto -> {
       final SimpleDashboard dashboard = this.dashboardService.buildSimple(workpackDetailDto.getId());
       workpackDetailDto.setDashboard(dashboard);
     });
+
     return verify.isEmpty()
       ? ResponseEntity.noContent().build()
       : ResponseEntity.ok(new ResponseBaseWorkpack().setData(verify).setMessage(SUCESSO).setSuccess(true));
-  }
-
-  private List<Workpack> findAllWorkpacks(
-    final Long idPlan,
-    final Long idPlanModel,
-    final Long idWorkPackModel,
-    final Long idFilter
-  ) {
-    return this.workpackService.findAll(
-      idPlan,
-      idPlanModel,
-      idWorkPackModel,
-      idFilter
-    );
-  }
-
-  private static <T> boolean isNotNull(final T obj) {
-    return Objects.nonNull(obj);
-  }
-
-  private static boolean workpackModelHasSortBy(final WorkpackModel workpackModel) {
-    return workpackModel != null && workpackModel.getSortBy() != null;
-  }
-
-  private static void sortWorkpacks(
-    final List<? extends Workpack> workpacks,
-    final WorkpackModel workpackModel
-  ) {
-    workpacks.sort((first, second) -> compare(
-      getValueProperty(
-        first,
-        workpackModel.getSortBy()
-      ),
-      getValueProperty(
-        second,
-        workpackModel.getSortBy()
-      )
-    ));
   }
 
   private WorkpackDetailDto mapToWorkpackDetailDto(
@@ -215,6 +171,7 @@ public class WorkpackController {
     @RequestParam(value = "id-plan-model", required = false) final Long idPlanModel,
     @RequestParam(value = "id-workpack-model", required = false) final Long idWorkpackModel,
     @RequestParam(value = "idFilter", required = false) final Long idFilter,
+    @RequestParam(required = false) final String term,
     @RequestParam(value = "workpackLinked", required = false) final boolean workpackLinked,
     @Authorization final String authorization
   ) {
@@ -229,18 +186,9 @@ public class WorkpackController {
       idWorkpackModel,
       idWorkpackParent,
       idFilter,
+      term,
       workpackLinked
     );
-
-    if (isNotNull(idWorkpackModel)) {
-      final WorkpackModel workpackModel = this.workpackService.getWorkpackModelById(idWorkpackModel);
-      if (workpackModelHasSortBy(workpackModel) && Objects.isNull(idFilter)) {
-        sortWorkpacks(
-          workpacks,
-          workpackModel
-        );
-      }
-    }
 
     final List<WorkpackDetailDto> workpackList = workpacks.parallelStream()
       .map(workpack -> this.mapToWorkpackDetailDto(workpack, idWorkpackModel))
@@ -411,7 +359,7 @@ public class WorkpackController {
   @PatchMapping("/complete-deliverable/{id-deliverable}")
   public Response<Void> completeDeliverable(
     @PathVariable("id-deliverable") final Long idDeliverable,
-    @RequestBody final CompleteDeliverableRequest request,
+    @RequestBody final CompleteWorkpackRequest request,
     @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanEditResource(

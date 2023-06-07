@@ -27,8 +27,9 @@ public class FindAllIssueUsingCustomFilter extends FindAllUsingCustomFilterBuild
     final CustomFilter filter,
     final StringBuilder query
   ) {
-    query.append("MATCH (issue:").append(this.nodeName)
-      .append(")-[reported:IS_REPORTED_FOR]->(workpack:Workpack{deleted:false})").append(" ");
+    query.append("MATCH (").append(this.nodeName).append(":Issue)-[reported:IS_REPORTED_FOR]->(workpack:Workpack{deleted:false}) ")
+      .append("WITH *, apoc.text.levenshteinSimilarity(apoc.text.clean(")
+      .append(this.nodeName).append(".name), apoc.text.clean($term)) AS score ");
   }
 
   @Override
@@ -36,14 +37,14 @@ public class FindAllIssueUsingCustomFilter extends FindAllUsingCustomFilterBuild
     final CustomFilter filter,
     final StringBuilder query
   ) {
-    query.append("WHERE id(workpack)=$idWorkpack").append(" ");
+    query.append("WHERE id(workpack)=$idWorkpack ")
+      .append("AND ($term is null OR $term = '' OR score > $searchCutOffScore) ");
   }
 
   @Override
   protected void buildReturnClause(final StringBuilder query) {
-    query.append("RETURN issue");
+    query.append("RETURN ").append(this.nodeName).append(" ");
   }
-
 
   @Override
   protected boolean hasAppendedBooleanBlock() {
@@ -58,7 +59,9 @@ public class FindAllIssueUsingCustomFilter extends FindAllUsingCustomFilterBuild
   @Override
   protected String[] getDefinedExternalParams() {
     return new String[]{
-      "idWorkpack"
+      "idWorkpack",
+      "term",
+      "searchCutOffScore"
     };
   }
 

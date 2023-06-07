@@ -20,10 +20,12 @@ public class IsEvaluatedBy {
   private Long id;
 
   private Decision decision;
-  private String inRoleWorkLocation;
-  private LocalDateTime when;
-  private String comment;
 
+  private String inRoleWorkLocation;
+
+  private LocalDateTime when;
+
+  private String comment;
 
   @StartNode
   private Baseline baseline;

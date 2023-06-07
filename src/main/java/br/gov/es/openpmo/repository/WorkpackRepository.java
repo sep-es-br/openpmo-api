@@ -50,12 +50,15 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
 
   @Query("MATCH (w:Workpack)-[rf:BELONGS_TO]->(p:Plan), "
          + "(p)-[is:IS_STRUCTURED_BY]->(pm:PlanModel) "
+         + "MATCH (w)<-[:FEATURES]-(name:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}) "
+         + "MATCH (w)<-[:FEATURES]-(fullName:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'fullName'}) "
          + "OPTIONAL MATCH (w)-[ii:IS_INSTANCE_BY]->(wm:WorkpackModel) "
          + "OPTIONAL MATCH (w)-[lt:IS_LINKED_TO]->(wm2:WorkpackModel)-[bt:BELONGS_TO]->(pm) "
-         + "WITH w, rf, p, is, pm, ii, wm, lt, wm2, bt "
+         + "WITH *, apoc.text.levenshteinSimilarity(apoc.text.clean(name.value + fullName.value), apoc.text.clean($term)) AS score "
          + "WHERE id(p)=$idPlan "
          + "AND (id(pm)=$idPlanModel OR $idPlanModel IS NULL) "
          + "AND (id(wm)=$idWorkPackModel OR id(wm2)=$idWorkPackModel OR $idWorkPackModel IS NULL) "
+         + "AND ($term IS NULL OR $term = '' OR score > $searchCutOffScore) "
          + "RETURN w, rf, p, ii, pm, wm, lt, wm2, bt, [ "
          + " [ (w)<-[f:FEATURES]-(p:Property)-[d:IS_DRIVEN_BY]->(pm:PropertyModel) | [f, p, d, pm] ], "
          + " [ (w)<-[wi:IS_IN]-(w2:Workpack) | [wi, w2] ], "
@@ -71,23 +74,31 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
          + " [ (group)-[groups:GROUPS]->(groupedProperty:PropertyModel) | [groups, groupedProperty] ], "
          + " [ (w)-[sharedWith:IS_SHARED_WITH]->(office:Office) | [sharedWith, office]], "
          + " [ (w)-[isLinkedTo:IS_LINKED_TO]->(workpackModel:WorkpackModel) | [isLinkedTo, workpackModel] ] "
-         + "]")
+         + "] "
+         + "ORDER BY score DESC"
+  )
   List<Workpack> findAll(
     @Param("idPlan") Long idPlan,
     @Param("idPlanModel") Long idPlanModel,
-    @Param("idWorkPackModel") Long idWorkPackModel
+    @Param("idWorkPackModel") Long idWorkPackModel,
+    @Param("term") String term,
+    @Param("searchCutOffScore") Double searchCutOffScore
   );
 
   @Query("MATCH (pl:Plan), (wm:WorkpackModel), (p:Workpack) " +
          "WHERE id(pl)=$idPlan AND id(wm)=$idWorkpackModel AND id(p)=$idWorkpackParent " +
          "OPTIONAL MATCH " +
-         "    (w:Workpack{deleted:false})-[:IS_IN]->(p), (w)-[:IS_INSTANCE_BY]->(wm), (w)-[bt1:BELONGS_TO]->(pl) " +
-         "WHERE bt1.linked=null OR bt1.linked=false " +
+         "    (w:Workpack{deleted:false})-[:IS_IN]->(p), (w)-[:IS_INSTANCE_BY]->(wm), (w)-[bt1:BELONGS_TO]->(pl), " +
+         "    (w)<-[:FEATURES]-(name1:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}), " +
+         "    (w)<-[:FEATURES]-(fullName1:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'fullName'}) " +
+         "WHERE (bt1.linked=null OR bt1.linked=false) AND ($term IS NULL OR $term = '' OR apoc.text.levenshteinSimilarity(apoc.text.clean(name1.value + fullName1.value), apoc.text.clean($term)) > $searchCutOffScore) " +
          "WITH w,p,wm,bt1,pl " +
          "OPTIONAL MATCH " +
          "    (v:Workpack{deleted:false})-[:IS_LINKED_TO]->(wm), " +
-         "    (v)-[bt2:BELONGS_TO]->(pl) " +
-         "WHERE bt2.linked=true " +
+         "    (v)-[bt2:BELONGS_TO]->(pl), " +
+         "    (v)<-[:FEATURES]-(name2:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}), " +
+         "    (v)<-[:FEATURES]-(fullName2:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'fullName'}) " +
+         "WHERE bt2.linked=true AND ($term IS NULL OR $term = '' OR apoc.text.levenshteinSimilarity(apoc.text.clean(name2.value + fullName2.value), apoc.text.clean($term)) > $searchCutOffScore) " +
          "WITH w,v,p,wm,bt1,bt2,pl " +
          "WITH collect(w)+collect(v) AS workpackList " +
          "UNWIND workpackList AS workpacks " +
@@ -104,13 +115,19 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   List<Workpack> findAllUsingParent(
     Long idWorkpackModel,
     Long idWorkpackParent,
-    Long idPlan
+    Long idPlan,
+    String term,
+    Double searchCutOffScore
   );
 
   @Query("MATCH (w:Workpack{deleted:false})-[:IS_IN]->(p:Workpack{deleted:false}) " +
          "MATCH (w)-[:IS_INSTANCE_BY]->(wm:WorkpackModel) " +
          "MATCH (w)-[:IS_IN*]->(:Workpack{deleted:false})-[:BELONGS_TO{linked: true}]->(pl:Plan) " +
+         "MATCH (w)<-[:FEATURES]-(name:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}) " +
+         "MATCH (w)<-[:FEATURES]-(fullName:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'fullName'}) " +
+         "WITH *, apoc.text.levenshteinSimilarity(apoc.text.clean(name.value + fullName.value), apoc.text.clean($term)) AS score " +
          "WHERE id(p)=$idWorkpackParent AND id(wm)=$idWorkpackModel AND id(pl)=$idPlan " +
+         "AND ($term IS NULL OR $term = '' OR score > $searchCutOffScore) " +
          "WITH collect(w) AS workpackList " +
          "UNWIND workpackList AS workpacks " +
          "RETURN workpacks, [ " +
@@ -126,7 +143,9 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   List<Workpack> findAllUsingParentLinked(
     Long idWorkpackModel,
     Long idWorkpackParent,
-    Long idPlan
+    Long idPlan,
+    String term,
+    Double searchCutOffScore
   );
 
   @Query("OPTIONAL MATCH (w:Workpack{deleted:false})-[ro:BELONGS_TO]->(pl:Plan), (w)-[wp:IS_INSTANCE_BY]->" +

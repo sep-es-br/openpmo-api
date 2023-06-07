@@ -3,6 +3,7 @@ package br.gov.es.openpmo.repository;
 import br.gov.es.openpmo.model.relations.IsInContactBookOf;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
@@ -23,8 +24,8 @@ public interface IsInContactBookOfRepository extends Neo4jRepository<IsInContact
          "AND id(office)=$idOffice " +
          "RETURN person, isInContactBookOf, office ")
   Optional<IsInContactBookOf> findIsInContactBookOfByPersonIdAndOfficeId(
-    Long personId,
-    Long idOffice
+    @Param("personId") Long personId,
+    @Param("idOffice") Long idOffice
   );
 
   @Query("match (p:Person)-[i:IS_IN_CONTACT_BOOK_OF]->(o:Office) " +

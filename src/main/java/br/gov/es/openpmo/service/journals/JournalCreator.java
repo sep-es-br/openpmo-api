@@ -2,6 +2,7 @@ package br.gov.es.openpmo.service.journals;
 
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.journals.JournalRequest;
+import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.baselines.Baseline;
@@ -10,6 +11,8 @@ import br.gov.es.openpmo.model.issue.response.IssueResponse;
 import br.gov.es.openpmo.model.journals.JournalAction;
 import br.gov.es.openpmo.model.journals.JournalEntry;
 import br.gov.es.openpmo.model.journals.JournalType;
+import br.gov.es.openpmo.model.office.Office;
+import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.risk.Risk;
 import br.gov.es.openpmo.model.risk.response.RiskResponse;
 import br.gov.es.openpmo.model.workpacks.Workpack;
@@ -90,87 +93,6 @@ public class JournalCreator {
       .orElseGet(() -> this.findWorkpackIdByBaselineId(baseline));
   }
 
-  private JournalEntry saveJournal(final JournalEntry journalEntry) {
-    return this.journalRepository.save(
-      journalEntry,
-      1
-    );
-  }
-
-  private Long findWorkpackIdByBaselineId(final Baseline baseline) {
-    return this.baselineRepository.findWorkpackIdByBaselineId(baseline.getId())
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
-  }
-
-  public void failure(final Long personId) {
-    if (personId == null) {
-      return;
-    }
-
-    final String description = "Failed to load resource: the server responded with a status of 404 (Not Found)";
-
-    this.create(
-      JournalType.FAIL,
-      null,
-      null,
-      description,
-      null,
-      personId
-    );
-  }
-
-  private Person findPersonById(final Long personId) {
-    return this.personRepository.findById(personId)
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.PERSON_NOT_FOUND));
-  }
-
-  public JournalEntry create(
-    final JournalType type,
-    final JournalAction action,
-    final String nameItem,
-    final String description,
-    final Workpack workpack,
-    final Person person
-  ) {
-    return this.create(
-      type,
-      action,
-      nameItem,
-      description,
-      null,
-      null,
-      null,
-      workpack,
-      person
-    );
-  }
-
-  public JournalEntry create(
-    final JournalType type,
-    final JournalAction action,
-    final String nameItem,
-    final String description,
-    final String reason,
-    final LocalDate newDate,
-    final LocalDate previousDate,
-    final Workpack workpack,
-    final Person person
-  ) {
-    final JournalEntry journalEntry = new JournalEntry(
-      type,
-      action,
-      nameItem,
-      description,
-      reason,
-      newDate,
-      previousDate,
-      workpack,
-      person
-    );
-
-    return this.saveJournal(journalEntry);
-  }
-
   public JournalEntry create(
     final JournalType type,
     final JournalAction action,
@@ -190,6 +112,11 @@ public class JournalCreator {
       workpackId,
       personId
     );
+  }
+
+  private Long findWorkpackIdByBaselineId(final Baseline baseline) {
+    return this.baselineRepository.findWorkpackIdByBaselineId(baseline.getId())
+      .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
   }
 
   public JournalEntry create(
@@ -227,6 +154,103 @@ public class JournalCreator {
   private Workpack findWorkpackById(final Long workpackId) {
     return this.workpackRepository.findById(workpackId)
       .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
+  }
+
+  private Person findPersonById(final Long personId) {
+    return this.personRepository.findById(personId)
+      .orElseThrow(() -> new NegocioException(ApplicationMessage.PERSON_NOT_FOUND));
+  }
+
+  public JournalEntry create(
+    final JournalType type,
+    final JournalAction action,
+    final String nameItem,
+    final String description,
+    final String reason,
+    final LocalDate newDate,
+    final LocalDate previousDate,
+    final Workpack workpack,
+    final Person person
+  ) {
+    final JournalEntry journalEntry = new JournalEntry(
+      type,
+      action,
+      nameItem,
+      description,
+      reason,
+      newDate,
+      previousDate,
+      workpack,
+      person
+    );
+
+    return this.saveJournal(journalEntry);
+  }
+
+  private JournalEntry saveJournal(final JournalEntry journalEntry) {
+    return this.journalRepository.save(
+      journalEntry,
+      1
+    );
+  }
+
+  public void officePermission(
+    final Office office,
+    final Person target,
+    final Person author,
+    final PermissionLevelEnum level,
+    final JournalAction journalAction
+  ) {
+    this.create(
+      JournalType.OFFICE_PERMISSION,
+      journalAction,
+      level,
+      office.getName(),
+      office.getFullName(),
+      office,
+      target,
+      author
+    );
+  }
+
+  public JournalEntry create(
+    final JournalType type,
+    final JournalAction action,
+    final PermissionLevelEnum level,
+    final String nameItem,
+    final String description,
+    final Office office,
+    final Person target,
+    final Person author
+  ) {
+    final JournalEntry journalEntry = JournalEntry.of(
+      type,
+      action,
+      level,
+      nameItem,
+      description,
+      office,
+      target,
+      author
+    );
+    return this.saveJournal(journalEntry);
+  }
+
+  public void failure(final Long personId) {
+    if (personId == null) {
+      return;
+    }
+
+    final String description = "Failed to load resource: the server responded with a status of 404 (Not Found)";
+
+    this.create(
+      JournalType.FAIL,
+      null,
+      null,
+      description,
+      null,
+      personId
+    );
   }
 
   public void issue(
@@ -389,6 +413,111 @@ public class JournalCreator {
     );
 
     return new EntityDto(journalEntry.getId());
+  }
+
+  public void planPermission(
+    final Plan plan,
+    final Person target,
+    final Person author,
+    final PermissionLevelEnum level,
+    final JournalAction journalAction
+  ) {
+    this.create(
+      JournalType.PLAN_PERMISSION,
+      journalAction,
+      level,
+      plan.getName(),
+      plan.getFullName(),
+      plan,
+      target,
+      author
+    );
+  }
+
+  private JournalEntry create(
+    final JournalType type,
+    final JournalAction action,
+    final PermissionLevelEnum level,
+    final String nameItem,
+    final String description,
+    final Plan plan,
+    final Person target,
+    final Person author
+  ) {
+    final JournalEntry journalEntry = JournalEntry.of(
+      type,
+      action,
+      level,
+      nameItem,
+      description,
+      plan,
+      target,
+      author
+    );
+    return this.saveJournal(journalEntry);
+  }
+
+  public void workpackPermission(
+    final Workpack workpack,
+    final Person target,
+    final Person author,
+    final PermissionLevelEnum level,
+    final JournalAction journalAction
+  ) {
+    this.create(
+      JournalType.WORKPACK_PERMISSION,
+      journalAction,
+      level,
+      workpack.getName(),
+      workpack.getReason(),
+      workpack,
+      target,
+      author
+    );
+  }
+
+  private JournalEntry create(
+    final JournalType type,
+    final JournalAction action,
+    final PermissionLevelEnum level,
+    final String nameItem,
+    final String description,
+    final Workpack workpack,
+    final Person target,
+    final Person author
+  ) {
+    final JournalEntry journalEntry = JournalEntry.of(
+      type,
+      action,
+      level,
+      nameItem,
+      description,
+      workpack,
+      target,
+      author
+    );
+    return this.saveJournal(journalEntry);
+  }
+
+  public JournalEntry create(
+    final JournalType type,
+    final JournalAction action,
+    final String nameItem,
+    final String description,
+    final Workpack workpack,
+    final Person person
+  ) {
+    return this.create(
+      type,
+      action,
+      nameItem,
+      description,
+      null,
+      null,
+      null,
+      workpack,
+      person
+    );
   }
 
 }

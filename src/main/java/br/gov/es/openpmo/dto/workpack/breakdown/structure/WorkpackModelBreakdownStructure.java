@@ -13,19 +13,11 @@ public class WorkpackModelBreakdownStructure {
 
   private List<WorkpackBreakdownStructure> workpacks;
 
-  public WorkpackModelRepresentation getRepresentation() {
-    return representation;
-  }
-
-  public void setRepresentation(WorkpackModelRepresentation representation) {
-    this.representation = representation;
-  }
-
   public List<WorkpackBreakdownStructure> getWorkpacks() {
-    return workpacks;
+    return this.workpacks;
   }
 
-  public void setWorkpacks(List<WorkpackBreakdownStructure> workpacks) {
+  public void setWorkpacks(final List<WorkpackBreakdownStructure> workpacks) {
     this.workpacks = workpacks;
   }
 
@@ -34,6 +26,21 @@ public class WorkpackModelBreakdownStructure {
     return Optional.ofNullable(this.representation)
       .map(WorkpackModelRepresentation::getWorkpackModelName)
       .orElse(null);
+  }
+
+  @JsonIgnore
+  public Long getRepresentationPosition() {
+    return Optional.ofNullable(this.representation)
+      .map(WorkpackModelRepresentation::getWorkpackModelPosition)
+      .orElse(0L);
+  }
+
+  public WorkpackModelRepresentation getRepresentation() {
+    return this.representation;
+  }
+
+  public void setRepresentation(final WorkpackModelRepresentation representation) {
+    this.representation = representation;
   }
 
 }

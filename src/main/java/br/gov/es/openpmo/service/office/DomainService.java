@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.service.office;
 
+import br.gov.es.openpmo.configuration.properties.AppProperties;
 import br.gov.es.openpmo.dto.domain.DomainStoreDto;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.filter.CustomFilter;
@@ -8,6 +9,8 @@ import br.gov.es.openpmo.model.office.Locality;
 import br.gov.es.openpmo.repository.CustomFilterRepository;
 import br.gov.es.openpmo.repository.DomainRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllDomainUsingCustomFilter;
+
+import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,6 +33,7 @@ public class DomainService {
   private final CustomFilterRepository customFilterRepository;
   private final FindAllDomainUsingCustomFilter findAllDomain;
   private final ModelMapper modelMapper;
+  private final AppProperties appProperties;
 
   @Autowired
   public DomainService(
@@ -37,22 +41,26 @@ public class DomainService {
     final CustomFilterRepository customFilterRepository,
     final OfficeService officeService,
     final FindAllDomainUsingCustomFilter findAllDomain,
-    final ModelMapper modelMapper
+    final ModelMapper modelMapper,
+    final AppProperties appProperties
   ) {
     this.domainRepository = domainRepository;
     this.officeService = officeService;
     this.customFilterRepository = customFilterRepository;
     this.findAllDomain = findAllDomain;
     this.modelMapper = modelMapper;
+    this.appProperties = appProperties;
   }
 
   public List<Domain> findAll(
     final Long idOffice,
-    final Long idFilter
+    final Long idFilter,
+    final String term
   ) {
 
     if(idFilter == null) {
-      return this.findAll(idOffice);
+    	if (StringUtils.isBlank(term)) return this.findAll(idOffice);
+    	else return this.findAllByTerm(idOffice, term);
     }
 
     final CustomFilter filter = this.customFilterRepository
@@ -61,12 +69,20 @@ public class DomainService {
 
     final Map<String, Object> params = new HashMap<>();
     params.put("idOffice", idOffice);
+    params.put("term", term);
+    params.put("searchCutOffScore", appProperties.getSearchCutOffScore());
+    
+    if (StringUtils.isNotBlank(term)) filter.setSimilarityFilter(true);
 
     return this.findAllDomain.execute(filter, params);
   }
 
   public List<Domain> findAll(final Long idOffice) {
     return new ArrayList<>(this.domainRepository.findAll(idOffice));
+  }
+  
+  public List<Domain> findAllByTerm(final Long idOffice, final String term) {
+    return new ArrayList<>(this.domainRepository.findAllByTerm(idOffice, term, this.appProperties.getSearchCutOffScore()));
   }
 
   public Domain save(final DomainStoreDto domainDto) {

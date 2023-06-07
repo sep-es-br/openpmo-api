@@ -19,15 +19,20 @@ public interface LocalityRepository extends Neo4jRepository<Locality, Long>, Cus
   @Query("MATCH (domain:Domain)<-[isRootOf:IS_ROOT_OF]-(locality:Locality) " +
          "WHERE id(domain)=$idDomain " +
          "RETURN domain, isRootOf, locality")
-  Optional<Locality> findLocalityRootFromDomain(Long idDomain);
+  Optional<Locality> findLocalityRootFromDomain(@Param("idDomain") Long idDomain);
 
   @Query("MATCH (d:Domain)<-[:IS_ROOT_OF]-(root:Locality)" +
          "MATCH (root)<-[:IS_IN]-(locality:Locality)-[:BELONGS_TO]->(d) " +
-         "WHERE id(d)=$idDomain " +
+         "WITH *, apoc.text.levenshteinSimilarity(apoc.text.clean(locality.name + locality.fullName), apoc.text.clean($term)) AS score " +
+         "WHERE id(d)=$idDomain AND ($term IS NULL OR $term = '' OR score > $searchCutOffScore) " +
          "RETURN locality, [ " +
          "    [(locality)<-[isIn:IS_IN]-(children:Locality)-[:BELONGS_TO]->(d) | [isIn, children] ] " +
          "]")
-  Collection<Locality> findAllByDomainFirstLevel(@Param("idDomain") Long idDomain);
+  Collection<Locality> findAllByDomainFirstLevel(
+    @Param("idDomain") Long idDomain,
+    @Param("term") String term,
+    @Param("searchCutOffScore") Double searchCutOffScore
+  );
 
   @Query("MATCH (d:Domain)<-[]-(l:Locality) " +
          "WHERE id(d)=$idDomain AND NOT (l)-[:IS_IN*1..]->(:Locality) " +
@@ -47,6 +52,6 @@ public interface LocalityRepository extends Neo4jRepository<Locality, Long>, Cus
          "with d1,d2 " +
          "with case d1 when null then d2 else d1 end as domain " +
          "return domain")
-  Optional<Domain> findDomainById(Long idLocality);
+  Optional<Domain> findDomainById(@Param("idLocality") Long idLocality);
 
 }

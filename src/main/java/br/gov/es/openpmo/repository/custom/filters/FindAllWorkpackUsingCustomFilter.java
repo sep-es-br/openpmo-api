@@ -9,6 +9,9 @@ import br.gov.es.openpmo.repository.custom.FindAllUsingCustomFilterBuilder;
 import org.neo4j.ogm.session.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+import java.util.Map;
 
 @Service
 public class FindAllWorkpackUsingCustomFilter extends FindAllUsingCustomFilterBuilder implements ApplyFilterUsingPropertyModel {
@@ -39,11 +42,13 @@ public class FindAllWorkpackUsingCustomFilter extends FindAllUsingCustomFilterBu
                  "(p)-[is:IS_STRUCTURED_BY]->(pm:PlanModel)<-[bt:BELONGS_TO]-(wm:WorkpackModel), " +
                  "(wm)<-[:FEATURES]-(propertyModel:PropertyModel), " +
                  "(node)<-[:FEATURES]-(property:Property)-[:IS_DRIVEN_BY]->(propertyModel) " +
+                 "MATCH (node)<-[:FEATURES]-(name:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}) " +
+                 "MATCH (node)<-[:FEATURES]-(fullName:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'fullName'}) " +
                  "OPTIONAL MATCH (propertyModel)-[:GROUPS]->(groupedProperty:PropertyModel) " +
                  "OPTIONAL MATCH (node)-[ii:IS_INSTANCE_BY]->(wm) " +
                  "OPTIONAL MATCH (node)-[lt:IS_LINKED_TO]->(wm) " +
                  "OPTIONAL MATCH (node)<-[:FEATURES]-(:Property)-[:VALUES]->(values) " +
-                 "WITH node, bt, rf, p, is, pm, ii, wm, property, propertyModel, groupedProperty, " +
+                 "WITH *, apoc.text.levenshteinSimilarity(apoc.text.clean(name.value + fullName.value), apoc.text.clean($term)) as score, " +
                  "collect( property ) as properties, " +
                  "collect( id(values) ) as selectedValues ");
   }
@@ -54,9 +59,10 @@ public class FindAllWorkpackUsingCustomFilter extends FindAllUsingCustomFilterBu
     final StringBuilder query
   ) {
     query.append("WHERE (" +
-                 "   id(p)=$idPlan " +
-                 "   AND (id(pm)=$idPlanModel OR $idPlanModel IS NULL) " +
-                 "   AND (id(wm)=$idWorkPackModel OR $idWorkPackModel IS NULL) " +
+                 "  id(p)=$idPlan " +
+                 "  AND (id(pm)=$idPlanModel OR $idPlanModel IS NULL) " +
+                 "  AND (id(wm)=$idWorkPackModel OR $idWorkPackModel IS NULL) " +
+                 "  AND ($term IS NULL OR $term = '' OR score > $searchCutOffScore ) " +
                  ") ");
   }
 
@@ -100,14 +106,27 @@ public class FindAllWorkpackUsingCustomFilter extends FindAllUsingCustomFilterBu
   @Override
   protected void buildOrderingAndDirectionClause(
     final CustomFilter filter,
+    final Map<String, Object> params,
     final StringBuilder query
   ) {
+    final String term = (String) params.get("term");
+    if (StringUtils.hasText(term)) {
+      query.append(" ")
+        .append("ORDER BY score DESC");
+      return;
+    }
     this.buildOrderingAndDirectionClauseForWorkpack(filter, query);
   }
 
   @Override
   public String[] getDefinedExternalParams() {
-    return new String[]{"idPlan", "idPlanModel", "idWorkPackModel"};
+    return new String[]{
+      "idPlan",
+      "idPlanModel",
+      "idWorkPackModel",
+      "searchCutOffScore",
+      "term"
+    };
   }
 
   @Override

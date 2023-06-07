@@ -17,13 +17,21 @@ public abstract class FindStakeholderAndPermissionUsingCustomFilterBuilder exten
     final CustomFilter filter,
     final Map<String, Object> params
   ) {
-    this.validateArgs(filter, params);
+    this.validateArgs(
+      filter,
+      params
+    );
     this.verifyExternalParam(params);
 
-    final boolean haveExternalParam = !params.keySet().isEmpty();
-    final String query = this.buildQuery(filter, params);
+    final String query = this.buildQuery(
+      filter,
+      params
+    );
 
-    final Result result = this.getSession().query(query, params);
+    final Result result = this.getSession().query(
+      query,
+      params
+    );
     final Iterable<Map<String, Object>> maps = result.queryResults();
     final Map<String, Object> objectMap = maps.iterator().next();
 
@@ -31,21 +39,28 @@ public abstract class FindStakeholderAndPermissionUsingCustomFilterBuilder exten
   }
 
   private StakeholderAndPermissionQuery getPermissionQuery(final Map<String, Object> objectMap) {
-    return new StakeholderAndPermissionQuery(this.getStakeholders(objectMap), this.getPermissions(objectMap));
+    return new StakeholderAndPermissionQuery(
+      this.getStakeholders(objectMap),
+      this.getPermissions(objectMap)
+    );
   }
 
+  @SuppressWarnings("unchecked")
   private ArrayList<CanAccessWorkpack> getPermissions(final Map<String, Object> objectMap) {
     try {
       return (ArrayList<CanAccessWorkpack>) objectMap.get("permissions");
-    } catch (ClassCastException exception) {
+    }
+    catch (final ClassCastException exception) {
       return new ArrayList<>();
     }
   }
 
+  @SuppressWarnings("unchecked")
   private ArrayList<IsStakeholderIn> getStakeholders(final Map<String, Object> objectMap) {
     try {
       return (ArrayList<IsStakeholderIn>) objectMap.get("stakeholders");
-    } catch (ClassCastException exception) {
+    }
+    catch (final ClassCastException exception) {
       return new ArrayList<>();
     }
   }
@@ -56,19 +71,27 @@ public abstract class FindStakeholderAndPermissionUsingCustomFilterBuilder exten
     final String label
   ) {
     final PropertyValue propertyValue = PropertyValue.find(rule.getPropertyName());
-    return propertyValue.getCondition(rule.getRelationalOperator().getOperador(), label) + " ";
+    return propertyValue.getCondition(
+      rule.getRelationalOperator().getOperador(),
+      label
+    ) + " ";
   }
 
   @Override
   protected void buildOrderingAndDirectionClause(
     final CustomFilter filter,
+    final Map<String, Object> params,
     final StringBuilder query
   ) {
     // sobrescreve ordenação padrão.
   }
 
   protected enum PropertyValue {
-    NAME("name", "actor", "person") {
+    NAME(
+      "name",
+      "actor",
+      "person"
+    ) {
       @Override
       String getCondition(
         final String operator,
@@ -76,7 +99,14 @@ public abstract class FindStakeholderAndPermissionUsingCustomFilterBuilder exten
       ) {
         return String.format(
           "(%s.%s %s $%s OR %s.%s %s $%s)",
-          this.firstNode, this.property, operator, label, this.secondNode, this.property, operator, label
+          this.firstNode,
+          this.property,
+          operator,
+          label,
+          this.secondNode,
+          this.property,
+          operator,
+          label
         );
       }
 
@@ -84,11 +114,18 @@ public abstract class FindStakeholderAndPermissionUsingCustomFilterBuilder exten
       String getOrdering(final CustomFilter filter) {
         return String.format(
           "ORDER BY %s.%s, %s.%s",
-          this.firstNode, this.property, this.secondNode, this.property
+          this.firstNode,
+          this.property,
+          this.secondNode,
+          this.property
         );
       }
     },
-    FULL_NAME("fullName", "actor", "person") {
+    FULL_NAME(
+      "fullName",
+      "actor",
+      "person"
+    ) {
       @Override
       String getCondition(
         final String operator,
@@ -96,7 +133,14 @@ public abstract class FindStakeholderAndPermissionUsingCustomFilterBuilder exten
       ) {
         return String.format(
           "(%s.%s %s $%s OR %s.%s %s $%s)",
-          this.firstNode, this.property, operator, label, this.secondNode, this.property, operator, label
+          this.firstNode,
+          this.property,
+          operator,
+          label,
+          this.secondNode,
+          this.property,
+          operator,
+          label
         );
       }
 
@@ -104,11 +148,18 @@ public abstract class FindStakeholderAndPermissionUsingCustomFilterBuilder exten
       String getOrdering(final CustomFilter filter) {
         return String.format(
           "ORDER BY %s.%s, %s.%s",
-          this.firstNode, this.property, this.secondNode, this.property
+          this.firstNode,
+          this.property,
+          this.secondNode,
+          this.property
         );
       }
     },
-    SECTOR("sector", "actor", null) {
+    SECTOR(
+      "sector",
+      "actor",
+      null
+    ) {
       @Override
       String getCondition(
         final String operator,
@@ -116,7 +167,10 @@ public abstract class FindStakeholderAndPermissionUsingCustomFilterBuilder exten
       ) {
         return String.format(
           "(%s.%s %s $%s)",
-          this.firstNode, this.property, operator, label
+          this.firstNode,
+          this.property,
+          operator,
+          label
         );
       }
 
@@ -124,11 +178,16 @@ public abstract class FindStakeholderAndPermissionUsingCustomFilterBuilder exten
       String getOrdering(final CustomFilter filter) {
         return String.format(
           "ORDER BY %s.%s",
-          this.firstNode, this.property
+          this.firstNode,
+          this.property
         );
       }
     },
-    ADDRESS("address", "contact", "actor") {
+    ADDRESS(
+      "address",
+      "contact",
+      "actor"
+    ) {
       @Override
       String getCondition(
         final String operator,
@@ -136,7 +195,14 @@ public abstract class FindStakeholderAndPermissionUsingCustomFilterBuilder exten
       ) {
         return String.format(
           "(%s.%s %s $%s OR %s.%s %s $%s)",
-          this.firstNode, this.property, operator, label, this.secondNode, this.property, operator, label
+          this.firstNode,
+          this.property,
+          operator,
+          label,
+          this.secondNode,
+          this.property,
+          operator,
+          label
         );
       }
 
@@ -144,11 +210,18 @@ public abstract class FindStakeholderAndPermissionUsingCustomFilterBuilder exten
       String getOrdering(final CustomFilter filter) {
         return String.format(
           "ORDER BY %s.%s, %s.%s",
-          this.firstNode, this.property, this.secondNode, this.property
+          this.firstNode,
+          this.property,
+          this.secondNode,
+          this.property
         );
       }
     },
-    CONTACT_EMAIL("contactEmail", "contact", "actor") {
+    CONTACT_EMAIL(
+      "contactEmail",
+      "contact",
+      "actor"
+    ) {
       @Override
       String getCondition(
         final String operator,
@@ -156,7 +229,14 @@ public abstract class FindStakeholderAndPermissionUsingCustomFilterBuilder exten
       ) {
         return String.format(
           "(%s.%s %s $%s OR %s.%s %s $%s)",
-          this.firstNode, this.property, operator, label, this.secondNode, this.property, operator, label
+          this.firstNode,
+          this.property,
+          operator,
+          label,
+          this.secondNode,
+          this.property,
+          operator,
+          label
         );
       }
 
@@ -164,11 +244,18 @@ public abstract class FindStakeholderAndPermissionUsingCustomFilterBuilder exten
       String getOrdering(final CustomFilter filter) {
         return String.format(
           "ORDER BY %s.%s, %s.%s",
-          this.firstNode, this.property, this.secondNode, this.property
+          this.firstNode,
+          this.property,
+          this.secondNode,
+          this.property
         );
       }
     },
-    PHONE_NUMBER("phoneNumber", "contact", "actor") {
+    PHONE_NUMBER(
+      "phoneNumber",
+      "contact",
+      "actor"
+    ) {
       @Override
       String getCondition(
         final String operator,
@@ -176,7 +263,14 @@ public abstract class FindStakeholderAndPermissionUsingCustomFilterBuilder exten
       ) {
         return String.format(
           "(%s.%s %s $%s OR %s.%s %s $%s)",
-          this.firstNode, this.property, operator, label, this.secondNode, this.property, operator, label
+          this.firstNode,
+          this.property,
+          operator,
+          label,
+          this.secondNode,
+          this.property,
+          operator,
+          label
         );
       }
 
@@ -184,11 +278,18 @@ public abstract class FindStakeholderAndPermissionUsingCustomFilterBuilder exten
       String getOrdering(final CustomFilter filter) {
         return String.format(
           "ORDER BY %s.%s, %s.%s",
-          this.firstNode, this.property, this.secondNode, this.property
+          this.firstNode,
+          this.property,
+          this.secondNode,
+          this.property
         );
       }
     },
-    ADMINISTRATOR("administrator", "person", "actor") {
+    ADMINISTRATOR(
+      "administrator",
+      "person",
+      "actor"
+    ) {
       @Override
       String getCondition(
         final String operator,
@@ -196,7 +297,14 @@ public abstract class FindStakeholderAndPermissionUsingCustomFilterBuilder exten
       ) {
         return String.format(
           "(%s.%s %s $%s OR %s.%s %s $%s)",
-          this.firstNode, this.property, operator, label, this.secondNode, this.property, operator, label
+          this.firstNode,
+          this.property,
+          operator,
+          label,
+          this.secondNode,
+          this.property,
+          operator,
+          label
         );
       }
 
@@ -204,11 +312,18 @@ public abstract class FindStakeholderAndPermissionUsingCustomFilterBuilder exten
       String getOrdering(final CustomFilter filter) {
         return String.format(
           "ORDER BY %s.%s, %s.%s",
-          this.firstNode, this.property, this.secondNode, this.property
+          this.firstNode,
+          this.property,
+          this.secondNode,
+          this.property
         );
       }
     },
-    LEVEL("level", "canAccessWorkpack", null) {
+    LEVEL(
+      "level",
+      "canAccessWorkpack",
+      null
+    ) {
       @Override
       String getCondition(
         final String operator,
@@ -216,7 +331,10 @@ public abstract class FindStakeholderAndPermissionUsingCustomFilterBuilder exten
       ) {
         return String.format(
           "(%s.%s %s $%s)",
-          this.firstNode, this.property, operator, label
+          this.firstNode,
+          this.property,
+          operator,
+          label
         );
       }
 
@@ -224,11 +342,16 @@ public abstract class FindStakeholderAndPermissionUsingCustomFilterBuilder exten
       String getOrdering(final CustomFilter filter) {
         return String.format(
           "ORDER BY %s.%s",
-          this.firstNode, this.property
+          this.firstNode,
+          this.property
         );
       }
     },
-    ROLE("role", "isStakeholderIn", null) {
+    ROLE(
+      "role",
+      "isStakeholderIn",
+      null
+    ) {
       @Override
       String getCondition(
         final String operator,
@@ -236,7 +359,10 @@ public abstract class FindStakeholderAndPermissionUsingCustomFilterBuilder exten
       ) {
         return String.format(
           "(toLower(%s.%s) %s toLower($%s))",
-          this.firstNode, this.property, operator, label
+          this.firstNode,
+          this.property,
+          operator,
+          label
         );
       }
 
@@ -244,13 +370,16 @@ public abstract class FindStakeholderAndPermissionUsingCustomFilterBuilder exten
       String getOrdering(final CustomFilter filter) {
         return String.format(
           "ORDER BY %s.%s",
-          this.firstNode, this.property
+          this.firstNode,
+          this.property
         );
       }
     };
 
     protected final String property;
+
     protected final String firstNode;
+
     protected final String secondNode;
 
     PropertyValue(
@@ -264,8 +393,8 @@ public abstract class FindStakeholderAndPermissionUsingCustomFilterBuilder exten
     }
 
     public static PropertyValue find(final String property) {
-      for(final PropertyValue value : PropertyValue.values()) {
-        if(value.property.equals(property)) {
+      for (final PropertyValue value : PropertyValue.values()) {
+        if (value.property.equals(property)) {
           return value;
         }
       }

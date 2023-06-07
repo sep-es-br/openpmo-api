@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.service.workpack;
 
+import br.gov.es.openpmo.configuration.properties.AppProperties;
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.costaccount.CostAccountDto;
 import br.gov.es.openpmo.dto.plan.PlanDto;
@@ -55,14 +56,17 @@ import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static br.gov.es.openpmo.service.workpack.GetPropertyValue.getValueProperty;
 import static br.gov.es.openpmo.utils.ApplicationMessage.*;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.*;
 import static java.lang.Boolean.TRUE;
@@ -120,6 +124,8 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
 
   private final MilestoneRepository milestoneRepository;
 
+  private final AppProperties appProperties;
+
   @Autowired
   public WorkpackService(
     final WorkpackModelService workpackModelService,
@@ -140,7 +146,8 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final WorkpackSorter workpackSorter,
     final IAsyncDashboardService dashboardService,
     final HasScheduleSessionActive hasScheduleSessionActive,
-    final MilestoneRepository milestoneRepository
+    final MilestoneRepository milestoneRepository,
+    final AppProperties appProperties
   ) {
     this.workpackModelService = workpackModelService;
     this.planService = planService;
@@ -161,6 +168,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     this.dashboardService = dashboardService;
     this.hasScheduleSessionActive = hasScheduleSessionActive;
     this.milestoneRepository = milestoneRepository;
+    this.appProperties = appProperties;
   }
 
   private static void addSharedWith(
@@ -414,49 +422,43 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final Long idWorkpackModel,
     final Long idWorkpackParent,
     final Long idFilter,
+    final String term,
     final boolean workpackLinked
   ) {
 
     if (idFilter == null) {
-      return this.findAllUsingParent(
+      final List<Workpack> workpacks = this.findAllUsingParent(
         idPlan,
         idWorkpackModel,
         idWorkpackParent,
+        term,
         workpackLinked
       );
+      if (!StringUtils.hasText(term) && Objects.nonNull(idWorkpackModel)) {
+        this.sortByWorkpackModel(idWorkpackModel, workpacks);
+      }
+      return workpacks;
     }
 
     final CustomFilter filter = this.findCustomFilterById(idFilter);
 
     final Map<String, Object> params = new HashMap<>();
-    params.put(
-      "idPlan",
-      idPlan
-    );
-    params.put(
-      "idPlanModel",
-      idPlanModel
-    );
-    params.put(
-      "idWorkPackModel",
-      idWorkpackModel
-    );
-    params.put(
-      "idWorkPackParent",
-      idWorkpackParent
-    );
+    params.put("idPlan", idPlan);
+    params.put("idPlanModel", idPlanModel);
+    params.put("idWorkPackModel", idWorkpackModel);
+    params.put("idWorkPackParent", idWorkpackParent);
+    params.put("term", term);
+    params.put("searchCutOffScore", this.appProperties.getSearchCutOffScore());
 
-    final List<Workpack> workpacks = this.findAllWorkpackByParent.execute(
-      filter,
-      params
-    );
+    final List<Workpack> workpacks = this.findAllWorkpackByParent.execute(filter, params);
 
     return this.workpackSorter.sort(new WorkpackSorter.WorkpackSorterRequest(
       idPlan,
       idPlanModel,
       idWorkpackModel,
       idFilter,
-      workpacks
+      workpacks,
+      null
     ));
   }
 
@@ -464,20 +466,25 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final Long idPlan,
     final Long idWorkPackModel,
     final Long idWorkPackParent,
+    final String term,
     final boolean workpackLinked
   ) {
     if (workpackLinked) {
       return this.workpackRepository.findAllUsingParentLinked(
         idWorkPackModel,
         idWorkPackParent,
-        idPlan
+        idPlan,
+        term,
+        appProperties.getSearchCutOffScore()
       );
     }
 
     return this.workpackRepository.findAllUsingParent(
       idWorkPackModel,
       idWorkPackParent,
-      idPlan
+      idPlan,
+      term,
+      appProperties.getSearchCutOffScore()
     );
   }
 
@@ -486,7 +493,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
       .orElseThrow(() -> new NegocioException(CUSTOM_FILTER_NOT_FOUND));
   }
 
-  public WorkpackModel getWorkpackModelById(final Long idWorkpackModel) {
+  private WorkpackModel getWorkpackModelById(final Long idWorkpackModel) {
     return this.workpackModelService.findById(idWorkpackModel);
   }
 
@@ -494,13 +501,17 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final Long idPlan,
     final Long idPlanModel,
     final Long idWorkpackModel,
-    final Long idFilter
+    final Long idFilter,
+    final String term
   ) {
+    final Double searchCutOffScore = this.appProperties.getSearchCutOffScore();
     if (idFilter == null) {
       return this.findAll(
         idPlan,
         idPlanModel,
-        idWorkpackModel
+        idWorkpackModel,
+        term,
+        searchCutOffScore
       );
     }
 
@@ -518,6 +529,14 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     params.put(
       "idWorkPackModel",
       idWorkpackModel
+    );
+    params.put(
+      "searchCutOffScore",
+      searchCutOffScore
+    );
+    params.put(
+      "term",
+      term
     );
 
     final List<Workpack> workpacks = this.findAllWorkpack.execute(
@@ -529,20 +548,45 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
       idPlanModel,
       idWorkpackModel,
       idFilter,
-      workpacks
+      workpacks,
+      term
     ));
   }
 
-  public List<Workpack> findAll(
+  private List<Workpack> findAll(
     final Long idPlan,
     final Long idPlanModel,
-    final Long idWorkPackModel
+    final Long idWorkpackModel,
+    final String term,
+    final Double searchCutOffScore
   ) {
-    return this.workpackRepository.findAll(
+    final List<Workpack> workpacks = this.workpackRepository.findAll(
       idPlan,
       idPlanModel,
-      idWorkPackModel
+      idWorkpackModel,
+      term,
+      searchCutOffScore
     );
+    if (!StringUtils.hasText(term) && Objects.nonNull(idWorkpackModel)) {
+      sortByWorkpackModel(idWorkpackModel, workpacks);
+    }
+    return workpacks;
+  }
+
+  private void sortByWorkpackModel(Long idWorkpackModel, List<Workpack> workpacks) {
+    final WorkpackModel workpackModel = this.getWorkpackModelById(idWorkpackModel);
+    if (workpackModel != null && workpackModel.getSortBy() != null) {
+      workpacks.sort((first, second) -> PropertyComparator.compare(
+        getValueProperty(
+          first,
+          workpackModel.getSortBy()
+        ),
+        getValueProperty(
+          second,
+          workpackModel.getSortBy()
+        )
+      ));
+    }
   }
 
   public void saveDefault(final Workpack workpack) {
@@ -1281,7 +1325,20 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
           propertyDto,
           Number.class
         );
-        number.setDriver((NumberModel) propertyModel);
+        final NumberModel numberModel = (NumberModel) propertyModel;
+
+        Optional.ofNullable(number.getValue()).ifPresent(value -> {
+          final double resultingValue = BigDecimal.valueOf(value)
+            .setScale(
+              Optional.ofNullable(numberModel.getPrecision()).orElse(3),
+              RoundingMode.DOWN
+            )
+            .doubleValue();
+          if (value != resultingValue) {
+            throw new NegocioException(VALUE_DOES_NOT_MATCH_PRECISION);
+          }
+        });
+        number.setDriver(numberModel);
         properties.add(number);
         break;
       case "br.gov.es.openpmo.dto.workpack.CurrencyDto":

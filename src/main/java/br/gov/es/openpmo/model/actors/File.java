@@ -6,6 +6,7 @@ import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 import org.springframework.data.annotation.Transient;
 
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,11 +29,27 @@ public class File extends Entity {
   @Relationship("IS_EVIDENCE_OF")
   private JournalEntry journalEntry;
 
+  private Boolean main;
+
+  @Relationship(type = "IS_COMPILATION_OF")
+  private File templateFile;
+
+  @Relationship(type = "IS_COMPILATION_OF", direction = Relationship.INCOMING)
+  private File compiledFile;
+
   public File() {
   }
 
   public Person getPerson() {
     return this.person;
+  }
+
+  public File getCompiledFile() {
+    return compiledFile;
+  }
+
+  public void setCompiledFile(File compiledFile) {
+    this.compiledFile = compiledFile;
   }
 
   public void setPerson(final Person person) {
@@ -77,4 +94,24 @@ public class File extends Entity {
     this.journalEntry = journalEntry;
   }
 
+  public Boolean getMain() {
+    return this.main;
+  }
+
+  public void setMain(final Boolean main) {
+    this.main = main;
+  }
+
+  public File getTemplateFile() {
+    return templateFile;
+  }
+
+  public void setTemplateFile(File templateFile) {
+    this.templateFile = templateFile;
+  }
+
+  @Transient
+  public Boolean hasCompiledFile() {
+    return Objects.nonNull(this.compiledFile);
+  }
 }

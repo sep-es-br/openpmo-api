@@ -5,6 +5,7 @@ import br.gov.es.openpmo.model.relations.IsStakeholderIn;
 import org.springframework.data.neo4j.annotation.QueryResult;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -12,6 +13,7 @@ import java.util.Set;
 public class StakeholderAndPermissionQuery {
 
   private final Set<IsStakeholderIn> stakeholderIn;
+
   private final Set<CanAccessWorkpack> workpackPermissions;
 
   public StakeholderAndPermissionQuery(
@@ -23,11 +25,11 @@ public class StakeholderAndPermissionQuery {
   }
 
   public Set<IsStakeholderIn> getStakeholderIn() {
-    return this.stakeholderIn;
+    return Collections.unmodifiableSet(this.stakeholderIn);
   }
 
   public Set<CanAccessWorkpack> getWorkpackPermissions() {
-    return this.workpackPermissions;
+    return Collections.unmodifiableSet(this.workpackPermissions);
   }
 
 }

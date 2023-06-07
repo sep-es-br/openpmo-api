@@ -1,21 +1,29 @@
 package br.gov.es.openpmo.dto.costaccount;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.math.BigDecimal;
 
 public class CostDto {
 
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   private Long idWorkpack;
+
   private BigDecimal planed;
-  private BigDecimal atual;
+
+  private BigDecimal actual;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private BigDecimal limit;
 
   public CostDto(
     final Long idWorkpack,
     final BigDecimal planed,
-    final BigDecimal atual
+    final BigDecimal actual
   ) {
     this.idWorkpack = idWorkpack;
     this.planed = planed;
-    this.atual = atual;
+    this.actual = actual;
   }
 
   public Long getIdWorkpack() {
@@ -34,12 +42,20 @@ public class CostDto {
     this.planed = planed;
   }
 
-  public BigDecimal getAtual() {
-    return this.atual;
+  public BigDecimal getActual() {
+    return this.actual;
   }
 
-  public void setAtual(final BigDecimal atual) {
-    this.atual = atual;
+  public void setActual(final BigDecimal actual) {
+    this.actual = actual;
+  }
+
+  public BigDecimal getLimit() {
+    return limit;
+  }
+
+  public void setLimit(BigDecimal limit) {
+    this.limit = limit;
   }
 
 }

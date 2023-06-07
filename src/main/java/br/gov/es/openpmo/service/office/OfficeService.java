@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.service.office;
 
+import br.gov.es.openpmo.configuration.properties.AppProperties;
 import br.gov.es.openpmo.dto.office.OfficeDto;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
@@ -13,6 +14,8 @@ import br.gov.es.openpmo.repository.OfficePermissionRepository;
 import br.gov.es.openpmo.repository.OfficeRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllOfficeUsingCustomFilter;
 import br.gov.es.openpmo.service.actors.PersonService;
+
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +24,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Spliterator;
@@ -39,33 +43,49 @@ public class OfficeService {
   private final OfficePermissionRepository officePermissionRepository;
   private final CustomFilterRepository customFilterRepository;
   private final FindAllOfficeUsingCustomFilter findAllOffice;
-
+  private final AppProperties appProperties;
+  
   @Autowired
   public OfficeService(
     final OfficeRepository officeRepository,
     final PersonService personService,
     final OfficePermissionRepository officePermissionRepository,
     final CustomFilterRepository customFilterRepository,
-    final FindAllOfficeUsingCustomFilter findAllOffice
+    final FindAllOfficeUsingCustomFilter findAllOffice,
+    final AppProperties appProperties
   ) {
     this.officeRepository = officeRepository;
     this.personService = personService;
     this.officePermissionRepository = officePermissionRepository;
     this.customFilterRepository = customFilterRepository;
     this.findAllOffice = findAllOffice;
+    this.appProperties = appProperties; 
   }
 
-  public List<Office> findAll(final Long idFilter) {
+  public List<Office> findAll(final Long idFilter, final String term) {
 
     if(idFilter == null) {
-      return this.findAll();
+    	if (StringUtils.isBlank(term)) return this.findAll();
+    	else return findByNameOrFullName(term);
     }
 
     final CustomFilter filter = this.customFilterRepository
       .findById(idFilter)
       .orElseThrow(() -> new NegocioException(CUSTOM_FILTER_NOT_FOUND));
-    return this.findAllOffice.execute(filter, new HashMap<>());
+    Map<String, Object> map = new HashMap<>();
+    map.put("term", term);
+    map.put("searchCutOffScore", appProperties.getSearchCutOffScore());
+    if (StringUtils.isNotBlank(term)) {
+    	filter.setSimilarityFilter(true);
+    }
+    return this.findAllOffice.execute(filter, map);
   }
+  
+	public List<Office> findByNameOrFullName(String name) {
+		List<Office> offices = this.officeRepository.findAllOfficeByNameOrFullName(name,
+				appProperties.getSearchCutOffScore());
+		return offices;
+	}
 
   public List<Office> findAll() {
     final List<Office> offices = new ArrayList<>();

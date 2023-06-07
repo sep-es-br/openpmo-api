@@ -40,7 +40,7 @@ public interface WorkpackPermissionRepository extends Neo4jRepository<CanAccessW
   @Query("MATCH (person:Person)-[permission:CAN_ACCESS_WORKPACK]->(workpack:Workpack) " +
          "WHERE id(person)=$idPerson " +
          "RETURN person, permission, workpack")
-  Set<CanAccessWorkpack> findAllPermissionsOfPerson(Long idPerson);
+  Set<CanAccessWorkpack> findAllPermissionsOfPerson(@Param("idPerson") Long idPerson);
 
 
 }

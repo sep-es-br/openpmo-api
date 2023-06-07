@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 @JsonTypeInfo(use = Id.NAME, property = "type")
@@ -70,6 +71,8 @@ public class WorkpackModel extends Entity {
   private Boolean journalManagementSessionActive;
 
   private Boolean dashboardSessionActive;
+
+  private Long position;
 
   @Relationship(type = "IS_SORTED_BY")
   private PropertyModel sortBy;
@@ -388,6 +391,7 @@ public class WorkpackModel extends Entity {
     this.dashboardShowMilestones = workpackModel.dashboardShowMilestones;
     this.dashboardShowStakeholders = workpackModel.dashboardShowStakeholders;
     this.dashboardSessionActive = workpackModel.dashboardSessionActive;
+    this.position = workpackModel.position;
   }
 
   public Boolean getDashboardSessionActive() {
@@ -396,6 +400,14 @@ public class WorkpackModel extends Entity {
 
   public void setDashboardSessionActive(final Boolean dashboardSessionActive) {
     this.dashboardSessionActive = dashboardSessionActive;
+  }
+
+  public Long getPosition() {
+    return this.position;
+  }
+
+  public void setPosition(final Long position) {
+    this.position = position;
   }
 
   @Transient
@@ -419,6 +431,17 @@ public class WorkpackModel extends Entity {
     Objects.requireNonNull(sortBy);
     if (Objects.isNull(this.sortBy)) return true;
     return !this.sortBy.getId().equals(sortBy.getId());
+  }
+
+  @Transient
+  public boolean isOrganizationRole(final String role) {
+    return this.organizationRoles.contains(role);
+  }
+
+  @Transient
+  public Long getPositionOrElseZero() {
+    return Optional.ofNullable(this.position)
+      .orElse(0L);
   }
 
 }

@@ -36,12 +36,13 @@ public class FindAllProcessUsingCustomFilter extends FindAllUsingCustomFilterBui
     final CustomFilter filter,
     final StringBuilder query
   ) {
-    query.append("WHERE id(workpack)=$idWorkpack\n");
+    query.append("WITH *, apoc.text.levenshteinSimilarity(apoc.text.clean(").append(this.nodeName).append(".name + ").append(this.nodeName).append(".subject), apoc.text.clean($term)) as score ")
+      .append("WHERE id(workpack)=$idWorkpack AND ($term is null OR $term = '' OR score > $searchCutOffScore) ");
   }
 
   @Override
   protected void buildReturnClause(final StringBuilder query) {
-    query.append("RETURN ").append(this.nodeName).append("\n");
+    query.append("\n").append("RETURN ").append(this.nodeName).append(", isReportedFor, workpack ").append("\n");
   }
 
 
@@ -58,7 +59,9 @@ public class FindAllProcessUsingCustomFilter extends FindAllUsingCustomFilterBui
   @Override
   protected String[] getDefinedExternalParams() {
     return new String[]{
-      "idWorkpack"
+      "idWorkpack",
+      "term",
+      "searchCutOffScore"
     };
   }
 

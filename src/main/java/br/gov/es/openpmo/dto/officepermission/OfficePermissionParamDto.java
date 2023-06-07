@@ -2,6 +2,8 @@ package br.gov.es.openpmo.dto.officepermission;
 
 import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.dto.person.PersonDto;
+import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -45,6 +47,17 @@ public class OfficePermissionParamDto {
 
   public void setPermissions(final List<PermissionDto> permissions) {
     this.permissions = permissions;
+  }
+
+  @JsonIgnore
+  public PermissionLevelEnum getGratherPermissionLevel() {
+    if (this.hasEdit()) return PermissionLevelEnum.EDIT;
+    return PermissionLevelEnum.READ;
+  }
+
+  @JsonIgnore
+  private boolean hasEdit() {
+    return this.permissions.stream().map(PermissionDto::getLevel).anyMatch(level -> level.equals(PermissionLevelEnum.EDIT));
   }
 
 }

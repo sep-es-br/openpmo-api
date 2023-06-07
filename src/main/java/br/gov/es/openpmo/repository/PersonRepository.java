@@ -258,7 +258,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
          "WITH person, isAuthenticatedBy, authService, isInContactBookOf, office, isPortraitOf, avatar " +
          "WHERE isAuthenticatedBy.key=$key " +
          "RETURN person, isAuthenticatedBy, authService, isInContactBookOf, office, isPortraitOf, avatar")
-  Optional<Person> findByKey(String key);
+  Optional<Person> findByKey(@Param("key") String key);
 
   @Query("MATCH (person:Person)<-[:IS_FAVORITED_BY]-(workpack:Workpack) " +
          "MATCH (workpack)-[instanceBy:IS_INSTANCE_BY]->(workpackModel:WorkpackModel) " +

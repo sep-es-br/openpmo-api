@@ -59,10 +59,11 @@ public class LocalityController {
   public ResponseEntity<ResponseBase<List<LocalityDto>>> indexBaseFirstLevel(
       @RequestParam("id-domain") final Long idDomain,
       @RequestParam(required = false) final Long idFilter,
+      @RequestParam(required = false) final String term,
       @Authorization final String authorization) {
 
     this.canAccessService.ensureCanReadResource(idDomain, authorization);
-    final List<LocalityDto> localities = this.localityService.findAllFirstLevel(idDomain, idFilter)
+    final List<LocalityDto> localities = this.localityService.findAllFirstLevel(idDomain, idFilter, term)
         .stream()
         .map(o -> this.modelMapper.map(o, LocalityDto.class))
         .collect(Collectors.toList());
@@ -91,11 +92,12 @@ public class LocalityController {
   public ResponseEntity<ResponseBase<LocalityDetailDto>> findById(
       @PathVariable final Long id,
       @RequestParam(required = false) final Long idFilter,
+      @RequestParam(required = false) final String term,
       @Authorization final String authorization) {
 
     this.canAccessService.ensureCanReadResource(id, authorization);
     final LocalityDetailDto localityDto = this.modelMapper.map(
-        this.localityService.findById(id, idFilter),
+        this.localityService.findById(id, idFilter, term),
         LocalityDetailDto.class);
 
     final ResponseBase<LocalityDetailDto> response = new ResponseBase<LocalityDetailDto>()

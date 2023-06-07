@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.annotations.ApiModel;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
@@ -36,6 +37,8 @@ public abstract class WorkpackModelDto {
 
   private PropertyModelDto sortBy;
 
+  private Long position;
+
 
   public static <TYPE extends WorkpackModelDto> WorkpackModelDto of(
     final WorkpackModel workpackModel,
@@ -46,6 +49,7 @@ public abstract class WorkpackModelDto {
     instance.setModelNameInPlural(workpackModel.getModelNameInPlural());
     instance.setModelName(workpackModel.getModelName());
     instance.setFontIcon(workpackModel.getFontIcon());
+    instance.setPosition(workpackModel.getPosition());
     return instance;
   }
 
@@ -96,6 +100,20 @@ public abstract class WorkpackModelDto {
 
   public void setSortBy(final PropertyModelDto sortBy) {
     this.sortBy = sortBy;
+  }
+
+  public Long getPosition() {
+    return this.position;
+  }
+
+  public void setPosition(final Long position) {
+    this.position = position;
+  }
+
+  @JsonIgnore
+  public Long getPositionOrElseZero() {
+    return Optional.ofNullable(this.position)
+      .orElse(0L);
   }
 
 }

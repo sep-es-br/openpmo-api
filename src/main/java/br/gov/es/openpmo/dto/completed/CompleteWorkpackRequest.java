@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDate;
 
-public class CompleteDeliverableRequest {
+public class CompleteWorkpackRequest {
 
   private final Boolean completed;
 
@@ -13,7 +13,7 @@ public class CompleteDeliverableRequest {
   private final LocalDate date;
 
   @JsonCreator
-  public CompleteDeliverableRequest(
+  public CompleteWorkpackRequest(
     final Boolean completed,
     final LocalDate date
   ) {

@@ -1,6 +1,5 @@
 package br.gov.es.openpmo.repository.custom.filters;
 
-
 import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.repository.LocalityRepository;
 import br.gov.es.openpmo.repository.custom.FindAllUsingCustomFilterBuilder;
@@ -29,11 +28,15 @@ public class FindAllLocalityUsingCustomFilter extends FindAllUsingCustomFilterBu
     final StringBuilder query
   ) {
     query.append("MATCH (domain:Domain)<-[:IS_ROOT_OF]-(")
-      .append("root:Locality)")
-      .append("\n")
+      .append("root:Locality) ")
       .append("MATCH (root)<-[:IS_IN]-(")
       .append(this.nodeName)
-      .append(":Locality)-[:BELONGS_TO]->(domain)\n");
+      .append(":Locality)-[:BELONGS_TO]->(domain) ")
+      .append("WITH *, apoc.text.levenshteinSimilarity(apoc.text.clean(")
+      .append(this.nodeName)
+      .append(".name + ")
+      .append(this.nodeName)
+      .append(".fullName), apoc.text.clean($term)) AS score ");
   }
 
   @Override
@@ -41,8 +44,8 @@ public class FindAllLocalityUsingCustomFilter extends FindAllUsingCustomFilterBu
     final CustomFilter filter,
     final StringBuilder query
   ) {
-    query.append("WHERE id(domain)=$idDomain")
-      .append(" ");
+    query.append("WHERE id(domain)=$idDomain ")
+      .append("AND ($term is null OR $term = '' OR score > $searchCutOffScore) ");
   }
 
   @Override
@@ -68,7 +71,11 @@ public class FindAllLocalityUsingCustomFilter extends FindAllUsingCustomFilterBu
 
   @Override
   public String[] getDefinedExternalParams() {
-    return new String[]{"idDomain"};
+    return new String[]{
+      "idDomain",
+      "term",
+      "searchCutOffScore"
+    };
   }
 
 }

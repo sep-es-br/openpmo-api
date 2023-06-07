@@ -8,6 +8,8 @@ import org.neo4j.ogm.session.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Service
 public class FindAllDomainUsingCustomFilter extends FindAllUsingCustomFilterBuilder {
 
@@ -38,12 +40,18 @@ public class FindAllDomainUsingCustomFilter extends FindAllUsingCustomFilterBuil
     final StringBuilder query
   ) {
     query.append("WHERE ( ID(o) = $idOffice OR $idOffice IS NULL ) ");
+    query.append("OPTIONAL MATCH (").append(this.nodeName).append(")<-[bt:BELONGS_TO]-(l:Locality) ");
+    String complementWITH = ", bt, l ";
+    buildFilterBySimilarity(filter, query, complementWITH);
+    if (!filter.isSimilarityFilter() && filter.getRules() != null && !filter.getRules().isEmpty()) {
+    	if (hasAppendedBooleanBlock()) query.append(" WHERE TRUE ");
+    	else  query.append(" WHERE ");
+    }
   }
 
   @Override
   public void buildReturnClause(final StringBuilder query) {
-    query.append("OPTIONAL MATCH (").append(this.nodeName).append(")<-[bt:BELONGS_TO]-(l:Locality) ")
-      .append("RETURN ").append(this.nodeName).append(", bt, l, [")
+    query.append("RETURN ").append(this.nodeName).append(", bt, l, [")
       .append("[ (").append(this.nodeName).append(")-[apl:APPLIES_TO]->(o:Office) | [apl, o] ], ")
       .append("[ (").append(this.nodeName).append(
         ")-[isRootOf:IS_ROOT_OF]->(root:Locality) | [isRootOf, root] ], ")
@@ -65,12 +73,15 @@ public class FindAllDomainUsingCustomFilter extends FindAllUsingCustomFilterBuil
   @Override
   public void buildOrderingAndDirectionClause(
     final CustomFilter filter,
+    Map<String, Object> params,
     final StringBuilder query
   ) {
+	if (filter.getSortBy() != null || filter.isSimilarityFilter()) query.append(" ").append("ORDER BY ");
+	buildOrderingBySimilarity(filter, query);
+	if (filter.getSortBy() != null && filter.isSimilarityFilter()) query.append(", ");
     this.appendStringIfTrue(
       filter.getSortBy() != null,
-      builder -> builder.append(" ").append("ORDER BY ")
-        .append(this.nodeName).append(".")
+      builder -> builder.append(this.nodeName).append(".")
         .append(filter.getSortBy())
         .append(" ").append(filter.getDirection()),
       query

@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.dto.workpack.breakdown.structure;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
 import java.util.List;
@@ -14,6 +15,9 @@ public class WorkpackBreakdownStructure {
 
   @JsonIgnore
   private Comparable order;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private Boolean hasChildren;
 
   public WorkpackRepresentation getRepresentation() {
     return representation;
@@ -39,4 +43,11 @@ public class WorkpackBreakdownStructure {
     this.order = order;
   }
 
+  public Boolean getHasChildren() {
+    return hasChildren;
+  }
+
+  public void setHasChildren(Boolean hasChildren) {
+    this.hasChildren = hasChildren;
+  }
 }

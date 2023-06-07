@@ -7,6 +7,7 @@ import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -79,5 +80,15 @@ public interface CostAccountRepository extends Neo4jRepository<CostAccount, Long
          "WHERE id(workpack)=$idWorkpack " +
          "RETURN costAccount")
   List<CostAccount> findAllByWorkpackId(Long idWorkpack);
+
+  @Query("MATCH (c:CostAccount)<-[:FEATURES]-(name:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name', session: 'COST'}) " +
+         "WHERE id(c)=$idCostAccount " +
+         "RETURN name.value")
+  String findCostAccountNameById(Long idCostAccount);
+
+  @Query("match (c:CostAccount)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel) " +
+         "where id(c)=$id and toLower(pm.name) = 'limit' " +
+         "return p.value")
+  BigDecimal findCostAccountLimitById(Long id);
 
 }

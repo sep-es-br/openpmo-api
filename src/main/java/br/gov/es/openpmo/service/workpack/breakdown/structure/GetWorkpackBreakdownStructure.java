@@ -10,11 +10,7 @@ import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Component
 public class GetWorkpackBreakdownStructure {
@@ -24,46 +20,68 @@ public class GetWorkpackBreakdownStructure {
   private final WorkpackRepository workpackRepository;
 
   public GetWorkpackBreakdownStructure(
-    GetWorkpackRepresentation getWorkpackRepresentation,
-    WorkpackRepository workpackRepository
+    final GetWorkpackRepresentation getWorkpackRepresentation,
+    final WorkpackRepository workpackRepository
   ) {
     this.getWorkpackRepresentation = getWorkpackRepresentation;
     this.workpackRepository = workpackRepository;
   }
 
-  public WorkpackBreakdownStructure execute(Long idWorkpack) {
+  private static Set<Workpack> getWorkpacks(
+    final Workpack parent,
+    final WorkpackModel child
+  ) {
+    final Set<Workpack> childWorkpacks = child.getWorkpacks();
+    if (childWorkpacks == null) {
+      return new HashSet<>();
+    }
+    final Set<Workpack> workpacks = new HashSet<>();
+    for (final Workpack workpack : childWorkpacks) {
+      if (parent.containsChild(workpack)) {
+        workpacks.add(workpack);
+      }
+    }
+    return workpacks;
+  }
+
+  public WorkpackBreakdownStructure execute(
+    final Long idWorkpack,
+    final Boolean allLevels
+  ) {
     if (idWorkpack == null) {
       throw new IllegalStateException("Id do workpack nulo!");
     }
-    Workpack workpack = workpackRepository.findWorkpackWithModelStructureById(idWorkpack)
+    final Workpack workpack = this.workpackRepository.findWorkpackWithModelStructureById(idWorkpack)
       .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
     final WorkpackModel model = workpack.getWorkpackModelInstance();
     final WorkpackBreakdownStructure rootStructure = new WorkpackBreakdownStructure();
     if (model == null) {
       return null;
     }
-    final List<WorkpackModelBreakdownStructure> children = getChildren(
+    final List<WorkpackModelBreakdownStructure> children = this.getChildren(
       workpack,
-      model
+      model,
+      allLevels
     );
     if (children.isEmpty()) {
       return null;
     }
     rootStructure.setWorkpackModels(children);
-    rootStructure.setRepresentation(getWorkpackRepresentation.execute(workpack));
+    rootStructure.setRepresentation(this.getWorkpackRepresentation.execute(workpack));
     return rootStructure;
   }
 
   private List<WorkpackModelBreakdownStructure> getChildren(
-    Workpack parent,
-    WorkpackModel model
+    final Workpack parent,
+    final WorkpackModel model,
+    final Boolean allLevels
   ) {
     final Set<WorkpackModel> modelChildren = model.getChildren();
     if (modelChildren == null) {
       return new ArrayList<>();
     }
-    List<WorkpackModelBreakdownStructure> structures = new ArrayList<>();
-    for (WorkpackModel child : modelChildren) {
+    final List<WorkpackModelBreakdownStructure> structures = new ArrayList<>();
+    for (final WorkpackModel child : modelChildren) {
       final Set<Workpack> workpacks = getWorkpacks(
         parent,
         child
@@ -76,50 +94,49 @@ public class GetWorkpackBreakdownStructure {
       summary.setIdWorkpackModel(child.getId());
       summary.setWorkpackModelName(child.getModelNameInPlural());
       summary.setWorkpackModelType(child.getType());
+      summary.setWorkpackModelPosition(child.getPosition());
       workpackModelBreakdownStructure.setRepresentation(summary);
       final List<WorkpackBreakdownStructure> workpackBreakdownStructures = new ArrayList<>();
-      for (Workpack workpack : workpacks) {
-        final WorkpackBreakdownStructure structure = getStructure(
+      for (final Workpack workpack : workpacks) {
+        final WorkpackBreakdownStructure structure = this.getStructure(
           workpack,
-          child
+          child,
+          allLevels
         );
         workpackBreakdownStructures.add(structure);
       }
-      workpackBreakdownStructures.sort(Comparator.comparing(WorkpackBreakdownStructure::getOrder, Comparator.nullsLast(Comparator.naturalOrder())));
+      workpackBreakdownStructures.sort(Comparator.comparing(
+        WorkpackBreakdownStructure::getOrder,
+        Comparator.nullsLast(Comparator.naturalOrder())
+      ));
       workpackModelBreakdownStructure.setWorkpacks(workpackBreakdownStructures);
       structures.add(workpackModelBreakdownStructure);
     }
-    structures.sort(Comparator.comparing(WorkpackModelBreakdownStructure::getName, Comparator.nullsLast(Comparator.naturalOrder())));
+    structures.sort(Comparator.comparing(WorkpackModelBreakdownStructure::getRepresentationPosition)
+      .thenComparing(
+        WorkpackModelBreakdownStructure::getName,
+        Comparator.nullsLast(Comparator.naturalOrder())
+      ));
     return structures;
   }
 
-  private static Set<Workpack> getWorkpacks(
-    Workpack parent,
-    WorkpackModel child
-  ) {
-    final Set<Workpack> childWorkpacks = child.getWorkpacks();
-    if (childWorkpacks == null) {
-      return new HashSet<>();
-    }
-    Set<Workpack> workpacks = new HashSet<>();
-    for (Workpack workpack : childWorkpacks) {
-      if (parent.containsChild(workpack)) {
-        workpacks.add(workpack);
-      }
-    }
-    return workpacks;
-  }
-
   private WorkpackBreakdownStructure getStructure(
-    Workpack workpack,
-    WorkpackModel child
+    final Workpack workpack,
+    final WorkpackModel child,
+    final Boolean allLevels
   ) {
     final WorkpackBreakdownStructure structure = new WorkpackBreakdownStructure();
     structure.setOrder(workpack.getOrder());
-    structure.setRepresentation(getWorkpackRepresentation.execute(workpack));
-    final List<WorkpackModelBreakdownStructure> children = getChildren(
+    structure.setRepresentation(this.getWorkpackRepresentation.execute(workpack));
+    if (!allLevels) {
+      structure.setHasChildren(workpack.hasChildren());
+      structure.setWorkpackModels(Collections.emptyList());
+      return structure;
+    }
+    final List<WorkpackModelBreakdownStructure> children = this.getChildren(
       workpack,
-      child
+      child,
+      true
     );
     structure.setWorkpackModels(children);
     return structure;

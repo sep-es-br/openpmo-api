@@ -12,23 +12,38 @@ import java.util.List;
 public class BaselineDetailCCBMemberResponse {
 
   private final Long id;
+
   private final Long idWorkpack;
+
   private final String projectName;
+
+  private final String projectFullName;
+
   private final String description;
+
   private final String message;
+
   private final String proposer;
+
   private final Status status;
+
   private final String name;
+
   private final Boolean cancelation;
+
   private final List<EvaluationItem> evaluations = new ArrayList<>();
+
   private BaselineCostDetail cost;
+
   private BaselineScheduleDetail schedule;
+
   private BaselineScopeDetail scope;
 
   public BaselineDetailCCBMemberResponse(
     final Long id,
     final Long idWorkpack,
     final String projectName,
+    final String projectFullName,
     final String description,
     final String message,
     final String proposer,
@@ -39,6 +54,7 @@ public class BaselineDetailCCBMemberResponse {
     this.id = id;
     this.idWorkpack = idWorkpack;
     this.projectName = projectName;
+    this.projectFullName = projectFullName;
     this.description = description;
     this.message = message;
     this.proposer = proposer;
@@ -50,13 +66,15 @@ public class BaselineDetailCCBMemberResponse {
   public static BaselineDetailCCBMemberResponse of(
     final Baseline baseline,
     final String name,
+    final String fullName,
     final TripleConstraintOutput output,
-    final List<? extends EvaluationItem> evaluations
+    final Collection<? extends EvaluationItem> evaluations
   ) {
     final BaselineDetailCCBMemberResponse response = new BaselineDetailCCBMemberResponse(
       baseline.getId(),
       baseline.getIdWorkpack(),
       name,
+      fullName,
       baseline.getDescription(),
       baseline.getMessage(),
       baseline.getFormattedRole(),
@@ -64,7 +82,7 @@ public class BaselineDetailCCBMemberResponse {
       baseline.getName(),
       baseline.isCancelation()
     );
-    if(output != null) {
+    if (output != null) {
       response.schedule = output.getScheduleDetail();
       response.cost = output.getCostDetail();
       response.scope = output.getScopeDetail();
@@ -92,6 +110,10 @@ public class BaselineDetailCCBMemberResponse {
 
   public String getProjectName() {
     return this.projectName;
+  }
+
+  public String getProjectFullName() {
+    return projectFullName;
   }
 
   public String getDescription() {

@@ -2,13 +2,13 @@ package br.gov.es.openpmo.model.risk.response;
 
 public enum Strategy {
 
-  AVOIDANCE_ELIMINATION,
+  MITIGATE,
   TRANSFER,
-  MITIGATION,
-  ACCEPTANCE,
+  ACCEPT,
+  ELIMINATE,
+  SCALE,
   EXPLOIT,
   ENHANCE,
-  SHARE,
-  ACCEPT
+  SHARE
 
 }

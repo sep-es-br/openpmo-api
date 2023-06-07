@@ -15,9 +15,16 @@ public interface RiskRepository extends Neo4jRepository<Risk, Long>, CustomRepos
   @Query("match (w:Workpack{deleted:false,canceled:false}) " +
          "where id(w)=$workpackId " +
          "optional match (w)<-[:IS_FORSEEN_ON]-(r:Risk) " +
-         "with w,r " +
-         "return r")
-  Set<Risk> findAll(Long workpackId);
+         "with *, apoc.text.levenshteinSimilarity(apoc.text.clean(r.name), apoc.text.clean($term)) AS score " +
+         "where ($term is null OR $term = '' OR score > $searchCutOffScore) " +
+         "return r " +
+         "order by score desc"
+  )
+  Set<Risk> findAll(
+    Long workpackId,
+    String term,
+    Double searchCutOffScore
+  );
 
   @Query("match (risk:Risk)<-[triggeredBy:IS_TRIGGERED_BY]-(:Issue) " +
          "where id(risk)=$riskId " +

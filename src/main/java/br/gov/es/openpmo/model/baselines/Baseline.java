@@ -162,13 +162,21 @@ public class Baseline extends Entity {
     this.baselinedBy = baselinedBy;
   }
 
+  public Set<IsEvaluatedBy> getEvaluations() {
+    return evaluations;
+  }
+
+  public void setEvaluations(Set<IsEvaluatedBy> evaluations) {
+    this.evaluations = evaluations;
+  }
+
   @Transient
   public Long getIdWorkpack() {
     return Optional.ofNullable(this.baselinedBy).map(IsBaselinedBy::getIdWorkpack).orElse(null);
   }
 
   public Baseline ifIsNotDraftThrowsException() {
-    if(this.isDraft()) {
+    if (this.isDraft()) {
       return this;
     }
     throw new NegocioException(BASELINE_IS_NOT_DRAFT_INVALID_STATE_ERROR);

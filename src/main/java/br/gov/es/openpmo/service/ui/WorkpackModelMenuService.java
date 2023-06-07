@@ -36,7 +36,7 @@ public class WorkpackModelMenuService {
     final List<PlanModelMenuResponse> planModelMenuResponses = new ArrayList<>();
     final List<PlanModel> planModels = this.officeRepository.findAllPlanModelsByOfficeId(idOffice);
 
-    for(final PlanModel planModel : planModels) {
+    for (final PlanModel planModel : planModels) {
       final PlanModelMenuResponse planModelMenuResponse = new PlanModelMenuResponse();
 
       planModelMenuResponse.setId(planModel.getId());
@@ -48,13 +48,14 @@ public class WorkpackModelMenuService {
 
       final Collection<WorkpackModelMenuResponse> workpackModelMenuResponses = new HashSet<>();
 
-      for(final WorkpackModel workpackModel : workpackModels) {
+      for (final WorkpackModel workpackModel : workpackModels) {
         final WorkpackModelMenuResponse response = this.getResponse(planModel, workpackModel);
         workpackModelMenuResponses.add(response);
       }
 
       final Set<WorkpackModelMenuResponse> sortedWorkpackModels = workpackModelMenuResponses.stream()
-        .sorted(Comparator.comparing(WorkpackModelMenuResponse::getName))
+        .sorted(Comparator.comparing(WorkpackModelMenuResponse::getPositionOrElseZero)
+                  .thenComparing(WorkpackModelMenuResponse::getName))
         .collect(Collectors.toCollection(LinkedHashSet::new));
       planModelMenuResponse.setWorkpackModels(sortedWorkpackModels);
       planModelMenuResponses.add(planModelMenuResponse);
@@ -76,20 +77,22 @@ public class WorkpackModelMenuService {
     item.setName(workpackModel.getModelName());
     item.setFontIcon(workpackModel.getFontIcon());
     item.setType(workpackModel.getType());
+    item.setPosition(workpackModel.getPosition());
 
     final Set<WorkpackModelMenuResponse> children = new HashSet<>();
 
-    if(workpackModel.getChildren() == null) {
+    if (workpackModel.getChildren() == null) {
       item.setChildren(null);
       return item;
     }
 
-    for(final WorkpackModel child : workpackModel.getChildren()) {
+    for (final WorkpackModel child : workpackModel.getChildren()) {
       final WorkpackModelMenuResponse response = this.getResponse(planModel, child);
       children.add(response);
     }
     final Set<WorkpackModelMenuResponse> sortedChildren = children.stream()
-      .sorted(Comparator.comparing(WorkpackModelMenuResponse::getName))
+      .sorted(Comparator.comparing(WorkpackModelMenuResponse::getPositionOrElseZero)
+                .thenComparing(WorkpackModelMenuResponse::getName))
       .collect(Collectors.toCollection(LinkedHashSet::new));
     item.setChildren(sortedChildren);
     return item;

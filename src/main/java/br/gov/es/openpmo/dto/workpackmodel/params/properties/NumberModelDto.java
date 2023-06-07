@@ -8,11 +8,11 @@ public class NumberModelDto extends PropertyModelDto {
   private Double defaultValue;
   private Double min;
   private Double max;
-  private Integer decimals;
+  private Integer precision;
 
   public static NumberModelDto of(final PropertyModel propertyModel) {
     final NumberModelDto instance = (NumberModelDto) PropertyModelDto.of(propertyModel, NumberModelDto::new);
-    instance.setDecimals(((NumberModel) propertyModel).getDecimals());
+    instance.setPrecision(((NumberModel) propertyModel).getPrecision());
     instance.setMin(((NumberModel) propertyModel).getMin());
     instance.setMax(((NumberModel) propertyModel).getMax());
     instance.setDefaultValue(((NumberModel) propertyModel).getDefaultValue());
@@ -44,12 +44,12 @@ public class NumberModelDto extends PropertyModelDto {
     this.max = max;
   }
 
-  public Integer getDecimals() {
-    return this.decimals;
+  public Integer getPrecision() {
+    return this.precision;
   }
 
-  public void setDecimals(final Integer decimals) {
-    this.decimals = decimals;
+  public void setPrecision(final Integer precision) {
+    this.precision = precision;
   }
 
 }

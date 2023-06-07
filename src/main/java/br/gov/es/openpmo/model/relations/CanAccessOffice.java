@@ -10,6 +10,7 @@ import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.Property;
 import org.neo4j.ogm.annotation.RelationshipEntity;
 import org.neo4j.ogm.annotation.StartNode;
+import org.springframework.data.annotation.Transient;
 
 @RelationshipEntity(type = "CAN_ACCESS_OFFICE")
 public class CanAccessOffice implements HasRole {
@@ -94,6 +95,11 @@ public class CanAccessOffice implements HasRole {
 
   public String getOfficeName() {
     return this.office.getName();
+  }
+
+  @Transient
+  public boolean isEdit() {
+    return this.permissionLevel.equals(PermissionLevelEnum.EDIT);
   }
 
 }

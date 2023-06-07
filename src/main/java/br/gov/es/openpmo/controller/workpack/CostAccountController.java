@@ -54,12 +54,15 @@ public class CostAccountController {
   public ResponseEntity<ResponseBaseItens<CostAccountDto>> indexBase(
       @RequestParam("id-workpack") final Long idWorkpack,
       @RequestParam(required = false) final Long idFilter,
+      @RequestParam(required = false) final String term,
       @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
     final List<CostAccountDto> costs = this.costAccountService.findAllByIdWorkpack(
         idWorkpack,
-        idFilter);
+        idFilter,
+        term
+    );
     if (costs.isEmpty()) {
       return ResponseEntity.noContent().build();
     }

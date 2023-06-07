@@ -46,12 +46,13 @@ public class OrganizationController {
   public ResponseEntity<ResponseBase<List<OrganizationDto>>> indexBase(
       @RequestParam("id-office") final Long idOffice,
       @RequestParam(required = false) final Long idFilter,
+      @RequestParam(required = false) final String term,
       @Authorization final String authorization) {
 
     this.canAccessService.ensureCanReadResource(idOffice, authorization);
 
     final List<OrganizationDto> organizations = new ArrayList<>();
-    this.organizationService.findAll(idOffice, idFilter)
+    this.organizationService.findAll(idOffice, idFilter, term)
         .forEach(registro -> organizations.add(
             new OrganizationDto(registro)));
     final ResponseBase<List<OrganizationDto>> response = new ResponseBase<List<OrganizationDto>>()

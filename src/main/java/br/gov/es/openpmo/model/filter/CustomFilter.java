@@ -6,6 +6,7 @@ import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
+import org.neo4j.ogm.annotation.Transient;
 
 import java.util.HashSet;
 import java.util.Optional;
@@ -33,6 +34,8 @@ public class CustomFilter extends Entity {
   @Relationship("FOR")
   private WorkpackModel workpackModel;
 
+  @Transient
+  private boolean similarityFilter;
 
   public CustomFilter(
     final String name,
@@ -128,6 +131,14 @@ public class CustomFilter extends Entity {
     this.setSortBy(request.getSortBy());
     this.setWorkpackModel(workpackModel);
     this.setType(customFilterEnum);
+  }
+
+  public boolean isSimilarityFilter() {
+	return similarityFilter;
+  }
+
+  public void setSimilarityFilter(boolean similarityFilter) {
+	this.similarityFilter = similarityFilter;
   }
 
 }

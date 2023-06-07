@@ -47,7 +47,7 @@ public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, C
   @Query(
     "MATCH  " +
     "    (p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-(a:AuthService), " +
-    "    path=shortestPath((n)-[*0..]->(m)) " +
+    "    path=shortestPath((n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO*0..]->(m)) " +
     "    WHERE id(n) IN $ids " +
     "    AND ( " +
     "    (m)<-[:CAN_ACCESS_WORKPACK {permissionLevel:'EDIT'} ]-(p) OR " +

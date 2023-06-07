@@ -2,6 +2,7 @@ package br.gov.es.openpmo.service.process;
 
 import br.gov.es.openpmo.apis.edocs.EDocsApi;
 import br.gov.es.openpmo.apis.edocs.response.ProcessResponse;
+import br.gov.es.openpmo.configuration.properties.AppProperties;
 import br.gov.es.openpmo.dto.process.ProcessCardDto;
 import br.gov.es.openpmo.dto.process.ProcessCreateDto;
 import br.gov.es.openpmo.dto.process.ProcessDetailDto;
@@ -45,19 +46,23 @@ public class ProcessService {
 
   private final CustomFilterService customFilterService;
 
+  private final AppProperties appProperties;
+
   @Autowired
   public ProcessService(
     final ProcessRepository repository,
     final EDocsApi eDocsApi,
     final WorkpackService workpackService,
     final FindAllProcessUsingCustomFilter findAllProcess,
-    final CustomFilterService customFilterService
+    final CustomFilterService customFilterService,
+    final AppProperties appProperties
   ) {
     this.repository = repository;
     this.eDocsApi = eDocsApi;
     this.workpackService = workpackService;
     this.findAllProcess = findAllProcess;
     this.customFilterService = customFilterService;
+    this.appProperties = appProperties;
   }
 
   public ProcessFromEDocsDto findProcessByProtocol(
@@ -130,7 +135,8 @@ public class ProcessService {
   public List<ProcessCardDto> findAllAsCardDto(
     final Long idWorkpack,
     final Long idFilter,
-    final Long idPerson
+    final Long idPerson,
+    final String term
   ) {
 
     if(idWorkpack == null) {
@@ -138,22 +144,36 @@ public class ProcessService {
     }
 
     if(idFilter == null) {
-      return this.repository.findAllByWorkpack(idWorkpack).stream()
+      return this.repository.findAllByWorkpack(idWorkpack, term, this.appProperties.getSearchCutOffScore()).stream()
         .map(ProcessCardDto::of)
         .collect(Collectors.toList());
     }
-    return this.findUsingCustomFilter(idWorkpack, idFilter, idPerson);
+
+    return this.findUsingCustomFilter(
+      idWorkpack,
+      idFilter,
+      idPerson,
+      term,
+      this.appProperties.getSearchCutOffScore()
+    );
   }
 
   private List<ProcessCardDto> findUsingCustomFilter(
     final Long idWorkpack,
     final Long idFilter,
-    final Long idPerson
+    final Long idPerson,
+    final String term,
+    final Double searchCutOffScore
   ) {
     final CustomFilter filter = this.customFilterService.findById(idFilter, idPerson);
     final Map<String, Object> params = new HashMap<>();
+
     params.put("idWorkpack", idWorkpack);
+    params.put("term", term);
+    params.put("searchCutOffScore", searchCutOffScore);
+
     final List<Process> processes = this.findAllProcess.execute(filter, params);
+
     return processes.stream()
       .map(ProcessCardDto::of)
       .collect(Collectors.toList());

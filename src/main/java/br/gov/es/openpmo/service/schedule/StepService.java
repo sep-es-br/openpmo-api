@@ -12,6 +12,7 @@ import br.gov.es.openpmo.model.schedule.Schedule;
 import br.gov.es.openpmo.model.schedule.Step;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
 import br.gov.es.openpmo.repository.ConsumesRepository;
+import br.gov.es.openpmo.repository.CostAccountRepository;
 import br.gov.es.openpmo.repository.ScheduleRepository;
 import br.gov.es.openpmo.repository.StepRepository;
 import br.gov.es.openpmo.service.workpack.CostAccountService;
@@ -54,6 +55,8 @@ public class StepService {
 
   private final ModelMapper modelMapper;
 
+  private final CostAccountRepository costAccountRepository;
+
   @Autowired
   public StepService(
     final StepRepository stepRepository,
@@ -61,7 +64,8 @@ public class StepService {
     final ConsumesRepository consumesRepository,
     final CostAccountService costAccountService,
     final RecalculateStepsAfterRemove recalculateStepsAfterRemove,
-    final ModelMapper modelMapper
+    final ModelMapper modelMapper,
+    final CostAccountRepository costAccountRepository
   ) {
     this.stepRepository = stepRepository;
     this.scheduleRepository = scheduleRepository;
@@ -69,6 +73,7 @@ public class StepService {
     this.costAccountService = costAccountService;
     this.recalculateStepsAfterRemove = recalculateStepsAfterRemove;
     this.modelMapper = modelMapper;
+    this.costAccountRepository = costAccountRepository;
   }
 
   @Transactional
@@ -97,6 +102,10 @@ public class StepService {
       .orElseThrow(() -> new NegocioException(STEP_NOT_FOUND));
   }
 
+  private Schedule findScheduleById(final Long id) {
+    return this.scheduleRepository.findByIdSchedule(id).orElseThrow(() -> new NegocioException(SCHEDULE_NOT_FOUND));
+  }
+
   public StepDto mapToStepDto(final Step step) {
     final StepDto stepDto = new StepDto();
 
@@ -119,7 +128,12 @@ public class StepService {
       consumesDto.setId(consumes.getId());
       consumesDto.setActualCost(consumes.getActualCost());
       consumesDto.setPlannedCost(consumes.getPlannedCost());
-      consumesDto.setCostAccount(EntityDto.of(consumes.getCostAccount()));
+      final Long id = consumes.getCostAccount().getId();
+      final EntityDto costAccount = new EntityDto(
+        id,
+        this.costAccountRepository.findCostAccountNameById(id)
+      );
+      consumesDto.setCostAccount(costAccount);
 
       final BigDecimal baselinePlannedCost = Optional.ofNullable(snapshotStep)
         .map(Step::getConsumes)
@@ -141,7 +155,10 @@ public class StepService {
   public void save(final StepStoreParamDto stepStoreParamDto) {
     final Schedule schedule = this.findScheduleById(stepStoreParamDto.getIdSchedule());
     final Set<Step> scheduleSteps = schedule.getSteps();
-    final long months = this.getMonths(stepStoreParamDto, schedule);
+    final long months = StepService.getMonths(
+      stepStoreParamDto,
+      schedule
+    );
 
     final Set<ConsumesParamDto> consumes = stepStoreParamDto.getConsumes();
 
@@ -161,18 +178,24 @@ public class StepService {
     }
 
     for (long month = 0; month < months; month++) {
-      final Step step = this.mapsToStep(stepStoreParamDto);
+      final Step step = StepService.mapsToStep(stepStoreParamDto);
       step.setSchedule(schedule);
 
       if (!consumes.isEmpty()) {
-        this.addsConsumesToStep(consumes, step);
+        this.addsConsumesToStep(
+          consumes,
+          step
+        );
       }
 
       step.setPeriodFromStart(isEndStep ? scheduleSteps.size() : month);
       scheduleSteps.add(this.stepRepository.save(step));
     }
 
-    this.addsMonthsToSchedule(stepStoreParamDto, schedule);
+    this.addsMonthsToSchedule(
+      stepStoreParamDto,
+      schedule
+    );
   }
 
   /**
@@ -248,14 +271,13 @@ public class StepService {
     return this.stepRepository.save(stepUpdate);
   }
 
-  private Schedule findScheduleById(final Long id) {
-    return this.scheduleRepository.findByIdSchedule(id).orElseThrow(() -> new NegocioException(SCHEDULE_NOT_FOUND));
-  }
-
   private Step getStepForUpdate(final StepUpdateDto stepUpdateDto) {
     final Step step = this.mapsToStep(stepUpdateDto);
     step.getConsumes().removeIf(consumes -> consumes.getId() == null);
-    this.addsConsumesToStep(stepUpdateDto, step);
+    this.addsConsumesToStep(
+      stepUpdateDto,
+      step
+    );
     return step;
   }
 
@@ -279,7 +301,7 @@ public class StepService {
     this.scheduleRepository.save(schedule);
   }
 
-  private long getMonths(
+  private static long getMonths(
     final StepStoreParamDto stepStoreParamDto,
     final Schedule schedule
   ) {
@@ -291,7 +313,7 @@ public class StepService {
     return intervalInMonths(scheduleStart, schedule.getStart());
   }
 
-  private Step mapsToStep(final StepStoreParamDto in) {
+  private static Step mapsToStep(final StepStoreParamDto in) {
     final Step out = new Step();
     out.setActualWork(Optional.ofNullable(in.getActualWork()).orElse(BigDecimal.ZERO));
     out.setPlannedWork(Optional.ofNullable(in.getPlannedWork()).orElse(BigDecimal.ZERO));
@@ -308,7 +330,10 @@ public class StepService {
   ) {
     stepUpdateDto.getConsumes().stream()
       .filter(consumesParamDto -> consumesParamDto.getId() == null)
-      .forEach(consumesParamDto -> this.addsConsumesToSteps(step, consumesParamDto));
+      .forEach(consumesParamDto -> this.addsConsumesToSteps(
+        step,
+        consumesParamDto
+      ));
   }
 
   private void addsConsumesToSteps(
@@ -332,7 +357,10 @@ public class StepService {
     final LocalDate start,
     final LocalDate end
   ) {
-    return ChronoUnit.MONTHS.between(start.withDayOfMonth(1), end.withDayOfMonth(1));
+    return ChronoUnit.MONTHS.between(
+      start.withDayOfMonth(1),
+      end.withDayOfMonth(1)
+    );
   }
 
   private static boolean costAccountConsumesAlreadyExists(

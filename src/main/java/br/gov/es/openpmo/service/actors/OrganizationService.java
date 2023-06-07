@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.service.actors;
 
+import br.gov.es.openpmo.configuration.properties.AppProperties;
 import br.gov.es.openpmo.dto.organization.OrganizationUpdateDto;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Organization;
@@ -10,6 +11,8 @@ import br.gov.es.openpmo.repository.OrganizationRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllOrganizationUsingCustomFilter;
 import br.gov.es.openpmo.service.office.OfficeService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
+
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,18 +29,21 @@ public class OrganizationService {
   private final OfficeService officeService;
   private final CustomFilterRepository customFilterRepository;
   private final FindAllOrganizationUsingCustomFilter findAllOrganization;
+  private final AppProperties appProperties;
 
   @Autowired
   public OrganizationService(
     final OrganizationRepository repository,
     final OfficeService officeService,
     final CustomFilterRepository customFilterRepository,
-    final FindAllOrganizationUsingCustomFilter findAllOrganization
+    final FindAllOrganizationUsingCustomFilter findAllOrganization,
+    final AppProperties appProperties
   ) {
     this.repository = repository;
     this.officeService = officeService;
     this.customFilterRepository = customFilterRepository;
     this.findAllOrganization = findAllOrganization;
+    this.appProperties = appProperties;
   }
 
   public List<Organization> findAll(final Long idOffice) {
@@ -46,10 +52,12 @@ public class OrganizationService {
 
   public List<Organization> findAll(
     final Long idOffice,
-    final Long idFilter
+    final Long idFilter,
+    final String term
   ) {
     if(idFilter == null) {
-      return this.repository.findByIdOffice(idOffice);
+    	if (StringUtils.isBlank(term)) return this.repository.findByIdOffice(idOffice);
+    	else return this.findAllByTerm(idOffice, term);
     }
 
     final CustomFilter filter = this.customFilterRepository
@@ -58,8 +66,16 @@ public class OrganizationService {
 
     final Map<String, Object> params = new HashMap<>();
     params.put("idOffice", idOffice);
+    params.put("term", term);
+    params.put("searchCutOffScore", appProperties.getSearchCutOffScore());
+    
+    if (StringUtils.isNotBlank(term)) filter.setSimilarityFilter(true);
 
     return this.findAllOrganization.execute(filter, params);
+  }
+  
+  public List<Organization> findAllByTerm(final Long idOffice, final String term) {
+	  return this.repository.findByIdOfficeAndByTerm(idOffice, term, this.appProperties.getSearchCutOffScore());
   }
 
   public Organization save(final Organization organization) {

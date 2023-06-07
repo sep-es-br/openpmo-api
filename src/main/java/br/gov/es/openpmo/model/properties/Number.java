@@ -15,6 +15,8 @@ public class Number extends Property<Number, Double> {
 
   private Double value;
 
+  private Long precision;
+
   private CategoryEnum category;
 
   @Relationship("FEATURES")
@@ -113,6 +115,14 @@ public class Number extends Property<Number, Double> {
 
   public void setDriver(final NumberModel driver) {
     this.driver = driver;
+  }
+
+  public Long getPrecision() {
+    return precision;
+  }
+
+  public void setPrecision(Long precision) {
+    this.precision = precision;
   }
 
 }

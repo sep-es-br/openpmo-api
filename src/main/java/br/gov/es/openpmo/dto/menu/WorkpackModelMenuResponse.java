@@ -1,5 +1,7 @@
 package br.gov.es.openpmo.dto.menu;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.util.Objects;
 import java.util.Set;
 
@@ -16,6 +18,8 @@ public class WorkpackModelMenuResponse {
   private String fontIcon;
 
   private String type;
+
+  private Long position;
 
   private Set<WorkpackModelMenuResponse> children;
 
@@ -73,6 +77,19 @@ public class WorkpackModelMenuResponse {
 
   public void setType(final String type) {
     this.type = type;
+  }
+
+  public Long getPosition() {
+    return this.position;
+  }
+
+  public void setPosition(final Long position) {
+    this.position = position;
+  }
+
+  @JsonIgnore
+  public Long getPositionOrElseZero() {
+    return this.position == null ? 0 : this.position;
   }
 
   @Override

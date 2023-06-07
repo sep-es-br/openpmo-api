@@ -64,7 +64,7 @@ public class StakeholderPersonController {
     @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanEditResource(request.getIdWorkpack(), authorization);
-    final Person person = this.stakeholderService.storeStakeholderPerson(request);
+    final Person person = this.stakeholderService.storeStakeholderPerson(request, authorization);
     return ResponseEntity.ok(ResponseBase.of(new EntityDto(person.getId())));
   }
 
@@ -74,7 +74,7 @@ public class StakeholderPersonController {
     @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanEditResource(request.getIdWorkpack(), authorization);
-    this.stakeholderService.updateStakeholderPerson(request);
+    this.stakeholderService.updateStakeholderPerson(request, authorization);
     return ResponseEntity.ok(ResponseBase.of());
   }
 
@@ -85,7 +85,7 @@ public class StakeholderPersonController {
     @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanEditResource(idWorkpack, authorization);
-    this.stakeholderService.deletePerson(idWorkpack, idPerson);
+    this.stakeholderService.deletePerson(idWorkpack, idPerson, authorization);
     return ResponseEntity.ok().build();
   }
 

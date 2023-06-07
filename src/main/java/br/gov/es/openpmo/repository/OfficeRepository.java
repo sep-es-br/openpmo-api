@@ -4,8 +4,10 @@ import br.gov.es.openpmo.dto.treeview.query.OfficeTreeViewQuery;
 import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.office.plan.PlanModel;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
+
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -43,5 +45,13 @@ public interface OfficeRepository extends Neo4jRepository<Office, Long>, CustomR
          "where id(o)=$idOffice " +
          "return pm")
   List<PlanModel> findAllPlanModelsByOfficeId(Long idOffice);
+  
+  @Query("MATCH (o:Office) " +
+  		 "WITH o, apoc.text.levenshteinSimilarity(apoc.text.clean(o.name + o.fullName), apoc.text.clean($name)) AS score " +
+	     "WHERE score > $searchCutOffScore "+
+	     "RETURN o " +
+	     "ORDER BY score DESC")
+  List<Office> findAllOfficeByNameOrFullName(@Param("name") String name, 
+		  								     @Param("searchCutOffScore") double searchCutOffScore);
 
 }

@@ -15,11 +15,16 @@ public interface StakeholderRepository extends Neo4jRepository<IsStakeholderIn, 
   @Query("MATCH (workpack:Workpack) " +
          "OPTIONAL MATCH (actor:Actor)-[isStakeholderIn:IS_STAKEHOLDER_IN]->(workpack) " +
          "OPTIONAL MATCH (person:Person)-[canAccessWorkpack:CAN_ACCESS_WORKPACK]->(workpack) " +
-         "WITH actor, isStakeholderIn, workpack, person, canAccessWorkpack " +
+         "WITH *, collect(actor) + collect(person) as actors " +
          "WHERE id(workpack)=$idWorkpack " +
-         "RETURN collect(actor), collect(isStakeholderIn) AS stakeholderIn, collect(workpack), " +
-         "collect(person), collect(canAccessWorkpack) AS workpackPermissions")
-  StakeholderAndPermissionQuery findByIdWorkpack(@Param("idWorkpack") Long idWorkpack);
+         "RETURN collect(actors), " +
+         "  collect(isStakeholderIn) AS stakeholderIn, " +
+         "  collect(workpack), " +
+         "  collect(canAccessWorkpack) AS workpackPermissions"
+  )
+  StakeholderAndPermissionQuery findByIdWorkpack(
+    @Param("idWorkpack") Long idWorkpack
+  );
 
   @Query("MATCH (p:Actor)-[is:IS_STAKEHOLDER_IN]->(o:Workpack) WHERE id(o) = $idWorkpack AND (id(p) = $idActor OR $idActor IS " +
          "NULL) RETURN p,o,is")

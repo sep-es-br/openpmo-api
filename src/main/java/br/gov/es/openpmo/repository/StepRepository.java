@@ -88,4 +88,12 @@ public interface StepRepository extends Neo4jRepository<Step, Long> {
          "return d,w")
   List<Workpack> findAllDeliverablesAndAscendents(List<Long> deliverablesId);
 
+  @Query("match (s:Step)-[c:CONSUMES]->(ca:CostAccount) " +
+         "where id(s) = $idStep and id(ca)=$idCostAccount " +
+         "return s, c, ca")
+  Optional<Step> findByStepIdAndCostAccountsId(
+    Long idStep,
+    Long idCostAccount
+  );
+
 }

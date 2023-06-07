@@ -183,6 +183,20 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
     }
   }
 
+  public Optional<Property> getPropertyName() {
+    if (Objects.isNull(this.properties)) return Optional.empty();
+    return this.properties.stream()
+      .filter(property -> property.getPropertyModelName().equals("name"))
+      .findFirst();
+  }
+
+  public Optional<Property> getPropertyFullName() {
+    if (Objects.isNull(this.properties)) return Optional.empty();
+    return this.properties.stream()
+      .filter(property -> property.getPropertyModelName().equals("fullName"))
+      .findFirst();
+  }
+
   @Transient
   private String getClassName(final WorkpackModel workpackModel) {
     return workpackModel.getClass().getName();

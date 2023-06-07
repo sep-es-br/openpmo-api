@@ -3,6 +3,7 @@ package br.gov.es.openpmo.repository;
 import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -19,8 +20,8 @@ public interface IsAuthenticatedByRepository extends Neo4jRepository<IsAuthentic
          "WHERE id(person)=$idPerson " +
          "RETURN person, authenticatedBY, authService")
   Optional<IsAuthenticatedBy> findAuthenticatedByUsingPersonAndDefaultServerName(
-    Long idPerson,
-    String authenticationServiceName
+    @Param("idPerson") Long idPerson,
+    @Param("authenticationServiceName") String authenticationServiceName
   );
 
 }

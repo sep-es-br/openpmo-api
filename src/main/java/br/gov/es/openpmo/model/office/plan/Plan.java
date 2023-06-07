@@ -3,11 +3,16 @@ package br.gov.es.openpmo.model.office.plan;
 import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.relations.BelongsTo;
+import br.gov.es.openpmo.model.workpacks.Workpack;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.annotation.Transient;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @NodeEntity
 public class Plan extends Entity {
@@ -18,7 +23,7 @@ public class Plan extends Entity {
   @Relationship(type = "IS_STRUCTURED_BY")
   private PlanModel planModel;
 
-  @Relationship(type = "BELONGS_TO")
+  @Relationship(type = "BELONGS_TO", direction = Relationship.INCOMING)
   private Set<BelongsTo> belongsTo;
 
   private String name;
@@ -86,6 +91,14 @@ public class Plan extends Entity {
 
   public void setFinish(final LocalDate finish) {
     this.finish = finish;
+  }
+
+  @Transient
+  public Set<Workpack> getWorkpacks() {
+    if (Objects.isNull(this.belongsTo)) return new HashSet<>();
+    return this.belongsTo.stream()
+      .map(BelongsTo::getWorkpack)
+      .collect(Collectors.toSet());
   }
 
 }

@@ -63,8 +63,8 @@ public class Schedule extends Entity implements Snapshotable<Schedule> {
   public Schedule snapshot() {
     final Schedule snapshot = new Schedule();
 
-    snapshot.setStart(this.getStart());
-    snapshot.setEnd(this.getEnd());
+    snapshot.start = this.start;
+    snapshot.end = this.end;
 
     return snapshot;
   }
@@ -134,11 +134,29 @@ public class Schedule extends Entity implements Snapshotable<Schedule> {
 
   @Transient
   public void addStep(final Step step) {
-    if(this.steps == null) {
+    if (this.steps == null) {
       this.steps = new HashSet<>();
     }
     this.steps.add(step);
     step.setSchedule(this);
+  }
+
+  @Transient
+  public boolean isStartStep(final Step step) {
+    final boolean isSameStartYear = step.getPeriodFromStartDate().getYear() == this.start.getYear();
+    final boolean isSameStartMonth = step.getPeriodFromStartDate().getMonthValue() == this.start.getMonthValue();
+    return isSameStartYear && isSameStartMonth;
+  }
+
+  @Transient
+  public boolean isEndStep(final Step step) {
+    final boolean isSameEndYear = step.getPeriodFromStartDate().getYear() == this.end.getYear();
+    final boolean isSameEndMonth = step.getPeriodFromStartDate().getMonthValue() == this.end.getMonthValue();
+    return isSameEndYear && isSameEndMonth;
+  }
+
+  public boolean isEdgeStep(final Step step) {
+    return this.isStartStep(step) || this.isEndStep(step);
   }
 
 }

@@ -8,9 +8,9 @@ import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.CustomFilterRepository;
 import br.gov.es.openpmo.repository.WorkpackModelRepository;
-import br.gov.es.openpmo.repository.WorkpackRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -38,6 +38,8 @@ public class WorkpackSorter {
   }
 
   public List<Workpack> sort(final WorkpackSorterRequest request) {
+    if(StringUtils.hasText(request.getTerm())) return request.getWorkpacks();
+
     if(Objects.isNull(request.getIdFilter())) {
       final WorkpackModel workpackModel = this.findById(
         request.getIdWorkpackModel()
@@ -112,19 +114,22 @@ public class WorkpackSorter {
     private final Long idWorkpackModel;
     private final Long idFilter;
     private final List<Workpack> workpacks;
+    private final String term;
 
     public WorkpackSorterRequest(
       final Long idPlan,
       final Long idPlanModel,
       final Long idWorkpackModel,
       final Long idFilter,
-      final List<Workpack> workpacks
+      final List<Workpack> workpacks,
+      final String term
     ) {
       this.idPlan = idPlan;
       this.idPlanModel = idPlanModel;
       this.idWorkpackModel = idWorkpackModel;
       this.idFilter = idFilter;
       this.workpacks = workpacks;
+      this.term = term;
     }
 
     public Long getIdPlan() {
@@ -145,6 +150,10 @@ public class WorkpackSorter {
 
     public List<Workpack> getWorkpacks() {
       return this.workpacks;
+    }
+
+    public String getTerm() {
+      return this.term;
     }
 
   }

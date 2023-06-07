@@ -53,11 +53,12 @@ public class PlanPermissionController {
   public ResponseEntity<ResponseBase<List<PlanPermissionDto>>> indexBase(
     @RequestParam(name = "id-plan") final Long idPlan,
     @RequestParam(name = "key", required = false) final String key,
+    @RequestParam(required = false) final String term,
     @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanReadManagementResource(idPlan, key, authorization);
     final Long idPerson = this.tokenService.getUserId(authorization);
-    final List<PlanPermissionDto> plans = this.service.findAllDto(idPlan, key, idPerson).stream()
+    final List<PlanPermissionDto> plans = this.service.findAllDto(idPlan, key, idPerson, term).stream()
       .map(o -> this.modelMapper.map(o, PlanPermissionDto.class))
       .collect(Collectors.toList());
     return plans.isEmpty() ?
@@ -71,7 +72,7 @@ public class PlanPermissionController {
     @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanAccessManagementResource(request.getIdPlan(), authorization);
-    this.service.store(request);
+    this.service.store(request, authorization);
     return ResponseEntity.ok(ResponseBase.of());
   }
 
@@ -81,7 +82,7 @@ public class PlanPermissionController {
     @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanAccessManagementResource(request.getIdPlan(), authorization);
-    this.service.update(request);
+    this.service.update(request, authorization);
     return ResponseEntity.ok(ResponseBase.of());
   }
 
@@ -92,7 +93,7 @@ public class PlanPermissionController {
     @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanAccessManagementResource(idPlan, authorization);
-    this.service.delete(idPlan, key);
+    this.service.delete(idPlan, key, authorization);
     return ResponseEntity.ok().build();
   }
 

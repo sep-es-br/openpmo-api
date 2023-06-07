@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.service.workpack;
 
+import br.gov.es.openpmo.configuration.properties.AppProperties;
 import br.gov.es.openpmo.dto.costaccount.CostAccountDto;
 import br.gov.es.openpmo.dto.costaccount.CostDto;
 import br.gov.es.openpmo.dto.workpack.*;
@@ -16,6 +17,8 @@ import br.gov.es.openpmo.repository.CostAccountRepository;
 import br.gov.es.openpmo.repository.CustomFilterRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllCostAccountUsingCustomFilter;
+import br.gov.es.openpmo.utils.TextSimilarityScore;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -52,6 +55,10 @@ public class CostAccountService {
 
   private final FindAllCostAccountUsingCustomFilter findAllCostAccount;
 
+  private final AppProperties appProperties;
+
+  private final TextSimilarityScore textSimilarityScore;
+
   @Autowired
   public CostAccountService(
     final CostAccountRepository costAccountRepository,
@@ -59,8 +66,10 @@ public class CostAccountService {
     final WorkpackRepository workpackRepository,
     final CustomFilterRepository customFilterRepository,
     final WorkpackModelService workpackModelService,
-    final CostAccountSorter costAccountSorter,
-    final FindAllCostAccountUsingCustomFilter findAllCostAccount
+    final FindAllCostAccountUsingCustomFilter findAllCostAccount,
+    final AppProperties appProperties,
+    final TextSimilarityScore textSimilarityScore,
+    final CostAccountSorter costAccountSorter
   ) {
     this.costAccountRepository = costAccountRepository;
     this.consumesRepository = consumesRepository;
@@ -69,17 +78,19 @@ public class CostAccountService {
     this.workpackModelService = workpackModelService;
     this.costAccountSorter = costAccountSorter;
     this.findAllCostAccount = findAllCostAccount;
+    this.appProperties = appProperties;
+    this.textSimilarityScore = textSimilarityScore;
   }
 
   public List<CostAccountDto> findAllByIdWorkpack(
     final Long idWorkpack,
-    final Long idFilter
+    final Long idFilter,
+    final String term
   ) {
 
     if (idFilter == null) {
-      return this.findAllByIdWorkpack(idWorkpack)
-        .stream()
-        .map(this::mapToDto)
+      return this.findAllByIdWorkpack(idWorkpack).stream().map(this::mapToDto)
+        .filter(dto -> StringUtils.isBlank(term) || this.filterBySimilarity(term, dto))
         .collect(Collectors.toList());
     }
 
@@ -88,10 +99,7 @@ public class CostAccountService {
       .orElseThrow(() -> new NegocioException(CUSTOM_FILTER_NOT_FOUND));
 
     final Map<String, Object> params = new HashMap<>();
-    params.put(
-      "idWorkpack",
-      idWorkpack
-    );
+    params.put("idWorkpack", idWorkpack);
 
     final List<CostAccount> costAccounts = this.findAllCostAccount.execute(
         filter,
@@ -100,23 +108,18 @@ public class CostAccountService {
       .flatMap(workpack -> this.fetchCostAccountFromWorkpack((Workpack) workpack).stream())
       .collect(Collectors.toList());
 
-    final List<CostAccount> costAccountsSorted = this.costAccountSorter.sort(new CostAccountSorter.CostAccountSorterRequest(
-      idFilter,
-      costAccounts
-    ));
+    final List<CostAccount> costAccountsSorted = this.costAccountSorter.sort(
+      new CostAccountSorter.CostAccountSorterRequest(
+        idFilter,
+        costAccounts
+      )
+    );
 
     return costAccountsSorted
       .stream()
       .map(this::mapToDto)
+      .filter(dto -> StringUtils.isBlank(term) || this.filterBySimilarity(term, dto))
       .collect(Collectors.toList());
-  }
-
-  public List<CostAccount> findAllByIdWorkpack(
-    final Long idWorkpack
-  ) {
-    final Workpack workpack = this.costAccountRepository.findWorkpackWithCosts(idWorkpack)
-      .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
-    return this.fetchCostAccountFromWorkpack(workpack);
   }
 
   public CostAccount save(final CostAccount costAccount) {
@@ -130,7 +133,7 @@ public class CostAccountService {
 
   public CostAccountDto findByIdAsDto(final Long id) {
     final CostAccount costAccount = this.findById(id);
-    final CostAccountDto costAccountDto = CostAccountDto.withoutRelations(costAccount);
+    final CostAccountDto costAccountDto = mapToDto(costAccount);
 
     this.maybeSetWorkpackNameData(
       costAccountDto,
@@ -190,7 +193,13 @@ public class CostAccountService {
     return null;
   }
 
-  public List<? extends PropertyDto> getPropertiesDto(
+  private List<CostAccount> findAllByIdWorkpack(final Long idWorkpack) {
+    final Workpack workpack = this.costAccountRepository.findWorkpackWithCosts(idWorkpack)
+      .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
+    return this.fetchCostAccountFromWorkpack(workpack);
+  }
+
+  private List<? extends PropertyDto> getPropertiesDto(
     final Collection<? extends Property> properties,
     final CostAccountDto costAccountDto
   ) {
@@ -303,14 +312,20 @@ public class CostAccountService {
     return list;
   }
 
+  private boolean filterBySimilarity(final String term, final CostAccountDto dto) {
+    final double score = this.textSimilarityScore.execute(dto.getWorkpackModelName() + dto.getWorkpackModelFullName(), term);
+    return score > this.appProperties.getSearchCutOffScore();
+  }
+
   private CostAccountDto mapToDto(final CostAccount costAccount) {
     final CostAccountDto dto = CostAccountDto.withoutRelations(costAccount);
+    final Long workpackId = costAccount.getWorkpackId();
     this.maybeSetWorkpackNameData(
       dto,
-      costAccount.getWorkpackId()
+      workpackId
     );
     if (costAccount.getWorkpack() != null) {
-      dto.setIdWorkpack(costAccount.getWorkpackId());
+      dto.setIdWorkpack(workpackId);
     }
     if (costAccount.getProperties() != null && !(costAccount.getProperties()).isEmpty()) {
       dto.setProperties(this.getPropertiesDto(
@@ -318,6 +333,14 @@ public class CostAccountService {
         dto
       ));
     }
+    final Long id = costAccount.getId();
+    final CostDto cost = this.getCost(
+      id,
+      workpackId
+    );
+    cost.setIdWorkpack(null);
+    cost.setLimit(this.costAccountRepository.findCostAccountLimitById(id));
+    dto.setCostAccountAllocation(cost);
     return dto;
   }
 
@@ -331,10 +354,6 @@ public class CostAccountService {
       dto.setWorkpackModelName(workpackName.getName());
       dto.setWorkpackModelFullName(workpackName.getFullName());
     }
-  }
-
-  private Optional<WorkpackName> maybeGetWorkpackNameData(final Long workpackId) {
-    return this.workpackRepository.findWorkpackNameAndFullname(workpackId);
   }
 
   private List<CostAccount> fetchCostAccountFromWorkpack(final Workpack workpack) {
@@ -354,6 +373,10 @@ public class CostAccountService {
       costs.addAll(this.fetchCostAccountFromWorkpack(workpack));
     }
     return costs;
+  }
+
+  private Optional<WorkpackName> maybeGetWorkpackNameData(final Long workpackId) {
+    return this.workpackRepository.findWorkpackNameAndFullname(workpackId);
   }
 
 }

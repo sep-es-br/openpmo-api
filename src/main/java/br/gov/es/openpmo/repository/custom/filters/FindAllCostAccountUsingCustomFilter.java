@@ -10,6 +10,8 @@ import org.neo4j.ogm.session.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Service
 public class FindAllCostAccountUsingCustomFilter extends FindAllUsingCustomFilterBuilder implements ApplyFilterUsingPropertyModel {
 
@@ -92,6 +94,7 @@ public class FindAllCostAccountUsingCustomFilter extends FindAllUsingCustomFilte
   @Override
   protected void buildOrderingAndDirectionClause(
     final CustomFilter filter,
+    Map<String, Object> params,
     final StringBuilder query
   ) {
     this.buildOrderingAndDirectionClauseForWorkpack(filter, query);

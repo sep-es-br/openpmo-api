@@ -55,6 +55,6 @@ public interface PlanPermissionRepository extends Neo4jRepository<CanAccessPlan,
   @Query("MATCH (person:Person)-[permission:CAN_ACCESS_PLAN]->(plan:Plan) " +
          "WHERE id(person)=$idPerson " +
          "RETURN person, permission, plan")
-  Set<CanAccessPlan> findAllPermissionsOfPerson(Long idPerson);
+  Set<CanAccessPlan> findAllPermissionsOfPerson(@Param("idPerson") Long idPerson);
 
 }

@@ -12,15 +12,16 @@ import org.neo4j.ogm.annotation.StartNode;
 
 import java.text.MessageFormat;
 
-
 @RelationshipEntity("IS_PROPOSED_BY")
 public class IsProposedBy {
 
   @Id
   @GeneratedValue
   private Long id;
+
   @EndNode
   private Baseline baseline;
+
   @StartNode
   private Person proposer;
 
@@ -61,7 +62,11 @@ public class IsProposedBy {
     this.proposer = (Person) actor;
     final String name = actor.getName();
     final String roleName = proposer.getRole() != null ? proposer.getRole() : null;
-    this.formattedRole = MessageFormat.format("{0} ({1})", name, roleName);
+    this.formattedRole = MessageFormat.format(
+      "{0} ({1})",
+      name,
+      roleName
+    );
   }
 
 }

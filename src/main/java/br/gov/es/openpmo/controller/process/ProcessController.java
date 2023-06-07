@@ -45,11 +45,12 @@ public class ProcessController {
   public ResponseEntity<ResponseBase<List<ProcessCardDto>>> findAll(
       @RequestParam("id-workpack") final Long idWorkpack,
       @RequestParam(value = "idFilter", required = false) final Long idFilter,
+      @RequestParam(required = false) final String term,
       @RequestHeader("Authorization") final String authorization) {
 
     this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
     final Long idPerson = this.tokenService.getUserId(authorization);
-    final List<ProcessCardDto> processes = this.service.findAllAsCardDto(idWorkpack, idFilter, idPerson);
+    final List<ProcessCardDto> processes = this.service.findAllAsCardDto(idWorkpack, idFilter, idPerson, term);
     final ResponseBase<List<ProcessCardDto>> response = ResponseBase.of(processes);
     return ResponseEntity.ok(response);
   }

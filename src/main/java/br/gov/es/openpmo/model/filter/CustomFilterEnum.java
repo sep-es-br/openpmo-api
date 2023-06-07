@@ -2,6 +2,7 @@ package br.gov.es.openpmo.model.filter;
 
 import br.gov.es.openpmo.dto.stakeholder.StakeholderAndPermissionQuery;
 import br.gov.es.openpmo.model.actors.Organization;
+import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.issue.Issue;
 import br.gov.es.openpmo.model.office.Domain;
 import br.gov.es.openpmo.model.office.Locality;
@@ -30,9 +31,11 @@ public enum CustomFilterEnum {
   RISK("Risk", Risk.class),
   STAKEHOLDER("IsStakeholderIn", StakeholderAndPermissionQuery.class),
   ISSUE("Issue", Issue.class),
-  PROCESS("Process", Process.class);
+  PROCESS("Process", Process.class),
+  BASELINE("Baseline", Baseline.class);
 
   private final String nodeName;
+
   private final Class<?> nodeClass;
 
   <T> CustomFilterEnum(
@@ -47,6 +50,7 @@ public enum CustomFilterEnum {
     return this.nodeName;
   }
 
+  @SuppressWarnings("unchecked")
   public <T> Class<T> getNodeClass() {
     return (Class<T>) this.nodeClass;
   }

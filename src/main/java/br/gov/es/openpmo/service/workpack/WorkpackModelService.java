@@ -82,7 +82,8 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
 
   private static final String TYPE_NAME_MODEL_TOGGLE = "br.gov.es.openpmo.model.properties.models.ToggleModel";
 
-  private static final String TYPE_NAME_MODEL_UNIT_SELECTION = "br.gov.es.openpmo.model.properties.models.UnitSelectionModel";
+  private static final String TYPE_NAME_MODEL_UNIT_SELECTION = "br.gov.es.openpmo.model.properties.models" +
+                                                               ".UnitSelectionModel";
 
   private static final String TYPE_NAME_MODEL_SELECTION = "br.gov.es.openpmo.model.properties.models.SelectionModel";
 
@@ -92,11 +93,11 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
 
   private static final String TYPE_NAME_MODEL_CURRENCY = "br.gov.es.openpmo.model.properties.models.CurrencyModel";
 
-  private static final String TYPE_NAME_MODEL_LOCALITY_SELECTION = "br.gov.es.openpmo.model.properties.models" +
-                                                                   ".LocalitySelectionModel";
+  private static final String TYPE_NAME_MODEL_LOCALITY_SELECTION
+    = "br.gov.es.openpmo.model.properties.models.LocalitySelectionModel";
 
-  private static final String TYPE_NAME_MODEL_ORGANIZATION_SELECTION = "br.gov.es.openpmo.model.properties.models" +
-                                                                       ".OrganizationSelectionModel";
+  private static final String TYPE_NAME_MODEL_ORGANIZATION_SELECTION
+    = "br.gov.es.openpmo.model.properties.models.OrganizationSelectionModel";
 
   private static final String TYPE_NAME_MODEL_GROUP = "br.gov.es.openpmo.model.properties.models.GroupModel";
 
@@ -145,6 +146,23 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
     this.verifier = verifier;
   }
 
+  private static Set<PropertyModel> extractGroupedPropertyIfExists(final Set<PropertyModel> propertiesToDelete) {
+    return Optional.ofNullable(propertiesToDelete)
+      .map(properties -> properties.stream()
+        .filter(GroupModel.class::isInstance)
+        .collect(Collectors.toSet()))
+      .orElse(new HashSet<>());
+  }
+
+  private static void ifNotMilestoneDeliverableProgramWorkpackThrowException(
+    final WorkpackModelParamDto workpackModelParamDto,
+    final boolean isChildFromProgramModel
+  ) {
+    if (workpackModelParamDto.hasNoParent() || !isChildFromProgramModel) {
+      throw new NegocioException(WORKPACK_MODEL_MILESTONE_DELIVERABLE_PROGRAM_ERROR);
+    }
+  }
+
   public WorkpackModel save(
     final WorkpackModel workpackModel,
     final Long idParent
@@ -156,8 +174,25 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
     return this.workpackModelRepository.save(workpackModel);
   }
 
+  private void ifHasParentIdCreateAsChild(
+    final WorkpackModel workpackModel,
+    final Long idParent
+  ) {
+    if (idParent != null) {
+      final WorkpackModel parent = this.findById(idParent);
+      workpackModel.addParent(parent);
+    }
+  }
+
+  public WorkpackModel findById(final Long id) {
+    return this.workpackModelRepository.findAllByIdWorkpackModel(id)
+      .orElseThrow(() -> new NegocioException(WORKPACKMODEL_NOT_FOUND));
+  }
+
   public List<WorkpackModel> findAll(final Long idPlanModel) {
-    return this.workpackModelRepository.findAllByIdPlanModel(idPlanModel);
+    return this.workpackModelRepository.findAllByIdPlanModel(idPlanModel)
+      .stream().sorted(Comparator.comparing(WorkpackModel::getPositionOrElseZero))
+      .collect(Collectors.toList());
   }
 
   @Transactional
@@ -193,11 +228,6 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
     );
 
     return this.workpackModelRepository.save(workpackModelUpdate);
-  }
-
-  public WorkpackModel findById(final Long id) {
-    return this.workpackModelRepository.findAllByIdWorkpackModel(id)
-      .orElseThrow(() -> new NegocioException(WORKPACKMODEL_NOT_FOUND));
   }
 
   public WorkpackModel getWorkpackModel(final WorkpackModelParamDto workpackModelParamDto) {
@@ -274,7 +304,8 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
     }
     if (detailDto != null && detailDto.getChildren() != null) {
       final LinkedHashSet<WorkpackModelDetailDto> sortedChildren = detailDto.getChildren().stream()
-        .sorted(Comparator.comparing(WorkpackModelDetailDto::getModelName))
+        .sorted(Comparator.comparing(WorkpackModelDetailDto::getPositionOrElseZero)
+                  .thenComparing(WorkpackModelDetailDto::getModelName))
         .collect(Collectors.toCollection(LinkedHashSet::new));
       detailDto.setChildren(sortedChildren);
     }
@@ -393,7 +424,9 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
           set.add(detailDto);
         }
       });
-      return set;
+      return set.stream()
+        .sorted(Comparator.comparing(WorkpackModelDetailDto::getPositionOrElseZero))
+        .collect(Collectors.toCollection(LinkedHashSet::new));
     }
     return Collections.emptySet();
   }
@@ -415,16 +448,6 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
 
   public boolean isCanDeleteProperty(final Long idPropertyModel) {
     return this.propertyModelService.canDeleteProperty(idPropertyModel);
-  }
-
-  private void ifHasParentIdCreateAsChild(
-    final WorkpackModel workpackModel,
-    final Long idParent
-  ) {
-    if (idParent != null) {
-      final WorkpackModel parent = this.findById(idParent);
-      workpackModel.addParent(parent);
-    }
   }
 
   private void verifyForPropertiesToUpdate(
@@ -542,7 +565,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
         decimalModelUpdate.setMax(decimalModel.getMax());
         decimalModelUpdate.setMin(decimalModel.getMin());
         decimalModelUpdate.setDefaultValue(decimalModel.getDefaultValue());
-        decimalModelUpdate.setDecimals(decimalModel.getDecimals());
+        decimalModelUpdate.setPrecision(decimalModel.getPrecision());
         break;
       case TYPE_NAME_MODEL_CURRENCY:
         final CurrencyModel currencyModelUpdate = (CurrencyModel) propertyModelUpdate;
@@ -557,7 +580,8 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
         localitySelectionModelUpdate.setDomain(localitySelectionModel.getDomain());
         break;
       case TYPE_NAME_MODEL_ORGANIZATION_SELECTION:
-        final OrganizationSelectionModel organizationSelectionModelUpdate = (OrganizationSelectionModel) propertyModelUpdate;
+        final OrganizationSelectionModel organizationSelectionModelUpdate =
+          (OrganizationSelectionModel) propertyModelUpdate;
         final OrganizationSelectionModel organizationSelectionModel = (OrganizationSelectionModel) propertyModel;
         organizationSelectionModelUpdate.setMultipleSelection(organizationSelectionModel.isMultipleSelection());
         organizationSelectionModelUpdate.setDefaultValue(organizationSelectionModel.getDefaultValue());
@@ -581,7 +605,8 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
   }
 
   private void verifyForGroupedPropertiesToDelete(final Set<PropertyModel> propertiesToDelete) {
-    final Set<PropertyModel> groupedProperties = WorkpackModelService.extractGroupedPropertyIfExists(propertiesToDelete);
+    final Set<PropertyModel> groupedProperties =
+      WorkpackModelService.extractGroupedPropertyIfExists(propertiesToDelete);
     if (!groupedProperties.isEmpty()) {
       final Collection<PropertyModel> groupedPropertiesToDelete = new HashSet<>();
       for (final PropertyModel property : groupedProperties) {
@@ -654,7 +679,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
     return propertyModels;
   }
 
-  private void extractToModel(
+  public void extractToModel(
     final Collection<? super PropertyModel> propertyModels,
     final PropertyModelDto property
   ) {
@@ -686,13 +711,26 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
         propertyModels.add(this.modelMapper.map(property, TextAreaModel.class));
         break;
       case PACKAGE_PROPERTIES_DTO + ".NumberModelDto":
-        propertyModels.add(this.modelMapper.map(property, NumberModel.class));
+        final NumberModel numberModel = this.modelMapper.map(
+          property,
+          NumberModel.class
+        );
+        final Integer precision = numberModel.getPrecision();
+        if (precision == null) {
+          numberModel.setPrecision(3);
+        } else if (precision < 1 || precision > 6) {
+          throw new NegocioException(ApplicationMessage.PRECISION_OUT_OF_RANGE);
+        }
+        propertyModels.add(numberModel);
         break;
       case PACKAGE_PROPERTIES_DTO + ".CurrencyModelDto":
         propertyModels.add(this.modelMapper.map(property, CurrencyModel.class));
         break;
       case PACKAGE_PROPERTIES_DTO + ".LocalitySelectionModelDto":
-        final LocalitySelectionModel localitySelectionModel = this.modelMapper.map(property, LocalitySelectionModel.class);
+        final LocalitySelectionModel localitySelectionModel = this.modelMapper.map(
+          property,
+          LocalitySelectionModel.class
+        );
         final LocalitySelectionModelDto localityDto = (LocalitySelectionModelDto) property;
         if (localityDto.getIdDomain() != null) {
           localitySelectionModel.setDomain(this.domainService.findById(localityDto.getIdDomain()));
@@ -729,23 +767,6 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
         propertyModels.add(groupModel);
 
         break;
-    }
-  }
-
-  private static Set<PropertyModel> extractGroupedPropertyIfExists(final Set<PropertyModel> propertiesToDelete) {
-    return Optional.ofNullable(propertiesToDelete)
-      .map(properties -> properties.stream()
-        .filter(GroupModel.class::isInstance)
-        .collect(Collectors.toSet()))
-      .orElse(new HashSet<>());
-  }
-
-  private static void ifNotMilestoneDeliverableProgramWorkpackThrowException(
-    final WorkpackModelParamDto workpackModelParamDto,
-    final boolean isChildFromProgramModel
-  ) {
-    if (workpackModelParamDto.hasNoParent() || !isChildFromProgramModel) {
-      throw new NegocioException(WORKPACK_MODEL_MILESTONE_DELIVERABLE_PROGRAM_ERROR);
     }
   }
 

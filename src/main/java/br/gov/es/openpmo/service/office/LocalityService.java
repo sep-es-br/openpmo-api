@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.service.office;
 
+import br.gov.es.openpmo.configuration.properties.AppProperties;
 import br.gov.es.openpmo.dto.domain.LocalityStoreDto;
 import br.gov.es.openpmo.dto.domain.LocalityUpdateDto;
 import br.gov.es.openpmo.exception.NegocioException;
@@ -12,7 +13,6 @@ import br.gov.es.openpmo.repository.custom.filters.FindAllLocalityUsingCustomFil
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,10 +34,16 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.LOCALITY_TYPE_ERROR;
 public class LocalityService {
 
   private final LocalityRepository localityRepository;
+
   private final DomainService domainService;
+
   private final ModelMapper modelMapper;
+
   private final CustomFilterRepository customFilterRepository;
+
   private final FindAllLocalityUsingCustomFilter findAllLocality;
+
+  private final AppProperties appProperties;
 
   @Autowired
   public LocalityService(
@@ -45,13 +51,15 @@ public class LocalityService {
     final ModelMapper modelMapper,
     final DomainService domainService,
     final CustomFilterRepository customFilterRepository,
-    final FindAllLocalityUsingCustomFilter findAllLocality
+    final FindAllLocalityUsingCustomFilter findAllLocality,
+    final AppProperties appProperties
   ) {
     this.localityRepository = localityRepository;
     this.modelMapper = modelMapper;
     this.domainService = domainService;
     this.customFilterRepository = customFilterRepository;
     this.findAllLocality = findAllLocality;
+    this.appProperties = appProperties;
   }
 
   public List<Locality> findAll(final Long idDomain) {
@@ -60,23 +68,47 @@ public class LocalityService {
 
   public List<Locality> findAllFirstLevel(
     final Long idDomain,
-    final Long idFilter
+    final Long idFilter,
+    final String term
   ) {
-    if(idFilter == null) {
-      return this.findAllFirstLevel(idDomain);
+    if (idFilter == null) {
+      return this.findAllFirstLevel(
+        idDomain,
+        term
+      );
     }
-
     final CustomFilter filter = this.customFilterRepository
       .findById(idFilter)
       .orElseThrow(() -> new NegocioException(CUSTOM_FILTER_NOT_FOUND));
-
     final Map<String, Object> params = new HashMap<>();
-    params.put("idDomain", idDomain);
-    return this.findAllLocality.execute(filter, params);
+    params.put(
+      "idDomain",
+      idDomain
+    );
+    params.put(
+      "term",
+      term
+    );
+    params.put(
+      "searchCutOffScore",
+      appProperties.getSearchCutOffScore()
+    );
+    return this.findAllLocality.execute(
+      filter,
+      params
+    );
   }
 
-  private List<Locality> findAllFirstLevel(final Long idDomain) {
-    return new ArrayList<>(this.localityRepository.findAllByDomainFirstLevel(idDomain));
+  private List<Locality> findAllFirstLevel(
+    final Long idDomain,
+    final String term
+  ) {
+    final Double searchCutOffScore = appProperties.getSearchCutOffScore();
+    return new ArrayList<>(this.localityRepository.findAllByDomainFirstLevel(
+      idDomain,
+      term,
+      searchCutOffScore
+    ));
   }
 
   public List<Locality> findAllByDomainProperties(final Long idDomain) {
@@ -89,25 +121,22 @@ public class LocalityService {
   }
 
   private void validateLocalityType(final Locality locality) {
-    if(locality.getParent() == null && locality.getDomain() != null) {
+    if (locality.getParent() == null && locality.getDomain() != null) {
       final Locality localityRoot = this.localityRepository.findLocalityRootFromDomain(locality.getDomainId())
         .orElseThrow(() -> new NegocioException(LOCALITY_ROOT_NOT_FOUND));
-
       final boolean notLocalityRoot = !localityRoot.getId().equals(locality.getId());
-
-      if(notLocalityRoot) {
+      if (notLocalityRoot) {
         throw new NegocioException(LOCALITY_ROOT_ERROR);
       }
     }
-    if(locality.getParent() != null) {
+    if (locality.getParent() != null) {
       final Locality parent = this.findById(locality.getParent().getId());
-      if(parent.getChildren() != null && !(parent.getChildren()).isEmpty()) {
-        if(locality.getId() != null && parent.getChildren().stream().anyMatch(l -> l.getId() != null && !l.getId().equals(
+      if (parent.getChildren() != null && !(parent.getChildren()).isEmpty()) {
+        if (locality.getId() != null && parent.getChildren().stream().anyMatch(l -> l.getId() != null && !l.getId().equals(
           locality.getId()) && !l.getType().equals(locality.getType()))) {
           throw new NegocioException(LOCALITY_TYPE_ERROR);
         }
-
-        if(locality.getId() == null && !locality.getType().equals(parent.getChildren().iterator().next().getType())) {
+        if (locality.getId() == null && !locality.getType().equals(parent.getChildren().iterator().next().getType())) {
           throw new NegocioException(LOCALITY_TYPE_ERROR);
         }
       }
@@ -121,29 +150,40 @@ public class LocalityService {
 
   public Locality findById(
     final Long id,
-    final Long idFilter
+    final Long idFilter,
+    final String term
   ) {
     final Locality locality = this.findById(id);
-
-    if(idFilter == null) {
+    if (idFilter == null) {
       return locality;
     }
-
     final Domain domain = this.localityRepository.findDomainById(id)
       .orElseThrow(() -> new NegocioException(DOMAIN_NOT_FOUND));
-
     final CustomFilter filter = this.customFilterRepository
       .findById(idFilter)
       .orElseThrow(() -> new NegocioException(CUSTOM_FILTER_NOT_FOUND));
-
     final Map<String, Object> params = new HashMap<>();
-    params.put("idDomain", domain.getId());
-
-    final List<Locality> localities = this.findAllLocality.execute(filter, params);
+    params.put(
+      "idDomain",
+      domain.getId()
+    );
+    params.put(
+      "term",
+      term
+    );
+    params.put(
+      "searchCutOffScore",
+      appProperties.getSearchCutOffScore()
+    );
+    final List<Locality> localities = this.findAllLocality.execute(
+      filter,
+      params
+    );
     final List<Long> localitiesId = localities.stream().map(Locality::getId).collect(Collectors.toList());
-
-    this.filterChildren(locality, localitiesId);
-
+    this.filterChildren(
+      locality,
+      localitiesId
+    );
     return locality;
   }
 
@@ -152,20 +192,19 @@ public class LocalityService {
     final List<Long> localitiesId
   ) {
     final Set<Locality> children = locality.getChildren();
-
-    if(children == null || children.isEmpty()) {
+    if (children == null || children.isEmpty()) {
       return;
     }
-
-    final HashSet<Locality> localities = new HashSet<>();
-
-    for(final Locality child : children) {
-      if(localitiesId.contains(child.getId())) {
-        this.filterChildren(child, localitiesId);
+    final Set<Locality> localities = new HashSet<>();
+    for (final Locality child : children) {
+      if (localitiesId.contains(child.getId())) {
+        this.filterChildren(
+          child,
+          localitiesId
+        );
         localities.add(child);
       }
     }
-
     locality.setChildren(localities);
   }
 
@@ -182,16 +221,19 @@ public class LocalityService {
   }
 
   public void delete(final Locality locality) {
-    if(locality.getChildren() != null && !(locality.getChildren()).isEmpty()) {
+    if (locality.getChildren() != null && !(locality.getChildren()).isEmpty()) {
       throw new NegocioException(LOCALITY_DELETE_RELATIONSHIP_ERROR);
     }
     this.localityRepository.delete(locality);
   }
 
   public Locality getLocality(final LocalityStoreDto localityParamDto) {
-    final Locality locality = this.modelMapper.map(localityParamDto, Locality.class);
+    final Locality locality = this.modelMapper.map(
+      localityParamDto,
+      Locality.class
+    );
     locality.setDomain(this.domainService.findById(localityParamDto.getIdDomain()));
-    if(localityParamDto.getIdParent() != null) {
+    if (localityParamDto.getIdParent() != null) {
       locality.setParent(this.findById(localityParamDto.getIdParent()));
     }
     return locality;

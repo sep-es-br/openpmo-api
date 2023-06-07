@@ -1,6 +1,8 @@
 package br.gov.es.openpmo.dto.stakeholder;
 
 import br.gov.es.openpmo.dto.permission.PermissionDto;
+import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -54,6 +56,17 @@ public class StakeholderParamDto {
 
   public void setIdPlan(final Long idPlan) {
     this.idPlan = idPlan;
+  }
+
+  @JsonIgnore
+  public PermissionLevelEnum getGratherPermissionLevel() {
+    if (this.hasEdit()) return PermissionLevelEnum.EDIT;
+    return PermissionLevelEnum.READ;
+  }
+
+  @JsonIgnore
+  private boolean hasEdit() {
+    return this.permissions.stream().map(PermissionDto::getLevel).anyMatch(level -> level.equals(PermissionLevelEnum.EDIT));
   }
 
 }

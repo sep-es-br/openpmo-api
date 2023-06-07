@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.service.risk;
 
+import br.gov.es.openpmo.configuration.properties.AppProperties;
 import br.gov.es.openpmo.dto.risk.RiskCardDto;
 import br.gov.es.openpmo.dto.risk.RiskCreateDto;
 import br.gov.es.openpmo.dto.risk.RiskDetailDto;
@@ -45,13 +46,16 @@ public class RiskService {
 
   private final JournalCreator journalCreator;
 
+  private final AppProperties appProperties;
+
   public RiskService(
     final RiskRepository repository,
     final RiskResponseRepository riskResponseRepository,
     final WorkpackService workpackService,
     final CustomFilterService customFilterService,
     final FindAllRiskUsingCustomFilter findAllRisk,
-    final JournalCreator journalCreator
+    final JournalCreator journalCreator,
+    final AppProperties appProperties
   ) {
     this.repository = repository;
     this.riskResponseRepository = riskResponseRepository;
@@ -59,33 +63,59 @@ public class RiskService {
     this.customFilterService = customFilterService;
     this.findAllRisk = findAllRisk;
     this.journalCreator = journalCreator;
+    this.appProperties = appProperties;
   }
 
   public List<RiskCardDto> findAllAsCardDto(
     final Long idWorkpack,
     final Long idFilter,
+    final String term,
     final Long idPerson
   ) {
-    if(idWorkpack == null) {
+    if (idWorkpack == null) {
       throw new IllegalArgumentException(ID_WORKPACK_NOT_NULL);
     }
-    if(idFilter == null) {
-      return this.findAllAsCardDto(idWorkpack);
+    if (idFilter == null) {
+      return this.findAllAsCardDto(
+        idWorkpack,
+        term
+      );
     }
-    final CustomFilter customFilter = this.customFilterService.findById(idFilter, idPerson);
+    final CustomFilter customFilter = this.customFilterService.findById(
+      idFilter,
+      idPerson
+    );
     final Map<String, Object> params = new HashMap<>();
-
-    params.put("idWorkpack", idWorkpack);
-
-    final List<Risk> risks = this.findAllRisk.execute(customFilter, params);
-
+    params.put(
+      "idWorkpack",
+      idWorkpack
+    );
+    params.put(
+      "term",
+      term
+    );
+    params.put(
+      "searchCutOffScore",
+      appProperties.getSearchCutOffScore()
+    );
+    final List<Risk> risks = this.findAllRisk.execute(
+      customFilter,
+      params
+    );
     return risks.stream()
       .map(RiskCardDto::of)
       .collect(Collectors.toList());
   }
 
-  private List<RiskCardDto> findAllAsCardDto(final Long idWorkpack) {
-    return this.repository.findAll(idWorkpack).stream()
+  private List<RiskCardDto> findAllAsCardDto(
+    final Long idWorkpack,
+    String term
+  ) {
+    return this.repository.findAll(
+        idWorkpack,
+        term,
+        appProperties.getSearchCutOffScore()
+      ).stream()
       .map(RiskCardDto::of)
       .collect(Collectors.toList());
   }
@@ -94,13 +124,19 @@ public class RiskService {
     final RiskCreateDto request,
     final Long idPerson
   ) {
-    if(request.getIdWorkpack() == null) {
+    if (request.getIdWorkpack() == null) {
       throw new IllegalStateException(ID_WORKPACK_NOT_NULL);
     }
     final Workpack workpack = this.workpackService.findById(request.getIdWorkpack());
-    final Risk risk = Risk.of(request, workpack);
+    final Risk risk = Risk.of(
+      request,
+      workpack
+    );
     this.repository.save(risk);
-    this.journalCreator.risk(risk, idPerson);
+    this.journalCreator.risk(
+      risk,
+      idPerson
+    );
     return risk;
   }
 
@@ -110,8 +146,14 @@ public class RiskService {
   ) {
     final Risk risk = this.findById(request.getId());
     risk.update(request);
-    this.repository.save(risk, 0);
-    this.journalCreator.risk(risk, idPerson);
+    this.repository.save(
+      risk,
+      0
+    );
+    this.journalCreator.risk(
+      risk,
+      idPerson
+    );
     return RiskDetailDto.of(risk);
   }
 

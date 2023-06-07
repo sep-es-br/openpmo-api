@@ -94,13 +94,10 @@ public class MenuController {
   public ResponseEntity<ResponseBaseItens<PlanModelMenuResponse>> indexWorkpackModels(
     @RequestParam("id-office") final Long idOffice
   ) {
-
     final List<PlanModelMenuResponse> responses = this.workpackModelMenuService.getResponses(idOffice);
-
     if (responses.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
-
     return ResponseEntity.ok(ResponseBaseItens.of(responses));
   }
 

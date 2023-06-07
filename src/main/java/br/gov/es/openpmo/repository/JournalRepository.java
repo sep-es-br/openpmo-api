@@ -4,6 +4,8 @@ import br.gov.es.openpmo.model.actors.File;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.journals.JournalEntry;
 import br.gov.es.openpmo.model.journals.JournalType;
+import br.gov.es.openpmo.model.office.Office;
+import br.gov.es.openpmo.model.office.plan.Plan;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.stereotype.Repository;
@@ -15,26 +17,26 @@ import java.util.Optional;
 @Repository
 public interface JournalRepository extends Neo4jRepository<JournalEntry, Long> {
 
-  @Query("match (j:JournalEntry)-[:SCOPE_TO]->(w:Workpack) " +
-         "where id(w)=$workpackId " +
-         "return id(j)")
+  @Query("MATCH (j:JournalEntry)-[:SCOPE_TO]->(w:Workpack) " +
+         "WHERE id(w)=$workpackId " +
+         "RETURN id(j)")
   List<Long> findAllJournalIdsByWorkpackId(Long workpackId);
 
-  @Query("match (w:Workpack), (j:JournalEntry), (p:Person) " +
-         "where ($scope is null or $scope=[] or id(w) in $scope) " +
-         " and ( " +
-         " (w)<-[:SCOPE_TO]-(j) or (w)<-[:IS_IN*]-(:Workpack)<-[:SCOPE_TO]-(j) or j.type='FAIL' " +
-         ") and ( " +
-         " (($from is null or (date(datetime($from)) <= date(datetime(j.date)))) " +
-         " and " +
-         " ($to is null or date(datetime(j.date)) <= date(datetime($to)))) " +
-         " and " +
-         " (j.type in $journalType or 'ALL' in $journalType) " +
-         ") and ( " +
+  @Query("MATCH (w), (j:JournalEntry), (p:Person) " +
+         "WHERE ($scope IS NULL OR $scope=[] OR id(w) IN $scope) " +
+         " AND ( " +
+         " (w)<-[:SCOPE_TO]-(j) OR (w)<-[:IS_IN*]-(:Workpack)<-[:SCOPE_TO]-(j) OR j.type='FAIL' " +
+         ") AND ( " +
+         " (($from IS NULL OR (date(datetime($from)) <= date(datetime(j.date)))) " +
+         " AND " +
+         " ($to IS NULL OR date(datetime(j.date)) <= date(datetime($to)))) " +
+         " AND " +
+         " (j.type IN $journalType OR 'ALL' IN $journalType) " +
+         ") AND ( " +
          " (p)<-[:IS_RECORDED_BY]-(j) " +
          ")" +
-         "return j " +
-         "order by j.date desc")
+         "RETURN j " +
+         "ORDER BY j.date DESC")
   List<JournalEntry> findAll(
     LocalDate from,
     LocalDate to,
@@ -42,24 +44,39 @@ public interface JournalRepository extends Neo4jRepository<JournalEntry, Long> {
     List<Integer> scope
   );
 
-  @Query("match (j:JournalEntry)-[:SCOPE_TO]->(w:Workpack) " +
-         "where id(j)=$journalId " +
-         "return id(w)")
+  @Query("MATCH (j:JournalEntry)-[:SCOPE_TO]->(w:Workpack) " +
+         "WHERE id(j)=$journalId " +
+         "RETURN id(w)")
   Optional<Long> findWorkpackIdByJournalId(Long journalId);
 
-  @Query("match (j:JournalEntry)-[:IS_RECORDED_BY]->(p:Person) " +
-         "where id(j)=$journalId " +
-         "return p")
-  Optional<Person> findPersonByJournalId(Long journalId);
+  @Query("MATCH (j:JournalEntry)-[:IS_RECORDED_BY]->(p:Person) " +
+         "WHERE id(j)=$journalId " +
+         "RETURN p")
+  Optional<Person> findAuthorByJournalId(Long journalId);
 
-  @Query("match (j:JournalEntry)<-[:IS_EVIDENCE_OF]-(f:File) " +
-         "where id(j)=$journalId " +
-         "return f")
+  @Query("MATCH (j:JournalEntry)-[:IS_RECORDED_FOR]->(p:Person) " +
+         "WHERE id(j)=$journalId " +
+         "RETURN p")
+  Optional<Person> findTargetByJournalId(Long journalId);
+
+  @Query("MATCH (j:JournalEntry)<-[:IS_EVIDENCE_OF]-(f:File) " +
+         "WHERE id(j)=$journalId " +
+         "RETURN f")
   List<File> findEvidencesByJournalId(Long journalId);
 
-  @Query("match (:JournalEntry)<-[:IS_EVIDENCE_OF]-(f:File) " +
-         "where id(f)=$evidenceId " +
-         "detach delete f")
+  @Query("MATCH (:JournalEntry)<-[:IS_EVIDENCE_OF]-(f:File) " +
+         "WHERE id(f)=$evidenceId " +
+         "DETACH DELETE f")
   void deleteEvidenceById(Long evidenceId);
+
+  @Query("MATCH (j:JournalEntry)-[:SCOPE_TO]->(o:Office) " +
+         "WHERE id(j)=$journalId " +
+         "RETURN o")
+  Optional<Office> findOfficeByJournalId(Long journalId);
+
+  @Query("MATCH (j:JournalEntry)-[:SCOPE_TO]->(p:Plan) " +
+         "WHERE id(j)=$journalId " +
+         "RETURN p")
+  Optional<Plan> findPlanByJournalId(Long journalId);
 
 }

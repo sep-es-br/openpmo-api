@@ -1,7 +1,7 @@
 package br.gov.es.openpmo.enumerator;
 
 public enum GeneralOperatorsEnum {
-  IGUAL("="), DIFERENTE("<>"), MAIOR(">"), MENOR("<"), MAIOR_IGUAL(">="), MENOR_IGUAL("<=");
+  IGUAL("="), DIFERENTE("<>"), MAIOR(">"), MENOR("<"), MAIOR_IGUAL(">="), MENOR_IGUAL("<="), CONTEM("=~");
 
   private final String operador;
 

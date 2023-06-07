@@ -30,11 +30,29 @@ public interface PlanModelRepository extends Neo4jRepository<PlanModel, Long>, C
          + "] ")
   PlanModel findByIdWithChildren(@Param("id") Long id);
 
-  @Query("match (pm:PlanModel)<-[:BELONGS_TO]-(wm:WorkpackModel) " +
-         "where id(pm)=$idPlanModel and not (wm)-[:IS_IN]->() " +
-         "return wm, [ " +
+  @Query("MATCH (pm:PlanModel)<-[:BELONGS_TO]-(wm:WorkpackModel) " +
+         "WHERE id(pm)=$idPlanModel AND NOT (wm)-[:IS_IN]->() " +
+         "RETURN wm, [ " +
          "    (wm)<-[ii:IS_IN*]-(wm2:WorkpackModel) | [ii,wm2] " +
          "]")
   List<WorkpackModel> findAllWorkpackModelsByPlanModelId(Long idPlanModel);
+
+  @Query("MATCH (p: PlanModel)-[r:IS_ADOPTED_BY]->(o:Office) " +
+         "WHERE id(o)= $id " +
+         "WITH p,r,o, apoc.text.levenshteinSimilarity(apoc.text.clean(p.name + p.fullName), apoc.text.clean($term)) " +
+         "AS score " +
+         "WHERE score > $searchCutOffScore " +
+         "RETURN p,r,o " +
+         "ORDER BY score DESC")
+  List<PlanModel> findAllInOfficeByTerm(
+    @Param("id") Long id,
+    @Param("term") String term,
+    @Param("searchCutOffScore") double searchCutOffScore
+  );
+
+  @Query("MATCH (pm:PlanModel)<-[:BELONGS_TO]-(wm:WorkpackModel) " +
+         "WHERE id(pm)=$idPlanModel AND NOT exists((wm)-[:IS_IN]->(:WorkpackModel)) " +
+         "RETURN max(wm.position)")
+  Long findActualPosition(@Param("idPlanModel") Long idPlanModel);
 
 }

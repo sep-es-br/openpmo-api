@@ -3,7 +3,9 @@ package br.gov.es.openpmo.service.journals;
 import br.gov.es.openpmo.dto.journals.EvidenceField;
 import br.gov.es.openpmo.dto.journals.InformationField;
 import br.gov.es.openpmo.dto.journals.JournalResponse;
+import br.gov.es.openpmo.dto.journals.OfficeField;
 import br.gov.es.openpmo.dto.journals.PersonField;
+import br.gov.es.openpmo.dto.journals.PlanField;
 import br.gov.es.openpmo.dto.journals.WorkpackField;
 import br.gov.es.openpmo.dto.workpack.WorkpackName;
 import br.gov.es.openpmo.exception.NegocioException;
@@ -11,6 +13,8 @@ import br.gov.es.openpmo.model.actors.File;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.journals.JournalEntry;
 import br.gov.es.openpmo.model.journals.JournalType;
+import br.gov.es.openpmo.model.office.Office;
+import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.JournalRepository;
 import br.gov.es.openpmo.repository.WorkpackModelRepository;
@@ -24,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -53,16 +58,39 @@ public class JournalResponseMapper {
     this.journalRepository = journalRepository;
   }
 
-  private EvidenceField getEvidenceField(
-    final File file,
+  public JournalResponse map(
+    final JournalEntry journalEntry,
     final UriComponentsBuilder uriComponentsBuilder
   ) {
-    final EvidenceField evidenceField = new EvidenceField();
-    evidenceField.setId(file.getId());
-    evidenceField.setMimeType(file.getMimeType());
-    evidenceField.setName(file.getUserGivenName());
-    evidenceField.setUrl(this.getUrl(file, uriComponentsBuilder));
-    return evidenceField;
+    final JournalResponse journalResponse = new JournalResponse();
+
+    journalResponse.setType(journalEntry.getType());
+    journalResponse.setAction(journalEntry.getAction());
+    journalResponse.setDate(journalEntry.getDate());
+    journalResponse.setLevel(journalEntry.getLevel());
+
+    final InformationField informationField = getInformationField(journalEntry);
+    journalResponse.setInformationField(informationField);
+
+    final Set<EvidenceField> evidenceFieldSet = this.getEvidenceFieldSet(journalEntry, uriComponentsBuilder);
+    journalResponse.setEvidenceFieldSet(evidenceFieldSet);
+
+    final PersonField authorField = this.getAuthorField(journalEntry);
+    journalResponse.setAuthorField(authorField);
+
+    final PersonField targetField = this.getTargetField(journalEntry);
+    journalResponse.setTargetField(targetField);
+
+    final WorkpackField workpackField = this.getWorkpackField(journalEntry);
+    journalResponse.setWorkpackField(workpackField);
+
+    final OfficeField officeField = this.getOfficeField(journalEntry);
+    journalResponse.setOfficeField(officeField);
+
+    final PlanField planField = this.getPlanField(journalEntry);
+    journalResponse.setPlanField(planField);
+
+    return journalResponse;
   }
 
   private static InformationField getInformationField(final JournalEntry journalEntry) {
@@ -75,64 +103,36 @@ public class JournalResponseMapper {
     return informationField;
   }
 
-  private String getUrl(
-    final File file,
-    final UriComponentsBuilder uriComponentsBuilder
-  ) {
-    String homeScheme = this.homeURI.split("://")[0];
-    return uriComponentsBuilder.cloneBuilder()
-      .path(getEndpoint(file))
-      .scheme(homeScheme)
-      .build()
-      .toUri()
-      .toString();
-  }
-
-  private List<File> getFiles(final JournalEntry journalEntry) {
-    return this.journalRepository.findEvidencesByJournalId(journalEntry.getId());
-  }
-
-  public JournalResponse map(
-    final JournalEntry journalEntry,
-    final UriComponentsBuilder uriComponentsBuilder
-  ) {
-    final JournalResponse journalResponse = new JournalResponse();
-
-    journalResponse.setType(journalEntry.getType());
-    journalResponse.setAction(journalEntry.getAction());
-    journalResponse.setDate(journalEntry.getDate());
-
-    final InformationField informationField = getInformationField(journalEntry);
-    journalResponse.setInformationField(informationField);
-
-    final Set<EvidenceField> evidenceFieldSet = this.getEvidenceFieldSet(journalEntry, uriComponentsBuilder);
-    journalResponse.setEvidenceFieldSet(evidenceFieldSet);
-
-    final PersonField personField = this.getPersonField(journalEntry);
-    journalResponse.setPersonField(personField);
-
-    final WorkpackField workpackField = this.getWorkpackField(journalEntry);
-    journalResponse.setWorkpackField(workpackField);
-
-    return journalResponse;
-  }
-
   private Set<EvidenceField> getEvidenceFieldSet(
     final JournalEntry journalEntry,
     final UriComponentsBuilder uriComponentsBuilder
   ) {
     return this.getFiles(journalEntry).stream()
-      .map(file -> getEvidenceField(file, uriComponentsBuilder))
+      .map(file -> this.getEvidenceField(file, uriComponentsBuilder))
       .collect(Collectors.toSet());
   }
 
-  private static String getEndpoint(final File file) {
-    return MessageFormat.format("/evidence/image/{0,number,#}", file.getId());
+  private PersonField getAuthorField(final JournalEntry journalEntry) {
+    final PersonField personField = new PersonField();
+    final Person person = this.getAuthor(journalEntry);
+    personField.setId(person.getId());
+    personField.setName(person.getName());
+    return personField;
+  }
+
+  private PersonField getTargetField(final JournalEntry journalEntry) {
+    final Optional<Person> maybeTarget = this.maybeTarget(journalEntry);
+    if (!maybeTarget.isPresent()) return null;
+    final PersonField personField = new PersonField();
+    final Person target = maybeTarget.get();
+    personField.setId(target.getId());
+    personField.setName(target.getName());
+    return personField;
   }
 
   @Nullable
   private WorkpackField getWorkpackField(final JournalEntry journalEntry) {
-    if(journalEntry.getType() == JournalType.FAIL) {
+    if (getTypes().contains(journalEntry.getType())) {
       return null;
     }
 
@@ -145,10 +145,57 @@ public class JournalResponseMapper {
     return workpackField;
   }
 
-  private String getWorkpackModelName(final Long workpackId) {
-    return this.workpackModelRepository.findByIdWorkpack(workpackId)
-      .map(WorkpackModel::getModelName)
-      .orElse("");
+  private OfficeField getOfficeField(final JournalEntry journalEntry) {
+    final Optional<Office> maybeOffice = this.maybeOffice(journalEntry);
+    if (!maybeOffice.isPresent()) return null;
+    final OfficeField officeField = new OfficeField();
+    final Office office = maybeOffice.get();
+    officeField.setId(office.getId());
+    officeField.setName(office.getName());
+    return officeField;
+  }
+
+  private PlanField getPlanField(final JournalEntry journalEntry) {
+    final Optional<Plan> maybePlan = this.maybePlan(journalEntry);
+    if (!maybePlan.isPresent()) return null;
+    final PlanField planField = new PlanField();
+    final Plan plan = maybePlan.get();
+    planField.setId(plan.getId());
+    planField.setName(plan.getName());
+    return planField;
+  }
+
+  private List<File> getFiles(final JournalEntry journalEntry) {
+    return this.journalRepository.findEvidencesByJournalId(journalEntry.getId());
+  }
+
+  private EvidenceField getEvidenceField(
+    final File file,
+    final UriComponentsBuilder uriComponentsBuilder
+  ) {
+    final EvidenceField evidenceField = new EvidenceField();
+    evidenceField.setId(file.getId());
+    evidenceField.setMimeType(file.getMimeType());
+    evidenceField.setName(file.getUserGivenName());
+    evidenceField.setUrl(this.getUrl(file, uriComponentsBuilder));
+    return evidenceField;
+  }
+
+  private Person getAuthor(final JournalEntry journalEntry) {
+    return this.journalRepository.findAuthorByJournalId(journalEntry.getId())
+      .orElseThrow(() -> new NegocioException(ApplicationMessage.PERSON_NOT_FOUND));
+  }
+
+  private Optional<Person> maybeTarget(final JournalEntry journalEntry) {
+    return this.journalRepository.findTargetByJournalId(journalEntry.getId());
+  }
+
+  private static List<JournalType> getTypes() {
+    final List<JournalType> types = new ArrayList<>();
+    types.add(JournalType.FAIL);
+    types.add(JournalType.OFFICE_PERMISSION);
+    types.add(JournalType.PLAN_PERMISSION);
+    return types;
   }
 
   private Long getWorkpackId(final JournalEntry journalEntry) {
@@ -163,21 +210,39 @@ public class JournalResponseMapper {
       .orElse("");
   }
 
+  private String getWorkpackModelName(final Long workpackId) {
+    return this.workpackModelRepository.findByIdWorkpack(workpackId)
+      .map(WorkpackModel::getModelName)
+      .orElse("");
+  }
+
+  private Optional<Office> maybeOffice(final JournalEntry journalEntry) {
+    return this.journalRepository.findOfficeByJournalId(journalEntry.getId());
+  }
+
+  private Optional<Plan> maybePlan(final JournalEntry journalEntry) {
+    return this.journalRepository.findPlanByJournalId(journalEntry.getId());
+  }
+
+  private String getUrl(
+    final File file,
+    final UriComponentsBuilder uriComponentsBuilder
+  ) {
+    final String homeScheme = this.homeURI.split("://")[0];
+    return uriComponentsBuilder.cloneBuilder()
+      .path(getEndpoint(file))
+      .scheme(homeScheme)
+      .build()
+      .toUri()
+      .toString();
+  }
+
   private Optional<WorkpackName> findWorkpackNameAndFullname(final Long workpackId) {
     return this.workpackRepository.findWorkpackNameAndFullname(workpackId);
   }
 
-  private PersonField getPersonField(final JournalEntry journalEntry) {
-    final PersonField personField = new PersonField();
-    final Person person = this.getPerson(journalEntry);
-    personField.setId(person.getId());
-    personField.setName(person.getName());
-    return personField;
-  }
-
-  private Person getPerson(final JournalEntry journalEntry) {
-    return this.journalRepository.findPersonByJournalId(journalEntry.getId())
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.PERSON_NOT_FOUND));
+  private static String getEndpoint(final File file) {
+    return MessageFormat.format("/evidence/image/{0,number,#}", file.getId());
   }
 
 }

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -59,11 +60,11 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
   ) {
     return this.getStakeholders(workpackId).stream()
       .map(stakeholder -> stakeholder.mapToResponse(uriComponentsBuilder))
-      .collect(Collectors.toSet());
+      .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
   private Set<DatasheetStakeholderQueryResult> getStakeholders(final Long workpackId) {
-    return this.repository.stakeholders(workpackId);
+    return new LinkedHashSet<>(this.repository.stakeholders(workpackId));
   }
 
 }

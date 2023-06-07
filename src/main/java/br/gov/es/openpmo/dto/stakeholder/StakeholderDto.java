@@ -18,6 +18,8 @@ public class StakeholderDto {
 
   @JsonIgnore
   private boolean isPerson;
+  @JsonIgnore
+  private Double score;
 
   public Long getIdWorkpack() {
     return this.idWorkpack;
@@ -55,6 +57,14 @@ public class StakeholderDto {
 
   public List<PermissionDto> getPermissions() {
     return this.permissions;
+  }
+
+  public Double getScore() {
+    return this.score;
+  }
+
+  public void setScore(final Double score) {
+    this.score = score;
   }
 
 }

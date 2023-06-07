@@ -1,9 +1,11 @@
 package br.gov.es.openpmo.repository.custom;
 
+import br.gov.es.openpmo.enumerator.GeneralOperatorsEnum;
 import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.model.filter.LogicOperatorEnum;
 import br.gov.es.openpmo.model.filter.Rules;
 import org.neo4j.ogm.session.Session;
+import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -38,7 +40,7 @@ public abstract class AbstractCustomFilterBuilder {
     );
 
     this.buildReturnClause(query);
-    this.buildOrderingAndDirectionClause(filter, query);
+    this.buildOrderingAndDirectionClause(filter, params, query);
 
     return query.toString();
   }
@@ -92,7 +94,7 @@ public abstract class AbstractCustomFilterBuilder {
     if(this.hasToCloseAppendedBooleanBlock()) builder.append(")");
   }
 
-  private String getValue(final Rules rule) {
+  private Object getValue(final Rules rule) {
     final String value = rule.getValue();
 
     if(value.contains(",")) {
@@ -111,7 +113,9 @@ public abstract class AbstractCustomFilterBuilder {
 
       return format("[{0}]", stringBuilder.toString());
     }
-
+    if ("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) {
+      return Boolean.valueOf(value);
+    }
     return value;
   }
 
@@ -119,11 +123,13 @@ public abstract class AbstractCustomFilterBuilder {
     final Rules rule,
     final String label
   ) {
-    return format("({0}.{1} {2} ${3}) ",
+    final String pattern = rule.getRelationalOperator() == GeneralOperatorsEnum.CONTEM
+      ? "({0}.{1} {2} ''.*'' + ${3} + ''.*'') "
+      : "({0}.{1} {2} ${3}) ";
+    return format(pattern,
                   this.nodeName, rule.getPropertyName(), rule.getRelationalOperator().getOperador(), label
     );
   }
-
 
   protected abstract boolean hasAppendedBooleanBlock();
 
@@ -131,8 +137,15 @@ public abstract class AbstractCustomFilterBuilder {
 
   protected void buildOrderingAndDirectionClause(
     final CustomFilter filter,
+    final Map<String, Object> params,
     final StringBuilder query
   ) {
+    final String term = (String) params.get("term");
+    if (StringUtils.hasText(term)) {
+      query.append(" ")
+        .append("ORDER BY score DESC");
+      return;
+    }
     this.appendStringIfTrue(
       filter.getSortBy() != null,
       builder -> builder.append(" ").append("ORDER BY ")
@@ -170,5 +183,44 @@ public abstract class AbstractCustomFilterBuilder {
   }
 
   protected abstract String[] getDefinedExternalParams();
+
+  protected void buildFilterBySimilarity(final CustomFilter filter,
+			 final StringBuilder query) {
+	  this.buildFilterBySimilarity(filter, query, "");
+  }
+
+  protected void buildFilterBySimilarity(final CustomFilter filter,
+		  								 final StringBuilder query,
+		  								 final String complementWITH) {
+	  this.appendStringIfTrue(
+		      filter.isSimilarityFilter(),
+		      builder -> builder.append("WITH ")
+		    	 				.append(this.nodeName).append(complementWITH)
+		    	 				.append(", ")
+		    	 				.append("apoc.text.levenshteinSimilarity(apoc.text.clean(")
+		    	 				.append(this.nodeName).append(".name + ")
+		    	 				.append(this.nodeName).append(".fullName), ")
+		    	 				.append("apoc.text.clean($term)")
+		    	 				.append(") AS score ")
+		    	 				.append("WHERE").append(" ")
+		    	 				.append("score > ")
+		    	 				.append("$searchCutOffScore "),
+		      query
+		    );
+
+		if (filter.isSimilarityFilter() && filter.getRules() != null && !filter.getRules().isEmpty()
+				&& !this.hasAppendedBooleanBlock())
+			query.append(" AND ");
+  }
+
+  protected void buildOrderingBySimilarity(final CustomFilter filter,
+			 						   	   final StringBuilder query) {
+	this.appendStringIfTrue(
+			filter.isSimilarityFilter(),
+			builder -> builder.append("score DESC "),
+			query
+	);
+
+  }
 
 }

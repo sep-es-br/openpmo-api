@@ -7,6 +7,8 @@ import org.neo4j.ogm.session.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Service
 public class FindAllOfficeUsingCustomFilter extends FindAllUsingCustomFilterBuilder {
 
@@ -36,7 +38,8 @@ public class FindAllOfficeUsingCustomFilter extends FindAllUsingCustomFilterBuil
     final CustomFilter filter,
     final StringBuilder query
   ) {
-    if(filter.getRules() == null || filter.getRules().isEmpty()) return;
+	buildFilterBySimilarity(filter, query);
+    if(filter.getRules() == null || filter.getRules().isEmpty() || filter.isSimilarityFilter()) return;
     query.append("WHERE").append(" ");
   }
 
@@ -58,11 +61,15 @@ public class FindAllOfficeUsingCustomFilter extends FindAllUsingCustomFilterBuil
   @Override
   public void buildOrderingAndDirectionClause(
     final CustomFilter filter,
+    Map<String, Object> params,
     final StringBuilder query
   ) {
+	if (filter.getSortBy() != null || filter.isSimilarityFilter()) query.append(" ").append("ORDER BY ");
+	buildOrderingBySimilarity(filter, query);
+	if (filter.getSortBy() != null && filter.isSimilarityFilter()) query.append(", ");
     this.appendStringIfTrue(
       filter.getSortBy() != null,
-      builder -> builder.append(" ").append("ORDER BY ").append(this.nodeName).append(".").append(filter.getSortBy()),
+      builder -> builder.append(this.nodeName).append(".").append(filter.getSortBy()),
       query
     );
     this.appendStringIfTrue(
@@ -74,7 +81,8 @@ public class FindAllOfficeUsingCustomFilter extends FindAllUsingCustomFilterBuil
 
   @Override
   public String[] getDefinedExternalParams() {
-    return new String[0];
+    String[] a = {"term", "searchCutOffScore"};
+    return a;
   }
 
 

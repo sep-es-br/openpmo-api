@@ -44,12 +44,13 @@ public class PlanModelController {
   public ResponseEntity<ResponseBase<List<PlanModelDto>>> indexBase(
       @RequestParam("id-office") final Long idOffice,
       @RequestParam(required = false) final Long idFilter,
+      @RequestParam(required = false) final String term,
       @Authorization final String authorization) {
 
     this.canAccessService.ensureCanReadResource(idOffice, authorization);
     final List<PlanModelDto> planModels = new ArrayList<>();
 
-    this.planModelService.findAllInOffice(idOffice, idFilter)
+    this.planModelService.findAllInOffice(idOffice, idFilter, term)
         .forEach(registro -> planModels.add(new PlanModelDto(registro)));
 
     return ResponseEntity.ok(ResponseBase.of(planModels));

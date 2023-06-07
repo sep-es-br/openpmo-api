@@ -1,6 +1,5 @@
 package br.gov.es.openpmo.repository.custom.filters;
 
-
 import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.model.filter.Rules;
 import br.gov.es.openpmo.repository.PropertyModelRepository;
@@ -10,10 +9,14 @@ import org.neo4j.ogm.session.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Service
-public class FindAllWorkpackByParentUsingCustomFilter extends FindAllUsingCustomFilterBuilder implements ApplyFilterUsingPropertyModel {
+public class FindAllWorkpackByParentUsingCustomFilter extends FindAllUsingCustomFilterBuilder
+  implements ApplyFilterUsingPropertyModel {
 
   private final WorkpackRepository repository;
+
   private final PropertyModelRepository propertyModelRepository;
 
   @Autowired
@@ -35,15 +38,16 @@ public class FindAllWorkpackByParentUsingCustomFilter extends FindAllUsingCustom
     final CustomFilter filter,
     final StringBuilder query
   ) {
-    query.append("" +
-                 "MATCH (node:Workpack{deleted:false})-[rf:BELONGS_TO]->(p:Plan)-[is:IS_STRUCTURED_BY]->(pm:PlanModel), " +
+    query.append("MATCH (node:Workpack{deleted:false})-[rf:BELONGS_TO]->(p:Plan)-[is:IS_STRUCTURED_BY]->(pm:PlanModel), " +
                  "(node)-[ii:IS_INSTANCE_BY]->(wm:WorkpackModel)<-[:FEATURES]-(propertyModel:PropertyModel), " +
                  "(node)-[wc:IS_IN]->(wp:Workpack), " +
-                 "(node)<-[:FEATURES]-(property:Property)-[:IS_DRIVEN_BY]->(propertyModel) " +
+                 "(node)<-[:FEATURES]-(property:Property)-[:IS_DRIVEN_BY]->(propertyModel), " +
+                 "(node)<-[:FEATURES]-(name:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}), " +
+                 "(node)<-[:FEATURES]-(fullName:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'fullName'}) " +
                  "OPTIONAL MATCH (propertyModel)-[:GROUPS]->(groupedProperty:PropertyModel) " +
                  "OPTIONAL MATCH (node)<-[:FEATURES]-(:Property)-[:VALUES]->(values) " +
-                 "WITH node, rf, p, is, pm, ii, wm, wc, wp, property, propertyModel, groupedProperty, " +
-                 "collect( property ) as properties, " +
+                 "WITH *, apoc.text.levenshteinSimilarity(apoc.text.clean(name.value + fullName.value), apoc.text.clean($term)) AS score, " +
+                 "collect( property ) + collect( name ) + collect( fullName ) as properties, " +
                  "collect( id(values) ) as selectedValues ");
   }
 
@@ -56,7 +60,8 @@ public class FindAllWorkpackByParentUsingCustomFilter extends FindAllUsingCustom
       .append("   id(p)=$idPlan ")
       .append("   AND (id(pm)=$idPlanModel OR $idPlanModel IS NULL) ")
       .append("   AND (id(wm)=$idWorkPackModel OR $idWorkPackModel IS NULL) ")
-      .append("   AND id(wp)=$idWorkPackParent")
+      .append("   AND id(wp)=$idWorkPackParent ")
+      .append("   AND ($term is null OR $term = '' OR score > $searchCutOffScore)")
       .append(") ");
   }
 
@@ -82,7 +87,10 @@ public class FindAllWorkpackByParentUsingCustomFilter extends FindAllUsingCustom
     final Rules rule,
     final String label
   ) {
-    return this.buildFilterRuleForWorkpack(rule, label);
+    return this.buildFilterRuleForWorkpack(
+      rule,
+      label
+    );
   }
 
   @Override
@@ -98,14 +106,25 @@ public class FindAllWorkpackByParentUsingCustomFilter extends FindAllUsingCustom
   @Override
   protected void buildOrderingAndDirectionClause(
     final CustomFilter filter,
+    Map<String, Object> params,
     final StringBuilder query
   ) {
-    this.buildOrderingAndDirectionClauseForWorkpack(filter, query);
+    this.buildOrderingAndDirectionClauseForWorkpack(
+      filter,
+      query
+    );
   }
 
   @Override
   public String[] getDefinedExternalParams() {
-    return new String[]{"idPlan", "idPlanModel", "idWorkPackModel", "idWorkPackParent"};
+    return new String[]{
+      "idPlan",
+      "idPlanModel",
+      "idWorkPackModel",
+      "idWorkPackParent",
+      "term",
+      "searchCutOffScore"
+    };
   }
 
   @Override

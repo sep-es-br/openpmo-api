@@ -45,10 +45,11 @@ public class DomainController {
   public ResponseEntity<ResponseBase<List<DomainDto>>> indexBase(
       @RequestParam(value = "id-office", required = false) final Long idOffice,
       @RequestParam(value = "idFilter", required = false) final Long idFilter,
+      @RequestParam(required = false) final String term,
       @Authorization final String authorization) {
 
     this.canAccessService.ensureCanAccessManagementOrReadResource(idOffice, authorization);
-    final List<DomainDto> domains = this.domainService.findAll(idOffice, idFilter)
+    final List<DomainDto> domains = this.domainService.findAll(idOffice, idFilter, term)
         .stream()
         .map(o -> this.modelMapper.map(o, DomainDto.class))
         .collect(Collectors.toList());

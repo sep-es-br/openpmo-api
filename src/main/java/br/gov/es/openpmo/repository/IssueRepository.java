@@ -14,13 +14,17 @@ public interface IssueRepository extends Neo4jRepository<Issue, Long>, CustomRep
 
   @Query("MATCH (issue:Issue)-[reported:IS_REPORTED_FOR]->(workpack:Workpack) " +
          "OPTIONAL MATCH (issue)-[isTriggeredBy:IS_TRIGGERED_BY]->(risk:Risk) " +
-         "WITH issue, reported, workpack, isTriggeredBy, risk " +
+         "WITH *, apoc.text.levenshteinSimilarity(apoc.text.clean(issue.name), apoc.text.clean($term)) AS score " +
          "WHERE id(workpack)=$idWorkpack AND (id(risk)=$idRisk OR $idRisk IS NULL) " +
-         "RETURN issue"
+         "AND ($term is null OR $term = '' OR score > $searchCutOffScore) " +
+         "RETURN issue " +
+         "ORDER BY score DESC"
   )
   List<Issue> findAllAsIssueCardDto(
     Long idWorkpack,
-    Long idRisk
+    Long idRisk,
+    String term,
+    Double searchCutOffScore
   );
 
   @Query(

@@ -54,6 +54,7 @@ public class GetBaselineAsCCBMemberViewService implements IGetBaselineAsCCBMembe
     return BaselineDetailCCBMemberResponse.of(
       baseline,
       workpackName.getName(),
+      workpackName.getFullName(),
       output,
       evaluations
     );

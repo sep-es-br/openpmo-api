@@ -13,38 +13,36 @@ import java.util.Set;
 @Repository
 public interface DashboardDatasheetRepository extends Neo4jRepository<Workpack, Long> {
 
-  @Query("match (w:Workpack{deleted:false})<-[:IS_IN*]-(v:Workpack{deleted:false,canceled:false})-[:IS_INSTANCE_BY]->" +
+  @Query("MATCH (w:Workpack{deleted:false})<-[:IS_IN*]-(v:Workpack{deleted:false,canceled:false})-[:IS_INSTANCE_BY]->" +
          "(m:WorkpackModel) " +
-         "where id(w)=$workpackId and not (v)-[:IS_IN*..0]->(:Workpack{canceled:false})-[:IS_IN*..0]->(w) " +
-         "with v, collect(distinct m) as modelList " +
-         "with v, collect([n in modelList where id(n)=v.idWorkpackModel][0]) as modelGroup " +
-         "unwind modelGroup as models " +
-         "return id(models), " +
-         "    count(v) as quantity, " +
-         "    models.modelName as singularName, " +
-         "    models.modelNameInPlural as pluralName, " +
-         "    models.fontIcon as icon")
+         "WHERE id(w)=$workpackId AND NOT (v)-[:IS_IN*..0]->(:Workpack{canceled:false})-[:IS_IN*..0]->(w) " +
+         "WITH v, collect(DISTINCT m) AS modelList " +
+         "WITH v, collect([n IN modelList WHERE id(n)=v.idWorkpackModel][0]) AS modelGroup " +
+         "UNWIND modelGroup AS models " +
+         "RETURN id(models), " +
+         "    count(v) AS quantity, " +
+         "    models.modelName AS singularName, " +
+         "    models.modelNameInPlural AS pluralName, " +
+         "    models.fontIcon AS icon")
   List<WorkpackByModelQueryResult> workpackByModel(Long workpackId);
 
-  @Query("match (a:Actor)-[s:IS_STAKEHOLDER_IN]->(w:Workpack{deleted:false,canceled:false}) " +
-         "optional match (w)-[:IS_IN*]->(v:Workpack{deleted:false,canceled:false}) " +
-         "optional match (a)<-[:IS_A_PORTRAIT_OF]-(file:File) " +
-         "with a,s,w,v,file " +
-         "where " +
+  @Query("MATCH (a:Actor)-[s:IS_STAKEHOLDER_IN]->(w:Workpack{deleted:false,canceled:false}) " +
+         "OPTIONAL MATCH (w)-[:IS_IN*]->(v:Workpack{deleted:false,canceled:false}) " +
+         "OPTIONAL MATCH (wm:WorkpackModel)<-[:IS_INSTANCE_BY]-(w) " +
+         "OPTIONAL MATCH (a)<-[:IS_A_PORTRAIT_OF]-(file:File) " +
+         "WITH * " +
+         "ORDER BY (s.role IN wm.organizationRoles), s.role, a.name " +
+         "WHERE " +
          "    ( " +
-         "        (a)-[s]->(w) and id(w)=$workpackId " +
+         "        (a)-[s]->(w) AND id(w)=$workpackId " +
          "    ) " +
-         "    or " +
-         "    ( " +
-         "        (a)-[s]->(w)-[:IS_IN*]->(v:Workpack{deleted:false,canceled:false}) and id(v)=$workpackId " +
-         "    ) " +
-         "return " +
-         "    distinct id(a) as id, " +
-         "    a.name as name, " +
-         "    a.fullName as fullName, " +
-         "    s.role as role, " +
+         "RETURN " +
+         "    DISTINCT id(a) AS id, " +
+         "    a.name AS name, " +
+         "    a.fullName AS fullName, " +
+         "    s.role AS role, " +
          "    file, " +
-         "    'Organization' in labels(a) as organization")
-  Set<DatasheetStakeholderQueryResult> stakeholders(Long workpackId);
+         "    'Organization' IN labels(a) AS organization")
+  List<DatasheetStakeholderQueryResult> stakeholders(Long workpackId);
 
 }

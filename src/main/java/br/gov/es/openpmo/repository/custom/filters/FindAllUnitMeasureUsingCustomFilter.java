@@ -29,7 +29,10 @@ public class FindAllUnitMeasureUsingCustomFilter extends FindAllUsingCustomFilte
     final StringBuilder query
   ) {
     query.append("MATCH (").append(this.nodeName)
-      .append(":UnitMeasure)-[a:AVAILABLE_IN]->(o:Office)")
+      .append(":UnitMeasure)-[a:AVAILABLE_IN]->(o:Office) ")
+      .append("WITH *, apoc.text.levenshteinSimilarity(")
+      .append("apoc.text.clean(").append(this.nodeName).append(".name) + apoc.text.clean(").append(this.nodeName).append(".fullName)")
+      .append(", apoc.text.clean($term)) AS score")
       .append(" ");
   }
 
@@ -38,12 +41,12 @@ public class FindAllUnitMeasureUsingCustomFilter extends FindAllUsingCustomFilte
     final CustomFilter filter,
     final StringBuilder query
   ) {
-    query.append("WHERE ID(o) = $idOffice").append(" ");
+    query.append("WHERE ID(o) = $idOffice AND ( $term IS NULL OR $term = '' OR score > $searchCutOffScore ) ");
   }
 
   @Override
   public void buildReturnClause(final StringBuilder query) {
-    query.append("RETURN ").append(this.nodeName).append(",a,o");
+    query.append("RETURN ").append(this.nodeName).append(", a, o");
   }
 
   @Override
@@ -59,7 +62,9 @@ public class FindAllUnitMeasureUsingCustomFilter extends FindAllUsingCustomFilte
   @Override
   public String[] getDefinedExternalParams() {
     return new String[]{
-      "idOffice"
+      "idOffice",
+      "searchCutOffScore",
+      "term"
     };
   }
 

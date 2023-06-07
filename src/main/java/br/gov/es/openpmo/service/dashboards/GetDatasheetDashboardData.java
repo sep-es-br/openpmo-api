@@ -14,6 +14,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -61,11 +62,11 @@ public class GetDatasheetDashboardData implements IGetDatasheetDashboardData {
   ) {
     return this.getStakeholders(workpackId).stream()
       .map(stakeholder -> stakeholder.mapToResponse(uriComponentsBuilder))
-      .collect(Collectors.toSet());
+      .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
   private List<DatasheetStakeholderQueryResult> getStakeholders(final Long workpackId) {
-    return new ArrayList<>(this.repository.stakeholders(workpackId));
+    return new ArrayList<>(new LinkedHashSet<>(this.repository.stakeholders(workpackId)));
   }
 
 }

@@ -42,11 +42,12 @@ public class OfficePermissionController {
     @RequestParam(name = "id-office") final Long idOffice,
     @RequestParam(required = false) final Long idFilter,
     @RequestParam(name = "key", required = false) final String key,
+    @RequestParam(required = false) final String term,
     @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanReadManagementResource(idOffice, key, authorization);
     final Long idPerson = this.tokenService.getUserId(authorization);
-    final List<OfficePermissionDto> offices = this.service.findAllDto(idOffice, idFilter, key, idPerson);
+    final List<OfficePermissionDto> offices = this.service.findAllDto(idOffice, idFilter, key, idPerson, term);
     if(offices.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
@@ -71,7 +72,7 @@ public class OfficePermissionController {
     @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanAccessManagementResource(request.getIdOffice(), authorization);
-    this.service.store(request);
+    this.service.store(request, authorization);
     return ResponseEntity.ok(ResponseBase.of());
   }
 
@@ -81,7 +82,7 @@ public class OfficePermissionController {
     @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanAccessManagementResource(request.getIdOffice(), authorization);
-    this.service.update(request);
+    this.service.update(request, authorization);
     return ResponseEntity.ok(ResponseBase.of());
   }
 
@@ -92,7 +93,7 @@ public class OfficePermissionController {
     @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanAccessManagementResource(idOffice, authorization);
-    this.service.delete(idOffice, key);
+    this.service.delete(idOffice, key, authorization);
     return ResponseEntity.ok().build();
   }
 

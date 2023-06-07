@@ -8,28 +8,38 @@ public class WorkpackModelRepresentation {
 
   private String workpackModelType;
 
+  private Long workpackModelPosition;
+
   public Long getIdWorkpackModel() {
-    return idWorkpackModel;
+    return this.idWorkpackModel;
   }
 
-  public void setIdWorkpackModel(Long idWorkpackModel) {
+  public void setIdWorkpackModel(final Long idWorkpackModel) {
     this.idWorkpackModel = idWorkpackModel;
   }
 
   public String getWorkpackModelName() {
-    return workpackModelName;
+    return this.workpackModelName;
   }
 
-  public void setWorkpackModelName(String workpackModelName) {
+  public void setWorkpackModelName(final String workpackModelName) {
     this.workpackModelName = workpackModelName;
   }
 
   public String getWorkpackModelType() {
-    return workpackModelType;
+    return this.workpackModelType;
   }
 
-  public void setWorkpackModelType(String workpackModelType) {
+  public void setWorkpackModelType(final String workpackModelType) {
     this.workpackModelType = workpackModelType;
+  }
+
+  public Long getWorkpackModelPosition() {
+    return this.workpackModelPosition;
+  }
+
+  public void setWorkpackModelPosition(final Long workpackModelPosition) {
+    this.workpackModelPosition = workpackModelPosition;
   }
 
 }

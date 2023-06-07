@@ -10,6 +10,7 @@ import io.swagger.annotations.Api;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Api
@@ -36,13 +37,17 @@ public class WorkpackBreakdownStructureController {
   @GetMapping("/{idWorkpack}")
   public Response<WorkpackBreakdownStructure> getWorkpackBreakdownStructure(
     @PathVariable final Long idWorkpack,
+    @RequestParam(required = false, defaultValue = "false") final Boolean allLevels,
     @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanReadResource(
       idWorkpack,
       authorization
     );
-    final WorkpackBreakdownStructure structure = this.getWorkpackBreakdownStructure.execute(idWorkpack);
+    final WorkpackBreakdownStructure structure = this.getWorkpackBreakdownStructure.execute(
+      idWorkpack,
+      allLevels
+    );
     return this.responseHandler.success(structure);
   }
 

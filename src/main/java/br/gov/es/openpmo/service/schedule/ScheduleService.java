@@ -1,12 +1,7 @@
 package br.gov.es.openpmo.service.schedule;
 
 import br.gov.es.openpmo.dto.EntityDto;
-import br.gov.es.openpmo.dto.schedule.ConsumesDto;
-import br.gov.es.openpmo.dto.schedule.CostSchedule;
-import br.gov.es.openpmo.dto.schedule.GroupStepDto;
-import br.gov.es.openpmo.dto.schedule.ScheduleDto;
-import br.gov.es.openpmo.dto.schedule.ScheduleParamDto;
-import br.gov.es.openpmo.dto.schedule.StepDto;
+import br.gov.es.openpmo.dto.schedule.*;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.relations.Consumes;
 import br.gov.es.openpmo.model.schedule.Schedule;
@@ -14,12 +9,13 @@ import br.gov.es.openpmo.model.schedule.Step;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
 import br.gov.es.openpmo.model.workpacks.Deliverable;
 import br.gov.es.openpmo.model.workpacks.Workpack;
+import br.gov.es.openpmo.repository.CostAccountRepository;
 import br.gov.es.openpmo.repository.ScheduleRepository;
 import br.gov.es.openpmo.repository.StepRepository;
 import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
 import br.gov.es.openpmo.service.workpack.CostAccountService;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
-import br.gov.es.openpmo.utils.Pair;
+import br.gov.es.openpmo.utils.MapPair;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,21 +27,28 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-import static br.gov.es.openpmo.utils.ApplicationMessage.SCHEDULE_ALREADY_EXISTS;
-import static br.gov.es.openpmo.utils.ApplicationMessage.SCHEDULE_HAS_ACTIVE_BASELINE;
-import static br.gov.es.openpmo.utils.ApplicationMessage.SCHEDULE_NOT_FOUND;
-import static br.gov.es.openpmo.utils.ApplicationMessage.SCHEDULE_START_DATE_AFTER_DATE_ERROR;
+import static br.gov.es.openpmo.utils.ApplicationMessage.*;
 
 @Service
 public class ScheduleService {
 
   private final StepRepository stepRepository;
+
   private final ScheduleRepository scheduleRepository;
+
   private final IAsyncDashboardService dashboardService;
+
   private final IGetEquivalentStepSnapshot getEquivalentStepSnapshot;
+
   private final CostAccountService costAccountService;
+
   private final WorkpackService workpackService;
+
   private final ModelMapper modelMapper;
+
+  private final CostAccountRepository costAccountRepository;
+
+  private final UpdateStatusService updateStatusService;
 
   @Autowired
   public ScheduleService(
@@ -55,8 +58,9 @@ public class ScheduleService {
     final IGetEquivalentStepSnapshot getEquivalentStepSnapshot,
     final CostAccountService costAccountService,
     final WorkpackService workpackService,
-    final ModelMapper modelMapper
-  ) {
+    final ModelMapper modelMapper,
+    final CostAccountRepository costAccountRepository,
+    UpdateStatusService updateStatusService) {
     this.stepRepository = stepRepository;
     this.scheduleRepository = scheduleRepository;
     this.dashboardService = dashboardService;
@@ -64,6 +68,8 @@ public class ScheduleService {
     this.costAccountService = costAccountService;
     this.workpackService = workpackService;
     this.modelMapper = modelMapper;
+    this.costAccountRepository = costAccountRepository;
+    this.updateStatusService = updateStatusService;
   }
 
   private static void setScheduleDtoWorkpack(
@@ -82,8 +88,11 @@ public class ScheduleService {
     final Iterable<? extends Step> steps,
     final Map<? super Integer, List<Step>> mapsYearToStep
   ) {
-    for(final Step step : steps) {
-      mapsYearToStep.computeIfAbsent(step.getYear(), ifIsMissingStepList -> new ArrayList<>());
+    for (final Step step : steps) {
+      mapsYearToStep.computeIfAbsent(
+        step.getYear(),
+        ifIsMissingStepList -> new ArrayList<>()
+      );
       mapsYearToStep.get(step.getYear()).add(step);
     }
   }
@@ -96,11 +105,24 @@ public class ScheduleService {
     steps.sort(Comparator.comparing(StepDto::getPeriodFromStart));
   }
 
+  private static Optional<BigDecimal> getBaselinePlannedCost(
+    final ConsumesDto consumes,
+    final Iterable<? extends Consumes> consumesSnapshot
+  ) {
+    for (final Consumes snapshot : consumesSnapshot) {
+      if (snapshot.getIdCostAccountMaster().equals(consumes.getIdCostAccount())) {
+        final BigDecimal plannedCost = snapshot.getPlannedCost();
+        return Optional.of(plannedCost);
+      }
+    }
+    return Optional.empty();
+  }
+
   private static void ifEndDateIsBeforeStartDateThrowsException(final ScheduleParamDto scheduleParamDto) {
     final LocalDate start = getStart(scheduleParamDto);
     final LocalDate end = getEnd(scheduleParamDto);
 
-    if(end.isBefore(start)) {
+    if (end.isBefore(start)) {
       throw new NegocioException(SCHEDULE_START_DATE_AFTER_DATE_ERROR);
     }
   }
@@ -135,7 +157,10 @@ public class ScheduleService {
     final LocalDate first = getStart(scheduleParamDto).withDayOfMonth(1);
     final LocalDate second = getEnd(scheduleParamDto).withDayOfMonth(1);
 
-    return ChronoUnit.MONTHS.between(first, second) + 1L;
+    return ChronoUnit.MONTHS.between(
+      first,
+      second
+    ) + 1L;
   }
 
   private static long getActualWorkMonths(final ScheduleParamDto scheduleParamDto) {
@@ -143,111 +168,156 @@ public class ScheduleService {
     final LocalDate end = getEnd(scheduleParamDto).withDayOfMonth(1);
     final LocalDate now = LocalDate.now();
 
-    if(now.isBefore(start)) {
+    if (now.isBefore(start)) {
       return 0L;
     }
 
-    if(now.isAfter(end)) {
-      return ChronoUnit.MONTHS.between(start, end) + 1L;
+    if (now.isAfter(end)) {
+      return ChronoUnit.MONTHS.between(
+        start,
+        end
+      ) + 1L;
     }
 
-    return ChronoUnit.MONTHS.between(start, now) + 1L;
+    return ChronoUnit.MONTHS.between(
+      start,
+      now
+    ) + 1L;
+  }
+
+  private static Map<Long, BigDecimal> getParts(
+    final long months,
+    final BigDecimal decimal
+  ) {
+    long count = 0L;
+    final Map<Long, BigDecimal> results = new HashMap<>();
+    if (Objects.isNull(decimal) || decimal.equals(BigDecimal.ZERO)) {
+      for (long month = months; month > 0; month--) {
+        results.put(month, BigDecimal.ZERO);
+      }
+      return results;
+    }
+    for (long month = months; month > 0; month--) {
+      final BigDecimal result = decimal
+        .subtract(new BigDecimal(count))
+        .divide(
+          new BigDecimal(month),
+          RoundingMode.CEILING
+        );
+      count = count + result.longValue();
+      results.put(month, result);
+    }
+    return results;
   }
 
   private static void addsStepToSteps(
-    final Map<CostAccount, Pair<BigDecimal, BigDecimal>> map,
+    final Map<Long, ? extends BigDecimal> plannedParts,
+    final Map<Long, ? extends BigDecimal> actualParts,
+    final Map<CostAccount, MapPair<Long, BigDecimal>> map,
     final Collection<? super Step> steps,
-    final long plannedWorkMonths,
     final long actualWorkMonths,
     final long currentMonth,
     final ScheduleParamDto scheduleParamDto
   ) {
     final Step step = new Step();
 
-    setPlannedWork(plannedWorkMonths, scheduleParamDto, step);
-    addsConsumesToStep(currentMonth, actualWorkMonths, map, step);
+    setPlannedWork(
+      plannedParts,
+      currentMonth,
+      scheduleParamDto,
+      step
+    );
+    addsConsumesForEachStep(
+      currentMonth,
+      actualWorkMonths,
+      map,
+      step
+    );
 
     step.setPeriodFromStart(currentMonth);
     step.setActualWork(BigDecimal.ZERO);
 
-    if(currentMonth < actualWorkMonths && actualWorkMonths > 0) {
-      setActualWork(actualWorkMonths, scheduleParamDto, step);
+    if (currentMonth < actualWorkMonths && actualWorkMonths > 0) {
+      setActualWork(
+        currentMonth,
+        scheduleParamDto,
+        actualParts,
+        step
+      );
     }
 
     steps.add(step);
   }
 
-  private static BigDecimal getParts(
-    final long months,
-    final BigDecimal decimal
-  ) {
-    if(decimal == null || decimal.equals(BigDecimal.ZERO)) {
-      return BigDecimal.ZERO;
-    }
-    return decimal.divide(new BigDecimal(months), 2, RoundingMode.HALF_UP);
-  }
-
   private static void setPlannedWork(
-    final long numberOfMonths,
+    final Map<Long, ? extends BigDecimal> plannedParts,
+    final long currentMonth,
     final ScheduleParamDto scheduleParamDto,
     final Step step
   ) {
     final BigDecimal plannedWork = scheduleParamDto.getPlannedWork();
     step.setPlannedWork(BigDecimal.ZERO);
-
-    if(Objects.nonNull(plannedWork)) {
-      step.setPlannedWork(getParts(numberOfMonths, plannedWork));
+    if (Objects.nonNull(plannedWork)) {
+      step.setPlannedWork(plannedParts.get(currentMonth));
     }
   }
 
-  private static void setActualWork(
-    final long numberOfMonths,
-    final ScheduleParamDto scheduleParamDto,
-    final Step step
-  ) {
-    final BigDecimal actualWork = scheduleParamDto.getActualWork();
-    step.setActualWork(BigDecimal.ZERO);
-
-    if(Objects.nonNull(actualWork)) {
-      step.setActualWork(getParts(numberOfMonths, actualWork));
-    }
-  }
-
-  private static void addsConsumesToStep(
+  private static void addsConsumesForEachStep(
     final long currentMonth,
     final long actualWorkMonths,
-    final Map<CostAccount, Pair<BigDecimal, BigDecimal>> mapCostToParts,
+    final Map<CostAccount, MapPair<Long, BigDecimal>> mapCostToParts,
     final Step step
   ) {
-    if(mapCostToParts.isEmpty()) {
+    if (mapCostToParts.isEmpty()) {
       return;
     }
 
     step.setConsumes(new HashSet<>());
 
-    for(final Map.Entry<CostAccount, Pair<BigDecimal, BigDecimal>> entry : mapCostToParts.entrySet()) {
+    for (final Map.Entry<CostAccount, MapPair<Long, BigDecimal>> entry : mapCostToParts.entrySet()) {
       final CostAccount costAccount = entry.getKey();
-      final Pair<BigDecimal, BigDecimal> pair = entry.getValue();
-      addsConsumesToStep(step, costAccount, pair, currentMonth < actualWorkMonths);
+      final MapPair<Long, BigDecimal> pair = entry.getValue();
+      addsConsumesInStep(
+        step,
+        currentMonth,
+        costAccount,
+        pair,
+        currentMonth < actualWorkMonths
+      );
     }
   }
 
-  private static void addsConsumesToStep(
+  private static void setActualWork(
+    final long currentMonth,
+    final ScheduleParamDto scheduleParamDto,
+    final Map<Long, ? extends BigDecimal> actualParts,
+    final Step step
+  ) {
+    final BigDecimal actualWork = scheduleParamDto.getActualWork();
+    step.setActualWork(BigDecimal.ZERO);
+
+    if (Objects.nonNull(actualWork)) {
+      step.setActualWork(actualParts.get(currentMonth));
+    }
+  }
+
+  private static void addsConsumesInStep(
     final Step step,
+    final long currentMonth,
     final CostAccount costAccount,
-    final Pair<? extends BigDecimal, ? extends BigDecimal> pair,
+    final MapPair<Long, ? extends BigDecimal> pair,
     final boolean includeActualCost
   ) {
     BigDecimal actualCost = BigDecimal.ZERO;
 
-    if(includeActualCost) {
-      actualCost = pair.getFirst();
+    if (includeActualCost) {
+      actualCost = pair.getFirst().get(currentMonth);
     }
 
     final Consumes consumes = new Consumes(
       null,
       actualCost,
-      pair.getSecond(),
+      pair.getSecond().get(currentMonth),
       costAccount,
       step
     );
@@ -259,7 +329,7 @@ public class ScheduleService {
     final List<Schedule> schedules = this.scheduleRepository.findAllByWorkpack(idWorkpack);
     final List<ScheduleDto> list = new ArrayList<>();
 
-    for(final Schedule schedule : schedules) {
+    for (final Schedule schedule : schedules) {
       final ScheduleDto scheduleDto = this.mapsToScheduleDto(schedule);
       list.add(scheduleDto);
     }
@@ -270,11 +340,17 @@ public class ScheduleService {
   public ScheduleDto mapsToScheduleDto(final Schedule schedule) {
     final ScheduleDto scheduleDto = this.mapsToScheduleDtoUsingModelMapper(schedule);
 
-    if(Objects.nonNull(schedule.getSteps())) {
-      this.setScheduleDtoGroupStep(schedule, scheduleDto);
+    if (Objects.nonNull(schedule.getSteps())) {
+      this.setScheduleDtoGroupStep(
+        schedule,
+        scheduleDto
+      );
     }
 
-    setScheduleDtoWorkpack(schedule, scheduleDto);
+    setScheduleDtoWorkpack(
+      schedule,
+      scheduleDto
+    );
 
     this.scheduleRepository.findSnapshotByMasterId(schedule.getId()).ifPresent(snapshot -> {
       scheduleDto.setBaselineStart(snapshot.getStart());
@@ -283,12 +359,18 @@ public class ScheduleService {
       final BigDecimal plannedWork = snapshot.getSteps().stream()
         .map(Step::getPlannedWork)
         .filter(Objects::nonNull)
-        .reduce(BigDecimal.ZERO, BigDecimal::add);
+        .reduce(
+          BigDecimal.ZERO,
+          BigDecimal::add
+        );
       final BigDecimal plannedCost = snapshot.getSteps().stream()
         .flatMap(step -> step.getConsumes().stream())
         .map(Consumes::getPlannedCost)
         .filter(Objects::nonNull)
-        .reduce(BigDecimal.ZERO, BigDecimal::add);
+        .reduce(
+          BigDecimal.ZERO,
+          BigDecimal::add
+        );
       scheduleDto.setBaselinePlaned(plannedWork);
       scheduleDto.setBaselineCost(plannedCost);
     });
@@ -297,7 +379,10 @@ public class ScheduleService {
   }
 
   private <T> ScheduleDto mapsToScheduleDtoUsingModelMapper(final T source) {
-    return this.modelMapper.map(source, ScheduleDto.class);
+    return this.modelMapper.map(
+      source,
+      ScheduleDto.class
+    );
   }
 
   private void setScheduleDtoGroupStep(
@@ -310,8 +395,11 @@ public class ScheduleService {
 
   private List<GroupStepDto> getGroupStep(final Iterable<? extends Step> steps) {
     final List<GroupStepDto> groups = new ArrayList<>();
-    if(Objects.nonNull(steps)) {
-      this.addsStepsToGroupSteps(steps, groups);
+    if (Objects.nonNull(steps)) {
+      this.addsStepsToGroupSteps(
+        steps,
+        groups
+      );
     }
     return groups;
   }
@@ -321,8 +409,14 @@ public class ScheduleService {
     final List<GroupStepDto> groups
   ) {
     final Map<Integer, List<Step>> mapYearToSteps = new HashMap<>();
-    addsStepsToMap(steps, mapYearToSteps);
-    this.addsStepsFromMapToGroupSteps(mapYearToSteps, groups);
+    addsStepsToMap(
+      steps,
+      mapYearToSteps
+    );
+    this.addsStepsFromMapToGroupSteps(
+      mapYearToSteps,
+      groups
+    );
     sortGroupsByYear(groups);
   }
 
@@ -330,10 +424,14 @@ public class ScheduleService {
     final Map<Integer, ? extends List<Step>> map,
     final Collection<? super GroupStepDto> groups
   ) {
-    for(final Map.Entry<Integer, ? extends List<Step>> entry : map.entrySet()) {
+    for (final Map.Entry<Integer, ? extends List<Step>> entry : map.entrySet()) {
       final Integer year = entry.getKey();
       final List<Step> stepList = entry.getValue();
-      this.addsStepToGroupSteps(groups, year, stepList);
+      this.addsStepToGroupSteps(
+        groups,
+        year,
+        stepList
+      );
     }
   }
 
@@ -345,7 +443,10 @@ public class ScheduleService {
     final GroupStepDto group = new GroupStepDto();
     final List<StepDto> groupSteps = group.getSteps();
 
-    this.addsStepsToGroupSteps(stepList, groupSteps);
+    this.addsStepsToGroupSteps(
+      stepList,
+      groupSteps
+    );
     sortStepsByPeriodFromStart(groupSteps);
 
     group.setYear(year);
@@ -356,22 +457,12 @@ public class ScheduleService {
     final Iterable<? extends Step> stepList,
     final Collection<? super StepDto> groupSteps
   ) {
-    for(final Step step : stepList) {
-      this.addsStepToGroupSteps(groupSteps, step);
+    for (final Step step : stepList) {
+      this.addsStepToGroupSteps(
+        groupSteps,
+        step
+      );
     }
-  }
-
-  private static Optional<BigDecimal> getBaselinePlannedCost(
-    final ConsumesDto consumes,
-    final Iterable<? extends Consumes> consumesSnapshot
-  ) {
-    for(final Consumes snapshot : consumesSnapshot) {
-      if(snapshot.getIdCostAccountMaster().equals(consumes.getIdCostAccount())) {
-        final BigDecimal plannedCost = snapshot.getPlannedCost();
-        return Optional.of(plannedCost);
-      }
-    }
-    return Optional.empty();
   }
 
   private void addsStepToGroupSteps(
@@ -385,11 +476,14 @@ public class ScheduleService {
     dto.setBaselinePlannedWork(maybeEquivalentSnapshot.map(Step::getPlannedWork).orElse(null));
     dto.setBaselinePeriodFromStart(maybeEquivalentSnapshot.map(Step::getPeriodFromStartDate).orElse(null));
 
-    for(final ConsumesDto consumes : dto.getConsumes()) {
+    for (final ConsumesDto consumes : dto.getConsumes()) {
       consumes.setBaselinePlannedCost(null);
       maybeEquivalentSnapshot
         .map(Step::getConsumes)
-        .flatMap(consumesSnapshot -> getBaselinePlannedCost(consumes, consumesSnapshot))
+        .flatMap(consumesSnapshot -> getBaselinePlannedCost(
+          consumes,
+          consumesSnapshot
+        ))
         .ifPresent(consumes::setBaselinePlannedCost);
     }
 
@@ -412,12 +506,17 @@ public class ScheduleService {
     final Set<Consumes> consumesRelationship = Optional.ofNullable(step.getConsumes())
       .orElseGet(HashSet::new);
 
-    for(final Consumes relation : consumesRelationship) {
+    for (final Consumes relation : consumesRelationship) {
       final ConsumesDto consumesDto = new ConsumesDto();
       consumesDto.setId(relation.getId());
       consumesDto.setActualCost(relation.getActualCost());
       consumesDto.setPlannedCost(relation.getPlannedCost());
-      consumesDto.setCostAccount(EntityDto.of(relation.getCostAccount()));
+      final Long id = relation.getCostAccount().getId();
+      final EntityDto costAccount = new EntityDto(
+        id,
+        this.costAccountRepository.findCostAccountNameById(id)
+      );
+      consumesDto.setCostAccount(costAccount);
       stepDto.getConsumes().add(consumesDto);
     }
 
@@ -427,28 +526,11 @@ public class ScheduleService {
   @Transactional
   public Schedule save(final ScheduleParamDto scheduleParamDto) {
     this.validatesScheduleParamDto(scheduleParamDto);
-    final Schedule schedule = this.scheduleRepository.save(this.mapToSchedule(scheduleParamDto));
-    final List<Deliverable> deliverables = this.stepRepository.findDeliverablesByScheduleId(schedule.getId());
-    this.updateDashboards(deliverables);
-    return schedule;
-  }
-
-  private void updateDashboards(final Iterable<? extends Deliverable> deliverables) {
-    final List<Long> deliverablesId = new ArrayList<>();
-    for(final Deliverable deliverable : deliverables) {
-      final Long deliverableId = deliverable.getId();
-      deliverablesId.add(deliverableId);
-    }
-
-    final List<Long> workpacksId = new ArrayList<>();
-    for(final Workpack workpack : this.stepRepository.findAllDeliverablesAndAscendents(deliverablesId)) {
-      final Long id = workpack.getId();
-      workpacksId.add(id);
-    }
-
-    for(final Long aLong : workpacksId) {
-      this.dashboardService.calculate(aLong);
-    }
+    final Schedule schedule = this.mapToSchedule(scheduleParamDto);
+    final Schedule savedSchedule = this.scheduleRepository.save(schedule);
+    final List<Deliverable> deliverables = this.updateStatusService.getDeliverablesByScheduleId(savedSchedule.getId());
+    this.updateStatusService.update(deliverables);
+    return savedSchedule;
   }
 
   private void validatesScheduleParamDto(final ScheduleParamDto scheduleParamDto) {
@@ -459,17 +541,29 @@ public class ScheduleService {
   private Schedule mapToSchedule(final ScheduleParamDto scheduleParamDto) {
     final Schedule schedule = new Schedule();
 
-    setScheduleStartDate(scheduleParamDto, schedule);
-    setScheduleEndDate(scheduleParamDto, schedule);
+    setScheduleStartDate(
+      scheduleParamDto,
+      schedule
+    );
+    setScheduleEndDate(
+      scheduleParamDto,
+      schedule
+    );
 
-    this.setScheduleSteps(scheduleParamDto, schedule);
-    this.setScheduleWorkpack(scheduleParamDto, schedule);
+    this.setScheduleSteps(
+      scheduleParamDto,
+      schedule
+    );
+    this.setScheduleWorkpack(
+      scheduleParamDto,
+      schedule
+    );
 
     return schedule;
   }
 
   private void ifScheduleAlreadyExistsThrowsException(final ScheduleParamDto scheduleParamDto) {
-    if(!this.scheduleRepository.findAllByWorkpack(scheduleParamDto.getIdWorkpack()).isEmpty()) {
+    if (!this.scheduleRepository.findAllByWorkpack(scheduleParamDto.getIdWorkpack()).isEmpty()) {
       throw scheduleAlreadyExistsException();
     }
   }
@@ -494,11 +588,25 @@ public class ScheduleService {
     final long plannedWorkMonths = getPlannedWorkMonths(scheduleParamDto);
     final long actualWorkMonths = getActualWorkMonths(scheduleParamDto);
 
-    final Map<CostAccount, Pair<BigDecimal, BigDecimal>> costsMap =
-      this.getCostsMap(scheduleParamDto, plannedWorkMonths, actualWorkMonths);
+    final Map<CostAccount, MapPair<Long, BigDecimal>> costsMap =
+      this.getCostsMap(
+        scheduleParamDto,
+        plannedWorkMonths,
+        actualWorkMonths
+      );
 
-    for(long currentMonth = 0; currentMonth < plannedWorkMonths; currentMonth++) {
-      addsStepToSteps(costsMap, steps, plannedWorkMonths, actualWorkMonths, currentMonth, scheduleParamDto);
+    final Map<Long, BigDecimal> plannedParts = getParts(plannedWorkMonths, scheduleParamDto.getPlannedWork());
+    final Map<Long, BigDecimal> actualParts = getParts(actualWorkMonths, scheduleParamDto.getActualWork());
+    for (long currentMonth = 1; currentMonth <= plannedWorkMonths; currentMonth++) {
+      addsStepToSteps(
+        plannedParts,
+        actualParts,
+        costsMap,
+        steps,
+        actualWorkMonths,
+        currentMonth,
+        scheduleParamDto
+      );
     }
 
     return steps;
@@ -508,18 +616,30 @@ public class ScheduleService {
     return this.findWorkpackById(scheduleParamDto);
   }
 
-  private Map<CostAccount, Pair<BigDecimal, BigDecimal>> getCostsMap(
+  private Map<CostAccount, MapPair<Long, BigDecimal>> getCostsMap(
     final ScheduleParamDto scheduleParamDto,
     final long plannedWorkMonths,
     final long actualWorkMonths
   ) {
-    final Map<CostAccount, Pair<BigDecimal, BigDecimal>> mapCostToParts = new HashMap<>();
+    final Map<CostAccount, MapPair<Long, BigDecimal>> mapCostToParts = new HashMap<>();
 
-    for(final CostSchedule costSchedule : scheduleParamDto.getCosts()) {
+    for (final CostSchedule costSchedule : scheduleParamDto.getCosts()) {
       final CostAccount costAccount = this.findCostAccountById(costSchedule);
-      final BigDecimal plannedCostParts = getParts(plannedWorkMonths, costSchedule.getPlannedCost());
-      final BigDecimal actualCostParts = getParts(actualWorkMonths, costSchedule.getActualCost());
-      mapCostToParts.put(costAccount, Pair.of(actualCostParts, plannedCostParts));
+      final Map<Long, BigDecimal> plannedCostParts = getParts(
+        plannedWorkMonths,
+        costSchedule.getPlannedCost()
+      );
+      final Map<Long, BigDecimal> actualCostParts = getParts(
+        actualWorkMonths,
+        costSchedule.getActualCost()
+      );
+      mapCostToParts.put(
+        costAccount,
+        MapPair.of(
+          actualCostParts,
+          plannedCostParts
+        )
+      );
     }
 
     return mapCostToParts;
@@ -536,7 +656,7 @@ public class ScheduleService {
   public void delete(final Long idSchedule) {
     final Schedule schedule = this.findById(idSchedule);
 
-    if(this.scheduleRepository.canBeRemoved(idSchedule)) {
+    if (this.scheduleRepository.canBeRemoved(idSchedule)) {
       throw new NegocioException(SCHEDULE_HAS_ACTIVE_BASELINE);
     }
 

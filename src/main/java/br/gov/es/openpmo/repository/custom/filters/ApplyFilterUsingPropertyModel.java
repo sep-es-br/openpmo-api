@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.repository.custom.filters;
 
+import br.gov.es.openpmo.enumerator.GeneralOperatorsEnum;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.model.filter.Rules;
@@ -8,9 +9,11 @@ import br.gov.es.openpmo.repository.PropertyModelRepository;
 import br.gov.es.openpmo.utils.PropertyModelType;
 
 import java.text.MessageFormat;
+import java.util.Objects;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_MODEL_INVALID_TYPE;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_MODEL_NOT_FOUND;
+import static java.text.MessageFormat.format;
 
 public interface ApplyFilterUsingPropertyModel {
 
@@ -21,9 +24,13 @@ public interface ApplyFilterUsingPropertyModel {
     final String propertyName = rule.getPropertyName();
     final String operador = rule.getRelationalOperator().getOperador();
 
-    return this.isIdentifier(propertyName)
-      ? this.getPropertyModelFilter(propertyName, operador, label)
-      : MessageFormat.format("({0}.{1} {2} ${3}) ", this.getNodeName(), propertyName, operador, label);
+    if (this.isIdentifier(propertyName)) {
+      return this.getPropertyModelFilter(propertyName, operador, label);
+    }
+    final String pattern = rule.getRelationalOperator() == GeneralOperatorsEnum.CONTEM
+      ? "({0}.{1} {2} ''.*'' + ${3} + ''.*'') "
+      : "({0}.{1} {2} ${3}) ";
+    return format(pattern, this.getNodeName(), propertyName, operador, label);
   }
 
   String getNodeName();
@@ -42,13 +49,21 @@ public interface ApplyFilterUsingPropertyModel {
     final PropertyModel propertyModel = this.getPropertyModel(Long.valueOf(propertyName));
 
     final String propertyLinkedToPropertyModelTemplate = String.format(
-      "(pr)-[:IS_DRIVEN_BY]->(propertyModel:PropertyModel{name: '%s'})",
+      "(pr)-[:IS_DRIVEN_BY]->(:PropertyModel{name: '%s'})",
       propertyModel.getName()
     );
 
     final String typeName = this.getTypeName(propertyModel);
 
     if(this.isValueDirectComparable(typeName)) {
+      if (Objects.equals(operador, GeneralOperatorsEnum.CONTEM.getOperador())) {
+        return MessageFormat.format(
+          "ANY( pr IN properties WHERE pr.value {0} ''.*'' + ${1} + ''.*'' AND {2} ) ",
+          operador,
+          label,
+          propertyLinkedToPropertyModelTemplate
+        );
+      }
       return MessageFormat.format(
         "ANY( pr IN properties WHERE pr.value {0} ${1} AND {2} ) ",
         operador,

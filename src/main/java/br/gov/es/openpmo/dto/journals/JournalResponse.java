@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.dto.journals;
 
+import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.model.journals.JournalAction;
 import br.gov.es.openpmo.model.journals.JournalType;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -14,6 +15,8 @@ public class JournalResponse {
 
   private JournalType type;
 
+  private PermissionLevelEnum level;
+
   @JsonProperty("status")
   private JournalAction action;
 
@@ -23,8 +26,17 @@ public class JournalResponse {
   @JsonProperty("workpack")
   private WorkpackField workpackField;
 
-  @JsonProperty("person")
-  private PersonField personField;
+  @JsonProperty("author")
+  private PersonField authorField;
+
+  @JsonProperty("target")
+  private PersonField targetField;
+
+  @JsonProperty("office")
+  private OfficeField officeField;
+
+  @JsonProperty("plan")
+  private PlanField planField;
 
   @JsonProperty("information")
   private InformationField informationField;
@@ -64,12 +76,12 @@ public class JournalResponse {
     this.workpackField = workpackField;
   }
 
-  public PersonField getPersonField() {
-    return this.personField;
+  public PersonField getAuthorField() {
+    return this.authorField;
   }
 
-  public void setPersonField(final PersonField personField) {
-    this.personField = personField;
+  public void setAuthorField(final PersonField authorField) {
+    this.authorField = authorField;
   }
 
   public InformationField getInformationField() {
@@ -88,6 +100,38 @@ public class JournalResponse {
 
   public void setEvidenceFieldSet(final Set<? extends EvidenceField> evidenceFieldSet) {
     this.evidenceFieldSet = Collections.unmodifiableSet(evidenceFieldSet);
+  }
+
+  public OfficeField getOfficeField() {
+    return this.officeField;
+  }
+
+  public void setOfficeField(final OfficeField officeField) {
+    this.officeField = officeField;
+  }
+
+  public PlanField getPlanField() {
+    return this.planField;
+  }
+
+  public void setPlanField(final PlanField planField) {
+    this.planField = planField;
+  }
+
+  public PersonField getTargetField() {
+    return this.targetField;
+  }
+
+  public void setTargetField(final PersonField targetField) {
+    this.targetField = targetField;
+  }
+
+  public PermissionLevelEnum getLevel() {
+    return this.level;
+  }
+
+  public void setLevel(final PermissionLevelEnum level) {
+    this.level = level;
   }
 
 }

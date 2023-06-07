@@ -86,4 +86,9 @@ public abstract class Property<T, V> extends Entity implements HasValue<V>, Snap
     this.snapshots = snapshots;
   }
 
+  @Transient
+  public String getPropertyModelName() {
+    return Optional.ofNullable(this.getPropertyModel()).map(PropertyModel::getName).orElse("");
+  }
+
 }

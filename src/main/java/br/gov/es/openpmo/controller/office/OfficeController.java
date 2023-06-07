@@ -51,11 +51,12 @@ public class OfficeController {
   @GetMapping
   public ResponseEntity<ResponseBase<List<OfficeDto>>> indexBase(
       @RequestHeader(name = "Authorization") final String authorization,
-      @RequestParam(required = false) final Long idFilter) {
+      @RequestParam(required = false) final Long idFilter,
+      @RequestParam(required = false) final String term) {
 
     final String token = authorization.substring(7);
     final Long idUser = this.tokenService.getPersonId(token, TokenType.AUTHENTICATION);
-    List<OfficeDto> offices = this.officeService.findAll(idFilter)
+    List<OfficeDto> offices = this.officeService.findAll(idFilter, term)
         .stream()
         .map(o -> this.modelMapper.map(o, OfficeDto.class))
         .collect(Collectors.toList());

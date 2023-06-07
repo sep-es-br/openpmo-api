@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.service.office.plan;
 
+import br.gov.es.openpmo.configuration.properties.AppProperties;
 import br.gov.es.openpmo.dto.office.OfficeDto;
 import br.gov.es.openpmo.dto.planmodel.PlanModelDto;
 import br.gov.es.openpmo.dto.planmodel.PlanModelStoreDto;
@@ -15,6 +16,8 @@ import br.gov.es.openpmo.repository.WorkpackModelRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllPlanModelUsingCustomFilter;
 import br.gov.es.openpmo.service.office.OfficeService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
+
+import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -41,6 +44,7 @@ public class PlanModelService {
   private final FindAllPlanModelUsingCustomFilter findAllPlanModel;
   private final ModelMapper modelMapper;
   private final OfficeService officeService;
+  private final AppProperties appProperties;
 
   @Autowired
   public PlanModelService(
@@ -49,7 +53,8 @@ public class PlanModelService {
     final CustomFilterRepository customFilterRepository,
     final FindAllPlanModelUsingCustomFilter findAllPlanModel,
     final ModelMapper modelMapper,
-    final OfficeService officeService
+    final OfficeService officeService,
+    final AppProperties appProperties
   ) {
     this.planModelRepository = planModelRepository;
     this.workpackModelRepository = workpackModelRepository;
@@ -57,6 +62,7 @@ public class PlanModelService {
     this.findAllPlanModel = findAllPlanModel;
     this.modelMapper = modelMapper;
     this.officeService = officeService;
+    this.appProperties = appProperties;
   }
 
   public List<PlanModel> findAll() {
@@ -67,10 +73,12 @@ public class PlanModelService {
 
   public List<PlanModel> findAllInOffice(
     final Long idOffice,
-    final Long idFilter
+    final Long idFilter,
+    final String term
   ) {
     if(idFilter == null) {
-      return this.findAllInOffice(idOffice);
+      if (StringUtils.isBlank(term)) return this.findAllInOffice(idOffice);
+      else return this.findAllInOfficeByTerm(idFilter, term);
     }
 
     final CustomFilter filter = this.customFilterRepository.findById(idFilter)
@@ -78,6 +86,10 @@ public class PlanModelService {
 
     final Map<String, Object> params = new HashMap<>();
     params.put("idOffice", idOffice);
+    params.put("term", term);
+    params.put("searchCutOffScore", appProperties.getSearchCutOffScore());
+    
+    if (StringUtils.isNotBlank(term)) filter.setSimilarityFilter(true);
 
     return this.findAllPlanModel.execute(filter, params);
   }
@@ -86,6 +98,10 @@ public class PlanModelService {
     final List<PlanModel> planModels = this.planModelRepository.findAllInOffice(id);
     planModels.sort(Comparator.comparing(PlanModel::getName));
     return planModels;
+  }
+  
+  public List<PlanModel> findAllInOfficeByTerm(final Long id, final String term) {
+    return this.planModelRepository.findAllInOfficeByTerm(id, term, appProperties.getSearchCutOffScore());
   }
 
   public void delete(final PlanModel planModel) {

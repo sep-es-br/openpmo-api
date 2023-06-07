@@ -6,12 +6,12 @@ import br.gov.es.openpmo.dto.baselines.BaselineDetailResponse;
 import br.gov.es.openpmo.dto.baselines.BaselineEvaluationRequest;
 import br.gov.es.openpmo.dto.baselines.EditDraftBaselineRequest;
 import br.gov.es.openpmo.dto.baselines.GetAllBaselinesResponse;
-import br.gov.es.openpmo.dto.baselines.GetAllCCBMemberBaselineResponse;
 import br.gov.es.openpmo.dto.baselines.IncludeBaselineRequest;
 import br.gov.es.openpmo.dto.baselines.SubmitBaselineRequest;
 import br.gov.es.openpmo.dto.baselines.SubmitCancellingRequest;
 import br.gov.es.openpmo.dto.baselines.UpdateResponse;
 import br.gov.es.openpmo.dto.baselines.ccbmemberview.BaselineDetailCCBMemberResponse;
+import br.gov.es.openpmo.enumerator.BaselineViewStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,61 +27,79 @@ import java.util.List;
 
 public interface IBaselineController {
 
-        @GetMapping
-        Response<List<GetAllBaselinesResponse>> getAllByWorkpackId(@RequestParam("id-workpack") Long idWorkpack);
+  @GetMapping
+  Response<List<GetAllBaselinesResponse>> getAllByWorkpackId(
+    @RequestParam("id-workpack") Long idWorkpack
+  );
 
-        @GetMapping("/ccb-member")
-        Response<List<GetAllCCBMemberBaselineResponse>> getAllByPersonId(
-                        @RequestHeader(name = "Authorization") String authorization);
+  @GetMapping("/ccb-member")
+  Response<List<GetAllBaselinesResponse>> getAllByPersonId(
+    @RequestParam BaselineViewStatus status,
+    @RequestParam(required = false) final Long idFilter,
+    @RequestParam(required = false) String term,
+    @RequestHeader(name = "Authorization") String authorization
+  );
 
-        @GetMapping("/updates")
-        Response<List<UpdateResponse>> getUpdates(@RequestParam("id-workpack") Long idWorkpack);
+  @GetMapping("/updates")
+  Response<List<UpdateResponse>> getUpdates(
+    @RequestParam("id-workpack") Long idWorkpack
+  );
 
-        @Transactional
-        @PostMapping
-        Response<EntityDto> create(
-                        @RequestBody IncludeBaselineRequest request,
-                        @RequestHeader(name = "Authorization") String authorization);
+  @Transactional
+  @PostMapping
+  Response<EntityDto> create(
+    @RequestBody IncludeBaselineRequest request,
+    @RequestHeader(name = "Authorization") String authorization
+  );
 
-        @Transactional
-        @PutMapping("/{id-baseline}/submit")
-        Response<Void> submit(
-                        @PathVariable("id-baseline") Long idBaseline,
-                        @RequestBody SubmitBaselineRequest request,
-                        @RequestHeader(name = "Authorization") String authorization);
+  @Transactional
+  @PutMapping("/{id-baseline}/submit")
+  Response<Void> submit(
+    @PathVariable("id-baseline") Long idBaseline,
+    @RequestBody SubmitBaselineRequest request,
+    @RequestHeader(name = "Authorization") String authorization
+  );
 
-        @Transactional
-        @PutMapping("/{id-baseline}")
-        Response<Void> edit(@PathVariable("id-baseline") Long idBaseline,
-                        @RequestBody EditDraftBaselineRequest request,
-                        @RequestHeader(name = "Authorization") String authorization);
+  @Transactional
+  @PutMapping("/{id-baseline}")
+  Response<Void> edit(
+    @PathVariable("id-baseline") Long idBaseline,
+    @RequestBody EditDraftBaselineRequest request,
+    @RequestHeader(name = "Authorization") String authorization
+  );
 
-        @Transactional
-        @DeleteMapping("/{id-baseline}")
-        Response<Void> delete(@PathVariable("id-baseline") Long idBaseline,
-                        @RequestHeader(name = "Authorization") String authorization);
+  @Transactional
+  @DeleteMapping("/{id-baseline}")
+  Response<Void> delete(
+    @PathVariable("id-baseline") Long idBaseline,
+    @RequestHeader(name = "Authorization") String authorization
+  );
 
-        @Transactional
-        @PostMapping("/submit-cancelling")
-        Response<EntityDto> submitCancelling(
-                        @RequestBody @Valid SubmitCancellingRequest request,
-                        @RequestHeader(name = "Authorization") String authorization);
+  @Transactional
+  @PostMapping("/submit-cancelling")
+  Response<EntityDto> submitCancelling(
+    @RequestBody @Valid SubmitCancellingRequest request,
+    @RequestHeader(name = "Authorization") String authorization
+  );
 
-        @GetMapping("/{id-baseline}")
-        Response<BaselineDetailResponse> getById(
-                        @PathVariable("id-baseline") Long idBaseline,
-                        @RequestHeader(name = "Authorization") String authorization);
+  @GetMapping("/{id-baseline}")
+  Response<BaselineDetailResponse> getById(
+    @PathVariable("id-baseline") Long idBaseline,
+    @RequestHeader(name = "Authorization") String authorization
+  );
 
-        @GetMapping("/{id-baseline}/ccb-member-view")
-        Response<BaselineDetailCCBMemberResponse> getBaselineByIdAsCCBMemberView(
-                        @RequestHeader(name = "Authorization") String authorization,
-                        @PathVariable("id-baseline") Long idBaseline);
+  @GetMapping("/{id-baseline}/ccb-member-view")
+  Response<BaselineDetailCCBMemberResponse> getBaselineByIdAsCCBMemberView(
+    @RequestHeader(name = "Authorization") String authorization,
+    @PathVariable("id-baseline") Long idBaseline
+  );
 
-        @Transactional
-        @PutMapping("/{id-baseline}/evaluate")
-        Response<Void> evaluateBaseline(
-                        @RequestHeader(name = "Authorization") String authorization,
-                        @PathVariable("id-baseline") Long idBaseline,
-                        @RequestBody BaselineEvaluationRequest request);
+  @Transactional
+  @PutMapping("/{id-baseline}/evaluate")
+  Response<Void> evaluateBaseline(
+    @RequestHeader(name = "Authorization") String authorization,
+    @PathVariable("id-baseline") Long idBaseline,
+    @RequestBody BaselineEvaluationRequest request
+  );
 
 }

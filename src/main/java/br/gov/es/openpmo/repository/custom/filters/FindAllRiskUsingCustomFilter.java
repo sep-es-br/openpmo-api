@@ -29,8 +29,9 @@ public class FindAllRiskUsingCustomFilter extends FindAllUsingCustomFilterBuilde
   ) {
     query.append("MATCH (")
       .append(this.nodeName)
-      .append(":Risk)-[isReportedFor:IS_FORSEEN_ON]->(workpack:Workpack{deleted:false})")
-      .append("\n");
+      .append(":Risk)-[isReportedFor:IS_FORSEEN_ON]->(workpack:Workpack{deleted:false}) ")
+      .append("WITH *, apoc.text.levenshteinSimilarity(apoc.text.clean(")
+      .append(this.nodeName).append(".name), apoc.text.clean($term)) AS score ");
   }
 
   @Override
@@ -38,12 +39,13 @@ public class FindAllRiskUsingCustomFilter extends FindAllUsingCustomFilterBuilde
     final CustomFilter filter,
     final StringBuilder query
   ) {
-    query.append("WHERE ").append("id(workpack)=$idWorkpack").append("\n");
+    query.append("WHERE ").append("id(workpack)=$idWorkpack ")
+      .append("AND ($term is null OR $term = '' OR score > $searchCutOffScore) ");
   }
 
   @Override
   protected void buildReturnClause(final StringBuilder query) {
-    query.append("RETURN ").append(this.nodeName).append(", isReportedFor, workpack").append("\n");
+    query.append("RETURN ").append(this.nodeName).append(", isReportedFor, workpack ");
   }
 
   @Override
@@ -58,7 +60,11 @@ public class FindAllRiskUsingCustomFilter extends FindAllUsingCustomFilterBuilde
 
   @Override
   protected String[] getDefinedExternalParams() {
-    return new String[]{"idWorkpack"};
+    return new String[]{
+      "idWorkpack",
+      "term",
+      "searchCutOffScore"
+    };
   }
 
 }

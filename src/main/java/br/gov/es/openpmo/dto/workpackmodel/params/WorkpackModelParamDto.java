@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import io.swagger.annotations.ApiModel;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.Collections;
@@ -65,6 +66,10 @@ public abstract class WorkpackModelParamDto {
   private Long idParent;
 
   private String sortBy;
+
+  @NotNull
+  @Min(value = 1, message = "A posição deve ser maior que 1")
+  private Long position;
 
   @JsonUnwrapped
   private DashboardConfiguration dashboardConfiguration;
@@ -174,6 +179,14 @@ public abstract class WorkpackModelParamDto {
 
   public void setSortBy(final String sortBy) {
     this.sortBy = sortBy;
+  }
+
+  public Long getPosition() {
+    return this.position;
+  }
+
+  public void setPosition(final Long position) {
+    this.position = position;
   }
 
   public boolean isRiskAndIssueManagementSessionActive() {

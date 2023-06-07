@@ -6,12 +6,12 @@ import br.gov.es.openpmo.dto.baselines.BaselineDetailResponse;
 import br.gov.es.openpmo.dto.baselines.BaselineEvaluationRequest;
 import br.gov.es.openpmo.dto.baselines.EditDraftBaselineRequest;
 import br.gov.es.openpmo.dto.baselines.GetAllBaselinesResponse;
-import br.gov.es.openpmo.dto.baselines.GetAllCCBMemberBaselineResponse;
 import br.gov.es.openpmo.dto.baselines.IncludeBaselineRequest;
 import br.gov.es.openpmo.dto.baselines.SubmitBaselineRequest;
 import br.gov.es.openpmo.dto.baselines.SubmitCancellingRequest;
 import br.gov.es.openpmo.dto.baselines.UpdateResponse;
 import br.gov.es.openpmo.dto.baselines.ccbmemberview.BaselineDetailCCBMemberResponse;
+import br.gov.es.openpmo.enumerator.BaselineViewStatus;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.baselines.*;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
@@ -57,19 +57,20 @@ public class BaselineController implements IBaselineController {
 
   @Autowired
   public BaselineController(
-      final IGetAllBaselinesService getAllBaselinesService,
-      final IGetBaselineUpdatesService getBaselineUpdatesService,
-      final ICreateBaselineService createBaselineService,
-      final ISubmitBaselineService submitBaselineService,
-      final IEditBaselineService editBaselineService,
-      final IDeleteBaselineService deleteBaselineService,
-      final ICancelBaselineService cancelBaselineService,
-      final IGetBaselineService getBaselineService,
-      final IGetBaselineAsCCBMemberViewService getBaselineAsCCBMemberViewService,
-      final IEvaluateBaselineService evaluateBaselineService,
-      final ResponseHandler responseHandler,
-      final TokenService tokenService,
-      final ICanAccessService canAccessService) {
+    final IGetAllBaselinesService getAllBaselinesService,
+    final IGetBaselineUpdatesService getBaselineUpdatesService,
+    final ICreateBaselineService createBaselineService,
+    final ISubmitBaselineService submitBaselineService,
+    final IEditBaselineService editBaselineService,
+    final IDeleteBaselineService deleteBaselineService,
+    final ICancelBaselineService cancelBaselineService,
+    final IGetBaselineService getBaselineService,
+    final IGetBaselineAsCCBMemberViewService getBaselineAsCCBMemberViewService,
+    final IEvaluateBaselineService evaluateBaselineService,
+    final ResponseHandler responseHandler,
+    final TokenService tokenService,
+    final ICanAccessService canAccessService
+  ) {
     this.getAllBaselinesService = getAllBaselinesService;
     this.getBaselineUpdatesService = getBaselineUpdatesService;
     this.createBaselineService = createBaselineService;
@@ -89,12 +90,21 @@ public class BaselineController implements IBaselineController {
   public Response<List<GetAllBaselinesResponse>> getAllByWorkpackId(final Long idWorkpack) {
     final List<GetAllBaselinesResponse> baselines = this.getAllBaselinesService.getAllByWorkpackId(idWorkpack);
     return this.responseHandler.success(baselines);
-
   }
 
-  public Response<List<GetAllCCBMemberBaselineResponse>> getAllByPersonId(final String authorization) {
+  public Response<List<GetAllBaselinesResponse>> getAllByPersonId(
+    final BaselineViewStatus status,
+    final Long idFilter,
+    final String term,
+    final String authorization
+  ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
-    final List<GetAllCCBMemberBaselineResponse> baselines = this.getAllBaselinesService.getAllByPersonId(idPerson);
+    final List<GetAllBaselinesResponse> baselines = this.getAllBaselinesService.getAllByPersonIdAndStatus(
+      idPerson,
+      idFilter,
+      term,
+      status
+    );
     return this.responseHandler.success(baselines);
   }
 
@@ -106,83 +116,113 @@ public class BaselineController implements IBaselineController {
 
   @Override
   public Response<EntityDto> create(
-      final IncludeBaselineRequest request,
-      @RequestHeader(name = "Authorization") final String authorization
+    final IncludeBaselineRequest request,
+    @RequestHeader(name = "Authorization") final String authorization
   ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
-    final Long idBaseline = this.createBaselineService.create(request, idPerson);
+    final Long idBaseline = this.createBaselineService.create(
+      request,
+      idPerson
+    );
     return this.responseHandler.success(new EntityDto(idBaseline));
   }
 
   @Override
   public Response<Void> submit(
-      final Long idBaseline,
-      final SubmitBaselineRequest request,
-      @RequestHeader(name = "Authorization") final String authorization) {
+    final Long idBaseline,
+    final SubmitBaselineRequest request,
+    @RequestHeader(name = "Authorization") final String authorization
+  ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
-    this.submitBaselineService.submit(idBaseline, request, idPerson);
+    this.submitBaselineService.submit(
+      idBaseline,
+      request,
+      idPerson
+    );
     return this.responseHandler.success();
   }
 
   @Override
   public Response<Void> edit(
-      final Long idBaseline,
-      final EditDraftBaselineRequest request,
-      @RequestHeader(name = "Authorization") final String authorization
+    final Long idBaseline,
+    final EditDraftBaselineRequest request,
+    @RequestHeader(name = "Authorization") final String authorization
   ) {
-    this.canAccessService.ensureCanReadResource(idBaseline, authorization);
-    this.editBaselineService.edit(idBaseline, request);
+    this.canAccessService.ensureCanReadResource(
+      idBaseline,
+      authorization
+    );
+    this.editBaselineService.edit(
+      idBaseline,
+      request
+    );
     return this.responseHandler.success();
   }
 
   @Override
-  public Response<Void> delete(final Long idBaseline,
-      @RequestHeader(name = "Authorization") final String authorization) {
-
-    this.canAccessService.ensureCanEditResource(idBaseline, authorization);
-
+  public Response<Void> delete(
+    final Long idBaseline,
+    @RequestHeader(name = "Authorization") final String authorization
+  ) {
+    this.canAccessService.ensureCanEditResource(
+      idBaseline,
+      authorization
+    );
     this.deleteBaselineService.delete(idBaseline);
     return this.responseHandler.success();
   }
 
   @Override
   public Response<EntityDto> submitCancelling(
-      final SubmitCancellingRequest request,
-      @RequestHeader(name = "Authorization") final String authorization
+    final SubmitCancellingRequest request,
+    @RequestHeader(name = "Authorization") final String authorization
   ) {
     final Long personId = this.tokenService.getUserId(authorization);
-    final EntityDto baselineProposed = this.cancelBaselineService.submit(request, personId);
+    final EntityDto baselineProposed = this.cancelBaselineService.submit(
+      request,
+      personId
+    );
     return this.responseHandler.success(baselineProposed);
   }
 
   @Override
-  public Response<BaselineDetailResponse> getById(final Long idBaseline,
-      @RequestHeader(name = "Authorization") final String authorization) {
-
-    this.canAccessService.ensureCanReadResource(idBaseline, authorization);
-
+  public Response<BaselineDetailResponse> getById(
+    final Long idBaseline,
+    @RequestHeader(name = "Authorization") final String authorization
+  ) {
+    this.canAccessService.ensureCanReadResource(
+      idBaseline,
+      authorization
+    );
     final BaselineDetailResponse response = this.getBaselineService.getById(idBaseline);
     return this.responseHandler.success(response);
   }
 
   @Override
   public Response<BaselineDetailCCBMemberResponse> getBaselineByIdAsCCBMemberView(
-      @RequestHeader(name = "Authorization") final String authorization,
-      final Long idBaseline) {
+    @RequestHeader(name = "Authorization") final String authorization,
+    final Long idBaseline
+  ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
-    final BaselineDetailCCBMemberResponse response = this.getBaselineAsCCBMemberViewService.getById(idBaseline,
-        idPerson);
+    final BaselineDetailCCBMemberResponse response = this.getBaselineAsCCBMemberViewService.getById(
+      idBaseline,
+      idPerson
+    );
     return this.responseHandler.success(response);
   }
 
   @Override
   public Response<Void> evaluateBaseline(
-      @RequestHeader(name = "Authorization") final String authorization,
-      final Long idBaseline,
-      final BaselineEvaluationRequest request
+    @RequestHeader(name = "Authorization") final String authorization,
+    final Long idBaseline,
+    final BaselineEvaluationRequest request
   ) {
     final Long idPerson = this.tokenService.getUserId(authorization);
-    this.evaluateBaselineService.evaluate(idPerson, idBaseline, request);
+    this.evaluateBaselineService.evaluate(
+      idPerson,
+      idBaseline,
+      request
+    );
     return this.responseHandler.success();
   }
 

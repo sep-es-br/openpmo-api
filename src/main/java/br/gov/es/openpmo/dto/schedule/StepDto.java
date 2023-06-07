@@ -2,21 +2,31 @@ package br.gov.es.openpmo.dto.schedule;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 public class StepDto {
 
   private Long id;
-  private Long idSchedule;
-  private BigDecimal actualWork;
-  private BigDecimal plannedWork;
-  private BigDecimal baselinePlannedWork;
-  private LocalDate periodFromStart;
-  private LocalDate baselinePeriodFromStart;
-  private Set<ConsumesDto> consumes;
-  private LocalDate scheduleEnd;
-  private LocalDate scheduleStart;
 
+  private Long idSchedule;
+
+  private BigDecimal actualWork;
+
+  private BigDecimal plannedWork;
+
+  private BigDecimal baselinePlannedWork;
+
+  private LocalDate periodFromStart;
+
+  private LocalDate baselinePeriodFromStart;
+
+  private Set<ConsumesDto> consumes;
+
+  private LocalDate scheduleEnd;
+
+  private LocalDate scheduleStart;
 
   public Long getId() {
     return this.id;
@@ -90,12 +100,21 @@ public class StepDto {
     this.scheduleStart = scheduleStart;
   }
 
-  public void setBaselinePeriodFromStart(LocalDate baselinePeriodFromStart) {
+  public LocalDate getBaselinePeriodFromStart() {
+    return this.baselinePeriodFromStart;
+  }
+
+  public void setBaselinePeriodFromStart(final LocalDate baselinePeriodFromStart) {
     this.baselinePeriodFromStart = baselinePeriodFromStart;
   }
 
-  public LocalDate getBaselinePeriodFromStart() {
-    return this.baselinePeriodFromStart;
+  public BigDecimal getBaselinePlannedCost() {
+    return Optional.ofNullable(this.consumes)
+      .map(c -> c.stream()
+        .map(ConsumesDto::getBaselinePlannedCost)
+        .filter(Objects::nonNull)
+        .reduce(BigDecimal.ZERO, BigDecimal::add))
+      .orElse(BigDecimal.ZERO);
   }
 
 }

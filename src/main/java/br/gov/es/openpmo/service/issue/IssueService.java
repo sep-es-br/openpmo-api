@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.service.issue;
 
+import br.gov.es.openpmo.configuration.properties.AppProperties;
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.issue.IssueCardDto;
 import br.gov.es.openpmo.dto.issue.IssueCreateDto;
@@ -47,6 +48,8 @@ public class IssueService {
 
   private final JournalCreator journalCreator;
 
+  private final AppProperties appProperties;
+
   public IssueService(
     final IssueRepository repository,
     final IssueResponseRepository issueResponseRepository,
@@ -54,7 +57,8 @@ public class IssueService {
     final WorkpackService workpackService,
     final FindAllIssueUsingCustomFilter findAllIssue,
     final CustomFilterService customFilterService,
-    final JournalCreator journalCreator
+    final JournalCreator journalCreator,
+    final AppProperties appProperties
   ) {
     this.repository = repository;
     this.issueResponseRepository = issueResponseRepository;
@@ -63,28 +67,47 @@ public class IssueService {
     this.findAllIssue = findAllIssue;
     this.customFilterService = customFilterService;
     this.journalCreator = journalCreator;
+    this.appProperties = appProperties;
   }
 
   public List<IssueCardDto> findAllAsCardDto(
     final Long idWorkpack,
     final Long idRisk,
     final Long idFilter,
+    final String term,
     final Long idPerson
   ) {
-    if(idWorkpack == null) {
+    if (idWorkpack == null) {
       throw new IllegalArgumentException(ID_WORKPACK_NOT_NULL);
     }
-    if(idFilter == null) {
-      return this.findAllAsCardDto(idWorkpack, idRisk);
+    if (idFilter == null) {
+      return this.findAllAsCardDto(
+        idWorkpack,
+        idRisk,
+        term
+      );
     }
-
-    final CustomFilter customFilter = this.customFilterService.findById(idFilter, idPerson);
+    final CustomFilter customFilter = this.customFilterService.findById(
+      idFilter,
+      idPerson
+    );
     final Map<String, Object> params = new HashMap<>();
-
-    params.put("idWorkpack", idWorkpack);
-
-    final List<Issue> issues = this.findAllIssue.execute(customFilter, params);
-
+    params.put(
+      "idWorkpack",
+      idWorkpack
+    );
+    params.put(
+      "term",
+      term
+    );
+    params.put(
+      "searchCutOffScore",
+      appProperties.getSearchCutOffScore()
+    );
+    final List<Issue> issues = this.findAllIssue.execute(
+      customFilter,
+      params
+    );
     return issues.stream()
       .map(IssueCardDto::of)
       .collect(Collectors.toList());
@@ -92,9 +115,15 @@ public class IssueService {
 
   private List<IssueCardDto> findAllAsCardDto(
     final Long idWorkpack,
-    final Long idRisk
+    final Long idRisk,
+    final String term
   ) {
-    return this.repository.findAllAsIssueCardDto(idWorkpack, idRisk).stream()
+    return this.repository.findAllAsIssueCardDto(
+        idWorkpack,
+        idRisk,
+        term,
+        appProperties.getSearchCutOffScore()
+      ).stream()
       .map(IssueCardDto::of)
       .collect(Collectors.toList());
   }
@@ -108,9 +137,10 @@ public class IssueService {
     final Issue issue = Issue.of(risk);
     this.repository.save(issue);
     this.issueResponseRepository.saveAll(issue.getResponses());
-
-    this.journalCreator.issue(issue, idPerson);
-
+    this.journalCreator.issue(
+      issue,
+      idPerson
+    );
     return EntityDto.of(issue);
   }
 
@@ -120,11 +150,15 @@ public class IssueService {
     final Long idPerson
   ) {
     final Workpack workpack = this.workpackService.findById(request.getIdWorkpack());
-    final Issue issue = Issue.of(request, workpack);
+    final Issue issue = Issue.of(
+      request,
+      workpack
+    );
     this.repository.save(issue);
-
-    this.journalCreator.issue(issue, idPerson);
-
+    this.journalCreator.issue(
+      issue,
+      idPerson
+    );
     return EntityDto.of(issue);
   }
 
@@ -135,12 +169,15 @@ public class IssueService {
   ) {
     final Issue issue = this.repository.findById(request.getId())
       .orElseThrow(() -> new RegistroNaoEncontradoException(ISSUE_NOT_FOUND));
-
     issue.update(request);
-    this.repository.save(issue, 0);
-
-    this.journalCreator.issue(issue, idPerson);
-
+    this.repository.save(
+      issue,
+      0
+    );
+    this.journalCreator.issue(
+      issue,
+      idPerson
+    );
     return IssueDetailDto.of(issue);
   }
 

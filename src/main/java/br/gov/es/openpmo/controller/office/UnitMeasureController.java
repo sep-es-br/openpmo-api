@@ -46,11 +46,12 @@ public class UnitMeasureController {
   public ResponseEntity<ResponseBase<List<UnitMeasureDto>>> indexBase(
       @RequestParam final Long idOffice,
       @RequestParam(required = false) final Long idFilter,
-      @Authorization final String authorization) {
-
+      @RequestParam(required = false) final String term,
+      @Authorization final String authorization
+  ) {
     this.canAccessService.ensureCanReadResource(idOffice, authorization);
     final List<UnitMeasureDto> unitMeasures = new ArrayList<>();
-    this.unitMeasureService.findAll(idOffice, idFilter)
+    this.unitMeasureService.findAll(idOffice, term, idFilter)
         .forEach(registro -> unitMeasures.add(new UnitMeasureDto(registro)));
     final ResponseBase<List<UnitMeasureDto>> response = new ResponseBase<List<UnitMeasureDto>>().setData(unitMeasures)
         .setMessage(OPERATION_SUCCESS).setSuccess(true);

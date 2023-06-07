@@ -56,13 +56,14 @@ public class PlanController {
   public ResponseEntity<ResponseBase<List<PlanDto>>> indexBase(
       @RequestParam("id-office") final Long idOffice,
       @RequestParam(required = false) final Long idFilter,
+      @RequestParam(required = false) final String term,
       @RequestHeader(name = "Authorization") final String autorization,
       @Authorization final String authorization) {
 
     this.canAccessService.ensureCanReadResource(idOffice, authorization);
     final String token = autorization.substring(7);
     final Long idUser = this.tokenService.getPersonId(token, TokenType.AUTHENTICATION);
-    List<PlanDto> plans = this.planService.findAllInOffice(idOffice, idFilter)
+    List<PlanDto> plans = this.planService.findAllInOffice(idOffice, idFilter, term)
         .stream()
         .map(PlanDto::of)
         .collect(Collectors.toList());

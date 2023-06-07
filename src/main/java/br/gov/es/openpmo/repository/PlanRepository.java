@@ -38,4 +38,34 @@ public interface PlanRepository extends Neo4jRepository<Plan, Long>, CustomRepos
     Long idPlan
   );
 
+  @Query("MATCH (p: Plan)-[r:IS_ADOPTED_BY]->(o:Office) " +
+         ", (p)-[sb:IS_STRUCTURED_BY]->(pm:PlanModel) " +
+         "WHERE id(o)= $id " +
+         "WITH p,r,o,sb,pm, apoc.text.levenshteinSimilarity(apoc.text.clean(p.name + p.fullName), apoc.text.clean($term)) AS score " +
+         "WHERE score > $searchCutOffScore "+
+         "RETURN p,r,o,sb,pm " +
+		 "ORDER BY score DESC")
+  List<Plan> findAllInOfficeByTerm(
+    @Param("id") Long id,
+		@Param("term") String term,
+		@Param("searchCutOffScore") double searchCutOffScore
+  );
+
+  @Query(
+    "match (p:Plan) " +
+    "where id(p)=$idPlan " +
+    "match (p)<-[bt:BELONGS_TO{linked:false}]-(w:Workpack{deleted:false}) " +
+    "where NOT (w)-[:IS_IN]->(:Workpack) " +
+    "return p, bt, w, [ " +
+    "    [ (w)<-[isIn:IS_IN*]-(children:Workpack{deleted:false}) | [ isIn, children] ], " +
+    "    [ (w)-[iib:IS_INSTANCE_BY]->(wm) | [iib, wm] ], " +
+    "    [ (children)-[iib2:IS_INSTANCE_BY]->(wm2) | [iib2, wm2] ], " +
+    "    [ (w)<-[wf1:FEATURES]-(wName:Property)-[ii1:IS_DRIVEN_BY]->(pm1:PropertyModel{name: 'name'}) | [wf1, wName, ii1, pm1] ], " +
+    "    [ (w)<-[wf2:FEATURES]-(wFullName:Property)-[ii2:IS_DRIVEN_BY]->(pm2:PropertyModel{name: 'fullName'}) | [wf2, wFullName, ii2, pm2] ], " +
+    "    [ (children)<-[cf1:FEATURES]-(cName:Property)-[ii3:IS_DRIVEN_BY]->(pm3:PropertyModel{name: 'name'}) | [cf1, cName, ii3, pm3] ], " +
+    "    [ (children)<-[cf2:FEATURES]-(cFullName:Property)-[ii4:IS_DRIVEN_BY]->(pm4:PropertyModel{name: 'fullName'}) | [cf2, cFullName, ii4, pm4] ] " +
+    "] "
+  )
+  Optional<Plan> findFirstLevelStructurePlanById(@Param("idPlan") Long idPlan);
+
 }

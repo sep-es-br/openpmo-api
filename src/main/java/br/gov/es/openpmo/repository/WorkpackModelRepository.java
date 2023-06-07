@@ -131,4 +131,11 @@ public interface WorkpackModelRepository extends Neo4jRepository<WorkpackModel, 
   )
   Set<Long> findWorkpackModelParentsHierarchy(@Param("idWorkpackModel") Long idWorkpackModel);
 
+  @Query(
+    "MATCH (wm1:WorkpackModel)<-[:IS_IN]-(wm2:WorkpackModel) " +
+    "WHERE id(wm1)=$idWorkpackModel " +
+    "RETURN max(wm2.position)"
+  )
+  Long findActualPosition(@Param("idWorkpackModel") Long idWorkpackModel);
+  
 }

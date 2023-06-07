@@ -19,6 +19,8 @@ public class CostAccountDto {
   private String workpackModelName;
   private String workpackModelFullName;
 
+  private CostDto costAccountAllocation;
+
   public static CostAccountDto of(final CostAccount costAccount) {
     final CostAccountDto instance = new CostAccountDto();
     instance.setId(costAccount.getId());
@@ -97,6 +99,14 @@ public class CostAccountDto {
 
   public void setWorkpackModelFullName(final String workpackModelFullName) {
     this.workpackModelFullName = workpackModelFullName;
+  }
+
+  public CostDto getCostAccountAllocation() {
+    return costAccountAllocation;
+  }
+
+  public void setCostAccountAllocation(CostDto costAccountAllocation) {
+    this.costAccountAllocation = costAccountAllocation;
   }
 
 }

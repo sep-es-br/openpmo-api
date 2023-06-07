@@ -39,10 +39,11 @@ public class StakeholderController {
   public ResponseEntity<ResponseBase<List<StakeholderDto>>> index(
       @Authorization final String authorization,
       @RequestParam(name = "id-workpack") final Long idWorkpack,
-      @RequestParam(required = false) final Long idFilter) {
-
+      @RequestParam(required = false) final String term,
+      @RequestParam(required = false) final Long idFilter
+  ) {
     this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
-    final List<StakeholderDto> isStakeHolderIn = this.stakeholderService.findAll(idWorkpack, idFilter);
+    final List<StakeholderDto> isStakeHolderIn = this.stakeholderService.findAll(idWorkpack, term, idFilter);
     return ResponseEntity.ok(ResponseBase.of(isStakeHolderIn));
   }
 

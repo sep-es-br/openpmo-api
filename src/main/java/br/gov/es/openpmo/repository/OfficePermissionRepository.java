@@ -56,6 +56,6 @@ public interface OfficePermissionRepository extends Neo4jRepository<CanAccessOff
   @Query("MATCH (person:Person)-[permission:CAN_ACCESS_OFFICE]->(office:Office) " +
          "WHERE id(person)=$idPerson " +
          "RETURN person, permission, office")
-  Set<CanAccessOffice> findAllPermissionsOfPerson(Long idPerson);
+  Set<CanAccessOffice> findAllPermissionsOfPerson(@Param("idPerson") Long idPerson);
 
 }

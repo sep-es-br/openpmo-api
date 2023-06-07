@@ -1,8 +1,11 @@
 package br.gov.es.openpmo.model.journals;
 
+import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.actors.File;
 import br.gov.es.openpmo.model.actors.Person;
+import br.gov.es.openpmo.model.office.Office;
+import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
@@ -35,11 +38,22 @@ public class JournalEntry extends Entity {
 
   private LocalDate previousDate;
 
+  private PermissionLevelEnum level;
+
   @Relationship("SCOPE_TO")
   private Workpack workpack;
 
+  @Relationship("SCOPE_TO")
+  private Office office;
+
+  @Relationship("SCOPE_TO")
+  private Plan plan;
+
   @Relationship("IS_RECORDED_BY")
-  private Person person;
+  private Person author;
+
+  @Relationship("IS_RECORDED_FOR")
+  private Person target;
 
   @Relationship(value = "IS_EVIDENCE_OF", direction = Relationship.INCOMING)
   private Set<File> files;
@@ -56,7 +70,7 @@ public class JournalEntry extends Entity {
     final LocalDate newDate,
     final LocalDate previousDate,
     final Workpack workpack,
-    final Person person
+    final Person author
   ) {
     this.type = type;
     this.action = action;
@@ -66,8 +80,77 @@ public class JournalEntry extends Entity {
     this.newDate = newDate;
     this.previousDate = previousDate;
     this.workpack = workpack;
-    this.person = person;
+    this.author = author;
     this.date = LocalDateTime.now();
+  }
+
+  public static JournalEntry of(
+    final JournalType type,
+    final JournalAction action,
+    final PermissionLevelEnum level,
+    final String nameItem,
+    final String description,
+    final Office office,
+    final Person target,
+    final Person author
+  ) {
+    final JournalEntry journalEntry = new JournalEntry();
+    journalEntry.setType(type);
+    journalEntry.setAction(action);
+    journalEntry.setLevel(level);
+    journalEntry.setNameItem(nameItem);
+    journalEntry.setDescription(description);
+    journalEntry.setOffice(office);
+    journalEntry.setAuthor(author);
+    journalEntry.setTarget(target);
+    journalEntry.setDate(LocalDateTime.now());
+    return journalEntry;
+  }
+
+  public static JournalEntry of(
+    final JournalType type,
+    final JournalAction action,
+    final PermissionLevelEnum level,
+    final String nameItem,
+    final String description,
+    final Plan plan,
+    final Person target,
+    final Person author
+  ) {
+    final JournalEntry journalEntry = new JournalEntry();
+    journalEntry.setType(type);
+    journalEntry.setAction(action);
+    journalEntry.setLevel(level);
+    journalEntry.setNameItem(nameItem);
+    journalEntry.setDescription(description);
+    journalEntry.setPlan(plan);
+    journalEntry.setAuthor(author);
+    journalEntry.setTarget(target);
+    journalEntry.setDate(LocalDateTime.now());
+    return journalEntry;
+  }
+
+  public static JournalEntry of(
+    final JournalType type,
+    final JournalAction action,
+    final PermissionLevelEnum level,
+    final String nameItem,
+    final String description,
+    final Workpack workpack,
+    final Person target,
+    final Person author
+  ) {
+    final JournalEntry journalEntry = new JournalEntry();
+    journalEntry.setType(type);
+    journalEntry.setAction(action);
+    journalEntry.setLevel(level);
+    journalEntry.setNameItem(nameItem);
+    journalEntry.setDescription(description);
+    journalEntry.setWorkpack(workpack);
+    journalEntry.setAuthor(author);
+    journalEntry.setTarget(target);
+    journalEntry.setDate(LocalDateTime.now());
+    return journalEntry;
   }
 
   @Transient
@@ -115,31 +198,55 @@ public class JournalEntry extends Entity {
     return this.workpack;
   }
 
+  public void setWorkpack(final Workpack workpack) {
+    this.workpack = workpack;
+  }
+
   @Transient
   public Long getWorkpackId() {
     return Optional.ofNullable(this.workpack).map(Workpack::getId).orElse(null);
   }
 
-  public void setWorkpack(final Workpack workpack) {
-    this.workpack = workpack;
+  public Office getOffice() {
+    return this.office;
   }
 
-  public Person getPerson() {
-    return this.person;
+  public void setOffice(final Office office) {
+    this.office = office;
+  }
+
+  public Plan getPlan() {
+    return this.plan;
+  }
+
+  public void setPlan(final Plan plan) {
+    this.plan = plan;
+  }
+
+  public Person getAuthor() {
+    return this.author;
+  }
+
+  public void setAuthor(final Person author) {
+    this.author = author;
+  }
+
+  public Person getTarget() {
+    return this.target;
+  }
+
+  public void setTarget(final Person target) {
+    this.target = target;
   }
 
   @Transient
   public Long getPersonId() {
-    return Optional.ofNullable(this.person).map(Person::getId).orElse(null);
+    return Optional.ofNullable(this.author).map(Person::getId).orElse(null);
   }
 
   @Transient
   public String getPersonName() {
-    return Optional.ofNullable(this.person).map(Person::getName).orElse(null);
-  }
-
-  public void setPerson(final Person person) {
-    this.person = person;
+    return Optional.ofNullable(this.author).map(Person::getName).orElse(null);
   }
 
   public Set<File> getFiles() {
@@ -167,27 +274,35 @@ public class JournalEntry extends Entity {
   }
 
   public String getReason() {
-    return reason;
+    return this.reason;
   }
 
-  public void setReason(String reason) {
+  public void setReason(final String reason) {
     this.reason = reason;
   }
 
   public LocalDate getNewDate() {
-    return newDate;
+    return this.newDate;
   }
 
-  public void setNewDate(LocalDate newDate) {
+  public void setNewDate(final LocalDate newDate) {
     this.newDate = newDate;
   }
 
   public LocalDate getPreviousDate() {
-    return previousDate;
+    return this.previousDate;
   }
 
-  public void setPreviousDate(LocalDate previousDate) {
+  public void setPreviousDate(final LocalDate previousDate) {
     this.previousDate = previousDate;
+  }
+
+  public PermissionLevelEnum getLevel() {
+    return this.level;
+  }
+
+  public void setLevel(final PermissionLevelEnum level) {
+    this.level = level;
   }
 
 }

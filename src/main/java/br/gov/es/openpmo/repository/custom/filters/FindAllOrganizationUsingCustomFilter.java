@@ -4,6 +4,9 @@ package br.gov.es.openpmo.repository.custom.filters;
 import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.repository.OrganizationRepository;
 import br.gov.es.openpmo.repository.custom.FindAllUsingCustomFilterBuilder;
+
+import java.util.Map;
+
 import org.neo4j.ogm.session.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,11 +41,25 @@ public class FindAllOrganizationUsingCustomFilter extends FindAllUsingCustomFilt
     final StringBuilder query
   ) {
     query.append("WHERE ID(office) = $idOffice ");
+    String complementWITH = ", office ";
+    buildFilterBySimilarity(filter, query, complementWITH);
   }
 
   @Override
   public void buildReturnClause(final StringBuilder query) {
     query.append("RETURN ").append(this.nodeName).append(", office");
+  }
+  
+  @Override
+  public void buildOrderingAndDirectionClause(
+	final CustomFilter filter, 
+	Map<String, Object> params,
+	final StringBuilder query
+  ) {
+	  if (filter.isSimilarityFilter()) {
+		query.append(" ").append("ORDER BY ");
+		buildOrderingBySimilarity(filter, query);
+	  }
   }
 
   @Override
