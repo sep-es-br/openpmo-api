@@ -16,11 +16,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Component
 public class CreateReportModel {
@@ -33,18 +31,32 @@ public class CreateReportModel {
 
   private final GetPropertyModelFromDto getPropertyModelFromDto;
 
+  private final OnlyOneReportModelTemplateSourceValidator onlyOneReportModelTemplateSourceValidator;
+
   private final CreateReportModelTemplateSource createReportModelTemplateSource;
 
   public CreateReportModel(
     final ReportDesignRepository reportDesignRepository,
     final PlanModelRepository planModelRepository,
     final GetPropertyModelFromDto getPropertyModelFromDto,
+    final OnlyOneReportModelTemplateSourceValidator onlyOneReportModelTemplateSourceValidator,
     final CreateReportModelTemplateSource createReportModelTemplateSource
   ) {
     this.reportDesignRepository = reportDesignRepository;
     this.planModelRepository = planModelRepository;
     this.getPropertyModelFromDto = getPropertyModelFromDto;
+    this.onlyOneReportModelTemplateSourceValidator = onlyOneReportModelTemplateSourceValidator;
     this.createReportModelTemplateSource = createReportModelTemplateSource;
+  }
+
+  private static ReportFormat getPreferredOutputFormat(final CreateReportModelRequest request) {
+    final ReportFormat preferredOutputFormat = request.getPreferredOutputFormat();
+    if (preferredOutputFormat != null) {
+      log.debug("Selecionando o formato {} como preferido para o relatório", preferredOutputFormat);
+      return preferredOutputFormat;
+    }
+    log.debug("Nenhum formato preferido informado, selecionando o formato PDF");
+    return ReportFormat.PDF;
   }
 
   public CreateReportModelResponse execute(final CreateReportModelRequest request) {
@@ -89,7 +101,10 @@ public class CreateReportModel {
 
   private Set<File> getFileTemplate(List<CreateReportModelFileItem> requestFiles) {
     log.debug("Criando {} novos arquivos de template", requestFiles.size());
-    final Set<File> createdFiles = this.createReportModelTemplateSource.execute(requestFiles);
+    final Set<File> createdFiles = this.createReportModelTemplateSource.execute(
+      requestFiles,
+      this.onlyOneReportModelTemplateSourceValidator::execute
+    );
     log.debug("Arquivos de template criados com sucesso");
     return createdFiles;
   }
@@ -104,16 +119,6 @@ public class CreateReportModel {
     }
     log.debug("PlanModel não encontrado com o ID {}.", idPlanModel);
     throw new NegocioException(ApplicationMessage.PLAN_MODEL_NOT_FOUND);
-  }
-
-  private static ReportFormat getPreferredOutputFormat(final CreateReportModelRequest request) {
-    final ReportFormat preferredOutputFormat = request.getPreferredOutputFormat();
-    if (preferredOutputFormat != null) {
-      log.debug("Selecionando o formato {} como preferido para o relatório", preferredOutputFormat);
-      return preferredOutputFormat;
-    }
-    log.debug("Nenhum formato preferido informado, selecionando o formato PDF");
-    return ReportFormat.PDF;
   }
 
 }

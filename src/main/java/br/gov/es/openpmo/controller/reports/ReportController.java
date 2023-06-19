@@ -89,18 +89,22 @@ public class ReportController {
   }
 
   @PostMapping("/generate")
-  public ResponseEntity<ByteArrayResource> generateReport(@RequestBody @Valid ReportRequest request) {
+  public ResponseEntity<ByteArrayResource> generateReport(
+    @Authorization String authorization,
+    @RequestBody @Valid final ReportRequest request
+  ) {
 
-    GeneratedReport response = this.generateReportComponent.execute(request);
+    final GeneratedReport response = this.generateReportComponent.execute(request, authorization);
 
     if (response.getResource() == null) {
       return ResponseEntity.noContent().build();
     }
 
-    HttpHeaders headers = new HttpHeaders();
+    final HttpHeaders headers = new HttpHeaders();
     headers.add("Access-Control-Expose-Headers", "Content-Disposition");
     headers.add("Content-Disposition", "attachment; filename=".concat(response.getFilename()));
-    return ResponseEntity.ok().headers(headers).contentLength(response.getResource().contentLength()).contentType(response.getContentType())
+    return ResponseEntity.ok().headers(headers).contentLength(response.getResource().contentLength()).contentType(
+        response.getContentType())
       .body(response.getResource());
   }
 

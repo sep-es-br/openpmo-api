@@ -2,6 +2,7 @@ package br.gov.es.openpmo.model.actors;
 
 import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.journals.JournalEntry;
+import br.gov.es.openpmo.service.reports.models.MainFile;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 import org.springframework.data.annotation.Transient;
@@ -11,7 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @NodeEntity
-public class File extends Entity {
+public class File extends Entity implements MainFile {
 
   public static final char DOT = '.';
 

@@ -6,56 +6,57 @@ import javax.validation.constraints.NotNull;
 
 public class ReportParamsRequest {
 
-	@NotNull
-	private String name;
-	
-	@NotNull
-	private String type;
-	
-	private String value;
-	
-	private Long selectedValue;
-	
-	private List<Long> selectedValues;
 
-	public String getName() {
-		return name;
-	}
+  @NotNull
+  private Long idPropertyModel;
 
-	public void setName(String name) {
-		this.name = name;
-	}
+  @NotNull
+  private String type;
 
-	public String getType() {
-		return type;
-	}
+  private String value;
 
-	public void setType(String type) {
-		this.type = type;
-	}
+  private Long selectedValue;
 
-	public String getValue() {
-		return value;
-	}
+  private List<Long> selectedValues;
 
-	public void setValue(String value) {
-		this.value = value;
-	}
+  public Long getIdPropertyModel() {
+    return idPropertyModel;
+  }
 
-	public Long getSelectedValue() {
-		return selectedValue;
-	}
+  public void setIdPropertyModel(Long idPropertyModel) {
+    this.idPropertyModel = idPropertyModel;
+  }
 
-	public void setSelectedValue(Long selectedValue) {
-		this.selectedValue = selectedValue;
-	}
+  public String getType() {
+    return type;
+  }
 
-	public List<Long> getSelectedValues() {
-		return selectedValues;
-	}
+  public void setType(String type) {
+    this.type = type;
+  }
 
-	public void setSelectedValues(List<Long> selectedValues) {
-		this.selectedValues = selectedValues;
-	}
+  public String getValue() {
+    return value;
+  }
+
+  public void setValue(String value) {
+    this.value = value;
+  }
+
+  public Long getSelectedValue() {
+    return selectedValue;
+  }
+
+  public void setSelectedValue(Long selectedValue) {
+    this.selectedValue = selectedValue;
+  }
+
+  public List<Long> getSelectedValues() {
+    return selectedValues;
+  }
+
+  public void setSelectedValues(List<Long> selectedValues) {
+    this.selectedValues = selectedValues;
+  }
 
 }

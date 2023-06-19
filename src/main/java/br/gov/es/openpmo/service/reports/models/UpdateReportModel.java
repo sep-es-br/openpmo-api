@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 @Component
 public class UpdateReportModel {
 
+  private static final Consumer<List<File>> NO_ADDITIONAL_VALIDATION = files -> {};
 
   private static final Logger log = LoggerFactory.getLogger(UpdateReportModel.class);
 
@@ -34,18 +35,29 @@ public class UpdateReportModel {
 
   private final UpdatePropertyModel updatePropertyModel;
 
+  private final OnlyOneReportModelTemplateSourceValidator onlyOneReportModelTemplateSourceValidator;
+
   public UpdateReportModel(
     final ReportDesignRepository reportDesignRepository,
     final CreateReportModelTemplateSource createReportModelTemplateSource,
     final GetPropertyModelFromDto getPropertyModelFromDto,
     final GetReportModelById getReportModelById,
-    final UpdatePropertyModel updatePropertyModel
-  ) {
+    final UpdatePropertyModel updatePropertyModel,
+    final OnlyOneReportModelTemplateSourceValidator onlyOneReportModelTemplateSourceValidator) {
     this.reportDesignRepository = reportDesignRepository;
     this.createReportModelTemplateSource = createReportModelTemplateSource;
     this.getPropertyModelFromDto = getPropertyModelFromDto;
     this.getReportModelById = getReportModelById;
     this.updatePropertyModel = updatePropertyModel;
+    this.onlyOneReportModelTemplateSourceValidator = onlyOneReportModelTemplateSourceValidator;
+  }
+
+  private static ReportFormat getPreferredOutputFormat(final UpdateReportModelRequest request) {
+    final ReportFormat preferredOutputFormat = request.getPreferredOutputFormat();
+    if (preferredOutputFormat != null) {
+      return preferredOutputFormat;
+    }
+    return ReportFormat.PDF;
   }
 
   public void execute(final UpdateReportModelRequest request) {
@@ -65,6 +77,8 @@ public class UpdateReportModel {
       return;
     }
 
+    this.onlyOneReportModelTemplateSourceValidator.execute(request.getFiles());
+
     final List<UpdateReportModelFileItem> newFilesRequest = request.getFiles().stream()
       .filter(file -> Objects.isNull(file.getId()))
       .collect(Collectors.toList());
@@ -76,7 +90,7 @@ public class UpdateReportModel {
       reportDesign.getId()
     );
 
-    final Set<File> createdFiles = this.createReportModelTemplateSource.execute(newFilesRequest);
+    final Set<File> createdFiles = this.createReportModelTemplateSource.execute(newFilesRequest, NO_ADDITIONAL_VALIDATION);
 
     log.debug("{} arquivos de template criados com sucesso para o reportDesignId={}", createdFiles.size(), reportDesign.getId());
 
@@ -118,14 +132,6 @@ public class UpdateReportModel {
       propertiesModel
     );
     log.debug("Propriedades atualizadas com sucesso.");
-  }
-
-  private static ReportFormat getPreferredOutputFormat(final UpdateReportModelRequest request) {
-    final ReportFormat preferredOutputFormat = request.getPreferredOutputFormat();
-    if (preferredOutputFormat != null) {
-      return preferredOutputFormat;
-    }
-    return ReportFormat.PDF;
   }
 
 }

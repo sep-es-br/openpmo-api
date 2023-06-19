@@ -4,10 +4,7 @@ import br.gov.es.openpmo.model.office.plan.Plan;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
-import java.util.Set;
 
 public class ReportScope {
 
@@ -17,16 +14,19 @@ public class ReportScope {
 
   private final String fullName;
 
+  private final Boolean hasPermission;
+
   private final Collection<ReportScopeItem> children = new LinkedList<>();
 
-  private ReportScope(final Long idPlan, final String name, final String fullName) {
+  private ReportScope(final Long idPlan, final String name, final String fullName, final Boolean hasPermission) {
     this.idPlan = idPlan;
     this.name = name;
     this.fullName = fullName;
+    this.hasPermission = hasPermission;
   }
 
-  public static ReportScope of(final Plan plan) {
-    return new ReportScope(plan.getId(), plan.getName(), plan.getFullName());
+  public static ReportScope of(final Plan plan, final boolean hasPermission) {
+    return new ReportScope(plan.getId(), plan.getName(), plan.getFullName(), hasPermission);
   }
 
   public Long getIdPlan() {
@@ -39,6 +39,10 @@ public class ReportScope {
 
   public String getFullName() {
     return this.fullName;
+  }
+
+  public Boolean getHasPermission() {
+    return this.hasPermission;
   }
 
   public Collection<ReportScopeItem> getChildren() {

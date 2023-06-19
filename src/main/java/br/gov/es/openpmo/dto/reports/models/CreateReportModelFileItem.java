@@ -1,8 +1,9 @@
 package br.gov.es.openpmo.dto.reports.models;
 
-import br.gov.es.openpmo.service.reports.models.CreateReportModelTemplateSource;
+import br.gov.es.openpmo.service.reports.models.TemplateSourceRequest;
+import br.gov.es.openpmo.service.reports.models.MainFile;
 
-public class CreateReportModelFileItem implements CreateReportModelTemplateSource.CreateTemplateSourceRequest {
+public class CreateReportModelFileItem implements TemplateSourceRequest, MainFile {
 
   private final String mimeType;
 

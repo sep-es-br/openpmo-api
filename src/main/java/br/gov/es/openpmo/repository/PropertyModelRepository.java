@@ -34,4 +34,10 @@ public interface PropertyModelRepository extends Neo4jRepository<PropertyModel, 
          "return m")
   Optional<PropertyModel> findByIdProperty(Long propertyId);
 
+  @Query(
+    "MATCH (model:PropertyModel)<-[:IS_DRIVEN_BY]-(property:Property) " +
+    "WHERE id(model) IN $propertiesModelId " +
+    "DETACH DELETE model, property"
+  )
+  void deletePropertyModelAndInstances(List<Long> propertiesModelId);
 }

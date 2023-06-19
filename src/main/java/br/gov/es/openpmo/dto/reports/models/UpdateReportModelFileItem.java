@@ -1,9 +1,10 @@
 package br.gov.es.openpmo.dto.reports.models;
 
 import br.gov.es.openpmo.model.actors.File;
-import br.gov.es.openpmo.service.reports.models.CreateReportModelTemplateSource;
+import br.gov.es.openpmo.service.reports.models.MainFile;
+import br.gov.es.openpmo.service.reports.models.TemplateSourceRequest;
 
-public class UpdateReportModelFileItem implements CreateReportModelTemplateSource.CreateTemplateSourceRequest {
+public class UpdateReportModelFileItem implements TemplateSourceRequest, MainFile {
 
   private final Long id;
 

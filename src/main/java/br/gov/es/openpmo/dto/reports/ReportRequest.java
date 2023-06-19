@@ -2,6 +2,7 @@ package br.gov.es.openpmo.dto.reports;
 
 import br.gov.es.openpmo.model.reports.ReportFormat;
 
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
@@ -10,34 +11,48 @@ public class ReportRequest {
   @NotNull
   private final Long idReportModel;
 
+  @NotNull
+  private final Long idPlan;
+
   private final List<ReportParamsRequest> params;
 
-  private final List<Long> scope;
+  @NotEmpty
+  private final List<@NotNull Long> scope;
 
   @NotNull
   private final ReportFormat format;
 
-  public ReportRequest(Long idReportModel, List<ReportParamsRequest> params, List<Long> scope, ReportFormat format) {
+  public ReportRequest(
+    final Long idReportModel,
+    final Long idPlan,
+    final List<ReportParamsRequest> params,
+    final List<Long> scope,
+    final ReportFormat format
+  ) {
     this.idReportModel = idReportModel;
+    this.idPlan = idPlan;
     this.params = params;
     this.scope = scope;
     this.format = format;
   }
 
   public Long getIdReportModel() {
-    return idReportModel;
+    return this.idReportModel;
   }
 
   public List<ReportParamsRequest> getParams() {
-    return params;
+    return this.params;
   }
 
   public List<Long> getScope() {
-    return scope;
+    return this.scope;
   }
 
   public ReportFormat getFormat() {
-    return format;
+    return this.format;
   }
 
+  public Long getIdPlan() {
+    return this.idPlan;
+  }
 }

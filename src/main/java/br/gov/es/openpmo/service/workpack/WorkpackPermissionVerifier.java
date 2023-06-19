@@ -194,6 +194,7 @@ public class WorkpackPermissionVerifier {
       if(workpack != null) {
         if(hasStakeholderSessionActive(workpack)) {
           List<PermissionDto> permissions = ifCanAccessWorkpackThenFetchPermissions(workpack, idUser);
+          permissions = this.fetchPermissionsFromWorkpack(workpack, idUser, idPlan);
           permissions = this.fetchPermissions(
             permissions,
             permissionsPlan,

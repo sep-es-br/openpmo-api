@@ -37,7 +37,8 @@ public class CreateReportModelTemplateSource {
   }
 
   public Set<File> execute(
-    final Collection<? extends CreateTemplateSourceRequest> files
+    final Collection<? extends TemplateSourceRequest> files,
+    final Consumer<? super List<File>> additionalValidation
   ) {
 
     final List<File> newFiles = files.stream()
@@ -55,25 +56,11 @@ public class CreateReportModelTemplateSource {
       .collect(Collectors.toList());
 
     this.ensureAllFilesAlreadyStoredOnDisc(newFiles);
-    this.ensureHasOnlyOneMainReportTemplate(newFiles);
+    additionalValidation.accept(newFiles);
 
     this.fileRepository.saveAll(newFiles);
 
     return new HashSet<>(newFiles);
-  }
-
-
-  private void ensureHasOnlyOneMainReportTemplate(final Collection<? extends File> reportTemplateFiles) {
-    log.debug("Validando arquivo principal do template de relatório");
-    final List<File> mainFiles = reportTemplateFiles.stream()
-      .filter(File::getMain)
-      .collect(Collectors.toList());
-    log.debug("Foram informados {} arquivo(s) como principal", mainFiles.size());
-    if (mainFiles.size() != 1) {
-      log.error("O relatório pode ter apenas 1 arquivo principal");
-      throw new NegocioException(ApplicationMessage.REPORT_DESIGN_MAIN_FILE_TEMPLATE_QUANTITY_DIFFERENT_THAN_ONE);
-    }
-    log.debug("Validação terminada com sucesso");
   }
 
   private void ensureAllFilesAlreadyStoredOnDisc(final Collection<? extends File> reportTemplateFiles) {
@@ -91,18 +78,6 @@ public class CreateReportModelTemplateSource {
       throw new NegocioException(ApplicationMessage.FILE_NOT_FOUND);
     }
     log.debug("Validação terminada com sucesso");
-  }
-
-  public interface CreateTemplateSourceRequest {
-
-    String getMimeType();
-
-    String getUniqueNameKey();
-
-    String getUserGivenName();
-
-    Boolean getMain();
-
   }
 
 }

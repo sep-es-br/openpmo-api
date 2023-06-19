@@ -315,8 +315,9 @@ public class ApplicationMessage {
     public static final String REPORT_GENERATE_ERROR = "report-design.generate.error";
     public static final String REPORT_DESIGN_MAIN_FILE_NOT_FOUND = "report-design.main.file.not.found";
     public static final String REPORT_GENERATE_UNKNOWN_TYPE_ERROR = "report-design.generate.unknown-type.error";
+    public static final String REPORT_GENERATE_SCOPE_PARAMETER_INVALID = "report-design.generate.scope.parameter.invalid";
 
-    private ApplicationMessage() {
+  private ApplicationMessage() {
     }
 
 }

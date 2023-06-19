@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 public class DeleteReportModelById {
@@ -82,9 +83,13 @@ public class DeleteReportModelById {
       log.debug("O report model {} não possui PropertyModel relacionado", reportDesignById.getId());
       return;
     }
-    log.debug("Excluindo {} propertiesModel.", propertiesModel.size());
-    this.propertyModelRepository.deleteAll(propertiesModel);
-    log.debug("PropertyModels excluídos.");
+    log.debug("Excluindo {} propertiesModel e properties.", propertiesModel.size());
+    this.propertyModelRepository.deletePropertyModelAndInstances(
+      propertiesModel.stream()
+        .map(PropertyModel::getId)
+        .collect(Collectors.toList())
+    );
+    log.debug("PropertyModels e properties excluídos.");
   }
 
   private ReportDesign getReportDesignById(final Long idReportDesign) {

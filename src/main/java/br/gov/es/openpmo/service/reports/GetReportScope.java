@@ -8,6 +8,7 @@ import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.PlanRepository;
 import br.gov.es.openpmo.service.permissions.canaccess.CanAccessData;
 import br.gov.es.openpmo.service.permissions.canaccess.CanAccessDataResponse;
+import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessDataResponse;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,17 +39,25 @@ public class GetReportScope {
     this.canAccessData = canAccessData;
   }
 
+  private static boolean analyzePermission(final ICanAccessDataResponse canAccess) {
+    return canAccess.canEditResource() || canAccess.getRead();
+  }
+
   public ReportScope execute(final Long idPlan, final String authorization) {
     log.info("Consultando escopo do relatório para o idPlan={}", idPlan);
     final Plan plan = this.getPlanStructure(idPlan);
 
+    final Function<Long, CanAccessDataResponse> fetchPermissionFunction = this.fetchPermission(authorization);
+
+    final boolean canReadOrEdit = analyzePermission(fetchPermissionFunction.apply(idPlan));
+
     log.debug("Criando ReportScope a partir do idPlan={}", idPlan);
-    final ReportScope scope = ReportScope.of(plan);
+    final ReportScope scope = ReportScope.of(plan, canReadOrEdit);
 
     final Set<Workpack> workpacks = plan.getWorkpacks();
 
     log.debug("Navegando na estrutura dos {} workpacks filho(s) diretos de idPlan={}", workpacks.size(), plan.getId());
-    final Collection<ReportScopeItem> children = this.addScope(workpacks, this.fetchPermission(authorization));
+    final Collection<ReportScopeItem> children = this.addScope(workpacks, fetchPermissionFunction);
 
     scope.addChildren(children);
 
@@ -72,13 +81,15 @@ public class GetReportScope {
     for (final Workpack workpack : workpacks) {
 
       log.debug("Criando ReportScopeItem a partir do workpackId={}", workpack.getId());
-      final CanAccessDataResponse canAccess = permissionByWorkpackId.get(workpack.getId());
-      final boolean canReadOrEdit = canAccess.canEditResource() || canAccess.getRead();
+      final boolean canReadOrEdit = analyzePermission(permissionByWorkpackId.get(workpack.getId()));
       final ReportScopeItem item = ReportScopeItem.of(workpack, canReadOrEdit);
       items.add(item);
 
       if (!workpack.hasChildren()) {
-        log.debug("Workpack workpackId={} não possui filhos, iniciando processamento do próximo Workpack", workpack.getId());
+        log.debug(
+          "Workpack workpackId={} não possui filhos, iniciando processamento do próximo Workpack",
+          workpack.getId()
+        );
         continue;
       }
 
