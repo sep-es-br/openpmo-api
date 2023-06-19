@@ -105,19 +105,18 @@ public class GenerateReportComponent {
 
     final Path path = this.getPath(compiledFileMain.getUniqueNameKey());
 
-    try {
+    try (final Connection connection = DriverManager.getConnection(
+      "jdbc:neo4j:" + this.urlConnection + "/neo4j",
+      this.userName,
+      this.password
+    )) {
       final JasperReport jasperReportMain = JasperUtils.getJasperReportFromJasperFile(path.toFile());
-
-      final File jrxmlFileMain = this.fileRepository.findFileTemplateReportDesignWhereMainIsTrue(request.getIdReportModel())
-        .orElseThrow(() -> new NegocioException(ApplicationMessage.REPORT_DESIGN_MAIN_FILE_NOT_FOUND));
 
       final Map<String, Object> params = this.getParams(request);
 
-      final JRDataSource dataSource = this.getDataSource(jrxmlFileMain, params);
-
       this.subReportsAsParams(reportDesign, params);
 
-      final byte[] reportBytes = jasperUtils.print(params, dataSource, request.getFormat(), jasperReportMain);
+      final byte[] reportBytes = jasperUtils.print(params, connection, request.getFormat(), jasperReportMain);
 
       final GeneratedReport generatedReport = new GeneratedReport();
 
@@ -157,54 +156,13 @@ public class GenerateReportComponent {
           compiledSubReport.getUserGivenName().lastIndexOf(".")
         );
 
-        final File jrxmlSubReport = compiledSubReport.getTemplateFile();
-        final JRDataSource dataSourceToSubReport = this.getDataSource(jrxmlSubReport, params);
-
         params.put(userGivenName, jasperSubReport);
-        params.put("ds_" + userGivenName, dataSourceToSubReport);
-      } catch (final ClassNotFoundException | IOException | SQLException e) {
+      } catch (final ClassNotFoundException | IOException e) {
         e.printStackTrace();
         throw new NegocioException(ApplicationMessage.REPORT_GENERATE_ERROR);
       }
     }
 
-  }
-
-  private JRDataSource getDataSource(final File jrxml, final Map<String, Object> params) throws SQLException {
-    try (final Connection connection = DriverManager.getConnection(
-      "jdbc:neo4j:" + this.urlConnection + "/neo4j",
-      this.userName,
-      this.password
-    )) {
-
-      final Document doc = DocumentUtils.convertToXMLDocument(this.getPath(jrxml.getUniqueNameKey()));
-
-      final NodeList nodeList = doc.getDocumentElement().getChildNodes();
-
-      Node node = null;
-      String query = "";
-      for (int i = 0; i < nodeList.getLength(); i++) {
-        node = nodeList.item(i);
-        if (node.getNodeName().equals("queryString")) {
-          query = node.getChildNodes().item(1).getTextContent();
-          break;
-        }
-      }
-
-      if (StringUtils.isAllEmpty(query)) return new JREmptyDataSource();
-
-      for (final Map.Entry<String, Object> parameter : params.entrySet()) {
-        query = query.replace("$P{" + parameter.getKey() + "}", parameter.getValue().toString());
-      }
-
-      final ResultSet rs = connection.createStatement().executeQuery(query);
-
-      final JRDataSource resultSetDataSource = new JRResultSetDataSource(rs);
-      return resultSetDataSource;
-    } catch (final SQLException e) {
-      e.printStackTrace();
-      throw new NegocioException(ApplicationMessage.REPORT_GENERATE_ERROR);
-    }
   }
 
   private Map<String, Object> getParams(final ReportRequest request) {
