@@ -13,17 +13,13 @@ sourceCompatibility = '1.8'
 
 
 repositories {
-  mavenCentral()
-  maven {
-    url "https://repo.spring.io/plugins-release/"
-  }
-  maven {
-    url "https://jasperreports.sourceforge.net/maven2/"
-  }
-  maven {
-    url "https://jaspersoft.artifactoryonline.com/jaspersoft/third-party-ce-artifacts/"
-
-  }
+    mavenCentral()
+    maven {
+        url "https://repo.spring.io/plugins-release/"
+    }
+    maven {
+        url "https://jasperreports.sourceforge.net/maven2/"
+    }
 }
 
 dependencies {
@@ -44,14 +40,13 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.9'
     implementation 'org.zalando:logbook-spring-boot-starter:2.14.0'
 
-	implementation 'org.neo4j:neo4j-jdbc-bolt:4.0.1'
-	
+    implementation 'org.neo4j:neo4j-jdbc-bolt:4.0.1'
+
     implementation 'net.sf.jasperreports:jasperreports:6.17.0'
     implementation 'com.lowagie:itext:2.1.7'
 
     implementation 'io.springfox:springfox-swagger2:2.9.2'
     implementation 'io.springfox:springfox-swagger-ui:2.9.2'
     implementation 'io.springfox:springfox-bean-validators:2.9.2'
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.11.3'
 
 }
