@@ -14,7 +14,7 @@ public class FindAllBaselineApprovedUsingCustomFilter
 
   @Override
   protected BaselineViewStatus getStatus() {
-    return BaselineViewStatus.APPROVED;
+    return BaselineViewStatus.APPROVEDS;
   }
 
 }

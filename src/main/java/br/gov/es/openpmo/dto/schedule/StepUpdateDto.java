@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.dto.schedule;
 
+import javax.validation.constraints.Min;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Set;
@@ -7,7 +8,9 @@ import java.util.Set;
 public class StepUpdateDto {
 
   private Long id;
+  @Min(value = 0)
   private BigDecimal actualWork;
+  @Min(value = 0)
   private BigDecimal plannedWork;
   private LocalDate scheduleEnd;
   private LocalDate scheduleStart;

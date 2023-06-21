@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.dto.schedule;
 
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -10,8 +11,10 @@ public class StepStoreParamDto {
   @NotNull
   private Long idSchedule;
 
+  @Min(value = 0)
   private BigDecimal actualWork;
 
+  @Min(value = 0)
   private BigDecimal plannedWork;
 
   @NotNull

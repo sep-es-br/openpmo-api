@@ -229,21 +229,19 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
         }
         break;
     }
-    models.stream().filter(m -> m.getSession() == Session.PROPERTIES && m.isActive())
-      .forEach(m -> validateProperty(
-        workpack,
-        m
-      ));
+    models.stream()
+      .filter(m -> m.getSession() == Session.PROPERTIES && m.isActive())
+      .forEach(m -> validateProperty(m, workpack.getProperties()));
 
   }
 
   private static void validateProperty(
-    final Workpack workpack,
-    final PropertyModel propertyModel
+    final PropertyModel propertyModel,
+    final Set<? extends Property> properties
   ) {
     boolean propertyModelFound = false;
-    if (workpack.getProperties() != null && !workpack.getProperties().isEmpty()) {
-      for (final Property property : workpack.getProperties()) {
+    if (properties != null && !properties.isEmpty()) {
+      for (final Property property : properties) {
         switch (property.getClass().getTypeName()) {
           case TYPE_MODEL_NAME_INTEGER:
             final Integer integer = (Integer) property;

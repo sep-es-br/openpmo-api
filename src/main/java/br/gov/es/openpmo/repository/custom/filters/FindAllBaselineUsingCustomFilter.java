@@ -55,12 +55,12 @@ public abstract class FindAllBaselineUsingCustomFilter extends FindAllUsingCusto
           .append(this.nodeName)
           .append(")-[:IS_EVALUATED_BY]->(p) ");
         break;
-      case APPROVED:
+      case APPROVEDS:
         query.append("and ")
           .append(this.nodeName)
           .append(".status='APPROVED' ");
         break;
-      case REJECTED:
+      case REJECTEDS:
         query.append("and ")
           .append(this.nodeName)
           .append(".status='REJECTED' ");

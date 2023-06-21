@@ -14,7 +14,7 @@ public class FindAllBaselineRejectedUsingCustomFilter
 
   @Override
   protected BaselineViewStatus getStatus() {
-    return BaselineViewStatus.REJECTED;
+    return BaselineViewStatus.REJECTEDS;
   }
 
 }

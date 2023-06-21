@@ -1,13 +1,15 @@
 package br.gov.es.openpmo.dto.schedule;
 
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
 public class ConsumesParamDto {
 
   private Long id;
+  @Min(value = 0)
   private BigDecimal actualCost;
-
+  @Min(value = 0)
   private BigDecimal plannedCost;
   @NotNull
   private Long idCostAccount;

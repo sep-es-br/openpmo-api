@@ -110,46 +110,72 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
   ) {
     List<Baseline> baselines = new ArrayList<>();
     final Double searchCutOffScore = appProperties.getSearchCutOffScore();
-    switch (status) {
-      case WAITING_MY_EVALUATION:
-        baselines = getAllWaitingMyEvaluationByPersonId(
-          idPerson,
-          idFilter,
-          term,
-          searchCutOffScore
-        );
-        break;
-      case WAITING_OTHERS_EVALUATIONS:
-        baselines = getAllWaitingOthersEvaluationByPersonId(
-          idPerson,
-          idFilter,
-          term,
-          searchCutOffScore
-        );
-        break;
-      case APPROVED:
-        baselines = getAllApprovedByPersonId(
-          idPerson,
-          idFilter,
-          term,
-          searchCutOffScore
-        );
-        break;
-      case REJECTED:
-        baselines = getAllRejectedByPersonId(
-          idPerson,
-          idFilter,
-          term,
-          searchCutOffScore
-        );
-        break;
-    }
-    if (idFilter == null) {
-      baselines.sort(GetAllBaselinesService::sortResponseByDate);
-    }
+    baselines = handleStatusBaseline(idPerson, idFilter, term, status, baselines, searchCutOffScore);
     return baselines.stream()
       .map(GetAllBaselinesService::getBaselinesResponse)
       .collect(Collectors.toList());
+  }
+
+  private List<Baseline> handleStatusBaseline(
+          Long idPerson,
+          Long idFilter,
+          String term,
+          BaselineViewStatus status,
+          List<Baseline> baselines,
+          Double searchCutOffScore
+  ) {
+    final boolean hasFilter = idFilter == null;
+    switch (status) {
+      case WAITING_MY_EVALUATION:
+        final List<Baseline> allWaitingMyEvaluationByPersonId = getAllWaitingMyEvaluationByPersonId(
+                idPerson,
+                idFilter,
+                term,
+                searchCutOffScore
+        );
+        if (hasFilter) {
+          allWaitingMyEvaluationByPersonId
+                  .sort(GetAllBaselinesService::sortResponseByDateReversed);
+        }
+        return allWaitingMyEvaluationByPersonId;
+      case WAITING_OTHERS_EVALUATIONS:
+        final List<Baseline> allWaitingOthersEvaluationByPersonId = getAllWaitingOthersEvaluationByPersonId(
+                idPerson,
+                idFilter,
+                term,
+                searchCutOffScore
+        );
+        if (hasFilter) {
+          allWaitingOthersEvaluationByPersonId
+                  .sort(GetAllBaselinesService::sortResponseByDateReversed);
+        }
+        return allWaitingOthersEvaluationByPersonId;
+      case APPROVEDS:
+        final List<Baseline> allApprovedByPersonId = getAllApprovedByPersonId(
+                idPerson,
+                idFilter,
+                term,
+                searchCutOffScore
+        );
+        if (hasFilter) {
+          allApprovedByPersonId
+                  .sort(GetAllBaselinesService::sortResponseByDate);
+        }
+        return allApprovedByPersonId;
+      case REJECTEDS:
+        final List<Baseline> allRejectedByPersonId = getAllRejectedByPersonId(
+                idPerson,
+                idFilter,
+                term,
+                searchCutOffScore
+        );
+        if (hasFilter) {
+          allRejectedByPersonId
+                  .sort(GetAllBaselinesService::sortResponseByDate);
+        }
+        return allRejectedByPersonId;
+    }
+    return baselines;
   }
 
   private static int sortResponseByDate(
@@ -165,6 +191,23 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
     final LocalDateTime secondProposalDate = second.getProposalDate();
     if (firstProposalDate != null && secondProposalDate != null) {
       return secondProposalDate.compareTo(firstProposalDate);
+    }
+    return DO_NOT_SORT;
+  }
+
+  private static int sortResponseByDateReversed(
+          Baseline first,
+          Baseline second
+  ) {
+    final LocalDateTime firstActivationDate = first.getActivationDate();
+    final LocalDateTime secondActivationDate = second.getActivationDate();
+    if (firstActivationDate != null && secondActivationDate != null) {
+      return firstActivationDate.compareTo(secondActivationDate);
+    }
+    final LocalDateTime firstProposalDate = first.getProposalDate();
+    final LocalDateTime secondProposalDate = second.getProposalDate();
+    if (firstProposalDate != null && secondProposalDate != null) {
+      return firstProposalDate.compareTo(secondProposalDate);
     }
     return DO_NOT_SORT;
   }

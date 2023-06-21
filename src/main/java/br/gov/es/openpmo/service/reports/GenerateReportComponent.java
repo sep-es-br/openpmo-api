@@ -8,25 +8,20 @@ import br.gov.es.openpmo.exception.RegistroNaoEncontradoException;
 import br.gov.es.openpmo.model.actors.File;
 import br.gov.es.openpmo.model.actors.Organization;
 import br.gov.es.openpmo.model.office.Locality;
-import br.gov.es.openpmo.model.properties.models.PropertyModel;
+import br.gov.es.openpmo.model.properties.models.*;
 import br.gov.es.openpmo.model.reports.ReportDesign;
-import br.gov.es.openpmo.repository.*;
+import br.gov.es.openpmo.repository.LocalityRepository;
+import br.gov.es.openpmo.repository.OrganizationRepository;
+import br.gov.es.openpmo.repository.PropertyModelRepository;
+import br.gov.es.openpmo.repository.ReportDesignRepository;
 import br.gov.es.openpmo.utils.ApplicationMessage;
-import br.gov.es.openpmo.utils.DocumentUtils;
 import br.gov.es.openpmo.utils.JasperUtils;
-import net.sf.jasperreports.engine.JRDataSource;
-import net.sf.jasperreports.engine.JREmptyDataSource;
-import net.sf.jasperreports.engine.JRResultSetDataSource;
 import net.sf.jasperreports.engine.JasperReport;
 import org.apache.commons.lang3.BooleanUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -34,23 +29,21 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static br.gov.es.openpmo.utils.ApplicationMessage.*;
 
 @Component
 public class GenerateReportComponent {
 
   private final ReportDesignRepository repository;
-
-  private final FileRepository fileRepository;
-
   private final LocalityRepository localityRepository;
 
   private final OrganizationRepository organizationRepository;
-
-  private final UnitMeasureRepository unitMeasureRepository;
 
   private final ReportScopeValidator reportScopeValidator;
 
@@ -66,10 +59,8 @@ public class GenerateReportComponent {
 
   public GenerateReportComponent(
     final ReportDesignRepository repository,
-    final FileRepository fileRepository,
     final LocalityRepository localityRepository,
     final OrganizationRepository organizationRepository,
-    final UnitMeasureRepository unitMeasureRepository,
     final ReportScopeValidator reportScopeValidator,
     final PropertyModelRepository propertyModelRepository,
     @Value("${app.reportPath}") final String fileReportPath,
@@ -78,10 +69,8 @@ public class GenerateReportComponent {
     @Value("${spring.data.neo4j.password}") final String password
   ) {
     this.repository = repository;
-    this.fileRepository = fileRepository;
     this.localityRepository = localityRepository;
     this.organizationRepository = organizationRepository;
-    this.unitMeasureRepository = unitMeasureRepository;
     this.reportScopeValidator = reportScopeValidator;
     this.propertyModelRepository = propertyModelRepository;
     this.fileReportPath = fileReportPath;
@@ -90,9 +79,177 @@ public class GenerateReportComponent {
     this.password = password;
   }
 
+  private void validateParameters(
+    final Collection<? extends ReportParamsRequest> parameters
+  ) {
+    if (parameters == null || parameters.isEmpty()) return;
+    for (final ReportParamsRequest parameter : parameters) {
+      this.validateParameter(parameter);
+    }
+  }
+
+  private void validateParameter(final ReportParamsRequest parameter) {
+    final PropertyModel propertyModelParameter = this.getPropertyModel(parameter);
+    switch (parameter.getType()) {
+      case "Integer": {
+        final Integer value = Integer.valueOf(parameter.getValue());
+        final IntegerModel integerModel = (IntegerModel) propertyModelParameter;
+        if (integerModel.isRequired()) {
+          throw new NegocioException(
+            PROPERTY_VALUE_NOT_NULL + "$" + propertyModelParameter.getLabel());
+        }
+        if (integerModel.getMin() != null
+          && integerModel.getMin() > value) {
+          throw new NegocioException(
+            PROPERTY_VALUE_NOT_MIN + "$" + propertyModelParameter.getLabel());
+        }
+        if (integerModel.getMax() != null
+          && integerModel.getMax() < value) {
+          throw new NegocioException(
+            PROPERTY_VALUE_NOT_MAX + "$" + propertyModelParameter.getLabel());
+        }
+        break;
+      }
+      case "Text": {
+        final String value = parameter.getValue();
+        final TextModel textModel = (TextModel) propertyModelParameter;
+        if (textModel.isRequired()
+          && (value == null || value.isEmpty())) {
+          throw new NegocioException(
+            PROPERTY_VALUE_NOT_EMPTY + "$" + propertyModelParameter.getLabel());
+        }
+        if (textModel.getMin() != null
+          && textModel.getMin() > value.length()) {
+          throw new NegocioException(
+            PROPERTY_VALUE_NOT_MIN + "$" + propertyModelParameter.getLabel());
+        }
+        if (textModel.getMax() != null
+          && textModel.getMax() < value.length()) {
+          throw new NegocioException(
+            PROPERTY_VALUE_NOT_MAX + "$" + propertyModelParameter.getLabel());
+        }
+        break;
+      }
+      case "Date": {
+        final DateModel dateModel = (DateModel) propertyModelParameter;
+        if (dateModel.isRequired() && parameter.getValue() == null) {
+          throw new NegocioException(
+            PROPERTY_VALUE_NOT_NULL + "$" + propertyModelParameter.getLabel());
+        }
+        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        final LocalDateTime value = LocalDateTime.parse(parameter.getValue(), formatter);
+        if (dateModel.getMin() != null && dateModel.getMin().isAfter(value)) {
+          throw new NegocioException(
+            PROPERTY_VALUE_NOT_MIN + "$" + propertyModelParameter.getLabel());
+        }
+        if (dateModel.getMax() != null && dateModel.getMax().isBefore(value)) {
+          throw new NegocioException(
+            PROPERTY_VALUE_NOT_MAX + "$" + propertyModelParameter.getLabel());
+        }
+        break;
+      }
+      case "Toggle": {
+        final ToggleModel toggleModel = (ToggleModel) propertyModelParameter;
+        if (toggleModel.isRequired() && parameter.getValue() == null) {
+          throw new NegocioException(
+            PROPERTY_VALUE_NOT_MAX + "$" + toggleModel.getLabel());
+        }
+        break;
+      }
+      case "UnitSelection": {
+        final UnitSelectionModel unitSelectionModel = (UnitSelectionModel) propertyModelParameter;
+        if (unitSelectionModel.isRequired() && parameter.getSelectedValue() == null) {
+          throw new NegocioException(
+            PROPERTY_VALUE_NOT_NULL + "$" + unitSelectionModel.getLabel());
+        }
+        break;
+      }
+      case "Selection": {
+        final SelectionModel selectionModel = (SelectionModel) propertyModelParameter;
+        if (selectionModel.isRequired() && parameter.getValue() == null) {
+          throw new NegocioException(PROPERTY_VALUE_NOT_NULL + "$" + selectionModel.getLabel());
+        }
+        final List<String> values = Arrays.stream(parameter.getValue().split(","))
+          .collect(Collectors.toList());
+        if (selectionModel.isRequired() && values.isEmpty()) {
+          throw new NegocioException(PROPERTY_VALUE_NOT_NULL + "$" + selectionModel.getLabel());
+        }
+        break;
+      }
+      case "TextArea": {
+        final TextAreaModel textAreaModel = (TextAreaModel) propertyModelParameter;
+        if (textAreaModel.isRequired()
+          && (parameter.getValue() == null || parameter.getValue().isEmpty())) {
+          throw new NegocioException(
+            PROPERTY_VALUE_NOT_EMPTY + "$" + propertyModelParameter.getLabel());
+        }
+        if (textAreaModel.getMin() != null
+          && textAreaModel.getMin() > parameter.getValue().length()) {
+          throw new NegocioException(
+            PROPERTY_VALUE_NOT_MIN + "$" + propertyModelParameter.getLabel());
+        }
+        if (textAreaModel.getMax() != null
+          && textAreaModel.getMax() < parameter.getValue().length()) {
+          throw new NegocioException(
+            PROPERTY_VALUE_NOT_MAX + "$" + propertyModelParameter.getLabel());
+        }
+        break;
+      }
+      case "Num": {
+        final NumberModel decimalModel = (NumberModel) propertyModelParameter;
+        if (decimalModel.isRequired() && parameter.getValue() == null) {
+          throw new NegocioException(PROPERTY_VALUE_NOT_NULL + "$" + propertyModelParameter.getLabel());
+        }
+        final Double value = Double.valueOf(parameter.getValue());
+        if (decimalModel.getMin() != null
+          && decimalModel.getMin() > value) {
+          throw new NegocioException(PROPERTY_VALUE_NOT_MIN + "$" + propertyModelParameter.getLabel());
+        }
+        if (decimalModel.getMax() != null
+          && decimalModel.getMax() < value) {
+          throw new NegocioException(PROPERTY_VALUE_NOT_MAX + "$" + propertyModelParameter.getLabel());
+        }
+        break;
+      }
+      case "Currency": {
+        final CurrencyModel currencyModel = (CurrencyModel) propertyModelParameter;
+        if (currencyModel.isRequired() && parameter.getValue() == null) {
+          throw new NegocioException(PROPERTY_VALUE_NOT_NULL + "$" + propertyModelParameter.getLabel());
+        }
+        break;
+      }
+      case "LocalitySelection": {
+        final LocalitySelectionModel localitySelection = (LocalitySelectionModel) propertyModelParameter;
+        if (localitySelection.isRequired() && (parameter.getSelectedValues() == null
+          || parameter.getSelectedValues().isEmpty())) {
+          throw new NegocioException(PROPERTY_VALUE_NOT_NULL + "$" + propertyModelParameter.getLabel());
+        }
+        break;
+      }
+      case "OrganizationSelection": {
+        final OrganizationSelectionModel organizationSelection = (OrganizationSelectionModel) propertyModelParameter;
+        if (organizationSelection.isRequired() &&
+          (parameter.getSelectedValues() == null || parameter.getSelectedValues().isEmpty())
+        ) {
+          throw new NegocioException(PROPERTY_VALUE_NOT_NULL + "$" + propertyModelParameter.getLabel());
+        }
+        break;
+      }
+      default: {
+        throw new NegocioException(PROPERTY_MODEL_INVALID_TYPE);
+      }
+    }
+  }
+
+  private PropertyModel getPropertyModel(final ReportParamsRequest property) {
+    return this.propertyModelRepository.findById(property.getIdPropertyModel())
+      .orElseThrow(() -> new NegocioException(PROPERTY_REQUIRED_NOT_FOUND + "$" + property.getIdPropertyModel()));
+  }
+
   public GeneratedReport execute(final ReportRequest request, final String authorization) {
 
     this.validateScope(request, authorization);
+    this.validateParameters(request.getParams());
 
     final JasperUtils jasperUtils = new JasperUtils();
 
@@ -190,34 +347,43 @@ public class GenerateReportComponent {
   private Object getValue(final ReportParamsRequest param) {
     switch (param.getType()) {
       case "Currency":
+        if (Objects.isNull(param.getValue())) return null;
         return new BigDecimal(param.getValue());
       case "Integer":
+        if (Objects.isNull(param.getValue())) return null;
         return Integer.valueOf(param.getValue());
       case "Date":
+        if (Objects.isNull(param.getValue())) return null;
         return "'" + param.getValue() + "'";
       case "Toggle":
+        if (Objects.isNull(param.getValue())) return null;
         return BooleanUtils.toBoolean(param.getValue());
       case "LocalitySelection": {
+        if (Objects.isNull(param.getSelectedValues())) return null;
         final Iterable<Locality> localities = this.localityRepository.findAllById(param.getSelectedValues(), 0);
         final StringJoiner joiner = new StringJoiner(",");
         localities.forEach(locality -> joiner.add(locality.getId().toString()));
         return joiner.toString();
       }
       case "OrganizationSelection": {
+        if (Objects.isNull(param.getSelectedValues())) return null;
         final Iterable<Organization> organizations = this.organizationRepository.findAllById(param.getSelectedValues());
         final StringJoiner joiner = new StringJoiner(",");
         organizations.forEach(organization -> joiner.add(organization.getId().toString()));
         return joiner.toString();
       }
       case "UnitSelection":
+        if (Objects.isNull(param.getSelectedValue())) return null;
         return param.getSelectedValue();
       case "Selection": {
+        if (Objects.isNull(param.getValue())) return null;
         final String[] split = param.getValue().split(",");
         final StringJoiner joiner = new StringJoiner("','", "'", "'");
         Arrays.stream(split).forEach(joiner::add);
         return joiner.toString();
       }
       default:
+        if (Objects.isNull(param.getValue())) return null;
         return param.getValue();
     }
   }

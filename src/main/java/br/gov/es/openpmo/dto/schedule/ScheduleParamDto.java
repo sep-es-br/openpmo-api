@@ -1,6 +1,8 @@
 package br.gov.es.openpmo.dto.schedule;
 
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Set;
@@ -18,7 +20,9 @@ public class ScheduleParamDto {
   private LocalDate start;
 
   @NotNull
+  @Min(value = 0)
   private BigDecimal plannedWork;
+  @Min(value = 0)
   private BigDecimal actualWork;
   private Set<CostSchedule> costs;
 

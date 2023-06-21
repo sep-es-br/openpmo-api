@@ -1,11 +1,14 @@
 package br.gov.es.openpmo.dto.schedule;
 
+import javax.validation.constraints.Min;
 import java.math.BigDecimal;
 
 public class CostSchedule {
 
   private Long id;
+  @Min(value = 0)
   private BigDecimal plannedCost;
+  @Min(value = 0)
   private BigDecimal actualCost;
 
   public Long getId() {
