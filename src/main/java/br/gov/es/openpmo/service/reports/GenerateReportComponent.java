@@ -18,6 +18,7 @@ import br.gov.es.openpmo.utils.ApplicationMessage;
 import br.gov.es.openpmo.utils.JasperUtils;
 import net.sf.jasperreports.engine.JasperReport;
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
@@ -376,7 +377,7 @@ public class GenerateReportComponent {
         if (Objects.isNull(param.getSelectedValue())) return null;
         return param.getSelectedValue();
       case "Selection": {
-        if (Objects.isNull(param.getValue())) return null;
+        if (StringUtils.isEmpty(param.getValue())) return null;
         final String[] split = param.getValue().split(",");
         final StringJoiner joiner = new StringJoiner("','", "'", "'");
         Arrays.stream(split).forEach(joiner::add);

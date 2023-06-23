@@ -91,7 +91,7 @@ public class LocalityService {
     );
     params.put(
       "searchCutOffScore",
-      appProperties.getSearchCutOffScore()
+      this.appProperties.getSearchCutOffScore()
     );
     return this.findAllLocality.execute(
       filter,
@@ -103,7 +103,7 @@ public class LocalityService {
     final Long idDomain,
     final String term
   ) {
-    final Double searchCutOffScore = appProperties.getSearchCutOffScore();
+    final Double searchCutOffScore = this.appProperties.getSearchCutOffScore();
     return new ArrayList<>(this.localityRepository.findAllByDomainFirstLevel(
       idDomain,
       term,
@@ -153,12 +153,25 @@ public class LocalityService {
     final Long idFilter,
     final String term
   ) {
-    final Locality locality = this.findById(id);
-    if (idFilter == null) {
-      return locality;
-    }
+
     final Domain domain = this.localityRepository.findDomainById(id)
       .orElseThrow(() -> new NegocioException(DOMAIN_NOT_FOUND));
+
+    final Locality locality = this.findById(id);
+    if (idFilter == null) {
+      final List<Locality> localities = this.localityRepository.findAllByDomainAndTextSearch(
+        domain.getId(),
+        term,
+        this.appProperties.getSearchCutOffScore()
+      );
+      final List<Long> localitiesId = localities.stream().map(Locality::getId).collect(Collectors.toList());
+      this.filterChildren(
+        locality,
+        localitiesId
+      );
+      return locality;
+    }
+
     final CustomFilter filter = this.customFilterRepository
       .findById(idFilter)
       .orElseThrow(() -> new NegocioException(CUSTOM_FILTER_NOT_FOUND));
@@ -173,7 +186,7 @@ public class LocalityService {
     );
     params.put(
       "searchCutOffScore",
-      appProperties.getSearchCutOffScore()
+      this.appProperties.getSearchCutOffScore()
     );
     final List<Locality> localities = this.findAllLocality.execute(
       filter,

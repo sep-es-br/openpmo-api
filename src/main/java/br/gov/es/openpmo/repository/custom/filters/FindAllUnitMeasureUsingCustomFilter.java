@@ -25,15 +25,20 @@ public class FindAllUnitMeasureUsingCustomFilter extends FindAllUsingCustomFilte
 
   @Override
   public void buildMatchClause(
-    final CustomFilter filter,
-    final StringBuilder query
+          final CustomFilter filter,
+          final StringBuilder query
   ) {
     query.append("MATCH (").append(this.nodeName)
-      .append(":UnitMeasure)-[a:AVAILABLE_IN]->(o:Office) ")
-      .append("WITH *, apoc.text.levenshteinSimilarity(")
-      .append("apoc.text.clean(").append(this.nodeName).append(".name) + apoc.text.clean(").append(this.nodeName).append(".fullName)")
-      .append(", apoc.text.clean($term)) AS score")
-      .append(" ");
+            .append(":UnitMeasure)-[a:AVAILABLE_IN]->(o:Office) ")
+            .append("WITH *, apoc.text.levenshteinSimilarity(")
+            .append("apoc.text.clean(")
+            .append(this.nodeName)
+            .append(".name), apoc.text.clean($term)) AS nameScore, ")
+            .append("apoc.text.levenshteinSimilarity(")
+            .append("apoc.text.clean(")
+            .append(this.nodeName)
+            .append(".fullName), apoc.text.clean($term)) AS fullNameScore ")
+            .append("WITH *, CASE WHEN nameScore > fullNameScore THEN nameScore ELSE fullNameScore END AS score ");
   }
 
   @Override

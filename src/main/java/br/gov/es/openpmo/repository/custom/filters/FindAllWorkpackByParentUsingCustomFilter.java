@@ -35,20 +35,22 @@ public class FindAllWorkpackByParentUsingCustomFilter extends FindAllUsingCustom
 
   @Override
   public void buildMatchClause(
-    final CustomFilter filter,
-    final StringBuilder query
+          final CustomFilter filter,
+          final StringBuilder query
   ) {
     query.append("MATCH (node:Workpack{deleted:false})-[rf:BELONGS_TO]->(p:Plan)-[is:IS_STRUCTURED_BY]->(pm:PlanModel), " +
-                 "(node)-[ii:IS_INSTANCE_BY]->(wm:WorkpackModel)<-[:FEATURES]-(propertyModel:PropertyModel), " +
-                 "(node)-[wc:IS_IN]->(wp:Workpack), " +
-                 "(node)<-[:FEATURES]-(property:Property)-[:IS_DRIVEN_BY]->(propertyModel), " +
-                 "(node)<-[:FEATURES]-(name:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}), " +
-                 "(node)<-[:FEATURES]-(fullName:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'fullName'}) " +
-                 "OPTIONAL MATCH (propertyModel)-[:GROUPS]->(groupedProperty:PropertyModel) " +
-                 "OPTIONAL MATCH (node)<-[:FEATURES]-(:Property)-[:VALUES]->(values) " +
-                 "WITH *, apoc.text.levenshteinSimilarity(apoc.text.clean(name.value + fullName.value), apoc.text.clean($term)) AS score, " +
-                 "collect( property ) + collect( name ) + collect( fullName ) as properties, " +
-                 "collect( id(values) ) as selectedValues ");
+            "(node)-[ii:IS_INSTANCE_BY]->(wm:WorkpackModel)<-[:FEATURES]-(propertyModel:PropertyModel), " +
+            "(node)-[wc:IS_IN]->(wp:Workpack), " +
+            "(node)<-[:FEATURES]-(property:Property)-[:IS_DRIVEN_BY]->(propertyModel), " +
+            "(node)<-[:FEATURES]-(name:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}), " +
+            "(node)<-[:FEATURES]-(fullName:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'fullName'}) " +
+            "OPTIONAL MATCH (propertyModel)-[:GROUPS]->(groupedProperty:PropertyModel) " +
+            "OPTIONAL MATCH (node)<-[:FEATURES]-(:Property)-[:VALUES]->(values) " +
+            "WITH *, apoc.text.levenshteinSimilarity(apoc.text.clean(name.value), apoc.text.clean($term)) AS nameScore, " +
+            "apoc.text.levenshteinSimilarity(apoc.text.clean(fullName.value), apoc.text.clean($term)) AS fullNameScore " +
+            "WITH *, CASE WHEN nameScore > fullNameScore THEN nameScore ELSE fullNameScore END AS score, " +
+            "collect( property ) + collect( name ) + collect( fullName ) as properties, " +
+            "collect( id(values) ) as selectedValues ");
   }
 
   @Override

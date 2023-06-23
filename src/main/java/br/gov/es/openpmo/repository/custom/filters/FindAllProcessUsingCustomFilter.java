@@ -33,11 +33,17 @@ public class FindAllProcessUsingCustomFilter extends FindAllUsingCustomFilterBui
 
   @Override
   protected void buildWhereClause(
-    final CustomFilter filter,
-    final StringBuilder query
+          final CustomFilter filter,
+          final StringBuilder query
   ) {
-    query.append("WITH *, apoc.text.levenshteinSimilarity(apoc.text.clean(").append(this.nodeName).append(".name + ").append(this.nodeName).append(".subject), apoc.text.clean($term)) as score ")
-      .append("WHERE id(workpack)=$idWorkpack AND ($term is null OR $term = '' OR score > $searchCutOffScore) ");
+    query.append("WITH *, apoc.text.levenshteinSimilarity(apoc.text.clean(")
+            .append(this.nodeName)
+            .append(".name), apoc.text.clean($term)) as nameScore, ")
+            .append("apoc.text.levenshteinSimilarity(apoc.text.clean(")
+            .append(this.nodeName)
+            .append(".subject), apoc.text.clean($term)) as subjectScore ")
+            .append("WITH *, CASE WHEN nameScore > subjectScore THEN nameScore ELSE subjectScore END AS score ")
+            .append("WHERE id(workpack)=$idWorkpack AND ($term is null OR $term = '' OR score > $searchCutOffScore) ");
   }
 
   @Override

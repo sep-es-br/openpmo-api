@@ -13,6 +13,8 @@ public class GetAllBaselinesResponse {
 
   private final String name;
 
+  private final String projectName;
+
   private final Status status;
 
   private final String description;
@@ -30,20 +32,22 @@ public class GetAllBaselinesResponse {
   private final boolean active;
 
   public GetAllBaselinesResponse(
-    final Long id,
-    final Long idWorkpack,
-    final String name,
-    final Status status,
-    final String description,
-    final LocalDateTime activationDate,
-    final LocalDateTime proposalDate,
-    final String message,
-    final boolean cancelation,
-    final boolean active
+          final Long id,
+          final Long idWorkpack,
+          final String name,
+          final String projectName,
+          final Status status,
+          final String description,
+          final LocalDateTime activationDate,
+          final LocalDateTime proposalDate,
+          final String message,
+          final boolean cancelation,
+          final boolean active
   ) {
     this.id = id;
     this.idWorkpack = idWorkpack;
     this.name = name;
+    this.projectName = projectName;
     this.status = status;
     this.description = description;
     this.activationDate = activationDate;
@@ -93,4 +97,7 @@ public class GetAllBaselinesResponse {
     return this.idWorkpack;
   }
 
+  public String getProjectName() {
+    return this.projectName;
+  }
 }

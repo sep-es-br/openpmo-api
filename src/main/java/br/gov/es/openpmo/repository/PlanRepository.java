@@ -39,16 +39,19 @@ public interface PlanRepository extends Neo4jRepository<Plan, Long>, CustomRepos
   );
 
   @Query("MATCH (p: Plan)-[r:IS_ADOPTED_BY]->(o:Office) " +
-         ", (p)-[sb:IS_STRUCTURED_BY]->(pm:PlanModel) " +
-         "WHERE id(o)= $id " +
-         "WITH p,r,o,sb,pm, apoc.text.levenshteinSimilarity(apoc.text.clean(p.name + p.fullName), apoc.text.clean($term)) AS score " +
-         "WHERE score > $searchCutOffScore "+
-         "RETURN p,r,o,sb,pm " +
-		 "ORDER BY score DESC")
+          ", (p)-[sb:IS_STRUCTURED_BY]->(pm:PlanModel) " +
+          "WHERE id(o)= $id " +
+          "WITH p,r,o,sb,pm, " +
+          "apoc.text.levenshteinSimilarity(apoc.text.clean(p.name), apoc.text.clean($term)) AS nameScore, " +
+          "apoc.text.levenshteinSimilarity(apoc.text.clean(p.fullName), apoc.text.clean($term)) AS fullNameScore " +
+          "WITH *, CASE WHEN nameScore > fullNameScore THEN nameScore ELSE fullNameScore END AS score " +
+          "WHERE score > $searchCutOffScore " +
+          "RETURN p,r,o,sb,pm " +
+          "ORDER BY score DESC")
   List<Plan> findAllInOfficeByTerm(
-    @Param("id") Long id,
-		@Param("term") String term,
-		@Param("searchCutOffScore") double searchCutOffScore
+          @Param("id") Long id,
+          @Param("term") String term,
+          @Param("searchCutOffScore") double searchCutOffScore
   );
 
   @Query(

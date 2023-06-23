@@ -49,103 +49,116 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   Set<Workpack> findParentsById(Long id);
 
   @Query("MATCH (w:Workpack)-[rf:BELONGS_TO]->(p:Plan), "
-         + "(p)-[is:IS_STRUCTURED_BY]->(pm:PlanModel) "
-         + "MATCH (w)<-[:FEATURES]-(name:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}) "
-         + "MATCH (w)<-[:FEATURES]-(fullName:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'fullName'}) "
-         + "OPTIONAL MATCH (w)-[ii:IS_INSTANCE_BY]->(wm:WorkpackModel) "
-         + "OPTIONAL MATCH (w)-[lt:IS_LINKED_TO]->(wm2:WorkpackModel)-[bt:BELONGS_TO]->(pm) "
-         + "WITH *, apoc.text.levenshteinSimilarity(apoc.text.clean(name.value + fullName.value), apoc.text.clean($term)) AS score "
-         + "WHERE id(p)=$idPlan "
-         + "AND (id(pm)=$idPlanModel OR $idPlanModel IS NULL) "
-         + "AND (id(wm)=$idWorkPackModel OR id(wm2)=$idWorkPackModel OR $idWorkPackModel IS NULL) "
-         + "AND ($term IS NULL OR $term = '' OR score > $searchCutOffScore) "
-         + "RETURN w, rf, p, ii, pm, wm, lt, wm2, bt, [ "
-         + " [ (w)<-[f:FEATURES]-(p:Property)-[d:IS_DRIVEN_BY]->(pm:PropertyModel) | [f, p, d, pm] ], "
-         + " [ (w)<-[wi:IS_IN]-(w2:Workpack) | [wi, w2] ], "
-         + " [ (w)-[wi2:IS_IN]->(w3:Workpack) | [wi2, w3] ], "
-         + " [ (w)<-[wa:APPLIES_TO]-(ca:CostAccount) | [wa, ca] ], "
-         + " [ (w)<-[wfg:FEATURES]-(wg:Group) | [wfg, wg] ], "
-         + " [ (wg)-[wgps:GROUPS]->(wgp:Property)-[gpd:IS_DRIVEN_BY]->(gpm:PropertyModel) | [wgps, wgp, gpd, gpm] ], "
-         + " [ (ca)<-[f1:FEATURES]-(p2:Property)-[d1:IS_DRIVEN_BY]->(pmc:PropertyModel) | [ca, f1, p2, d1, pmc ] ], "
-         + " [ (wm)<-[wmi:IS_IN]-(wm2:WorkpackModel) | [wmi,wm2] ], "
-         + " [ (wm)-[wmi2:IS_IN]->(wm3:WorkpackModel) | [wmi2,wm3] ], "
-         + " [ (wm)<-[f2:FEATURES]-(pm2:PropertyModel) | [f2, pm2] ], "
-         + " [ (wm)-[featureGroup:FEATURES]->(group:GroupModel) | [featureGroup, group] ], "
-         + " [ (group)-[groups:GROUPS]->(groupedProperty:PropertyModel) | [groups, groupedProperty] ], "
-         + " [ (w)-[sharedWith:IS_SHARED_WITH]->(office:Office) | [sharedWith, office]], "
-         + " [ (w)-[isLinkedTo:IS_LINKED_TO]->(workpackModel:WorkpackModel) | [isLinkedTo, workpackModel] ] "
-         + "] "
-         + "ORDER BY score DESC"
+          + "(p)-[is:IS_STRUCTURED_BY]->(pm:PlanModel) "
+          + "MATCH (w)<-[:FEATURES]-(name:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}) "
+          + "MATCH (w)<-[:FEATURES]-(fullName:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'fullName'}) "
+          + "OPTIONAL MATCH (w)-[ii:IS_INSTANCE_BY]->(wm:WorkpackModel) "
+          + "OPTIONAL MATCH (w)-[lt:IS_LINKED_TO]->(wm2:WorkpackModel)-[bt:BELONGS_TO]->(pm) "
+          + "WITH *, "
+          + "apoc.text.levenshteinSimilarity(apoc.text.clean(name.value), apoc.text.clean($term)) AS nameScore, "
+          + "apoc.text.levenshteinSimilarity(apoc.text.clean(fullName.value), apoc.text.clean($term)) AS fullNameScore "
+          + "WITH *, CASE WHEN nameScore > fullNameScore THEN nameScore ELSE fullNameScore END AS score "
+          + "WHERE id(p)=$idPlan "
+          + "AND (id(pm)=$idPlanModel OR $idPlanModel IS NULL) "
+          + "AND (id(wm)=$idWorkPackModel OR id(wm2)=$idWorkPackModel OR $idWorkPackModel IS NULL) "
+          + "AND ($term IS NULL OR $term = '' OR score > $searchCutOffScore) "
+          + "RETURN w, rf, p, ii, pm, wm, lt, wm2, bt, [ "
+          + " [ (w)<-[f:FEATURES]-(p:Property)-[d:IS_DRIVEN_BY]->(pm:PropertyModel) | [f, p, d, pm] ], "
+          + " [ (w)<-[wi:IS_IN]-(w2:Workpack) | [wi, w2] ], "
+          + " [ (w)-[wi2:IS_IN]->(w3:Workpack) | [wi2, w3] ], "
+          + " [ (w)<-[wa:APPLIES_TO]-(ca:CostAccount) | [wa, ca] ], "
+          + " [ (w)<-[wfg:FEATURES]-(wg:Group) | [wfg, wg] ], "
+          + " [ (wg)-[wgps:GROUPS]->(wgp:Property)-[gpd:IS_DRIVEN_BY]->(gpm:PropertyModel) | [wgps, wgp, gpd, gpm] ], "
+          + " [ (ca)<-[f1:FEATURES]-(p2:Property)-[d1:IS_DRIVEN_BY]->(pmc:PropertyModel) | [ca, f1, p2, d1, pmc ] ], "
+          + " [ (wm)<-[wmi:IS_IN]-(wm2:WorkpackModel) | [wmi,wm2] ], "
+          + " [ (wm)-[wmi2:IS_IN]->(wm3:WorkpackModel) | [wmi2,wm3] ], "
+          + " [ (wm)<-[f2:FEATURES]-(pm2:PropertyModel) | [f2, pm2] ], "
+          + " [ (wm)-[featureGroup:FEATURES]->(group:GroupModel) | [featureGroup, group] ], "
+          + " [ (group)-[groups:GROUPS]->(groupedProperty:PropertyModel) | [groups, groupedProperty] ], "
+          + " [ (w)-[sharedWith:IS_SHARED_WITH]->(office:Office) | [sharedWith, office]], "
+          + " [ (w)-[isLinkedTo:IS_LINKED_TO]->(workpackModel:WorkpackModel) | [isLinkedTo, workpackModel] ] "
+          + "] "
+          + "ORDER BY score DESC"
   )
   List<Workpack> findAll(
-    @Param("idPlan") Long idPlan,
-    @Param("idPlanModel") Long idPlanModel,
-    @Param("idWorkPackModel") Long idWorkPackModel,
-    @Param("term") String term,
-    @Param("searchCutOffScore") Double searchCutOffScore
+          @Param("idPlan") Long idPlan,
+          @Param("idPlanModel") Long idPlanModel,
+          @Param("idWorkPackModel") Long idWorkPackModel,
+          @Param("term") String term,
+          @Param("searchCutOffScore") Double searchCutOffScore
   );
 
   @Query("MATCH (pl:Plan), (wm:WorkpackModel), (p:Workpack) " +
-         "WHERE id(pl)=$idPlan AND id(wm)=$idWorkpackModel AND id(p)=$idWorkpackParent " +
-         "OPTIONAL MATCH " +
-         "    (w:Workpack{deleted:false})-[:IS_IN]->(p), (w)-[:IS_INSTANCE_BY]->(wm), (w)-[bt1:BELONGS_TO]->(pl), " +
-         "    (w)<-[:FEATURES]-(name1:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}), " +
-         "    (w)<-[:FEATURES]-(fullName1:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'fullName'}) " +
-         "WHERE (bt1.linked=null OR bt1.linked=false) AND ($term IS NULL OR $term = '' OR apoc.text.levenshteinSimilarity(apoc.text.clean(name1.value + fullName1.value), apoc.text.clean($term)) > $searchCutOffScore) " +
-         "WITH w,p,wm,bt1,pl " +
-         "OPTIONAL MATCH " +
-         "    (v:Workpack{deleted:false})-[:IS_LINKED_TO]->(wm), " +
-         "    (v)-[bt2:BELONGS_TO]->(pl), " +
-         "    (v)<-[:FEATURES]-(name2:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}), " +
-         "    (v)<-[:FEATURES]-(fullName2:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'fullName'}) " +
-         "WHERE bt2.linked=true AND ($term IS NULL OR $term = '' OR apoc.text.levenshteinSimilarity(apoc.text.clean(name2.value + fullName2.value), apoc.text.clean($term)) > $searchCutOffScore) " +
-         "WITH w,v,p,wm,bt1,bt2,pl " +
-         "WITH collect(w)+collect(v) AS workpackList " +
-         "UNWIND workpackList AS workpacks " +
-         "RETURN workpacks, [ " +
-         "    [ (workpacks)<-[f:FEATURES]-(p:Property)-[d:IS_DRIVEN_BY]->(pm:PropertyModel) | [f, p, d, pm] ], " +
-         "    [ (workpacks)-[iib:IS_INSTANCE_BY]->(m1:WorkpackModel) | [iib, m1] ], " +
-         "    [ (m1)<-[f2:FEATURES]-(pm2:PropertyModel) | [f2, pm2] ], " +
-         "    [ (workpacks)-[ilt:IS_LINKED_TO]->(m2:WorkpackModel) | [ilt, m2] ], " +
-         "    [ (m2)<-[f3:FEATURES]-(pm3:PropertyModel) | [f3, pm3] ], " +
-         "    [ (workpacks)-[bt:BELONGS_TO]->(pn:Plan) | [bt,pn] ], " +
-         "    [ (workpacks)<-[ii:IS_IN]->(z:Workpack) | [ii, z] ], " +
-         "    [ (workpacks)-[isw:IS_SHARED_WITH]->(o:Office) | [isw, o] ] " +
-         "]")
+          "WHERE id(pl)=$idPlan AND id(wm)=$idWorkpackModel AND id(p)=$idWorkpackParent " +
+          "OPTIONAL MATCH " +
+          "    (w:Workpack{deleted:false})-[:IS_IN]->(p), (w)-[:IS_INSTANCE_BY]->(wm), (w)-[bt1:BELONGS_TO]->(pl), " +
+          "    (w)<-[:FEATURES]-(name1:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}), " +
+          "    (w)<-[:FEATURES]-(fullName1:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'fullName'}) " +
+          "WITH *, " +
+          "    apoc.text.levenshteinSimilarity(apoc.text.clean(name1.value), apoc.text.clean($term)) AS nameScore1, " +
+          "    apoc.text.levenshteinSimilarity(apoc.text.clean(fullName1.value), apoc.text.clean($term)) AS fullNameScore1 " +
+          "WITH *, CASE WHEN nameScore1 > fullNameScore1 THEN nameScore1 ELSE fullNameScore1 END AS score1 " +
+          "OPTIONAL MATCH " +
+          "    (v:Workpack{deleted:false})-[:IS_LINKED_TO]->(wm), " +
+          "    (v)-[bt2:BELONGS_TO]->(pl), " +
+          "    (v)<-[:FEATURES]-(name2:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}), " +
+          "    (v)<-[:FEATURES]-(fullName2:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'fullName'}) " +
+          "WITH *," +
+          "    apoc.text.levenshteinSimilarity(apoc.text.clean(name2.value), apoc.text.clean($term)) AS nameScore2, " +
+          "    apoc.text.levenshteinSimilarity(apoc.text.clean(fullName2.value), apoc.text.clean($term)) AS fullNameScore2 " +
+          "WITH *, CASE WHEN nameScore2 > fullNameScore2 THEN nameScore2 ELSE fullNameScore2 END AS score2 " +
+          "WHERE ( (bt1.linked=null OR bt1.linked=false) AND ($term IS NULL OR $term = '' OR score1 > $searchCutOffScore) ) OR " +
+          "      ( bt2.linked=true AND ($term IS NULL OR $term = '' OR score2 > $searchCutOffScore) ) " +
+          "WITH * " +
+          "WITH collect(w)+collect(v) AS workpackList " +
+          "UNWIND workpackList AS workpacks " +
+          "RETURN workpacks, [ " +
+          "    [ (workpacks)<-[f:FEATURES]-(p:Property)-[d:IS_DRIVEN_BY]->(pm:PropertyModel) | [f, p, d, pm] ], " +
+          "    [ (workpacks)-[iib:IS_INSTANCE_BY]->(m1:WorkpackModel) | [iib, m1] ], " +
+          "    [ (m1)<-[f2:FEATURES]-(pm2:PropertyModel) | [f2, pm2] ], " +
+          "    [ (workpacks)-[ilt:IS_LINKED_TO]->(m2:WorkpackModel) | [ilt, m2] ], " +
+          "    [ (m2)<-[f3:FEATURES]-(pm3:PropertyModel) | [f3, pm3] ], " +
+          "    [ (workpacks)-[bt:BELONGS_TO]->(pn:Plan) | [bt,pn] ], " +
+          "    [ (workpacks)<-[ii:IS_IN]->(z:Workpack) | [ii, z] ], " +
+          "    [ (workpacks)-[isw:IS_SHARED_WITH]->(o:Office) | [isw, o] ] " +
+          "]")
   List<Workpack> findAllUsingParent(
-    Long idWorkpackModel,
-    Long idWorkpackParent,
-    Long idPlan,
-    String term,
-    Double searchCutOffScore
+          Long idWorkpackModel,
+          Long idWorkpackParent,
+          Long idPlan,
+          String term,
+          Double searchCutOffScore
   );
 
   @Query("MATCH (w:Workpack{deleted:false})-[:IS_IN]->(p:Workpack{deleted:false}) " +
-         "MATCH (w)-[:IS_INSTANCE_BY]->(wm:WorkpackModel) " +
-         "MATCH (w)-[:IS_IN*]->(:Workpack{deleted:false})-[:BELONGS_TO{linked: true}]->(pl:Plan) " +
-         "MATCH (w)<-[:FEATURES]-(name:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}) " +
-         "MATCH (w)<-[:FEATURES]-(fullName:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'fullName'}) " +
-         "WITH *, apoc.text.levenshteinSimilarity(apoc.text.clean(name.value + fullName.value), apoc.text.clean($term)) AS score " +
-         "WHERE id(p)=$idWorkpackParent AND id(wm)=$idWorkpackModel AND id(pl)=$idPlan " +
-         "AND ($term IS NULL OR $term = '' OR score > $searchCutOffScore) " +
-         "WITH collect(w) AS workpackList " +
-         "UNWIND workpackList AS workpacks " +
-         "RETURN workpacks, [ " +
-         "    [ (workpacks)<-[f:FEATURES]-(p:Property)-[d:IS_DRIVEN_BY]->(pm:PropertyModel) | [f, p, d, pm] ], " +
-         "    [ (workpacks)-[iib:IS_INSTANCE_BY]->(m1:WorkpackModel) | [iib, m1] ], " +
-         "    [ (m1)<-[f2:FEATURES]-(pm2:PropertyModel) | [f2, pm2] ], " +
-         "    [ (workpacks)-[ilt:IS_LINKED_TO]->(m2:WorkpackModel) | [ilt, m2] ], " +
-         "    [ (m2)<-[f3:FEATURES]-(pm3:PropertyModel) | [f3, pm3] ], " +
-         "    [ (workpacks)-[bt:BELONGS_TO]->(pn:Plan) | [bt,pn] ], " +
-         "    [ (workpacks)<-[ii:IS_IN]->(z:Workpack) | [ii, z] ], " +
-         "    [ (workpacks)-[isw:IS_SHARED_WITH]->(o:Office) | [isw, o] ] " +
-         "]")
+          "MATCH (w)-[:IS_INSTANCE_BY]->(wm:WorkpackModel) " +
+          "MATCH (w)-[:IS_IN*]->(:Workpack{deleted:false})-[:BELONGS_TO{linked: true}]->(pl:Plan) " +
+          "MATCH (w)<-[:FEATURES]-(name:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}) " +
+          "MATCH (w)<-[:FEATURES]-(fullName:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'fullName'}) " +
+          "WITH *, " +
+          "apoc.text.levenshteinSimilarity(apoc.text.clean(name.value), apoc.text.clean($term)) AS nameScore, " +
+          "apoc.text.levenshteinSimilarity(apoc.text.clean(fullName.value), apoc.text.clean($term)) AS fullNameScore " +
+          "WITH *, CASE WHEN nameScore > fullNameScore THEN nameScore ELSE fullNameScore END AS score " +
+          "WHERE id(p)=$idWorkpackParent AND id(wm)=$idWorkpackModel AND id(pl)=$idPlan " +
+          "AND ($term IS NULL OR $term = '' OR score > $searchCutOffScore) " +
+          "WITH collect(w) AS workpackList " +
+          "UNWIND workpackList AS workpacks " +
+          "RETURN workpacks, [ " +
+          "    [ (workpacks)<-[f:FEATURES]-(p:Property)-[d:IS_DRIVEN_BY]->(pm:PropertyModel) | [f, p, d, pm] ], " +
+          "    [ (workpacks)-[iib:IS_INSTANCE_BY]->(m1:WorkpackModel) | [iib, m1] ], " +
+          "    [ (m1)<-[f2:FEATURES]-(pm2:PropertyModel) | [f2, pm2] ], " +
+          "    [ (workpacks)-[ilt:IS_LINKED_TO]->(m2:WorkpackModel) | [ilt, m2] ], " +
+          "    [ (m2)<-[f3:FEATURES]-(pm3:PropertyModel) | [f3, pm3] ], " +
+          "    [ (workpacks)-[bt:BELONGS_TO]->(pn:Plan) | [bt,pn] ], " +
+          "    [ (workpacks)<-[ii:IS_IN]->(z:Workpack) | [ii, z] ], " +
+          "    [ (workpacks)-[isw:IS_SHARED_WITH]->(o:Office) | [isw, o] ] " +
+          "]")
   List<Workpack> findAllUsingParentLinked(
-    Long idWorkpackModel,
-    Long idWorkpackParent,
-    Long idPlan,
-    String term,
-    Double searchCutOffScore
+          Long idWorkpackModel,
+          Long idWorkpackParent,
+          Long idPlan,
+          String term,
+          Double searchCutOffScore
   );
 
   @Query("OPTIONAL MATCH (w:Workpack{deleted:false})-[ro:BELONGS_TO]->(pl:Plan), (w)-[wp:IS_INSTANCE_BY]->" +

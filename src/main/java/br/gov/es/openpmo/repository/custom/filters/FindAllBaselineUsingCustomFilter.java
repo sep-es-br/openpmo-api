@@ -21,17 +21,17 @@ public abstract class FindAllBaselineUsingCustomFilter extends FindAllUsingCusto
 
   @Override
   protected void buildMatchClause(
-    final CustomFilter filter,
-    final StringBuilder query
+          final CustomFilter filter,
+          final StringBuilder query
   ) {
     query.append("match (w:Workpack)-[ii:IS_BASELINED_BY]->(")
-      .append(this.nodeName)
-      .append(":Baseline), (p:Person)-[c:IS_CCB_MEMBER_FOR{active:true}]->(w) ")
-      .append("with *, apoc.text.levenshteinSimilarity(apoc.text.clean(")
-      .append(this.nodeName)
-      .append(".name + ")
-      .append(this.nodeName)
-      .append(".description), apoc.text.clean($term)) as score ");
+            .append(this.nodeName)
+            .append(":Baseline), (p:Person)-[c:IS_CCB_MEMBER_FOR{active:true}]->(w), ")
+            .append("(w)-[iib:IS_INSTANCE_BY]->(model:WorkpackModel), ")
+            .append("(model)<-[f1:FEATURES]-(nameModel:PropertyModel{name:'name', session:'PROPERTIES'})<-[idb:IS_DRIVEN_BY]-(nameProperty:Property)-[f2:FEATURES]->(w) ")
+            .append("with *, apoc.text.levenshteinSimilarity(apoc.text.clean(").append(this.nodeName).append(".name), apoc.text.clean($term)) as nameScore, ")
+            .append("apoc.text.levenshteinSimilarity(apoc.text.clean(").append(this.nodeName).append(".description), apoc.text.clean($term)) as descriptionScore ")
+            .append("with *, case when nameScore > descriptionScore then nameScore else descriptionScore end as score ");
   }
 
   @Override
@@ -40,7 +40,7 @@ public abstract class FindAllBaselineUsingCustomFilter extends FindAllUsingCusto
     final StringBuilder query
   ) {
     query.append("where id(p)=$idPerson ");
-    switch (getStatus()) {
+    switch (this.getStatus()) {
       case WAITING_MY_EVALUATION:
         query.append("and ")
           .append(this.nodeName)
@@ -56,14 +56,10 @@ public abstract class FindAllBaselineUsingCustomFilter extends FindAllUsingCusto
           .append(")-[:IS_EVALUATED_BY]->(p) ");
         break;
       case APPROVEDS:
-        query.append("and ")
-          .append(this.nodeName)
-          .append(".status='APPROVED' ");
+        query.append("and ").append(this.nodeName).append(".status='APPROVED' ");
         break;
       case REJECTEDS:
-        query.append("and ")
-          .append(this.nodeName)
-          .append(".status='REJECTED' ");
+        query.append("and ").append(this.nodeName).append(".status='REJECTED' ");
         break;
     }
     query.append("and ($term is null or $term = '' or score > $searchCutOffScore) ");
@@ -71,7 +67,7 @@ public abstract class FindAllBaselineUsingCustomFilter extends FindAllUsingCusto
 
   @Override
   protected void buildReturnClause(final StringBuilder query) {
-    query.append("return ").append(this.nodeName).append(", w, ii, p, c ");
+    query.append("return ").append(this.nodeName).append(", w, ii, p, iib, model, f1, f2, nameModel, idb ");
   }
 
   @Override

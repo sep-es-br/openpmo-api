@@ -77,6 +77,7 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
       baseline.getId(),
       baseline.getIdWorkpack(),
       baseline.getName(),
+      baseline.getProjectName(),
       baseline.getStatus(),
       baseline.getDescription(),
       baseline.getActivationDate(),

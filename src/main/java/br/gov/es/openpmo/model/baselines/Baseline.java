@@ -212,4 +212,12 @@ public class Baseline extends Entity {
     this.status = REJECTED;
   }
 
+  @Transient
+  public String getProjectName() {
+    return Optional.ofNullable(this.getBaselinedBy())
+            .map(IsBaselinedBy::getWorkpack)
+            .map(Workpack::getWorkpackModelInstance)
+            .map(WorkpackModel::getModelName)
+            .orElse(null);
+  }
 }

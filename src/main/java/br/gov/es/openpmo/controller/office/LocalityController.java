@@ -88,7 +88,7 @@ public class LocalityController {
     return ResponseEntity.ok(ResponseBase.of(localities));
   }
 
-  @GetMapping("{id}")
+  @GetMapping("/{id}")
   public ResponseEntity<ResponseBase<LocalityDetailDto>> findById(
       @PathVariable final Long id,
       @RequestParam(required = false) final Long idFilter,

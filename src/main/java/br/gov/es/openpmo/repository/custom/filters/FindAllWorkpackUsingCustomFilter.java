@@ -35,22 +35,25 @@ public class FindAllWorkpackUsingCustomFilter extends FindAllUsingCustomFilterBu
 
   @Override
   public void buildMatchClause(
-    final CustomFilter filter,
-    final StringBuilder query
+          final CustomFilter filter,
+          final StringBuilder query
   ) {
     query.append("MATCH (node:Workpack{deleted:false})-[rf:BELONGS_TO]->(p:Plan), " +
-                 "(p)-[is:IS_STRUCTURED_BY]->(pm:PlanModel)<-[bt:BELONGS_TO]-(wm:WorkpackModel), " +
-                 "(wm)<-[:FEATURES]-(propertyModel:PropertyModel), " +
-                 "(node)<-[:FEATURES]-(property:Property)-[:IS_DRIVEN_BY]->(propertyModel) " +
-                 "MATCH (node)<-[:FEATURES]-(name:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}) " +
-                 "MATCH (node)<-[:FEATURES]-(fullName:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'fullName'}) " +
-                 "OPTIONAL MATCH (propertyModel)-[:GROUPS]->(groupedProperty:PropertyModel) " +
-                 "OPTIONAL MATCH (node)-[ii:IS_INSTANCE_BY]->(wm) " +
-                 "OPTIONAL MATCH (node)-[lt:IS_LINKED_TO]->(wm) " +
-                 "OPTIONAL MATCH (node)<-[:FEATURES]-(:Property)-[:VALUES]->(values) " +
-                 "WITH *, apoc.text.levenshteinSimilarity(apoc.text.clean(name.value + fullName.value), apoc.text.clean($term)) as score, " +
-                 "collect( property ) as properties, " +
-                 "collect( id(values) ) as selectedValues ");
+            "(p)-[is:IS_STRUCTURED_BY]->(pm:PlanModel)<-[bt:BELONGS_TO]-(wm:WorkpackModel), " +
+            "(wm)<-[:FEATURES]-(propertyModel:PropertyModel), " +
+            "(node)<-[:FEATURES]-(property:Property)-[:IS_DRIVEN_BY]->(propertyModel) " +
+            "MATCH (node)<-[:FEATURES]-(name:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}) " +
+            "MATCH (node)<-[:FEATURES]-(fullName:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'fullName'}) " +
+            "OPTIONAL MATCH (propertyModel)-[:GROUPS]->(groupedProperty:PropertyModel) " +
+            "OPTIONAL MATCH (node)-[ii:IS_INSTANCE_BY]->(wm) " +
+            "OPTIONAL MATCH (node)-[lt:IS_LINKED_TO]->(wm) " +
+            "OPTIONAL MATCH (node)<-[:FEATURES]-(:Property)-[:VALUES]->(values) " +
+            "WITH *, " +
+            "apoc.text.levenshteinSimilarity(apoc.text.clean(name.value), apoc.text.clean($term)) as nameScore, " +
+            "apoc.text.levenshteinSimilarity(apoc.text.clean(fullName.value), apoc.text.clean($term)) as fullNameScore " +
+            "WITH *, CASE WHEN nameScore > fullNameScore THEN nameScore ELSE fullNameScore END AS score " +
+            "collect( property ) as properties, " +
+            "collect( id(values) ) as selectedValues ");
   }
 
   @Override

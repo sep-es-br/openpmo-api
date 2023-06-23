@@ -3,11 +3,13 @@ package br.gov.es.openpmo.repository;
 import br.gov.es.openpmo.model.office.Domain;
 import br.gov.es.openpmo.model.office.Locality;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
+import com.sun.org.apache.bcel.internal.generic.RETURN;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface LocalityRepository extends Neo4jRepository<Locality, Long>, CustomRepository {
@@ -22,16 +24,19 @@ public interface LocalityRepository extends Neo4jRepository<Locality, Long>, Cus
   Optional<Locality> findLocalityRootFromDomain(@Param("idDomain") Long idDomain);
 
   @Query("MATCH (d:Domain)<-[:IS_ROOT_OF]-(root:Locality)" +
-         "MATCH (root)<-[:IS_IN]-(locality:Locality)-[:BELONGS_TO]->(d) " +
-         "WITH *, apoc.text.levenshteinSimilarity(apoc.text.clean(locality.name + locality.fullName), apoc.text.clean($term)) AS score " +
-         "WHERE id(d)=$idDomain AND ($term IS NULL OR $term = '' OR score > $searchCutOffScore) " +
-         "RETURN locality, [ " +
-         "    [(locality)<-[isIn:IS_IN]-(children:Locality)-[:BELONGS_TO]->(d) | [isIn, children] ] " +
-         "]")
+          "MATCH (root)<-[:IS_IN]-(locality:Locality)-[:BELONGS_TO]->(d) " +
+          "WITH *, " +
+          "apoc.text.levenshteinSimilarity(apoc.text.clean(locality.name), apoc.text.clean($term)) AS nameScore, " +
+          "apoc.text.levenshteinSimilarity(apoc.text.clean(locality.fullName), apoc.text.clean($term)) AS fullNameScore " +
+          "WITH *, CASE WHEN nameScore > fullNameScore THEN nameScore ELSE fullNameScore END AS score " +
+          "WHERE id(d)=$idDomain AND ($term IS NULL OR $term = '' OR score > $searchCutOffScore) " +
+          "RETURN locality, [ " +
+          "    [(locality)<-[isIn:IS_IN]-(children:Locality)-[:BELONGS_TO]->(d) | [isIn, children] ] " +
+          "]")
   Collection<Locality> findAllByDomainFirstLevel(
-    @Param("idDomain") Long idDomain,
-    @Param("term") String term,
-    @Param("searchCutOffScore") Double searchCutOffScore
+          @Param("idDomain") Long idDomain,
+          @Param("term") String term,
+          @Param("searchCutOffScore") Double searchCutOffScore
   );
 
   @Query("MATCH (d:Domain)<-[]-(l:Locality) " +
@@ -54,4 +59,18 @@ public interface LocalityRepository extends Neo4jRepository<Locality, Long>, Cus
          "return domain")
   Optional<Domain> findDomainById(@Param("idLocality") Long idLocality);
 
+  @Query(
+    "MATCH (domain:Domain)<-[:IS_ROOT_OF]-(root:Locality)  " +
+    "MATCH (root)<-[:IS_IN*]-(node:Locality)-[:BELONGS_TO]->(domain)  " +
+    "WITH *,  " +
+    "    apoc.text.levenshteinSimilarity(apoc.text.clean(node.name), apoc.text.clean($term)) AS nameScore,  " +
+    "    apoc.text.levenshteinSimilarity(apoc.text.clean(node.fullName), apoc.text.clean($term)) AS fullNameScore  " +
+    "WITH *, CASE WHEN nameScore > fullNameScore THEN nameScore ELSE fullNameScore END AS score  " +
+    "WHERE id(domain)=$idDomain AND ($term is null OR $term = '' OR score > $searchCutOffScore) " +
+    "RETURN node, [ " +
+    "    [ (node)<-[isIn:IS_IN]-(children:Locality)-[:BELONGS_TO]->(domain) | [isIn, children] ] " +
+    "] " +
+    "ORDER BY score DESC "
+  )
+  List<Locality> findAllByDomainAndTextSearch(Long idDomain, String term, Double searchCutOffScore);
 }

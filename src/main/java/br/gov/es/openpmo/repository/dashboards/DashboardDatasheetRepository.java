@@ -8,7 +8,6 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Set;
 
 @Repository
 public interface DashboardDatasheetRepository extends Neo4jRepository<Workpack, Long> {
@@ -26,15 +25,21 @@ public interface DashboardDatasheetRepository extends Neo4jRepository<Workpack, 
          "    models.fontIcon AS icon")
   List<WorkpackByModelQueryResult> workpackByModel(Long workpackId);
 
-  @Query("MATCH (a:Actor)-[s:IS_STAKEHOLDER_IN]->(w:Workpack{deleted:false,canceled:false}) " +
+  @Query("MATCH (a:Actor)-[s:IS_STAKEHOLDER_IN{active:true}]->(w:Workpack{deleted:false,canceled:false}) " +
          "OPTIONAL MATCH (w)-[:IS_IN*]->(v:Workpack{deleted:false,canceled:false}) " +
          "OPTIONAL MATCH (wm:WorkpackModel)<-[:IS_INSTANCE_BY]-(w) " +
          "OPTIONAL MATCH (a)<-[:IS_A_PORTRAIT_OF]-(file:File) " +
          "WITH * " +
-         "ORDER BY (s.role IN wm.organizationRoles), s.role, a.name " +
+         "ORDER BY " +
+         "    (s.role IN wm.organizationRoles), " +
+         "    [i IN RANGE(0, SIZE(wm.dashboardShowStakeholders)-1) WHERE toLower(wm.dashboardShowStakeholders[i]) = toLower(s.role)][0], " +
+         "    a.name " +
          "WHERE " +
          "    ( " +
          "        (a)-[s]->(w) AND id(w)=$workpackId " +
+         "        AND ANY(role IN wm.dashboardShowStakeholders WHERE toLower(role) = toLower(s.role)) " +
+         "        AND (s.from is null or date(s.from) <= date()) " +
+         "        AND (s.to is null or date(s.to) >= date()) " +
          "    ) " +
          "RETURN " +
          "    DISTINCT id(a) AS id, " +

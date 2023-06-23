@@ -192,25 +192,29 @@ public abstract class AbstractCustomFilterBuilder {
   protected void buildFilterBySimilarity(final CustomFilter filter,
 		  								 final StringBuilder query,
 		  								 final String complementWITH) {
-	  this.appendStringIfTrue(
-		      filter.isSimilarityFilter(),
-		      builder -> builder.append("WITH ")
-		    	 				.append(this.nodeName).append(complementWITH)
-		    	 				.append(", ")
-		    	 				.append("apoc.text.levenshteinSimilarity(apoc.text.clean(")
-		    	 				.append(this.nodeName).append(".name + ")
-		    	 				.append(this.nodeName).append(".fullName), ")
-		    	 				.append("apoc.text.clean($term)")
-		    	 				.append(") AS score ")
-		    	 				.append("WHERE").append(" ")
-		    	 				.append("score > ")
-		    	 				.append("$searchCutOffScore "),
-		      query
-		    );
+      this.appendStringIfTrue(
+              filter.isSimilarityFilter(),
+              builder -> builder.append("WITH ")
+                      .append(this.nodeName).append(complementWITH)
+                      .append(", ")
+                      .append("apoc.text.levenshteinSimilarity(apoc.text.clean(")
+                      .append(this.nodeName).append(".name), ")
+                      .append("apoc.text.clean($term)")
+                      .append(") AS nameScore, ")
+                      .append("apoc.text.levenshteinSimilarity(apoc.text.clean(")
+                      .append(this.nodeName).append(".fullName), ")
+                      .append("apoc.text.clean($term)")
+                      .append(") AS fullNameScore ")
+                      .append("WITH *, CASE WHEN nameScore > fullNameScore THEN nameScore ELSE fullNameScore END AS score ")
+                      .append("WHERE").append(" ")
+                      .append("score > ")
+                      .append("$searchCutOffScore "),
+              query
+      );
 
-		if (filter.isSimilarityFilter() && filter.getRules() != null && !filter.getRules().isEmpty()
-				&& !this.hasAppendedBooleanBlock())
-			query.append(" AND ");
+      if (filter.isSimilarityFilter() && filter.getRules() != null && !filter.getRules().isEmpty()
+              && !this.hasAppendedBooleanBlock())
+          query.append(" AND ");
   }
 
   protected void buildOrderingBySimilarity(final CustomFilter filter,
