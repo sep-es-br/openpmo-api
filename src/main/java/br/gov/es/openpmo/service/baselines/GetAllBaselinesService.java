@@ -4,6 +4,7 @@ import br.gov.es.openpmo.configuration.properties.AppProperties;
 import br.gov.es.openpmo.dto.baselines.GetAllBaselinesResponse;
 import br.gov.es.openpmo.dto.baselines.GetAllCCBMemberBaselineResponse;
 import br.gov.es.openpmo.dto.workpack.WorkpackName;
+import br.gov.es.openpmo.dto.workpack.WorkpackNameResponse;
 import br.gov.es.openpmo.enumerator.BaselineViewStatus;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.filter.CustomFilter;
@@ -16,6 +17,7 @@ import br.gov.es.openpmo.repository.custom.filters.FindAllBaselineRejectedUsingC
 import br.gov.es.openpmo.repository.custom.filters.FindAllBaselineWaitingMyEvaluationUsingCustomFilter;
 import br.gov.es.openpmo.repository.custom.filters.FindAllBaselineWaitingOthersEvaluationsUsingCustomFilter;
 import br.gov.es.openpmo.service.filters.CustomFilterService;
+import br.gov.es.openpmo.service.workpack.GetWorkpackName;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +31,7 @@ import java.util.stream.Collectors;
 @Service
 public class GetAllBaselinesService implements IGetAllBaselinesService {
 
-  public static final int DO_NOT_SORT = 0;
+  private static final int DO_NOT_SORT = 0;
 
   private final BaselineRepository baselineRepository;
 
@@ -49,6 +51,8 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
 
   private final FindAllBaselineWaitingOthersEvaluationsUsingCustomFilter findAllBaselineWaitingOthersEvaluations;
 
+  private final GetWorkpackName getWorkpackName;
+
   @Autowired
   public GetAllBaselinesService(
     final BaselineRepository baselineRepository,
@@ -59,7 +63,8 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
     final FindAllBaselineApprovedUsingCustomFilter findAllBaselineApproved,
     final FindAllBaselineRejectedUsingCustomFilter findAllBaselineRejected,
     final FindAllBaselineWaitingMyEvaluationUsingCustomFilter findAllBaselineWaitingMyEvaluation,
-    final FindAllBaselineWaitingOthersEvaluationsUsingCustomFilter findAllBaselineWaitingOthersEvaluations
+    final FindAllBaselineWaitingOthersEvaluationsUsingCustomFilter findAllBaselineWaitingOthersEvaluations,
+    final GetWorkpackName getWorkpackName
   ) {
     this.baselineRepository = baselineRepository;
     this.workpackRepository = workpackRepository;
@@ -70,14 +75,18 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
     this.findAllBaselineRejected = findAllBaselineRejected;
     this.findAllBaselineWaitingMyEvaluation = findAllBaselineWaitingMyEvaluation;
     this.findAllBaselineWaitingOthersEvaluations = findAllBaselineWaitingOthersEvaluations;
+    this.getWorkpackName = getWorkpackName;
   }
 
-  private static GetAllBaselinesResponse getBaselinesResponse(final Baseline baseline) {
+  private static GetAllBaselinesResponse getBaselinesResponse(
+    final Baseline baseline,
+    final WorkpackNameResponse workpackNameWrapper
+  ) {
     return new GetAllBaselinesResponse(
       baseline.getId(),
       baseline.getIdWorkpack(),
       baseline.getName(),
-      baseline.getProjectName(),
+      workpackNameWrapper.getName(),
       baseline.getStatus(),
       baseline.getDescription(),
       baseline.getActivationDate(),
@@ -88,100 +97,9 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
     );
   }
 
-  @Override
-  public List<GetAllBaselinesResponse> getAllByWorkpackId(final Long idWorkpack) {
-    return this.baselineRepository.findAllByWorkpackId(idWorkpack).stream()
-      .map(GetAllBaselinesService::getBaselinesResponse)
-      .collect(Collectors.toList());
-  }
-
-  @Override
-  public List<GetAllCCBMemberBaselineResponse> getAllByPersonId(final Long idPerson) {
-    return this.getWorkpacks(idPerson).stream()
-      .map(this::getGetAllCCBMemberBaselineResponse)
-      .collect(Collectors.toList());
-  }
-
-  @Override
-  public List<GetAllBaselinesResponse> getAllByPersonIdAndStatus(
-    Long idPerson,
-    Long idFilter,
-    String term,
-    BaselineViewStatus status
-  ) {
-    List<Baseline> baselines = new ArrayList<>();
-    final Double searchCutOffScore = appProperties.getSearchCutOffScore();
-    baselines = handleStatusBaseline(idPerson, idFilter, term, status, baselines, searchCutOffScore);
-    return baselines.stream()
-      .map(GetAllBaselinesService::getBaselinesResponse)
-      .collect(Collectors.toList());
-  }
-
-  private List<Baseline> handleStatusBaseline(
-          Long idPerson,
-          Long idFilter,
-          String term,
-          BaselineViewStatus status,
-          List<Baseline> baselines,
-          Double searchCutOffScore
-  ) {
-    final boolean hasFilter = idFilter == null;
-    switch (status) {
-      case WAITING_MY_EVALUATION:
-        final List<Baseline> allWaitingMyEvaluationByPersonId = getAllWaitingMyEvaluationByPersonId(
-                idPerson,
-                idFilter,
-                term,
-                searchCutOffScore
-        );
-        if (hasFilter) {
-          allWaitingMyEvaluationByPersonId
-                  .sort(GetAllBaselinesService::sortResponseByDateReversed);
-        }
-        return allWaitingMyEvaluationByPersonId;
-      case WAITING_OTHERS_EVALUATIONS:
-        final List<Baseline> allWaitingOthersEvaluationByPersonId = getAllWaitingOthersEvaluationByPersonId(
-                idPerson,
-                idFilter,
-                term,
-                searchCutOffScore
-        );
-        if (hasFilter) {
-          allWaitingOthersEvaluationByPersonId
-                  .sort(GetAllBaselinesService::sortResponseByDateReversed);
-        }
-        return allWaitingOthersEvaluationByPersonId;
-      case APPROVEDS:
-        final List<Baseline> allApprovedByPersonId = getAllApprovedByPersonId(
-                idPerson,
-                idFilter,
-                term,
-                searchCutOffScore
-        );
-        if (hasFilter) {
-          allApprovedByPersonId
-                  .sort(GetAllBaselinesService::sortResponseByDate);
-        }
-        return allApprovedByPersonId;
-      case REJECTEDS:
-        final List<Baseline> allRejectedByPersonId = getAllRejectedByPersonId(
-                idPerson,
-                idFilter,
-                term,
-                searchCutOffScore
-        );
-        if (hasFilter) {
-          allRejectedByPersonId
-                  .sort(GetAllBaselinesService::sortResponseByDate);
-        }
-        return allRejectedByPersonId;
-    }
-    return baselines;
-  }
-
   private static int sortResponseByDate(
-    Baseline first,
-    Baseline second
+    final Baseline first,
+    final Baseline second
   ) {
     final LocalDateTime firstActivationDate = first.getActivationDate();
     final LocalDateTime secondActivationDate = second.getActivationDate();
@@ -197,8 +115,8 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
   }
 
   private static int sortResponseByDateReversed(
-          Baseline first,
-          Baseline second
+    final Baseline first,
+    final Baseline second
   ) {
     final LocalDateTime firstActivationDate = first.getActivationDate();
     final LocalDateTime secondActivationDate = second.getActivationDate();
@@ -213,14 +131,105 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
     return DO_NOT_SORT;
   }
 
+  @Override
+  public List<GetAllBaselinesResponse> getAllByWorkpackId(final Long idWorkpack) {
+    return this.baselineRepository.findAllByWorkpackId(idWorkpack).stream()
+      .map(baseline -> getBaselinesResponse(baseline, this.getWorkpackName.execute(baseline.getIdWorkpack())))
+      .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<GetAllCCBMemberBaselineResponse> getAllByPersonId(final Long idPerson) {
+    return this.getWorkpacks(idPerson).stream()
+      .map(this::getGetAllCCBMemberBaselineResponse)
+      .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<GetAllBaselinesResponse> getAllByPersonIdAndStatus(
+    final Long idPerson,
+    final Long idFilter,
+    final String term,
+    final BaselineViewStatus status
+  ) {
+    List<Baseline> baselines = new ArrayList<>();
+    final Double searchCutOffScore = this.appProperties.getSearchCutOffScore();
+    baselines = this.handleStatusBaseline(idPerson, idFilter, term, status, baselines, searchCutOffScore);
+    return baselines.stream()
+      .map(baseline -> getBaselinesResponse(baseline, this.getWorkpackName.execute(baseline.getIdWorkpack())))
+      .collect(Collectors.toList());
+  }
+
+  private List<Baseline> handleStatusBaseline(
+    final Long idPerson,
+    final Long idFilter,
+    final String term,
+    final BaselineViewStatus status,
+    final List<Baseline> baselines,
+    final Double searchCutOffScore
+  ) {
+    final boolean hasFilter = idFilter == null;
+    switch (status) {
+      case WAITING_MY_EVALUATION:
+        final List<Baseline> allWaitingMyEvaluationByPersonId = this.getAllWaitingMyEvaluationByPersonId(
+          idPerson,
+          idFilter,
+          term,
+          searchCutOffScore
+        );
+        if (hasFilter) {
+          allWaitingMyEvaluationByPersonId
+            .sort(GetAllBaselinesService::sortResponseByDateReversed);
+        }
+        return allWaitingMyEvaluationByPersonId;
+      case WAITING_OTHERS_EVALUATIONS:
+        final List<Baseline> allWaitingOthersEvaluationByPersonId = this.getAllWaitingOthersEvaluationByPersonId(
+          idPerson,
+          idFilter,
+          term,
+          searchCutOffScore
+        );
+        if (hasFilter) {
+          allWaitingOthersEvaluationByPersonId
+            .sort(GetAllBaselinesService::sortResponseByDateReversed);
+        }
+        return allWaitingOthersEvaluationByPersonId;
+      case APPROVEDS:
+        final List<Baseline> allApprovedByPersonId = this.getAllApprovedByPersonId(
+          idPerson,
+          idFilter,
+          term,
+          searchCutOffScore
+        );
+        if (hasFilter) {
+          allApprovedByPersonId
+            .sort(GetAllBaselinesService::sortResponseByDate);
+        }
+        return allApprovedByPersonId;
+      case REJECTEDS:
+        final List<Baseline> allRejectedByPersonId = this.getAllRejectedByPersonId(
+          idPerson,
+          idFilter,
+          term,
+          searchCutOffScore
+        );
+        if (hasFilter) {
+          allRejectedByPersonId
+            .sort(GetAllBaselinesService::sortResponseByDate);
+        }
+        return allRejectedByPersonId;
+    }
+    return baselines;
+  }
+
   private List<Baseline> getAllApprovedByPersonId(
-    Long idPerson,
-    Long idFilter,
-    String term,
-    Double searchCutOffScore
+    final Long idPerson,
+    final Long idFilter,
+    final String term,
+    final Double searchCutOffScore
   ) {
     if (idFilter == null) {
-      return baselineRepository.findAllApprovedByPersonId(
+      return this.baselineRepository.findAllApprovedByPersonId(
         idPerson,
         term,
         searchCutOffScore
@@ -230,7 +239,7 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
       idFilter,
       idPerson
     );
-    final Map<String, Object> params = getParams(
+    final Map<String, Object> params = this.getParams(
       idPerson,
       term
     );
@@ -241,13 +250,13 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
   }
 
   private List<Baseline> getAllRejectedByPersonId(
-    Long idPerson,
-    Long idFilter,
-    String term,
-    Double searchCutOffScore
+    final Long idPerson,
+    final Long idFilter,
+    final String term,
+    final Double searchCutOffScore
   ) {
     if (idFilter == null) {
-      return baselineRepository.findAllRejectedByPersonId(
+      return this.baselineRepository.findAllRejectedByPersonId(
         idPerson,
         term,
         searchCutOffScore
@@ -257,7 +266,7 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
       idFilter,
       idPerson
     );
-    final Map<String, Object> params = getParams(
+    final Map<String, Object> params = this.getParams(
       idPerson,
       term
     );
@@ -268,13 +277,13 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
   }
 
   private List<Baseline> getAllWaitingMyEvaluationByPersonId(
-    Long idPerson,
-    Long idFilter,
-    String term,
-    Double searchCutOffScore
+    final Long idPerson,
+    final Long idFilter,
+    final String term,
+    final Double searchCutOffScore
   ) {
     if (idFilter == null) {
-      return baselineRepository.findAllWaitingMyEvaluationByPersonId(
+      return this.baselineRepository.findAllWaitingMyEvaluationByPersonId(
         idPerson,
         term,
         searchCutOffScore
@@ -284,7 +293,7 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
       idFilter,
       idPerson
     );
-    final Map<String, Object> params = getParams(
+    final Map<String, Object> params = this.getParams(
       idPerson,
       term
     );
@@ -295,13 +304,13 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
   }
 
   private List<Baseline> getAllWaitingOthersEvaluationByPersonId(
-    Long idPerson,
-    Long idFilter,
-    String term,
-    Double searchCutOffScore
+    final Long idPerson,
+    final Long idFilter,
+    final String term,
+    final Double searchCutOffScore
   ) {
     if (idFilter == null) {
-      return baselineRepository.findAllWaitingOthersEvaluationByPersonId(
+      return this.baselineRepository.findAllWaitingOthersEvaluationByPersonId(
         idPerson,
         term,
         searchCutOffScore
@@ -311,7 +320,7 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
       idFilter,
       idPerson
     );
-    final Map<String, Object> params = getParams(
+    final Map<String, Object> params = this.getParams(
       idPerson,
       term
     );
@@ -322,8 +331,8 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
   }
 
   private Map<String, Object> getParams(
-    Long idPerson,
-    String term
+    final Long idPerson,
+    final String term
   ) {
     final Map<String, Object> params = new HashMap<>();
     params.put(
@@ -336,7 +345,7 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
     );
     params.put(
       "searchCutOffScore",
-      appProperties.getSearchCutOffScore()
+      this.appProperties.getSearchCutOffScore()
     );
     return params;
   }
@@ -344,7 +353,7 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
   private GetAllCCBMemberBaselineResponse getGetAllCCBMemberBaselineResponse(final Workpack workpack) {
     final List<GetAllBaselinesResponse> baselines = new ArrayList<>();
     for (final Baseline baseline : this.getBaselines(workpack)) {
-      baselines.add(getBaselinesResponse(baseline));
+      baselines.add(getBaselinesResponse(baseline, this.getWorkpackName.execute(baseline.getIdWorkpack())));
     }
     return new GetAllCCBMemberBaselineResponse(
       workpack.getId(),
