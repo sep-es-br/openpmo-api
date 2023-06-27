@@ -252,7 +252,7 @@ public class MenuService {
     final Set<Long> permittedWorkpacksId
   ) {
 
-    final Set<WorkpackMenuDto> menu = new HashSet<>(0);
+    final Set<WorkpackMenuDto> generalMenuItem = new HashSet<>(0);
 
     for (final Workpack workpack : workpacks) {
 
@@ -268,22 +268,22 @@ public class MenuService {
           idUser,
           permission,
           permittedWorkpacksId,
-          menu,
+          generalMenuItem,
           workpack,
           linkedModel
         );
       } else {
-        this.addWorkpack(
+       this.addWorkpack(
           idPlan,
           idUser,
           permission,
           permittedWorkpacksId,
-          menu,
+          generalMenuItem,
           workpack
         );
       }
     }
-    return menu;
+    return generalMenuItem;
   }
 
   private void addLinkedWorkpack(
@@ -388,10 +388,10 @@ public class MenuService {
     final Long idUser,
     boolean permission,
     final Set<Long> permittedWorkpacksId,
-    final Collection<? super WorkpackMenuDto> menu,
+    final Collection<? super WorkpackMenuDto> generalMenuItem,
     final Workpack workpack
   ) {
-    final WorkpackMenuDto menuItemDto = WorkpackMenuDto.of(
+    final WorkpackMenuDto currentMenuItem = WorkpackMenuDto.of(
       workpack,
       idPlan,
       this.getSorterProperty.execute(workpack.getId(), idUser)
@@ -401,13 +401,13 @@ public class MenuService {
       permission = this.addPropertyName(
         permission,
         permittedWorkpacksId,
-        menu,
+        generalMenuItem,
         workpack,
-        menuItemDto
+        currentMenuItem
       );
     }
     if (workpack.getChildren() != null) {
-      menuItemDto.setChildren(this.buildWorkpackStructure(
+      currentMenuItem.setChildren(this.buildWorkpackStructure(
         workpack.getChildren(),
         idPlan,
         idUser,
@@ -420,20 +420,20 @@ public class MenuService {
   private boolean addPropertyName(
     boolean permission,
     final Set<Long> permittedWorkpacksId,
-    final Collection<? super WorkpackMenuDto> menu,
+    final Collection<? super WorkpackMenuDto> generalMenu,
     final Workpack workpack,
-    final WorkpackMenuDto menuItem
+    final WorkpackMenuDto currentMenuItem
   ) {
     final Optional<String> maybeWorkpackNameData = this.workpackService.findWorkpackNameAndFullname(workpack.getId())
       .map(WorkpackName::getName);
 
     if (maybeWorkpackNameData.isPresent()) {
-      menuItem.setName(maybeWorkpackNameData.get());
+      currentMenuItem.setName(maybeWorkpackNameData.get());
       if (isWorkpackWithPermission(permittedWorkpacksId, workpack)) {
         permission = true;
       }
       if (permission || this.isChildrenWithPermission(workpack.getChildren(), permittedWorkpacksId)) {
-        menu.add(menuItem);
+        generalMenu.add(currentMenuItem);
       }
     }
     return permission;
@@ -444,15 +444,19 @@ public class MenuService {
     final Set<Long> idWorkpackStakeholder
   ) {
     if (workpacks == null) return false;
+    boolean hasPermission = false;
     for (final Workpack workpack : workpacks) {
       if (isWorkpackWithPermission(idWorkpackStakeholder, workpack)) {
         return true;
       }
       if (workpack.getChildren() != null) {
-        return this.isChildrenWithPermission(workpack.getChildren(), idWorkpackStakeholder);
+        hasPermission = this.isChildrenWithPermission(
+          workpack.getChildren(),
+          idWorkpackStakeholder
+        );
       }
     }
-    return false;
+    return hasPermission;
   }
 
   private static final class AddPlanCommand {

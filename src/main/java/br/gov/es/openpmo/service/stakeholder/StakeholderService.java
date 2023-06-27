@@ -323,7 +323,7 @@ public class StakeholderService {
 
     person.setFullName(personDto.getFullName());
 
-    final String name = personDto.getName() != null ? personDto.getName() : personDto.firstNameFromFullName();
+    final String name = personDto.getName() != null ? personDto.getName() : personDto.getFullName();
     person.setName(name);
 
     return person;
