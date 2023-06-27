@@ -59,7 +59,6 @@ public class PlanController {
       @RequestParam(required = false) final String term,
       @RequestHeader(name = "Authorization") final String autorization,
       @Authorization final String authorization) {
-
     this.canAccessService.ensureCanReadResource(idOffice, authorization);
     final String token = autorization.substring(7);
     final Long idUser = this.tokenService.getPersonId(token, TokenType.AUTHENTICATION);

@@ -38,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -250,7 +251,7 @@ public class WorkpackController {
     @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanEditResource(
-      request.getIdPlan(),
+      Arrays.asList(request.getIdPlan(), request.getIdParent()),
       authorization
     );
     final Workpack workpack = this.workpackService.getWorkpack(request);

@@ -51,7 +51,7 @@ public class FindAllWorkpackUsingCustomFilter extends FindAllUsingCustomFilterBu
             "WITH *, " +
             "apoc.text.levenshteinSimilarity(apoc.text.clean(name.value), apoc.text.clean($term)) as nameScore, " +
             "apoc.text.levenshteinSimilarity(apoc.text.clean(fullName.value), apoc.text.clean($term)) as fullNameScore " +
-            "WITH *, CASE WHEN nameScore > fullNameScore THEN nameScore ELSE fullNameScore END AS score " +
+            "WITH *, CASE WHEN nameScore > fullNameScore THEN nameScore ELSE fullNameScore END AS score, " +
             "collect( property ) as properties, " +
             "collect( id(values) ) as selectedValues ");
   }
