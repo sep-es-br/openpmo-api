@@ -1,11 +1,7 @@
 package br.gov.es.openpmo.service.actors;
 
 import br.gov.es.openpmo.dto.ComboDto;
-import br.gov.es.openpmo.dto.person.PersonCreateRequest;
-import br.gov.es.openpmo.dto.person.PersonDto;
-import br.gov.es.openpmo.dto.person.PersonGetByIdDto;
-import br.gov.es.openpmo.dto.person.PersonListDto;
-import br.gov.es.openpmo.dto.person.PersonUpdateDto;
+import br.gov.es.openpmo.dto.person.*;
 import br.gov.es.openpmo.dto.person.detail.PersonDetailDto;
 import br.gov.es.openpmo.dto.person.detail.permissions.OfficePermissionDetailDto;
 import br.gov.es.openpmo.dto.person.detail.permissions.PlanPermissionDetailDto;
@@ -21,24 +17,18 @@ import br.gov.es.openpmo.enumerator.StakeholderFilterEnum;
 import br.gov.es.openpmo.enumerator.UserFilterEnum;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.Entity;
+import br.gov.es.openpmo.model.PermissionEntityProvider;
 import br.gov.es.openpmo.model.actors.AuthService;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.office.plan.Plan;
-import br.gov.es.openpmo.model.relations.CanAccessOffice;
-import br.gov.es.openpmo.model.relations.CanAccessPlan;
-import br.gov.es.openpmo.model.relations.CanAccessWorkpack;
-import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
-import br.gov.es.openpmo.model.relations.IsCCBMemberFor;
-import br.gov.es.openpmo.model.relations.IsInContactBookOf;
-import br.gov.es.openpmo.model.relations.IsStakeholderIn;
+import br.gov.es.openpmo.model.relations.*;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.IsCCBMemberRepository;
 import br.gov.es.openpmo.repository.OfficeRepository;
 import br.gov.es.openpmo.repository.PersonRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
-import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -46,15 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.validation.constraints.NotNull;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
@@ -256,7 +238,7 @@ public class PersonService {
 
     final PersonDetailDto personDetailDto = new PersonDetailDto(maybeQuery.get(), uriComponentsBuilder);
 
-    final List<PersonPermissionDetailQuery> permissions = this.repository.findPermissions(personId, officeId);
+    final List<PersonPermissionDetailQuery> permissions = new ArrayList<>(this.repository.findPermissions(personId, officeId));
 
     if(permissions.isEmpty()) {
       return personDetailDto;
@@ -338,7 +320,7 @@ public class PersonService {
 
       final PlanPermissionDetailDto item = new PlanPermissionDetailDto();
 
-      final List<CanAccessPlan> canAccessPlan = this.extractFrom(
+      final Set<CanAccessPlan> canAccessPlan = this.extractFrom(
         plan,
         permissions,
         PersonPermissionDetailQuery::getPlan,
@@ -388,7 +370,7 @@ public class PersonService {
   ) {
     final List<WorkpackPermissionDetailDto> result = new ArrayList<>();
 
-    final List<Workpack> workpacks = this.extractFrom(plan, permissions,
+    final Set<Workpack> workpacks = this.extractFrom(plan, permissions,
                                                       PersonPermissionDetailQuery::getPlan,
                                                       PersonPermissionDetailQuery::getWorkpack
     );
@@ -403,21 +385,21 @@ public class PersonService {
         continue;
       }
 
-      final List<CanAccessWorkpack> canAccessWorkpacks = this.extractFrom(
+      final Set<CanAccessWorkpack> canAccessWorkpacks = this.extractFrom(
         workpack,
         permissions,
         PersonPermissionDetailQuery::getWorkpack,
         PersonPermissionDetailQuery::getCanAccessWorkpack
       );
 
-      final List<IsCCBMemberFor> isCCBMemberFors = this.extractFrom(
+      final Set<IsCCBMemberFor> isCCBMemberFors = this.extractFrom(
         workpack,
         permissions,
         PersonPermissionDetailQuery::getWorkpack,
         PersonPermissionDetailQuery::getIsCCBMemberFor
       );
 
-      final List<IsStakeholderIn> isStakeholderIns = this.extractFrom(
+      final Set<IsStakeholderIn> isStakeholderIns = this.extractFrom(
         workpack,
         permissions,
         PersonPermissionDetailQuery::getWorkpack,
@@ -514,14 +496,14 @@ public class PersonService {
     return false;
   }
 
-  private <R> List<R> extractFrom(
+  private <R> Set<R> extractFrom(
     @NotNull final Entity entity,
     final Iterable<PersonPermissionDetailQuery> permissions,
     final Function<PersonPermissionDetailQuery, Entity> entitySupplier,
     final Function<PersonPermissionDetailQuery, R> relationshipSupplier
   ) {
     final Long id = entity.getId();
-    final List<R> result = new ArrayList<>();
+    final Set<R> result = new HashSet<>();
 
     for(final PersonPermissionDetailQuery permission : permissions) {
       final Entity other = entitySupplier.apply(permission);
@@ -530,8 +512,14 @@ public class PersonService {
       }
       final boolean isSame = Objects.equals(id, other.getId());
       final R relationship = relationshipSupplier.apply(permission);
-      if(isSame && relationship != null) {
-        result.add(relationship);
+      if (isSame && relationship != null) {
+        if (relationship instanceof PermissionEntityProvider) {
+          if (entity == ((PermissionEntityProvider) relationship).getPermissionEntity()) {
+            result.add(relationship);
+          }
+        } else {
+          result.add(relationship);
+        }
       }
     }
 

@@ -73,6 +73,7 @@ public class PersonDto {
     dto.setId(person.getId());
     dto.setName(person.getName());
     dto.setFullName(person.getFullName());
+    dto.setAdministrator(person.getAdministrator());
     return dto;
   }
 

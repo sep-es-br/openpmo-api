@@ -4,10 +4,10 @@ import br.gov.es.openpmo.model.properties.Property;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 
-public class ReportScopeItem {
+public class ReportScopeItem implements Scope {
 
   private final Long id;
 
@@ -17,9 +17,9 @@ public class ReportScopeItem {
 
   private final String icon;
 
-  private final Boolean hasPermission;
+  private Boolean hasPermission;
 
-  private final Collection<ReportScopeItem> children = new LinkedList<>();
+  private final List<ReportScopeItem> children = new LinkedList<>();
 
   private ReportScopeItem(final Long id, final String name, final String fullName, final String icon, final Boolean hasPermission) {
     this.id = id;
@@ -45,6 +45,7 @@ public class ReportScopeItem {
     );
   }
 
+  @Override
   public Long getId() {
     return this.id;
   }
@@ -61,10 +62,17 @@ public class ReportScopeItem {
     return this.icon;
   }
 
-  public Collection<ReportScopeItem> getChildren() {
-    return Collections.unmodifiableCollection(this.children);
+  @Override
+  public void setHasPermission(Boolean hasPermission) {
+    this.hasPermission = hasPermission;
   }
 
+  @Override
+  public List<? extends Scope> getChildren() {
+    return this.children;
+  }
+
+  @Override
   public Boolean getHasPermission() {
     return this.hasPermission;
   }

@@ -349,7 +349,7 @@ public class GenerateReportComponent {
     switch (param.getType()) {
       case "Currency":
         if (Objects.isNull(param.getValue())) return null;
-        return new BigDecimal(param.getValue());
+        return Double.valueOf(param.getValue());
       case "Integer":
         if (Objects.isNull(param.getValue())) return null;
         return Integer.valueOf(param.getValue());

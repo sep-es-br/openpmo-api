@@ -1,6 +1,8 @@
 package br.gov.es.openpmo.model.relations;
 
 import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
+import br.gov.es.openpmo.model.Entity;
+import br.gov.es.openpmo.model.PermissionEntityProvider;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.scheduler.updateroles.HasRole;
@@ -13,7 +15,7 @@ import org.neo4j.ogm.annotation.StartNode;
 import org.springframework.data.annotation.Transient;
 
 @RelationshipEntity(type = "CAN_ACCESS_WORKPACK")
-public class CanAccessWorkpack implements HasRole {
+public class CanAccessWorkpack implements HasRole, PermissionEntityProvider {
 
   @Id
   @GeneratedValue
@@ -128,4 +130,8 @@ public class CanAccessWorkpack implements HasRole {
     return this.person.getId().equals(idUser);
   }
 
+  @Override
+  public Entity getPermissionEntity() {
+    return this.workpack;
+  }
 }

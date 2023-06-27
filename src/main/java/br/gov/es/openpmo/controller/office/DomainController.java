@@ -48,7 +48,7 @@ public class DomainController {
       @RequestParam(required = false) final String term,
       @Authorization final String authorization) {
 
-    this.canAccessService.ensureCanAccessManagementOrReadResource(idOffice, authorization);
+//    this.canAccessService.ensureCanAccessManagementOrReadResource(idOffice, authorization);
     final List<DomainDto> domains = this.domainService.findAll(idOffice, idFilter, term)
         .stream()
         .map(o -> this.modelMapper.map(o, DomainDto.class))
@@ -64,7 +64,7 @@ public class DomainController {
   @GetMapping("{id}")
   public ResponseEntity<ResponseBase<DomainDto>> findById(@PathVariable final Long id,
       @Authorization final String authorization) {
-    this.canAccessService.ensureCanReadResource(id, authorization);
+//    this.canAccessService.ensureCanReadResource(id, authorization);
     final DomainDto domainDto = this.modelMapper.map(this.domainService.findById(id), DomainDto.class);
     final ResponseBase<DomainDto> response = new ResponseBase<DomainDto>()
         .setData(domainDto)

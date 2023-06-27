@@ -86,7 +86,7 @@ public class WorkpackModelController {
     @RequestHeader("Authorization") final String authorization
   ) {
 
-    this.canAccessService.ensureCanReadResource(idPlanModel, authorization);
+//    this.canAccessService.ensureCanReadResource(idPlanModel, authorization);
     final List<WorkpackModel> list = this.workpackModelService.findAll(idPlanModel);
 
     final List<WorkpackModelDto> worList = new ArrayList<>();
@@ -110,7 +110,7 @@ public class WorkpackModelController {
     @RequestHeader("Authorization") final String authorization
   ) {
 
-    this.canAccessService.ensureCanReadResource(id, authorization);
+//    this.canAccessService.ensureCanReadResource(id, authorization);
     final WorkpackModel workpackModel = this.workpackModelService.findById(id);
 
     if (workpackModel.getProperties() != null && !(workpackModel.getProperties()).isEmpty()) {

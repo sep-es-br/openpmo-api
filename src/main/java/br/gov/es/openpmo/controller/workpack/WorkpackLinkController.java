@@ -1,6 +1,5 @@
 package br.gov.es.openpmo.controller.workpack;
 
-import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.ComboDto;
 import br.gov.es.openpmo.dto.ResponseBaseItens;
 import br.gov.es.openpmo.dto.workpack.ResponseBaseWorkpackDetail;
@@ -13,14 +12,7 @@ import br.gov.es.openpmo.service.workpack.WorkpackSharedService;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -54,10 +46,7 @@ public class WorkpackLinkController {
 
   @GetMapping("/can-be-linked")
   public ResponseEntity<ResponseBaseItens<ComboDto>> getAllWorkpackCanBeLinked(
-      @RequestParam("id-workpack-model") final Long idworkpackModel,
-      @RequestHeader("Authorization") final String authorization) {
-
-    this.canAccessService.ensureCanReadResource(idworkpackModel.longValue(), authorization);
+      @RequestParam("id-workpack-model") final Long idworkpackModel) {
     final List<ComboDto> response = this.workpackSharedService.getSharedWorkpacks(idworkpackModel);
     return ResponseEntity.ok(ResponseBaseItens.of(response));
   }

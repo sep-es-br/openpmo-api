@@ -2,6 +2,8 @@ package br.gov.es.openpmo.model.relations;
 
 import br.gov.es.openpmo.dto.ccbmembers.MemberAs;
 import br.gov.es.openpmo.dto.ccbmembers.PersonResponse;
+import br.gov.es.openpmo.model.Entity;
+import br.gov.es.openpmo.model.PermissionEntityProvider;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.scheduler.updateroles.HasRole;
@@ -14,7 +16,7 @@ import org.neo4j.ogm.annotation.StartNode;
 import org.springframework.data.annotation.Transient;
 
 @RelationshipEntity(type = "IS_CCB_MEMBER_FOR")
-public class IsCCBMemberFor implements HasRole {
+public class IsCCBMemberFor implements HasRole, PermissionEntityProvider {
 
   @Id
   @GeneratedValue
@@ -125,4 +127,8 @@ public class IsCCBMemberFor implements HasRole {
     this.person = person;
   }
 
+  @Override
+  public Entity getPermissionEntity() {
+    return this.workpack;
+  }
 }

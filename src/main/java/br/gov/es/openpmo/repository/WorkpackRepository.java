@@ -109,8 +109,8 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
           "WITH *, CASE WHEN nameScore2 > fullNameScore2 THEN nameScore2 ELSE fullNameScore2 END AS score2 " +
           "WHERE ( (bt1.linked=null OR bt1.linked=false) AND ($term IS NULL OR $term = '' OR score1 > $searchCutOffScore) ) OR " +
           "      ( bt2.linked=true AND ($term IS NULL OR $term = '' OR score2 > $searchCutOffScore) ) " +
-          "WITH * " +
-          "WITH collect(w)+collect(v) AS workpackList " +
+          "WITH *, CASE WHEN coalesce(score1, 0) > coalesce(score2, 0) THEN score1 ELSE score2 END as score " +
+          "WITH score, collect(w)+collect(v) AS workpackList " +
           "UNWIND workpackList AS workpacks " +
           "RETURN workpacks, [ " +
           "    [ (workpacks)<-[f:FEATURES]-(p:Property)-[d:IS_DRIVEN_BY]->(pm:PropertyModel) | [f, p, d, pm] ], " +
@@ -121,7 +121,9 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
           "    [ (workpacks)-[bt:BELONGS_TO]->(pn:Plan) | [bt,pn] ], " +
           "    [ (workpacks)<-[ii:IS_IN]->(z:Workpack) | [ii, z] ], " +
           "    [ (workpacks)-[isw:IS_SHARED_WITH]->(o:Office) | [isw, o] ] " +
-          "]")
+          "] " +
+          "ORDER BY score DESC"
+  )
   List<Workpack> findAllUsingParent(
           Long idWorkpackModel,
           Long idWorkpackParent,

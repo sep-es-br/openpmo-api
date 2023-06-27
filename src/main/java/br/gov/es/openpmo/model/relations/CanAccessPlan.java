@@ -1,6 +1,8 @@
 package br.gov.es.openpmo.model.relations;
 
 import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
+import br.gov.es.openpmo.model.Entity;
+import br.gov.es.openpmo.model.PermissionEntityProvider;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.scheduler.updateroles.HasRole;
@@ -14,7 +16,7 @@ import org.springframework.data.annotation.Transient;
 
 
 @RelationshipEntity(type = "CAN_ACCESS_PLAN")
-public class CanAccessPlan implements HasRole {
+public class CanAccessPlan implements HasRole, PermissionEntityProvider {
 
   @Id
   @GeneratedValue
@@ -116,4 +118,8 @@ public class CanAccessPlan implements HasRole {
     return this.person.getId().equals(idUser);
   }
 
+  @Override
+  public Entity getPermissionEntity() {
+    return this.plan;
+  }
 }

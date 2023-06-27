@@ -321,11 +321,6 @@ public class StakeholderService {
   ) {
     final PersonStakeholderParamDto personDto = request.getPerson();
 
-    Optional.of(request)
-      .map(StakeholderParamDto::getPerson)
-      .map(PersonStakeholderParamDto::getAdministrator)
-      .ifPresent(person::setAdministrator);
-
     person.setFullName(personDto.getFullName());
 
     final String name = personDto.getName() != null ? personDto.getName() : personDto.firstNameFromFullName();
@@ -392,6 +387,7 @@ public class StakeholderService {
     this.isInContactBookOfService.save(isInContactBookOf);
   }
 
+  @Transactional
   public void updateStakeholderPerson(
     final StakeholderParamDto request,
     final String authorization
@@ -483,7 +479,7 @@ public class StakeholderService {
               request,
               target
             );
-            this.workpackPermissionRepository.save(canAccessWorkpack);
+            this.workpackPermissionRepository.save(canAccessWorkpack, 0);
           }
         }
       });

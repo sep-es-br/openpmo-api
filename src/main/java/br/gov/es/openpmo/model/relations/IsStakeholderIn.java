@@ -1,20 +1,18 @@
 package br.gov.es.openpmo.model.relations;
 
 import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
+import br.gov.es.openpmo.model.Entity;
+import br.gov.es.openpmo.model.PermissionEntityProvider;
 import br.gov.es.openpmo.model.actors.Actor;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.scheduler.updateroles.HasRole;
-import org.neo4j.ogm.annotation.EndNode;
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.RelationshipEntity;
-import org.neo4j.ogm.annotation.StartNode;
+import org.neo4j.ogm.annotation.*;
 import org.springframework.data.annotation.Transient;
 
 import java.time.LocalDate;
 
 @RelationshipEntity(type = "IS_STAKEHOLDER_IN")
-public class IsStakeholderIn implements HasRole {
+public class IsStakeholderIn implements HasRole, PermissionEntityProvider {
 
   @Id
   @GeneratedValue
@@ -119,4 +117,8 @@ public class IsStakeholderIn implements HasRole {
     this.id = id;
   }
 
+  @Override
+  public Entity getPermissionEntity() {
+    return this.workpack;
+  }
 }

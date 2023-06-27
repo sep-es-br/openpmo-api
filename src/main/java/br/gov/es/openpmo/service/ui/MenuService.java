@@ -5,16 +5,11 @@ import br.gov.es.openpmo.dto.menu.PlanMenuDto;
 import br.gov.es.openpmo.dto.menu.PortfolioMenuRequest;
 import br.gov.es.openpmo.dto.menu.WorkpackMenuDto;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
-import br.gov.es.openpmo.dto.workpack.PropertyDto;
-import br.gov.es.openpmo.dto.workpack.WorkpackDetailDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackName;
-import br.gov.es.openpmo.dto.workpackmodel.details.WorkpackModelDetailDto;
-import br.gov.es.openpmo.dto.workpackmodel.params.properties.PropertyModelDto;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.filter.SortByDirectionEnum;
 import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.office.plan.Plan;
-import br.gov.es.openpmo.model.properties.Property;
 import br.gov.es.openpmo.model.relations.BelongsTo;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
@@ -23,7 +18,6 @@ import br.gov.es.openpmo.service.office.OfficeService;
 import br.gov.es.openpmo.service.office.plan.PlanService;
 import br.gov.es.openpmo.service.properties.GetSorterProperty;
 import br.gov.es.openpmo.service.workpack.PropertyComparator;
-import br.gov.es.openpmo.service.workpack.WorkpackModelService;
 import br.gov.es.openpmo.service.workpack.WorkpackPermissionVerifier;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,8 +26,6 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static br.gov.es.openpmo.enumerator.Session.PROPERTIES;
-
 @Service
 public class MenuService {
 
@@ -41,7 +33,6 @@ public class MenuService {
   private final PlanService planService;
   private final OfficeService officeService;
   private final PersonService personService;
-  private final WorkpackModelService workpackModelService;
   private final WorkpackPermissionVerifier workpackPermissionVerifier;
   private final GetSorterProperty getSorterProperty;
 
@@ -51,7 +42,6 @@ public class MenuService {
     final PlanService planService,
     final PersonService personService,
     final OfficeService officeService,
-    final WorkpackModelService workpackModelService,
     final WorkpackPermissionVerifier workpackPermissionVerifier,
     final GetSorterProperty getSorterProperty
   ) {
@@ -59,33 +49,8 @@ public class MenuService {
     this.workpackService = workpackService;
     this.planService = planService;
     this.officeService = officeService;
-    this.workpackModelService = workpackModelService;
     this.workpackPermissionVerifier = workpackPermissionVerifier;
     this.getSorterProperty = getSorterProperty;
-  }
-
-  private static Optional<Property> equivalentPropertyOfWorkpack(
-    final Workpack workpack,
-    final WorkpackDetailDto detailDto,
-    final WorkpackModelDetailDto model
-  ) {
-    final PropertyModelDto propertyModelName = model.getProperties()
-      .stream()
-      .filter(property -> property.getSession() == PROPERTIES && "name".equals(property.getName()))
-      .findFirst()
-      .orElse(null);
-
-    final PropertyDto propertyName = detailDto.getProperties().stream()
-      .filter(pn -> propertyModelName != null && pn.getIdPropertyModel().equals(propertyModelName.getId()))
-      .findFirst()
-      .orElse(null);
-
-    if (propertyName == null) return Optional.empty();
-
-    return workpack.getProperties().stream()
-      .filter(Objects::nonNull)
-      .filter(property -> propertyName.getId().equals(property.getId()))
-      .findFirst();
   }
 
   private static boolean isWorkpackWithPermission(
@@ -308,7 +273,7 @@ public class MenuService {
           linkedModel
         );
       } else {
-        permission = this.addWorkpack(
+        this.addWorkpack(
           idPlan,
           idUser,
           permission,
@@ -321,7 +286,7 @@ public class MenuService {
     return menu;
   }
 
-  private boolean addLinkedWorkpack(
+  private void addLinkedWorkpack(
     final Long idPlan,
     final Long idUser,
     boolean permission,
@@ -352,8 +317,6 @@ public class MenuService {
         linkedModel
       ));
     }
-
-    return permission;
   }
 
   private Set<WorkpackMenuDto> buildWorkpackLinkedStructure(
@@ -372,7 +335,7 @@ public class MenuService {
 
       if (!maybeLinkedModelEquivalent.isPresent()) continue;
 
-      permission = this.addLinkedWorkpack(
+      this.addLinkedWorkpack(
         idPlan,
         idUser,
         permission,
@@ -387,7 +350,7 @@ public class MenuService {
 
   private Optional<WorkpackModel> findWorkpackModelEquivalent(
     final WorkpackModel model,
-    final Set<WorkpackModel> linkedModels
+    final Collection<WorkpackModel> linkedModels
   ) {
     if (linkedModels == null || linkedModels.isEmpty()) {
       return Optional.empty();
@@ -401,7 +364,7 @@ public class MenuService {
       return workpackModel;
     }
 
-    final Set<WorkpackModel> children = new HashSet<>();
+    final Collection<WorkpackModel> children = new HashSet<>();
 
     for (final WorkpackModel linkedModel : linkedModels) {
       children.addAll(linkedModel.getChildren());
@@ -420,7 +383,7 @@ public class MenuService {
     );
   }
 
-  private boolean addWorkpack(
+  private void addWorkpack(
     final Long idPlan,
     final Long idUser,
     boolean permission,
@@ -452,7 +415,6 @@ public class MenuService {
         permittedWorkpacksId
       ));
     }
-    return permission;
   }
 
   private boolean addPropertyName(

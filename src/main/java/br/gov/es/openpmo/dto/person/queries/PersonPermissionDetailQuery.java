@@ -11,6 +11,8 @@ import br.gov.es.openpmo.model.relations.IsStakeholderIn;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import org.springframework.data.neo4j.annotation.QueryResult;
 
+import java.util.Objects;
+
 @QueryResult
 public class PersonPermissionDetailQuery {
 
@@ -90,4 +92,33 @@ public class PersonPermissionDetailQuery {
     return this.workpack;
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    PersonPermissionDetailQuery that = (PersonPermissionDetailQuery) o;
+    return Objects.equals(person, that.person) &&
+            Objects.equals(office, that.office) &&
+            Objects.equals(plan, that.plan) &&
+            Objects.equals(workpack, that.workpack) &&
+            Objects.equals(canAccessOffice, that.canAccessOffice) &&
+            Objects.equals(canAccessPlan, that.canAccessPlan) &&
+            Objects.equals(canAccessWorkpack, that.canAccessWorkpack) &&
+            Objects.equals(isStakeholderIn, that.isStakeholderIn) &&
+            Objects.equals(isCCBMemberFor, that.isCCBMemberFor);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(
+            person,
+            office,
+            plan, workpack,
+            canAccessOffice,
+            canAccessPlan,
+            canAccessWorkpack,
+            isStakeholderIn,
+            isCCBMemberFor
+    );
+  }
 }

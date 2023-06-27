@@ -473,7 +473,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
         idWorkPackParent,
         idPlan,
         term,
-        appProperties.getSearchCutOffScore()
+        this.appProperties.getSearchCutOffScore()
       );
     }
 
@@ -482,7 +482,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
       idWorkPackParent,
       idPlan,
       term,
-      appProperties.getSearchCutOffScore()
+      this.appProperties.getSearchCutOffScore()
     );
   }
 

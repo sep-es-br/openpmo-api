@@ -3,10 +3,10 @@ package br.gov.es.openpmo.dto.reports;
 import br.gov.es.openpmo.model.office.plan.Plan;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 
-public class ReportScope {
+public class ReportScope implements Scope {
 
   private final Long idPlan;
 
@@ -14,9 +14,9 @@ public class ReportScope {
 
   private final String fullName;
 
-  private final Boolean hasPermission;
+  private Boolean hasPermission;
 
-  private final Collection<ReportScopeItem> children = new LinkedList<>();
+  private final List<ReportScopeItem> children = new LinkedList<>();
 
   private ReportScope(final Long idPlan, final String name, final String fullName, final Boolean hasPermission) {
     this.idPlan = idPlan;
@@ -41,12 +41,24 @@ public class ReportScope {
     return this.fullName;
   }
 
+  @Override
+  public void setHasPermission(Boolean hasPermission) {
+    this.hasPermission = hasPermission;
+  }
+
+  @Override
+  public Long getId() {
+    return this.idPlan;
+  }
+
+  @Override
   public Boolean getHasPermission() {
     return this.hasPermission;
   }
 
-  public Collection<ReportScopeItem> getChildren() {
-    return Collections.unmodifiableCollection(this.children);
+  @Override
+  public List<? extends Scope> getChildren() {
+    return this.children;
   }
 
   public void addChildren(final Collection<? extends ReportScopeItem> children) {

@@ -2,6 +2,7 @@ package br.gov.es.openpmo.service.reports;
 
 import br.gov.es.openpmo.dto.reports.ReportScope;
 import br.gov.es.openpmo.dto.reports.ReportScopeItem;
+import br.gov.es.openpmo.dto.reports.Scope;
 import br.gov.es.openpmo.exception.RegistroNaoEncontradoException;
 import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.workpacks.Workpack;
@@ -14,11 +15,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Set;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -49,40 +48,45 @@ public class GetReportScope {
 
     final Function<Long, CanAccessDataResponse> fetchPermissionFunction = this.fetchPermission(authorization);
 
-    final boolean canReadOrEdit = analyzePermission(fetchPermissionFunction.apply(idPlan));
-
     log.debug("Criando ReportScope a partir do idPlan={}", idPlan);
-    final ReportScope scope = ReportScope.of(plan, canReadOrEdit);
+    final ReportScope scope = ReportScope.of(plan,  false);
 
     final Set<Workpack> workpacks = plan.getWorkpacks();
 
     log.debug("Navegando na estrutura dos {} workpacks filho(s) diretos de idPlan={}", workpacks.size(), plan.getId());
-    final Collection<ReportScopeItem> children = this.addScope(workpacks, fetchPermissionFunction);
+    final Instant instant0 = Instant.now();
+    final Collection<ReportScopeItem> children = this.addScope(workpacks);
+    final Instant instantFinal = Instant.now();
 
+    log.info("Tempo: {}", ChronoUnit.MILLIS.between(instant0, instantFinal));
     scope.addChildren(children);
 
+    applyPermissionsToScope(scope, fetchPermissionFunction.andThen(GetReportScope::analyzePermission));
     return scope;
   }
 
+  private void applyPermissionsToScope(Scope scope, Function<Long, Boolean> fetchPermissionFunction) {
+    if (fetchPermissionFunction.apply(scope.getId())) {
+      scope.enablePermission();
+      return;
+    }
+    scope.disablePermission();
+    scope.getChildren().parallelStream().forEach(child -> applyPermissionsToScope(child, fetchPermissionFunction));
+  }
+
   private Function<Long, CanAccessDataResponse> fetchPermission(final String authorization) {
-    return idWorkpack -> this.canAccessData.execute(idWorkpack, authorization);
+    return id -> this.canAccessData.execute(id, authorization);
   }
 
   private Collection<ReportScopeItem> addScope(
-    final Collection<? extends Workpack> workpacks,
-    final Function<Long, CanAccessDataResponse> fetchPermissions
+    final Collection<? extends Workpack> workpacks
   ) {
     log.debug("Iniciando processamento de {} workpack(s)", workpacks.size());
     final Collection<ReportScopeItem> items = new LinkedList<>();
-
-    final Map<Long, CanAccessDataResponse> permissionByWorkpackId = workpacks.parallelStream()
-      .collect(Collectors.toMap(Workpack::getId, w -> fetchPermissions.apply(w.getId())));
-
     for (final Workpack workpack : workpacks) {
 
       log.debug("Criando ReportScopeItem a partir do workpackId={}", workpack.getId());
-      final boolean canReadOrEdit = analyzePermission(permissionByWorkpackId.get(workpack.getId()));
-      final ReportScopeItem item = ReportScopeItem.of(workpack, canReadOrEdit);
+      final ReportScopeItem item = ReportScopeItem.of(workpack, false);
       items.add(item);
 
       if (!workpack.hasChildren()) {
@@ -96,7 +100,7 @@ public class GetReportScope {
       final Set<Workpack> children = workpack.getChildren();
       log.debug("Iniciando processamento de {} filho(s) do workpackId={}", children.size(), workpack.getId());
 
-      item.addChildren(this.addScope(children, fetchPermissions));
+      item.addChildren(this.addScope(children));
 
     }
 
