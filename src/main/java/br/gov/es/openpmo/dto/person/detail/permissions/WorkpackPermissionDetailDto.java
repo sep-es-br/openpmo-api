@@ -64,4 +64,9 @@ public class WorkpackPermissionDetailDto {
     this.isCcbMember = ccbMember;
   }
 
+  public void removeBasicRead() {
+    if (this.accessLevel == PermissionLevelEnum.BASIC_READ) {
+      this.accessLevel = PermissionLevelEnum.NONE;
+    }
+  }
 }

@@ -60,4 +60,12 @@ public class PlanPermissionDetailDto {
     return this.id.equals(that.id);
   }
 
+  public void removeBasicRead() {
+    if (this.accessLevel == PermissionLevelEnum.BASIC_READ) {
+      this.accessLevel = PermissionLevelEnum.NONE;
+    }
+    for (WorkpackPermissionDetailDto workpackPermissionDetailDto : this.workpacksPermission) {
+      workpackPermissionDetailDto.removeBasicRead();
+    }
+  }
 }

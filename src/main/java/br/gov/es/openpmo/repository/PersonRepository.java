@@ -221,16 +221,13 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
 
   @Query("MATCH (person:Person), (office:Office) " +
          "WHERE id(person)=$personId AND id(office)=$officeId " +
+         "OPTIONAL MATCH (workpack:Workpack)-[]->(plan:Plan)-[]->(office) " +
+         "WITH * " +
          "OPTIONAL MATCH (person)-[canAccessOffice:CAN_ACCESS_OFFICE]->(office) " +
-         "OPTIONAL MATCH (person)-[canAccessPlan:CAN_ACCESS_PLAN]->(plan1:Plan)-[]->(office) " +
-         "OPTIONAL MATCH (person)-[canAccessWorkpack:CAN_ACCESS_WORKPACK]->(workpack1:Workpack)-[]->(plan2:Plan)-[]->(office) " +
-         "OPTIONAL MATCH (person)-[isStakeholderIn:IS_STAKEHOLDER_IN]->(workpack2:Workpack)-[]->(plan3:Plan)-[]->(office) " +
-         "OPTIONAL MATCH (person)-[isCCBMemberFor:IS_CCB_MEMBER_FOR{active: true}]->(workpack3:Workpack)-[]->(plan4:Plan)-[]->(office) " +
-         "WITH *, " +
-         "[plan1,plan2,plan3,plan4] as plans, " +
-         "[workpack1, workpack2, workpack3] as workpacks " +
-         "UNWIND plans AS plan " +
-         "UNWIND workpacks AS workpack " +
+         "OPTIONAL MATCH (person)-[canAccessPlan:CAN_ACCESS_PLAN]->(plan) " +
+         "OPTIONAL MATCH (person)-[canAccessWorkpack:CAN_ACCESS_WORKPACK]->(workpack) " +
+         "OPTIONAL MATCH (person)-[isStakeholderIn:IS_STAKEHOLDER_IN]->(workpack) " +
+         "OPTIONAL MATCH (person)-[isCCBMemberFor:IS_CCB_MEMBER_FOR{active: true}]->(workpack) " +
          "WITH " +
          "    person, " +
          "    office, " +

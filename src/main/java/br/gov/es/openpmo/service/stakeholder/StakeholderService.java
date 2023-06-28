@@ -176,13 +176,14 @@ public class StakeholderService {
             permission.getId(),
             request.getIdPlan()
           ));
-        this.journalCreator.workpackPermission(
-          workpack,
-          target,
-          author,
-          request.getGratherPermissionLevel(),
-          JournalAction.CREATED
-        );
+// TODO: comentado para testes
+//        this.journalCreator.workpackPermission(
+//          workpack,
+//          target,
+//          author,
+//          request.getGratherPermissionLevel(),
+//          JournalAction.CREATED
+//        );
       });
     }
     return target;
@@ -483,13 +484,14 @@ public class StakeholderService {
           }
         }
       });
-      this.journalCreator.workpackPermission(
-        workpack,
-        target,
-        author,
-        request.getGratherPermissionLevel(),
-        JournalAction.EDITED
-      );
+// TODO: comentado para testes
+//      this.journalCreator.workpackPermission(
+//        workpack,
+//        target,
+//        author,
+//        request.getGratherPermissionLevel(),
+//        JournalAction.EDITED
+//      );
     }
   }
 
@@ -612,13 +614,14 @@ public class StakeholderService {
         target.getId()
       );
     this.workpackPermissionRepository.deleteAll(permissions);
-    this.journalCreator.workpackPermission(
-      workpack,
-      target,
-      author,
-      this.getGratherPermissionLevel(permissions),
-      JournalAction.REMOVED
-    );
+// TODO: comentado para testes
+//    this.journalCreator.workpackPermission(
+//      workpack,
+//      target,
+//      author,
+//      this.getGratherPermissionLevel(permissions),
+//      JournalAction.REMOVED
+//    );
   }
 
   private PermissionLevelEnum getGratherPermissionLevel(final List<? extends CanAccessWorkpack> permissions) {

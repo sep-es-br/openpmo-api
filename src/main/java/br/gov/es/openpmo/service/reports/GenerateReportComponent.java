@@ -347,6 +347,7 @@ public class GenerateReportComponent {
 
   private Object getValue(final ReportParamsRequest param) {
     switch (param.getType()) {
+      case "Double":
       case "Currency":
         if (Objects.isNull(param.getValue())) return null;
         return Double.valueOf(param.getValue());

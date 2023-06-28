@@ -259,27 +259,27 @@ public class PersonService {
     final PersonPermissionDetailQuery permission = permissions.get(0);
     final OfficePermissionDetailDto result = new OfficePermissionDetailDto();
 
-    final List<CanAccessOffice> canAccessOffices = permissions.stream()
+    final Set<CanAccessOffice> canAccessOffices = permissions.stream()
       .map(PersonPermissionDetailQuery::getCanAccessOffice)
       .filter(Objects::nonNull)
-      .collect(Collectors.toList());
+      .collect(Collectors.toSet());
 
     final List<PlanPermissionDetailDto> planDetail = this.createPlanDetail(permissions);
 
     if(canAccessOffices.isEmpty()) {
-      final List<CanAccessPlan> canAccessPlan = permissions.stream()
+      final Set<CanAccessPlan> canAccessPlan = permissions.stream()
         .map(PersonPermissionDetailQuery::getCanAccessPlan)
         .filter(Objects::nonNull)
-        .collect(Collectors.toList());
+        .collect(Collectors.toSet());
 
       if(canAccessPlan.isEmpty()) {
         if(planDetail.size() == 1) {
           result.setAccessLevel(planDetail.get(0).getAccessLevel());
         }
         else {
-          final List<PermissionLevelEnum> permissionLevels = planDetail.stream()
+          final Set<PermissionLevelEnum> permissionLevels = planDetail.stream()
             .map(PlanPermissionDetailDto::getAccessLevel)
-            .collect(Collectors.toList());
+            .collect(Collectors.toSet());
 
           if(permissionLevels.contains(PermissionLevelEnum.BASIC_READ)) {
             result.setAccessLevel(PermissionLevelEnum.BASIC_READ);
@@ -305,6 +305,7 @@ public class PersonService {
     result.setId(permission.getOffice().getId());
     result.setPlanPermissions(planDetail);
 
+    result.removeBasicRead();
     return result;
   }
 
@@ -408,13 +409,13 @@ public class PersonService {
 
       final WorkpackPermissionDetailDto item = new WorkpackPermissionDetailDto();
       item.setId(workpack.getId());
-      item.setName(this.getName(workpack));
-      item.setRoles(this.getRoles(isStakeholderIns));
-      item.setIcon(this.getFontIcon(workpack));
       item.setCcbMember(Boolean.FALSE);
 
       if(canAccessWorkpacks.isEmpty()) {
         if(!isStakeholderIns.isEmpty()) {
+          item.setName(this.getName(workpack));
+          item.setRoles(this.getRoles(isStakeholderIns));
+          item.setIcon(this.getFontIcon(workpack));
           item.setAccessLevel(PermissionLevelEnum.NONE);
           result.add(item);
         }
@@ -425,6 +426,9 @@ public class PersonService {
           .max(PermissionLevelEnum::compareTo)
           .orElse(null);
 
+        item.setName(this.getName(workpack));
+        item.setRoles(this.getRoles(isStakeholderIns));
+        item.setIcon(this.getFontIcon(workpack));
         item.setAccessLevel(accessLevel);
         result.add(item);
       }

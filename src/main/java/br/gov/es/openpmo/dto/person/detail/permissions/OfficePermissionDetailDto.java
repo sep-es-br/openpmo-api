@@ -71,4 +71,13 @@ public class OfficePermissionDetailDto {
     return this.id.equals(that.id);
   }
 
+  public void removeBasicRead() {
+    if (this.accessLevel == PermissionLevelEnum.BASIC_READ) {
+      this.accessLevel = PermissionLevelEnum.NONE;
+    }
+    for (PlanPermissionDetailDto planPermission : this.planPermissions) {
+      planPermission.removeBasicRead();
+    }
+  }
+
 }

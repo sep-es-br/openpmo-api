@@ -9,6 +9,7 @@ import br.gov.es.openpmo.model.relations.IsInContactBookOf;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.CONTACT_DATA_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PERSON_NOT_FOUND;
@@ -18,6 +19,7 @@ public class PersonDetailDto {
   private Long id;
   private String name;
   private String fullName;
+  private String key;
   private String email;
   private String contactEmail;
   private String phoneNumber;
@@ -62,6 +64,7 @@ public class PersonDetailDto {
     this.id = person.getId();
     this.name = person.getName();
     this.fullName = person.getFullName();
+    this.key = Optional.ofNullable(query.getAuthentication()).map(IsAuthenticatedBy::getKey).orElse(null);
   }
 
   private void setContactData(final PersonDetailQuery query) {
@@ -95,6 +98,14 @@ public class PersonDetailDto {
 
   public void setFullName(final String fullName) {
     this.fullName = fullName;
+  }
+
+  public String getKey() {
+    return key;
+  }
+
+  public void setKey(String key) {
+    this.key = key;
   }
 
   public String getEmail() {
