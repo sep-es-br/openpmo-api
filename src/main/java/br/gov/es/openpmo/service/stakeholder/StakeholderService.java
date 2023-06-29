@@ -5,15 +5,7 @@ import br.gov.es.openpmo.dto.organization.OrganizationDto;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.dto.person.PersonDto;
 import br.gov.es.openpmo.dto.person.RoleResource;
-import br.gov.es.openpmo.dto.stakeholder.OrganizationStakeholderParamDto;
-import br.gov.es.openpmo.dto.stakeholder.PersonStakeholderParamDto;
-import br.gov.es.openpmo.dto.stakeholder.RoleDto;
-import br.gov.es.openpmo.dto.stakeholder.StakeholderAndPermissionQuery;
-import br.gov.es.openpmo.dto.stakeholder.StakeholderCardViewDto;
-import br.gov.es.openpmo.dto.stakeholder.StakeholderDto;
-import br.gov.es.openpmo.dto.stakeholder.StakeholderOrganizationDto;
-import br.gov.es.openpmo.dto.stakeholder.StakeholderParamDto;
-import br.gov.es.openpmo.dto.stakeholder.StakeholderPersonDto;
+import br.gov.es.openpmo.dto.stakeholder.*;
 import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Actor;
@@ -23,12 +15,7 @@ import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.model.filter.SortByDirectionEnum;
 import br.gov.es.openpmo.model.journals.JournalAction;
 import br.gov.es.openpmo.model.office.Office;
-import br.gov.es.openpmo.model.relations.CanAccessOffice;
-import br.gov.es.openpmo.model.relations.CanAccessPlan;
-import br.gov.es.openpmo.model.relations.CanAccessWorkpack;
-import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
-import br.gov.es.openpmo.model.relations.IsInContactBookOf;
-import br.gov.es.openpmo.model.relations.IsStakeholderIn;
+import br.gov.es.openpmo.model.relations.*;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.CustomFilterRepository;
 import br.gov.es.openpmo.repository.StakeholderRepository;
@@ -58,9 +45,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static br.gov.es.openpmo.utils.ApplicationMessage.CUSTOM_FILTER_NOT_FOUND;
-import static br.gov.es.openpmo.utils.ApplicationMessage.EMAIL_NOT_NULL;
-import static br.gov.es.openpmo.utils.ApplicationMessage.OFFICE_NOT_FOUND;
+import static br.gov.es.openpmo.utils.ApplicationMessage.*;
 import static java.lang.Boolean.TRUE;
 
 @Service
@@ -176,14 +161,13 @@ public class StakeholderService {
             permission.getId(),
             request.getIdPlan()
           ));
-// TODO: comentado para testes
-//        this.journalCreator.workpackPermission(
-//          workpack,
-//          target,
-//          author,
-//          request.getGratherPermissionLevel(),
-//          JournalAction.CREATED
-//        );
+        this.journalCreator.workpackPermission(
+          workpack,
+          target,
+          author,
+          request.getGratherPermissionLevel(),
+          JournalAction.CREATED
+        );
       });
     }
     return target;
@@ -484,14 +468,13 @@ public class StakeholderService {
           }
         }
       });
-// TODO: comentado para testes
-//      this.journalCreator.workpackPermission(
-//        workpack,
-//        target,
-//        author,
-//        request.getGratherPermissionLevel(),
-//        JournalAction.EDITED
-//      );
+      this.journalCreator.workpackPermission(
+        workpack,
+        target,
+        author,
+        request.getGratherPermissionLevel(),
+        JournalAction.EDITED
+      );
     }
   }
 
@@ -614,14 +597,13 @@ public class StakeholderService {
         target.getId()
       );
     this.workpackPermissionRepository.deleteAll(permissions);
-// TODO: comentado para testes
-//    this.journalCreator.workpackPermission(
-//      workpack,
-//      target,
-//      author,
-//      this.getGratherPermissionLevel(permissions),
-//      JournalAction.REMOVED
-//    );
+    this.journalCreator.workpackPermission(
+      workpack,
+      target,
+      author,
+      this.getGratherPermissionLevel(permissions),
+      JournalAction.REMOVED
+    );
   }
 
   private PermissionLevelEnum getGratherPermissionLevel(final List<? extends CanAccessWorkpack> permissions) {
