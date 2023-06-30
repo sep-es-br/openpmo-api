@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.service.journals;
 
+import br.gov.es.openpmo.dto.journals.EvidenceCreatedResponse;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.File;
 import br.gov.es.openpmo.model.journals.JournalEntry;
@@ -53,18 +54,23 @@ public class EvidenceCreator {
     return MessageFormat.format("{0}{1}", randomNumber, originalFilename);
   }
 
-  public void create(
+  public EvidenceCreatedResponse create(
     final Long idJournal,
     final MultipartFile multipartFile
-  ) throws IOException {
+  ) {
     final JournalEntry journalEntry = this.findJournalById(idJournal);
     final File file = createFile(journalEntry, multipartFile);
-    FileUtils.storeFile(this.journalPath, file.getUniqueNameKey(), multipartFile.getBytes());
-    this.saveFile(file);
+    try {
+      FileUtils.storeFile(this.journalPath, file.getUniqueNameKey(), multipartFile.getBytes());
+    } catch (IOException e) {
+      throw new NegocioException(ApplicationMessage.EVIDENCE_FILE_UPLOAD_SAVE_ERROR);
+    }
+    final File savedFile = this.saveFile(file);
+    return new EvidenceCreatedResponse(savedFile.getId());
   }
 
-  private void saveFile(final File file) {
-    this.fileRepository.save(file);
+  private File saveFile(final File file) {
+    return this.fileRepository.save(file);
   }
 
   private JournalEntry findJournalById(final Long idJournal) {

@@ -3,6 +3,7 @@ package br.gov.es.openpmo.service.schedule;
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.schedule.*;
 import br.gov.es.openpmo.exception.NegocioException;
+import br.gov.es.openpmo.model.office.UnitMeasure;
 import br.gov.es.openpmo.model.relations.Consumes;
 import br.gov.es.openpmo.model.schedule.Schedule;
 import br.gov.es.openpmo.model.schedule.Step;
@@ -12,7 +13,7 @@ import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.CostAccountRepository;
 import br.gov.es.openpmo.repository.ScheduleRepository;
 import br.gov.es.openpmo.repository.StepRepository;
-import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
+import br.gov.es.openpmo.repository.UnitMeasureRepository;
 import br.gov.es.openpmo.service.workpack.CostAccountService;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
 import br.gov.es.openpmo.utils.MapPair;
@@ -36,8 +37,6 @@ public class ScheduleService {
 
   private final ScheduleRepository scheduleRepository;
 
-  private final IAsyncDashboardService dashboardService;
-
   private final IGetEquivalentStepSnapshot getEquivalentStepSnapshot;
 
   private final CostAccountService costAccountService;
@@ -50,26 +49,29 @@ public class ScheduleService {
 
   private final UpdateStatusService updateStatusService;
 
+  private final UnitMeasureRepository unitMeasureRepository;
+
   @Autowired
   public ScheduleService(
     final StepRepository stepRepository,
     final ScheduleRepository scheduleRepository,
-    final IAsyncDashboardService dashboardService,
     final IGetEquivalentStepSnapshot getEquivalentStepSnapshot,
     final CostAccountService costAccountService,
     final WorkpackService workpackService,
     final ModelMapper modelMapper,
     final CostAccountRepository costAccountRepository,
-    UpdateStatusService updateStatusService) {
+    final UpdateStatusService updateStatusService,
+    final UnitMeasureRepository unitMeasureRepository
+  ) {
     this.stepRepository = stepRepository;
     this.scheduleRepository = scheduleRepository;
-    this.dashboardService = dashboardService;
     this.getEquivalentStepSnapshot = getEquivalentStepSnapshot;
     this.costAccountService = costAccountService;
     this.workpackService = workpackService;
     this.modelMapper = modelMapper;
     this.costAccountRepository = costAccountRepository;
     this.updateStatusService = updateStatusService;
+    this.unitMeasureRepository = unitMeasureRepository;
   }
 
   private static void setScheduleDtoWorkpack(
@@ -187,9 +189,10 @@ public class ScheduleService {
 
   private static Map<Long, BigDecimal> getParts(
     final long months,
-    final BigDecimal decimal
+    final BigDecimal decimal,
+    final int scale
   ) {
-    long count = 0L;
+    BigDecimal count = BigDecimal.ZERO;
     final Map<Long, BigDecimal> results = new HashMap<>();
     if (Objects.isNull(decimal) || decimal.equals(BigDecimal.ZERO)) {
       for (long month = months; month > 0; month--) {
@@ -199,13 +202,14 @@ public class ScheduleService {
     }
     for (long month = months; month > 0; month--) {
       final BigDecimal result = decimal
-        .subtract(new BigDecimal(count))
+        .subtract(count)
         .divide(
           new BigDecimal(month),
-          RoundingMode.CEILING
+          scale,
+          RoundingMode.HALF_UP
         );
-      count = count + result.longValue();
-      results.put(month, result);
+      count = count.add(result);
+      results.put(months - month + 1, result);
     }
     return results;
   }
@@ -213,7 +217,7 @@ public class ScheduleService {
   private static void addsStepToSteps(
     final Map<Long, ? extends BigDecimal> plannedParts,
     final Map<Long, ? extends BigDecimal> actualParts,
-    final Map<CostAccount, MapPair<Long, BigDecimal>> map,
+    final Map<CostAccount, MapPair<Long, BigDecimal>> costsMap,
     final Collection<? super Step> steps,
     final long actualWorkMonths,
     final long currentMonth,
@@ -230,7 +234,7 @@ public class ScheduleService {
     addsConsumesForEachStep(
       currentMonth,
       actualWorkMonths,
-      map,
+      costsMap,
       step
     );
 
@@ -595,8 +599,9 @@ public class ScheduleService {
         actualWorkMonths
       );
 
-    final Map<Long, BigDecimal> plannedParts = getParts(plannedWorkMonths, scheduleParamDto.getPlannedWork());
-    final Map<Long, BigDecimal> actualParts = getParts(actualWorkMonths, scheduleParamDto.getActualWork());
+    final int scale = getScale(scheduleParamDto);
+    final Map<Long, BigDecimal> plannedParts = getParts(plannedWorkMonths, scheduleParamDto.getPlannedWork(), scale);
+    final Map<Long, BigDecimal> actualParts = getParts(actualWorkMonths, scheduleParamDto.getActualWork(), scale);
     for (long currentMonth = 1; currentMonth <= plannedWorkMonths; currentMonth++) {
       addsStepToSteps(
         plannedParts,
@@ -612,6 +617,12 @@ public class ScheduleService {
     return steps;
   }
 
+  private int getScale(ScheduleParamDto scheduleParamDto) {
+    final UnitMeasure unitMeasure = unitMeasureRepository.findByWorkpackId(scheduleParamDto.getIdWorkpack())
+            .orElseThrow(() -> new NegocioException(UNITMEASURE_NOT_FOUND));
+    return Math.toIntExact(unitMeasure.getPrecision());
+  }
+
   private Workpack getWorkpack(final ScheduleParamDto scheduleParamDto) {
     return this.findWorkpackById(scheduleParamDto);
   }
@@ -625,13 +636,16 @@ public class ScheduleService {
 
     for (final CostSchedule costSchedule : scheduleParamDto.getCosts()) {
       final CostAccount costAccount = this.findCostAccountById(costSchedule);
+      final int scale = 2;
       final Map<Long, BigDecimal> plannedCostParts = getParts(
         plannedWorkMonths,
-        costSchedule.getPlannedCost()
+        costSchedule.getPlannedCost(),
+        scale
       );
       final Map<Long, BigDecimal> actualCostParts = getParts(
         actualWorkMonths,
-        costSchedule.getActualCost()
+        costSchedule.getActualCost(),
+        scale
       );
       mapCostToParts.put(
         costAccount,

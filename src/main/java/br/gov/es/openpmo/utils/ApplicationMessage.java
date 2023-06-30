@@ -288,7 +288,9 @@ public class ApplicationMessage {
 
     public static final String AVATAR_ALREADY_EXISTS = "avatar.already.exists";
 
-    public static final String STEP_PLANNED_WORK_CANNOT_BE_NULL_OR_ZERO = "step.planned-work.cannot.be.null-or-zero";
+    public static final String FILE_UPLOAD_MAXSIZE_EXCEDED = "file.upload.maxsize.exceeded";
+
+    public static final String EVIDENCE_FILE_UPLOAD_SAVE_ERROR = "evidence.file.upload.save.error";
 
     public static final String WORKPACK_SORTER_PROPERTY_NOT_FOUND = "workpack.sorter.property.not-found";
 

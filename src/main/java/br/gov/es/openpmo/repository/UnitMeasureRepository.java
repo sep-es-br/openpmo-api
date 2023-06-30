@@ -7,6 +7,7 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface UnitMeasureRepository extends Neo4jRepository<UnitMeasure, Long>, CustomRepository {
 
@@ -25,5 +26,10 @@ public interface UnitMeasureRepository extends Neo4jRepository<UnitMeasure, Long
           @Param("term") String term,
           @Param("searchCutOffScore") Double searchCutOffScore
   );
+
+  @Query("MATCH (w:Workpack)<-[:FEATURES]-(:UnitSelection)-[:VALUES]->(u:UnitMeasure) " +
+          "WHERE ID(w)=$workpackId " +
+          "RETURN u")
+  Optional<UnitMeasure> findByWorkpackId(Long workpackId);
 
 }

@@ -2,6 +2,7 @@ package br.gov.es.openpmo.controller.journals;
 
 import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.Response;
+import br.gov.es.openpmo.dto.journals.EvidenceCreatedResponse;
 import br.gov.es.openpmo.service.journals.EvidenceCreator;
 import br.gov.es.openpmo.service.journals.EvidenceFinder;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
@@ -14,12 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.MediaTypeFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -55,11 +51,9 @@ public class EvidenceController {
   }
 
   @GetMapping("/image/{id-evidence}")
-  public ResponseEntity<UrlResource> getEvidence(@PathVariable("id-evidence") final Long idEvidence,
-      @Authorization final String authorization)
+  public ResponseEntity<UrlResource> getEvidence(@PathVariable("id-evidence") final Long idEvidence)
       throws IOException {
 
-    this.canAccessService.ensureCanReadResource(idEvidence, authorization);
     final UrlResource imagem = this.evidenceFinder.getEvidence(idEvidence);
 
     return ResponseEntity.ok()
@@ -69,14 +63,14 @@ public class EvidenceController {
 
   @Transactional
   @PostMapping("/{id-journal}")
-  public Response<Void> create(
+  public Response<EvidenceCreatedResponse> create(
       @PathVariable("id-journal") final Long idJournal,
       @RequestParam final MultipartFile file,
-      @Authorization final String authorization) throws IOException {
+      @Authorization final String authorization) {
 
     this.canAccessService.ensureCanEditResource(idJournal, authorization);
-    this.evidenceCreator.create(idJournal, file);
-    return this.responseHandler.success();
+    final EvidenceCreatedResponse response = this.evidenceCreator.create(idJournal, file);
+    return this.responseHandler.success(response);
   }
 
 }
