@@ -252,11 +252,13 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
                   PROPERTY_VALUE_NOT_NULL + "$" + propertyModel.getLabel());
               }
               if (integer.getDriver().getMin() != null
+                  && integer.getValue() != null
                   && integer.getDriver().getMin() > integer.getValue()) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_MIN + "$" + propertyModel.getLabel());
               }
               if (integer.getDriver().getMax() != null
+                  && integer.getValue() != null
                   && integer.getDriver().getMax() < integer.getValue()) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_MAX + "$" + propertyModel.getLabel());
@@ -273,11 +275,13 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
                   PROPERTY_VALUE_NOT_EMPTY + "$" + propertyModel.getLabel());
               }
               if (text.getDriver().getMin() != null
+                  && text.getValue() != null
                   && text.getDriver().getMin() > text.getValue().length()) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_MIN + "$" + propertyModel.getLabel());
               }
               if (text.getDriver().getMax() != null
+                  && text.getValue() != null
                   && text.getDriver().getMax() < text.getValue().length()) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_MAX + "$" + propertyModel.getLabel());
@@ -293,11 +297,13 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
                   PROPERTY_VALUE_NOT_NULL + "$" + propertyModel.getLabel());
               }
               if (date.getDriver().getMin() != null
+                  && date.getValue() != null
                   && date.getDriver().getMin().isAfter(date.getValue())) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_MIN + "$" + propertyModel.getLabel());
               }
               if (date.getDriver().getMax() != null
+                  && date.getValue() != null
                   && date.getDriver().getMax().isBefore(date.getValue())) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_MAX + "$" + propertyModel.getLabel());
@@ -341,11 +347,13 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
                   PROPERTY_VALUE_NOT_EMPTY + "$" + propertyModel.getLabel());
               }
               if (textArea.getDriver().getMin() != null
+                  && textArea.getValue() != null
                   && textArea.getDriver().getMin() > textArea.getValue().length()) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_MIN + "$" + propertyModel.getLabel());
               }
               if (textArea.getDriver().getMax() != null
+                  && textArea.getValue() != null
                   && textArea.getDriver().getMax() < textArea.getValue().length()) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_MAX + "$" + propertyModel.getLabel());
@@ -360,10 +368,12 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
                 throw new NegocioException(PROPERTY_VALUE_NOT_NULL + "$" + propertyModel.getLabel());
               }
               if (decimal.getDriver().getMin() != null
+                  && decimal.getValue() != null
                   && decimal.getDriver().getMin() > decimal.getValue()) {
                 throw new NegocioException(PROPERTY_VALUE_NOT_MIN + "$" + propertyModel.getLabel());
               }
               if (decimal.getDriver().getMax() != null
+                  && decimal.getValue() != null
                   && decimal.getDriver().getMax() < decimal.getValue()) {
                 throw new NegocioException(PROPERTY_VALUE_NOT_MAX + "$" + propertyModel.getLabel());
               }
