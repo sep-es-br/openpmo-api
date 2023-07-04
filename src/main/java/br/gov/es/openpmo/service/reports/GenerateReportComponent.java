@@ -362,6 +362,7 @@ public class GenerateReportComponent {
 
   private Object getValue(final ReportParamsRequest param) {
     switch (param.getType()) {
+      case "Num":
       case "Double":
       case "Currency":
         if (Objects.isNull(param.getValue())) return null;
@@ -371,7 +372,7 @@ public class GenerateReportComponent {
         return Integer.valueOf(param.getValue());
       case "Date":
         if (Objects.isNull(param.getValue())) return null;
-        return "'" + param.getValue() + "'";
+        return param.getValue();
       case "Toggle":
         if (Objects.isNull(param.getValue())) return null;
         return BooleanUtils.toBoolean(param.getValue());
