@@ -26,13 +26,7 @@ import org.springframework.util.CollectionUtils;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.CONSUMES_COST_ACCOUNT_ALREADY_EXISTS;
@@ -149,6 +143,10 @@ public class StepService {
       stepDto.getConsumes().add(consumesDto);
     }
 
+    final Set<ConsumesDto> sortedConsumes = stepDto.getConsumes().stream()
+            .sorted(Comparator.comparing(dto -> dto.getCostAccount().getName()))
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+    stepDto.setConsumes(sortedConsumes);
     return stepDto;
   }
 

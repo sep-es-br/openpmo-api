@@ -27,6 +27,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.*;
 
@@ -524,6 +525,10 @@ public class ScheduleService {
       stepDto.getConsumes().add(consumesDto);
     }
 
+    final Set<ConsumesDto> sortedConsumes = stepDto.getConsumes().stream()
+            .sorted(Comparator.comparing(dto -> dto.getCostAccount().getName()))
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+    stepDto.setConsumes(sortedConsumes);
     return stepDto;
   }
 
