@@ -93,12 +93,15 @@ public class GenerateReportComponent {
     final PropertyModel propertyModelParameter = this.getPropertyModel(parameter);
     switch (parameter.getType()) {
       case "Integer": {
-        final Integer value = Integer.valueOf(parameter.getValue());
         final IntegerModel integerModel = (IntegerModel) propertyModelParameter;
-        if (integerModel.isRequired()) {
+        if (integerModel.isRequired() && parameter.getValue() == null) {
           throw new NegocioException(
             PROPERTY_VALUE_NOT_NULL + "$" + propertyModelParameter.getLabel());
         }
+        if (parameter.getValue() == null) {
+          return;
+        }
+        final Integer value = Integer.valueOf(parameter.getValue());
         if (integerModel.getMin() != null
           && integerModel.getMin() > value) {
           throw new NegocioException(
@@ -119,6 +122,9 @@ public class GenerateReportComponent {
           throw new NegocioException(
             PROPERTY_VALUE_NOT_EMPTY + "$" + propertyModelParameter.getLabel());
         }
+        if (Objects.isNull(value)) {
+          return;
+        }
         if (textModel.getMin() != null
           && textModel.getMin() > value.length()) {
           throw new NegocioException(
@@ -136,6 +142,9 @@ public class GenerateReportComponent {
         if (dateModel.isRequired() && parameter.getValue() == null) {
           throw new NegocioException(
             PROPERTY_VALUE_NOT_NULL + "$" + propertyModelParameter.getLabel());
+        }
+        if (parameter.getValue() == null) {
+          return;
         }
         final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
         final LocalDateTime value = LocalDateTime.parse(parameter.getValue(), formatter);
@@ -170,6 +179,9 @@ public class GenerateReportComponent {
         if (selectionModel.isRequired() && parameter.getValue() == null) {
           throw new NegocioException(PROPERTY_VALUE_NOT_NULL + "$" + selectionModel.getLabel());
         }
+        if (parameter.getValue() == null) {
+          return;
+        }
         final List<String> values = Arrays.stream(parameter.getValue().split(","))
           .collect(Collectors.toList());
         if (selectionModel.isRequired() && values.isEmpty()) {
@@ -200,6 +212,9 @@ public class GenerateReportComponent {
         final NumberModel decimalModel = (NumberModel) propertyModelParameter;
         if (decimalModel.isRequired() && parameter.getValue() == null) {
           throw new NegocioException(PROPERTY_VALUE_NOT_NULL + "$" + propertyModelParameter.getLabel());
+        }
+        if (Objects.isNull(parameter.getValue())) {
+          return;
         }
         final Double value = Double.valueOf(parameter.getValue());
         if (decimalModel.getMin() != null
