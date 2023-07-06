@@ -21,23 +21,8 @@ import br.gov.es.openpmo.model.properties.Integer;
 import br.gov.es.openpmo.model.properties.Number;
 import br.gov.es.openpmo.model.properties.*;
 import br.gov.es.openpmo.model.properties.models.*;
-import br.gov.es.openpmo.model.relations.BelongsTo;
-import br.gov.es.openpmo.model.workpacks.CostAccount;
-import br.gov.es.openpmo.model.workpacks.Deliverable;
-import br.gov.es.openpmo.model.workpacks.Milestone;
-import br.gov.es.openpmo.model.workpacks.Organizer;
-import br.gov.es.openpmo.model.workpacks.Portfolio;
-import br.gov.es.openpmo.model.workpacks.Program;
-import br.gov.es.openpmo.model.workpacks.Project;
-import br.gov.es.openpmo.model.workpacks.Workpack;
-import br.gov.es.openpmo.model.workpacks.models.DeliverableModel;
-import br.gov.es.openpmo.model.workpacks.models.MilestoneModel;
-import br.gov.es.openpmo.model.workpacks.models.OrganizerModel;
-import br.gov.es.openpmo.model.workpacks.models.PortfolioModel;
-import br.gov.es.openpmo.model.workpacks.models.ProgramModel;
-import br.gov.es.openpmo.model.workpacks.models.ProjectModel;
-import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
-import br.gov.es.openpmo.repository.BelongsToRepository;
+import br.gov.es.openpmo.model.workpacks.*;
+import br.gov.es.openpmo.model.workpacks.models.*;
 import br.gov.es.openpmo.repository.CustomFilterRepository;
 import br.gov.es.openpmo.repository.MilestoneRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
@@ -56,6 +41,7 @@ import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
@@ -110,8 +96,6 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
 
   private final FindAllWorkpackByParentUsingCustomFilter findAllWorkpackByParent;
 
-  private final BelongsToRepository belongsToRepository;
-
   private final MilestoneService milestoneService;
 
   private final JournalDeleter journalDeleter;
@@ -140,7 +124,6 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final LocalityService localityService,
     final UnitMeasureService unitMeasureService,
     final FindAllWorkpackUsingCustomFilter findAllWorkpack,
-    final BelongsToRepository belongsToRepository,
     final MilestoneService milestoneService,
     final JournalDeleter journalDeleter,
     final WorkpackSorter workpackSorter,
@@ -161,7 +144,6 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     this.localityService = localityService;
     this.unitMeasureService = unitMeasureService;
     this.findAllWorkpack = findAllWorkpack;
-    this.belongsToRepository = belongsToRepository;
     this.milestoneService = milestoneService;
     this.journalDeleter = journalDeleter;
     this.workpackSorter = workpackSorter;
@@ -237,7 +219,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
 
   private static void validateProperty(
     final PropertyModel propertyModel,
-    final Set<? extends Property> properties
+    final Collection<? extends Property> properties
   ) {
     boolean propertyModelFound = false;
     if (properties != null && !properties.isEmpty()) {
@@ -576,12 +558,12 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
       searchCutOffScore
     );
     if (!StringUtils.hasText(term) && Objects.nonNull(idWorkpackModel)) {
-      sortByWorkpackModel(idWorkpackModel, workpacks);
+      this.sortByWorkpackModel(idWorkpackModel, workpacks);
     }
     return workpacks;
   }
 
-  private void sortByWorkpackModel(Long idWorkpackModel, List<Workpack> workpacks) {
+  private void sortByWorkpackModel(final Long idWorkpackModel, final List<Workpack> workpacks) {
     final WorkpackModel workpackModel = this.getWorkpackModelById(idWorkpackModel);
     if (workpackModel != null && workpackModel.getSortBy() != null) {
       workpacks.sort((first, second) -> PropertyComparator.compare(
@@ -598,25 +580,22 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
   }
 
   public void saveDefault(final Workpack workpack) {
-    this.save(workpack);
+    this.workpackRepository.save(workpack);
   }
 
-  private Workpack save(final Workpack workpack) {
-    return this.workpackRepository.save(workpack);
-  }
-
+  @Transactional
   public EntityDto save(
     final Workpack workpack,
     final Long idPlan,
     final Long idParent
   ) {
+    validateWorkpack(workpack);
+    this.workpackRepository.save(workpack);
     this.ifNewWorkpackAddRelationship(
       workpack,
       idPlan,
       idParent
     );
-    validateWorkpack(workpack);
-    this.save(workpack);
     return EntityDto.of(workpack);
   }
 
@@ -625,24 +604,28 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final Long idPlan,
     final Long idParent
   ) {
-    if(idPlan != null && idParent != null) {
+    if (idPlan != null && idParent != null) {
       final Plan workpackParentPlan = this.planService.findNotLinkedBelongsTo(idParent);
       if (!idPlan.equals(workpackParentPlan.getId())) {
         throw new NegocioException(ApplicationMessage.WORKPACK_PARENT_PLAN_MISMATCH);
       }
     }
     if (idPlan != null) {
-      final BelongsTo belongsTo = new BelongsTo();
-      belongsTo.setLinked(false);
-      belongsTo.setPlan(this.planService.findById(idPlan));
-      belongsTo.setWorkpack(workpack);
-      this.belongsToRepository.save(belongsTo);
+      if (!this.planService.existsById(idPlan)) {
+        throw new NegocioException(PLAN_NOT_FOUND);
+      }
+      this.workpackRepository.createBelongsToRelationship(workpack.getId(), idPlan);
     }
     if (idParent != null) {
-      final Workpack parent = this.findById(idParent);
-      parent.addChildren(workpack);
-      this.workpackRepository.save(parent);
+      if (!this.existsById(idParent)) {
+        throw new NegocioException(WORKPACK_NOT_FOUND);
+      }
+      this.workpackRepository.createIsInRelationship(workpack.getId(), idParent);
     }
+  }
+
+  private boolean existsById(Long id) {
+    return this.workpackRepository.existsById(id);
   }
 
   public Workpack findById(final Long id) {
@@ -666,10 +649,10 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
       properties
     );
     validateWorkpack(workpackUpdate);
-    final Workpack savedWorkpack = this.save(workpackUpdate);
+    final Workpack savedWorkpack = this.workpackRepository.save(workpackUpdate);
     if (workpack instanceof Milestone) {
-      final boolean concluded = milestoneRepository.isConcluded(workpackId);
-      final boolean onActualBaseline = milestoneRepository.isOnActualBaseline(workpackId);
+      final boolean concluded = this.milestoneRepository.isConcluded(workpackId);
+      final boolean onActualBaseline = this.milestoneRepository.isOnActualBaseline(workpackId);
       savedWorkpack.setReasonRequired(!concluded && onActualBaseline && dateHasChanged.test(workpackId));
     } else {
       savedWorkpack.setReasonRequired(false);
@@ -760,18 +743,29 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
         final Date date = (Date) property;
         final LocalDateTime newDate = date.getValue();
         final LocalDateTime previousDate = dateUpdate.getValue();
+        if (newDate == null && previousDate == null) break;
         if (workpack != null) {
-          workpack.setNewDate(newDate.toLocalDate());
-          workpack.setPreviousDate(previousDate.toLocalDate());
+          Optional.ofNullable(newDate).map(LocalDateTime::toLocalDate)
+            .ifPresent(workpack::setNewDate);
+          Optional.ofNullable(previousDate).map(LocalDateTime::toLocalDate)
+            .ifPresent(workpack::setPreviousDate);
         }
-        final boolean dateChanged =
-          !previousDate.toLocalDate().isEqual(newDate.toLocalDate()) && !LocalDate.now().isEqual(newDate.toLocalDate());
-        hasDataChanged = idWorkpack ->
-          dateChanged &&
-          milestoneRepository.hasBaselineDateChanged(
-            idWorkpack,
-            newDate
-          );
+        final Boolean previousDateDifferentNewDate = Optional.ofNullable(previousDate)
+          .map(LocalDateTime::toLocalDate)
+          .map(value -> {
+            if (newDate == null) return false;
+            return !value.isEqual(newDate.toLocalDate());
+          })
+          .orElse(false);
+        final Boolean newDateDifferentNow = Optional.ofNullable(newDate)
+          .map(LocalDateTime::toLocalDate)
+          .map(value -> !LocalDate.now().isEqual(value))
+          .orElse(false);
+        final boolean dateChanged = previousDateDifferentNewDate && newDateDifferentNow;
+        hasDataChanged = idWorkpack -> dateChanged && this.milestoneRepository.hasBaselineDateChanged(
+          idWorkpack,
+          newDate
+        );
         dateUpdate.setValue(newDate);
         break;
       case TYPE_MODEL_NAME_TOGGLE:

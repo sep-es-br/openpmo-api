@@ -23,19 +23,11 @@ import br.gov.es.openpmo.service.office.OfficeService;
 import br.gov.es.openpmo.service.permissions.OfficePermissionService;
 import br.gov.es.openpmo.service.ui.BreadcrumbPlanHelper;
 import br.gov.es.openpmo.utils.ApplicationMessage;
-
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.CUSTOM_FILTER_NOT_FOUND;
@@ -265,5 +257,8 @@ public class PlanService implements BreadcrumbPlanHelper {
       .orElse(false);
   }
 
+  public boolean existsById(Long idPlan) {
+    return this.planRepository.existsById(idPlan);
+  }
 }
 

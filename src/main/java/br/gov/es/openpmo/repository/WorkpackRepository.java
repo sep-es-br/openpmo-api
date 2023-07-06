@@ -606,4 +606,8 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   )
   boolean hasChildren(@Param("idWorkpack") Long idWorkpack);
 
+  @Query("MATCH (w:Workpack), (p:Plan) " +
+          "WHERE id(w)=$idWorkpack AND id(p)=$idPlan " +
+          "CREATE (w)-[:BELONGS_TO{linked: false}]->(p)")
+  void createBelongsToRelationship(Long idWorkpack, Long idPlan);
 }

@@ -1,31 +1,13 @@
 package br.gov.es.openpmo.service.workpack;
 
-import br.gov.es.openpmo.dto.workpackmodel.DeliverableModelDto;
-import br.gov.es.openpmo.dto.workpackmodel.MilestoneModelDto;
-import br.gov.es.openpmo.dto.workpackmodel.OrganizerModelDto;
-import br.gov.es.openpmo.dto.workpackmodel.PortfolioModelDto;
-import br.gov.es.openpmo.dto.workpackmodel.ProgramModelDto;
-import br.gov.es.openpmo.dto.workpackmodel.ProjectModelDto;
-import br.gov.es.openpmo.dto.workpackmodel.WorkpackModelDto;
-import br.gov.es.openpmo.dto.workpackmodel.details.DeliverableModelDetailDto;
-import br.gov.es.openpmo.dto.workpackmodel.details.MilestoneModelDetailDto;
-import br.gov.es.openpmo.dto.workpackmodel.details.OrganizerModelDetailDto;
-import br.gov.es.openpmo.dto.workpackmodel.details.PortfolioModelDetailDto;
-import br.gov.es.openpmo.dto.workpackmodel.details.ProgramModelDetailDto;
-import br.gov.es.openpmo.dto.workpackmodel.details.ProjectModelDetailDto;
-import br.gov.es.openpmo.dto.workpackmodel.details.WorkpackModelDetailDto;
+import br.gov.es.openpmo.dto.workpackmodel.*;
+import br.gov.es.openpmo.dto.workpackmodel.details.*;
 import br.gov.es.openpmo.dto.workpackmodel.params.WorkpackModelParamDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.*;
 import br.gov.es.openpmo.enumerator.Session;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.properties.models.*;
-import br.gov.es.openpmo.model.workpacks.models.DeliverableModel;
-import br.gov.es.openpmo.model.workpacks.models.MilestoneModel;
-import br.gov.es.openpmo.model.workpacks.models.OrganizerModel;
-import br.gov.es.openpmo.model.workpacks.models.PortfolioModel;
-import br.gov.es.openpmo.model.workpacks.models.ProgramModel;
-import br.gov.es.openpmo.model.workpacks.models.ProjectModel;
-import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
+import br.gov.es.openpmo.model.workpacks.models.*;
 import br.gov.es.openpmo.repository.WorkpackModelRepository;
 import br.gov.es.openpmo.service.actors.OrganizationService;
 import br.gov.es.openpmo.service.office.DomainService;
@@ -42,22 +24,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_MODEL_DELETE_RELATIONSHIP_ERROR;
-import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_UPDATE_TYPE_ERROR;
-import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACKMODEL_NOT_FOUND;
-import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_MODEL_MILESTONE_DELIVERABLE_PROGRAM_ERROR;
+import static br.gov.es.openpmo.utils.ApplicationMessage.*;
 
 @Service
 public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
