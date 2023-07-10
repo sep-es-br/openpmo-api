@@ -7,10 +7,17 @@ import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.WorkpackRepository;
+import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessData;
+import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessDataResponse;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Component
 public class GetWorkpackBreakdownStructure {
@@ -19,12 +26,16 @@ public class GetWorkpackBreakdownStructure {
 
   private final WorkpackRepository workpackRepository;
 
+  private final ICanAccessData canAccessData;
+
   public GetWorkpackBreakdownStructure(
     final GetWorkpackRepresentation getWorkpackRepresentation,
-    final WorkpackRepository workpackRepository
+    final WorkpackRepository workpackRepository,
+    final ICanAccessData canAccessData
   ) {
     this.getWorkpackRepresentation = getWorkpackRepresentation;
     this.workpackRepository = workpackRepository;
+    this.canAccessData = canAccessData;
   }
 
   private static Set<Workpack> getWorkpacks(
@@ -46,7 +57,8 @@ public class GetWorkpackBreakdownStructure {
 
   public WorkpackBreakdownStructure execute(
     final Long idWorkpack,
-    final Boolean allLevels
+    final Boolean allLevels,
+    final String authorization
   ) {
     if (idWorkpack == null) {
       throw new IllegalStateException("Id do workpack nulo!");
@@ -56,6 +68,9 @@ public class GetWorkpackBreakdownStructure {
     final WorkpackModel model = workpack.getWorkpackModelInstance();
     final WorkpackBreakdownStructure rootStructure = new WorkpackBreakdownStructure();
     if (model == null) {
+      return null;
+    }
+    if (this.hasOnlyBasicReadPermission(idWorkpack, authorization)) {
       return null;
     }
     final List<WorkpackModelBreakdownStructure> children = this.getChildren(
@@ -69,6 +84,17 @@ public class GetWorkpackBreakdownStructure {
     rootStructure.setWorkpackModels(children);
     rootStructure.setRepresentation(this.getWorkpackRepresentation.execute(workpack));
     return rootStructure;
+  }
+
+  private boolean hasOnlyBasicReadPermission(final Long idWorkpack, final String authorization) {
+    final ICanAccessDataResponse canAccessData = this.canAccessData.execute(idWorkpack, authorization);
+    if (canAccessData.getEdit()) {
+      return false;
+    }
+    if (canAccessData.getRead()) {
+      return false;
+    }
+    return canAccessData.getBasicRead();
   }
 
   private List<WorkpackModelBreakdownStructure> getChildren(
@@ -112,11 +138,12 @@ public class GetWorkpackBreakdownStructure {
       workpackModelBreakdownStructure.setWorkpacks(workpackBreakdownStructures);
       structures.add(workpackModelBreakdownStructure);
     }
-    structures.sort(Comparator.comparing(WorkpackModelBreakdownStructure::getRepresentationPosition)
-      .thenComparing(
-        WorkpackModelBreakdownStructure::getName,
-        Comparator.nullsLast(Comparator.naturalOrder())
-      ));
+    structures.sort(
+      Comparator.comparing(WorkpackModelBreakdownStructure::getRepresentationPosition)
+        .thenComparing(
+          WorkpackModelBreakdownStructure::getName,
+          Comparator.nullsLast(Comparator.naturalOrder())
+        ));
     return structures;
   }
 

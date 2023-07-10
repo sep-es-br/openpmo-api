@@ -46,7 +46,8 @@ public class WorkpackBreakdownStructureController {
     );
     final WorkpackBreakdownStructure structure = this.getWorkpackBreakdownStructure.execute(
       idWorkpack,
-      allLevels
+      allLevels,
+      authorization
     );
     return this.responseHandler.success(structure);
   }
