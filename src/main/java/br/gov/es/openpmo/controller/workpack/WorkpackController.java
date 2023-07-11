@@ -7,7 +7,13 @@ import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.completed.CompleteWorkpackRequest;
 import br.gov.es.openpmo.dto.dashboards.v2.SimpleDashboard;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
-import br.gov.es.openpmo.dto.workpack.*;
+import br.gov.es.openpmo.dto.workpack.EndDeliverableManagementRequest;
+import br.gov.es.openpmo.dto.workpack.ResponseBaseWorkpack;
+import br.gov.es.openpmo.dto.workpack.ResponseBaseWorkpackDetail;
+import br.gov.es.openpmo.dto.workpack.WorkpackDetailDto;
+import br.gov.es.openpmo.dto.workpack.WorkpackHasChildrenResponse;
+import br.gov.es.openpmo.dto.workpack.WorkpackNameResponse;
+import br.gov.es.openpmo.dto.workpack.WorkpackParamDto;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.journals.JournalAction;
 import br.gov.es.openpmo.model.workpacks.Milestone;
@@ -29,7 +35,17 @@ import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import java.util.Arrays;
@@ -399,6 +415,7 @@ public class WorkpackController {
     return ResponseEntity.ok(response);
   }
 
+  // TODO: revisar url desse endpoint
   @GetMapping("/{id-workpack}/has-children")
   public ResponseEntity<ResponseBase<WorkpackHasChildrenResponse>> hasChildren(
     @Authorization final String authorization,
@@ -406,9 +423,7 @@ public class WorkpackController {
   ) {
     this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
 
-    final boolean hasChildren = this.workpackHasChildren.execute(idWorkpack);
-
-    final WorkpackHasChildrenResponse response = new WorkpackHasChildrenResponse(hasChildren);
+    final WorkpackHasChildrenResponse response = this.workpackHasChildren.execute(idWorkpack, authorization);
 
     return ResponseEntity.ok(ResponseBase.of(response));
   }
