@@ -57,8 +57,10 @@ public interface WorkpackModelRepository extends Neo4jRepository<WorkpackModel, 
          + "  [(wm)<-[i:IS_IN*]-(wm2:WorkpackModel)-[:BELONGS_TO]->(:PlanModel) | [i,wm2] ], "
          + "  [(wm)<-[features:FEATURES]-(propertyModel:PropertyModel) | [features, propertyModel] ], "
          + "  [(wm2)<-[features2:FEATURES]-(propertyModel2:PropertyModel) | [features2, propertyModel2] ], "
+         + "  [(wm)-[isSortedBy1:IS_SORTED_BY]->(sorter1:PropertyModel) | [isSortedBy1, sorter1] ], "
+         + "  [(wm2)-[isSortedBy2:IS_SORTED_BY]->(sorter2:PropertyModel) | [isSortedBy2, sorter2] ], "
          + "  [(propertyModel)-[groups:GROUPS]->(groupedProperty:PropertyModel) | [groups, groupedProperty] ], "
-         + "  [(propertyModel)-[groups2:GROUPS]->(groupedProperty2:PropertyModel) | [groups2, groupedProperty2] ] "
+         + "  [(propertyModel2)-[groups2:GROUPS]->(groupedProperty2:PropertyModel) | [groups2, groupedProperty2] ] "
          + "] ")
   Set<WorkpackModel> findAllByIdPlanModelWithChildren(@Param("id") Long id);
 
@@ -137,5 +139,5 @@ public interface WorkpackModelRepository extends Neo4jRepository<WorkpackModel, 
     "RETURN max(wm2.position)"
   )
   Long findActualPosition(@Param("idWorkpackModel") Long idWorkpackModel);
-  
+
 }

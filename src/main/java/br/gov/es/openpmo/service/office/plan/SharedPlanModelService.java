@@ -63,6 +63,7 @@ public class SharedPlanModelService {
 
   private static void cleanUpProperty(final PropertyModel property) {
     property.setId(null);
+    property.setSorts(null);
 
     if(property instanceof GroupModel) {
       cleanUpGroupedProperty(((GroupModel) property).getGroupedProperties());
@@ -97,6 +98,7 @@ public class SharedPlanModelService {
     newModel.setPlanModel(null);
     newModel.setChildren(new HashSet<>());
     newModel.setParent(new HashSet<>());
+    newModel.setSortBy(null);
     this.cleanUpPropertiesModel(newModel);
   }
 
@@ -104,11 +106,14 @@ public class SharedPlanModelService {
     final Set<PropertyModel> properties = newModel.getProperties();
 
     if(properties == null) {
+      newModel.setSortBy(null);
       newModel.setProperties(new HashSet<>());
       return;
     }
 
     final Set<PropertyModel> newProperties = new HashSet<>();
+
+    final PropertyModel sortPropertyModel = this.findPropertyModelSort(properties);
 
     for(final PropertyModel property : properties) {
       cleanUpProperty(property);
@@ -116,6 +121,14 @@ public class SharedPlanModelService {
     }
 
     newModel.setProperties(newProperties);
+    newModel.setSortBy(sortPropertyModel);
+  }
+
+  private PropertyModel findPropertyModelSort(Set<PropertyModel> properties) {
+    return properties.stream()
+      .filter(PropertyModel::isSortProperty)
+      .findFirst()
+      .orElse(null);
   }
 
   private void copyChildren(
