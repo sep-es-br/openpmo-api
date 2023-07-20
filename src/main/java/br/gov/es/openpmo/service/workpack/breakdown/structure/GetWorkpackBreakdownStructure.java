@@ -63,8 +63,7 @@ public class GetWorkpackBreakdownStructure {
     if (idWorkpack == null) {
       throw new IllegalStateException("Id do workpack nulo!");
     }
-    final Workpack workpack = this.workpackRepository.findWorkpackWithModelStructureById(idWorkpack)
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
+    final Workpack workpack = getWorkpack(idWorkpack, allLevels);
     final WorkpackModel model = workpack.getWorkpackModelInstance();
     final WorkpackBreakdownStructure rootStructure = new WorkpackBreakdownStructure();
     if (model == null) {
@@ -84,6 +83,15 @@ public class GetWorkpackBreakdownStructure {
     rootStructure.setWorkpackModels(children);
     rootStructure.setRepresentation(this.getWorkpackRepresentation.execute(workpack));
     return rootStructure;
+  }
+
+  private Workpack getWorkpack(Long idWorkpack, Boolean allLevels) {
+    if (allLevels) {
+      return this.workpackRepository.findWorkpackWithModelStructureById(idWorkpack)
+        .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
+    }
+    return this.workpackRepository.findWorkpackWithModelStructureByIdFirstLevel(idWorkpack)
+      .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
   }
 
   private boolean hasOnlyBasicReadPermission(final Long idWorkpack, final String authorization) {

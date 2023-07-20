@@ -264,7 +264,8 @@ public class PersonService {
       .filter(Objects::nonNull)
       .collect(Collectors.toSet());
 
-    final List<PlanPermissionDetailDto> planDetail = this.createPlanDetail(permissions);
+    BitSet toRemove = new BitSet();
+    final List<PlanPermissionDetailDto> planDetail = this.createPlanDetail(permissions, toRemove);
 
     if(canAccessOffices.isEmpty()) {
       final Set<CanAccessPlan> canAccessPlan = permissions.stream()
@@ -309,7 +310,7 @@ public class PersonService {
     return result;
   }
 
-  private List<PlanPermissionDetailDto> createPlanDetail(final Iterable<PersonPermissionDetailQuery> permissions) {
+  private List<PlanPermissionDetailDto> createPlanDetail(final List<PersonPermissionDetailQuery> permissions, BitSet toRemove) {
     final List<PlanPermissionDetailDto> result = new ArrayList<>();
 
     for(final PersonPermissionDetailQuery permission : permissions) {
@@ -325,10 +326,11 @@ public class PersonService {
         plan,
         permissions,
         PersonPermissionDetailQuery::getPlan,
-        PersonPermissionDetailQuery::getCanAccessPlan
+        PersonPermissionDetailQuery::getCanAccessPlan,
+        null
       );
 
-      final List<WorkpackPermissionDetailDto> workpackDetail = this.createWorkpackDetail(plan, permissions);
+      final List<WorkpackPermissionDetailDto> workpackDetail = this.createWorkpackDetail(plan, permissions, toRemove);
 
       if(canAccessPlan.isEmpty()) {
         final boolean allNone = workpackDetail.stream()
@@ -367,16 +369,29 @@ public class PersonService {
 
   private List<WorkpackPermissionDetailDto> createWorkpackDetail(
     final Plan plan,
-    final Iterable<PersonPermissionDetailQuery> permissions
+    final List<PersonPermissionDetailQuery> permissions,
+    final BitSet toRemove
   ) {
     final List<WorkpackPermissionDetailDto> result = new ArrayList<>();
 
-    final Set<Workpack> workpacks = this.extractFrom(plan, permissions,
-                                                      PersonPermissionDetailQuery::getPlan,
-                                                      PersonPermissionDetailQuery::getWorkpack
+    final Set<Workpack> workpacks = this.extractFrom(
+      plan,
+      permissions,
+      PersonPermissionDetailQuery::getPlan,
+      PersonPermissionDetailQuery::getWorkpack,
+      toRemove
     );
 
-    for(final PersonPermissionDetailQuery permission : permissions) {
+    final List<PersonPermissionDetailQuery> permissionsFiltered = permissions.stream()
+      .filter(
+        personPermissionDetailQuery ->
+          personPermissionDetailQuery.getCanAccessWorkpack() != null
+            || personPermissionDetailQuery.getIsStakeholderIn() != null
+            || personPermissionDetailQuery.getIsCCBMemberFor() != null
+      )
+      .collect(Collectors.toList());
+
+    for(final PersonPermissionDetailQuery permission : permissionsFiltered) {
       final Workpack workpack = permission.getWorkpack();
 
       if(workpack == null
@@ -390,21 +405,24 @@ public class PersonService {
         workpack,
         permissions,
         PersonPermissionDetailQuery::getWorkpack,
-        PersonPermissionDetailQuery::getCanAccessWorkpack
+        PersonPermissionDetailQuery::getCanAccessWorkpack,
+        null
       );
 
       final Set<IsCCBMemberFor> isCCBMemberFors = this.extractFrom(
         workpack,
         permissions,
         PersonPermissionDetailQuery::getWorkpack,
-        PersonPermissionDetailQuery::getIsCCBMemberFor
+        PersonPermissionDetailQuery::getIsCCBMemberFor,
+        null
       );
 
       final Set<IsStakeholderIn> isStakeholderIns = this.extractFrom(
         workpack,
         permissions,
         PersonPermissionDetailQuery::getWorkpack,
-        PersonPermissionDetailQuery::getIsStakeholderIn
+        PersonPermissionDetailQuery::getIsStakeholderIn,
+        null
       );
 
       final WorkpackPermissionDetailDto item = new WorkpackPermissionDetailDto();
@@ -502,14 +520,17 @@ public class PersonService {
 
   private <R> Set<R> extractFrom(
     @NotNull final Entity entity,
-    final Iterable<PersonPermissionDetailQuery> permissions,
+    final List<PersonPermissionDetailQuery> permissions,
     final Function<PersonPermissionDetailQuery, Entity> entitySupplier,
-    final Function<PersonPermissionDetailQuery, R> relationshipSupplier
+    final Function<PersonPermissionDetailQuery, R> relationshipSupplier,
+    final BitSet toRemove
   ) {
     final Long id = entity.getId();
     final Set<R> result = new HashSet<>();
 
-    for(final PersonPermissionDetailQuery permission : permissions) {
+    for (int i = 0, permissionsSize = permissions.size(); i < permissionsSize; i++) {
+      if (toRemove != null && toRemove.get(i)) continue;
+      PersonPermissionDetailQuery permission = permissions.get(i);
       final Entity other = entitySupplier.apply(permission);
       if(other == null) {
         continue;
@@ -520,9 +541,11 @@ public class PersonService {
         if (relationship instanceof PermissionEntityProvider) {
           if (entity == ((PermissionEntityProvider) relationship).getPermissionEntity()) {
             result.add(relationship);
+            if (toRemove != null) toRemove.set(i);
           }
         } else {
           result.add(relationship);
+          if (toRemove != null) toRemove.set(i);
         }
       }
     }

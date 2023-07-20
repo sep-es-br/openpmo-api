@@ -38,6 +38,17 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
          "]")
   Optional<Workpack> findWorkpackWithModelStructureById(Long id);
 
+  @Query("MATCH (w1:Workpack) " +
+    "WHERE id(w1)=$id " +
+    "RETURN w1, [ " +
+    " [(w1)-[iib1:IS_INSTANCE_BY]->(wm1:WorkpackModel)<-[ii1:IS_IN*..1]-(wm2:WorkpackModel)<-[iib2:IS_INSTANCE_BY]-" +
+    "(w2:Workpack)-[ii2:IS_IN*..1]->(w1) | [iib1, wm1, ii1, wm2, iib2, w2, ii2]], " +
+    " [(w1)<-[f1:FEATURES]-(p1) | [f1, p1]], " +
+    " [(w1)<-[:IS_IN*..1]-(w2)<-[f2:FEATURES]-(p2:Property)-[idb1:IS_DRIVEN_BY]->(pm1:PropertyModel)<-[isb1:IS_SORTED_BY]-" +
+    "(wm3:WorkpackModel)<-[:IS_INSTANCE_BY]-(w2) | [f2, p2, idb1, pm1, isb1, wm3]] " +
+    "]")
+  Optional<Workpack> findWorkpackWithModelStructureByIdFirstLevel(Long id);
+
   @Query("MATCH (w:Workpack)<-[f:FEATURES]-(p:Property) " +
          "MATCH (p)-[v:VALUES]->(u:UnitMeasure) " +
          "WHERE id(w)=$id  RETURN w, f, p, v, u")
@@ -99,7 +110,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
           "    apoc.text.levenshteinSimilarity(apoc.text.clean(fullName1.value), apoc.text.clean($term)) AS fullNameScore1 " +
           "WITH *, CASE WHEN nameScore1 > fullNameScore1 THEN nameScore1 ELSE fullNameScore1 END AS score1 " +
           "OPTIONAL MATCH " +
-          "    (v:Workpack{deleted:false})-[:IS_LINKED_TO]->(wm), " +
+          "    (p)<-[:IS_IN]-(v:Workpack{deleted:false})-[:IS_LINKED_TO]->(wm), " +
           "    (v)-[bt2:BELONGS_TO]->(pl), " +
           "    (v)<-[:FEATURES]-(name2:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}), " +
           "    (v)<-[:FEATURES]-(fullName2:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'fullName'}) " +
@@ -488,14 +499,10 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   @Query("MATCH (workpack:Workpack{deleted:false,canceled:false}) " +
          "WHERE id(workpack)=$workpackId " +
          "OPTIONAL MATCH (workpack)<-[:FEATURES]-(schedule1:Schedule) " +
-         "WITH workpack, schedule1 " +
-         "OPTIONAL MATCH (workpack)<-[:IS_IN*]-(:Workpack{deleted:false,canceled:false})<-[:FEATURES]-" +
-         "(schedule2:Schedule) " +
-         "WITH workpack, schedule1, schedule2 " +
+         "OPTIONAL MATCH (workpack)<-[:IS_IN*]-(:Deliverable{deleted:false,canceled:false})<-[:FEATURES]-(schedule2:Schedule) " +
          "OPTIONAL MATCH (workpack)<-[:FEATURES]-(date1:Date) " +
-         "WITH workpack, schedule1, schedule2, date1 " +
          "OPTIONAL MATCH (workpack)<-[:IS_IN*]-(:Milestone{deleted:false,canceled:false})<-[:FEATURES]-(date2:Date) " +
-         "WITH workpack, schedule1, schedule2, date1, date2 " +
+         "WITH * " +
          "WITH " +
          "    collect(DISTINCT datetime(schedule1.end)) + " +
          "    collect(DISTINCT datetime(schedule2.end)) AS scheduleEndDates, " +

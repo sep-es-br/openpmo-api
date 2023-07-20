@@ -337,42 +337,27 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
     @Query("MATCH (b:Baseline)<-[:IS_BASELINED_BY]-(p:Project{deleted:false})<-[:IS_SNAPSHOT_OF]-(ps:Project) " +
             "WHERE id(b) IN $baselineIds " +
             "OPTIONAL MATCH (w:Workpack{deleted:false})<-[:IS_IN*]->(p) " +
+            "WITH * " +
             "WHERE id(w)=$workpackId " +
-            "WITH b,p,ps,w " +
-            "OPTIONAL MATCH (d:Deliverable{deleted:false})-[:IS_IN*]->(p) " +
-            "WHERE id(d)=$workpackId " +
-            "WITH b,p,ps,w,d " +
-            "OPTIONAL MATCH (m:Milestone{deleted:false})-[:IS_IN*]->(p) " +
-            "WHERE id(m)=$workpackId " +
-            "WITH b,p,ps,w,d,m " +
-            "OPTIONAL MATCH (w)<-[:IS_IN*]-(:Deliverable{deleted:false})-[:FEATURES]-(:Schedule)<-[:IS_SNAPSHOT_OF]-(s1:Schedule)" +
-            "-[:COMPOSES]->(b) " +
-            "WITH b,p,ps,w,d,m,s1 " +
-            "OPTIONAL MATCH (w)<-[:IS_IN*]-(:Milestone{deleted:false})<-[:FEATURES]-(:Date)<-[:IS_SNAPSHOT_OF]-(d1:Date)" +
-            "-[:COMPOSES]->(b) " +
-            "WITH b,p,ps,w,d,m,s1,d1 " +
-            "OPTIONAL MATCH (d)-[:FEATURES]-(:Schedule)<-[:IS_SNAPSHOT_OF]-(s2:Schedule)-[:COMPOSES]->(b) " +
-            "WITH b,p,ps,w,d,m,s1,d1,s2 " +
-            "OPTIONAL MATCH (m)<-[:FEATURES]-(:Date)<-[:IS_SNAPSHOT_OF]-(d2:Date)-[:COMPOSES]->(baseline) " +
-            "WITH b,p,ps,w,d,m,s1,d1,s2,d2 " +
-            "OPTIONAL MATCH (p)<-[:IS_IN*]-(:Deliverable{deleted:false})-[:FEATURES]-(:Schedule)<-[:IS_SNAPSHOT_OF]-(s3:Schedule)" +
-            "-[:COMPOSES]->(b) " +
-            "WITH b,p,ps,w,d,m,s1,d1,s2,d2,s3 " +
-            "OPTIONAL MATCH (p)<-[:IS_IN*]-(:Milestone{deleted:false})<-[:FEATURES]-(:Date)<-[:IS_SNAPSHOT_OF]-(d3:Date)" +
-            "-[:COMPOSES]->(b) " +
-            "WITH b,p,ps,w,d,m,s1,d1,s2,d2,s3,d3 " +
+            "OPTIONAL MATCH (w)<-[:IS_IN*]-(:Deliverable{deleted:false})<-[:FEATURES]-(:Schedule)<-[:IS_SNAPSHOT_OF]-(s1:Schedule)-[:COMPOSES]->(b) " +
+            "OPTIONAL MATCH (w)<-[:IS_IN*]-(:Milestone{deleted:false})<-[:FEATURES]-(:Date)<-[:IS_SNAPSHOT_OF]-(d1:Date)-[:COMPOSES]->(b) " +
+            "OPTIONAL MATCH (w)<-[:FEATURES]-(:Schedule)<-[:IS_SNAPSHOT_OF]-(s2:Schedule)-[:COMPOSES]->(b) " +
+            "OPTIONAL MATCH (w)<-[:FEATURES]-(:Date)<-[:IS_SNAPSHOT_OF]-(d2:Date)-[:COMPOSES]->(baseline) " +
+            "OPTIONAL MATCH (p)<-[:IS_IN*]-(:Deliverable{deleted:false})<-[:FEATURES]-(:Schedule)<-[:IS_SNAPSHOT_OF]-(s3:Schedule)-[:COMPOSES]->(b) " +
+            "OPTIONAL MATCH (p)<-[:IS_IN*]-(:Milestone{deleted:false})<-[:FEATURES]-(:Date)<-[:IS_SNAPSHOT_OF]-(d3:Date)-[:COMPOSES]->(b) " +
+            "WITH * " +
             "WITH " +
             "    CASE id(w) WHEN $workpackId THEN collect(DISTINCT datetime(s1.start)) ELSE [] END + " +
-            "    CASE id(d) WHEN $workpackId THEN collect(DISTINCT datetime(s2.start)) ELSE [] END + " +
+            "    CASE id(w) WHEN $workpackId THEN collect(DISTINCT datetime(s2.start)) ELSE [] END + " +
             "    CASE id(p) WHEN $workpackId THEN collect(DISTINCT datetime(s3.start)) ELSE [] END + " +
             "    CASE id(w) WHEN $workpackId THEN collect(DISTINCT datetime(d1.value)) ELSE [] END + " +
-            "    CASE id(m) WHEN $workpackId THEN collect(DISTINCT datetime(d2.value)) ELSE [] END + " +
+            "    CASE id(w) WHEN $workpackId THEN collect(DISTINCT datetime(d2.value)) ELSE [] END + " +
             "    CASE id(p) WHEN $workpackId THEN collect(DISTINCT datetime(d3.value)) ELSE [] END AS startDatesList, " +
             "    CASE id(w) WHEN $workpackId THEN collect(DISTINCT datetime(s1.end)) ELSE [] END + " +
-            "    CASE id(d) WHEN $workpackId THEN collect(DISTINCT datetime(s2.end)) ELSE [] END + " +
+            "    CASE id(w) WHEN $workpackId THEN collect(DISTINCT datetime(s2.end)) ELSE [] END + " +
             "    CASE id(p) WHEN $workpackId THEN collect(DISTINCT datetime(s3.end)) ELSE [] END + " +
             "    CASE id(w) WHEN $workpackId THEN collect(DISTINCT datetime(d1.value)) ELSE [] END + " +
-            "    CASE id(m) WHEN $workpackId THEN collect(DISTINCT datetime(d2.value)) ELSE [] END + " +
+            "    CASE id(w) WHEN $workpackId THEN collect(DISTINCT datetime(d2.value)) ELSE [] END + " +
             "    CASE id(p) WHEN $workpackId THEN collect(DISTINCT datetime(d3.value)) ELSE [] END AS endDatesList " +
             "UNWIND startDatesList AS startDates " +
             "UNWIND endDatesList AS endDates " +

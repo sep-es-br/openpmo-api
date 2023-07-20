@@ -250,7 +250,7 @@ public class DashboardService implements IDashboardService {
     return Optional.of(parameters)
       .map(this::getTripleConstraintData)
       .map(data -> this.getTripleConstraintDataChart(workpackId, baselineId, yearMonth, data))
-      .orElse(Collections.singletonList(this.tripleConstraintService.build(parameters)));
+      .orElseGet(() -> Collections.singletonList(this.tripleConstraintService.build(parameters)));
   }
 
   private List<TripleConstraintDataChart> getTripleConstraintDataChart(
@@ -325,7 +325,7 @@ public class DashboardService implements IDashboardService {
       .map(Dashboard::getEarnedValueAnalysis)
       .map(json -> new Gson().fromJson(json, EarnedValueAnalysisData.class))
       .map(EarnedValueAnalysisData::getResponse)
-      .orElse(this.earnedValueAnalysisService.build(parameters));
+      .orElseGet(() -> this.earnedValueAnalysisService.build(parameters));
 
     if(earnedValueAnalysis == null) {
       return null;

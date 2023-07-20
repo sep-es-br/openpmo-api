@@ -90,23 +90,44 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
          "    AND " +
          "    ( " +
          "        ( " +
-         "            $workpackScope IS NOT NULL " +
-         "            AND " +
-         "            ((person)-[:IS_STAKEHOLDER_IN]->(workpack) OR (person)-[:IS_CCB_MEMBER_FOR]->(workpack)) " +
-         "            AND " +
-         "            id(workpack) IN $workpackScope " +
+         "            ( " +
+         "                $workpackScope IS NULL OR $workpackScope = [] AND " +
+         "                ((person)-[:IS_STAKEHOLDER_IN]->(workpack) OR (person)-[:IS_CCB_MEMBER_FOR]->(workpack)) " +
+         "            ) " +
+         "            OR " +
+         "            ( " +
+         "                $workpackScope IS NOT NULL " +
+         "                AND " +
+         "                ((person)-[:IS_STAKEHOLDER_IN]->(workpack) OR (person)-[:IS_CCB_MEMBER_FOR]->(workpack)) " +
+         "                AND " +
+         "                id(workpack) IN $workpackScope " +
+         "            ) " +
          "        ) " +
          "        OR " +
          "        ( " +
-         "            $planScope IS NOT NULL AND " +
-         "            (person)-[:CAN_ACCESS_PLAN]->(plan) AND " +
-         "            id(plan) IN $planScope " +
+         "            ( " +
+         "                $planScope IS NULL OR $planScope = [] AND " +
+         "                (person)-[:CAN_ACCESS_PLAN]->(plan) " +
+         "            ) " +
+         "            OR " +
+         "            ( " +
+         "                $planScope IS NOT NULL AND " +
+         "                (person)-[:CAN_ACCESS_PLAN]->(plan) AND " +
+         "                id(plan) IN $planScope " +
+         "            ) " +
          "        ) " +
          "        OR " +
          "        ( " +
-         "            $workpackScope IS NOT NULL AND " +
-         "            (person)-[:CAN_ACCESS_WORKPACK]->(workpack) AND " +
-         "            id(workpack) IN $workpackScope " +
+         "            ( " +
+         "                $workpackScope IS NULL OR $workpackScope = [] AND " +
+         "                (person)-[:CAN_ACCESS_WORKPACK]->(workpack) " +
+         "            ) " +
+         "            OR " +
+         "            ( " +
+         "                $workpackScope IS NOT NULL AND " +
+         "                (person)-[:CAN_ACCESS_WORKPACK]->(workpack) AND " +
+         "                id(workpack) IN $workpackScope " +
+         "            ) " +
          "        ) " +
          "        OR " +
          "        ( " +
@@ -114,8 +135,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
          "        ) " +
          "    ) " +
          "RETURN " +
-         "    DISTINCT person, " +
-         "    id(person) AS id, " +
+         "    DISTINCT id(person) AS id, " +
          "    person.name AS name, " +
          "    avatar, " +
          "    isInContactBookOf.email AS email")
