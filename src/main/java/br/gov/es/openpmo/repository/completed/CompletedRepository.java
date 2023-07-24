@@ -21,6 +21,9 @@ public interface CompletedRepository extends Neo4jRepository<Workpack, Long> {
   @Query("MATCH (w:Workpack)-[:IS_IN]->(p:Workpack) WHERE id(w)=$workpackId RETURN id(p)")
   Long getParentId(Long workpackId);
 
+  @Query("MATCH (w:Workpack)-[:IS_IN]->(p:Workpack) WHERE id(w)=$workpackId RETURN id(p)")
+  List<Long> getParentIds(Long workpackId);
+
   @Query("MATCH (parent:Workpack)<-[:IS_IN]-(sons:Workpack{deleted:false}) " +
          "WHERE id(parent)=$parentId " +
          "WITH collect(sons) AS allSons " +
