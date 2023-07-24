@@ -32,7 +32,7 @@ public interface DashboardDatasheetRepository extends Neo4jRepository<Workpack, 
          "WITH * " +
          "ORDER BY " +
          "    (s.role IN wm.organizationRoles), " +
-         "    [i IN RANGE(0, SIZE(wm.dashboardShowStakeholders)-1) WHERE toLower(wm.dashboardShowStakeholders[i]) = toLower(s.role)][0], " +
+         "    CASE WHEN wm.dashboardShowStakeholders IS NOT NULL THEN [i IN RANGE(0, SIZE(wm.dashboardShowStakeholders)-1) WHERE toLower(wm.dashboardShowStakeholders[i]) = toLower(s.role)][0] ELSE 0 END, " +
          "    a.name " +
          "WHERE " +
          "    ( " +

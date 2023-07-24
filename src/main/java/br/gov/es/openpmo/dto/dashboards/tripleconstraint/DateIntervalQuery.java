@@ -27,6 +27,10 @@ public class DateIntervalQuery {
     this.endDate = endDate;
   }
 
+  public static DateIntervalQuery empty() {
+    return new DateIntervalQuery(null, null);
+  }
+
   public List<YearMonth> toYearMonths() {
     if(!this.isValid()) {
       return new ArrayList<>();

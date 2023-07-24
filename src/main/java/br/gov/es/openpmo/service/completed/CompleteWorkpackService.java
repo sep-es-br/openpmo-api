@@ -10,6 +10,7 @@ import br.gov.es.openpmo.service.workpack.HasScheduleSessionActive;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.*;
 
@@ -86,15 +87,17 @@ public class CompleteWorkpackService implements ICompleteWorkpackService {
   }
 
   private void setAllIncomplete(final Long workpackId) {
-    final Long parentId = this.repository.getParentId(workpackId);
-    if (parentId == null) {
+    final List<Long> parentIds = this.repository.getParentIds(workpackId);
+    if (parentIds == null) {
       return;
     }
-    this.repository.setCompleted(
-      parentId,
-      false
-    );
-    this.setAllIncomplete(parentId);
+    for (Long parentId : parentIds) {
+      this.repository.setCompleted(
+        parentId,
+        false
+      );
+      this.setAllIncomplete(parentId);
+    }
   }
 
   private Workpack getWorkpack(final Long idDeliverable) {

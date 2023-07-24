@@ -33,15 +33,19 @@ public class DashboardEarnedValueByStepsService implements IDashboardEarnedValue
 
   private final BaselineRepository baselineRepository;
 
+  private final FindWorkpackBaselineInterval findWorkpackBaselineInterval;
+
   @Autowired
   public DashboardEarnedValueByStepsService(
     final EarnedValueAnalysisRepository repository,
     final WorkpackRepository workpackRepository,
-    final BaselineRepository baselineRepository
+    final BaselineRepository baselineRepository,
+    final FindWorkpackBaselineInterval findWorkpackBaselineInterval
   ) {
     this.repository = repository;
     this.workpackRepository = workpackRepository;
     this.baselineRepository = baselineRepository;
+    this.findWorkpackBaselineInterval = findWorkpackBaselineInterval;
   }
 
   @Override
@@ -130,7 +134,7 @@ public class DashboardEarnedValueByStepsService implements IDashboardEarnedValue
     final Long workpackId,
     final List<Long> idBaseline
   ) {
-    return this.baselineRepository.fetchIntervalOfSchedules(workpackId, idBaseline)
+    return this.findWorkpackBaselineInterval.execute(workpackId, idBaseline)
       .orElseThrow(() -> new NegocioException(INTERVAL_DATE_IN_BASELINE_NOT_FOUND));
   }
 

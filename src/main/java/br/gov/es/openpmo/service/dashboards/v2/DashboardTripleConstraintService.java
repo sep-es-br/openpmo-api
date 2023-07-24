@@ -16,12 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_NOT_FOUND;
@@ -34,17 +29,23 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
   private final BaselineRepository baselineRepository;
   private final ScheduleRepository scheduleRepository;
   private final IDashboardCostScopeService costScopeService;
+  private final FindWorkpackInterval findWorkpackInterval;
+  private final FindWorkpackBaselineInterval findWorkpackBaselineInterval;
 
   public DashboardTripleConstraintService(
     final WorkpackRepository workpackRepository,
     final BaselineRepository baselineRepository,
     final ScheduleRepository scheduleRepository,
-    final IDashboardCostScopeService costScopeService
+    final IDashboardCostScopeService costScopeService,
+    final FindWorkpackInterval findWorkpackInterval,
+    final FindWorkpackBaselineInterval findWorkpackBaselineInterval
   ) {
     this.workpackRepository = workpackRepository;
     this.baselineRepository = baselineRepository;
     this.scheduleRepository = scheduleRepository;
     this.costScopeService = costScopeService;
+    this.findWorkpackInterval = findWorkpackInterval;
+    this.findWorkpackBaselineInterval = findWorkpackBaselineInterval;
   }
 
   @Override
@@ -67,7 +68,7 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
   public Optional<List<TripleConstraintDataChart>> calculate(@NonNull final Long workpackId) {
     final List<Long> baselineIds = this.getActiveBaselineIds(workpackId);
 
-    return this.baselineRepository.fetchIntervalOfSchedules(workpackId, baselineIds)
+    return this.findWorkpackBaselineInterval.execute(workpackId, baselineIds)
       .filter(DateIntervalQuery::isValid)
       .map(DateIntervalQuery::toYearMonths)
       .map(months -> this.calculateForAllMonths(workpackId, months));
@@ -210,7 +211,7 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
     final Long workpackId,
     final List<Long> baselineIds
   ) {
-    return this.baselineRepository.fetchIntervalOfSchedules(workpackId, baselineIds)
+    return this.findWorkpackBaselineInterval.execute(workpackId, baselineIds)
       .orElseThrow(() -> new NegocioException(INTERVAL_DATE_IN_BASELINE_NOT_FOUND));
   }
 
@@ -228,7 +229,7 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
   }
 
   private DateIntervalQuery findIntervalInWorkpack(final Long workpackId) {
-    return this.workpackRepository.findIntervalInSchedulesChildrenOf(workpackId)
+    return this.findWorkpackInterval.execute(workpackId)
       .orElseThrow(() -> new NegocioException(INTERVAL_DATE_IN_BASELINE_NOT_FOUND));
   }
 

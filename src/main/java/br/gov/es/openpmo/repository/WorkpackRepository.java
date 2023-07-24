@@ -1,6 +1,5 @@
 package br.gov.es.openpmo.repository;
 
-import br.gov.es.openpmo.dto.dashboards.tripleconstraint.DateIntervalQuery;
 import br.gov.es.openpmo.dto.workpack.WorkpackName;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.workpacks.Deliverable;
@@ -495,27 +494,6 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
          "WITH workpack, project, plan " +
          "RETURN project")
   Optional<Project> findProjectInParentsOf(Long idWorkpack);
-
-  @Query("MATCH (workpack:Workpack{deleted:false,canceled:false}) " +
-         "WHERE id(workpack)=$workpackId " +
-         "OPTIONAL MATCH (workpack)<-[:FEATURES]-(schedule1:Schedule) " +
-         "OPTIONAL MATCH (workpack)<-[:IS_IN*]-(:Deliverable{deleted:false,canceled:false})<-[:FEATURES]-(schedule2:Schedule) " +
-         "OPTIONAL MATCH (workpack)<-[:FEATURES]-(date1:Date) " +
-         "OPTIONAL MATCH (workpack)<-[:IS_IN*]-(:Milestone{deleted:false,canceled:false})<-[:FEATURES]-(date2:Date) " +
-         "WITH * " +
-         "WITH " +
-         "    collect(DISTINCT datetime(schedule1.end)) + " +
-         "    collect(DISTINCT datetime(schedule2.end)) AS scheduleEndDates, " +
-         "    collect(DISTINCT datetime(schedule1.start)) + " +
-         "    collect(DISTINCT datetime(schedule2.start)) AS scheduleStartDates, " +
-         "    collect(DISTINCT datetime(date1.value)) + " +
-         "    collect(DISTINCT datetime(date2.value)) AS dates " +
-         "UNWIND (scheduleStartDates+dates) AS startDates " +
-         "UNWIND (scheduleEndDates+dates) AS unwindScheduleEndDates " +
-         "RETURN " +
-         "    min(startDates) AS initialDate, " +
-         "    max(unwindScheduleEndDates) AS endDate")
-  Optional<DateIntervalQuery> findIntervalInSchedulesChildrenOf(@Param("workpackId") Long workpackId);
 
   @Query("MATCH (d:Deliverable)-[:IS_IN*]->(p:Project) " +
          "WHERE id(d)=$idDeliverable " +

@@ -638,8 +638,7 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
       final WorkpackModel workpackModel = this.getWorkpackModelInstance();
       for (Property property : this.properties) {
         final PropertyModel propertyModel = property.getPropertyModel();
-        final WorkpackModel sorts = propertyModel.getSorts();
-        if (workpackModel == sorts) {
+        if (propertyModel != null && workpackModel == propertyModel.getSorts()) {
           return (Comparable) property.getValue();
         }
       }

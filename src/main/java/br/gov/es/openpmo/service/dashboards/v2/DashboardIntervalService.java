@@ -5,7 +5,6 @@ import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
-import br.gov.es.openpmo.repository.dashboards.DashboardRepository;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
@@ -21,18 +20,22 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_NOT_FOUND;
 @Service
 public class DashboardIntervalService implements IDashboardIntervalService {
 
-  private final DashboardRepository dashboardRepository;
+  private final FindWorkpackInterval findWorkpackInterval;
+
+  private final FindWorkpackBaselineInterval findWorkpackBaselineInterval;
 
   private final WorkpackRepository workpackRepository;
 
   private final BaselineRepository baselineRepository;
 
   public DashboardIntervalService(
-    final DashboardRepository dashboardRepository,
+    final FindWorkpackInterval findWorkpackInterval,
+    final FindWorkpackBaselineInterval findWorkpackBaselineInterval,
     final WorkpackRepository workpackRepository,
     final BaselineRepository baselineRepository
   ) {
-    this.dashboardRepository = dashboardRepository;
+    this.findWorkpackInterval = findWorkpackInterval;
+    this.findWorkpackBaselineInterval = findWorkpackBaselineInterval;
     this.workpackRepository = workpackRepository;
     this.baselineRepository = baselineRepository;
   }
@@ -58,12 +61,12 @@ public class DashboardIntervalService implements IDashboardIntervalService {
     final List<Long> baselineIds = this.getActiveBaselineIds(workpackId);
 
     if(baselineIds.isEmpty()) {
-      return this.workpackRepository.findIntervalInSchedulesChildrenOf(workpackId)
+      return this.findWorkpackInterval.execute(workpackId)
         .map(Interval::new)
         .orElse(null);
     }
 
-    return this.baselineRepository.fetchIntervalOfSchedules(workpackId, baselineIds)
+    return this.findWorkpackBaselineInterval.execute(workpackId, baselineIds)
       .map(Interval::new)
       .orElse(null);
   }

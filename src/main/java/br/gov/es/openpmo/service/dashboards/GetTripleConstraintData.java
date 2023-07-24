@@ -1,10 +1,7 @@
 package br.gov.es.openpmo.service.dashboards;
 
 import br.gov.es.openpmo.dto.dashboards.DashboardParameters;
-import br.gov.es.openpmo.dto.dashboards.tripleconstraint.CostAndScopeData;
-import br.gov.es.openpmo.dto.dashboards.tripleconstraint.DateIntervalQuery;
-import br.gov.es.openpmo.dto.dashboards.tripleconstraint.ScheduleDataChart;
-import br.gov.es.openpmo.dto.dashboards.tripleconstraint.TripleConstraintDataChart;
+import br.gov.es.openpmo.dto.dashboards.tripleconstraint.*;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.schedule.Schedule;
@@ -14,6 +11,7 @@ import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.ScheduleRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
+import br.gov.es.openpmo.service.dashboards.v2.FindWorkpackInterval;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -35,18 +33,21 @@ public class GetTripleConstraintData implements IGetTripleConstraintData {
   private final WorkpackRepository workpackRepository;
   private final ScheduleRepository scheduleRepository;
   private final IGetCostAndScope getStepTotalCost;
+  private final FindWorkpackInterval findWorkpackInterval;
 
   @Autowired
   public GetTripleConstraintData(
     final BaselineRepository repository,
     final WorkpackRepository workpackRepository,
     final ScheduleRepository scheduleRepository,
-    final IGetCostAndScope getStepTotalCost
+    final IGetCostAndScope getStepTotalCost,
+    final FindWorkpackInterval findWorkpackInterval
   ) {
     this.repository = repository;
     this.getStepTotalCost = getStepTotalCost;
     this.workpackRepository = workpackRepository;
     this.scheduleRepository = scheduleRepository;
+    this.findWorkpackInterval = findWorkpackInterval;
   }
 
   @Override
@@ -179,7 +180,7 @@ public class GetTripleConstraintData implements IGetTripleConstraintData {
   }
 
   private DateIntervalQuery findIntervalInProject(final Long idProject) {
-    return this.workpackRepository.findIntervalInSchedulesChildrenOf(idProject)
+    return this.findWorkpackInterval.execute(idProject)
       .orElseThrow(() -> new NegocioException(INTERVAL_DATE_IN_BASELINE_NOT_FOUND));
   }
 
