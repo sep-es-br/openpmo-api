@@ -63,13 +63,14 @@ public class JournalController {
       @RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") final LocalDate from,
       @RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") final LocalDate to,
       @RequestParam(required = false) final List<Integer> scope,
+      @RequestParam final Long idWorkpack,
       @RequestParam final List<JournalType> type,
       final UriComponentsBuilder uriComponentsBuilder,
-      final Pageable pageable,
-      @RequestHeader(name = "Authorization") final String authorization) {
+      final Pageable pageable
+  ) {
 
-    final Page<JournalResponse> responsePage = this.journalFinder.getAll(from, to, type, scope, uriComponentsBuilder,
-        pageable);
+    final Page<JournalResponse> responsePage =
+      this.journalFinder.getAll(from, to, type, scope, idWorkpack, uriComponentsBuilder, pageable);
 
     return PageResponse.of(responsePage);
   }

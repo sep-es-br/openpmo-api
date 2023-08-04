@@ -169,6 +169,9 @@ public class OfficePermissionService {
       final List<CanAccessOffice> permissionsFilteredByPerson = listOfficesPermission.stream()
         .filter(permission -> permission.getPerson().equals(person))
         .collect(Collectors.toList());
+      if (permissionsFilteredByPerson.isEmpty()) {
+        continue;
+      }
       this.fillPersonDto(idOffice, person, officePermissionItem, roles);
       officePermissionItem.setIdOffice(idOffice);
       this.fillPermissions(officePermissionItem, permissionsFilteredByPerson);

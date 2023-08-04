@@ -49,10 +49,11 @@ public class JournalFinder {
     final LocalDate to,
     final List<JournalType> journalType,
     final List<Integer> scope,
+    final Long idWorkpack,
     final UriComponentsBuilder uriComponentsBuilder,
     final Pageable pageable
   ) {
-    final List<JournalEntry> journalEntries = this.journalRepository.findAll(from, to, journalType, scope);
+    final List<JournalEntry> journalEntries = this.journalRepository.findAll(from, to, journalType, scope, idWorkpack);
 
     return getJournalEntryPage(journalEntries, pageable)
       .map(journalEntry -> this.getResponse(uriComponentsBuilder, journalEntry));

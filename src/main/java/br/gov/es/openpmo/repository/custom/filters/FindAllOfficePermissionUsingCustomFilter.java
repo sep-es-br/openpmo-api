@@ -1,12 +1,16 @@
 package br.gov.es.openpmo.repository.custom.filters;
 
 
+import br.gov.es.openpmo.enumerator.GeneralOperatorsEnum;
 import br.gov.es.openpmo.model.filter.CustomFilter;
+import br.gov.es.openpmo.model.filter.Rules;
 import br.gov.es.openpmo.repository.OfficePermissionRepository;
 import br.gov.es.openpmo.repository.custom.FindAllUsingCustomFilterBuilder;
 import org.neo4j.ogm.session.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.text.MessageFormat;
 
 @Service
 public class FindAllOfficePermissionUsingCustomFilter extends FindAllUsingCustomFilterBuilder {
@@ -29,7 +33,10 @@ public class FindAllOfficePermissionUsingCustomFilter extends FindAllUsingCustom
     final StringBuilder query
   ) {
     query.append("MATCH (person:Person)-[").append(this.nodeName).append(":CAN_ACCESS_OFFICE]->")
-      .append("(office:Office)").append(" ");
+      .append("(office:Office)").append(" ")
+      .append("OPTIONAL MATCH (person)-[contact:IS_IN_CONTACT_BOOK_OF]->(office)").append(" ")
+      .append("OPTIONAL MATCH (person)-[auth:IS_AUTHENTICATED_BY]->(:AuthService)").append(" ")
+      .append("WITH *").append(" ");
   }
 
   @Override
@@ -43,6 +50,34 @@ public class FindAllOfficePermissionUsingCustomFilter extends FindAllUsingCustom
   @Override
   public void buildReturnClause(final StringBuilder query) {
     query.append("RETURN ").append(this.nodeName).append(", office, person");
+  }
+
+  @Override
+  protected String buildCustomFilterRule(Rules rule, String label) {
+    if (rule.getRelationalOperator() == GeneralOperatorsEnum.CONTEM) {
+      switch (rule.getPropertyName()) {
+        case "name":
+          return MessageFormat.format("(person.name =~ ''.*'' + ${0} + ''.*'') ", label);
+        case "email":
+          return MessageFormat.format("((auth.email =~ ''.*'' + ${0} + ''.*'') or (contact.email =~ ''.*'' + ${0} + ''.*'')) ", label);
+        case "level":
+          return MessageFormat.format("(node.permissionLevel =~ ''.*'' + ${0} + ''.*'') ", label);
+        default:
+          throw new UnsupportedOperationException("Propriedade não suportada!");
+      }
+    } else {
+      final String operador = rule.getRelationalOperator().getOperador();
+      switch (rule.getPropertyName()) {
+        case "name":
+          return MessageFormat.format("(person.name {0} ${1}) ", operador, label);
+        case "email":
+          return MessageFormat.format("((auth.email {0} ${1}) or (contact.email {0} ${1}) ", operador, label);
+        case "level":
+          return MessageFormat.format("(node.permissionLevel {0} ${1}) ", operador, label);
+        default:
+          throw new UnsupportedOperationException("Propriedade não suportada!");
+      }
+    }
   }
 
   @Override
