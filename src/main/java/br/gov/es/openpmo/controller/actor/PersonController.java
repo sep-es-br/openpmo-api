@@ -5,6 +5,7 @@ import br.gov.es.openpmo.dto.ComboDto;
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.Response;
 import br.gov.es.openpmo.dto.ResponseBase;
+import br.gov.es.openpmo.dto.actor.PersonListFilterParameters;
 import br.gov.es.openpmo.dto.person.NameRequest;
 import br.gov.es.openpmo.dto.person.PersonCreateRequest;
 import br.gov.es.openpmo.dto.person.PersonDto;
@@ -69,27 +70,25 @@ public class PersonController {
         .orElseGet(() -> ResponseEntity.noContent().build());
   }
 
-  @GetMapping("/office/{officeScope}")
+  @PostMapping("/office/{officeScope}")
   public ResponseEntity<ResponseBase<List<PersonListDto>>> findAll(
-      @PathVariable final Long officeScope,
-      @RequestParam(value = "stakeholderStatus", required = false, defaultValue = "ALL") final StakeholderFilterEnum stakeholderStatus,
-      @RequestParam(value = "userStatus", required = false, defaultValue = "ALL") final UserFilterEnum userStatus,
-      @RequestParam(value = "ccbMemberStatus", required = false, defaultValue = "ALL") final CcbMemberFilterEnum ccbMemberStatus,
-      @RequestParam(value = "name", required = false) final String name,
-      @RequestParam(value = "planScope", required = false) final Long[] planScope,
-      @RequestParam(value = "workpackScope", required = false) final Long[] workpackScope,
-      final UriComponentsBuilder uriComponentsBuilder,
-      @Authorization final String authorization) {
+    @PathVariable final Long officeScope,
+    @RequestBody final PersonListFilterParameters parameters,
+    final UriComponentsBuilder uriComponentsBuilder,
+    @Authorization final String authorization
+  ) {
     this.canAccessService.ensureCanAccessManagementResource(officeScope, authorization);
+
     final List<PersonListDto> persons = this.personService.findAll(
-        stakeholderStatus,
-        userStatus,
-        ccbMemberStatus,
-        name,
-        officeScope,
-        planScope,
-        workpackScope,
-        uriComponentsBuilder);
+      parameters.getStakeholderStatus(),
+      parameters.getUserStatus(),
+      parameters.getCcbMemberStatus(),
+      parameters.getName(),
+      officeScope,
+      parameters.getPlanScope(),
+      parameters.getWorkpackScope(),
+      uriComponentsBuilder
+    );
 
     return ResponseEntity.ok(ResponseBase.of(persons));
   }
