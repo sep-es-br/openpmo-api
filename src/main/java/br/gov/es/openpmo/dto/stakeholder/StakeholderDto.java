@@ -4,6 +4,7 @@ import br.gov.es.openpmo.dto.organization.OrganizationDto;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.dto.person.PersonDto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,13 +14,13 @@ public class StakeholderDto {
   private final List<PermissionDto> permissions = new ArrayList<>(0);
   private final List<RoleDto> roles = new ArrayList<>(0);
   private Long idWorkpack;
+  @JsonIgnoreProperties(value = {"score"})
   private PersonDto person;
   private OrganizationDto organization;
 
   @JsonIgnore
   private boolean isPerson;
-  @JsonIgnore
-  private Double score;
+  private double score;
 
   public Long getIdWorkpack() {
     return this.idWorkpack;
@@ -59,11 +60,11 @@ public class StakeholderDto {
     return this.permissions;
   }
 
-  public Double getScore() {
+  public double getScore() {
     return this.score;
   }
 
-  public void setScore(final Double score) {
+  public void setScore(final double score) {
     this.score = score;
   }
 

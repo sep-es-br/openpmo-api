@@ -1,6 +1,6 @@
 package br.gov.es.openpmo.dto;
 
-import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -12,11 +12,18 @@ public class PageResponse<T> {
 
   private int pageSize;
 
-  public static <T> PageResponse<T> of(final Slice<T> data) {
+  private int totalPages;
+
+  private long totalRecords;
+
+
+  public static <T> PageResponse<T> of(final Page<T> data) {
     final PageResponse<T> pageResponse = new PageResponse<>();
     pageResponse.data = data.getContent();
     pageResponse.page = data.getNumber();
     pageResponse.pageSize = data.getSize();
+    pageResponse.totalRecords = data.getTotalElements();
+    pageResponse.totalPages = data.getTotalPages();
     return pageResponse;
   }
 
@@ -44,4 +51,19 @@ public class PageResponse<T> {
     this.pageSize = pageSize;
   }
 
+  public long getTotalRecords() {
+    return this.totalRecords;
+  }
+
+  public void setTotalRecords(final int totalRecords) {
+    this.totalRecords = totalRecords;
+  }
+
+  public int getTotalPages() {
+    return this.totalPages;
+  }
+
+  public void setTotalPages(final int totalPages) {
+    this.totalPages = totalPages;
+  }
 }

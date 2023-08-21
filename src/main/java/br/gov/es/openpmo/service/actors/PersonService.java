@@ -1,7 +1,11 @@
 package br.gov.es.openpmo.service.actors;
 
 import br.gov.es.openpmo.dto.ComboDto;
-import br.gov.es.openpmo.dto.person.*;
+import br.gov.es.openpmo.dto.person.PersonCreateRequest;
+import br.gov.es.openpmo.dto.person.PersonDto;
+import br.gov.es.openpmo.dto.person.PersonGetByIdDto;
+import br.gov.es.openpmo.dto.person.PersonListDto;
+import br.gov.es.openpmo.dto.person.PersonUpdateDto;
 import br.gov.es.openpmo.dto.person.detail.PersonDetailDto;
 import br.gov.es.openpmo.dto.person.detail.permissions.OfficePermissionDetailDto;
 import br.gov.es.openpmo.dto.person.detail.permissions.PlanPermissionDetailDto;
@@ -22,7 +26,13 @@ import br.gov.es.openpmo.model.actors.AuthService;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.office.plan.Plan;
-import br.gov.es.openpmo.model.relations.*;
+import br.gov.es.openpmo.model.relations.CanAccessOffice;
+import br.gov.es.openpmo.model.relations.CanAccessPlan;
+import br.gov.es.openpmo.model.relations.CanAccessWorkpack;
+import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
+import br.gov.es.openpmo.model.relations.IsCCBMemberFor;
+import br.gov.es.openpmo.model.relations.IsInContactBookOf;
+import br.gov.es.openpmo.model.relations.IsStakeholderIn;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.IsCCBMemberRepository;
@@ -31,12 +41,23 @@ import br.gov.es.openpmo.repository.PersonRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.validation.constraints.NotNull;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
@@ -168,10 +189,9 @@ public class PersonService {
 
     this.createAuthenticationRelationship(dto.getKey(), dto.getEmail(), dto.getGuid(), person);
 
-    if(dto.hasAnyContactInformationData()) {
+    if (dto.hasAnyContactInformationData()) {
       this.createContactRelationshipUsingDto(idOffice, person, dto);
-    }
-    else {
+    } else {
       this.createContactRelationshipUsingEmail(dto.getEmail(), idOffice, person);
     }
 
@@ -200,7 +220,7 @@ public class PersonService {
     this.isInContactBookOfService.save(isInContactBookOf);
   }
 
-  public List<PersonListDto> findAll(
+  public Page<PersonListDto> findAll(
     final StakeholderFilterEnum stakeholderFilter,
     final UserFilterEnum userFilter,
     final CcbMemberFilterEnum ccbMemberFilter,
@@ -208,6 +228,7 @@ public class PersonService {
     final Long officeScope,
     final Long[] planScope,
     final Long[] workpackScope,
+    final Pageable pageable,
     final UriComponentsBuilder uriComponentsBuilder
   ) {
     return this.repository.findAllFilteringBy(
@@ -217,11 +238,10 @@ public class PersonService {
         name.isEmpty() ? null : name,
         officeScope,
         planScope,
-        workpackScope
+        workpackScope,
+        pageable
       )
-      .stream()
-      .map(query -> new PersonListDto(query, uriComponentsBuilder))
-      .collect(Collectors.toList());
+      .map(query -> new PersonListDto(query, uriComponentsBuilder));
   }
 
   public PersonDetailDto findPersonDetailsById(
@@ -232,15 +252,18 @@ public class PersonService {
 
     final Optional<PersonDetailQuery> maybeQuery = this.repository.findPersonDetailsBy(personId, officeId);
 
-    if(!maybeQuery.isPresent()) {
+    if (!maybeQuery.isPresent()) {
       return null;
     }
 
     final PersonDetailDto personDetailDto = new PersonDetailDto(maybeQuery.get(), uriComponentsBuilder);
 
-    final List<PersonPermissionDetailQuery> permissions = new ArrayList<>(this.repository.findPermissions(personId, officeId));
+    final List<PersonPermissionDetailQuery> permissions = new ArrayList<>(this.repository.findPermissions(
+      personId,
+      officeId
+    ));
 
-    if(permissions.isEmpty()) {
+    if (permissions.isEmpty()) {
       return personDetailDto;
     }
 
@@ -264,37 +287,33 @@ public class PersonService {
       .filter(Objects::nonNull)
       .collect(Collectors.toSet());
 
-    BitSet toRemove = new BitSet();
+    final BitSet toRemove = new BitSet();
     final List<PlanPermissionDetailDto> planDetail = this.createPlanDetail(permissions, toRemove);
 
-    if(canAccessOffices.isEmpty()) {
+    if (canAccessOffices.isEmpty()) {
       final Set<CanAccessPlan> canAccessPlan = permissions.stream()
         .map(PersonPermissionDetailQuery::getCanAccessPlan)
         .filter(Objects::nonNull)
         .collect(Collectors.toSet());
 
-      if(canAccessPlan.isEmpty()) {
-        if(planDetail.size() == 1) {
+      if (canAccessPlan.isEmpty()) {
+        if (planDetail.size() == 1) {
           result.setAccessLevel(planDetail.get(0).getAccessLevel());
-        }
-        else {
+        } else {
           final Set<PermissionLevelEnum> permissionLevels = planDetail.stream()
             .map(PlanPermissionDetailDto::getAccessLevel)
             .collect(Collectors.toSet());
 
-          if(permissionLevels.contains(PermissionLevelEnum.BASIC_READ)) {
+          if (permissionLevels.contains(PermissionLevelEnum.BASIC_READ)) {
             result.setAccessLevel(PermissionLevelEnum.BASIC_READ);
-          }
-          else {
+          } else {
             result.setAccessLevel(PermissionLevelEnum.NONE);
           }
         }
-      }
-      else {
+      } else {
         result.setAccessLevel(PermissionLevelEnum.BASIC_READ);
       }
-    }
-    else {
+    } else {
       final PermissionLevelEnum accessLevel = canAccessOffices.stream()
         .map(CanAccessOffice::getPermissionLevel)
         .max(PermissionLevelEnum::compareTo)
@@ -310,13 +329,16 @@ public class PersonService {
     return result;
   }
 
-  private List<PlanPermissionDetailDto> createPlanDetail(final List<PersonPermissionDetailQuery> permissions, BitSet toRemove) {
+  private List<PlanPermissionDetailDto> createPlanDetail(
+    final List<PersonPermissionDetailQuery> permissions,
+    final BitSet toRemove
+  ) {
     final List<PlanPermissionDetailDto> result = new ArrayList<>();
 
-    for(final PersonPermissionDetailQuery permission : permissions) {
+    for (final PersonPermissionDetailQuery permission : permissions) {
       final Plan plan = permission.getPlan();
 
-      if(plan == null || this.contains(plan, result, PlanPermissionDetailDto::getId)) {
+      if (plan == null || this.contains(plan, result, PlanPermissionDetailDto::getId)) {
         continue;
       }
 
@@ -332,19 +354,17 @@ public class PersonService {
 
       final List<WorkpackPermissionDetailDto> workpackDetail = this.createWorkpackDetail(plan, permissions, toRemove);
 
-      if(canAccessPlan.isEmpty()) {
+      if (canAccessPlan.isEmpty()) {
         final boolean allNone = workpackDetail.stream()
           .map(WorkpackPermissionDetailDto::getAccessLevel)
           .allMatch(accessLevel -> accessLevel.equals(PermissionLevelEnum.NONE));
 
-        if(allNone) {
+        if (allNone) {
           item.setAccessLevel(PermissionLevelEnum.NONE);
-        }
-        else {
+        } else {
           item.setAccessLevel(PermissionLevelEnum.BASIC_READ);
         }
-      }
-      else {
+      } else {
         final PermissionLevelEnum accessLevel = canAccessPlan.stream()
           .map(CanAccessPlan::getPermissionLevel)
           .max(PermissionLevelEnum::compareTo)
@@ -359,7 +379,7 @@ public class PersonService {
 
       final boolean skip = item.getAccessLevel() == PermissionLevelEnum.NONE && workpackDetail.isEmpty();
 
-      if(!skip) {
+      if (!skip) {
         result.add(item);
       }
     }
@@ -386,17 +406,17 @@ public class PersonService {
       .filter(
         personPermissionDetailQuery ->
           personPermissionDetailQuery.getCanAccessWorkpack() != null
-            || personPermissionDetailQuery.getIsStakeholderIn() != null
-            || personPermissionDetailQuery.getIsCCBMemberFor() != null
+          || personPermissionDetailQuery.getIsStakeholderIn() != null
+          || personPermissionDetailQuery.getIsCCBMemberFor() != null
       )
       .collect(Collectors.toList());
 
-    for(final PersonPermissionDetailQuery permission : permissionsFiltered) {
+    for (final PersonPermissionDetailQuery permission : permissionsFiltered) {
       final Workpack workpack = permission.getWorkpack();
 
-      if(workpack == null
-         || this.contains(workpack, result, WorkpackPermissionDetailDto::getId)
-         || !workpacks.contains(workpack)
+      if (workpack == null
+          || this.contains(workpack, result, WorkpackPermissionDetailDto::getId)
+          || !workpacks.contains(workpack)
       ) {
         continue;
       }
@@ -429,16 +449,15 @@ public class PersonService {
       item.setId(workpack.getId());
       item.setCcbMember(Boolean.FALSE);
 
-      if(canAccessWorkpacks.isEmpty()) {
-        if(!isStakeholderIns.isEmpty()) {
+      if (canAccessWorkpacks.isEmpty()) {
+        if (!isStakeholderIns.isEmpty()) {
           item.setName(this.getName(workpack));
           item.setRoles(this.getRoles(isStakeholderIns));
           item.setIcon(this.getFontIcon(workpack));
           item.setAccessLevel(PermissionLevelEnum.NONE);
           result.add(item);
         }
-      }
-      else {
+      } else {
         final PermissionLevelEnum accessLevel = canAccessWorkpacks.stream()
           .map(CanAccessWorkpack::getPermissionLevel)
           .max(PermissionLevelEnum::compareTo)
@@ -451,7 +470,7 @@ public class PersonService {
         result.add(item);
       }
 
-      if(!isCCBMemberFors.isEmpty()) {
+      if (!isCCBMemberFors.isEmpty()) {
         final WorkpackPermissionDetailDto item2 = new WorkpackPermissionDetailDto();
         item2.setId(workpack.getId());
         item2.setName(this.getName(workpack));
@@ -469,7 +488,7 @@ public class PersonService {
   private String getFontIcon(final Workpack workpack) {
     final Long id = workpack.getId();
     final String cache = this.fontIconCache.get(id);
-    if(cache != null) {
+    if (cache != null) {
       return cache;
     }
     final String fontIcon = this.workpackRepository.findWorkpackModelByWorkpackId(id)
@@ -489,7 +508,7 @@ public class PersonService {
   private String getName(final Workpack workpack) {
     final Long id = workpack.getId();
     final String cache = this.nameCache.get(id);
-    if(cache != null) {
+    if (cache != null) {
       return cache;
     }
     final String name = this.workpackRepository.findWorkpackNameAndFullname(id)
@@ -506,11 +525,11 @@ public class PersonService {
   ) {
     final Long id = entity.getId();
     final Boolean hasCache = this.containsCache.get(id);
-    if(hasCache != null) {
+    if (hasCache != null) {
       return true;
     }
-    for(final T element : collection) {
-      if(Objects.equals(id, longFunction.applyAsLong(element))) {
+    for (final T element : collection) {
+      if (Objects.equals(id, longFunction.applyAsLong(element))) {
         this.containsCache.put(id, true);
         return true;
       }
@@ -530,9 +549,9 @@ public class PersonService {
 
     for (int i = 0, permissionsSize = permissions.size(); i < permissionsSize; i++) {
       if (toRemove != null && toRemove.get(i)) continue;
-      PersonPermissionDetailQuery permission = permissions.get(i);
+      final PersonPermissionDetailQuery permission = permissions.get(i);
       final Entity other = entitySupplier.apply(permission);
-      if(other == null) {
+      if (other == null) {
         continue;
       }
       final boolean isSame = Objects.equals(id, other.getId());
@@ -563,7 +582,7 @@ public class PersonService {
 
     this.updateContactBook(personUpdateDto, personToUpdate);
 
-    if(personUpdateDto.getUnify()) {
+    if (personUpdateDto.getUnify()) {
       this.unifyContactInformationsInAllOffices(personUpdateDto);
     }
 
@@ -577,13 +596,13 @@ public class PersonService {
     final Optional<IsInContactBookOf> personContactData = this.repository
       .findContactBookBy(personUpdateDto.getId(), personUpdateDto.getIdOffice());
 
-    if(personContactData.isPresent()) {
+    if (personContactData.isPresent()) {
       personContactData.get().update(personUpdateDto);
       this.isInContactBookOfService.save(personContactData.get());
       return;
     }
 
-    if(!person.getAdministrator()) {
+    if (!person.getAdministrator()) {
       throw new NegocioException(ApplicationMessage.CONTACT_DATA_NOT_FOUND);
     }
 
@@ -615,7 +634,7 @@ public class PersonService {
     final Optional<PersonByFullNameQuery> maybeQueryResult =
       this.repository.findPersonsInOfficeByFullName(partialName, idWorkpack);
 
-    if(maybeQueryResult.isPresent()) {
+    if (maybeQueryResult.isPresent()) {
       final PersonByFullNameQuery query = maybeQueryResult.get();
       return query.getPersons()
         .stream()
@@ -631,7 +650,7 @@ public class PersonService {
     final Long idWorkpack
   ) {
     final Optional<Person> personByFullName = this.repository.findPersonByFullName(fullName, idWorkpack);
-    if(personByFullName.isPresent()) {
+    if (personByFullName.isPresent()) {
       throw new NegocioException(ApplicationMessage.PERSON_ALREADY_EXISTS);
     }
   }
@@ -677,11 +696,11 @@ public class PersonService {
 
   public Set<Person> findAllById(final Iterable<Long> responsible) {
     final Set<Person> set = new HashSet<>();
-    if(responsible == null) {
+    if (responsible == null) {
       return set;
     }
     final Iterable<Person> personIterable = this.repository.findAllById(responsible);
-    for(final Person person : personIterable) {
+    for (final Person person : personIterable) {
       set.add(person);
     }
     return set;

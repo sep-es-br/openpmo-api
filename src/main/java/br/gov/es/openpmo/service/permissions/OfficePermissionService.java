@@ -34,9 +34,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -172,27 +174,29 @@ public class OfficePermissionService {
       if (permissionsFilteredByPerson.isEmpty()) {
         continue;
       }
-      this.fillPersonDto(idOffice, person, officePermissionItem, roles);
+      this.fillPersonDto(idOffice, person, officePermissionItem, roles, term);
       officePermissionItem.setIdOffice(idOffice);
       this.fillPermissions(officePermissionItem, permissionsFilteredByPerson);
       allPermissionsOfOffice.add(officePermissionItem);
     }
 
-    allPermissionsOfOffice.removeIf(dto -> !StringUtils.isBlank(term)
-                                           && this.textSimilarityScore.execute(
-      dto.getPerson().getName() + dto.getPerson().getFullName(),
-      term
-    ) <= this.appProperties.getSearchCutOffScore());
+    allPermissionsOfOffice.removeIf(dto -> {
+      if (StringUtils.isBlank(term)) return false;
+      return dto.getPerson().getScore() < this.appProperties.getSearchCutOffScore();
+    });
 
     if (key != null) {
-      return allPermissionsOfOffice.stream().filter(permission -> {
-        if (permission.getPerson().getKey() == null) {
-          return true;
-        }
-        return permission.getPerson().getKey().equals(key);
-      }).collect(Collectors.toList());
+      return allPermissionsOfOffice.stream()
+        .filter(permission -> {
+          if (permission.getPerson().getKey() == null) return true;
+          return permission.getPerson().getKey().equals(key);
+        })
+        .sorted(Comparator.comparing(p -> p.getPerson().getScore()))
+        .collect(Collectors.toList());
     }
-    return allPermissionsOfOffice;
+    return allPermissionsOfOffice.stream()
+      .sorted(Comparator.comparing(p -> p.getPerson().getScore()))
+      .collect(Collectors.toList());
   }
 
   private List<CanAccessOffice> listOfficesPermissions(
@@ -226,13 +230,24 @@ public class OfficePermissionService {
     final Long idOffice,
     final Person person,
     final OfficePermissionDto officePermissionDto,
-    final Collection<RoleResource> roles
+    final Collection<RoleResource> roles,
+    final String term
   ) {
     final Optional<IsInContactBookOf> maybeContact =
       this.isInContactBookOfService.findContactInformationUsingPersonIdAndOffice(person.getId(), idOffice);
     final Optional<IsAuthenticatedBy> maybeAuthenticatedBy =
       this.isAuthenticatedByService.findAuthenticatedBy(person.getId());
-    final PersonDto personDto = PersonDto.from(person, maybeContact, maybeAuthenticatedBy);
+    final PersonDto personDto = PersonDto.from(
+      person,
+      maybeContact,
+      maybeAuthenticatedBy
+    );
+    if (Objects.nonNull(term)) {
+      final double nameScore = this.textSimilarityScore.execute(person.getName(), term);
+      final double fullNameScore = this.textSimilarityScore.execute(person.getFullName(), term);
+      final double score = Math.max(nameScore, fullNameScore);
+      personDto.setScore(score);
+    }
     personDto.addAllRoles(roles);
     officePermissionDto.setPerson(personDto);
   }
@@ -417,7 +432,7 @@ public class OfficePermissionService {
     final List<CanAccessOffice> permissions = this.findByOfficeAndPerson(idOffice, person.getId());
 
     final List<RoleResource> roles = this.roleService.getRolesByKey(idPerson, key);
-    this.fillPersonDto(idOffice, person, officePermissionDto, roles);
+    this.fillPersonDto(idOffice, person, officePermissionDto, roles, null);
     this.fillPermissions(officePermissionDto, permissions);
     this.fillPersonRoles(officePermissionDto, person.getId());
 

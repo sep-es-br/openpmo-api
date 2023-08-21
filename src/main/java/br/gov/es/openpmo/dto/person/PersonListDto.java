@@ -9,6 +9,7 @@ public class PersonListDto {
 
   private Long id;
   private String name;
+  private String fullName;
   private String email;
 
   private AvatarDto avatar;
@@ -21,6 +22,7 @@ public class PersonListDto {
     this(
       query.getId(),
       query.getName(),
+      query.getFullName(),
       query.getEmail(),
       query.getAvatar(),
       uriComponentsBuilder
@@ -30,15 +32,17 @@ public class PersonListDto {
   public PersonListDto(
     final Long id,
     final String name,
+    final String fullName,
     final String email,
     final File avatar,
     final UriComponentsBuilder uriComponentsBuilder
   ) {
     this.id = id;
     this.name = name;
+    this.fullName = fullName;
     this.email = email;
 
-    if(avatar != null) {
+    if (avatar != null) {
       this.avatar = new AvatarDto(avatar, uriComponentsBuilder);
     }
   }
@@ -75,4 +79,11 @@ public class PersonListDto {
     this.avatar = avatar;
   }
 
+  public String getFullName() {
+    return this.fullName;
+  }
+
+  public void setFullName(final String fullName) {
+    this.fullName = fullName;
+  }
 }

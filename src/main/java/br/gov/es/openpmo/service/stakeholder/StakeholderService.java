@@ -5,7 +5,15 @@ import br.gov.es.openpmo.dto.organization.OrganizationDto;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.dto.person.PersonDto;
 import br.gov.es.openpmo.dto.person.RoleResource;
-import br.gov.es.openpmo.dto.stakeholder.*;
+import br.gov.es.openpmo.dto.stakeholder.OrganizationStakeholderParamDto;
+import br.gov.es.openpmo.dto.stakeholder.PersonStakeholderParamDto;
+import br.gov.es.openpmo.dto.stakeholder.RoleDto;
+import br.gov.es.openpmo.dto.stakeholder.StakeholderAndPermissionQuery;
+import br.gov.es.openpmo.dto.stakeholder.StakeholderCardViewDto;
+import br.gov.es.openpmo.dto.stakeholder.StakeholderDto;
+import br.gov.es.openpmo.dto.stakeholder.StakeholderOrganizationDto;
+import br.gov.es.openpmo.dto.stakeholder.StakeholderParamDto;
+import br.gov.es.openpmo.dto.stakeholder.StakeholderPersonDto;
 import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Actor;
@@ -15,7 +23,12 @@ import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.model.filter.SortByDirectionEnum;
 import br.gov.es.openpmo.model.journals.JournalAction;
 import br.gov.es.openpmo.model.office.Office;
-import br.gov.es.openpmo.model.relations.*;
+import br.gov.es.openpmo.model.relations.CanAccessOffice;
+import br.gov.es.openpmo.model.relations.CanAccessPlan;
+import br.gov.es.openpmo.model.relations.CanAccessWorkpack;
+import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
+import br.gov.es.openpmo.model.relations.IsInContactBookOf;
+import br.gov.es.openpmo.model.relations.IsStakeholderIn;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.CustomFilterRepository;
 import br.gov.es.openpmo.repository.StakeholderRepository;
@@ -42,10 +55,22 @@ import org.springframework.util.StringUtils;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import static br.gov.es.openpmo.utils.ApplicationMessage.*;
+import static br.gov.es.openpmo.utils.ApplicationMessage.CUSTOM_FILTER_NOT_FOUND;
+import static br.gov.es.openpmo.utils.ApplicationMessage.EMAIL_NOT_NULL;
+import static br.gov.es.openpmo.utils.ApplicationMessage.OFFICE_NOT_FOUND;
 import static java.lang.Boolean.TRUE;
 
 @Service
@@ -125,6 +150,44 @@ public class StakeholderService {
     this.textSimilarityScore = textSimilarityScore;
     this.journalCreator = journalCreator;
     this.tokenService = tokenService;
+  }
+
+  private static void orderByScore(final List<? extends StakeholderDto> dto) {
+    dto.sort(Comparator.comparing(StakeholderDto::getScore).reversed());
+  }
+
+  private static void applyOrdering(
+    final List<? extends StakeholderDto> dto,
+    final boolean filteringByTerm,
+    final CustomFilter filter
+  ) {
+    if (filteringByTerm) {
+      orderByScore(dto);
+      return;
+    }
+
+    final StakeholderSorter sorter = StakeholderSorter.find(filter.getSortBy());
+
+    if (filter.getDirection().equals(SortByDirectionEnum.ASC)) {
+      dto.sort(sorter.getComparator());
+    } else {
+      dto.sort(Collections.reverseOrder(sorter.getComparator()));
+    }
+
+  }
+
+  private static Map<Person, List<PermissionDto>> mapAndExtractPermissions(final StakeholderAndPermissionQuery query) {
+    final Map<Person, List<PermissionDto>> mappedPermissions = new HashMap<>();
+    query.getWorkpackPermissions().forEach(canAccessWorkpack -> {
+      mappedPermissions.computeIfAbsent(
+        canAccessWorkpack.getPerson(),
+        key -> new ArrayList<>()
+      );
+      mappedPermissions.get(canAccessWorkpack.getPerson()).add(
+        PermissionDto.of(canAccessWorkpack)
+      );
+    });
+    return mappedPermissions;
   }
 
   @Transactional
@@ -496,7 +559,8 @@ public class StakeholderService {
     final Collection<? extends CanAccessWorkpack> canAccessWorkpacks,
     final PermissionDto permission
   ) {
-    return canAccessWorkpacks.stream().noneMatch(ca -> ca.getRole() != null && ca.getRole().equals(permission.getRole()));
+    return canAccessWorkpacks.stream().noneMatch(ca -> ca.getRole() != null && ca.getRole()
+      .equals(permission.getRole()));
   }
 
   private boolean hasSameRole(
@@ -893,11 +957,10 @@ public class StakeholderService {
     final Set<StakeholderDto> stakeholderDtos = new HashSet<>();
     mappedRoles.keySet().forEach(actor -> {
       final StakeholderDto stakeholderDto = new StakeholderDto();
+      final double nameScore = this.textSimilarityScore.execute(actor.getName(), term);
+      final double fullNameScore = this.textSimilarityScore.execute(actor.getFullName(), term);
       stakeholderDto.setIdWorkpack(idWorkpack);
-      stakeholderDto.setScore(this.textSimilarityScore.execute(
-        actor.getName() + actor.getFullName(),
-        term
-      ));
+      stakeholderDto.setScore(Math.max(nameScore, fullNameScore));
       if (actor instanceof Person) {
         stakeholderDto.setPerson(this.modelMapper.map(
           actor,
@@ -930,10 +993,9 @@ public class StakeholderService {
           person,
           PersonDto.class
         ));
-        stakeholderDto.setScore(this.textSimilarityScore.execute(
-          person.getName() + person.getFullName(),
-          term
-        ));
+        final double nameScore = this.textSimilarityScore.execute(person.getName(), term);
+        final double fullNameScore = this.textSimilarityScore.execute(person.getFullName(), term);
+        stakeholderDto.setScore(Math.max(nameScore, fullNameScore));
         stakeholderDto
           .getPermissions()
           .addAll(mappedPermissions.get(person));
@@ -944,30 +1006,6 @@ public class StakeholderService {
     return stakeholderDtos.stream()
       .filter(dto -> !StringUtils.hasText(term) || (dto.getScore() > this.appProperties.getSearchCutOffScore()))
       .collect(Collectors.toList());
-  }
-
-  private static void orderByScore(final List<? extends StakeholderDto> dto) {
-    dto.sort(Comparator.comparing(StakeholderDto::getScore).reversed());
-  }
-
-  private static void applyOrdering(
-    final List<? extends StakeholderDto> dto,
-    final boolean filteringByTerm,
-    final CustomFilter filter
-  ) {
-    if (filteringByTerm) {
-      orderByScore(dto);
-      return;
-    }
-
-    final StakeholderSorter sorter = StakeholderSorter.find(filter.getSortBy());
-
-    if (filter.getDirection().equals(SortByDirectionEnum.ASC)) {
-      dto.sort(sorter.getComparator());
-    } else {
-      dto.sort(Collections.reverseOrder(sorter.getComparator()));
-    }
-
   }
 
   private Map<Actor, List<RoleDto>> mapAndExtractRoles(final StakeholderAndPermissionQuery query) {
@@ -983,20 +1021,6 @@ public class StakeholderService {
       ));
     });
     return mappedRoles;
-  }
-
-  private static Map<Person, List<PermissionDto>> mapAndExtractPermissions(final StakeholderAndPermissionQuery query) {
-    final Map<Person, List<PermissionDto>> mappedPermissions = new HashMap<>();
-    query.getWorkpackPermissions().forEach(canAccessWorkpack -> {
-      mappedPermissions.computeIfAbsent(
-        canAccessWorkpack.getPerson(),
-        key -> new ArrayList<>()
-      );
-      mappedPermissions.get(canAccessWorkpack.getPerson()).add(
-        PermissionDto.of(canAccessWorkpack)
-      );
-    });
-    return mappedPermissions;
   }
 
   public Set<StakeholderCardViewDto> findAllPersonStakeholderByWorkpackId(final Long id) {

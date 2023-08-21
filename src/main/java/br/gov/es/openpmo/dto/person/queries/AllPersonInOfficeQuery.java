@@ -8,17 +8,20 @@ public class AllPersonInOfficeQuery {
 
   private final Long id;
   private final String name;
+  private final String fullName;
   private final File avatar;
   private final String email;
 
   public AllPersonInOfficeQuery(
     final Long id,
     final String name,
+    final String fullName,
     final File avatar,
     final String email
   ) {
     this.id = id;
     this.name = name;
+    this.fullName = fullName;
     this.avatar = avatar;
     this.email = email;
   }
@@ -37,6 +40,10 @@ public class AllPersonInOfficeQuery {
 
   public String getName() {
     return this.name;
+  }
+
+  public String getFullName() {
+    return this.fullName;
   }
 
 }

@@ -25,6 +25,7 @@ public class PersonDto {
   private boolean administrator;
   private Boolean isUser;
   private String guid;
+  private double score;
 
   public PersonDto() {
     this.roles.add(RoleResource.citizen());
@@ -197,4 +198,11 @@ public class PersonDto {
     this.guid = guid;
   }
 
+  public double getScore() {
+    return this.score;
+  }
+
+  public void setScore(final double score) {
+    this.score = score;
+  }
 }
