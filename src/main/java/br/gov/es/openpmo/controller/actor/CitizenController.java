@@ -63,7 +63,7 @@ public class CitizenController {
       @RequestParam(required = false) final Long idOffice,
       @RequestHeader(name = "Authorization") final String authorization) {
 
-    this.canAccessService.ensureCanEditResource(idOffice, authorization);
+    this.canAccessService.ensureCanReadResource(idOffice, authorization);
 
     final Long idPerson = this.tokenService.getUserId(authorization);
     final CitizenDto citizenDto = this.service.findCitizenBySub(sub, idOffice, idPerson);
@@ -81,7 +81,7 @@ public class CitizenController {
       @RequestParam(required = false) final Long idOffice,
       @RequestHeader(name = "Authorization") final String authorization) {
 
-    this.canAccessService.ensureCanEditResource(idOffice, authorization);
+    this.canAccessService.ensureCanReadResource(idOffice, authorization);
 
     final Long idPerson = this.tokenService.getUserId(authorization);
     final CitizenDto citizen = this.service.findPersonByCpf(cpf, idOffice, idPerson);
