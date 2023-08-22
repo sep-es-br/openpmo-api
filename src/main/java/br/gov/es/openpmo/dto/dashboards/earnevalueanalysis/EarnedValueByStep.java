@@ -107,18 +107,18 @@ public class EarnedValueByStep {
     this.actualCost = this.actualCost.add(other.actualCost);
     this.plannedWork = this.plannedWork.add(other.plannedWork);
     this.actualWork = this.actualWork.add(other.actualWork);
-    this.earnedValue = this.calculateEarnedValue();
+    this.earnedValue = this.earnedValue.add(this.calculateEarnedValue(other));
     this.date = other.date;
   }
 
-  private BigDecimal calculateEarnedValue() {
-    if(BigDecimal.ZERO.compareTo(this.plannedWork) == 0) {
+  private BigDecimal calculateEarnedValue(final EarnedValueByStep other) {
+    if (BigDecimal.ZERO.compareTo(other.plannedWork) == 0) {
       return BigDecimal.ZERO;
     }
 
-    return this.plannedValue
-      .divide(this.plannedWork, new MathContext(4, RoundingMode.HALF_EVEN))
-      .multiply(this.actualWork);
+    return other.plannedValue
+      .divide(other.plannedWork, new MathContext(4, RoundingMode.HALF_EVEN))
+      .multiply(other.actualWork);
   }
 
 }
