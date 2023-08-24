@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.time.YearMonth;
+import java.util.Optional;
 
 public class EarnedValueByStep {
 
@@ -107,7 +108,9 @@ public class EarnedValueByStep {
     this.actualCost = this.actualCost.add(other.actualCost);
     this.plannedWork = this.plannedWork.add(other.plannedWork);
     this.actualWork = this.actualWork.add(other.actualWork);
-    this.earnedValue = this.earnedValue.add(this.calculateEarnedValue(other));
+    this.earnedValue = Optional.ofNullable(this.earnedValue)
+      .map(earnedValue -> earnedValue.add(this.calculateEarnedValue(other)))
+      .orElseGet(() -> this.calculateEarnedValue(other));
     this.date = other.date;
   }
 

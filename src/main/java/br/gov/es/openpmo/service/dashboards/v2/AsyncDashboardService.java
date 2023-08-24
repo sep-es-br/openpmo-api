@@ -67,7 +67,7 @@ public class AsyncDashboardService implements IAsyncDashboardService {
   private Dashboard getDashboard(@NonNull final Long worpackId) {
     return this.dashboardRepository
       .findByWorkpackId(worpackId)
-      .orElse(this.createDashboard(worpackId));
+      .orElseGet(() -> this.createDashboard(worpackId));
   }
 
   private Dashboard createDashboard(@NonNull final Long worpackId) {
