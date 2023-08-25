@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.dto.person;
 
 
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
@@ -14,6 +15,7 @@ public class PersonUpdateDto {
 
   @NotEmpty
   @NotNull
+  @NotBlank
   private final String name;
 
   private final String contactEmail;

@@ -36,7 +36,7 @@ import java.util.Set;
   ProjectModel.class, MilestoneModel.class}, discriminator = "type", description = "Supertype of all WorkpackModel."
 )
 @NodeEntity
-public class WorkpackModel extends Entity {
+public abstract class WorkpackModel extends Entity {
 
   private String fontIcon;
 
@@ -88,12 +88,6 @@ public class WorkpackModel extends Entity {
 
   @Relationship(type = "IS_IN", direction = Relationship.INCOMING)
   private Set<WorkpackModel> children;
-
-  @Relationship(type = "IS_INSTANCE_BY", direction = Relationship.INCOMING)
-  private Set<Workpack> workpacks;
-
-  @Transient
-  private Long idParent;
 
   @Transient
   private Long idPlanModel;
@@ -415,13 +409,7 @@ public class WorkpackModel extends Entity {
     return !ObjectUtils.isEmpty(this.properties);
   }
 
-  public Set<Workpack> getWorkpacks() {
-    return this.workpacks;
-  }
-
-  public void setWorkpacks(final Set<Workpack> workpacks) {
-    this.workpacks = workpacks;
-  }
+  public abstract Set<? extends Workpack> getInstances();
 
   public String getType() {
     throw new UnsupportedOperationException();

@@ -3,7 +3,6 @@ package br.gov.es.openpmo.controller.actor;
 import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.ComboDto;
 import br.gov.es.openpmo.dto.EntityDto;
-import br.gov.es.openpmo.dto.PageResponse;
 import br.gov.es.openpmo.dto.Response;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.ResponseBasePaginated;
@@ -184,7 +183,7 @@ public class PersonController {
   @PatchMapping("/{id-person}")
   public Response<Void> updateName(
     @PathVariable("id-person") final Long idPerson,
-    @RequestBody final NameRequest nameRequest,
+    @RequestBody @Valid final NameRequest nameRequest,
     @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanEditResource(idPerson, authorization);

@@ -23,7 +23,16 @@ import br.gov.es.openpmo.service.workpack.WorkpackService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -444,19 +453,17 @@ public class MenuService {
     final Set<Long> idWorkpackStakeholder
   ) {
     if (workpacks == null) return false;
-    boolean hasPermission = false;
     for (final Workpack workpack : workpacks) {
       if (isWorkpackWithPermission(idWorkpackStakeholder, workpack)) {
         return true;
       }
       if (workpack.getChildren() != null) {
-        hasPermission = this.isChildrenWithPermission(
-          workpack.getChildren(),
-          idWorkpackStakeholder
-        );
+        if (this.isChildrenWithPermission(workpack.getChildren(), idWorkpackStakeholder)) {
+          return true;
+        }
       }
     }
-    return hasPermission;
+    return false;
   }
 
   private static final class AddPlanCommand {

@@ -24,6 +24,8 @@ public interface WorkpackModelRepository extends Neo4jRepository<WorkpackModel, 
          + "  [(w)-[i:IS_IN*]->(w2:WorkpackModel) | [i, w2]], "
          + "  [(w)<-[i2:IS_IN*]-(w3:WorkpackModel) | [i2,w3] ],"
          + "  [(w)<-[ib:IS_INSTANCE_BY]-(w4:Workpack) | [ib, w4]],"
+         + "  [(w)-[:IS_IN*]->(:WorkpackModel)<-[ib2:IS_INSTANCE_BY]-(w5:Workpack) | [ib2, w5]],"
+         + "  [(w)<-[:IS_IN*]-(:WorkpackModel)<-[ib3:IS_INSTANCE_BY]-(w6:Workpack) | [ib3, w6]],"
          + "  [(w)<-[f:FEATURES]-(p:PropertyModel) | [f, p] ], "
          + "  [(w)-[is:IS_SORTED_BY]->(ps:PropertyModel) | [is, ps] ], "
          + "  [(w)-[featureGroup:FEATURES]->(group:GroupModel) | [featureGroup, group] ], "

@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.dto.person;
 
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
@@ -7,15 +8,19 @@ public class PersonCreateRequest {
 
   @NotNull
   @NotEmpty
+  @NotBlank
   private final String name;
   @NotNull
   @NotEmpty
+  @NotBlank
   private final String fullName;
   @NotNull
   @NotEmpty
+  @NotBlank
   private final String key;
   @NotNull
   @NotEmpty
+  @NotBlank
   private final String email;
   @NotNull
   private final Boolean administrator;

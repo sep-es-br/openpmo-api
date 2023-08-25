@@ -42,7 +42,7 @@ public class GetWorkpackBreakdownStructure {
     final Workpack parent,
     final WorkpackModel child
   ) {
-    final Set<Workpack> childWorkpacks = child.getWorkpacks();
+    final Set<? extends Workpack> childWorkpacks = child.getInstances();
     if (childWorkpacks == null) {
       return new HashSet<>();
     }
