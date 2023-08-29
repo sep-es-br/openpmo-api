@@ -23,7 +23,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.springframework.data:spring-data-neo4j:5.2.12.RELEASE'
+    implementation 'org.springframework.data:spring-data-neo4j:5.2.13.RELEASE'
     implementation 'org.neo4j.driver:neo4j-java-driver-spring-boot-starter:4.3.6.0'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -49,5 +49,6 @@ dependencies {
     implementation 'io.springfox:springfox-swagger2:2.9.2'
     implementation 'io.springfox:springfox-swagger-ui:2.9.2'
     implementation 'io.springfox:springfox-bean-validators:2.9.2'
+    implementation 'org.springframework.boot:spring-boot-starter-test'
 
 }

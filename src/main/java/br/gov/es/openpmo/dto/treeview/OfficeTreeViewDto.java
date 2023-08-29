@@ -20,15 +20,6 @@ public class OfficeTreeViewDto {
     this.name = office.getName();
   }
 
-  public OfficeTreeViewDto(
-    final Long id,
-    final String name,
-    final Set<PlanTreeViewDto> plans
-  ) {
-    this.id = id;
-    this.name = name;
-    this.plans = Collections.unmodifiableSet(plans);
-  }
 
   public Long getId() {
     return this.id;

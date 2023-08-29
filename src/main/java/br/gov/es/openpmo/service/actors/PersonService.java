@@ -10,6 +10,7 @@ import br.gov.es.openpmo.dto.person.detail.PersonDetailDto;
 import br.gov.es.openpmo.dto.person.detail.permissions.OfficePermissionDetailDto;
 import br.gov.es.openpmo.dto.person.detail.permissions.PlanPermissionDetailDto;
 import br.gov.es.openpmo.dto.person.detail.permissions.WorkpackPermissionDetailDto;
+import br.gov.es.openpmo.dto.person.queries.AllPersonInOfficeQuery;
 import br.gov.es.openpmo.dto.person.queries.PersonByFullNameQuery;
 import br.gov.es.openpmo.dto.person.queries.PersonDetailQuery;
 import br.gov.es.openpmo.dto.person.queries.PersonPermissionDetailQuery;
@@ -42,7 +43,9 @@ import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.util.Streamable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -52,12 +55,14 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
@@ -231,17 +236,23 @@ public class PersonService {
     final Pageable pageable,
     final UriComponentsBuilder uriComponentsBuilder
   ) {
-    return this.repository.findAllFilteringBy(
-        stakeholderFilter,
-        userFilter,
-        ccbMemberFilter,
-        name.isEmpty() ? null : name,
-        officeScope,
-        planScope,
-        workpackScope,
-        pageable
-      )
-      .map(query -> new PersonListDto(query, uriComponentsBuilder));
+    final Streamable<Person> streamableQueryResult = this.repository.findAllFilteringBy(
+      stakeholderFilter,
+      userFilter,
+      ccbMemberFilter,
+      name.isEmpty() ? null : name,
+      officeScope,
+      planScope,
+      workpackScope
+    );
+    final long total = streamableQueryResult.stream().count();
+    final List<PersonListDto> response = streamableQueryResult.stream().parallel()
+      .skip(pageable.getOffset())
+      .limit(pageable.getPageSize())
+      .sorted(Comparator.comparing(Person::getName))
+      .map(query -> PersonListDto.of(query, uriComponentsBuilder))
+      .collect(Collectors.toCollection(CopyOnWriteArrayList::new));
+    return new PageImpl<>(response, pageable, total);
   }
 
   public PersonDetailDto findPersonDetailsById(

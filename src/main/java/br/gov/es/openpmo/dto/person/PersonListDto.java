@@ -3,6 +3,8 @@ package br.gov.es.openpmo.dto.person;
 import br.gov.es.openpmo.dto.file.AvatarDto;
 import br.gov.es.openpmo.dto.person.queries.AllPersonInOfficeQuery;
 import br.gov.es.openpmo.model.actors.File;
+import br.gov.es.openpmo.model.actors.Person;
+import br.gov.es.openpmo.model.relations.IsInContactBookOf;
 import org.springframework.web.util.UriComponentsBuilder;
 
 public class PersonListDto {
@@ -15,16 +17,16 @@ public class PersonListDto {
   private AvatarDto avatar;
 
 
-  public PersonListDto(
-    final AllPersonInOfficeQuery query,
+  public static PersonListDto of(
+    final Person person,
     final UriComponentsBuilder uriComponentsBuilder
   ) {
-    this(
-      query.getId(),
-      query.getName(),
-      query.getFullName(),
-      query.getEmail(),
-      query.getAvatar(),
+    return new PersonListDto(
+      person.getId(),
+      person.getName(),
+      person.getFullName(),
+      person.getIsInContactBookOf().stream().findAny().map(IsInContactBookOf::getEmail).orElse(null),
+      person.getAvatar(),
       uriComponentsBuilder
     );
   }

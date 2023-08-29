@@ -4,18 +4,19 @@ package br.gov.es.openpmo.service.office;
 import br.gov.es.openpmo.dto.treeview.OfficeTreeViewDto;
 import br.gov.es.openpmo.dto.treeview.PlanTreeViewDto;
 import br.gov.es.openpmo.dto.treeview.WorkpackTreeViewDto;
-import br.gov.es.openpmo.dto.treeview.query.OfficeTreeViewQuery;
-import br.gov.es.openpmo.dto.workpack.WorkpackName;
 import br.gov.es.openpmo.exception.NegocioException;
+import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.office.plan.Plan;
+import br.gov.es.openpmo.model.properties.Property;
+import br.gov.es.openpmo.model.relations.BelongsTo;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.OfficeRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -43,15 +44,11 @@ public class OfficeTreeViewService {
   }
 
   public OfficeTreeViewDto findOfficeTreeViewById(final Long idOffice) {
-    final OfficeTreeViewQuery officeTreeViewQuery = this.findOfficeAsTreeViewQuery(idOffice);
+    final Office office = this.findOfficeAsTreeViewQuery(idOffice);
 
-    if(officeTreeViewQuery == null) {
-      return null;
-    }
+    final OfficeTreeViewDto treeView = new OfficeTreeViewDto(office);
 
-    final OfficeTreeViewDto treeView = new OfficeTreeViewDto(officeTreeViewQuery.getOffice());
-
-    final Set<PlanTreeViewDto> plans = officeTreeViewQuery.getPlans().stream()
+    final Set<PlanTreeViewDto> plans = office.getPlans().stream()
       .map(this::buildPlanTreeView)
       .collect(Collectors.toSet());
 
@@ -60,7 +57,7 @@ public class OfficeTreeViewService {
     return treeView;
   }
 
-  private OfficeTreeViewQuery findOfficeAsTreeViewQuery(final Long idOffice) {
+  private Office findOfficeAsTreeViewQuery(final Long idOffice) {
     return this.officeRepository
       .findOfficeTreeViewById(idOffice)
       .orElseThrow(() -> new NegocioException(OFFICE_NOT_FOUND));
@@ -69,7 +66,10 @@ public class OfficeTreeViewService {
   private PlanTreeViewDto buildPlanTreeView(final Plan plan) {
     final PlanTreeViewDto planTreeViewDto = new PlanTreeViewDto(plan);
 
-    final Set<Workpack> workpacks = this.workpackRepository.findAllByPlanWithProperties(plan.getId());
+    final List<Workpack> workpacks = plan.getBelongsTo()
+      .stream()
+      .map(BelongsTo::getWorkpack)
+      .collect(Collectors.toList());
 
     final Set<WorkpackTreeViewDto> workpackTreeViewDto = this.buildWorkpackTreeView(workpacks);
 
@@ -81,10 +81,10 @@ public class OfficeTreeViewService {
 
     final Set<WorkpackTreeViewDto> workpacksTreeView = new HashSet<>();
 
-    for(final Workpack workpack : workpacks) {
+    for (final Workpack workpack : workpacks) {
       final String workpackName = this.findWorkpackName(workpack);
       final WorkpackTreeViewDto dto = WorkpackTreeViewDto.of(workpack, workpackName);
-      if(hasChildren(workpack)) {
+      if (hasChildren(workpack)) {
         final Set<WorkpackTreeViewDto> children = this.buildWorkpackTreeView(workpack.getChildren());
         dto.setChildren(children);
       }
@@ -95,8 +95,9 @@ public class OfficeTreeViewService {
   }
 
   private String findWorkpackName(final Workpack workpack) {
-    return this.workpackRepository.findWorkpackNameAndFullname(workpack.getId())
-      .map(WorkpackName::getName)
+    return workpack.getPropertyName()
+      .map(Property::getValue)
+      .map(String.class::cast)
       .orElse(null);
   }
 
