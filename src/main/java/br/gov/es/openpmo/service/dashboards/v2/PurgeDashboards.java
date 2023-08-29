@@ -5,6 +5,7 @@ import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.dashboards.DashboardRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +27,8 @@ public class PurgeDashboards {
     this.asyncDashboardService = asyncDashboardService;
   }
 
+
+  @Async
   @Transactional
   public void execute() {
     final Iterable<Dashboard> dashboards = this.dashboardRepository.findAll();

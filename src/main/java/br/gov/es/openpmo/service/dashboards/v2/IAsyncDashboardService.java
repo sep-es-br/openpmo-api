@@ -7,6 +7,6 @@ public interface IAsyncDashboardService {
 
 //  @Async
   @Transactional
-  void calculate(Long worpackId, Boolean calculateInterval);
+  void calculate(Long workpackId, Boolean calculateInterval);
 
 }
