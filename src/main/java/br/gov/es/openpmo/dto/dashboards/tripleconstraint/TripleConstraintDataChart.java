@@ -11,11 +11,11 @@ public class TripleConstraintDataChart {
   @JsonFormat(pattern = "MM-yyyy")
   private LocalDate mesAno;
 
-  private CostDataChart cost;
+  private CostDataChart cost = new CostDataChart();
 
   private ScheduleDataChart schedule;
 
-  private ScopeDataChart scope;
+  private ScopeDataChart scope = new ScopeDataChart();
 
   public CostDataChart getCost() {
     return this.cost;
@@ -42,14 +42,14 @@ public class TripleConstraintDataChart {
   }
 
   public void sumCostData(final CostDataChart cost) {
-    if(this.cost == null) {
+    if (this.cost == null) {
       this.cost = new CostDataChart();
     }
     this.cost.sumCostData(cost);
   }
 
   public void sumScopeData(final ScopeDataChart scopeData) {
-    if(this.scope == null) {
+    if (this.scope == null) {
       this.scope = new ScopeDataChart();
     }
     this.scope.sumScopeData(scopeData);

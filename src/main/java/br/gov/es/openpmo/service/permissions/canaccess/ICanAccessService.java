@@ -17,7 +17,7 @@ public interface ICanAccessService {
                         String authorization);
 
         void ensureCanEditResource(
-                        @Valid Long long1,
+                        @Valid Long id,
                         String authorization);
 
         void ensureIsAdministrator(String authorization);

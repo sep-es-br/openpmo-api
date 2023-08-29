@@ -11,6 +11,8 @@ public class EarnedValueByStepData {
 
   private BigDecimal actualCost;
 
+  private BigDecimal estimatedCost;
+
   private BigDecimal earnedValue;
 
   private YearMonth date;
@@ -23,8 +25,23 @@ public class EarnedValueByStepData {
     final EarnedValueByStepData to = new EarnedValueByStepData();
     to.setPlannedValue(from.getPlannedValue());
     to.setActualCost(from.getActualCost());
+    to.setEstimatedCost(from.getEstimatedCost());
     to.setEarnedValue(from.getEarnedValue());
     to.setDate(from.getDate());
+    return to;
+  }
+
+  public static EarnedValueByStepData of(final EarnedValue from) {
+    if(from == null) {
+      return null;
+    }
+
+    final EarnedValueByStepData to = new EarnedValueByStepData();
+    to.setPlannedValue(from.getPlannedValue());
+    to.setActualCost(from.getActualCost());
+    to.setEstimatedCost(from.getEstimatedCost());
+    to.setEarnedValue(from.getEarnedValue());
+    to.setDate(from.getMonth().toYearMonth());
     return to;
   }
 
@@ -42,6 +59,14 @@ public class EarnedValueByStepData {
 
   public void setActualCost(final BigDecimal actualCost) {
     this.actualCost = actualCost;
+  }
+
+  public BigDecimal getEstimatedCost() {
+    return this.estimatedCost;
+  }
+
+  public void setEstimatedCost(final BigDecimal estimatedCost) {
+    this.estimatedCost = estimatedCost;
   }
 
   public BigDecimal getEarnedValue() {
@@ -63,6 +88,7 @@ public class EarnedValueByStepData {
   public EarnedValueByStep getResponse() {
     final EarnedValueByStep step = new EarnedValueByStep();
     step.setActualCost(this.actualCost);
+    step.setEstimatedCost(this.estimatedCost);
     step.setPlannedValue(this.plannedValue);
     step.setEarnedValue(this.earnedValue);
     step.setDate(this.date);

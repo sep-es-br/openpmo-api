@@ -5,12 +5,14 @@ import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.office.plan.PlanModel;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
+import br.gov.es.openpmo.model.relations.IsLinkedTo;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.swagger.annotations.ApiModel;
+import org.apache.commons.collections.CollectionUtils;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 import org.springframework.data.annotation.Transient;
@@ -88,6 +90,12 @@ public abstract class WorkpackModel extends Entity {
 
   @Relationship(type = "IS_IN", direction = Relationship.INCOMING)
   private Set<WorkpackModel> children;
+
+  @Relationship(type = "IS_LINKED_TO", direction = Relationship.INCOMING)
+  private Set<IsLinkedTo> linkedToRelationship;
+
+  @Transient
+  private Long idParent;
 
   @Transient
   private Long idPlanModel;
@@ -173,6 +181,9 @@ public abstract class WorkpackModel extends Entity {
   }
 
   public Set<PropertyModel> getProperties() {
+    if (properties == null) {
+      properties = new HashSet<>();
+    }
     return this.properties;
   }
 
@@ -432,4 +443,24 @@ public abstract class WorkpackModel extends Entity {
       .orElse(0L);
   }
 
+  public Long getIdParent() {
+    return this.idParent;
+  }
+
+  public Set<IsLinkedTo> getLinkedToRelationship() {
+    return this.linkedToRelationship;
+  }
+
+  public void setLinkedToRelationship(final Set<IsLinkedTo> linkedToRelationship) {
+    this.linkedToRelationship = linkedToRelationship;
+  }
+
+  public void setIdParent(final Long idParent) {
+    this.idParent = idParent;
+  }
+
+  @Transient
+  public boolean hasLinkedWorkpack() {
+    return CollectionUtils.isNotEmpty(this.linkedToRelationship);
+  }
 }

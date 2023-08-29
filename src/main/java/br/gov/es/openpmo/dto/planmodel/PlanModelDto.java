@@ -16,6 +16,7 @@ public class PlanModelDto {
   private String name;
   private String fullName;
   private Long idOffice;
+  private Long idCostAccountModel;
 
   private boolean sharedWithAll;
   private Set<OfficeDto> sharedWith;
@@ -28,7 +29,7 @@ public class PlanModelDto {
     this.name = planModel.getName();
     this.fullName = planModel.getFullName();
     this.idOffice = Optional.ofNullable(planModel.getOffice()).map(Entity::getId).orElse(null);
-
+    this.idCostAccountModel = Optional.ofNullable(planModel.getCostAccountModel()).map(Entity::getId).orElse(null);
     this.sharedWithAll = planModel.isPublicShared();
 
     this.sharedWith = Optional.ofNullable(planModel.getSharedWith())
@@ -43,6 +44,7 @@ public class PlanModelDto {
     planModelDto.setName(planModel.getName());
     planModelDto.setFullName(planModel.getFullName());
     planModelDto.setSharedWithAll(false);
+    planModelDto.setIdCostAccountModel(planModel.getIdCostAccountModel());
     planModelDto.setSharedWith(planModel.getSharedWith()
                                  .stream()
                                  .map(OfficeDto::of)
@@ -98,4 +100,11 @@ public class PlanModelDto {
     this.sharedWith = sharedWith;
   }
 
+  public Long getIdCostAccountModel() {
+    return idCostAccountModel;
+  }
+
+  public void setIdCostAccountModel(Long idCostAccountModel) {
+    this.idCostAccountModel = idCostAccountModel;
+  }
 }

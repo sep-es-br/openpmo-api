@@ -10,9 +10,18 @@ import java.util.Optional;
 @Repository
 public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
 
-  @Query("match (d:Dashboard)-[:BELONGS_TO]->(w:Workpack{deleted:false,canceled:false}) " +
-         "where id(w)=$workpackId " +
-         "return d")
+  @Query("match (dashboard:Dashboard)-[:BELONGS_TO]->(workpack:Workpack{deleted:false,canceled:false}) " +
+    "where id(workpack)=$workpackId " +
+    "optional match (dashboard)<-[isPartOf:IS_PART_OF]-(month:DashboardMonth)<-[isAt:IS_AT]-(entities) " +
+    "with * " +
+    "return dashboard, isPartOf, month, isAt, entities")
   Optional<Dashboard> findByWorkpackId(Long workpackId);
+
+  @Query("match (dashboard:Dashboard)-[:BELONGS_TO]->(workpack:Workpack{deleted:false,canceled:false}) " +
+    "where id(workpack)=$workpackId " +
+    "optional match (dashboard)<-[isPartOf:IS_PART_OF]-(month:DashboardMonth) " +
+    "with * " +
+    "return dashboard, isPartOf, month")
+  Optional<Dashboard> findByWorkpackIdForInterval(Long workpackId);
 
 }

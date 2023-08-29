@@ -7,13 +7,7 @@ import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.completed.CompleteWorkpackRequest;
 import br.gov.es.openpmo.dto.dashboards.v2.SimpleDashboard;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
-import br.gov.es.openpmo.dto.workpack.EndDeliverableManagementRequest;
-import br.gov.es.openpmo.dto.workpack.ResponseBaseWorkpack;
-import br.gov.es.openpmo.dto.workpack.ResponseBaseWorkpackDetail;
-import br.gov.es.openpmo.dto.workpack.WorkpackDetailDto;
-import br.gov.es.openpmo.dto.workpack.WorkpackHasChildrenResponse;
-import br.gov.es.openpmo.dto.workpack.WorkpackNameResponse;
-import br.gov.es.openpmo.dto.workpack.WorkpackParamDto;
+import br.gov.es.openpmo.dto.workpack.*;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.journals.JournalAction;
 import br.gov.es.openpmo.model.workpacks.Milestone;
@@ -35,21 +29,12 @@ import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Api
@@ -140,14 +125,14 @@ public class WorkpackController {
       return ResponseEntity.noContent().build();
     }
 
-    final List<WorkpackDetailDto> workpackDetailDtos = workpacks.parallelStream()
-      .map(workpack -> this.mapToWorkpackDetailDto(
+    final List<WorkpackDetailParentDto> workpackDetailDtos = workpacks.parallelStream()
+      .map(workpack -> this.mapToWorkpackDetailParentDto(
         workpack,
         idWorkpackModel
       ))
       .collect(Collectors.toList());
 
-    final List<WorkpackDetailDto> verify = this.workpackPermissionVerifier.verify(
+    final List<WorkpackDetailParentDto> verify = this.workpackPermissionVerifier.verify(
       workpackDetailDtos,
       idUser,
       idPlan
@@ -163,11 +148,11 @@ public class WorkpackController {
       : ResponseEntity.ok(new ResponseBaseWorkpack().setData(verify).setMessage(SUCESSO).setSuccess(true));
   }
 
-  private WorkpackDetailDto mapToWorkpackDetailDto(
+  private WorkpackDetailParentDto mapToWorkpackDetailParentDto(
     final Workpack workpack,
     final Long idWorkpackModel
   ) {
-    final WorkpackDetailDto itemDetail = this.workpackService.getWorkpackDetailDto(workpack);
+    final WorkpackDetailParentDto itemDetail = this.workpackService.getWorkpackDetailParentDto(workpack);
     itemDetail.applyLinkedStatus(
       workpack,
       idWorkpackModel
@@ -201,14 +186,17 @@ public class WorkpackController {
       workpackLinked
     );
 
-    final List<WorkpackDetailDto> workpackList = workpacks.parallelStream()
-      .map(workpack -> this.mapToWorkpackDetailDto(workpack, idWorkpackModel))
+    final List<WorkpackDetailParentDto> workpackList = workpacks.parallelStream()
+      .map(workpack -> this.mapToWorkpackDetailParentDto(
+        workpack,
+        idWorkpackModel
+      ))
       .collect(Collectors.toList());
 
     if (workpackList.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
-    final List<WorkpackDetailDto> verify = this.workpackPermissionVerifier.verify(
+    final List<WorkpackDetailParentDto> verify = this.workpackPermissionVerifier.verify(
       workpackList,
       idUser,
       idPlan
@@ -235,7 +223,11 @@ public class WorkpackController {
       authorization
     );
     final Long idPerson = this.tokenService.getUserId(authorization);
-    final Workpack workpack = this.workpackService.findByIdWithParent(idWorkpack);
+    final Optional<Workpack> maybeWorkpack = this.workpackService.maybeFindByIdWithParent(idWorkpack);
+    if (!maybeWorkpack.isPresent()) {
+      return ResponseEntity.ok(ResponseBaseWorkpackDetail.of(null));
+    }
+    final Workpack workpack = maybeWorkpack.get();
     final WorkpackDetailDto workpackDetailDto = this.workpackService.getWorkpackDetailDto(
       workpack,
       idPlan
@@ -277,7 +269,7 @@ public class WorkpackController {
       idPerson
     );
     if (workpack instanceof Milestone) {
-      this.workpackService.calculateDashboard(workpack);
+      this.workpackService.calculateDashboard(workpack, true);
     }
     return ResponseEntity.ok(ResponseBase.of(response));
   }
@@ -315,7 +307,7 @@ public class WorkpackController {
       );
     }
     if (isMilestone) {
-      this.workpackService.calculateDashboard(workpack);
+      this.workpackService.calculateDashboard(workpack, true);
     }
     return ResponseEntity.ok(ResponseBase.of(EntityDto.of(workpack)));
   }
@@ -363,6 +355,9 @@ public class WorkpackController {
     );
     final Workpack workpack = this.workpackService.findById(idWorkpack);
     this.workpackService.delete(workpack);
+    if (workpack instanceof Milestone) {
+      this.workpackService.calculateDashboard(workpack, true);
+    }
     return ResponseEntity.ok().build();
   }
 

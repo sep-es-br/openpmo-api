@@ -1,16 +1,11 @@
 package br.gov.es.openpmo.dto.dashboards.tripleconstraint;
 
+import br.gov.es.openpmo.model.dashboards.DashboardMonth;
 import org.springframework.data.neo4j.annotation.QueryResult;
 
-import java.time.LocalDate;
-import java.time.Period;
-import java.time.YearMonth;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.time.*;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.LongStream;
 
 @QueryResult
 public class DateIntervalQuery {
@@ -31,16 +26,45 @@ public class DateIntervalQuery {
     return new DateIntervalQuery(null, null);
   }
 
+  public static DateIntervalQuery of(Collection<DashboardMonth> months) {
+    if (months == null || months.isEmpty()) {
+      return empty();
+    }
+    final Set<ZonedDateTime> zonedDateTimes = months.stream()
+      .map(month -> ZonedDateTime.from(month.getDate().atStartOfDay(ZoneId.systemDefault())))
+      .collect(Collectors.toSet());
+    return new DateIntervalQuery(
+      zonedDateTimes.stream().min(Comparator.naturalOrder()).orElse(null),
+      zonedDateTimes.stream().max(Comparator.naturalOrder()).orElse(null)
+    );
+  }
+
+  public List<DashboardMonth> toDashboardMonths() {
+    if (!this.isValid()) {
+      return null;
+    }
+    final List<DashboardMonth> dashboardMonths = new ArrayList<>();
+    final LocalDate localDate = this.getInitialDate();
+    final long numberOfMonths = this.numberOfMonths();
+    for (long m = 0; m < numberOfMonths; m++) {
+      DashboardMonth month = new DashboardMonth(localDate.plusMonths(m));
+      dashboardMonths.add(month);
+    }
+    return dashboardMonths;
+  }
+
   public List<YearMonth> toYearMonths() {
-    if(!this.isValid()) {
+    if (!this.isValid()) {
       return new ArrayList<>();
     }
-
-    return LongStream.range(0, this.numberOfMonths())
-      .boxed()
-      .map(this.getInitialDate()::plusMonths)
-      .map(YearMonth::from)
-      .collect(Collectors.toList());
+    final List<YearMonth> yearMonths = new ArrayList<>();
+    final LocalDate localDate = this.getInitialDate();
+    final long numberOfMonths = this.numberOfMonths();
+    for (long m = 0; m < numberOfMonths; m++) {
+      final YearMonth yearMonth = YearMonth.from(localDate.plusMonths(m));
+      yearMonths.add(yearMonth);
+    }
+    return yearMonths;
   }
 
   private long numberOfMonths() {

@@ -50,7 +50,7 @@ public class SubmitBaselineService implements ISubmitBaselineService {
     this.submit(request, baseline, workpack);
 
     this.journalCreator.baseline(baseline, idPerson);
-    this.dashboardService.calculate(workpack.getId());
+    this.dashboardService.calculate(workpack.getId(), true);
   }
 
   private Workpack getWorkpackByBaseline(final Baseline baseline) {

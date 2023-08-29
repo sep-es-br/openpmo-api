@@ -10,23 +10,39 @@ public class DashboardParameters {
 
   private final Long workpackId;
 
+  private final Long workpackModelId;
+
+  private final Long workpackModelLinkedId;
+
+  private final Long planId;
+
   private final Long baselineId;
 
   private final YearMonth yearMonth;
+
+  private final Boolean linked;
 
   private final UriComponentsBuilder uriComponentsBuilder;
 
   public DashboardParameters(
     final Boolean showHeader,
     final Long workpackId,
+    final Long workpackModelId,
+    final Long workpackModelLinkedId,
+    final Long planId,
     final Long baselineId,
     final YearMonth date,
+    final Boolean linked,
     final UriComponentsBuilder uriComponentsBuilder
   ) {
     this.showHeader = showHeader;
     this.workpackId = workpackId;
+    this.workpackModelId = workpackModelId;
+    this.workpackModelLinkedId = workpackModelLinkedId;
+    this.planId = planId;
     this.baselineId = baselineId;
     this.yearMonth = date;
+    this.linked = linked;
     this.uriComponentsBuilder = uriComponentsBuilder;
   }
 
@@ -48,6 +64,22 @@ public class DashboardParameters {
 
   public Boolean getShowHeader() {
     return this.showHeader;
+  }
+
+  public Long getPlanId() {
+    return this.planId;
+  }
+
+  public Long getWorkpackModelId() {
+    return this.workpackModelId;
+  }
+
+  public Long getWorkpackModelLinkedId() {
+    return this.workpackModelLinkedId;
+  }
+
+  public Boolean getLinked() {
+    return this.linked;
   }
 
 }

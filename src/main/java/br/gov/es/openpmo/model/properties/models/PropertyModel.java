@@ -1,6 +1,5 @@
 package br.gov.es.openpmo.model.properties.models;
 
-import br.gov.es.openpmo.enumerator.Session;
 import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -40,8 +39,6 @@ public class PropertyModel extends Entity {
 
   private String label;
 
-  private Session session;
-
   private boolean active;
 
   private boolean fullLine;
@@ -65,14 +62,6 @@ public class PropertyModel extends Entity {
 
   public void setActive(final boolean active) {
     this.active = active;
-  }
-
-  public Session getSession() {
-    return this.session;
-  }
-
-  public void setSession(final Session session) {
-    this.session = session;
   }
 
   public String getName() {
@@ -118,7 +107,7 @@ public class PropertyModel extends Entity {
   @Override
   public int hashCode() {
     return Objects.hash(super.hashCode(), this.sortIndex, this.name, this.label,
-                        this.session, this.active, this.fullLine, this.required
+                        this.active, this.fullLine, this.required
     );
   }
 
@@ -135,8 +124,7 @@ public class PropertyModel extends Entity {
     }
     final PropertyModel that = (PropertyModel) o;
     return this.active == that.active && this.fullLine == that.fullLine && this.required == that.required && Objects.equals(
-      this.sortIndex, that.sortIndex) && Objects.equals(this.name, that.name) && Objects.equals(this.label, that.label)
-           && Objects.equals(this.session, that.session);
+      this.sortIndex, that.sortIndex) && Objects.equals(this.name, that.name) && Objects.equals(this.label, that.label);
   }
 
   @Transient
@@ -157,14 +145,8 @@ public class PropertyModel extends Entity {
   }
 
   @Transient
-  public boolean hasSameSession(final PropertyModel property) {
-    if (property == null) return false;
-    return this.session.equals(property.session);
-  }
-
-  @Transient
   public boolean isCompatibleWith(final PropertyModel other) {
-    return this.hasSameType(other) && this.hasSameName(other) && this.hasSameSession(other);
+    return this.hasSameType(other) && this.hasSameName(other);
   }
 
   @Transient

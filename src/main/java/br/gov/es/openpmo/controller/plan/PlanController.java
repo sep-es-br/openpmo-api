@@ -17,7 +17,16 @@ import io.swagger.annotations.Api;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -38,12 +47,13 @@ public class PlanController {
 
   @Autowired
   public PlanController(
-      final PlanService planService,
-      final OfficeService officeService,
-      final PlanModelService planModelService,
-      final ModelMapper modelMapper,
-      final TokenService tokenService,
-      final ICanAccessService canAccessService) {
+    final PlanService planService,
+    final OfficeService officeService,
+    final PlanModelService planModelService,
+    final ModelMapper modelMapper,
+    final TokenService tokenService,
+    final ICanAccessService canAccessService
+  ) {
     this.planService = planService;
     this.officeService = officeService;
     this.planModelService = planModelService;
@@ -54,36 +64,41 @@ public class PlanController {
 
   @GetMapping
   public ResponseEntity<ResponseBase<List<PlanDto>>> indexBase(
-      @RequestParam("id-office") final Long idOffice,
-      @RequestParam(required = false) final Long idFilter,
-      @RequestParam(required = false) final String term,
-      @RequestHeader(name = "Authorization") final String autorization,
-      @Authorization final String authorization) {
+    @RequestParam("id-office") final Long idOffice,
+    @RequestParam(required = false) final Long idFilter,
+    @RequestParam(required = false) final String term,
+    @Authorization final String authorization
+  ) {
     this.canAccessService.ensureCanReadResource(idOffice, authorization);
-    final String token = autorization.substring(7);
+    final String token = authorization.substring(7);
     final Long idUser = this.tokenService.getPersonId(token, TokenType.AUTHENTICATION);
     List<PlanDto> plans = this.planService.findAllInOffice(idOffice, idFilter, term)
-        .stream()
-        .map(PlanDto::of)
-        .collect(Collectors.toList());
-    plans = this.planService.chekPermission(plans, idUser, idOffice);
+      .stream()
+      .map(PlanDto::of)
+      .collect(Collectors.toList());
+    plans = this.planService.checkPermission(plans, idUser, idOffice);
     final ResponseBase<List<PlanDto>> response = new ResponseBase<List<PlanDto>>().setData(plans).setSuccess(true);
     return ResponseEntity.status(200).body(response);
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<ResponseBase<PlanDto>> findById(@PathVariable final Long id,
-      @Authorization final String authorization) {
-
+  public ResponseEntity<ResponseBase<PlanDto>> findById(
+    @PathVariable final Long id,
+    @Authorization final String authorization
+  ) {
     this.canAccessService.ensureCanReadResource(id, authorization);
-    final PlanDto planDto = PlanDto.of(this.planService.findById(id));
-    final ResponseBase<PlanDto> response = new ResponseBase<PlanDto>().setData(planDto).setSuccess(true);
-    return ResponseEntity.status(200).body(response);
+
+    final PlanDto response = this.planService.maybeFindById(id)
+      .map(PlanDto::of)
+      .orElse(null);
+    return ResponseEntity.ok(ResponseBase.of(response));
   }
 
   @PostMapping
-  public ResponseEntity<ResponseBase<EntityDto>> save(@RequestBody @Valid final PlanStoreDto planStoreDto,
-      @Authorization final String authorization) {
+  public ResponseEntity<ResponseBase<EntityDto>> save(
+    @RequestBody @Valid final PlanStoreDto planStoreDto,
+    @Authorization final String authorization
+  ) {
 
     this.canAccessService.ensureCanEditResource(planStoreDto.getIdOffice(), authorization);
     Plan plan = this.modelMapper.map(planStoreDto, Plan.class);
@@ -91,24 +106,28 @@ public class PlanController {
     plan.setPlanModel(this.planModelService.findById(planStoreDto.getIdPlanModel()));
     plan = this.planService.save(plan);
     final ResponseBase<EntityDto> entity = new ResponseBase<EntityDto>().setData(new EntityDto(plan.getId()))
-        .setSuccess(true);
+      .setSuccess(true);
     return ResponseEntity.status(200).body(entity);
   }
 
   @PutMapping
-  public ResponseEntity<ResponseBase<EntityDto>> update(@RequestBody @Valid final PlanUpdateDto planParamDto,
-      @Authorization final String authorization) {
+  public ResponseEntity<ResponseBase<EntityDto>> update(
+    @RequestBody @Valid final PlanUpdateDto planParamDto,
+    @Authorization final String authorization
+  ) {
 
     this.canAccessService.ensureCanEditResource(planParamDto.getId(), authorization);
     final Plan plan = this.planService.save(this.planService.getPlan(planParamDto));
     final ResponseBase<EntityDto> entity = new ResponseBase<EntityDto>().setData(new EntityDto(plan.getId()))
-        .setSuccess(true);
+      .setSuccess(true);
     return ResponseEntity.status(200).body(entity);
   }
 
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> delete(@PathVariable final Long id,
-      @Authorization final String authorization) {
+  public ResponseEntity<Void> delete(
+    @PathVariable final Long id,
+    @Authorization final String authorization
+  ) {
 
     this.canAccessService.ensureCanEditResource(id, authorization);
     final Plan plan = this.planService.findById(id);

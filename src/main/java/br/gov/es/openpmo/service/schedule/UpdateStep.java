@@ -61,7 +61,7 @@ public class UpdateStep {
     this.modelMapper = modelMapper;
   }
 
-  public Step execute(final StepUpdateDto stepUpdateDto) {
+  public Step execute(final StepUpdateDto stepUpdateDto, Boolean calculateInterval) {
     final Step step = this.getStepForUpdate(stepUpdateDto);
     final Step stepUpdate = this.findById(step.getId());
 
@@ -129,7 +129,7 @@ public class UpdateStep {
     final Step stepUpdated = this.stepRepository.save(stepUpdate);
 
     final List<Deliverable> deliverables = this.updateStatusService.getDeliverablesByStepId(step.getId());
-    this.updateStatusService.update(deliverables);
+    this.updateStatusService.update(deliverables, calculateInterval);
 
     return stepUpdated;
   }

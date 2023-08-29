@@ -1,10 +1,12 @@
 package br.gov.es.openpmo.dto.schedule;
 
+import br.gov.es.openpmo.service.schedule.CostAccountValueAllocatorParameter;
+
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
-public class ConsumesParamDto {
+public class ConsumesParamDto implements CostAccountValueAllocatorParameter {
 
   private Long id;
   @Min(value = 0)

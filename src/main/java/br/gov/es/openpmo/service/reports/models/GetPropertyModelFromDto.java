@@ -21,7 +21,7 @@ public class GetPropertyModelFromDto {
     this.extractPropertyModel = extractPropertyModel;
   }
 
-  public Set<PropertyModel> execute(Collection<PropertyModelDto> propertyModelDtos) {
+  public Set<PropertyModel> execute(Collection<? extends PropertyModelDto> propertyModelDtos) {
     final Set<PropertyModel> propertyModels = new HashSet<>();
     if (propertyModelDtos == null || propertyModelDtos.isEmpty()) {
       log.debug("PropertyModelDtos vazio. Retonando lista vazia.");

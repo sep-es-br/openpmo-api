@@ -7,11 +7,13 @@ import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.reports.ReportDesign;
 import br.gov.es.openpmo.model.reports.ReportFormat;
 import br.gov.es.openpmo.repository.ReportDesignRepository;
+import br.gov.es.openpmo.service.workpack.UpdatePropertyModels;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -33,7 +35,7 @@ public class UpdateReportModel {
 
   private final GetReportModelById getReportModelById;
 
-  private final UpdatePropertyModel updatePropertyModel;
+  private final UpdatePropertyModels updatePropertyModels;
 
   private final OnlyOneReportModelTemplateSourceValidator onlyOneReportModelTemplateSourceValidator;
 
@@ -42,13 +44,13 @@ public class UpdateReportModel {
     final CreateReportModelTemplateSource createReportModelTemplateSource,
     final GetPropertyModelFromDto getPropertyModelFromDto,
     final GetReportModelById getReportModelById,
-    final UpdatePropertyModel updatePropertyModel,
+    final UpdatePropertyModels updatePropertyModels,
     final OnlyOneReportModelTemplateSourceValidator onlyOneReportModelTemplateSourceValidator) {
     this.reportDesignRepository = reportDesignRepository;
     this.createReportModelTemplateSource = createReportModelTemplateSource;
     this.getPropertyModelFromDto = getPropertyModelFromDto;
     this.getReportModelById = getReportModelById;
-    this.updatePropertyModel = updatePropertyModel;
+    this.updatePropertyModels = updatePropertyModels;
     this.onlyOneReportModelTemplateSourceValidator = onlyOneReportModelTemplateSourceValidator;
   }
 
@@ -127,9 +129,13 @@ public class UpdateReportModel {
   ) {
     log.debug("Atualizando propriedades do reportDesign.");
     final Set<PropertyModel> propertiesModel = this.getPropertyModelFromDto.execute(request.getParamModels());
-    this.updatePropertyModel.execute(
-      reportDesign,
-      propertiesModel
+    if (reportDesign.getPropertiesModel() == null) {
+      reportDesign.setPropertiesModel(new HashSet<>());
+    }
+    final Set<PropertyModel> propertiesToUpdate = reportDesign.getPropertiesModel();
+    this.updatePropertyModels.execute(
+      propertiesModel,
+      propertiesToUpdate
     );
     log.debug("Propriedades atualizadas com sucesso.");
   }

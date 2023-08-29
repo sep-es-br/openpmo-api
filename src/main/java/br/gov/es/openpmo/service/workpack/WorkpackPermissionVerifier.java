@@ -1,7 +1,7 @@
 package br.gov.es.openpmo.service.workpack;
 
 import br.gov.es.openpmo.dto.permission.PermissionDto;
-import br.gov.es.openpmo.dto.workpack.WorkpackDetailDto;
+import br.gov.es.openpmo.dto.workpack.WorkpackDetailParentDto;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.office.Office;
@@ -159,8 +159,8 @@ public class WorkpackPermissionVerifier {
       .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
   }
 
-  public List<WorkpackDetailDto> verify(
-    final List<WorkpackDetailDto> workpackList,
+  public List<WorkpackDetailParentDto> verify(
+    final List<WorkpackDetailParentDto> workpackList,
     final Long idUser,
     final Long idPlan
   ) {
@@ -173,8 +173,8 @@ public class WorkpackPermissionVerifier {
     final List<PermissionDto> permissionsPlan = this.fetchPlanPermissions(idPlan, idUser);
 
     final Set<Workpack> workpacks = this.getAllWorkpacksUsingPlan(idPlan);
-    for(final Iterator<WorkpackDetailDto> it = workpackList.iterator(); it.hasNext(); ) {
-      final WorkpackDetailDto workpackDetailDto = it.next();
+    for(final Iterator<WorkpackDetailParentDto> it = workpackList.iterator(); it.hasNext(); ) {
+      final WorkpackDetailParentDto workpackDetailDto = it.next();
       final Workpack workpack = this.getWorkpack(workpacks, workpackDetailDto.getId());
       if(workpack != null) {
         if(hasStakeholderSessionActive(workpack)) {

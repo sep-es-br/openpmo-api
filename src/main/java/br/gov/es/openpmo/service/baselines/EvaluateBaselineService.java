@@ -112,8 +112,12 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     this.updateBaselineStatus(baseline, idPerson);
     this.journalCreator.baseline(baseline, idPerson);
 
+    if (baseline.getStatus() != Status.APPROVED || baseline.isCancelation()) {
+      return;
+    }
+
     this.repository.findWorkpacksIdByBaselineId(baseline.getId())
-      .forEach(this.dashboardService::calculate);
+      .forEach(worpackId -> this.dashboardService.calculate(worpackId, true));
   }
 
   private boolean isAlreadyRejected(final Long idBaseline) {

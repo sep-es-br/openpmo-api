@@ -47,13 +47,14 @@ public class GetDatasheetDashboardData implements IGetDatasheetDashboardData {
   }
 
   private List<WorkpacksByModelResponse> getChildrenByType(final Long workpackId) {
-    final List<WorkpackByModelQueryResult> queryResults = Optional.ofNullable(workpackId)
-      .map(this.repository::workpackByModel)
-      .orElse(Collections.emptyList());
+//    final List<WorkpackByModelQueryResult> queryResults = Optional.ofNullable(workpackId)
+//      .map(this.repository::workpackByModel)
+//      .orElse(Collections.emptyList());
 
-    return queryResults.stream()
-      .map(WorkpacksByModelResponse::from)
-      .collect(Collectors.toList());
+//    return queryResults.stream()
+//      .map(WorkpacksByModelResponse::from)
+//      .collect(Collectors.toList());
+    return null;
   }
 
   private Set<DatasheetStakeholderResponse> getDatasheetStakeholders(

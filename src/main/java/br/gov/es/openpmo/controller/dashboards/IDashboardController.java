@@ -28,7 +28,11 @@ public interface IDashboardController {
   @GetMapping
   Response<DashboardResponse> getDashboard(
       @RequestParam(name = "show-header", defaultValue = "true") Boolean showHeader,
+      @RequestParam(name = "id-plan") Long planId,
       @RequestParam(name = "id-workpack") Long workpackId,
+      @RequestParam(name = "id-workpack-model") Long workpackModelId,
+      @RequestParam(name = "id-workpack-model-linked", required = false) Long workpackModelLinkedId,
+      @RequestParam(name = "linked", required = false, defaultValue = "false") boolean linked,
       @RequestParam(name = "id-baseline", required = false) Long baselineId,
       @RequestParam(name = "date-reference", required = false) @DateTimeFormat(pattern = "MM/yyyy") YearMonth yearMonth,
       UriComponentsBuilder uriComponentsBuilder,
@@ -37,6 +41,11 @@ public interface IDashboardController {
   @GetMapping("/calculate")
   Response<Void> calculate(
       @RequestParam("id-workpack") final Long workpackId,
-      @Authorization final String authorization);
+      @RequestParam(value = "calculate-interval", required = false) Boolean calculateInterval,
+      @Authorization final String authorization
+  );
+
+  @GetMapping("/purge")
+  Response<Void> purge(@Authorization final String authorization);
 
 }

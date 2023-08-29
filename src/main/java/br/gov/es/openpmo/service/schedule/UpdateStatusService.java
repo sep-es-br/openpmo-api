@@ -48,7 +48,7 @@ public class UpdateStatusService {
     return this.stepRepository.findDeliverablesByScheduleId(scheduleId);
   }
 
-  public void update(final List<Deliverable> deliverables) {
+  public void update(final Collection<Deliverable> deliverables, Boolean calculateInterval) {
     final Collection<Workpack> analyzedDeliverables = new ArrayList<>();
 
     for (final Deliverable deliverable : deliverables) {
@@ -60,7 +60,7 @@ public class UpdateStatusService {
       this.completeWorkpackService.apply(workpack.getId(), request);
     }
 
-    this.updateDashboards(deliverables);
+    this.updateDashboards(deliverables, calculateInterval);
   }
 
   private void updateIfCompleted(
@@ -118,7 +118,7 @@ public class UpdateStatusService {
     return this.stepRepository.hasWorkToCompleteComparingWithMaster(idDeliverable);
   }
 
-  private void updateDashboards(final Collection<? extends Deliverable> deliverables) {
+  private void updateDashboards(final Collection<? extends Deliverable> deliverables, Boolean calculateInterval) {
     final List<Long> deliverablesId = deliverables.stream()
       .map(Deliverable::getId)
       .collect(Collectors.toList());
@@ -126,7 +126,7 @@ public class UpdateStatusService {
     this.stepRepository.findAllDeliverablesAndAscendents(deliverablesId)
       .stream()
       .map(Workpack::getId)
-      .forEach(this.dashboardService::calculate);
+      .forEach(worpackId -> this.dashboardService.calculate(worpackId, calculateInterval));
   }
 
 }

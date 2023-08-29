@@ -2,14 +2,7 @@ package br.gov.es.openpmo.controller.baselines;
 
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.Response;
-import br.gov.es.openpmo.dto.baselines.BaselineDetailResponse;
-import br.gov.es.openpmo.dto.baselines.BaselineEvaluationRequest;
-import br.gov.es.openpmo.dto.baselines.EditDraftBaselineRequest;
-import br.gov.es.openpmo.dto.baselines.GetAllBaselinesResponse;
-import br.gov.es.openpmo.dto.baselines.IncludeBaselineRequest;
-import br.gov.es.openpmo.dto.baselines.SubmitBaselineRequest;
-import br.gov.es.openpmo.dto.baselines.SubmitCancellingRequest;
-import br.gov.es.openpmo.dto.baselines.UpdateResponse;
+import br.gov.es.openpmo.dto.baselines.*;
 import br.gov.es.openpmo.dto.baselines.ccbmemberview.BaselineDetailCCBMemberResponse;
 import br.gov.es.openpmo.enumerator.BaselineViewStatus;
 import br.gov.es.openpmo.service.authentication.TokenService;

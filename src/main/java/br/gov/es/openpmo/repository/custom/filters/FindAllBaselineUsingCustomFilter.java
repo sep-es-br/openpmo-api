@@ -28,7 +28,7 @@ public abstract class FindAllBaselineUsingCustomFilter extends FindAllUsingCusto
             .append(this.nodeName)
             .append(":Baseline), (p:Person)-[c:IS_CCB_MEMBER_FOR{active:true}]->(w), ")
             .append("(w)-[iib:IS_INSTANCE_BY]->(model:WorkpackModel), ")
-            .append("(model)<-[f1:FEATURES]-(nameModel:PropertyModel{name:'name', session:'PROPERTIES'})<-[idb:IS_DRIVEN_BY]-(nameProperty:Property)-[f2:FEATURES]->(w) ")
+            .append("(model)<-[f1:FEATURES]-(nameModel:PropertyModel{name:'name'})<-[idb:IS_DRIVEN_BY]-(nameProperty:Property)-[f2:FEATURES]->(w) ")
             .append("with *, apoc.text.levenshteinSimilarity(apoc.text.clean(").append(this.nodeName).append(".name), apoc.text.clean($term)) as nameScore, ")
             .append("apoc.text.levenshteinSimilarity(apoc.text.clean(").append(this.nodeName).append(".description), apoc.text.clean($term)) as descriptionScore ")
             .append("with *, case when nameScore > descriptionScore then nameScore else descriptionScore end as score ");

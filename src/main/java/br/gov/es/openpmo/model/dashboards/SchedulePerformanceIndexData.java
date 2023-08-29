@@ -11,7 +11,7 @@ public class SchedulePerformanceIndexData {
   private BigDecimal scheduleVariation;
 
   public static SchedulePerformanceIndexData of(final SchedulePerformanceIndex from) {
-    if(from == null) {
+    if (from == null) {
       return null;
     }
 
@@ -19,6 +19,19 @@ public class SchedulePerformanceIndexData {
 
     to.setIndexValue(from.getIndexValue());
     to.setScheduleVariation(from.getScheduleVariation());
+
+    return to;
+  }
+
+  public static SchedulePerformanceIndexData of(final PerformanceIndexes from) {
+    if (from == null) {
+      return null;
+    }
+
+    final SchedulePerformanceIndexData to = new SchedulePerformanceIndexData();
+
+    to.setIndexValue(from.getSchedulePerformanceIndexValue());
+    to.setScheduleVariation(from.getSchedulePerformanceIndexVariation());
 
     return to;
   }

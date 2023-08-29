@@ -90,10 +90,9 @@ public class ReportController {
 
   @PostMapping("/generate")
   public ResponseEntity<ByteArrayResource> generateReport(
-    @Authorization String authorization,
+    @Authorization final String authorization,
     @RequestBody @Valid final ReportRequest request
   ) {
-
     final GeneratedReport response = this.generateReportComponent.execute(request, authorization);
 
     if (response.getResource() == null) {

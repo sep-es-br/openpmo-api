@@ -7,6 +7,7 @@ import br.gov.es.openpmo.dto.Response;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.ResponseBasePaginated;
 import br.gov.es.openpmo.dto.actor.PersonListFilterParameters;
+import br.gov.es.openpmo.dto.person.LocalWorkRequest;
 import br.gov.es.openpmo.dto.person.NameRequest;
 import br.gov.es.openpmo.dto.person.PersonCreateRequest;
 import br.gov.es.openpmo.dto.person.PersonDto;
@@ -16,6 +17,7 @@ import br.gov.es.openpmo.dto.person.PersonUpdateDto;
 import br.gov.es.openpmo.dto.person.detail.PersonDetailDto;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.service.actors.PersonService;
+import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.permissions.PersonPermissionsService;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.utils.ResponseHandler;
@@ -54,18 +56,21 @@ public class PersonController {
   private final PersonPermissionsService personPermissionsService;
   private final ResponseHandler responseHandler;
   private final ICanAccessService canAccessService;
+  private final TokenService tokenService;
 
   @Autowired
   public PersonController(
     final PersonService personService,
     final PersonPermissionsService personPermissionsService,
     final ResponseHandler responseHandler,
-    final ICanAccessService canAccessService
+    final ICanAccessService canAccessService,
+    final TokenService tokenService
   ) {
     this.personService = personService;
     this.personPermissionsService = personPermissionsService;
     this.responseHandler = responseHandler;
     this.canAccessService = canAccessService;
+    this.tokenService = tokenService;
   }
 
   @GetMapping("/{key}")
@@ -188,6 +193,17 @@ public class PersonController {
   ) {
     this.canAccessService.ensureCanEditResource(idPerson, authorization);
     this.personService.updateName(idPerson, nameRequest.getName());
+    return this.responseHandler.success();
+  }
+
+  @Transactional
+  @PatchMapping("/work-local")
+  public Response<Void> updateLocalWork(
+    @RequestBody final LocalWorkRequest request,
+    @Authorization final String authorization
+  ) {
+    final Long idPerson = this.tokenService.getUserId(authorization);
+    this.personService.updateLocalWork(idPerson, request);
     return this.responseHandler.success();
   }
 

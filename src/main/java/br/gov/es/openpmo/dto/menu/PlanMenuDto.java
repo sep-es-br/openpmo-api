@@ -9,22 +9,30 @@ public class PlanMenuDto {
 
   private Long id;
   private String name;
+  private String fullName;
   private LocalDate start;
 
   public PlanMenuDto() {}
 
   public PlanMenuDto(
-    Long id,
-    String name,
-    LocalDate start
+    final Long id,
+    final String name,
+    final String fullName,
+    final LocalDate start
   ) {
     this.id = id;
     this.name = name;
+    this.fullName = fullName;
     this.start = start;
   }
 
   public static PlanMenuDto of(final Plan plan) {
-    return new PlanMenuDto(plan.getId(), plan.getName(), plan.getStart());
+    return new PlanMenuDto(
+      plan.getId(),
+      plan.getName(),
+      plan.getFullName(),
+      plan.getStart()
+    );
   }
 
   public Long getId() {
@@ -44,11 +52,19 @@ public class PlanMenuDto {
   }
 
   public LocalDate getStart() {
-    return start;
+    return this.start;
   }
 
-  public void setStart(LocalDate start) {
+  public void setStart(final LocalDate start) {
     this.start = start;
+  }
+
+  public String getFullName() {
+    return this.fullName;
+  }
+
+  public void setFullName(final String fullName) {
+    this.fullName = fullName;
   }
 
   @Override
@@ -58,10 +74,10 @@ public class PlanMenuDto {
 
   @Override
   public boolean equals(final Object o) {
-    if(this == o) {
+    if (this == o) {
       return true;
     }
-    if(o == null || this.getClass() != o.getClass()) {
+    if (o == null || this.getClass() != o.getClass()) {
       return false;
     }
     final PlanMenuDto that = (PlanMenuDto) o;

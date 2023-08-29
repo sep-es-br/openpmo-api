@@ -102,6 +102,10 @@ public class OfficeService {
     return this.officeRepository.findById(id).orElseThrow(() -> new NegocioException(OFFICE_NOT_FOUND));
   }
 
+  public Optional<Office> maybeFindById(final Long id) {
+    return this.officeRepository.findById(id);
+  }
+
   public void delete(final Office office) {
     if((office.getPlans() != null && !office.getPlans().isEmpty())
        || (office.getPlansModel() != null && !office.getPlansModel().isEmpty())) {

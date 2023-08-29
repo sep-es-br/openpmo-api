@@ -4,6 +4,8 @@ public class ApplicationMessage {
 
     public static final String PLAN_MODEL_NOT_FOUND = "planModel.not.found";
 
+    public static final String COST_ACCOUNT_MODEL_NOT_FOUND = "costAccountModel.not.found";
+
     public static final String CUSTOM_FILTER_NOT_FOUND = "customFilter.not.found";
 
     public static final String PLAN_NOT_FOUND = "plan.not.found";
@@ -43,6 +45,8 @@ public class ApplicationMessage {
     public static final String PLAN_MODEL_DELETE_RELATIONSHIP_ERROR = "planModel.delete.relationship.error";
 
     public static final String WORKPACK_MODEL_DELETE_RELATIONSHIP_ERROR = "workpackModel.delete.relationship.error";
+
+    public static final String COST_ACCOUNT_MODEL_DELETE_RELATIONSHIP_ERROR = "costAccountModel.delete.relationship.error";
 
     public static final String PROPERTY_MODEL_DELETE_RELATIONSHIP_ERROR = "propertyModel.delete.relationship.error";
 
@@ -111,6 +115,8 @@ public class ApplicationMessage {
     public static final String ID_NOT_NULL = "id.not.null";
 
     public static final String ID_WORKPACK_NOT_NULL = "id.workpack.not.null";
+
+    public static final String ID_COST_ACCOUNT_MODEL_NOT_NULL = "id.costAccountModel.not.null";
 
     public static final String OFFICE_NOT_NULL = "office.not.null";
 

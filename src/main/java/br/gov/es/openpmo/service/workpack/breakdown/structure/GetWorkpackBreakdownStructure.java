@@ -96,6 +96,9 @@ public class GetWorkpackBreakdownStructure {
 
   private boolean hasOnlyBasicReadPermission(final Long idWorkpack, final String authorization) {
     final ICanAccessDataResponse canAccessData = this.canAccessData.execute(idWorkpack, authorization);
+    if (canAccessData.getAdmin()) {
+      return false;
+    }
     if (canAccessData.getEdit()) {
       return false;
     }

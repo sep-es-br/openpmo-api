@@ -17,11 +17,13 @@ public class GetReportModelById {
 
   private final ReportDesignRepository repository;
 
-  public GetReportModelById(final ReportDesignRepository repository) {this.repository = repository;}
+  public GetReportModelById(final ReportDesignRepository repository) {
+    this.repository = repository;
+  }
 
   public ReportDesign execute(final Long idReportDesign) {
     log.debug("Buscando ReportDesign pelo ID: {}.", idReportDesign);
-    final Optional<ReportDesign> maybeReportDesign = this.repository.findById(idReportDesign, 2);
+    final Optional<ReportDesign> maybeReportDesign = this.repository.findByIdWithRelationships(idReportDesign);
     if (maybeReportDesign.isPresent()) {
       log.debug("Retornando PlanModel encontrado. ID {}.", idReportDesign);
       return maybeReportDesign.get();

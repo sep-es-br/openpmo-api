@@ -13,7 +13,7 @@ public class ResponseBaseWorkpack {
   private boolean success = true;
 
   @ApiModelProperty(position = 3)
-  private List<WorkpackDetailDto> data;
+  private List<WorkpackDetailParentDto> data;
 
   public String getMessage() {
     return this.message;
@@ -33,11 +33,11 @@ public class ResponseBaseWorkpack {
     return this;
   }
 
-  public List<WorkpackDetailDto> getData() {
+  public List<WorkpackDetailParentDto> getData() {
     return this.data;
   }
 
-  public ResponseBaseWorkpack setData(final List<WorkpackDetailDto> entidade) {
+  public ResponseBaseWorkpack setData(final List<WorkpackDetailParentDto> entidade) {
     this.data = entidade;
     return this;
   }

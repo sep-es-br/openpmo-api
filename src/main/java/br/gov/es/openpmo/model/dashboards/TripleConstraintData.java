@@ -24,7 +24,7 @@ public class TripleConstraintData {
   private ScopeData scope;
 
   public static TripleConstraintData of(final TripleConstraintDataChart from) {
-    if(from == null) {
+    if (from == null) {
       return null;
     }
 
@@ -36,6 +36,22 @@ public class TripleConstraintData {
     apply(from.getCost(), CostData::of, to::setCost);
     apply(from.getSchedule(), ScheduleData::of, to::setSchedule);
     apply(from.getScope(), ScopeData::of, to::setScope);
+
+    return to;
+  }
+
+  public static TripleConstraintData of(final TripleConstraint from) {
+    if (from == null) {
+      return null;
+    }
+
+    final TripleConstraintData to = new TripleConstraintData();
+
+    to.setIdBaseline(from.getIdBaseline());
+    to.setMesAno(from.getMonth().getDate());
+    to.setCost(CostData.of(from));
+    to.setSchedule(ScheduleData.of(from));
+    to.setScope(ScopeData.of(from));
 
     return to;
   }

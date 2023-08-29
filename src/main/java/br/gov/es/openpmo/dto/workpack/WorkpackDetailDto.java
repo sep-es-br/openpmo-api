@@ -1,28 +1,18 @@
 package br.gov.es.openpmo.dto.workpack;
 
-import br.gov.es.openpmo.dto.costaccount.CostAccountDto;
 import br.gov.es.openpmo.dto.dashboards.v2.SimpleDashboard;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.dto.plan.PlanDto;
 import br.gov.es.openpmo.dto.workpackLink.WorkpackModelLinkedDto;
 import br.gov.es.openpmo.dto.workpackmodel.details.WorkpackModelDetailDto;
-import br.gov.es.openpmo.dto.workpackshared.WorkpackSharedDto;
-import br.gov.es.openpmo.model.relations.IsLinkedTo;
 import br.gov.es.openpmo.model.workpacks.Workpack;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.*;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.swagger.annotations.ApiModel;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
 import java.util.function.Supplier;
 
 @JsonTypeInfo(use = Id.NAME, property = "type")
@@ -39,46 +29,28 @@ public abstract class WorkpackDetailDto {
 
   private Long id;
 
+  private Long idParent;
+
   private PlanDto plan;
 
   private WorkpackModelDetailDto model;
 
-  private Set<WorkpackDetailDto> children;
+  private Boolean hasChildren;
 
   private List<? extends PropertyDto> properties;
-
-  private Set<CostAccountDto> costs;
 
   private List<PermissionDto> permissions;
 
   private WorkpackModelLinkedDto modelLinked;
 
-  private List<WorkpackSharedDto> sharedWith;
-
-  private Boolean linked;
-
-  private Long linkedModel;
-
-  @JsonProperty("cancelable")
-  private boolean isCancelable;
+  private Boolean sharedWith;
 
   @JsonProperty("canceled")
   private boolean isCanceled;
 
-  @JsonProperty("canDeleted")
-  private boolean canBeDeleted;
-
-  private boolean hasActiveBaseline;
-
-  private boolean pendingBaseline;
-
-  private boolean cancelPropose;
-
   private boolean isFavoritedBy;
 
   private Boolean hasScheduleSectionActive;
-
-  private String activeBaselineName;
 
   @JsonFormat(pattern = "dd-MM-yyyy")
   private LocalDate endManagementDate;
@@ -95,61 +67,19 @@ public abstract class WorkpackDetailDto {
   ) {
     final TYPE instance = instanceSupplier.get();
     instance.setId(workpack.getId());
-    instance.setCancelable(workpack.isCancelable());
     instance.setCanceled(workpack.isCanceled());
-    instance.setCanBeDeleted(workpack.isDeleted());
     instance.setEndManagementDate(workpack.getEndManagementDate());
     instance.setReason(workpack.getReason());
     instance.setCompleted(workpack.getCompleted());
     return instance;
   }
 
-  public void setCanBeDeleted(final boolean canBeDeleted) {
-    this.canBeDeleted = canBeDeleted;
-  }
-
-  public boolean isHasActiveBaseline() {
-    return this.hasActiveBaseline;
-  }
-
-  public void setHasActiveBaseline(final boolean hasActiveBaseline) {
-    this.hasActiveBaseline = hasActiveBaseline;
-  }
-
-  public List<WorkpackSharedDto> getSharedWith() {
+  public Boolean getSharedWith() {
     return this.sharedWith;
   }
 
-  public void setSharedWith(final List<WorkpackSharedDto> sharedWith) {
+  public void setSharedWith(final Boolean sharedWith) {
     this.sharedWith = sharedWith;
-  }
-
-  public Boolean getLinked() {
-    return this.linked;
-  }
-
-  public void setLinked(final Boolean linked) {
-    this.linked = linked;
-  }
-
-  public void applyLinkedStatus(
-    final Workpack workpack,
-    final Long idWorkpackModel
-  ) {
-    this.linkedModel = Optional.ofNullable(workpack.getLinkedTo())
-      .flatMap(linkeds -> linkeds.stream()
-        .map(IsLinkedTo::getWorkpackModelId)
-        .filter(id -> Objects.equals(id, idWorkpackModel))
-        .findFirst()).orElse(null);
-    this.linked = this.linkedModel != null;
-  }
-
-  public Long getLinkedModel() {
-    return this.linkedModel;
-  }
-
-  public void setLinkedModel(final Long linkedModel) {
-    this.linkedModel = linkedModel;
   }
 
   public Long getId() {
@@ -184,12 +114,12 @@ public abstract class WorkpackDetailDto {
     this.model = model;
   }
 
-  public Set<WorkpackDetailDto> getChildren() {
-    return this.children;
+  public Boolean getHasChildren() {
+    return hasChildren;
   }
 
-  public void setChildren(final Set<WorkpackDetailDto> children) {
-    this.children = children;
+  public void setHasChildren(Boolean hasChildren) {
+    this.hasChildren = hasChildren;
   }
 
   public List<? extends PropertyDto> getProperties() {
@@ -198,14 +128,6 @@ public abstract class WorkpackDetailDto {
 
   public void setProperties(final List<? extends PropertyDto> properties) {
     this.properties = properties;
-  }
-
-  public Set<CostAccountDto> getCosts() {
-    return this.costs;
-  }
-
-  public void setCosts(final Set<CostAccountDto> costs) {
-    this.costs = costs;
   }
 
   public List<PermissionDto> getPermissions() {
@@ -229,40 +151,12 @@ public abstract class WorkpackDetailDto {
     return this.plan.getId();
   }
 
-  public boolean isCancelable() {
-    return this.isCancelable;
-  }
-
-  public void setCancelable(final boolean cancelable) {
-    this.isCancelable = cancelable;
-  }
-
   public boolean isCanceled() {
     return this.isCanceled;
   }
 
   public void setCanceled(final boolean canceled) {
     this.isCanceled = canceled;
-  }
-
-  public boolean canBeDeleted() {
-    return this.canBeDeleted;
-  }
-
-  public boolean getPendingBaseline() {
-    return this.pendingBaseline;
-  }
-
-  public void setPendingBaseline(final boolean pendingBaseline) {
-    this.pendingBaseline = pendingBaseline;
-  }
-
-  public boolean getCancelPropose() {
-    return this.cancelPropose;
-  }
-
-  public void setCancelPropose(final boolean cancelPropose) {
-    this.cancelPropose = cancelPropose;
   }
 
   public boolean isFavoritedBy() {
@@ -305,15 +199,6 @@ public abstract class WorkpackDetailDto {
     this.dashboard = dashboard;
   }
 
-  public String getActiveBaselineName() {
-    return this.activeBaselineName;
-  }
-
-  public void setActiveBaselineName(final String activeBaselineName) {
-    this.activeBaselineName = activeBaselineName;
-  }
-
-
   public Boolean getHasScheduleSectionActive() {
     return this.hasScheduleSectionActive;
   }
@@ -322,4 +207,11 @@ public abstract class WorkpackDetailDto {
     this.hasScheduleSectionActive = hasScheduleSectionActive;
   }
 
+  public Long getIdParent() {
+    return idParent;
+  }
+
+  public void setIdParent(Long idParent) {
+    this.idParent = idParent;
+  }
 }

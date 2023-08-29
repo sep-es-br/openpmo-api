@@ -19,9 +19,15 @@ public interface ReportDesignRepository extends Neo4jRepository<ReportDesign, Lo
          "RETURN r, p, pm")
   List<ReportDesign> findAllByPlanModelId(Long planModelId);
 
-  @Query("MATCH (r:ReportDesign)<-[s]->(t) " +
-         "WHERE id(r) = $id " +
-         "RETURN r, s, t, [(t)-[p:IS_COMPILATION_OF]->(c:File) | [p, c]]")
+  @Query("match (rd:ReportDesign) " +
+    "where id(rd)=$id " +
+    "match (rd)-[i:IS_DESIGNED_FOR]->(pl:PlanModel) " +
+    "optional match (rd)<-[p:PARAMETERIZES]-(pm:PropertyModel) " +
+    "optional match (pm)-[d:DEFAULTS_TO]->(n) " +
+    "optional match (rd)<-[s:IS_SOURCE_TEMPLATE_OF]-(ts:File) " +
+    "optional match (rd)<-[c:IS_COMPILED_TEMPLATE_OF]-(cs:File) " +
+    "with rd, i, pl, p, pm, d, n, s, ts, c, cs " +
+    "return rd, i, pl, p, pm, d, n, s, ts, c, cs")
   Optional<ReportDesign> findByIdWithRelationships(@Param("id") Long id);
 
   @Query(
@@ -31,7 +37,7 @@ public interface ReportDesignRepository extends Neo4jRepository<ReportDesign, Lo
     "RETURN r"
   )
   Set<ReportDesign> findAllReportsActiveByPlan(@Param("idPlan") Long idPlan);
-  
+
   @Query("MATCH (r:ReportDesign)-[p:IS_DESIGNED_FOR]->(pm:PlanModel) " +
          "WHERE id(pm) = $planModelId AND r.active = TRUE " +
          "RETURN r, p, pm")

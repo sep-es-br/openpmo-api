@@ -53,11 +53,12 @@ public class WorkpackLinkController {
 
   @PostMapping("/{id-workpack}/link/to/workpackModel/{id-workpack-model}")
   public ResponseEntity<ResponseBaseItens<ComboDto>> createLink(
-      @PathVariable("id-workpack") final Long idWorkpack,
-      @PathVariable("id-workpack-model") final Long idworkpackModel,
-      @RequestParam("id-plan") final Long idPlan,
-      @RequestParam(value = "id-parent", required = false) final Long idParent,
-      @RequestHeader("Authorization") final String authorization) {
+    @PathVariable("id-workpack") final Long idWorkpack,
+    @PathVariable("id-workpack-model") final Long idworkpackModel,
+    @RequestParam("id-plan") final Long idPlan,
+    @RequestParam(value = "id-parent", required = false) final Long idParent,
+    @RequestHeader("Authorization") final String authorization
+  ) {
 
     this.canAccessService.ensureCanEditResource(idParent, authorization);
     this.workpackLinkService.linkWorkpackToWorkpackModel(idWorkpack, idworkpackModel, idPlan, idParent);
@@ -66,10 +67,11 @@ public class WorkpackLinkController {
 
   @PostMapping("/{id-workpack}/unlink/to/workpackModel/{id-workpack-model}")
   public ResponseEntity<ResponseBaseItens<Void>> unlinkWorkpack(
-      @PathVariable("id-workpack") final Long idWorkpack,
-      @PathVariable("id-workpack-model") final Long idWorkpackModel,
-      @RequestParam("id-plan") final Long idPlan,
-      @RequestHeader("Authorization") final String authorization) {
+    @PathVariable("id-workpack") final Long idWorkpack,
+    @PathVariable("id-workpack-model") final Long idWorkpackModel,
+    @RequestParam("id-plan") final Long idPlan,
+    @RequestHeader("Authorization") final String authorization
+  ) {
 
     this.canAccessService.ensureCanEditResource(idWorkpack, authorization);
     this.workpackLinkService.unlink(idWorkpack, idWorkpackModel, idPlan);
@@ -91,10 +93,12 @@ public class WorkpackLinkController {
         idWorkpack,
         idWorpackModelLinked);
 
-    response.setPermissions(this.workpackPermissionVerifier.fetchPermissions(
+    if (response != null) {
+      response.setPermissions(this.workpackPermissionVerifier.fetchPermissions(
         idUser,
         idPlan,
         response.getId()));
+    }
 
     return ResponseEntity.ok(
         new ResponseBaseWorkpackDetail()

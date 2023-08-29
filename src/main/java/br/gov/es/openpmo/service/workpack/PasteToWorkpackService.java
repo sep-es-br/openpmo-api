@@ -154,7 +154,7 @@ public class PasteToWorkpackService {
 
   private void calculateDashboard(final Long workpackId) {
     this.workpackRepository.findAllInHierarchy(workpackId)
-      .forEach(this.dashboardService::calculate);
+      .forEach(worpackId -> this.dashboardService.calculate(worpackId, true));
   }
 
   private Plan getPlan(final Long idPlan) {

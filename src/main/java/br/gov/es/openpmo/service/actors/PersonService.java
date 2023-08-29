@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.service.actors;
 
 import br.gov.es.openpmo.dto.ComboDto;
+import br.gov.es.openpmo.dto.person.LocalWorkRequest;
 import br.gov.es.openpmo.dto.person.PersonCreateRequest;
 import br.gov.es.openpmo.dto.person.PersonDto;
 import br.gov.es.openpmo.dto.person.PersonGetByIdDto;
@@ -417,8 +418,8 @@ public class PersonService {
       .filter(
         personPermissionDetailQuery ->
           personPermissionDetailQuery.getCanAccessWorkpack() != null
-          || personPermissionDetailQuery.getIsStakeholderIn() != null
-          || personPermissionDetailQuery.getIsCCBMemberFor() != null
+            || personPermissionDetailQuery.getIsStakeholderIn() != null
+            || personPermissionDetailQuery.getIsCCBMemberFor() != null
       )
       .collect(Collectors.toList());
 
@@ -426,8 +427,8 @@ public class PersonService {
       final Workpack workpack = permission.getWorkpack();
 
       if (workpack == null
-          || this.contains(workpack, result, WorkpackPermissionDetailDto::getId)
-          || !workpacks.contains(workpack)
+        || this.contains(workpack, result, WorkpackPermissionDetailDto::getId)
+        || !workpacks.contains(workpack)
       ) {
         continue;
       }
@@ -737,4 +738,14 @@ public class PersonService {
       .orElseThrow(() -> new NegocioException(ApplicationMessage.PERSON_NOT_FOUND));
   }
 
+  public void updateLocalWork(Long idPerson, LocalWorkRequest request) {
+    final Person person = this.repository.findById(idPerson)
+      .orElseThrow(() -> new NegocioException(ApplicationMessage.PERSON_NOT_FOUND));
+
+    person.setIdOffice(request.getIdOffice());
+    person.setIdPlan(request.getIdPlan());
+    person.setIdWorkpack(request.getIdWorkpack());
+    person.setIdWorkpackModelLinked(request.getIdWorkpackModelLinked());
+    this.repository.save(person, 0);
+  }
 }

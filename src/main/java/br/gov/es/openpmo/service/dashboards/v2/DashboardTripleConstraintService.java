@@ -52,7 +52,7 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
   public TripleConstraintDataChart build(final DashboardParameters parameters) {
     final YearMonth yearMonth = parameters.getYearMonth();
 
-    if(yearMonth == null) {
+    if (yearMonth == null) {
       return null;
     }
 
@@ -65,19 +65,25 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
 
   @Override
   @NonNull
-  public Optional<List<TripleConstraintDataChart>> calculate(@NonNull final Long workpackId) {
+  public List<TripleConstraintDataChart> calculate(@NonNull final Long workpackId) {
+    Optional<DateIntervalQuery> dateIntervalQuery;
     final List<Long> baselineIds = this.getActiveBaselineIds(workpackId);
-
-    return this.findWorkpackBaselineInterval.execute(workpackId, baselineIds)
+    if (baselineIds.isEmpty()) {
+      dateIntervalQuery = this.findWorkpackInterval.execute(workpackId);
+    } else {
+      dateIntervalQuery = this.findWorkpackBaselineInterval.execute(workpackId, baselineIds);
+    }
+    return dateIntervalQuery
       .filter(DateIntervalQuery::isValid)
       .map(DateIntervalQuery::toYearMonths)
-      .map(months -> this.calculateForAllMonths(workpackId, months));
+      .map(months -> this.calculateForAllMonths(workpackId, months))
+      .orElseGet(ArrayList::new);
   }
 
   private Set<Long> getDeliverablesId(final Long workpackId) {
     final Set<Long> deliverablesId = this.workpackRepository.getDeliverablesId(workpackId);
 
-    if(this.workpackRepository.isDeliverable(workpackId)) {
+    if (this.workpackRepository.isDeliverable(workpackId)) {
       deliverablesId.add(workpackId);
     }
 
@@ -88,7 +94,7 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
     final Long workpackId,
     final Long baselineId,
     final YearMonth yearMonth,
-    final Set<Long> deliverablesId
+    final Iterable<Long> deliverablesId
   ) {
     final TripleConstraintDataChart tripleConstraint = new TripleConstraintDataChart();
 
@@ -97,7 +103,7 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
 
     this.buildScheduleDataChart(baselineId, workpackId, tripleConstraint, yearMonth);
 
-    for(final Long deliverableId : deliverablesId) {
+    for (final Long deliverableId : deliverablesId) {
       this.calculateForDeliverable(baselineId, tripleConstraint, deliverableId, yearMonth);
     }
 
@@ -106,11 +112,11 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
 
   public LocalDate getMesAno(final YearMonth yearMonth) {
     final LocalDate now = LocalDate.now();
-    if(yearMonth == null) {
+    if (yearMonth == null) {
       return now;
     }
     final LocalDate endOfMonth = yearMonth.atEndOfMonth();
-    if(now.isBefore(endOfMonth)) {
+    if (now.isBefore(endOfMonth)) {
       return now;
     }
     return endOfMonth;
@@ -118,15 +124,23 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
 
   private List<TripleConstraintDataChart> calculateForAllMonths(
     @NonNull final Long workpackId,
-    @NonNull final List<YearMonth> months
+    @NonNull final Iterable<YearMonth> months
   ) {
-    final ArrayList<TripleConstraintDataChart> charts = new ArrayList<>();
+    final List<TripleConstraintDataChart> charts = new ArrayList<>();
     final Set<Long> deliverablesId = this.getDeliverablesId(workpackId);
 
-    for(final Baseline baseline : this.getBaselines(workpackId)) {
-      this.calculateForBaseline(workpackId, baseline.getId(), months, deliverablesId, charts);
+    final List<Baseline> baselines = this.getBaselines(workpackId);
+    if (baselines.isEmpty()) {
+      for (final YearMonth month : months) {
+        charts.add(this.calculateForMonth(workpackId, null, month, deliverablesId));
+      }
+    } else {
+      for (final YearMonth month : months) {
+        for (final Baseline baseline : baselines) {
+          charts.add(this.calculateForMonth(workpackId, baseline.getId(), month, deliverablesId));
+        }
+      }
     }
-
     return charts;
   }
 
@@ -134,12 +148,12 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
     final List<Baseline> baselines =
       this.baselineRepository.findApprovedOrProposedBaselinesByAnyWorkpackId(workpackId);
 
-    if(this.workpackRepository.isProject(workpackId)) {
+    if (this.workpackRepository.isProject(workpackId)) {
       return baselines;
     }
 
-    for(final Baseline baseline : baselines) {
-      if(baseline.isActive()) {
+    for (final Baseline baseline : baselines) {
+      if (baseline.isActive()) {
         return Collections.singletonList(baseline);
       }
     }
@@ -147,17 +161,17 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
     return baselines.stream()
       .max(Comparator.comparing(Baseline::getProposalDate))
       .map(Collections::singletonList)
-      .orElse(null);
+      .orElseGet(ArrayList::new);
   }
 
   private void calculateForBaseline(
     final Long workpackId,
     final Long baselineId,
-    final List<YearMonth> months,
-    final Set<Long> deliverablesId,
-    final List<? super TripleConstraintDataChart> charts
+    final Iterable<YearMonth> months,
+    final Iterable<Long> deliverablesId,
+    final Collection<? super TripleConstraintDataChart> charts
   ) {
-    for(final YearMonth month : months) {
+    for (final YearMonth month : months) {
       charts.add(this.calculateForMonth(workpackId, baselineId, month, deliverablesId));
     }
   }
@@ -170,7 +184,7 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
   ) {
     final List<Long> baselineIds = Optional.ofNullable(baselineId)
       .map(Collections::singletonList)
-      .orElse(this.getActiveBaselineIds(workpackId));
+      .orElseGet(() -> this.getActiveBaselineIds(workpackId));
 
     final DateIntervalQuery plannedInterval = this.findIntervalInSnapshots(workpackId, baselineIds);
     final DateIntervalQuery foreseenInterval = this.findIntervalInWorkpack(workpackId);
@@ -187,14 +201,14 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
     final boolean canceled = this.workpackRepository.isCanceled(deliverableId);
     this.scheduleRepository.findScheduleByWorkpackId(deliverableId)
       .ifPresent(schedule ->
-                   this.sumCostAndWorkOfSteps(
-                     baselineId,
-                     tripleConstraint,
-                     schedule.getSteps(),
-                     schedule.getId(),
-                     yearMonth,
-                     canceled
-                   ));
+        this.sumCostAndWorkOfSteps(
+          baselineId,
+          tripleConstraint,
+          schedule.getSteps(),
+          schedule.getId(),
+          yearMonth,
+          canceled
+        ));
   }
 
   private List<Long> getActiveBaselineIds(final Long workpackId) {

@@ -19,7 +19,7 @@ public class ScopeData {
   private BigDecimal foreseenValue;
 
   public static ScopeData of(final ScopeDataChart from) {
-    if(from == null) {
+    if (from == null) {
       return null;
     }
 
@@ -30,6 +30,21 @@ public class ScopeData {
     to.setActualVariationPercent(from.getActualVariationPercent());
     to.setPlannedValue(from.getPlannedWork());
     to.setForeseenValue(from.getForeseenWork());
+    return to;
+  }
+
+  public static ScopeData of(final TripleConstraint from) {
+    if (from == null) {
+      return null;
+    }
+
+    final ScopeData to = new ScopeData();
+    to.setVariation(from.getScopeVariation());
+    to.setPlannedVariationPercent(from.getScopePlannedVariationPercent());
+    to.setForeseenVariationPercent(from.getScopeForeseenVariationPercent());
+    to.setActualVariationPercent(from.getScopeActualVariationPercent());
+    to.setPlannedValue(from.getScopePlannedValue());
+    to.setForeseenValue(from.getScopeForeseenValue());
     return to;
   }
 

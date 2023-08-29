@@ -14,12 +14,7 @@ import br.gov.es.openpmo.service.workpack.WorkpackService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import io.swagger.annotations.Api;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Api
 @RestController
@@ -85,7 +80,7 @@ public class MilestoneController {
         idPerson
       );
     }
-    this.workpackService.calculateDashboard(milestone);
+    this.workpackService.calculateDashboard(milestone, true);
     return ResponseEntity.ok(ResponseBase.success());
   }
 

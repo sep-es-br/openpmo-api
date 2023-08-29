@@ -28,6 +28,8 @@ public class PersonGetByIdDto {
 
   private AvatarDto avatar;
 
+  private WorkLocalResponse workLocal;
+
   @JsonProperty("isCcbMember")
   private Boolean isCcbMember;
 
@@ -40,7 +42,7 @@ public class PersonGetByIdDto {
   ) {
     final PersonGetByIdDto dto = from(person);
     maybeSetContact(maybeContact, dto);
-    if(person.getAvatar() != null) {
+    if (person.getAvatar() != null) {
       dto.setAvatar(new AvatarDto(person.getAvatar(), uriComponentsBuilder));
     }
     return dto;
@@ -75,6 +77,7 @@ public class PersonGetByIdDto {
     dto.setName(person.getName());
     dto.setFullName(person.getFullName());
     dto.setAdministrator(person.getAdministrator());
+    dto.setWorkLocal(WorkLocalResponse.from(person));
     return dto;
   }
 
@@ -146,4 +149,11 @@ public class PersonGetByIdDto {
     this.isCcbMember = CCBMember;
   }
 
+  public WorkLocalResponse getWorkLocal() {
+    return workLocal;
+  }
+
+  public void setWorkLocal(WorkLocalResponse workLocal) {
+    this.workLocal = workLocal;
+  }
 }

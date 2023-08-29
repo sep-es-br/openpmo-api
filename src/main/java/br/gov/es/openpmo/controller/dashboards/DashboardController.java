@@ -10,6 +10,7 @@ import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
 import br.gov.es.openpmo.service.dashboards.v2.IDashboardBaselineService;
 import br.gov.es.openpmo.service.dashboards.v2.IDashboardIntervalService;
 import br.gov.es.openpmo.service.dashboards.v2.IDashboardService;
+import br.gov.es.openpmo.service.dashboards.v2.PurgeDashboards;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.utils.ResponseHandler;
 import io.swagger.annotations.Api;
@@ -31,25 +32,29 @@ public class DashboardController implements IDashboardController {
   private final IDashboardService dashboardService;
   private final IAsyncDashboardService asyncDashboardService;
   private final ICanAccessService canAccessService;
+  private final PurgeDashboards purgeDashboards;
 
   public DashboardController(
-      final ResponseHandler responseHandler,
-      final IDashboardBaselineService baselineService,
-      final IDashboardService dashboardService,
-      final IDashboardIntervalService intervalService,
-      final IAsyncDashboardService asyncDashboardService,
-      final ICanAccessService canAccessService) {
+    final ResponseHandler responseHandler,
+    final IDashboardBaselineService baselineService,
+    final IDashboardService dashboardService,
+    final IDashboardIntervalService intervalService,
+    final IAsyncDashboardService asyncDashboardService,
+    final ICanAccessService canAccessService,
+    final PurgeDashboards purgeDashboards
+  ) {
     this.responseHandler = responseHandler;
     this.baselineService = baselineService;
     this.dashboardService = dashboardService;
     this.intervalService = intervalService;
     this.asyncDashboardService = asyncDashboardService;
     this.canAccessService = canAccessService;
+    this.purgeDashboards = purgeDashboards;
   }
 
   @Override
   public Response<List<DashboardBaselineResponse>> getBaselines(final Long workpackId,
-      @Authorization final String authorization) {
+                                                                @Authorization final String authorization) {
 
     this.canAccessService.ensureCanReadResource(workpackId, authorization);
     final List<DashboardBaselineResponse> baselines = this.baselineService.getBaselines(workpackId);
@@ -58,7 +63,7 @@ public class DashboardController implements IDashboardController {
 
   @Override
   public Response<Interval> getInterval(final Long workpackId,
-      @Authorization final String authorization) {
+                                        @Authorization final String authorization) {
 
     this.canAccessService.ensureCanReadResource(workpackId, authorization);
     final Interval interval = this.intervalService.calculateFor(workpackId);
@@ -68,26 +73,50 @@ public class DashboardController implements IDashboardController {
   @Override
   public Response<DashboardResponse> getDashboard(
       final Boolean showHeader,
+      final Long planId,
       final Long workpackId,
+      final Long workpackModelId,
+      final Long workpackModelLinkedId,
+      final boolean linked,
       final Long baselineId,
       final YearMonth yearMonth,
       final UriComponentsBuilder uriComponentsBuilder,
-      @Authorization final String authorization) {
+      @Authorization final String authorization
+  ) {
 
     this.canAccessService.ensureCanReadResource(workpackId, authorization);
-    final DashboardParameters parameters = new DashboardParameters(showHeader, workpackId, baselineId, yearMonth,
-        uriComponentsBuilder);
+    final DashboardParameters parameters = new DashboardParameters(
+      showHeader,
+      workpackId,
+      workpackModelId,
+      workpackModelLinkedId,
+      planId,
+      baselineId,
+      yearMonth,
+      linked,
+      uriComponentsBuilder
+    );
 
     final DashboardResponse response = this.dashboardService.build(parameters);
     return this.responseHandler.success(response);
   }
 
   @Override
-  public Response<Void> calculate(final Long workpackId,
-      @Authorization final String authorization) {
+  public Response<Void> calculate(
+    final Long workpackId,
+    final Boolean calculateInterval,
+    @Authorization final String authorization
+  ) {
 
     this.canAccessService.ensureCanReadResource(workpackId, authorization);
-    this.asyncDashboardService.calculate(workpackId);
+    this.asyncDashboardService.calculate(workpackId, calculateInterval);
+    return this.responseHandler.success();
+  }
+
+  @Override
+  public Response<Void> purge(String authorization) {
+    this.canAccessService.ensureIsAdministrator(authorization);
+    this.purgeDashboards.execute();
     return this.responseHandler.success();
   }
 

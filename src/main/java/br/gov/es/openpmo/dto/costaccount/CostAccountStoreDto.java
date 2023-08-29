@@ -15,12 +15,16 @@ public class CostAccountStoreDto {
 
   private List<? extends PropertyDto> properties;
 
+  @NotNull(message = ApplicationMessage.ID_COST_ACCOUNT_MODEL_NOT_NULL)
+  private Long idCostAccountModel;
 
   public CostAccountStoreDto(
     final Long idWorkpack,
+    final Long idCostAccountModel,
     final List<? extends PropertyDto> properties
   ) {
     this.idWorkpack = idWorkpack;
+    this.idCostAccountModel = idCostAccountModel;
     this.properties = Optional.ofNullable(properties)
       .map(Collections::unmodifiableList)
       .orElse(Collections.emptyList());
@@ -42,4 +46,11 @@ public class CostAccountStoreDto {
     this.properties = properties;
   }
 
+  public Long getIdCostAccountModel() {
+    return idCostAccountModel;
+  }
+
+  public void setIdCostAccountModel(Long idCostAccountModel) {
+    this.idCostAccountModel = idCostAccountModel;
+  }
 }

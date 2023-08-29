@@ -6,8 +6,9 @@ import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.DashboardEarnedValueA
 import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.EarnedValueAnalysisDerivedVariables;
 import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.EarnedValueAnalysisVariables;
 import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.EarnedValueByStep;
-import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.PerformanceIndexes;
+import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.PerformanceIndexesByStep;
 import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.SchedulePerformanceIndex;
+import br.gov.es.openpmo.dto.dashboards.tripleconstraint.DateIntervalQuery;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.repository.BaselineRepository;
@@ -43,6 +44,7 @@ public class DashboardEarnedValueAnalysisService implements IDashboardEarnedValu
     final EarnedValueAnalysisVariables variables = new EarnedValueAnalysisVariables();
     variables.setPlannedValue(earnedValueByStep.getPlannedValue());
     variables.setActualCost(earnedValueByStep.getActualCost());
+    variables.setEstimatedCost(earnedValueByStep.getEstimatedCost());
     variables.setEarnedValue(earnedValueByStep.getEarnedValue());
     return variables;
   }
@@ -80,9 +82,9 @@ public class DashboardEarnedValueAnalysisService implements IDashboardEarnedValu
   }
 
   @Override
-  public DashboardEarnedValueAnalysis build(final DashboardParameters parameters) {
-    final List<EarnedValueByStep> earnedValueByStepList = this.getEarnedValueByStep(parameters);
-    final List<PerformanceIndexes> performanceIndexesList = new ArrayList<>();
+  public DashboardEarnedValueAnalysis build(final DashboardParameters parameters, Optional<DateIntervalQuery> dateIntervalQuery) {
+    final List<EarnedValueByStep> earnedValueByStepList = this.getEarnedValueByStep(parameters, dateIntervalQuery);
+    final List<PerformanceIndexesByStep> performanceIndexesList = new ArrayList<>();
 
     final Long workpackId = parameters.getWorkpackId();
     final boolean baselinesEmpty = this.isBaselinesEmpty(workpackId);
@@ -94,7 +96,7 @@ public class DashboardEarnedValueAnalysisService implements IDashboardEarnedValu
       final EarnedValueAnalysisVariables variables = getVariables(step);
       final EarnedValueAnalysisDerivedVariables derivedVariables = getDerivedVariables(variables);
 
-      final PerformanceIndexes performanceIndexes = new PerformanceIndexes(
+      final PerformanceIndexesByStep performanceIndexes = new PerformanceIndexesByStep(
         variables.getActualCost(),
         variables.getPlannedValue(),
         variables.getEarnedValue(),
@@ -115,9 +117,9 @@ public class DashboardEarnedValueAnalysisService implements IDashboardEarnedValu
   }
 
   @Override
-  public DashboardEarnedValueAnalysis calculate(final Long workpackId) {
-    final List<EarnedValueByStep> earnedValueByStepList = this.getEarnedValueBySteps.calculate(workpackId);
-    final List<PerformanceIndexes> performanceIndexesList = new ArrayList<>();
+  public DashboardEarnedValueAnalysis calculate(final Long workpackId, final Optional<DateIntervalQuery> dateIntervalQuery) {
+    final List<EarnedValueByStep> earnedValueByStepList = this.getEarnedValueBySteps.calculate(workpackId, dateIntervalQuery);
+    final List<PerformanceIndexesByStep> performanceIndexesList = new ArrayList<>();
     final boolean baselinesEmpty = this.isBaselinesEmpty(workpackId);
 
     final Optional<EarnedValueByStep> atCompletion = earnedValueByStepList.stream()
@@ -127,7 +129,7 @@ public class DashboardEarnedValueAnalysisService implements IDashboardEarnedValu
       final EarnedValueAnalysisVariables variables = getVariables(step);
       final EarnedValueAnalysisDerivedVariables derivedVariables = getDerivedVariables(variables);
 
-      final PerformanceIndexes performanceIndexes = new PerformanceIndexes(
+      final PerformanceIndexesByStep performanceIndexes = new PerformanceIndexesByStep(
         variables.getActualCost(),
         variables.getPlannedValue(),
         variables.getEarnedValue(),
@@ -169,8 +171,8 @@ public class DashboardEarnedValueAnalysisService implements IDashboardEarnedValu
     return this.baselineRepository.findAllActiveBaselines(workpackId);
   }
 
-  private List<EarnedValueByStep> getEarnedValueByStep(final DashboardParameters parameters) {
-    return this.getEarnedValueBySteps.build(parameters);
+  private List<EarnedValueByStep> getEarnedValueByStep(final DashboardParameters parameters, Optional<DateIntervalQuery> dateIntervalQuery) {
+    return this.getEarnedValueBySteps.build(parameters, dateIntervalQuery);
   }
 
 }

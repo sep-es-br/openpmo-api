@@ -15,6 +15,8 @@ public class EarnedValueByStep {
 
   private BigDecimal actualCost;
 
+  private BigDecimal estimatedCost;
+
   private BigDecimal earnedValue;
 
   @JsonFormat(pattern = "yyyy-MM")
@@ -30,6 +32,7 @@ public class EarnedValueByStep {
     final EarnedValueByStep result = new EarnedValueByStep();
     result.plannedValue = BigDecimal.ZERO;
     result.actualCost = BigDecimal.ZERO;
+    result.estimatedCost = BigDecimal.ZERO;
     result.plannedWork = BigDecimal.ZERO;
     result.actualWork = BigDecimal.ZERO;
     return result;
@@ -59,12 +62,13 @@ public class EarnedValueByStep {
     obj.actualWork = this.actualWork;
     obj.date = this.date;
 
-    if(all) {
+    if (all) {
       obj.actualCost = this.actualCost;
+      obj.estimatedCost = this.estimatedCost;
       obj.earnedValue = this.earnedValue;
-    }
-    else {
+    } else {
       obj.actualCost = BigDecimal.ZERO;
+      obj.estimatedCost = BigDecimal.ZERO;
       obj.earnedValue = BigDecimal.ZERO;
     }
 
@@ -95,6 +99,14 @@ public class EarnedValueByStep {
     this.earnedValue = earnedValue;
   }
 
+  public BigDecimal getEstimatedCost() {
+    return this.estimatedCost;
+  }
+
+  public void setEstimatedCost(final BigDecimal estimatedCost) {
+    this.estimatedCost = estimatedCost;
+  }
+
   public YearMonth getDate() {
     return this.date;
   }
@@ -106,6 +118,7 @@ public class EarnedValueByStep {
   public void add(final EarnedValueByStep other) {
     this.plannedValue = this.plannedValue.add(other.plannedValue);
     this.actualCost = this.actualCost.add(other.actualCost);
+    this.estimatedCost = this.estimatedCost.add(other.estimatedCost);
     this.plannedWork = this.plannedWork.add(other.plannedWork);
     this.actualWork = this.actualWork.add(other.actualWork);
     this.earnedValue = Optional.ofNullable(this.earnedValue)

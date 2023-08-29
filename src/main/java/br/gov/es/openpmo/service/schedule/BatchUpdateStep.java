@@ -28,7 +28,7 @@ public class BatchUpdateStep {
   }
 
   private Step updateStep(final StepUpdateDto step) {
-    return this.updateStep.execute(step);
+    return this.updateStep.execute(step, false);
   }
 
 }

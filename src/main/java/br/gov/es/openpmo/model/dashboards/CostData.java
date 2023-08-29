@@ -15,7 +15,7 @@ public class CostData {
   private BigDecimal foreseenValue;
 
   public static CostData of(final CostDataChart from) {
-    if(from == null) {
+    if (from == null) {
       return null;
     }
 
@@ -24,6 +24,19 @@ public class CostData {
     to.setVariation(from.getVariation());
     to.setPlannedValue(from.getPlannedValue());
     to.setForeseenValue(from.getForeseenValue());
+    return to;
+  }
+
+  public static CostData of(final TripleConstraint from) {
+    if (from == null) {
+      return null;
+    }
+
+    final CostData to = new CostData();
+    to.setActualValue(from.getCostActualValue());
+    to.setVariation(from.getCostVariation());
+    to.setPlannedValue(from.getCostPlannedValue());
+    to.setForeseenValue(from.getCostForeseenValue());
     return to;
   }
 

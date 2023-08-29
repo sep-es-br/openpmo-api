@@ -46,17 +46,9 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
   boolean isConcluded(Long milestoneId);
 
   @Query("match (m:Milestone)<-[:FEATURES]-(d:Date) " +
-         "where " +
-         "    id(m)=$milestoneId and d.value is not null " +
-         "with " +
-         "    datetime(d.value) as expirationDate " +
-         "with " +
-         "    expirationDate, " +
-         "    expirationDate - duration({days: 7}) as warningDate " +
-         "with " +
-         "    expirationDate, " +
-         "    warningDate <= datetime() as isWithinAWeek " +
-         "return expirationDate, isWithinAWeek ")
+         "where id(m)=$milestoneId and d.value is not null " +
+         "with datetime(d.value) as expirationDate " +
+         "return expirationDate")
   MilestoneDateQueryResult getMilestoneDateQueryResult(Long milestoneId);
 
   @Query("match (m:Milestone)<-[:FEATURES]-(d:Date) " +

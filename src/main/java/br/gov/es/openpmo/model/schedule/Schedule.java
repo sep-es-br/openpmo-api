@@ -159,4 +159,8 @@ public class Schedule extends Entity implements Snapshotable<Schedule> {
     return this.isStartStep(step) || this.isEndStep(step);
   }
 
+  @Transient
+  public Long getIdWorkpack() {
+    return this.workpack.getId();
+  }
 }

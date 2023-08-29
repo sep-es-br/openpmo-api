@@ -47,10 +47,12 @@ public class EarnedValueByStepQueryResult {
     final BigDecimal plannedValue = sum(this.snapshotConsumesList, Consumes::getPlannedCost);
     final BigDecimal plannedWork = sum(this.snapshotStepList, Step::getPlannedWork);
     final BigDecimal actualCost = sum(this.masterConsumesList, Consumes::getActualCost);
+    final BigDecimal estimatedCost = sum(this.masterConsumesList, Consumes::getPlannedCost);
     final BigDecimal actualWork = sum(this.masterStepList, Step::getActualWork);
 
     result.setPlannedValue(plannedValue);
     result.setActualCost(actualCost);
+    result.setEstimatedCost(estimatedCost);
     result.setPlannedWork(plannedWork);
     result.setActualWork(actualWork);
     result.setDate(this.getDate());

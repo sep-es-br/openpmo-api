@@ -2,7 +2,7 @@ package br.gov.es.openpmo.model.dashboards;
 
 import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.DashboardEarnedValueAnalysis;
 import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.EarnedValueByStep;
-import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.PerformanceIndexes;
+import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.PerformanceIndexesByStep;
 
 import java.util.Comparator;
 import java.util.HashSet;
@@ -19,13 +19,26 @@ public class EarnedValueAnalysisData {
   private Set<PerformanceIndexesData> performanceIndexes;
 
   public static EarnedValueAnalysisData of(final DashboardEarnedValueAnalysis from) {
-    if(from == null) {
+    if (from == null) {
       return null;
     }
 
     final EarnedValueAnalysisData to = new EarnedValueAnalysisData();
 
     apply(from.getEarnedValueByStep(), EarnedValueByStepData::of, to::setEarnedValueByStep, HashSet::new);
+    apply(from.getPerformanceIndexes(), PerformanceIndexesData::of, to::setPerformanceIndexes, HashSet::new);
+
+    return to;
+  }
+
+  public static EarnedValueAnalysisData of(final Dashboard from) {
+    if (from == null) {
+      return null;
+    }
+
+    final EarnedValueAnalysisData to = new EarnedValueAnalysisData();
+
+    apply(from.getEarnedValue(), EarnedValueByStepData::of, to::setEarnedValueByStep, HashSet::new);
     apply(from.getPerformanceIndexes(), PerformanceIndexesData::of, to::setPerformanceIndexes, HashSet::new);
 
     return to;
@@ -38,10 +51,10 @@ public class EarnedValueAnalysisData {
       .sorted(Comparator.comparing(EarnedValueByStep::getDate))
       .collect(Collectors.toList());
 
-    final List<PerformanceIndexes> performanceIndexes = this.getPerformanceIndexes()
+    final List<PerformanceIndexesByStep> performanceIndexes = this.getPerformanceIndexes()
       .stream()
       .map(PerformanceIndexesData::getResponse)
-      .sorted(Comparator.comparing(PerformanceIndexes::getDate))
+      .sorted(Comparator.comparing(PerformanceIndexesByStep::getDate))
       .collect(Collectors.toList());
 
     return new DashboardEarnedValueAnalysis(

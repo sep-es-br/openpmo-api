@@ -6,9 +6,6 @@ import br.gov.es.openpmo.repository.PropertyModelRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_MODEL_NOT_FOUND;
 
 @Service
@@ -19,12 +16,6 @@ public class PropertyModelService {
   @Autowired
   public PropertyModelService(final PropertyModelRepository propertyModelRepository) {
     this.propertyModelRepository = propertyModelRepository;
-  }
-
-  public List<PropertyModel> findAllByIdWorkpackModel(final Long idWorkpackModel) {
-    return new ArrayList<>(this.propertyModelRepository.findAllByIdWorkpackModel(
-      idWorkpackModel
-    ));
   }
 
   public PropertyModel findById(final Long id) {

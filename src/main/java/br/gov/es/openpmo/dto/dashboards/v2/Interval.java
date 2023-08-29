@@ -34,6 +34,10 @@ public class Interval {
       .ifPresent(this::setEndDate);
   }
 
+  public static Interval empty() {
+    return new Interval(null, null);
+  }
+
   public LocalDate getStartDate() {
     return this.startDate;
   }

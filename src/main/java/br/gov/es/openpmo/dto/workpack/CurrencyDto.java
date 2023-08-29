@@ -27,7 +27,7 @@ public class CurrencyDto extends PropertyDto {
 
   @Override
   public String getType() {
-    return "Date";
+    return "Currency";
   }
 
   @Override

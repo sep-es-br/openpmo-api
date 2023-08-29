@@ -1,6 +1,6 @@
 package br.gov.es.openpmo.model.dashboards;
 
-import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.PerformanceIndexes;
+import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.PerformanceIndexesByStep;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.math.BigDecimal;
@@ -28,8 +28,8 @@ public class PerformanceIndexesData {
   @JsonFormat(pattern = "yyyy-MM")
   private YearMonth date;
 
-  public static PerformanceIndexesData of(final PerformanceIndexes from) {
-    if(from == null) {
+  public static PerformanceIndexesData of(final PerformanceIndexesByStep from) {
+    if (from == null) {
       return null;
     }
 
@@ -44,6 +44,25 @@ public class PerformanceIndexesData {
 
     apply(from.getCostPerformanceIndex(), CostPerformanceIndexData::of, to::setCostPerformanceIndex);
     apply(from.getSchedulePerformanceIndex(), SchedulePerformanceIndexData::of, to::setSchedulePerformanceIndex);
+
+    return to;
+  }
+
+  public static PerformanceIndexesData of(final PerformanceIndexes from) {
+    if (from == null) {
+      return null;
+    }
+
+    final PerformanceIndexesData to = new PerformanceIndexesData();
+
+    to.setActualCost(from.getActualCost());
+    to.setPlannedValue(from.getPlannedValue());
+    to.setEarnedValue(from.getEarnedValue());
+    to.setEstimatesAtCompletion(from.getEstimatesAtCompletion());
+    to.setEstimateToComplete(from.getEstimateToComplete());
+    to.setDate(from.getMonth().toYearMonth());
+    to.setCostPerformanceIndex(CostPerformanceIndexData.of(from));
+    to.setSchedulePerformanceIndex(SchedulePerformanceIndexData.of(from));
 
     return to;
   }
@@ -112,8 +131,8 @@ public class PerformanceIndexesData {
     this.date = date;
   }
 
-  public PerformanceIndexes getResponse() {
-    return new PerformanceIndexes(
+  public PerformanceIndexesByStep getResponse() {
+    return new PerformanceIndexesByStep(
       this.actualCost,
       this.plannedValue,
       this.earnedValue,

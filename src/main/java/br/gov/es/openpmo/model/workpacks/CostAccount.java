@@ -7,6 +7,7 @@ import br.gov.es.openpmo.model.baselines.Snapshotable;
 import br.gov.es.openpmo.model.properties.Property;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.relations.IsCostAccountSnapshotOf;
+import br.gov.es.openpmo.model.workpacks.models.CostAccountModel;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 import org.springframework.data.annotation.Transient;
@@ -34,6 +35,9 @@ public class CostAccount extends Entity implements Snapshotable<CostAccount> {
   @Relationship(type = "APPLIES_TO")
   private Workpack workpack;
 
+  @Relationship("IS_INSTANCE_BY")
+  private CostAccountModel instance;
+
   private CategoryEnum category;
 
   public CostAccount() {
@@ -53,6 +57,14 @@ public class CostAccount extends Entity implements Snapshotable<CostAccount> {
 
   public void setWorkpack(final Workpack workpack) {
     this.workpack = workpack;
+  }
+
+  public CostAccountModel getInstance() {
+    return instance;
+  }
+
+  public void setInstance(CostAccountModel instance) {
+    this.instance = instance;
   }
 
   @Transient

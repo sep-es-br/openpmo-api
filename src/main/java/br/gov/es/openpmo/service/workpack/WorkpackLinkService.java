@@ -125,7 +125,8 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
     this.makeWorkpackLinkedBelongTo(idPlan, workpack);
     this.ifHasParentCreateRelationshipAsChildren(idParent, workpack);
     this.createLinkBetween(workpack, workpackModel);
-    this.workpackRepository.findAllInHierarchy(idWorkpack).forEach(this.dashboardService::calculate);
+    this.workpackRepository.findAllInHierarchy(idWorkpack)
+      .forEach(worpackId -> this.dashboardService.calculate(worpackId, true));
   }
 
   private void createLinkBetween(
@@ -153,7 +154,11 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
     final Long idWorkpack,
     final Long idWorkpackModelLinked
   ) {
-    final Workpack workpack = this.workpackService.findById(idWorkpack);
+    final Optional<Workpack> maybeWorkpack = this.workpackService.mayeFindById(idWorkpack);
+    if (!maybeWorkpack.isPresent()) {
+      return null;
+    }
+    final Workpack workpack = maybeWorkpack.get();
     final WorkpackModel workpackModelLinked = this.workpackModelService.findById(idWorkpackModelLinked);
 
     final WorkpackModel workpackModelOriginal = this.workpackModelService.findById(workpack.getIdWorkpackModel());
@@ -240,7 +245,7 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
       idWorkpackModelLinked
     );
     return sharedPermissions.map(isSharedWith -> Collections.singletonList(of(isSharedWith)))
-      .orElse(Collections.singletonList(read()));
+      .orElseGet(() -> Collections.singletonList(read()));
   }
 
   private static Optional<WorkpackModel> findOriginalModelEquivalence(
@@ -279,7 +284,8 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
     this.repository.unlinkPermissions(idPlan, idWorkpackModel, idWorkpack);
     this.repository.unlinkParentRelation(idPlan, idWorkpackModel, idWorkpack);
     this.repository.unlinkWorkpackModelAndPlan(idPlan, idWorkpackModel, idWorkpack);
-    this.workpackRepository.findAllInHierarchy(idWorkpack).forEach(this.dashboardService::calculate);
+    this.workpackRepository.findAllInHierarchy(idWorkpack)
+      .forEach(worpackId -> this.dashboardService.calculate(worpackId, true));
   }
 
 }

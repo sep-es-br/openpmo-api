@@ -2,6 +2,7 @@ package br.gov.es.openpmo.model.office.plan;
 
 import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.office.Office;
+import br.gov.es.openpmo.model.workpacks.models.CostAccountModel;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Property;
 import org.neo4j.ogm.annotation.Relationship;
@@ -18,6 +19,9 @@ public class PlanModel extends Entity {
 
   @Relationship(type = "IS_SHARED_WITH")
   private Set<Office> sharedWith;
+
+  @Relationship(type = "BELONGS_TO", direction = Relationship.INCOMING)
+  private CostAccountModel costAccountModel;
 
   private String name;
   private String fullName;
@@ -64,6 +68,14 @@ public class PlanModel extends Entity {
     this.sharedWith = sharedWith;
   }
 
+  public CostAccountModel getCostAccountModel() {
+    return costAccountModel;
+  }
+
+  public void setCostAccountModel(CostAccountModel costAccountModel) {
+    this.costAccountModel = costAccountModel;
+  }
+
   public boolean isPublicShared() {
     return this.publicShared;
   }
@@ -75,6 +87,11 @@ public class PlanModel extends Entity {
   @Transient
   public Long getIdOffice() {
     return Optional.ofNullable(this.office).map(Entity::getId).orElse(null);
+  }
+
+  @Transient
+  public Long getIdCostAccountModel() {
+    return Optional.ofNullable(this.costAccountModel).map(Entity::getId).orElse(null);
   }
 
 }

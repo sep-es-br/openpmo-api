@@ -1,6 +1,5 @@
 package br.gov.es.openpmo.dto.workpackmodel.params.properties;
 
-import br.gov.es.openpmo.enumerator.Session;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -39,8 +38,6 @@ public class PropertyModelDto {
   private String name;
   @NotBlank
   private String label;
-  @NotNull
-  private Session session;
 
   private boolean active;
   private boolean fullLine;
@@ -53,7 +50,6 @@ public class PropertyModelDto {
     final PropertyModelDto instance = instanceSupplier.get();
     instance.setId(propertyModel.getId());
     instance.setActive(propertyModel.isActive());
-    instance.setSession(propertyModel.getSession());
     instance.setName(propertyModel.getName());
     instance.setLabel(propertyModel.getLabel());
     instance.setSortIndex(propertyModel.getSortIndex());
@@ -76,14 +72,6 @@ public class PropertyModelDto {
 
   public void setActive(final boolean active) {
     this.active = active;
-  }
-
-  public Session getSession() {
-    return this.session;
-  }
-
-  public void setSession(final Session session) {
-    this.session = session;
   }
 
   public String getName() {

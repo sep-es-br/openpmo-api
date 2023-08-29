@@ -6,11 +6,11 @@ public class DashboardEarnedValueAnalysis {
 
   private List<EarnedValueByStep> earnedValueByStep;
 
-  private List<PerformanceIndexes> performanceIndexes;
+  private List<PerformanceIndexesByStep> performanceIndexes;
 
   public DashboardEarnedValueAnalysis(
     final List<EarnedValueByStep> earnedValueByStep,
-    final List<PerformanceIndexes> performanceIndexes
+    final List<PerformanceIndexesByStep> performanceIndexes
   ) {
     this.earnedValueByStep = earnedValueByStep;
     this.performanceIndexes = performanceIndexes;
@@ -24,11 +24,11 @@ public class DashboardEarnedValueAnalysis {
     this.earnedValueByStep = earnedValueByStep;
   }
 
-  public List<PerformanceIndexes> getPerformanceIndexes() {
+  public List<PerformanceIndexesByStep> getPerformanceIndexes() {
     return this.performanceIndexes;
   }
 
-  public void setPerformanceIndexes(final List<PerformanceIndexes> performanceIndexes) {
+  public void setPerformanceIndexes(final List<PerformanceIndexesByStep> performanceIndexes) {
     this.performanceIndexes = performanceIndexes;
   }
 

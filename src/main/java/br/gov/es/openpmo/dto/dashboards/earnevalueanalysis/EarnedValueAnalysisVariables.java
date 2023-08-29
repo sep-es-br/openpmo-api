@@ -8,6 +8,8 @@ public class EarnedValueAnalysisVariables {
 
   private BigDecimal actualCost;
 
+  private BigDecimal estimatedCost;
+
   private BigDecimal plannedValue;
 
   public EarnedValueAnalysisVariables() {
@@ -47,4 +49,11 @@ public class EarnedValueAnalysisVariables {
     this.plannedValue = plannedValue;
   }
 
+  public BigDecimal getEstimatedCost() {
+    return this.estimatedCost;
+  }
+
+  public void setEstimatedCost(final BigDecimal estimatedCost) {
+    this.estimatedCost = estimatedCost;
+  }
 }

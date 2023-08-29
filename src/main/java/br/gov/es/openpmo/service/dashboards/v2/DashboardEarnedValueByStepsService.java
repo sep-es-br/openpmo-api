@@ -13,12 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.YearMonth;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_NOT_FOUND;
@@ -33,23 +28,19 @@ public class DashboardEarnedValueByStepsService implements IDashboardEarnedValue
 
   private final BaselineRepository baselineRepository;
 
-  private final FindWorkpackBaselineInterval findWorkpackBaselineInterval;
-
   @Autowired
   public DashboardEarnedValueByStepsService(
     final EarnedValueAnalysisRepository repository,
     final WorkpackRepository workpackRepository,
-    final BaselineRepository baselineRepository,
-    final FindWorkpackBaselineInterval findWorkpackBaselineInterval
+    final BaselineRepository baselineRepository
   ) {
     this.repository = repository;
     this.workpackRepository = workpackRepository;
     this.baselineRepository = baselineRepository;
-    this.findWorkpackBaselineInterval = findWorkpackBaselineInterval;
   }
 
   @Override
-  public List<EarnedValueByStep> build(final DashboardParameters parameters) {
+  public List<EarnedValueByStep> build(final DashboardParameters parameters, final Optional<DateIntervalQuery> dateIntervalQuery) {
     final Long baselineId = parameters.getBaselineId();
     final Long workpackId = parameters.getWorkpackId();
 
@@ -57,12 +48,16 @@ public class DashboardEarnedValueByStepsService implements IDashboardEarnedValue
       .map(Collections::singletonList)
       .orElse(this.getActiveBaselineIds(workpackId));
 
-    final DateIntervalQuery interval = this.findIntervalInSnapshots(workpackId, baselineIds);
+    if (!dateIntervalQuery.isPresent()) {
+      return new ArrayList<>();
+    }
+
+    final DateIntervalQuery interval = dateIntervalQuery.get();
 
     final List<EarnedValueByStep> list = new ArrayList<>();
     final EarnedValueByStep accumulate = EarnedValueByStep.zeroValue();
 
-    for(final YearMonth month : interval.toYearMonths()) {
+    for (final YearMonth month : interval.toYearMonths()) {
       final EarnedValueByStepQueryResult value =
         this.getEarnedValueByStep(workpackId, baselineIds, month);
 
@@ -74,24 +69,24 @@ public class DashboardEarnedValueByStepsService implements IDashboardEarnedValue
   }
 
   @Override
-  public List<EarnedValueByStep> calculate(final Long workpackId) {
-    final Optional<List<Long>> maybeBaselineIds = Optional.ofNullable(this.getBaselines(workpackId))
-      .map(Collection::stream)
-      .map(b -> b.map(Baseline::getId))
-      .map(b -> b.collect(Collectors.toList()));
+  public List<EarnedValueByStep> calculate(final Long workpackId, final Optional<DateIntervalQuery> dateIntervalQuery) {
+    final List<Long> baselineIds = this.getBaselines(workpackId).stream()
+      .map(Baseline::getId)
+      .collect(Collectors.toList());
 
-    if(!maybeBaselineIds.isPresent()) {
-      return new ArrayList<>();
+    if (baselineIds.isEmpty()) {
+      return Collections.emptyList();
     }
 
-    final DateIntervalQuery interval = this.findIntervalInSnapshots(workpackId, maybeBaselineIds.get());
+    final DateIntervalQuery interval = dateIntervalQuery
+      .orElseThrow(() -> new NegocioException(INTERVAL_DATE_IN_BASELINE_NOT_FOUND));
 
     final List<EarnedValueByStep> list = new ArrayList<>();
     final EarnedValueByStep accumulate = EarnedValueByStep.zeroValue();
 
-    for(final YearMonth month : interval.toYearMonths()) {
+    for (final YearMonth month : interval.toYearMonths()) {
       final EarnedValueByStepQueryResult value =
-        this.getEarnedValueByStep(workpackId, maybeBaselineIds.get(), month);
+        this.getEarnedValueByStep(workpackId, baselineIds, month);
 
       accumulate.add(value.toEarnedValueByStep());
       list.add(accumulate.copy(true));
@@ -104,12 +99,12 @@ public class DashboardEarnedValueByStepsService implements IDashboardEarnedValue
     final List<Baseline> baselines =
       this.baselineRepository.findApprovedOrProposedBaselinesByAnyWorkpackId(workpackId);
 
-    if(this.workpackRepository.isProject(workpackId)) {
+    if (this.workpackRepository.isProject(workpackId)) {
       return baselines;
     }
 
-    for(final Baseline baseline : baselines) {
-      if(baseline.isActive()) {
+    for (final Baseline baseline : baselines) {
+      if (baseline.isActive()) {
         return Collections.singletonList(baseline);
       }
     }
@@ -117,7 +112,7 @@ public class DashboardEarnedValueByStepsService implements IDashboardEarnedValue
     return baselines.stream()
       .max(Comparator.comparing(Baseline::getProposalDate))
       .map(Collections::singletonList)
-      .orElse(null);
+      .orElse(Collections.emptyList());
   }
 
   private List<Long> getActiveBaselineIds(final Long workpackId) {
@@ -128,14 +123,6 @@ public class DashboardEarnedValueByStepsService implements IDashboardEarnedValue
     return baselines.stream()
       .map(Baseline::getId)
       .collect(Collectors.toList());
-  }
-
-  private DateIntervalQuery findIntervalInSnapshots(
-    final Long workpackId,
-    final List<Long> idBaseline
-  ) {
-    return this.findWorkpackBaselineInterval.execute(workpackId, idBaseline)
-      .orElseThrow(() -> new NegocioException(INTERVAL_DATE_IN_BASELINE_NOT_FOUND));
   }
 
   private EarnedValueByStepQueryResult getEarnedValueByStep(

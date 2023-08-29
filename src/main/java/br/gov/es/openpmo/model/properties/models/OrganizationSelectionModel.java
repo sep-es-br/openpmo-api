@@ -14,6 +14,8 @@ public class OrganizationSelectionModel extends PropertyModel {
   @Relationship("DEFAULTS_TO")
   private Set<Organization> defaultValue;
 
+  private String sectors;
+
   public boolean isMultipleSelection() {
     return this.multipleSelection;
   }
@@ -30,4 +32,11 @@ public class OrganizationSelectionModel extends PropertyModel {
     this.defaultValue = defaultValue;
   }
 
+  public String getSectors() {
+    return sectors;
+  }
+
+  public void setSectors(String sectors) {
+    this.sectors = sectors;
+  }
 }

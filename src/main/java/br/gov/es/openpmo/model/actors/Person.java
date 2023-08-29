@@ -9,11 +9,7 @@ import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 import org.springframework.data.annotation.Transient;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static org.neo4j.ogm.annotation.Relationship.INCOMING;
 
@@ -21,6 +17,10 @@ import static org.neo4j.ogm.annotation.Relationship.INCOMING;
 public class Person extends Actor {
 
   private boolean administrator;
+  private Long idOffice;
+  private Long idPlan;
+  private Long idWorkpack;
+  private Long idWorkpackModelLinked;
 
   @Relationship(type = "IS_AUTHENTICATED_BY")
   private Set<IsAuthenticatedBy> authentications;
@@ -50,6 +50,38 @@ public class Person extends Actor {
       .stream()
       .filter(contact -> contact.getOfficeId().equals(idOffice))
       .findFirst();
+  }
+
+  public Long getIdOffice() {
+    return idOffice;
+  }
+
+  public void setIdOffice(Long idOffice) {
+    this.idOffice = idOffice;
+  }
+
+  public Long getIdPlan() {
+    return idPlan;
+  }
+
+  public void setIdPlan(Long idPlan) {
+    this.idPlan = idPlan;
+  }
+
+  public Long getIdWorkpack() {
+    return idWorkpack;
+  }
+
+  public void setIdWorkpack(Long idWorkpack) {
+    this.idWorkpack = idWorkpack;
+  }
+
+  public Long getIdWorkpackModelLinked() {
+    return idWorkpackModelLinked;
+  }
+
+  public void setIdWorkpackModelLinked(Long idWorkpackModelLinked) {
+    this.idWorkpackModelLinked = idWorkpackModelLinked;
   }
 
   public boolean getAdministrator() {

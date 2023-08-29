@@ -81,7 +81,9 @@ public class LocalityController {
 //    this.canAccessService.ensureCanReadResource(idDomain, authorization);
     final List<LocalityPropertyDto> localities = this.localityService.findAllByDomainProperties(idDomain).stream()
         .map(locality -> this.modelMapper.map(locality, LocalityPropertyDto.class))
+        .sorted()
         .collect(Collectors.toList());
+    localities.forEach(LocalityPropertyDto::sort);
     if (localities.isEmpty()) {
       return ResponseEntity.noContent().build();
     }

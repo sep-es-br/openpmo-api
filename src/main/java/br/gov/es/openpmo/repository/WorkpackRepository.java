@@ -26,25 +26,26 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
          "]")
   Optional<Workpack> findByIdWithChildren(Long id);
 
-  @Query("MATCH (w1:Workpack) " +
+  @Query("MATCH (w1:Workpack{deleted:false}) " +
          "WHERE id(w1)=$id " +
          "RETURN w1, [ " +
          " [(w1)-[iib1:IS_INSTANCE_BY]->(wm1:WorkpackModel)<-[ii1:IS_IN*]-(wm2:WorkpackModel)<-[iib2:IS_INSTANCE_BY]-" +
-         "(w2:Workpack)-[ii2:IS_IN*]->(w1) | [iib1, wm1, ii1, wm2, iib2, w2, ii2]], " +
+         "(w2:Workpack{deleted:false})-[ii2:IS_IN*]->(w1) | [iib1, wm1, ii1, wm2, iib2, w2, ii2]], " +
          " [(w1)<-[f1:FEATURES]-(p1) | [f1, p1]], " +
          " [(w1)<-[:IS_IN*]-(w2)<-[f2:FEATURES]-(p2:Property)-[idb1:IS_DRIVEN_BY]->(pm1:PropertyModel)<-[isb1:IS_SORTED_BY]-" +
          "(wm3:WorkpackModel)<-[:IS_INSTANCE_BY]-(w2) | [f2, p2, idb1, pm1, isb1, wm3]] " +
          "]")
   Optional<Workpack> findWorkpackWithModelStructureById(Long id);
 
-  @Query("MATCH (w1:Workpack) " +
+  @Query("MATCH (w1:Workpack{deleted:false}) " +
     "WHERE id(w1)=$id " +
     "RETURN w1, [ " +
     " [(w1)-[iib1:IS_INSTANCE_BY]->(wm1:WorkpackModel)<-[ii1:IS_IN*..1]-(wm2:WorkpackModel)<-[iib2:IS_INSTANCE_BY]-" +
-    "(w2:Workpack)-[ii2:IS_IN*..1]->(w1) | [iib1, wm1, ii1, wm2, iib2, w2, ii2]], " +
+    "(w2:Workpack{deleted:false})-[ii2:IS_IN*..1]->(w1) | [iib1, wm1, ii1, wm2, iib2, w2, ii2]], " +
     " [(w1)<-[f1:FEATURES]-(p1) | [f1, p1]], " +
     " [(w1)<-[:IS_IN*..1]-(w2)<-[f2:FEATURES]-(p2:Property)-[idb1:IS_DRIVEN_BY]->(pm1:PropertyModel)<-[isb1:IS_SORTED_BY]-" +
-    "(wm3:WorkpackModel)<-[:IS_INSTANCE_BY]-(w2) | [f2, p2, idb1, pm1, isb1, wm3]] " +
+    "(wm3:WorkpackModel)<-[:IS_INSTANCE_BY]-(w2) | [f2, p2, idb1, pm1, isb1, wm3]], " +
+    " [(w1)<-[:IS_IN*..1]-(w2)<-[ii3:IS_IN*..1]-(w3:Workpack{deleted:false}) | [ii3, w3]] " +
     "]")
   Optional<Workpack> findWorkpackWithModelStructureByIdFirstLevel(Long id);
 
@@ -251,6 +252,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
          + " [(w)-[wi:IS_IN*]->(w2:Workpack)<-[f2:FEATURES]-(p2:Property)-[d2:IS_DRIVEN_BY]->(pm2:PropertyModel) | " +
          "[wi,w2,f2, " +
          "p2, d2, pm2] ], "
+         + " [(w)<-[wi2:IS_IN]-(w3:Workpack)-[:BELONGS_TO]->(pl) | [wi2, w3] ], "
          + " [(w)<-[f2:FEATURES]-(l:LocalitySelection)-[v1:VALUES]->(l1:Locality) | [f2,l,v1,l1]], "
          + " [(w)<-[f3:FEATURES]-(o:OrganizationSelection)-[v2:VALUES]->(o1:Organization) | [f3,o,v2,o1]], "
          + " [(w)<-[f4:FEATURES]-(u:UnitSelection)-[v3:VALUES]->(u1:UnitMeasure) | [f4,u,v3,u1]], "
@@ -328,9 +330,9 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   Optional<Workpack> findWithPropertiesAndModelAndChildrenById(Long idWorkpack);
 
   @Query("MATCH (workpack:Workpack)-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel), " +
-         "(model)<-[:FEATURES]-(nameModel:PropertyModel{name:'name', session:'PROPERTIES'})<-[:IS_DRIVEN_BY]-" +
+         "(model)<-[:FEATURES]-(nameModel:PropertyModel{name:'name'})<-[:IS_DRIVEN_BY]-" +
          "(nameProperty:Property)-[:FEATURES]->(workpack), " +
-         "(model)<-[:FEATURES]-(fullNameModel:PropertyModel{name:'fullName', session:'PROPERTIES'})<-[:IS_DRIVEN_BY]-" +
+         "(model)<-[:FEATURES]-(fullNameModel:PropertyModel{name:'fullName'})<-[:IS_DRIVEN_BY]-" +
          "(fullNameProperty:Property)-[:FEATURES]->(workpack) " +
          "WHERE id(workpack)=$idWorkpack " +
          "RETURN id(model) AS idWorkpackModel, " +

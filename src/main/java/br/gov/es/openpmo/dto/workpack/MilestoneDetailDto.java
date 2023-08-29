@@ -19,8 +19,6 @@ public class MilestoneDetailDto extends WorkpackDetailDto {
   @JsonFormat(pattern = "dd/MM/yyyy")
   private LocalDate expirationDate;
 
-  private boolean isWithinAWeek;
-
   public static MilestoneDetailDto of(final Workpack workpack) {
     return (MilestoneDetailDto) WorkpackDetailDto.of(
       workpack,
@@ -42,14 +40,6 @@ public class MilestoneDetailDto extends WorkpackDetailDto {
 
   public void setExpirationDate(final LocalDate expirationDate) {
     this.expirationDate = expirationDate;
-  }
-
-  public boolean isWithinAWeek() {
-    return this.isWithinAWeek;
-  }
-
-  public void setWithinAWeek(final boolean withinAWeek) {
-    this.isWithinAWeek = withinAWeek;
   }
 
   public LocalDate getMilestoneDate() {

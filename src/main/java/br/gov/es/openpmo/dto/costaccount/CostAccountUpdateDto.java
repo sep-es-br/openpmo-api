@@ -14,6 +14,9 @@ public class CostAccountUpdateDto {
   @NotNull(message = ApplicationMessage.ID_WORKPACK_NOT_NULL)
   private Long idWorkpack;
 
+  @NotNull(message = ApplicationMessage.ID_COST_ACCOUNT_MODEL_NOT_NULL)
+  private Long idCostAccountModel;
+
   private List<? extends PropertyDto> properties;
 
   public Long getId() {
@@ -30,6 +33,14 @@ public class CostAccountUpdateDto {
 
   public void setIdWorkpack(final Long idWorkpack) {
     this.idWorkpack = idWorkpack;
+  }
+
+  public Long getIdCostAccountModel() {
+    return idCostAccountModel;
+  }
+
+  public void setIdCostAccountModel(Long idCostAccountModel) {
+    this.idCostAccountModel = idCostAccountModel;
   }
 
   public List<? extends PropertyDto> getProperties() {

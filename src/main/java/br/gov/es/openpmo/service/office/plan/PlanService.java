@@ -92,9 +92,9 @@ public class PlanService implements BreadcrumbPlanHelper {
     params.put("idOffice", idOffice);
     params.put("term", term);
     params.put("searchCutOffScore", appProperties.getSearchCutOffScore());
-    
+
     if (StringUtils.isNotBlank(term)) filter.setSimilarityFilter(true);
-    
+
     return this.findAllPlan.execute(filter, params);
   }
 
@@ -103,7 +103,7 @@ public class PlanService implements BreadcrumbPlanHelper {
     plans.sort(Comparator.comparing(Plan::getStart).reversed());
     return plans;
   }
-  
+
   public List<Plan> findAllInOfficeByTerm(final Long idOffice, final String term) {
     return this.planRepository.findAllInOfficeByTerm(idOffice, term, this.appProperties.getSearchCutOffScore());
   }
@@ -133,7 +133,11 @@ public class PlanService implements BreadcrumbPlanHelper {
       .orElseThrow(() -> new NegocioException(PLAN_NOT_FOUND));
   }
 
-  public List<PlanDto> chekPermission(
+  public Optional<Plan> maybeFindById(final Long idPlan) {
+    return this.planRepository.findById(idPlan);
+  }
+
+  public List<PlanDto> checkPermission(
     final List<PlanDto> plans,
     final Long idUser,
     final Long idOffice

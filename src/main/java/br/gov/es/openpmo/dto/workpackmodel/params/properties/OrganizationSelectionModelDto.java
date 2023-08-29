@@ -14,6 +14,7 @@ public class OrganizationSelectionModelDto extends PropertyModelDto {
 
   private List<Long> defaults;
 
+  private String sectors;
 
   public static OrganizationSelectionModelDto of(final PropertyModel propertyModel) {
     final OrganizationSelectionModelDto instance = (OrganizationSelectionModelDto) PropertyModelDto.of(
@@ -26,6 +27,7 @@ public class OrganizationSelectionModelDto extends PropertyModelDto {
       .map(organizations -> organizations.stream().map(Organization::getId).collect(Collectors.toList()))
       .ifPresent(instance::setDefaults);
     instance.setMultipleSelection(((OrganizationSelectionModel) propertyModel).isMultipleSelection());
+    instance.setSectors(((OrganizationSelectionModel) propertyModel).getSectors());
     return instance;
   }
 
@@ -45,4 +47,11 @@ public class OrganizationSelectionModelDto extends PropertyModelDto {
     this.defaults = defaults;
   }
 
+  public String getSectors() {
+    return sectors;
+  }
+
+  public void setSectors(String sectors) {
+    this.sectors = sectors;
+  }
 }

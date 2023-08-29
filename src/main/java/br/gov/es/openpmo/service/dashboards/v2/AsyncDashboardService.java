@@ -1,23 +1,29 @@
 package br.gov.es.openpmo.service.dashboards.v2;
 
-import br.gov.es.openpmo.dto.dashboards.DashboardParameters;
 import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.DashboardEarnedValueAnalysis;
+import br.gov.es.openpmo.dto.dashboards.tripleconstraint.DateIntervalQuery;
 import br.gov.es.openpmo.dto.dashboards.tripleconstraint.TripleConstraintDataChart;
-import br.gov.es.openpmo.dto.dashboards.v2.Interval;
 import br.gov.es.openpmo.exception.NegocioException;
+import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.dashboards.Dashboard;
+import br.gov.es.openpmo.model.dashboards.DashboardMonth;
+import br.gov.es.openpmo.model.dashboards.EarnedValue;
 import br.gov.es.openpmo.model.dashboards.EarnedValueAnalysisData;
-import br.gov.es.openpmo.model.dashboards.TripleConstraintData;
+import br.gov.es.openpmo.model.dashboards.PerformanceIndexes;
+import br.gov.es.openpmo.model.dashboards.TripleConstraint;
 import br.gov.es.openpmo.model.workpacks.Workpack;
+import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
+import br.gov.es.openpmo.repository.dashboards.DashboardMonthRepository;
 import br.gov.es.openpmo.repository.dashboards.DashboardRepository;
 import br.gov.es.openpmo.utils.ApplicationMessage;
-import com.google.gson.Gson;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
-import java.time.YearMonth;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -26,40 +32,87 @@ import java.util.stream.Collectors;
 public class AsyncDashboardService implements IAsyncDashboardService {
 
   private final DashboardRepository dashboardRepository;
-
-  private final IDashboardTripleConstraintService tripleConstraintService;
-
-  private final IDashboardEarnedValueAnalysisService earnedValueAnalysisService;
-
+  private final DashboardMonthRepository dashboardMonthRepository;
+  private final DashboardTripleConstraintService tripleConstraintService;
+  private final DashboardEarnedValueAnalysisService earnedValueAnalysisService;
   private final WorkpackRepository workpackRepository;
-
-  private final IDashboardIntervalService intervalService;
+  private final FindWorkpackBaselineInterval findWorkpackBaselineInterval;
+  private final FindWorkpackInterval findWorkpackInterval;
+  private final BaselineRepository baselineRepository;
 
   public AsyncDashboardService(
     final DashboardRepository dashboardRepository,
-    final IDashboardTripleConstraintService tripleConstraintService,
-    final IDashboardEarnedValueAnalysisService earnedValueAnalysisService,
+    final DashboardMonthRepository dashboardMonthRepository,
+    final DashboardTripleConstraintService tripleConstraintService,
+    final DashboardEarnedValueAnalysisService earnedValueAnalysisService,
     final WorkpackRepository workpackRepository,
-    final IDashboardIntervalService intervalService
+    final FindWorkpackBaselineInterval findWorkpackBaselineInterval,
+    final FindWorkpackInterval findWorkpackInterval,
+    final BaselineRepository baselineRepository
   ) {
     this.dashboardRepository = dashboardRepository;
+    this.dashboardMonthRepository = dashboardMonthRepository;
     this.tripleConstraintService = tripleConstraintService;
     this.earnedValueAnalysisService = earnedValueAnalysisService;
     this.workpackRepository = workpackRepository;
-    this.intervalService = intervalService;
+    this.findWorkpackBaselineInterval = findWorkpackBaselineInterval;
+    this.findWorkpackInterval = findWorkpackInterval;
+    this.baselineRepository = baselineRepository;
   }
 
   @Override
-  public void calculate(@NonNull final Long worpackId) {
+  public void calculate(@NonNull final Long worpackId, final Boolean calculateInterval) {
+    Optional<DateIntervalQuery> baselineInterval;
+    final List<Long> activeBaselineIds = getActiveBaselineIds(worpackId);
+    if (activeBaselineIds.isEmpty()) {
+      baselineInterval = Optional.empty();
+    } else {
+      baselineInterval = this.findWorkpackBaselineInterval.execute(worpackId, activeBaselineIds);
+    }
+
     final Dashboard dashboard = this.getDashboard(worpackId);
+    if (Boolean.TRUE.equals(calculateInterval) || !dashboard.hasMonths()) {
+      final Optional<DateIntervalQuery> dateIntervalQuery;
+      if (activeBaselineIds.isEmpty()) {
+        dateIntervalQuery = this.findWorkpackInterval.execute(worpackId);
+      } else {
+        dateIntervalQuery = baselineInterval;
+      }
+      final List<DashboardMonth> dashboardMonths = dateIntervalQuery
+        .map(DateIntervalQuery::toDashboardMonths)
+        .orElse(null);
+      final List<DashboardMonth> months = dashboard.getMonths();
+      if (months != null && !months.isEmpty()) {
+        for (DashboardMonth month : months) {
+          this.dashboardMonthRepository.deleteWithNodes(month.getId());
+        }
+        dashboard.setMonths(new ArrayList<>());
+      }
+      dashboard.addMonths(dashboardMonths);
+      this.dashboardRepository.save(dashboard);
+    }
 
     Optional.of(worpackId)
       .map(this::getTripleConstraint)
       .ifPresent(dashboard::setTripleConstraint);
 
-    Optional.of(worpackId)
-      .map(this::getEarnedValueAnalysis)
-      .ifPresent(dashboard::setEarnedValueAnalysis);
+    final Optional<EarnedValueAnalysisData> maybeEarnedValueAnalysisData = Optional.of(worpackId)
+      .map(id -> getEarnedValueAnalysis(id, baselineInterval));
+
+    if (maybeEarnedValueAnalysisData.isPresent()) {
+      final EarnedValueAnalysisData earnedValueAnalysisData = maybeEarnedValueAnalysisData.get();
+
+      final List<EarnedValue> earnedValues = earnedValueAnalysisData.getEarnedValueByStep().stream()
+        .map(EarnedValue::of)
+        .collect(Collectors.toList());
+
+      final List<PerformanceIndexes> performanceIndexes = earnedValueAnalysisData.getPerformanceIndexes().stream()
+        .map(PerformanceIndexes::of)
+        .collect(Collectors.toList());
+
+      dashboard.setEarnedValue(earnedValues);
+      dashboard.setPerformanceIndexes(performanceIndexes);
+    }
 
     this.dashboardRepository.save(dashboard);
   }
@@ -85,65 +138,58 @@ public class AsyncDashboardService implements IAsyncDashboardService {
       .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
   }
 
-  private String getEarnedValueAnalysis(@NonNull final Long worpackId) {
+  private EarnedValueAnalysisData getEarnedValueAnalysis(@NonNull final Long worpackId, Optional<DateIntervalQuery> dateIntervalQuery) {
     return Optional.of(worpackId)
-      .map(this::calculateEarnedValueAnalysis)
+      .map(id -> calculateEarnedValueAnalysis(id, dateIntervalQuery))
       .map(EarnedValueAnalysisData::of)
-      .map(new Gson()::toJson)
       .orElse(null);
   }
 
-  private DashboardEarnedValueAnalysis calculateEarnedValueAnalysis(@NonNull final Long worpackId) {
-    return this.earnedValueAnalysisService.calculate(worpackId);
+  private DashboardEarnedValueAnalysis calculateEarnedValueAnalysis(@NonNull final Long worpackId, Optional<DateIntervalQuery> dateIntervalQuery) {
+    return this.earnedValueAnalysisService.calculate(worpackId, dateIntervalQuery);
   }
 
-  private String getTripleConstraint(@NonNull final Long worpackId) {
+  private List<TripleConstraint> getTripleConstraint(@NonNull final Long worpackId) {
     return Optional.of(worpackId)
       .map(this::calculateTripleConstraintDataChart)
       .map(this::convertToTripleConstraintData)
-      .map(new Gson()::toJson)
       .orElse(null);
   }
 
-  private List<TripleConstraintData> convertToTripleConstraintData(final List<TripleConstraintDataChart> charts) {
+  private List<TripleConstraint> convertToTripleConstraintData(final Collection<TripleConstraintDataChart> charts) {
     return charts.stream()
-      .map(TripleConstraintData::of)
+      .map(TripleConstraint::of)
       .collect(Collectors.toList());
   }
 
   private List<TripleConstraintDataChart> calculateTripleConstraintDataChart(final Long worpackId) {
-    return Optional.of(worpackId)
-      .flatMap(this.tripleConstraintService::calculate)
-      .orElse(Collections.singletonList(this.tripleConstraintService.build(this.getParams(worpackId))));
+    return this.tripleConstraintService.calculate(worpackId);
   }
 
-  DashboardParameters getParams(final Long workpackId) {
-    final Interval interval = this.intervalService.calculateFor(workpackId);
-
-    if(interval.getStartDate() == null || interval.getEndDate() == null) {
-      return null;
-    }
-
-    final YearMonth previousMonth = YearMonth.now().minusMonths(1);
-    final YearMonth startMonth = YearMonth.from(interval.getStartDate());
-    final YearMonth endMonth = YearMonth.from(interval.getEndDate());
-    final YearMonth clampDate = this.clampDate(previousMonth, startMonth, endMonth);
-
-    return new DashboardParameters(false, workpackId, null, clampDate, null);
+  private List<Long> getActiveBaselineIds(final Long workpackId) {
+    return this.getBaselines(workpackId).stream()
+      .map(Baseline::getId)
+      .collect(Collectors.toList());
   }
 
-  private YearMonth clampDate(
-    final YearMonth underTest,
-    final YearMonth minDate,
-    final YearMonth maxDate
-  ) {
-    if(underTest.isBefore(minDate)) {
-      return minDate;
+  private List<Baseline> getBaselines(final Long workpackId) {
+    final List<Baseline> baselines =
+      this.baselineRepository.findApprovedOrProposedBaselinesByAnyWorkpackId(workpackId);
+
+    if (this.workpackRepository.isProject(workpackId)) {
+      return baselines;
     }
-    if(underTest.isAfter(maxDate)) {
-      return maxDate;
+
+    for (final Baseline baseline : baselines) {
+      if (baseline.isActive()) {
+        return Collections.singletonList(baseline);
+      }
     }
-    return underTest;
+
+    return baselines.stream()
+      .max(Comparator.comparing(Baseline::getProposalDate))
+      .map(Collections::singletonList)
+      .orElse(Collections.emptyList());
   }
 
 }

@@ -28,7 +28,7 @@ public class ScheduleData {
   private BigDecimal actualValue;
 
   public static ScheduleData of(final ScheduleDataChart from) {
-    if(from == null) {
+    if (from == null) {
       return null;
     }
 
@@ -43,6 +43,25 @@ public class ScheduleData {
     to.setPlannedValue(from.getPlannedValue());
     to.setForeseenValue(from.getForeseenValue());
     to.setActualValue(from.getActualValue());
+    return to;
+  }
+
+  public static ScheduleData of(final TripleConstraint from) {
+    if (from == null) {
+      return null;
+    }
+
+    final ScheduleData to = new ScheduleData();
+    to.setPlannedStartDate(from.getSchedulePlannedStartDate());
+    to.setPlannedEndDate(from.getSchedulePlannedEndDate());
+    to.setForeseenStartDate(from.getScheduleForeseenStartDate());
+    to.setForeseenEndDate(from.getScheduleForeseenEndDate());
+    to.setActualStartDate(from.getScheduleActualStartDate());
+    to.setActualEndDate(from.getScheduleActualEndDate());
+    to.setVariation(from.getScheduleVariation());
+    to.setPlannedValue(from.getSchedulePlannedValue());
+    to.setForeseenValue(from.getScheduleForeseenValue());
+    to.setActualValue(from.getScheduleActualValue());
     return to;
   }
 

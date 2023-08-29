@@ -23,6 +23,19 @@ public class CostPerformanceIndexData {
     return to;
   }
 
+  public static CostPerformanceIndexData of(final PerformanceIndexes from) {
+    if(from == null) {
+      return null;
+    }
+
+    final CostPerformanceIndexData to = new CostPerformanceIndexData();
+
+    to.setIndexValue(from.getCostPerformanceIndexValue());
+    to.setCostVariation(from.getCostPerformanceIndexVariation());
+
+    return to;
+  }
+
   public BigDecimal getIndexValue() {
     return this.indexValue;
   }

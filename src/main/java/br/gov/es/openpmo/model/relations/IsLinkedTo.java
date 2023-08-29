@@ -55,4 +55,9 @@ public class IsLinkedTo {
     return this.workpackModel.getId();
   }
 
+  @Transient
+  public WorkpackModel getOriginalWorkpackModel() {
+    return this.workpack.getWorkpackModelInstance();
+  }
+
 }

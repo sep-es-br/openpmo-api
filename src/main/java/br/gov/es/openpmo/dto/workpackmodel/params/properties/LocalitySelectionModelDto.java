@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.dto.workpackmodel.params.properties;
 
+import br.gov.es.openpmo.dto.workpack.SimpleResource;
 import br.gov.es.openpmo.model.office.Locality;
 import br.gov.es.openpmo.model.properties.models.LocalitySelectionModel;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
@@ -15,6 +16,7 @@ public class LocalitySelectionModelDto extends PropertyModelDto {
   @NotNull
   private Long idDomain;
   private List<Long> defaults;
+  private List<SimpleResource> defaultsDetails;
 
   public static LocalitySelectionModelDto of(final PropertyModel propertyModel) {
     final LocalitySelectionModelDto instance = (LocalitySelectionModelDto) PropertyModelDto.of(
@@ -26,6 +28,14 @@ public class LocalitySelectionModelDto extends PropertyModelDto {
       .map(LocalitySelectionModel::getDefaultValue)
       .map(locality -> locality.stream().map(Locality::getId).collect(Collectors.toList()))
       .ifPresent(instance::setDefaults);
+    Optional.of(propertyModel)
+      .map(LocalitySelectionModel.class::cast)
+      .map(LocalitySelectionModel::getDefaultValue)
+      .map(values -> values.stream()
+        .map(value -> SimpleResource.of(value.getId(), value.getName(), value.getFullName()))
+        .collect(Collectors.toList())
+      )
+      .ifPresent(instance::setDefaultsDetails);
     instance.setMultipleSelection(((LocalitySelectionModel) propertyModel).isMultipleSelection());
     instance.setIdDomain(((LocalitySelectionModel) propertyModel).getDomainId());
     return instance;
@@ -56,4 +66,11 @@ public class LocalitySelectionModelDto extends PropertyModelDto {
     this.defaults = defaults;
   }
 
+  public List<SimpleResource> getDefaultsDetails() {
+    return this.defaultsDetails;
+  }
+
+  public void setDefaultsDetails(final List<SimpleResource> defaultsDetails) {
+    this.defaultsDetails = defaultsDetails;
+  }
 }

@@ -1,6 +1,8 @@
 package br.gov.es.openpmo.dto.plan;
 
 import br.gov.es.openpmo.dto.permission.PermissionDto;
+import br.gov.es.openpmo.dto.workpack.SimpleResource;
+import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.office.plan.Plan;
 
 import java.time.LocalDate;
@@ -15,6 +17,7 @@ public class PlanDto {
   private String fullName;
   private LocalDate start;
   private LocalDate finish;
+  private SimpleResource office;
   private List<PermissionDto> permissions;
 
   public PlanDto() {
@@ -23,15 +26,23 @@ public class PlanDto {
 
   public static PlanDto of(final Plan plan) {
     final PlanDto dto = new PlanDto();
-    dto.setId(plan.getId());
-    if(plan.getPlanModel() != null) {
-      dto.setIdPlanModel(plan.getPlanModel().getId());
+    dto.id = plan.getId();
+    if (plan.getPlanModel() != null) {
+      dto.idPlanModel = plan.getPlanModel().getId();
     }
-    dto.setIdOffice(plan.getOffice().getId());
-    dto.setName(plan.getName());
-    dto.setFullName(plan.getFullName());
-    dto.setStart(plan.getStart());
-    dto.setFinish(plan.getFinish());
+    dto.name = plan.getName();
+    dto.fullName = plan.getFullName();
+    dto.start = plan.getStart();
+    dto.finish = plan.getFinish();
+    if (plan.getOffice() != null) {
+      final Office office = plan.getOffice();
+      dto.office = SimpleResource.of(
+        office.getId(),
+        office.getName(),
+        office.getFullName()
+      );
+      dto.idOffice = office.getId();
+    }
     return dto;
   }
 
@@ -99,4 +110,11 @@ public class PlanDto {
     this.permissions = permissions;
   }
 
+  public SimpleResource getOffice() {
+    return this.office;
+  }
+
+  public void setOffice(final SimpleResource office) {
+    this.office = office;
+  }
 }

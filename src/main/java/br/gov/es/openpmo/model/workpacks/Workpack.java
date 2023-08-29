@@ -10,14 +10,7 @@ import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.properties.Property;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
-import br.gov.es.openpmo.model.relations.BelongsTo;
-import br.gov.es.openpmo.model.relations.CanAccessWorkpack;
-import br.gov.es.openpmo.model.relations.IsBaselinedBy;
-import br.gov.es.openpmo.model.relations.IsFavoritedBy;
-import br.gov.es.openpmo.model.relations.IsLinkedTo;
-import br.gov.es.openpmo.model.relations.IsSharedWith;
-import br.gov.es.openpmo.model.relations.IsSnapshotOf;
-import br.gov.es.openpmo.model.relations.IsWorkpackSnapshotOf;
+import br.gov.es.openpmo.model.relations.*;
 import br.gov.es.openpmo.model.schedule.Schedule;
 import br.gov.es.openpmo.model.workpacks.models.ProjectModel;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
@@ -28,24 +21,16 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.swagger.annotations.ApiModel;
+import org.apache.commons.collections.CollectionUtils;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 import org.springframework.data.annotation.Transient;
 import org.springframework.util.ObjectUtils;
 
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
-import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_DELIVERABLE;
-import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_MILESTONE;
-import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_ORGANIZER;
-import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_PORTFOLIO;
-import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_PROGRAM;
-import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_PROJECT;
+import static br.gov.es.openpmo.utils.WorkpackInstanceType.*;
 import static org.neo4j.ogm.annotation.Relationship.INCOMING;
 
 @JsonTypeInfo(use = Id.NAME, property = "type")
@@ -610,18 +595,18 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
   }
 
   public LocalDate getNewDate() {
-    return newDate;
+    return this.newDate;
   }
 
-  public void setNewDate(LocalDate newDate) {
+  public void setNewDate(final LocalDate newDate) {
     this.newDate = newDate;
   }
 
   public LocalDate getPreviousDate() {
-    return previousDate;
+    return this.previousDate;
   }
 
-  public void setPreviousDate(LocalDate previousDate) {
+  public void setPreviousDate(final LocalDate previousDate) {
     this.previousDate = previousDate;
   }
 
@@ -636,17 +621,59 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
     }
     try {
       final WorkpackModel workpackModel = this.getWorkpackModelInstance();
-      for (Property property : this.properties) {
+      for (final Property property : this.properties) {
         final PropertyModel propertyModel = property.getPropertyModel();
         if (propertyModel != null && workpackModel == propertyModel.getSorts()) {
           return (Comparable) property.getValue();
         }
       }
-    }
-    catch (ClassCastException e) {
+    } catch (final ClassCastException e) {
       return null;
     }
     return null;
   }
 
+  @Transient
+  public boolean isLinkedToWorkpackModel(final Long idWorkpackModel) {
+    if (CollectionUtils.isEmpty(this.linkedTo)) return false;
+    return this.linkedTo.stream()
+      .anyMatch(relation -> relation.getWorkpackModelId().equals(idWorkpackModel));
+  }
+
+  public boolean isInstanceByOrLinkedTo(final Long idWorkpackModel) {
+    return this.isLinkedToWorkpackModel(idWorkpackModel) || this.idWorkpackModel.equals(idWorkpackModel);
+  }
+
+  public Optional<WorkpackModel> getLinkedWorkpackModel(final Long idWorkpackModel) {
+    if (CollectionUtils.isEmpty(this.linkedTo)) return Optional.empty();
+    return this.linkedTo.stream()
+      .filter(relation -> relation.getWorkpackModelId().equals(idWorkpackModel))
+      .map(IsLinkedTo::getWorkpackModel)
+      .findFirst();
+  }
+
+  public boolean hasLinkedToRelationship() {
+    return CollectionUtils.isNotEmpty(this.linkedTo);
+  }
+
+  @Transient
+  public Optional<Workpack> getParentByPlan(Plan plan) {
+    if (plan == null) {
+      return Optional.empty();
+    }
+    final Set<Workpack> parents = this.getParent();
+    if (parents == null || parents.isEmpty()) {
+      return Optional.empty();
+    }
+    return parents.stream()
+      .filter(parent -> parent.isOriginalPlan(plan))
+      .findFirst();
+  }
+
+  @Transient
+  private boolean isOriginalPlan(Plan plan) {
+    return this.getOriginalPlan()
+      .filter(plan::equals)
+      .isPresent();
+  }
 }

@@ -2,7 +2,6 @@ package br.gov.es.openpmo.dto.schedule;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Set;
@@ -22,8 +21,13 @@ public class ScheduleParamDto {
   @NotNull
   @Min(value = 0)
   private BigDecimal plannedWork;
+
   @Min(value = 0)
   private BigDecimal actualWork;
+
+  @NotNull
+  private DistributionStrategy distribution;
+
   private Set<CostSchedule> costs;
 
   public Long getId() {
@@ -82,4 +86,11 @@ public class ScheduleParamDto {
     this.costs = costs;
   }
 
+  public DistributionStrategy getDistribution() {
+    return this.distribution;
+  }
+
+  public void setDistribution(final DistributionStrategy distribution) {
+    this.distribution = distribution;
+  }
 }

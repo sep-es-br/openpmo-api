@@ -2,40 +2,38 @@ package br.gov.es.openpmo.service.workpack;
 
 import br.gov.es.openpmo.configuration.properties.AppProperties;
 import br.gov.es.openpmo.dto.costaccount.CostAccountDto;
+import br.gov.es.openpmo.dto.costaccount.CostAccountStoreDto;
+import br.gov.es.openpmo.dto.costaccount.CostAccountUpdateDto;
 import br.gov.es.openpmo.dto.costaccount.CostDto;
 import br.gov.es.openpmo.dto.workpack.*;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.filter.CustomFilter;
+import br.gov.es.openpmo.model.properties.Currency;
+import br.gov.es.openpmo.model.properties.Date;
 import br.gov.es.openpmo.model.properties.Integer;
 import br.gov.es.openpmo.model.properties.Number;
 import br.gov.es.openpmo.model.properties.*;
 import br.gov.es.openpmo.model.relations.Consumes;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
 import br.gov.es.openpmo.model.workpacks.Workpack;
+import br.gov.es.openpmo.model.workpacks.models.CostAccountModel;
 import br.gov.es.openpmo.repository.ConsumesRepository;
 import br.gov.es.openpmo.repository.CostAccountRepository;
 import br.gov.es.openpmo.repository.CustomFilterRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllCostAccountUsingCustomFilter;
+import br.gov.es.openpmo.service.reports.models.GetPropertyModelDtoFromEntity;
 import br.gov.es.openpmo.utils.TextSimilarityScore;
 import org.apache.commons.lang3.StringUtils;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import static br.gov.es.openpmo.utils.ApplicationMessage.COST_ACCOUNT_DELETE_RELATIONSHIP_ERROR;
-import static br.gov.es.openpmo.utils.ApplicationMessage.COST_ACCOUNT_NOT_FOUND;
-import static br.gov.es.openpmo.utils.ApplicationMessage.CUSTOM_FILTER_NOT_FOUND;
-import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_NOT_FOUND;
+import static br.gov.es.openpmo.utils.ApplicationMessage.*;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.*;
 
 @Service
@@ -49,8 +47,6 @@ public class CostAccountService {
 
   private final CustomFilterRepository customFilterRepository;
 
-  private final WorkpackModelService workpackModelService;
-
   private final CostAccountSorter costAccountSorter;
 
   private final FindAllCostAccountUsingCustomFilter findAllCostAccount;
@@ -59,27 +55,41 @@ public class CostAccountService {
 
   private final TextSimilarityScore textSimilarityScore;
 
+  private final GetPropertyModelDtoFromEntity getPropertyModelDtoFromEntity;
+
+  private final WorkpackService workpackService;
+
+  private final ModelMapper modelMapper;
+
+  private final FindCostAccountModel findCostAccountModel;
+
   @Autowired
   public CostAccountService(
     final CostAccountRepository costAccountRepository,
     final ConsumesRepository consumesRepository,
     final WorkpackRepository workpackRepository,
     final CustomFilterRepository customFilterRepository,
-    final WorkpackModelService workpackModelService,
     final FindAllCostAccountUsingCustomFilter findAllCostAccount,
     final AppProperties appProperties,
     final TextSimilarityScore textSimilarityScore,
-    final CostAccountSorter costAccountSorter
+    final CostAccountSorter costAccountSorter,
+    final GetPropertyModelDtoFromEntity getPropertyModelDtoFromEntity,
+    final WorkpackService workpackService,
+    final ModelMapper modelMapper,
+    final FindCostAccountModel findCostAccountModel
   ) {
     this.costAccountRepository = costAccountRepository;
     this.consumesRepository = consumesRepository;
     this.workpackRepository = workpackRepository;
     this.customFilterRepository = customFilterRepository;
-    this.workpackModelService = workpackModelService;
     this.costAccountSorter = costAccountSorter;
     this.findAllCostAccount = findAllCostAccount;
     this.appProperties = appProperties;
     this.textSimilarityScore = textSimilarityScore;
+    this.getPropertyModelDtoFromEntity = getPropertyModelDtoFromEntity;
+    this.workpackService = workpackService;
+    this.modelMapper = modelMapper;
+    this.findCostAccountModel = findCostAccountModel;
   }
 
   public List<CostAccountDto> findAllByIdWorkpack(
@@ -127,8 +137,8 @@ public class CostAccountService {
   }
 
   public CostAccount findById(final Long id) {
-    return this.costAccountRepository.findByIdWithPropertyModel(id).orElseThrow(
-      () -> new NegocioException(COST_ACCOUNT_NOT_FOUND));
+    return this.costAccountRepository.findByIdWithPropertyModel(id)
+      .orElseThrow(() -> new NegocioException(COST_ACCOUNT_NOT_FOUND));
   }
 
   public CostAccountDto findByIdAsDto(final Long id) {
@@ -203,7 +213,9 @@ public class CostAccountService {
     final Collection<? extends Property> properties,
     final CostAccountDto costAccountDto
   ) {
-    if (properties == null || properties.isEmpty()) {return null;}
+    if (properties == null || properties.isEmpty()) {
+      return null;
+    }
     costAccountDto.setModels(new ArrayList<>());
     final List<PropertyDto> list = new ArrayList<>();
     properties.forEach(property -> {
@@ -212,7 +224,7 @@ public class CostAccountService {
           final IntegerDto integerDto = IntegerDto.of(property);
           if (((Integer) property).getDriver() != null) {
             integerDto.setIdPropertyModel(((Integer) property).getDriver().getId());
-            costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((Integer) property).getDriver()));
+            costAccountDto.getModels().add(this.getPropertyModelDtoFromEntity.execute(((Integer) property).getDriver()));
           }
           list.add(integerDto);
           break;
@@ -220,7 +232,7 @@ public class CostAccountService {
           final TextDto textDto = TextDto.of(property);
           if (((Text) property).getDriver() != null) {
             textDto.setIdPropertyModel(((Text) property).getDriver().getId());
-            costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((Text) property).getDriver()));
+            costAccountDto.getModels().add(this.getPropertyModelDtoFromEntity.execute(((Text) property).getDriver()));
           }
           list.add(textDto);
           break;
@@ -228,7 +240,7 @@ public class CostAccountService {
           final DateDto dateDto = DateDto.of(property);
           if (((Date) property).getDriver() != null) {
             dateDto.setIdPropertyModel(((Date) property).getDriver().getId());
-            costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((Date) property).getDriver()));
+            costAccountDto.getModels().add(this.getPropertyModelDtoFromEntity.execute(((Date) property).getDriver()));
           }
           list.add(dateDto);
           break;
@@ -236,7 +248,7 @@ public class CostAccountService {
           final ToggleDto toggleDto = ToggleDto.of(property);
           if (((Toggle) property).getDriver() != null) {
             toggleDto.setIdPropertyModel(((Toggle) property).getDriver().getId());
-            costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((Toggle) property).getDriver()));
+            costAccountDto.getModels().add(this.getPropertyModelDtoFromEntity.execute(((Toggle) property).getDriver()));
           }
           list.add(toggleDto);
           break;
@@ -244,7 +256,7 @@ public class CostAccountService {
           final UnitSelectionDto unitSelectionDto = UnitSelectionDto.of(property);
           if (((UnitSelection) property).getDriver() != null) {
             unitSelectionDto.setIdPropertyModel(((UnitSelection) property).getDriver().getId());
-            costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((UnitSelection) property).getDriver()));
+            costAccountDto.getModels().add(this.getPropertyModelDtoFromEntity.execute(((UnitSelection) property).getDriver()));
           }
           if (((UnitSelection) property).getValue() != null) {
             unitSelectionDto.setSelectedValue(((UnitSelection) property).getValue().getId());
@@ -255,7 +267,7 @@ public class CostAccountService {
           final SelectionDto selectionDto = SelectionDto.of(property);
           if (((Selection) property).getDriver() != null) {
             selectionDto.setIdPropertyModel(((Selection) property).getDriver().getId());
-            costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((Selection) property).getDriver()));
+            costAccountDto.getModels().add(this.getPropertyModelDtoFromEntity.execute(((Selection) property).getDriver()));
           }
           list.add(selectionDto);
           break;
@@ -263,7 +275,7 @@ public class CostAccountService {
           final TextAreaDto textAreaDto = TextAreaDto.of(property);
           if (((TextArea) property).getDriver() != null) {
             textAreaDto.setIdPropertyModel(((TextArea) property).getDriver().getId());
-            costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((TextArea) property).getDriver()));
+            costAccountDto.getModels().add(this.getPropertyModelDtoFromEntity.execute(((TextArea) property).getDriver()));
           }
           list.add(textAreaDto);
           break;
@@ -271,7 +283,7 @@ public class CostAccountService {
           final NumberDto numberDto = NumberDto.of(property);
           if (((Number) property).getDriver() != null) {
             numberDto.setIdPropertyModel(((Number) property).getDriver().getId());
-            costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((Number) property).getDriver()));
+            costAccountDto.getModels().add(this.getPropertyModelDtoFromEntity.execute(((Number) property).getDriver()));
           }
           list.add(numberDto);
           break;
@@ -279,7 +291,7 @@ public class CostAccountService {
           final CurrencyDto currencyDto = CurrencyDto.of(property);
           if (((Currency) property).getDriver() != null) {
             currencyDto.setIdPropertyModel(((Currency) property).getDriver().getId());
-            costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((Currency) property).getDriver()));
+            costAccountDto.getModels().add(this.getPropertyModelDtoFromEntity.execute(((Currency) property).getDriver()));
           }
           list.add(currencyDto);
           break;
@@ -287,7 +299,7 @@ public class CostAccountService {
           final LocalitySelectionDto localitySelectionDto = LocalitySelectionDto.of(property);
           if (((LocalitySelection) property).getDriver() != null) {
             localitySelectionDto.setIdPropertyModel(((LocalitySelection) property).getDriver().getId());
-            costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((LocalitySelection) property).getDriver()));
+            costAccountDto.getModels().add(this.getPropertyModelDtoFromEntity.execute(((LocalitySelection) property).getDriver()));
           }
           if (((LocalitySelection) property).getValue() != null) {
             localitySelectionDto.setSelectedValues(new HashSet<>());
@@ -299,7 +311,7 @@ public class CostAccountService {
           final OrganizationSelectionDto organizationSelectionDto = OrganizationSelectionDto.of(property);
           if (((OrganizationSelection) property).getDriver() != null) {
             organizationSelectionDto.setIdPropertyModel(((OrganizationSelection) property).getDriver().getId());
-            costAccountDto.getModels().add(this.workpackModelService.getPropertyModelDto(((OrganizationSelection) property).getDriver()));
+            costAccountDto.getModels().add(this.getPropertyModelDtoFromEntity.execute(((OrganizationSelection) property).getDriver()));
           }
           if (((OrganizationSelection) property).getValue() != null) {
             organizationSelectionDto.setSelectedValues(new HashSet<>());
@@ -318,7 +330,7 @@ public class CostAccountService {
   }
 
   private CostAccountDto mapToDto(final CostAccount costAccount) {
-    final CostAccountDto dto = CostAccountDto.withoutRelations(costAccount);
+    final CostAccountDto dto = CostAccountDto.of(costAccount);
     final Long workpackId = costAccount.getWorkpackId();
     this.maybeSetWorkpackNameData(
       dto,
@@ -377,6 +389,40 @@ public class CostAccountService {
 
   private Optional<WorkpackName> maybeGetWorkpackNameData(final Long workpackId) {
     return this.workpackRepository.findWorkpackNameAndFullname(workpackId);
+  }
+
+  public CostAccount getCostAccount(final Object cost) {
+    Set<Property> properties = null;
+    Long idCostAccount = null;
+    Long idCostAccountModel = null;
+    if (cost instanceof CostAccountStoreDto) {
+      if (((CostAccountStoreDto) cost).getProperties() != null
+        && !(((CostAccountStoreDto) cost).getProperties()).isEmpty()) {
+        final CostAccountStoreDto store = (CostAccountStoreDto) cost;
+        properties = this.workpackService.getProperties(store.getProperties());
+        idCostAccountModel = store.getIdCostAccountModel();
+        store.setProperties(null);
+      }
+    } else {
+      idCostAccount = ((CostAccountUpdateDto) cost).getId();
+      if ((((CostAccountUpdateDto) cost).getProperties()) != null
+        && !(((CostAccountUpdateDto) cost).getProperties()).isEmpty()) {
+        final CostAccountUpdateDto update = (CostAccountUpdateDto) cost;
+        properties = this.workpackService.getProperties(update.getProperties());
+        idCostAccountModel = update.getIdCostAccountModel();
+        update.setProperties(null);
+      }
+    }
+    final CostAccount costAccount;
+    if (idCostAccount == null) {
+      costAccount = this.modelMapper.map(cost, CostAccount.class);
+    } else {
+      costAccount = this.findById(idCostAccount);
+    }
+    costAccount.setProperties(properties);
+    final CostAccountModel costAccountModel = this.findCostAccountModel.execute(idCostAccountModel);
+    costAccount.setInstance(costAccountModel);
+    return costAccount;
   }
 
 }

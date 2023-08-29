@@ -2,6 +2,7 @@ package br.gov.es.openpmo.service.actors;
 
 import br.gov.es.openpmo.dto.person.favorite.WorkpackFavoritedDetail;
 import br.gov.es.openpmo.dto.person.favorite.WorkpackFavoritedRequest;
+import br.gov.es.openpmo.dto.workpack.WorkpackNameResponse;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.relations.IsFavoritedBy;
@@ -70,9 +71,11 @@ public class IsFavoritedByService {
   ) {
     final Long id = workpack.getId();
     final String icon = workpack.getIcon();
+    final WorkpackNameResponse workpackNameResponse = this.getWorkpackName.execute(id);
     return new WorkpackFavoritedDetail(
       id,
-      this.getWorkpackName.execute(id).getName(),
+      workpackNameResponse.getName(),
+      workpackNameResponse.getFullName(),
       icon,
       this.canAccessData.execute(id, authorization).canReadResource()
     );

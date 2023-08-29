@@ -1,8 +1,16 @@
 package br.gov.es.openpmo.dto.domain;
 
-import java.util.Set;
+import org.springframework.util.CollectionUtils;
 
-public class LocalityPropertyDto {
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+public class LocalityPropertyDto implements Comparable<LocalityPropertyDto> {
 
   private Long id;
   private String name;
@@ -41,4 +49,20 @@ public class LocalityPropertyDto {
     this.children = children;
   }
 
+  @Override
+  public int compareTo(final LocalityPropertyDto other) {
+    if (Objects.isNull(other.name)) return 1;
+    if (Objects.isNull(this.name)) return -1;
+    final String otherNameCleaned = other.name.replaceAll("[^a-zA-Z0-9]", "").toLowerCase(Locale.ROOT);
+    final String selfNameCleaned = this.name.replaceAll("[^a-zA-Z0-9]", "").toLowerCase(Locale.ROOT);
+    return selfNameCleaned.compareToIgnoreCase(otherNameCleaned);
+  }
+
+  public void sort() {
+    if (CollectionUtils.isEmpty(this.children)) return;
+    this.children = this.children.stream()
+      .sorted()
+      .collect(Collectors.toCollection(LinkedHashSet::new));
+    this.children.forEach(LocalityPropertyDto::sort);
+  }
 }

@@ -26,6 +26,8 @@ public class StepStoreParamDto {
 
   private LocalDate scheduleStart;
 
+  private DistributionStrategy distribution;
+
   public Long getIdSchedule() {
     return this.idSchedule;
   }
@@ -82,4 +84,11 @@ public class StepStoreParamDto {
     this.scheduleStart = scheduleStart;
   }
 
+  public DistributionStrategy getDistribution() {
+    return this.distribution;
+  }
+
+  public void setDistribution(final DistributionStrategy distribution) {
+    this.distribution = distribution;
+  }
 }

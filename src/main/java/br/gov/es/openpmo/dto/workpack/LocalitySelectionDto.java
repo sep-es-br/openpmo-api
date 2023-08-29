@@ -11,12 +11,14 @@ import java.util.stream.Collectors;
 public class LocalitySelectionDto extends PropertyDto {
 
   private Set<Long> selectedValues;
+  private Set<SimpleResource> selectedValuesDetails;
 
   public static LocalitySelectionDto of(final Property property) {
     final LocalitySelectionDto localitySelectionDto = new LocalitySelectionDto();
     localitySelectionDto.setId(property.getId());
     localitySelectionDto.setIdPropertyModel(property.getPropertyModelId());
-    localitySelectionDto.setSelectedValues(getValue((LocalitySelection) property));
+    localitySelectionDto.selectedValues = getValue((LocalitySelection) property);
+    localitySelectionDto.selectedValuesDetails = getValueDetails((LocalitySelection) property);
     return localitySelectionDto;
   }
 
@@ -28,6 +30,16 @@ public class LocalitySelectionDto extends PropertyDto {
         .collect(Collectors.toSet())
       ).orElse(null);
   }
+
+  private static Set<SimpleResource> getValueDetails(final LocalitySelection property) {
+    return Optional.ofNullable(property)
+      .map(LocalitySelection::getValue)
+      .map(values -> values.stream()
+        .map(locality -> SimpleResource.of(locality.getId(), locality.getName(), locality.getFullName()))
+        .collect(Collectors.toSet())
+      ).orElse(null);
+  }
+
 
   @Override
   public String getType() {
@@ -47,4 +59,11 @@ public class LocalitySelectionDto extends PropertyDto {
     this.selectedValues = selectedValues;
   }
 
+  public Set<SimpleResource> getSelectedValuesDetails() {
+    return this.selectedValuesDetails;
+  }
+
+  public void setSelectedValuesDetails(final Set<SimpleResource> selectedValuesDetails) {
+    this.selectedValuesDetails = selectedValuesDetails;
+  }
 }

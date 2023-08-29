@@ -2,6 +2,7 @@ package br.gov.es.openpmo.dto.costaccount;
 
 import br.gov.es.openpmo.dto.workpack.PropertyDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.PropertyModelDto;
+import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
 import br.gov.es.openpmo.utils.PropertyModelInstanceType;
 
@@ -18,7 +19,7 @@ public class CostAccountDto {
   private Long idWorkpack;
   private String workpackModelName;
   private String workpackModelFullName;
-
+  private Long idCostAccountModel;
   private CostDto costAccountAllocation;
 
   public static CostAccountDto of(final CostAccount costAccount) {
@@ -27,13 +28,22 @@ public class CostAccountDto {
     instance.setIdWorkpack(costAccount.getWorkpackId());
     instance.setProperties(getPropertiesFrom(costAccount));
     instance.setModels(getModelsFrom(costAccount));
+    instance.setIdCostAccountModel(getIdCostAccountModel(costAccount));
     return instance;
+  }
+
+  private static Long getIdCostAccountModel(CostAccount costAccount) {
+    return Optional.ofNullable(costAccount)
+      .map(CostAccount::getInstance)
+      .map(Entity::getId)
+      .orElse(null);
   }
 
   public static CostAccountDto withoutRelations(final CostAccount costAccount) {
     final CostAccountDto instance = new CostAccountDto();
     instance.setId(costAccount.getId());
     instance.setIdWorkpack(costAccount.getWorkpackId());
+    instance.setIdCostAccountModel(getIdCostAccountModel(costAccount));
     return instance;
   }
 
@@ -109,4 +119,11 @@ public class CostAccountDto {
     this.costAccountAllocation = costAccountAllocation;
   }
 
+  public Long getIdCostAccountModel() {
+    return idCostAccountModel;
+  }
+
+  public void setIdCostAccountModel(Long idCostAccountModel) {
+    this.idCostAccountModel = idCostAccountModel;
+  }
 }

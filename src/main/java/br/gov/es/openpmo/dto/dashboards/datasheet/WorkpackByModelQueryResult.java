@@ -5,6 +5,10 @@ import org.springframework.data.neo4j.annotation.QueryResult;
 @QueryResult
 public class WorkpackByModelQueryResult {
 
+  private Long idWorkpackModel;
+
+  private Long idPlan;
+
   private Long quantity;
 
   private String singularName;
@@ -12,6 +16,22 @@ public class WorkpackByModelQueryResult {
   private String pluralName;
 
   private String icon;
+
+  public Long getIdWorkpackModel() {
+    return this.idWorkpackModel;
+  }
+
+  public void setIdWorkpackModel(final Long idWorkpackModel) {
+    this.idWorkpackModel = idWorkpackModel;
+  }
+
+  public Long getIdPlan() {
+    return this.idPlan;
+  }
+
+  public void setIdPlan(final Long idPlan) {
+    this.idPlan = idPlan;
+  }
 
   public Long getQuantity() {
     return this.quantity;

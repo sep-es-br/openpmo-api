@@ -75,7 +75,7 @@ public class OfficeController {
 
 //    this.canAccessService.ensureCanReadResource(id, authorization);
 
-    final OfficeDto officeDto = this.modelMapper.map(this.officeService.findById(id), OfficeDto.class);
+    final OfficeDto officeDto = this.officeService.maybeFindById(id).map(o -> this.modelMapper.map(o, OfficeDto.class)).orElse(null);
     final ResponseBase<OfficeDto> response = new ResponseBase<OfficeDto>().setData(officeDto).setSuccess(true);
     return ResponseEntity.status(200).body(response);
   }

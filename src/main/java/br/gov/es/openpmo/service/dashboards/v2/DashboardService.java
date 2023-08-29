@@ -4,11 +4,7 @@ import br.gov.es.openpmo.dto.dashboards.DashboardParameters;
 import br.gov.es.openpmo.dto.dashboards.MilestoneDataChart;
 import br.gov.es.openpmo.dto.dashboards.RiskDataChart;
 import br.gov.es.openpmo.dto.dashboards.datasheet.DatasheetResponse;
-import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.CostPerformanceIndex;
-import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.DashboardEarnedValueAnalysis;
-import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.EarnedValueByStep;
-import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.PerformanceIndexes;
-import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.SchedulePerformanceIndex;
+import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.*;
 import br.gov.es.openpmo.dto.dashboards.tripleconstraint.TripleConstraintDataChart;
 import br.gov.es.openpmo.dto.dashboards.v2.DashboardResponse;
 import br.gov.es.openpmo.dto.dashboards.v2.Interval;
@@ -21,8 +17,6 @@ import br.gov.es.openpmo.model.dashboards.TripleConstraintData;
 import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.repository.dashboards.DashboardRepository;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,13 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_NOT_FOUND;
@@ -52,8 +40,6 @@ public class DashboardService implements IDashboardService {
 
   private final IDashboardDatasheetService datasheetService;
 
-  private final IDashboardEarnedValueAnalysisService earnedValueAnalysisService;
-
   private final DashboardRepository dashboardRepository;
 
   private final BaselineRepository baselineRepository;
@@ -67,7 +53,6 @@ public class DashboardService implements IDashboardService {
     final IDashboardMilestoneService milestoneService,
     final IDashboardRiskService riskService,
     final IDashboardDatasheetService datasheetService,
-    final IDashboardEarnedValueAnalysisService earnedValueAnalysisService,
     final DashboardRepository dashboardRepository,
     final BaselineRepository baselineRepository,
     final WorkpackRepository workpackRepository,
@@ -77,7 +62,6 @@ public class DashboardService implements IDashboardService {
     this.milestoneService = milestoneService;
     this.riskService = riskService;
     this.datasheetService = datasheetService;
-    this.earnedValueAnalysisService = earnedValueAnalysisService;
     this.dashboardRepository = dashboardRepository;
     this.baselineRepository = baselineRepository;
     this.workpackRepository = workpackRepository;
@@ -108,10 +92,10 @@ public class DashboardService implements IDashboardService {
     final YearMonth minDate,
     final YearMonth maxDate
   ) {
-    if(underTest.isBefore(minDate)) {
+    if (underTest.isBefore(minDate)) {
       return minDate;
     }
-    if(underTest.isAfter(maxDate)) {
+    if (underTest.isAfter(maxDate)) {
       return maxDate;
     }
     return underTest;
@@ -125,13 +109,13 @@ public class DashboardService implements IDashboardService {
   private static boolean sameBaseline(
     final TripleConstraintDataChart dataChart,
     final Long baselineId,
-    final List<? extends Baseline> baselines
+    final Collection<? extends Baseline> baselines
   ) {
-    if(baselines == null) {
+    if (baselines == null) {
       return true;
     }
 
-    if(Objects.equals(dataChart.getIdBaseline(), baselineId)) {
+    if (Objects.equals(dataChart.getIdBaseline(), baselineId)) {
       return true;
     }
 
@@ -151,17 +135,10 @@ public class DashboardService implements IDashboardService {
       .orElse(false);
   }
 
-  private static List<TripleConstraintData> deserializeTripleConstraint(final String json) {
-    return new Gson().fromJson(
-      json,
-      new TypeToken<ArrayList<TripleConstraintData>>() {}.getType()
-    );
-  }
-
   @Override
   @Transactional
   public DashboardResponse build(final DashboardParameters parameters) {
-    if(parameters == null) {
+    if (parameters == null) {
       return null;
     }
 
@@ -180,20 +157,20 @@ public class DashboardService implements IDashboardService {
     final Interval interval = this.intervalService.calculateFor(workpackId);
     final YearMonth date;
 
-    if(interval.getStartDate() == null || interval.getEndDate() == null) {
+    if (interval.getStartDate() == null || interval.getEndDate() == null) {
       date = null;
-    }
-    else {
+    } else {
       final YearMonth previousMonth = YearMonth.now().minusMonths(1);
       final YearMonth startMonth = YearMonth.from(interval.getStartDate());
       final YearMonth endMonth = YearMonth.from(interval.getEndDate());
       date = DashboardService.clampDate(previousMonth, startMonth, endMonth);
     }
 
+    // TODO: verificar se é necessário informar o 'planId'
     final DashboardParameters parameters =
-      new DashboardParameters(false, workpackId, null, date, null);
+      new DashboardParameters(false, workpackId, null, null, null, null, date, false, null);
 
-    final Optional<PerformanceIndexes> performanceIndexes = Optional.of(parameters)
+    final Optional<PerformanceIndexesByStep> performanceIndexes = Optional.of(parameters)
       .map(this::getEarnedValueAnalysis)
       .map(DashboardEarnedValueAnalysis::getPerformanceIndexes)
       .flatMap(indexes -> indexes.stream().findFirst());
@@ -212,17 +189,17 @@ public class DashboardService implements IDashboardService {
     return this.getTripleConstraintList(parameters).parallelStream().findFirst().orElse(null);
   }
 
-  private BigDecimal getEarnedValue(final Optional<PerformanceIndexes> indexes) {
-    return indexes.map(PerformanceIndexes::getEarnedValue)
+  private BigDecimal getEarnedValue(final Optional<PerformanceIndexesByStep> indexes) {
+    return indexes.map(PerformanceIndexesByStep::getEarnedValue)
       .orElse(null);
   }
 
-  private SchedulePerformanceIndex getSchedulePerformanceIndex(final Optional<PerformanceIndexes> indexes) {
-    return indexes.map(PerformanceIndexes::getSchedulePerformanceIndex).orElse(null);
+  private SchedulePerformanceIndex getSchedulePerformanceIndex(final Optional<PerformanceIndexesByStep> indexes) {
+    return indexes.map(PerformanceIndexesByStep::getSchedulePerformanceIndex).orElse(null);
   }
 
-  private CostPerformanceIndex getCostPerformanceIndex(final Optional<PerformanceIndexes> indexes) {
-    return indexes.map(PerformanceIndexes::getCostPerformanceIndex).orElse(null);
+  private CostPerformanceIndex getCostPerformanceIndex(final Optional<PerformanceIndexesByStep> indexes) {
+    return indexes.map(PerformanceIndexesByStep::getCostPerformanceIndex).orElse(null);
   }
 
   private RiskDataChart getRisk(final DashboardParameters parameters) {
@@ -240,7 +217,7 @@ public class DashboardService implements IDashboardService {
   private List<TripleConstraintDataChart> getTripleConstraintList(final DashboardParameters parameters) {
     final YearMonth yearMonth = parameters.getYearMonth();
 
-    if(yearMonth == null) {
+    if (yearMonth == null) {
       return new ArrayList<>();
     }
 
@@ -282,18 +259,18 @@ public class DashboardService implements IDashboardService {
     final List<Baseline> baselines =
       this.baselineRepository.findApprovedOrProposedBaselinesByAnyWorkpackId(workpackId);
 
-    if(baselineId != null) {
+    if (baselineId != null) {
       return baselines.parallelStream()
         .filter(baseline -> Objects.equals(baseline.getId(), baselineId))
         .collect(Collectors.toList());
     }
 
-    if(this.workpackRepository.isProject(workpackId)) {
+    if (this.workpackRepository.isProject(workpackId)) {
       return baselines;
     }
 
-    for(final Baseline baseline : baselines) {
-      if(baseline.isActive()) {
+    for (final Baseline baseline : baselines) {
+      if (baseline.isActive()) {
         return Collections.singletonList(baseline);
       }
     }
@@ -308,7 +285,7 @@ public class DashboardService implements IDashboardService {
   private List<TripleConstraintData> getTripleConstraintData(final DashboardParameters parameters) {
     return this.dashboardRepository.findByWorkpackId(parameters.getWorkpackId())
       .map(Dashboard::getTripleConstraint)
-      .map(DashboardService::deserializeTripleConstraint)
+      .map(tripleConstraints -> tripleConstraints.stream().map(TripleConstraintData::of).collect(Collectors.toList()))
       .orElse(null);
   }
 
@@ -322,16 +299,15 @@ public class DashboardService implements IDashboardService {
     final Long workpackId = parameters.getWorkpackId();
 
     final DashboardEarnedValueAnalysis earnedValueAnalysis = this.dashboardRepository.findByWorkpackId(workpackId)
-      .map(Dashboard::getEarnedValueAnalysis)
-      .map(json -> new Gson().fromJson(json, EarnedValueAnalysisData.class))
+      .map(EarnedValueAnalysisData::of)
       .map(EarnedValueAnalysisData::getResponse)
-      .orElseGet(() -> this.earnedValueAnalysisService.build(parameters));
+      .orElse(null);
 
-    if(earnedValueAnalysis == null) {
+    if (earnedValueAnalysis == null) {
       return null;
     }
 
-    final List<PerformanceIndexes> performanceIndexes = this.filterPerformanceIndexes(
+    final List<PerformanceIndexesByStep> performanceIndexes = this.filterPerformanceIndexes(
       earnedValueAnalysis,
       parameters.getYearMonth()
     );
@@ -342,8 +318,8 @@ public class DashboardService implements IDashboardService {
 
     final boolean baselinesEmpty = this.isBaselinesEmpty(workpackId);
 
-    if(performanceIndexes.isEmpty()) {
-      performanceIndexes.add(new PerformanceIndexes(
+    if (performanceIndexes.isEmpty()) {
+      performanceIndexes.add(new PerformanceIndexesByStep(
         BigDecimal.ZERO,
         BigDecimal.ZERO,
         BigDecimal.ZERO,
@@ -383,13 +359,13 @@ public class DashboardService implements IDashboardService {
     return this.baselineRepository.findAllActiveBaselines(workpackId);
   }
 
-  private List<PerformanceIndexes> filterPerformanceIndexes(
+  private List<PerformanceIndexesByStep> filterPerformanceIndexes(
     final DashboardEarnedValueAnalysis earnedValueAnalysis,
     final YearMonth yearMonth
   ) {
     final List<LocalDate> dateList = earnedValueAnalysis.getPerformanceIndexes()
       .parallelStream()
-      .map(PerformanceIndexes::getDate)
+      .map(PerformanceIndexesByStep::getDate)
       .map(YearMonth::atEndOfMonth)
       .collect(Collectors.toList());
 

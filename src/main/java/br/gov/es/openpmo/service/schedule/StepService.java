@@ -3,6 +3,7 @@ package br.gov.es.openpmo.service.schedule;
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.schedule.ConsumesDto;
 import br.gov.es.openpmo.dto.schedule.ConsumesParamDto;
+import br.gov.es.openpmo.dto.schedule.DistributionStrategy;
 import br.gov.es.openpmo.dto.schedule.StepDto;
 import br.gov.es.openpmo.dto.schedule.StepStoreParamDto;
 import br.gov.es.openpmo.dto.schedule.StepUpdateDto;
@@ -17,6 +18,7 @@ import br.gov.es.openpmo.repository.ScheduleRepository;
 import br.gov.es.openpmo.repository.StepRepository;
 import br.gov.es.openpmo.service.workpack.CostAccountService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
+import br.gov.es.openpmo.utils.MapPair;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,7 +28,15 @@ import org.springframework.util.CollectionUtils;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.CONSUMES_COST_ACCOUNT_ALREADY_EXISTS;
@@ -51,6 +61,10 @@ public class StepService {
 
   private final CostAccountRepository costAccountRepository;
 
+  private final GetCostAccountGroupedByDistributedParts getCostAccountGroupedByDistributedParts;
+
+  private final GetUnitMeasureScaleByWorkpack getWorkpackUnitMeasureScale;
+
   @Autowired
   public StepService(
     final StepRepository stepRepository,
@@ -59,7 +73,9 @@ public class StepService {
     final CostAccountService costAccountService,
     final RecalculateStepsAfterRemove recalculateStepsAfterRemove,
     final ModelMapper modelMapper,
-    final CostAccountRepository costAccountRepository
+    final CostAccountRepository costAccountRepository,
+    final GetCostAccountGroupedByDistributedParts getCostAccountGroupedByDistributedParts,
+    final GetUnitMeasureScaleByWorkpack getWorkpackUnitMeasureScale
   ) {
     this.stepRepository = stepRepository;
     this.scheduleRepository = scheduleRepository;
@@ -68,6 +84,131 @@ public class StepService {
     this.recalculateStepsAfterRemove = recalculateStepsAfterRemove;
     this.modelMapper = modelMapper;
     this.costAccountRepository = costAccountRepository;
+    this.getCostAccountGroupedByDistributedParts = getCostAccountGroupedByDistributedParts;
+    this.getWorkpackUnitMeasureScale = getWorkpackUnitMeasureScale;
+  }
+
+  private static Map<Long, BigDecimal> getParts(
+    final long months,
+    final BigDecimal decimal,
+    final int scale,
+    final DistributionStrategy distribution
+  ) {
+    switch (distribution) {
+      case LINEAR:
+        return new StepValueLinearAllocator().execute(months, decimal, scale);
+      case SIGMOIDAL:
+        return new StepValueSigmoidalAllocator().execute(months, decimal, scale);
+      default:
+        throw new NegocioException();
+    }
+  }
+
+  private static long getPlannedWorkMonths(
+    final StepStoreParamDto stepStoreParamDto,
+    final Schedule schedule
+  ) {
+    if (stepStoreParamDto.getEndStep()) {
+      final LocalDate scheduleEnd = stepStoreParamDto.getScheduleEnd();
+      return intervalInMonths(schedule.getEnd(), scheduleEnd);
+    }
+    final LocalDate scheduleStart = stepStoreParamDto.getScheduleStart();
+    return intervalInMonths(scheduleStart, schedule.getStart());
+  }
+
+  private static long getActualWorkMonths(
+    final StepStoreParamDto stepStoreParamDto,
+    final Schedule schedule
+  ) {
+    final LocalDate now = LocalDate.now();
+
+    if (stepStoreParamDto.getEndStep()) {
+      final LocalDate scheduleEnd = stepStoreParamDto.getScheduleEnd();
+      final LocalDate start = schedule.getEnd();
+
+      if (now.isBefore(start)) return 0L;
+
+      if (now.isAfter(scheduleEnd)) {
+        return ChronoUnit.MONTHS.between(
+          start.withDayOfMonth(1),
+          scheduleEnd.withDayOfMonth(1)
+        );
+      }
+      return ChronoUnit.MONTHS.between(
+        start,
+        now
+      );
+    }
+
+    final LocalDate scheduleStart = stepStoreParamDto.getScheduleStart();
+    final LocalDate end = schedule.getStart();
+
+    if (now.isBefore(scheduleStart)) return 0L;
+
+    if (now.isAfter(end)) {
+      return ChronoUnit.MONTHS.between(
+        scheduleStart.withDayOfMonth(1),
+        end.withDayOfMonth(1)
+      );
+    }
+
+    return ChronoUnit.MONTHS.between(
+      scheduleStart,
+      now
+    );
+  }
+
+  private static Step mapsToStep(final StepStoreParamDto in) {
+    final Step out = new Step();
+    out.setActualWork(Optional.ofNullable(in.getActualWork()).orElse(BigDecimal.ZERO));
+    out.setPlannedWork(Optional.ofNullable(in.getPlannedWork()).orElse(BigDecimal.ZERO));
+    return out;
+  }
+
+  private static long intervalInMonths(
+    final LocalDate start,
+    final LocalDate end
+  ) {
+    return ChronoUnit.MONTHS.between(
+      start.withDayOfMonth(1),
+      end.withDayOfMonth(1)
+    );
+  }
+
+  private static boolean costAccountConsumesAlreadyExists(
+    final Consumes consumes,
+    final Collection<? extends Consumes> existingConsumes
+  ) {
+    if (CollectionUtils.isEmpty(existingConsumes)) {
+      return false;
+    }
+    return existingConsumes.stream()
+      .filter(c -> Objects.nonNull(c.getIdCostAccount()))
+      .anyMatch(c -> c.getIdCostAccount().equals(consumes.getIdCostAccount()));
+  }
+
+  private static void addsConsumesInStep(
+    final Step step,
+    final long currentMonth,
+    final CostAccount costAccount,
+    final MapPair<Long, ? extends BigDecimal> pair,
+    final boolean includeActualCost
+  ) {
+    BigDecimal actualCost = BigDecimal.ZERO;
+
+    if (includeActualCost) {
+      actualCost = pair.getFirst().get(currentMonth + 1);
+    }
+
+    final Consumes consumes = new Consumes(
+      null,
+      actualCost,
+      pair.getSecond().get(currentMonth + 1),
+      costAccount,
+      step
+    );
+
+    step.getConsumes().add(consumes);
   }
 
   @Transactional
@@ -144,29 +285,53 @@ public class StepService {
     }
 
     final Set<ConsumesDto> sortedConsumes = stepDto.getConsumes().stream()
-            .sorted(Comparator.comparing(dto -> dto.getCostAccount().getName()))
-            .collect(Collectors.toCollection(LinkedHashSet::new));
+      .sorted(Comparator.comparing(dto -> dto.getCostAccount().getName()))
+      .collect(Collectors.toCollection(LinkedHashSet::new));
     stepDto.setConsumes(sortedConsumes);
     return stepDto;
+  }
+
+  private int getScale(final Long idWorkpack) {
+    return this.getWorkpackUnitMeasureScale.execute(idWorkpack);
   }
 
   public void save(final StepStoreParamDto stepStoreParamDto) {
     final Schedule schedule = this.findScheduleById(stepStoreParamDto.getIdSchedule());
     final Set<Step> scheduleSteps = schedule.getSteps();
-    final long months = StepService.getMonths(
-      stepStoreParamDto,
-      schedule
+
+    final long plannedWorkMonths = getPlannedWorkMonths(stepStoreParamDto, schedule);
+    final long actualWorkMonths = getActualWorkMonths(stepStoreParamDto, schedule);
+
+    final Map<CostAccount, MapPair<Long, BigDecimal>> costsMap = this.getCostAccountGroupedByDistributedParts.execute(
+      plannedWorkMonths,
+      actualWorkMonths,
+      stepStoreParamDto.getDistribution(),
+      stepStoreParamDto.getConsumes()
     );
 
-    final Set<ConsumesParamDto> consumes = stepStoreParamDto.getConsumes();
+    final int scale = this.getScale(schedule.getIdWorkpack());
+
+    final Map<Long, BigDecimal> plannedParts = getParts(
+      plannedWorkMonths,
+      stepStoreParamDto.getPlannedWork(),
+      scale,
+      stepStoreParamDto.getDistribution()
+    );
+    final Map<Long, BigDecimal> actualParts = getParts(
+      actualWorkMonths,
+      stepStoreParamDto.getActualWork(),
+      scale,
+      stepStoreParamDto.getDistribution()
+    );
 
     final boolean isEndStep = stepStoreParamDto.getEndStep();
+
     if (!isEndStep) {
       final List<Step> sortedSteps = scheduleSteps.stream()
         .sorted(Comparator.comparing(Step::getPeriodFromStart))
         .collect(Collectors.toList());
 
-      long updatedPeriodFromStart = months;
+      long updatedPeriodFromStart = plannedWorkMonths;
       for (final Step step : sortedSteps) {
         step.setPeriodFromStart(updatedPeriodFromStart);
         updatedPeriodFromStart++;
@@ -175,18 +340,27 @@ public class StepService {
       this.stepRepository.saveAll(sortedSteps);
     }
 
-    for (long month = 0; month < months; month++) {
-      final Step step = StepService.mapsToStep(stepStoreParamDto);
+    for (long currentMonth = 0; currentMonth < plannedWorkMonths; currentMonth++) {
+      final Step step = mapsToStep(stepStoreParamDto);
       step.setSchedule(schedule);
 
-      if (!consumes.isEmpty()) {
+      if (!costsMap.isEmpty()) {
         this.addsConsumesToStep(
-          consumes,
-          step
+          step,
+          currentMonth,
+          actualWorkMonths,
+          costsMap
         );
       }
 
-      step.setPeriodFromStart(isEndStep ? scheduleSteps.size() : month);
+      step.setPeriodFromStart(isEndStep ? scheduleSteps.size() : currentMonth);
+      step.setPlannedWork(plannedParts.get(currentMonth + 1));
+      step.setActualWork(BigDecimal.ZERO);
+
+      if (currentMonth < actualWorkMonths) {
+        step.setActualWork(actualParts.getOrDefault(currentMonth + 1, BigDecimal.ZERO));
+      }
+
       scheduleSteps.add(this.stepRepository.save(step));
     }
 
@@ -222,7 +396,9 @@ public class StepService {
       final Set<Consumes> consumesDelete = stepUpdate.getConsumes().stream()
         .filter(consumes ->
                   step.getConsumes() == null ||
-                  step.getConsumes().stream().noneMatch(c -> Objects.nonNull(c.getId()) && c.getId().equals(consumes.getId()))
+                  step.getConsumes()
+                    .stream()
+                    .noneMatch(c -> Objects.nonNull(c.getId()) && c.getId().equals(consumes.getId()))
         ).collect(Collectors.toSet());
 
       if (!consumesDelete.isEmpty()) {
@@ -280,11 +456,24 @@ public class StepService {
   }
 
   private void addsConsumesToStep(
-    final Iterable<? extends ConsumesParamDto> consumes,
-    final Step step
+    final Step step,
+    final long currentMonth,
+    final long actualWorkMonths,
+    final Map<CostAccount, MapPair<Long, BigDecimal>> costsMap
   ) {
+    if (costsMap.isEmpty()) return;
     step.setConsumes(new HashSet<>());
-    consumes.forEach(consumesParamDto -> this.addsConsumesToSteps(step, consumesParamDto));
+    for (final Map.Entry<CostAccount, MapPair<Long, BigDecimal>> entry : costsMap.entrySet()) {
+      final CostAccount costAccount = entry.getKey();
+      final MapPair<Long, BigDecimal> pair = entry.getValue();
+      addsConsumesInStep(
+        step,
+        currentMonth,
+        costAccount,
+        pair,
+        currentMonth < actualWorkMonths
+      );
+    }
   }
 
   private void addsMonthsToSchedule(
@@ -297,25 +486,6 @@ public class StepService {
       schedule.setStart(stepStoreParamDto.getScheduleStart());
     }
     this.scheduleRepository.save(schedule);
-  }
-
-  private static long getMonths(
-    final StepStoreParamDto stepStoreParamDto,
-    final Schedule schedule
-  ) {
-    if (stepStoreParamDto.getEndStep()) {
-      final LocalDate scheduleEnd = stepStoreParamDto.getScheduleEnd();
-      return intervalInMonths(schedule.getEnd(), scheduleEnd);
-    }
-    final LocalDate scheduleStart = stepStoreParamDto.getScheduleStart();
-    return intervalInMonths(scheduleStart, schedule.getStart());
-  }
-
-  private static Step mapsToStep(final StepStoreParamDto in) {
-    final Step out = new Step();
-    out.setActualWork(Optional.ofNullable(in.getActualWork()).orElse(BigDecimal.ZERO));
-    out.setPlannedWork(Optional.ofNullable(in.getPlannedWork()).orElse(BigDecimal.ZERO));
-    return out;
   }
 
   private Step mapsToStep(final StepUpdateDto in) {
@@ -349,28 +519,6 @@ public class StepService {
     );
 
     step.getConsumes().add(consumes);
-  }
-
-  private static long intervalInMonths(
-    final LocalDate start,
-    final LocalDate end
-  ) {
-    return ChronoUnit.MONTHS.between(
-      start.withDayOfMonth(1),
-      end.withDayOfMonth(1)
-    );
-  }
-
-  private static boolean costAccountConsumesAlreadyExists(
-    final Consumes consumes,
-    final Collection<? extends Consumes> existingConsumes
-  ) {
-    if (CollectionUtils.isEmpty(existingConsumes)) {
-      return false;
-    }
-    return existingConsumes.stream()
-      .filter(c -> Objects.nonNull(c.getIdCostAccount()))
-      .anyMatch(c -> c.getIdCostAccount().equals(consumes.getIdCostAccount()));
   }
 
 }

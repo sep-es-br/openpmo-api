@@ -53,7 +53,7 @@ public class FindAllOfficePermissionUsingCustomFilter extends FindAllUsingCustom
   }
 
   @Override
-  protected String buildCustomFilterRule(Rules rule, String label) {
+  protected String buildCustomFilterRule(final Rules rule, final String label) {
     if (rule.getRelationalOperator() == GeneralOperatorsEnum.CONTEM) {
       switch (rule.getPropertyName()) {
         case "name":

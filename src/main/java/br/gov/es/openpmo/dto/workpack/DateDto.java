@@ -7,8 +7,6 @@ import java.time.LocalDateTime;
 
 public class DateDto extends PropertyDto {
 
-  private String type = "Date";
-
   private LocalDateTime value;
 
   private String reason;
