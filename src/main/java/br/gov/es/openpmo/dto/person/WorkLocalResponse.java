@@ -21,6 +21,20 @@ public class WorkLocalResponse {
     return dto;
   }
 
+  public WorkLocalResponse orNull() {
+    if (isInvalid()) {
+      return null;
+    }
+    return this;
+  }
+
+  private boolean isInvalid() {
+    return this.idOffice == null
+      && this.idPlan == null
+      && this.idWorkpack == null
+      && this.idWorkpackModelLinked == null;
+  }
+
   public Long getIdOffice() {
     return idOffice;
   }

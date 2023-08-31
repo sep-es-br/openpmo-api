@@ -3,6 +3,7 @@ package br.gov.es.openpmo.dto.person;
 import br.gov.es.openpmo.dto.file.AvatarDto;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.relations.IsInContactBookOf;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -28,6 +29,7 @@ public class PersonGetByIdDto {
 
   private AvatarDto avatar;
 
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   private WorkLocalResponse workLocal;
 
   @JsonProperty("isCcbMember")
@@ -77,7 +79,7 @@ public class PersonGetByIdDto {
     dto.setName(person.getName());
     dto.setFullName(person.getFullName());
     dto.setAdministrator(person.getAdministrator());
-    dto.setWorkLocal(WorkLocalResponse.from(person));
+    dto.setWorkLocal(WorkLocalResponse.from(person).orNull());
     return dto;
   }
 
