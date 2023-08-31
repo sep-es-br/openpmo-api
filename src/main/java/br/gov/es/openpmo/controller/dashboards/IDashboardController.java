@@ -7,6 +7,7 @@ import br.gov.es.openpmo.dto.dashboards.v2.DashboardResponse;
 import br.gov.es.openpmo.dto.dashboards.v2.Interval;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -45,7 +46,7 @@ public interface IDashboardController {
       @Authorization final String authorization
   );
 
-  @GetMapping("/purge")
+  @PostMapping("/purge")
   Response<Void> purge(@Authorization final String authorization);
 
 }

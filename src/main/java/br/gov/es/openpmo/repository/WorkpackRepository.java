@@ -597,4 +597,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
           "WHERE id(w)=$idWorkpack AND id(p)=$idPlan " +
           "CREATE (w)-[:BELONGS_TO{linked: false}]->(p)")
   void createBelongsToRelationship(Long idWorkpack, Long idPlan);
+
+  @Override
+  List<Workpack> findAll();
 }
