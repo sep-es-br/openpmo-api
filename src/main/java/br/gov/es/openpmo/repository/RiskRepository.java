@@ -4,6 +4,7 @@ import br.gov.es.openpmo.model.risk.Risk;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -57,8 +58,8 @@ public interface RiskRepository extends Neo4jRepository<Risk, Long>, CustomRepos
          "unwind riskList as risks " +
          "return count(distinct risks)")
   Long countOpenedRiskOfWorkpackByImportance(
-    Long workpackId,
-    String importance
+    @Param("workpackId") Long workpackId,
+    @Param("importance") String importance
   );
 
   @Query("match (w:Workpack{deleted:false,canceled:false}) " +
@@ -69,7 +70,7 @@ public interface RiskRepository extends Neo4jRepository<Risk, Long>, CustomRepos
          "with collect(r1) + collect(r2) as riskList " +
          "unwind riskList as risks " +
          "return count(distinct risks)")
-  Long countAllOpenedRisksOfWorkpack(Long workpackId);
+  Long countAllOpenedRisksOfWorkpack(@Param("workpackId") Long workpackId);
 
   @Query("match (w:Workpack{deleted:false,canceled:false}) " +
          "where id(w)=$workpackId " +
@@ -81,6 +82,6 @@ public interface RiskRepository extends Neo4jRepository<Risk, Long>, CustomRepos
          "with collect(r1) + collect(r2) as riskList " +
          "unwind riskList as risks " +
          "return count(distinct risks)")
-  Long countClosedRisksOfWorkpack(Long workpackId);
+  Long countClosedRisksOfWorkpack(@Param("workpackId") Long workpackId);
 
 }

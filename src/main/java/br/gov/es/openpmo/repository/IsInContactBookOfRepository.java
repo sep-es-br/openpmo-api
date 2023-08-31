@@ -32,8 +32,8 @@ public interface IsInContactBookOfRepository extends Neo4jRepository<IsInContact
          "where id(p)=$personId and id(o)=$officeId " +
          "return count(i)>0")
   boolean existsByPersonIdAndOfficeId(
-    Long personId,
-    Long officeId
+    @Param("personId") Long personId,
+    @Param("officeId") Long officeId
   );
 
 }

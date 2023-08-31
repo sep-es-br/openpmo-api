@@ -6,6 +6,7 @@ import br.gov.es.openpmo.dto.dashboards.DashboardBaselineResponse;
 import br.gov.es.openpmo.dto.dashboards.DashboardParameters;
 import br.gov.es.openpmo.dto.dashboards.v2.DashboardResponse;
 import br.gov.es.openpmo.dto.dashboards.v2.Interval;
+import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
 import br.gov.es.openpmo.service.dashboards.v2.IDashboardBaselineService;
 import br.gov.es.openpmo.service.dashboards.v2.IDashboardIntervalService;
@@ -32,6 +33,8 @@ public class DashboardController implements IDashboardController {
   private final IDashboardService dashboardService;
   private final IAsyncDashboardService asyncDashboardService;
   private final ICanAccessService canAccessService;
+
+  private final TokenService tokenService;
   private final PurgeDashboards purgeDashboards;
 
   public DashboardController(
@@ -41,6 +44,7 @@ public class DashboardController implements IDashboardController {
     final IDashboardIntervalService intervalService,
     final IAsyncDashboardService asyncDashboardService,
     final ICanAccessService canAccessService,
+    final TokenService tokenService,
     final PurgeDashboards purgeDashboards
   ) {
     this.responseHandler = responseHandler;
@@ -49,6 +53,7 @@ public class DashboardController implements IDashboardController {
     this.intervalService = intervalService;
     this.asyncDashboardService = asyncDashboardService;
     this.canAccessService = canAccessService;
+    this.tokenService = tokenService;
     this.purgeDashboards = purgeDashboards;
   }
 
@@ -85,6 +90,9 @@ public class DashboardController implements IDashboardController {
   ) {
 
     this.canAccessService.ensureCanReadResource(workpackId, authorization);
+
+    final Long userId = this.tokenService.getUserId(authorization);
+
     final DashboardParameters parameters = new DashboardParameters(
       showHeader,
       workpackId,
@@ -94,6 +102,7 @@ public class DashboardController implements IDashboardController {
       baselineId,
       yearMonth,
       linked,
+      userId,
       uriComponentsBuilder
     );
 

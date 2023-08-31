@@ -22,6 +22,8 @@ public class DashboardParameters {
 
   private final Boolean linked;
 
+  private final Long personId;
+
   private final UriComponentsBuilder uriComponentsBuilder;
 
   public DashboardParameters(
@@ -33,6 +35,7 @@ public class DashboardParameters {
     final Long baselineId,
     final YearMonth date,
     final Boolean linked,
+    final Long personId,
     final UriComponentsBuilder uriComponentsBuilder
   ) {
     this.showHeader = showHeader;
@@ -43,6 +46,7 @@ public class DashboardParameters {
     this.baselineId = baselineId;
     this.yearMonth = date;
     this.linked = linked;
+    this.personId = personId;
     this.uriComponentsBuilder = uriComponentsBuilder;
   }
 
@@ -80,6 +84,10 @@ public class DashboardParameters {
 
   public Boolean getLinked() {
     return this.linked;
+  }
+
+  public Long getPersonId() {
+    return this.personId;
   }
 
 }

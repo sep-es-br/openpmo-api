@@ -33,7 +33,7 @@ public interface OfficeRepository extends Neo4jRepository<Office, Long>, CustomR
   @Query("MATCH (plan:Plan)-[isAdoptedBy:IS_ADOPTED_BY]->(office:Office) " +
          "WHERE id(plan)=$planId " +
          "RETURN office")
-  Optional<Office> findOfficeByPlanId(Long planId);
+  Optional<Office> findOfficeByPlanId(@Param("planId") Long planId);
 
   @Query("MATCH (plan:Plan)-[isAdoptedBy:IS_ADOPTED_BY]->(office:Office) " +
          "MATCH (workpack:Workpack) " +

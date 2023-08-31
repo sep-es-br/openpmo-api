@@ -10,6 +10,8 @@ import br.gov.es.openpmo.model.relations.IsLinkedTo;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.dashboards.DashboardDatasheetRepository;
+import br.gov.es.openpmo.service.properties.GetSorterProperty;
+import br.gov.es.openpmo.service.properties.SorterProperty;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -26,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.dto.dashboards.datasheet.WorkpacksByModelResponse.WorkpacksByModelItem;
@@ -34,10 +37,15 @@ import static br.gov.es.openpmo.dto.dashboards.datasheet.WorkpacksByModelRespons
 public class DashboardDatasheetService implements IDashboardDatasheetService {
 
   private final DashboardDatasheetRepository repository;
+  private final GetSorterProperty getSorterProperty;
 
   @Autowired
-  public DashboardDatasheetService(final DashboardDatasheetRepository repository) {
+  public DashboardDatasheetService(
+    final DashboardDatasheetRepository repository,
+    final GetSorterProperty getSorterProperty
+  ) {
     this.repository = repository;
+    this.getSorterProperty = getSorterProperty;
   }
 
   private static <T> Collection<T> ifCollectionNullThenEmpty(final Collection<T> list) {
@@ -50,8 +58,10 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
     final Long workpackId = parameters.getWorkpackId();
     final UriComponentsBuilder uriComponentsBuilder = parameters.getUriComponentsBuilder();
 
+    final DatasheetTotalizers datasheetTotalizers = this.getDatasheetTotalizers(parameters);
+    datasheetTotalizers.sort();
     return new DatasheetResponse(
-      this.getDatasheetTotalizers(parameters),
+      datasheetTotalizers,
       this.getDatasheetStakeholders(workpackId, uriComponentsBuilder)
     );
   }
@@ -98,6 +108,7 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
             parameters.getPlanId(),
             !equivalentLinkedModelChildren.isEmpty(),
             parameters.getWorkpackId(),
+            this.getSortPropertyFunction(parameters.getPersonId()),
             1
           ));
       }
@@ -111,11 +122,19 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
 
     final Map<Long, Set<WorkpacksByModelItem>> itemGroupedByWorkpackModel = new HashMap<>();
 
+    final Function<Long, SorterProperty<?>> sortPropertyFunction =
+      this.getSortPropertyFunction(parameters.getPersonId());
+
     for (final WorkpackModel workpackModel : workpackModels) {
 
-      Set<WorkpacksByModelItem> items = Optional.ofNullable(workpackModel.getInstances())
+      final Set<WorkpacksByModelItem> items = Optional.ofNullable(workpackModel.getInstances())
         .map(workpacks -> workpacks.stream()
-          .map(workpack -> WorkpacksByModelItem.parent(workpack, workpackModel, parameters.getPlanId()))
+          .map(workpack -> WorkpacksByModelItem.parent(
+            workpack,
+            workpackModel,
+            parameters.getPlanId(),
+            sortPropertyFunction
+          ))
           .collect(Collectors.toSet())
         )
         .orElseGet(HashSet::new);
@@ -123,7 +142,7 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
       final Set<WorkpacksByModelItem> itemsLinked = Optional.ofNullable(workpackModel.getLinkedToRelationship())
         .map(linkedTo -> linkedTo.stream()
           .map(IsLinkedTo::getWorkpack)
-          .map(workpack -> WorkpacksByModelItem.parentLinked(workpack, workpackModel.getId()))
+          .map(workpack -> WorkpacksByModelItem.parentLinked(workpack, workpackModel.getId(), sortPropertyFunction))
           .collect(Collectors.toSet())
         )
         .orElseGet(Collections::emptySet);
@@ -134,15 +153,17 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
 
 
     expandedWorkpacksByModelResponse.forEach(
-      response -> response.addItems(itemGroupedByWorkpackModel.getOrDefault(
-        response.getIdWorkpackModel(),
-        new HashSet<>()
-      ))
+      response -> {
+        response.addItems(itemGroupedByWorkpackModel.getOrDefault(
+          response.getIdWorkpackModel(),
+          new HashSet<>()
+        ));
+      }
     );
 
     responseList.addAll(expandedWorkpacksByModelResponse);
 
-    return responseList.stream()
+   return responseList.stream()
       .sorted(
         Comparator.comparing(WorkpacksByModelResponse::getDepth)
           .thenComparing(WorkpacksByModelResponse::getModelName)
@@ -186,6 +207,7 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
             equivalentLinkedModelChildren,
             firstLayerWorkpackModelLinkedChildren,
             parameters.getPlanId(),
+            this.getSortPropertyFunction(parameters.getPersonId()),
             1
           ));
       }
@@ -213,7 +235,8 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
           .map(workpack -> WorkpacksByModelItem.parentLinkedEquivalent(
             workpack,
             equivalentLinkedWorkpackModel.get(),
-            parameters.getPlanId()
+            parameters.getPlanId(),
+            this.getSortPropertyFunction(parameters.getPersonId())
           ))
           .collect(Collectors.toSet())
         )
@@ -223,12 +246,15 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
     }
 
     expandedWorkpacksByModelResponse.forEach(
-      response -> response.addItems(itemGroupedByWorkpackModel.getOrDefault(
-        response.getIdWorkpackModel(),
-        new HashSet<>()
-      ))
+      response -> {
+        response.addItems(itemGroupedByWorkpackModel.getOrDefault(
+          response.getIdWorkpackModel(),
+          new HashSet<>()
+        ));
+      }
     );
     responseList.addAll(expandedWorkpacksByModelResponse);
+
     return responseList.stream()
       .sorted(
         Comparator.comparing(WorkpacksByModelResponse::getDepth)
@@ -251,10 +277,11 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
     final Collection<? extends WorkpackModel> equivalentLinkedModelChildren,
     final Iterable<? extends WorkpackModel> children,
     final Long planIdLinked,
+    final Function<Long, SorterProperty<?>> sortPropertyFunction,
     final int depth
   ) {
 
-    final Collection<WorkpacksByModelResponse> responseList = new HashSet<>();
+    final Collection<WorkpacksByModelResponse> responseList = new LinkedHashSet<>();
 
     for (final WorkpackModel child : children) {
 
@@ -280,7 +307,8 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
             .map(workpack -> WorkpacksByModelItem.parentLinkedEquivalent(
               workpack,
               maybeEquivalentLinkedModel.get(),
-              planIdLinked
+              planIdLinked,
+              sortPropertyFunction
             ))
             .collect(Collectors.toList())
         );
@@ -309,6 +337,7 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
               .orElseGet(Collections::emptySet),
             this.repository.findWorkpackModelLinkedChildren(child.getId(), planIdLinked),
             planIdLinked,
+            sortPropertyFunction,
             depth + 1
           )
         );
@@ -326,20 +355,26 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
     final Long planId,
     final boolean linked,
     final Long parentId,
+    final Function<Long, SorterProperty<?>> sortPropertyFunction,
     final int depth
   ) {
 
-    final Collection<WorkpacksByModelResponse> responseList = new HashSet<>();
+    final Collection<WorkpacksByModelResponse> responseList = new LinkedHashSet<>();
 
     for (final WorkpackModel child : children) {
 
-      final Collection<WorkpacksByModelItem> grandChildItem = new ArrayList<>();
+      final Collection<WorkpacksByModelItem> grandChildItem = new LinkedHashSet<>();
       final boolean isGrandChild = depth == 1;
 
       if (isGrandChild) {
         grandChildItem.addAll(
           ifCollectionNullThenEmpty(child.getInstances()).stream()
-            .map(workpack -> WorkpacksByModelItem.parent(workpack, child, planId))
+            .map(workpack -> WorkpacksByModelItem.parent(
+              workpack,
+              child,
+              planId,
+              sortPropertyFunction
+            ))
             .collect(Collectors.toList())
         );
       }
@@ -353,7 +388,7 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
         .filter(model -> model.hasSameName(child))
         .findFirst();
 
-      long quantity;
+      final long quantity;
       if (linked) {
         final int totalLinkedChildrenWorkpack = equivalentModelLinked.map(WorkpackModel::getInstances)
           .map(Set::size)
@@ -362,7 +397,11 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
           grandChildItem.addAll(
             equivalentModelLinked.map(WorkpackModel::getInstances)
               .map(list -> list.stream()
-                .map(workpack -> WorkpacksByModelItem.parentLinked(workpack, child))
+                .map(workpack -> WorkpacksByModelItem.parentLinked(
+                  workpack,
+                  child,
+                  sortPropertyFunction
+                ))
                 .collect(Collectors.toList())
               )
               .orElseGet(Collections::emptyList)
@@ -378,7 +417,7 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
           grandChildItem.addAll(
             ifCollectionNullThenEmpty(child.getLinkedToRelationship()).stream()
               .map(IsLinkedTo::getWorkpack)
-              .map(workpack -> WorkpacksByModelItem.parentLinked(workpack, child))
+              .map(workpack -> WorkpacksByModelItem.parentLinked(workpack, child, sortPropertyFunction))
               .collect(Collectors.toList())
           );
         }
@@ -409,6 +448,7 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
               planId,
               true,
               parentId,
+              sortPropertyFunction,
               depth + 1
             )
           );
@@ -423,6 +463,7 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
               planId,
               linked,
               parentId,
+              sortPropertyFunction,
               depth + 1
             )
           );
@@ -431,6 +472,8 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
       }
     }
 
+    responseList.forEach(WorkpacksByModelResponse::sortWorkpacks);
+
     return responseList.stream()
       .sorted(Comparator.comparing(WorkpacksByModelResponse::getModelName))
       .collect(Collectors.toCollection(LinkedHashSet::new));
@@ -438,7 +481,7 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
 
   private boolean hasInstanceOrLinked(final WorkpackModel workpackModel) {
     return CollectionUtils.isNotEmpty(workpackModel.getInstances()) ||
-      CollectionUtils.isNotEmpty(workpackModel.getLinkedToRelationship());
+           CollectionUtils.isNotEmpty(workpackModel.getLinkedToRelationship());
   }
 
   private Set<DatasheetStakeholderResponse> getDatasheetStakeholders(
@@ -452,6 +495,10 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
 
   private Set<DatasheetStakeholderQueryResult> getStakeholders(final Long workpackId) {
     return new LinkedHashSet<>(this.repository.stakeholders(workpackId));
+  }
+
+  private Function<Long, SorterProperty<?>> getSortPropertyFunction(final Long idPerson) {
+    return idWorkpack -> this.getSorterProperty.execute(idWorkpack, idPerson);
   }
 
 }

@@ -71,5 +71,5 @@ public interface LocalityRepository extends Neo4jRepository<Locality, Long>, Cus
     "] " +
     "ORDER BY score DESC "
   )
-  List<Locality> findAllByDomainAndTextSearch(Long idDomain, String term, Double searchCutOffScore);
+  List<Locality> findAllByDomainAndTextSearch(@Param("idDomain") Long idDomain, @Param("term") String term, @Param("searchCutOffScore") Double searchCutOffScore);
 }

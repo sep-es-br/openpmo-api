@@ -339,7 +339,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
          "id(workpack) AS idWorkpack, " +
          "nameProperty.value AS name, " +
          "fullNameProperty.value AS fullName")
-  Optional<WorkpackName> findWorkpackNameAndFullname(Long idWorkpack);
+  Optional<WorkpackName> findWorkpackNameAndFullname(@Param("idWorkpack") Long idWorkpack);
 
   @Query("MATCH (workpack:Workpack) " +
          "OPTIONAL MATCH (workpack)<-[snapshotOf:IS_SNAPSHOT_OF]-(:Workpack) " +
@@ -430,8 +430,8 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
          "WHERE id(w)=$childId AND id(p)=$parentId " +
          "CREATE (w)-[:IS_IN]->(p)")
   void createIsInRelationship(
-    Long childId,
-    Long parentId
+    @Param("childId") Long childId,
+    @Param("parentId") Long parentId
   );
 
   @Query("MATCH (w:Workpack), (wm:WorkpackModel) " +
@@ -521,14 +521,14 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   @Query("MATCH (w:Workpack)-[:BELONGS_TO]->(p:Plan) " +
          "WHERE id(p)=$id " +
          "RETURN count(w)>0")
-  boolean existsByPlanId(Long id);
+  boolean existsByPlanId(@Param("id") Long id);
 
   @Query("MATCH (w:Workpack)<-[:IS_IN*]->(v:Workpack) " +
          "WHERE id(w)=$workpackId " +
          "WITH [ id(w) ] + collect( id(v) ) AS list " +
          "UNWIND list AS l " +
          "RETURN l")
-  Set<Long> findAllInHierarchy(Long workpackId);
+  Set<Long> findAllInHierarchy(@Param("workpackId") Long workpackId);
 
   @Query("MATCH (w:Workpack) WHERE id(w)=$id RETURN w.canceled=true AND w.deleted=false")
   boolean isCanceled(Long id);
@@ -596,7 +596,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   @Query("MATCH (w:Workpack), (p:Plan) " +
           "WHERE id(w)=$idWorkpack AND id(p)=$idPlan " +
           "CREATE (w)-[:BELONGS_TO{linked: false}]->(p)")
-  void createBelongsToRelationship(Long idWorkpack, Long idPlan);
+  void createBelongsToRelationship(@Param("idWorkpack") Long idWorkpack, @Param("idPlan") Long idPlan);
 
   @Override
   List<Workpack> findAll();

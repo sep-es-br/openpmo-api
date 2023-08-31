@@ -72,7 +72,7 @@ public interface PropertyRepository extends Neo4jRepository<Property, Long> {
     "MATCH (workpack)<-[features:FEATURES]-(sorter:Property)-[isDrivenBy:IS_DRIVEN_BY]->(sorterModel) " +
     "return workpack, sorter, isDrivenBy, sorterModel, model, isSortedBy"
   )
-  Optional<Property> findWorkpackModelSorterPropertyByWorkpackId(Long idWorkpack);
+  Optional<Property> findWorkpackModelSorterPropertyByWorkpackId(@Param("idWorkpack") Long idWorkpack);
 
   @Query(
     "MATCH (workpack:Workpack)<-[featuresWorkpack:FEATURES]-(property:Property)-[isDrivenBy:IS_DRIVEN_BY]->(propertyModel:PropertyModel)" +

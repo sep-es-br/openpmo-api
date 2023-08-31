@@ -6,6 +6,7 @@ import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -306,8 +307,8 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
             "WHERE id(b)=$baselineId AND id(w)=$workpackId " +
             "CREATE (b)<-[:IS_BASELINED_BY]-(w)")
     void createIsBaselinedByRelationship(
-            Long baselineId,
-            Long workpackId
+            @Param("baselineId") Long baselineId,
+            @Param("workpackId") Long workpackId
     );
 
     @Query("MATCH (b:Baseline), (s:Property) " +

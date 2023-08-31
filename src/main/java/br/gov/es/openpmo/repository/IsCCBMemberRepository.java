@@ -5,6 +5,7 @@ import br.gov.es.openpmo.model.relations.IsCCBMemberFor;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -26,7 +27,7 @@ public interface IsCCBMemberRepository extends Neo4jRepository<IsCCBMemberFor, L
   @Query("MATCH (p:Person)-[c:IS_CCB_MEMBER_FOR{active: true}]->(:Workpack) " +
          "WHERE id(p)=$personId " +
          "RETURN count(c)>0")
-  boolean isActive(Long personId);
+  boolean isActive(@Param("personId") Long personId);
 
   @Query("MATCH (p:Person)-[c:IS_CCB_MEMBER_FOR]->(w:Workpack) " +
          "WHERE id(p)=$idPerson AND id(w)=$idWorkpack " +

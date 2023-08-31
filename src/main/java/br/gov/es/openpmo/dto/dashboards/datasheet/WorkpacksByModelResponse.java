@@ -1,10 +1,14 @@
 package br.gov.es.openpmo.dto.dashboards.datasheet;
 
+import br.gov.es.openpmo.model.filter.SortByDirectionEnum;
 import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.properties.HasValue;
 import br.gov.es.openpmo.model.relations.IsLinkedTo;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
+import br.gov.es.openpmo.service.properties.SorterProperty;
+import br.gov.es.openpmo.service.workpack.PropertyComparator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -128,6 +132,32 @@ public class WorkpacksByModelResponse {
     this.workpacks.addAll(items);
   }
 
+  @Override
+  public boolean equals(final Object o) {
+    if (this == o) return true;
+    if (o == null || this.getClass() != o.getClass()) return false;
+
+    final WorkpacksByModelResponse that = (WorkpacksByModelResponse) o;
+
+    return this.idWorkpackModel.equals(that.idWorkpackModel);
+  }
+
+  @Override
+  public int hashCode() {
+    return this.idWorkpackModel.hashCode();
+  }
+
+  public void sortWorkpacks() {
+    if (this.workpacks.isEmpty()) return;
+    this.workpacks.sort(
+      (a, b) -> {
+        final SortByDirectionEnum sort = Optional.ofNullable(a.getSort().getDirection())
+          .orElseGet(() -> Optional.ofNullable(b.getSort().getDirection()).orElse(SortByDirectionEnum.ASC));
+        return PropertyComparator.compare(a.getSort().getValue(), b.getSort().getValue()) * sort.getOrder();
+      }
+    );
+    this.workpacks.forEach(WorkpacksByModelItem::sortWorkpacks);
+  }
 
   public static class WorkpacksByModelItem {
     private final Long id;
@@ -136,6 +166,7 @@ public class WorkpacksByModelResponse {
     private final String name;
     private final String icon;
     private final Boolean linked;
+    private final SorterProperty<?> sort;
     private final List<WorkpacksByModelItem> workpacks = new ArrayList<>();
 
     public WorkpacksByModelItem(
@@ -144,7 +175,8 @@ public class WorkpacksByModelResponse {
       final Long idPlan,
       final String name,
       final String icon,
-      final Boolean linked
+      final Boolean linked,
+      final SorterProperty<?> sort
     ) {
       this.id = id;
       this.idWorkpackModel = idWorkpackModel;
@@ -152,21 +184,28 @@ public class WorkpacksByModelResponse {
       this.name = name;
       this.icon = icon;
       this.linked = linked;
+      this.sort = sort;
     }
 
-    public static WorkpacksByModelItem parent(final Workpack workpack, final WorkpackModel workpackModel, final Long planId) {
+    public static WorkpacksByModelItem parent(
+      final Workpack workpack,
+      final WorkpackModel workpackModel,
+      final Long planId,
+      final Function<Long, SorterProperty<?>> sortPropertyFunction
+    ) {
       final WorkpacksByModelItem item = new WorkpacksByModelItem(
         workpack.getId(),
         workpack.getIdWorkpackModel(),
         workpack.getOriginalPlan().map(Plan::getId).orElse(null),
         workpack.getPropertyName().map(HasValue::getValue).map(String.class::cast).orElse(null),
         workpack.getIcon(),
-        false
+        false,
+        sortPropertyFunction.apply(workpack.getId())
       );
       item.addChildren(
         Optional.ofNullable(workpack.getChildren())
           .map(children -> children.stream()
-            .map(child -> child(child, workpackModel, planId))
+            .map(child -> child(child, workpackModel, planId, sortPropertyFunction))
             .collect(Collectors.toList())
           )
           .orElseGet(Collections::emptyList)
@@ -174,14 +213,19 @@ public class WorkpacksByModelResponse {
       return item;
     }
 
-    public static WorkpacksByModelItem parentLinked(final Workpack workpack, final Long idWorkpackModel) {
+    public static WorkpacksByModelItem parentLinked(
+      final Workpack workpack,
+      final Long idWorkpackModel,
+      final Function<Long, SorterProperty<?>> sortPropertyFunction
+    ) {
       final WorkpacksByModelItem item = new WorkpacksByModelItem(
         workpack.getId(),
         workpack.getLinkedWorkpackModel(idWorkpackModel).map(WorkpackModel::getId).orElse(null),
         workpack.getOriginalPlan().map(Plan::getId).orElse(null),
         workpack.getPropertyName().map(HasValue::getValue).map(String.class::cast).orElse(null),
         workpack.getLinkedWorkpackModel(idWorkpackModel).map(WorkpackModel::getFontIcon).orElse(null),
-        true
+        true,
+        sortPropertyFunction.apply(workpack.getId())
       );
       final Optional<WorkpackModel> linkedWorkpackModel = workpack.getLinkedWorkpackModel(idWorkpackModel);
       item.addChildren(
@@ -189,7 +233,8 @@ public class WorkpacksByModelResponse {
           .map(children -> children.stream()
             .map(child -> WorkpacksByModelItem.childLinked(
               child,
-              linkedWorkpackModel.orElseGet(workpack::getWorkpackModelInstance)
+              linkedWorkpackModel.orElseGet(workpack::getWorkpackModelInstance),
+              sortPropertyFunction
             ))
             .collect(Collectors.toList())
           )
@@ -199,7 +244,11 @@ public class WorkpacksByModelResponse {
       return item;
     }
 
-    public static WorkpacksByModelItem parentLinked(final Workpack workpack, final WorkpackModel workpackModel) {
+    public static WorkpacksByModelItem parentLinked(
+      final Workpack workpack,
+      final WorkpackModel workpackModel,
+      final Function<Long, SorterProperty<?>> sortPropertyFunction
+    ) {
       final Optional<WorkpackModel> linkedWorkpackModel = workpack.getLinkedWorkpackModel(workpackModel.getId());
       final WorkpacksByModelItem item = new WorkpacksByModelItem(
         workpack.getId(),
@@ -207,14 +256,16 @@ public class WorkpacksByModelResponse {
         workpack.getOriginalPlan().map(Plan::getId).orElse(null),
         workpack.getPropertyName().map(HasValue::getValue).map(String.class::cast).orElse(null),
         workpackModel.getFontIcon(),
-        true
+        true,
+        sortPropertyFunction.apply(workpack.getId())
       );
       item.addChildren(
         Optional.ofNullable(workpack.getChildren())
           .map(children -> children.stream()
             .map(child -> WorkpacksByModelItem.childLinked(
               child,
-              linkedWorkpackModel.orElseGet(workpack::getWorkpackModelInstance)
+              linkedWorkpackModel.orElseGet(workpack::getWorkpackModelInstance),
+              sortPropertyFunction
             ))
             .collect(Collectors.toList())
           )
@@ -224,7 +275,12 @@ public class WorkpacksByModelResponse {
       return item;
     }
 
-    public static WorkpacksByModelItem child(final Workpack workpack, final WorkpackModel workpackModel, Long planId) {
+    public static WorkpacksByModelItem child(
+      final Workpack workpack,
+      final WorkpackModel workpackModel,
+      final Long planId,
+      final Function<Long, SorterProperty<?>> sortPropertyFunction
+    ) {
 
       final boolean hasLinkedToRelationship = workpack.hasLinkedToRelationship();
 
@@ -238,7 +294,8 @@ public class WorkpacksByModelResponse {
           planId,
           workpack.getPropertyName().map(HasValue::getValue).map(String.class::cast).orElse(null),
           maybeLinkedModel.map(WorkpackModel::getFontIcon).orElseGet(workpack::getIcon),
-          true
+          true,
+          sortPropertyFunction.apply(workpack.getId())
         );
       }
       return new WorkpacksByModelItem(
@@ -247,11 +304,16 @@ public class WorkpacksByModelResponse {
         planId,
         workpack.getPropertyName().map(HasValue::getValue).map(String.class::cast).orElse(null),
         workpack.getIcon(),
-        false
+        false,
+        sortPropertyFunction.apply(workpack.getId())
       );
     }
 
-    public static WorkpacksByModelItem childLinked(final Workpack workpack, final WorkpackModel linkedToModel) {
+    public static WorkpacksByModelItem childLinked(
+      final Workpack workpack,
+      final WorkpackModel linkedToModel,
+      final Function<Long, SorterProperty<?>> sortPropertyFunction
+    ) {
 
       final Optional<WorkpackModel> equivalentChildModel = linkedToModel.getChildren().stream()
         .filter(childModel -> childModel.hasSameName(workpack.getWorkpackModelInstance()))
@@ -263,14 +325,16 @@ public class WorkpacksByModelResponse {
         workpack.getOriginalPlan().map(Plan::getId).orElse(null),
         workpack.getPropertyName().map(HasValue::getValue).map(String.class::cast).orElse(null),
         equivalentChildModel.map(WorkpackModel::getFontIcon).orElse(null),
-        true
+        true,
+        sortPropertyFunction.apply(workpack.getId())
       );
     }
 
     public static WorkpacksByModelItem parentLinkedEquivalent(
       final Workpack workpack,
       final WorkpackModel linkedModelEquivalent,
-      final Long planId
+      final Long planId,
+      final Function<Long, SorterProperty<?>> sortPropertyFunction
     ) {
       final WorkpacksByModelItem parent = new WorkpacksByModelItem(
         workpack.getId(),
@@ -278,14 +342,16 @@ public class WorkpacksByModelResponse {
         planId,
         workpack.getPropertyName().map(HasValue::getValue).map(String.class::cast).orElse(null),
         linkedModelEquivalent.getFontIcon(),
-        true
+        true,
+        sortPropertyFunction.apply(workpack.getId())
       );
       parent.addChildren(
         Optional.ofNullable(workpack.getChildren())
           .map(children -> children.stream()
             .map(child -> WorkpacksByModelItem.childLinked(
               child,
-              linkedModelEquivalent
+              linkedModelEquivalent,
+              sortPropertyFunction
             ))
             .collect(Collectors.toList())
           )
@@ -333,22 +399,22 @@ public class WorkpacksByModelResponse {
       return this.workpacks;
     }
 
+    @JsonIgnore
+    public SorterProperty<?> getSort() {
+      return this.sort;
+    }
 
-  }
-
-  @Override
-  public boolean equals(final Object o) {
-    if (this == o) return true;
-    if (o == null || this.getClass() != o.getClass()) return false;
-
-    final WorkpacksByModelResponse that = (WorkpacksByModelResponse) o;
-
-    return this.idWorkpackModel.equals(that.idWorkpackModel);
-  }
-
-  @Override
-  public int hashCode() {
-    return this.idWorkpackModel.hashCode();
+    public void sortWorkpacks() {
+      if (this.workpacks.isEmpty()) return;
+      this.workpacks.sort(
+        (a, b) -> {
+          final SortByDirectionEnum sort = Optional.ofNullable(a.sort.getDirection())
+            .orElseGet(() -> Optional.ofNullable(b.sort.getDirection()).orElse(SortByDirectionEnum.ASC));
+          return PropertyComparator.compare(a.sort.getValue(), b.sort.getValue()) * sort.getOrder();
+        }
+      );
+      this.workpacks.forEach(WorkpacksByModelItem::sortWorkpacks);
+    }
   }
 
 }

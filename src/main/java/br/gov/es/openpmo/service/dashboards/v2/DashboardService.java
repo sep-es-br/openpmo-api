@@ -168,7 +168,7 @@ public class DashboardService implements IDashboardService {
 
     // TODO: verificar se é necessário informar o 'planId'
     final DashboardParameters parameters =
-      new DashboardParameters(false, workpackId, null, null, null, null, date, false, null);
+      new DashboardParameters(false, workpackId, null, null, null, null, date, false, null, null);
 
     final Optional<PerformanceIndexesByStep> performanceIndexes = Optional.of(parameters)
       .map(this::getEarnedValueAnalysis)
