@@ -11,7 +11,6 @@ import br.gov.es.openpmo.dto.person.detail.PersonDetailDto;
 import br.gov.es.openpmo.dto.person.detail.permissions.OfficePermissionDetailDto;
 import br.gov.es.openpmo.dto.person.detail.permissions.PlanPermissionDetailDto;
 import br.gov.es.openpmo.dto.person.detail.permissions.WorkpackPermissionDetailDto;
-import br.gov.es.openpmo.dto.person.queries.AllPersonInOfficeQuery;
 import br.gov.es.openpmo.dto.person.queries.PersonByFullNameQuery;
 import br.gov.es.openpmo.dto.person.queries.PersonDetailQuery;
 import br.gov.es.openpmo.dto.person.queries.PersonPermissionDetailQuery;
@@ -56,7 +55,6 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -204,36 +202,12 @@ public class PersonService {
     return person;
   }
 
-  private String extractName(final String email) {
-    final String[] name = email.split("@");
-    return name.length == 0 ? email : name[0];
-  }
-
-  private void createContactRelationshipUsingDto(
-    final Long idOffice,
-    final Person person,
-    final PersonDto dto
-  ) {
-    final IsInContactBookOf isInContactBookOf = new IsInContactBookOf(dto);
-
-    final Office office = this.officeRepository
-      .findById(idOffice)
-      .orElseThrow(() -> new NegocioException(OFFICE_NOT_FOUND));
-
-    isInContactBookOf.setPerson(person);
-    isInContactBookOf.setOffice(office);
-
-    this.isInContactBookOfService.save(isInContactBookOf);
-  }
-
   public Page<PersonListDto> findAll(
     final StakeholderFilterEnum stakeholderFilter,
     final UserFilterEnum userFilter,
     final CcbMemberFilterEnum ccbMemberFilter,
     final String name,
-    final Long officeScope,
-    final Long[] planScope,
-    final Long[] workpackScope,
+    final Long[] scope,
     final Pageable pageable,
     final UriComponentsBuilder uriComponentsBuilder
   ) {
@@ -242,15 +216,12 @@ public class PersonService {
       userFilter,
       ccbMemberFilter,
       name.isEmpty() ? null : name,
-      officeScope,
-      planScope,
-      workpackScope
+      scope
     );
     final long total = streamableQueryResult.stream().count();
     final List<PersonListDto> response = streamableQueryResult.stream().parallel()
       .skip(pageable.getOffset())
       .limit(pageable.getPageSize())
-      .sorted(Comparator.comparing(Person::getName))
       .map(query -> PersonListDto.of(query, uriComponentsBuilder))
       .collect(Collectors.toCollection(CopyOnWriteArrayList::new));
     return new PageImpl<>(response, pageable, total);
@@ -284,6 +255,131 @@ public class PersonService {
     personDetailDto.setOfficePermission(officePermissionDetailDto);
 
     return personDetailDto;
+  }
+
+  @Transactional
+  public Person update(final PersonUpdateDto personUpdateDto) {
+    final Person personToUpdate = this.repository.findById(personUpdateDto.getId())
+      .orElseThrow(() -> new NegocioException(ApplicationMessage.PERSON_NOT_FOUND));
+
+    this.repository.save(personToUpdate, 0);
+    personToUpdate.setName(personUpdateDto.getName());
+
+    this.updateContactBook(personUpdateDto, personToUpdate);
+
+    if (personUpdateDto.getUnify()) {
+      this.unifyContactInformationsInAllOffices(personUpdateDto);
+    }
+
+    return personToUpdate;
+  }
+
+  public List<PersonDto> findPersonsByFullNameAndWorkpack(
+    final String partialName,
+    final Long idWorkpack
+  ) {
+    final Optional<PersonByFullNameQuery> maybeQueryResult =
+      this.repository.findPersonsInOfficeByFullName(partialName, idWorkpack);
+
+    if (maybeQueryResult.isPresent()) {
+      final PersonByFullNameQuery query = maybeQueryResult.get();
+      return query.getPersons()
+        .stream()
+        .map(person -> PersonDto.from(person, query.getContacts()))
+        .collect(java.util.stream.Collectors.toList());
+    }
+
+    return Collections.emptyList();
+  }
+
+  public void findPersonByFullName(
+    final String fullName,
+    final Long idWorkpack
+  ) {
+    final Optional<Person> personByFullName = this.repository.findPersonByFullName(fullName, idWorkpack);
+    if (personByFullName.isPresent()) {
+      throw new NegocioException(ApplicationMessage.PERSON_ALREADY_EXISTS);
+    }
+  }
+
+  public Optional<PersonGetByIdDto> maybeFindPersonDataByKey(
+    final String key,
+    final Long idOffice,
+    final UriComponentsBuilder uriComponentsBuilder
+  ) {
+    return this.repository.findByKey(key)
+      .map(person -> this.getPersonGetByIdDto(idOffice, uriComponentsBuilder, person));
+  }
+
+  public List<ComboDto> findOfficesByPersonId(final Long personId) {
+    return this.repository.findOfficesByPersonId(personId)
+      .stream()
+      .map(office -> new ComboDto(office.getId(), office.getName()))
+      .collect(Collectors.toList());
+  }
+
+  public Person create(final PersonCreateRequest request) {
+    final Person person = new Person();
+    person.setName(request.getName());
+    person.setFullName(request.getFullName());
+    person.setAdministrator(request.getAdministrator());
+    this.repository.save(person);
+    this.createAuthenticationRelationship(request.getKey(), request.getEmail(), null, person);
+    return person;
+  }
+
+  public Set<Person> findAllById(final Iterable<Long> responsible) {
+    final Set<Person> set = new HashSet<>();
+    if (responsible == null) {
+      return set;
+    }
+    final Iterable<Person> personIterable = this.repository.findAllById(responsible);
+    for (final Person person : personIterable) {
+      set.add(person);
+    }
+    return set;
+  }
+
+  public void updateName(
+    final Long idPerson,
+    final String name
+  ) {
+    final Person person = this.repository.findById(idPerson)
+      .orElseThrow(() -> new NegocioException(ApplicationMessage.PERSON_NOT_FOUND));
+
+    person.setName(name);
+    this.repository.save(person, 0);
+  }
+
+  public Optional<Person> findByKey(final String key) {
+    return this.repository.findByKey(key);
+  }
+
+  public Person findPersonByKey(final String key) {
+    return this.findByKey(key)
+      .orElseThrow(() -> new NegocioException(ApplicationMessage.PERSON_NOT_FOUND));
+  }
+
+  private String extractName(final String email) {
+    final String[] name = email.split("@");
+    return name.length == 0 ? email : name[0];
+  }
+
+  private void createContactRelationshipUsingDto(
+    final Long idOffice,
+    final Person person,
+    final PersonDto dto
+  ) {
+    final IsInContactBookOf isInContactBookOf = new IsInContactBookOf(dto);
+
+    final Office office = this.officeRepository
+      .findById(idOffice)
+      .orElseThrow(() -> new NegocioException(OFFICE_NOT_FOUND));
+
+    isInContactBookOf.setPerson(person);
+    isInContactBookOf.setOffice(office);
+
+    this.isInContactBookOfService.save(isInContactBookOf);
   }
 
   private OfficePermissionDetailDto createOfficeDetail(final List<PersonPermissionDetailQuery> permissions) {
@@ -584,23 +680,6 @@ public class PersonService {
     return result;
   }
 
-  @Transactional
-  public Person update(final PersonUpdateDto personUpdateDto) {
-    final Person personToUpdate = this.repository.findById(personUpdateDto.getId())
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.PERSON_NOT_FOUND));
-
-    this.repository.save(personToUpdate, 0);
-    personToUpdate.setName(personUpdateDto.getName());
-
-    this.updateContactBook(personUpdateDto, personToUpdate);
-
-    if (personUpdateDto.getUnify()) {
-      this.unifyContactInformationsInAllOffices(personUpdateDto);
-    }
-
-    return personToUpdate;
-  }
-
   private void updateContactBook(
     final PersonUpdateDto personUpdateDto,
     final Person person
@@ -639,43 +718,6 @@ public class PersonService {
     this.isInContactBookOfService.saveAll(allContactInformationByPersonId);
   }
 
-  public List<PersonDto> findPersonsByFullNameAndWorkpack(
-    final String partialName,
-    final Long idWorkpack
-  ) {
-    final Optional<PersonByFullNameQuery> maybeQueryResult =
-      this.repository.findPersonsInOfficeByFullName(partialName, idWorkpack);
-
-    if (maybeQueryResult.isPresent()) {
-      final PersonByFullNameQuery query = maybeQueryResult.get();
-      return query.getPersons()
-        .stream()
-        .map(person -> PersonDto.from(person, query.getContacts()))
-        .collect(java.util.stream.Collectors.toList());
-    }
-
-    return Collections.emptyList();
-  }
-
-  public void findPersonByFullName(
-    final String fullName,
-    final Long idWorkpack
-  ) {
-    final Optional<Person> personByFullName = this.repository.findPersonByFullName(fullName, idWorkpack);
-    if (personByFullName.isPresent()) {
-      throw new NegocioException(ApplicationMessage.PERSON_ALREADY_EXISTS);
-    }
-  }
-
-  public Optional<PersonGetByIdDto> maybeFindPersonDataByKey(
-    final String key,
-    final Long idOffice,
-    final UriComponentsBuilder uriComponentsBuilder
-  ) {
-    return this.repository.findByKey(key)
-      .map(person -> this.getPersonGetByIdDto(idOffice, uriComponentsBuilder, person));
-  }
-
   private PersonGetByIdDto getPersonGetByIdDto(
     final Long idOffice,
     final UriComponentsBuilder uriComponentsBuilder,
@@ -687,55 +729,6 @@ public class PersonService {
     final PersonGetByIdDto personGetByIdDto = PersonGetByIdDto.from(person, maybeContact, uriComponentsBuilder);
     personGetByIdDto.setCcbMember(this.ccbMemberRepository.isActive(person.getId()));
     return personGetByIdDto;
-  }
-
-  public List<ComboDto> findOfficesByPersonId(final Long personId) {
-    return this.repository.findOfficesByPersonId(personId)
-      .stream()
-      .map(office -> new ComboDto(office.getId(), office.getName()))
-      .collect(Collectors.toList());
-  }
-
-  public Person create(final PersonCreateRequest request) {
-    final Person person = new Person();
-    person.setName(request.getName());
-    person.setFullName(request.getFullName());
-    person.setAdministrator(request.getAdministrator());
-    this.repository.save(person);
-    this.createAuthenticationRelationship(request.getKey(), request.getEmail(), null, person);
-    return person;
-  }
-
-  public Set<Person> findAllById(final Iterable<Long> responsible) {
-    final Set<Person> set = new HashSet<>();
-    if (responsible == null) {
-      return set;
-    }
-    final Iterable<Person> personIterable = this.repository.findAllById(responsible);
-    for (final Person person : personIterable) {
-      set.add(person);
-    }
-    return set;
-  }
-
-  public void updateName(
-    final Long idPerson,
-    final String name
-  ) {
-    final Person person = this.repository.findById(idPerson)
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.PERSON_NOT_FOUND));
-
-    person.setName(name);
-    this.repository.save(person, 0);
-  }
-
-  public Optional<Person> findByKey(final String key) {
-    return this.repository.findByKey(key);
-  }
-
-  public Person findPersonByKey(final String key) {
-    return this.findByKey(key)
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.PERSON_NOT_FOUND));
   }
 
   public void updateLocalWork(Long idPerson, LocalWorkRequest request) {

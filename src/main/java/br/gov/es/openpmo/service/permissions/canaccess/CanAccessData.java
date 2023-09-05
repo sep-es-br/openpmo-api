@@ -5,10 +5,11 @@ import br.gov.es.openpmo.service.actors.IGetPersonFromAuthorization;
 import br.gov.es.openpmo.service.actors.IGetPersonFromAuthorization.PersonDataResponse;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 
 @Component
 public class CanAccessData implements ICanAccessData {
@@ -31,15 +32,14 @@ public class CanAccessData implements ICanAccessData {
   private static boolean hasPermission(
     final List<Long> ids,
     final String key,
-    final BiFunction<? super List<Long>, ? super String, Long> permissionFunction
+    final BiPredicate<? super List<Long>, ? super String> permissionFunction
   ) {
-    final Long permissions = permissionFunction.apply(ids, key);
-    return permissions > 0;
+    return permissionFunction.test(ids, key);
   }
 
   private static Boolean isSelfId(
     final PersonDataResponse personData,
-    final List<Long> ids
+    final Collection<Long> ids
   ) {
     return ids.stream()
       .filter(Objects::nonNull)
@@ -56,17 +56,39 @@ public class CanAccessData implements ICanAccessData {
     final String authorizationHeader
   ) {
     final PersonDataResponse personData = this.getPerson(authorizationHeader);
+    final boolean isAdministrator = isAdministrator(personData);
 
     final List<Long> ids = Collections.singletonList(id);
+    final Boolean self = isSelfId(personData, ids);
+
+    if (isAdministrator) {
+      return CanAccessDataResponse.administrator(personData.getKey(), self);
+    }
+
+    final boolean editManagement = hasPermission(
+      ids,
+      personData.getKey(),
+      this.permissionRepository::hasEditManagementPermission
+    );
+
+    final boolean edit = hasPermission(ids, personData.getKey(), this.permissionRepository::hasEditPermission);
+    if (edit) {
+      return CanAccessDataResponse.edit(personData.getKey(), editManagement, self);
+    }
+    final boolean read = hasPermission(ids, personData.getKey(), this.permissionRepository::hasReadPermission);
+    if (read) {
+      return CanAccessDataResponse.read(personData.getKey(), editManagement, self);
+    }
+
     return new CanAccessDataResponse(
-      hasPermission(ids, personData.getKey(), this.permissionRepository::hasEditPermission),
-      hasPermission(ids, personData.getKey(), this.permissionRepository::hasReadPermission),
+      false,
+      false,
       hasPermission(ids, personData.getKey(), this.permissionRepository::hasBasicReadPermission),
-      isAdministrator(personData),
-      isSelfId(personData, ids),
+      false,
+      self,
       personData.getKey(),
       new CanAccessManagementDataResponse(
-        hasPermission(ids, personData.getKey(), this.permissionRepository::hasEditManagementPermission),
+        editManagement,
         true
       )
     );

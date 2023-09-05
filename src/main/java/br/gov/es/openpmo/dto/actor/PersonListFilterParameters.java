@@ -3,30 +3,31 @@ package br.gov.es.openpmo.dto.actor;
 import br.gov.es.openpmo.enumerator.CcbMemberFilterEnum;
 import br.gov.es.openpmo.enumerator.StakeholderFilterEnum;
 import br.gov.es.openpmo.enumerator.UserFilterEnum;
+import org.apache.commons.lang3.StringUtils;
 
 public class PersonListFilterParameters {
 
   private final StakeholderFilterEnum stakeholderStatus;
+
   private final UserFilterEnum userStatus;
+
   private final CcbMemberFilterEnum ccbMemberStatus;
+
   private final String name;
-  private final Long[] planScope;
-  private final Long[] workpackScope;
+  private final Long[] scope;
 
   public PersonListFilterParameters(
     final StakeholderFilterEnum stakeholderStatus,
     final UserFilterEnum userStatus,
     final CcbMemberFilterEnum ccbMemberStatus,
     final String name,
-    final Long[] planScope,
-    final Long[] workpackScope
+    final Long[] scope
   ) {
     this.stakeholderStatus = stakeholderStatus;
     this.userStatus = userStatus;
     this.ccbMemberStatus = ccbMemberStatus;
     this.name = name;
-    this.planScope = planScope;
-    this.workpackScope = workpackScope;
+    this.scope = scope;
   }
 
   public StakeholderFilterEnum getStakeholderStatus() {
@@ -45,11 +46,7 @@ public class PersonListFilterParameters {
     return this.name;
   }
 
-  public Long[] getPlanScope() {
-    return this.planScope;
-  }
-
-  public Long[] getWorkpackScope() {
-    return this.workpackScope;
+  public Long[] getScope() {
+    return scope;
   }
 }

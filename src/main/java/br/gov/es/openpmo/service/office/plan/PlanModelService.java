@@ -87,8 +87,8 @@ public class PlanModelService {
     final Map<String, Object> params = new HashMap<>();
     params.put("idOffice", idOffice);
     params.put("term", term);
-    params.put("searchCutOffScore", appProperties.getSearchCutOffScore());
-    
+    params.put("searchCutOffScore", this.appProperties.getSearchCutOffScore());
+
     if (StringUtils.isNotBlank(term)) filter.setSimilarityFilter(true);
 
     return this.findAllPlanModel.execute(filter, params);
@@ -99,7 +99,7 @@ public class PlanModelService {
     planModels.sort(Comparator.comparing(PlanModel::getName));
     return planModels;
   }
-  
+
   public List<PlanModel> findAllInOfficeByTerm(final Long id, final String term) {
     return this.planModelRepository.findAllInOfficeByTerm(id, term, appProperties.getSearchCutOffScore());
   }

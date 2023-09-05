@@ -26,27 +26,27 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
          "]")
   Optional<Workpack> findByIdWithChildren(Long id);
 
-  @Query("MATCH (w1:Workpack{deleted:false}) " +
-         "WHERE id(w1)=$id " +
-         "RETURN w1, [ " +
-         " [(w1)-[iib1:IS_INSTANCE_BY]->(wm1:WorkpackModel)<-[ii1:IS_IN*]-(wm2:WorkpackModel)<-[iib2:IS_INSTANCE_BY]-" +
-         "(w2:Workpack{deleted:false})-[ii2:IS_IN*]->(w1) | [iib1, wm1, ii1, wm2, iib2, w2, ii2]], " +
-         " [(w1)<-[f1:FEATURES]-(p1) | [f1, p1]], " +
-         " [(w1)<-[:IS_IN*]-(w2)<-[f2:FEATURES]-(p2:Property)-[idb1:IS_DRIVEN_BY]->(pm1:PropertyModel)<-[isb1:IS_SORTED_BY]-" +
-         "(wm3:WorkpackModel)<-[:IS_INSTANCE_BY]-(w2) | [f2, p2, idb1, pm1, isb1, wm3]] " +
-         "]")
-  Optional<Workpack> findWorkpackWithModelStructureById(Long id);
-
-  @Query("MATCH (w1:Workpack{deleted:false}) " +
+  @Query(
+    "MATCH (w1:Workpack{deleted:false}) " +
     "WHERE id(w1)=$id " +
     "RETURN w1, [ " +
-    " [(w1)-[iib1:IS_INSTANCE_BY]->(wm1:WorkpackModel)<-[ii1:IS_IN*..1]-(wm2:WorkpackModel)<-[iib2:IS_INSTANCE_BY]-" +
-    "(w2:Workpack{deleted:false})-[ii2:IS_IN*..1]->(w1) | [iib1, wm1, ii1, wm2, iib2, w2, ii2]], " +
-    " [(w1)<-[f1:FEATURES]-(p1) | [f1, p1]], " +
-    " [(w1)<-[:IS_IN*..1]-(w2)<-[f2:FEATURES]-(p2:Property)-[idb1:IS_DRIVEN_BY]->(pm1:PropertyModel)<-[isb1:IS_SORTED_BY]-" +
-    "(wm3:WorkpackModel)<-[:IS_INSTANCE_BY]-(w2) | [f2, p2, idb1, pm1, isb1, wm3]], " +
+    " [(w1)-[iib1:IS_INSTANCE_BY]->(wm1:WorkpackModel)<-[ii1:IS_IN*]-(wm2:WorkpackModel)<-[iib2:IS_INSTANCE_BY]-(w2:Workpack{deleted:false})-[ii2:IS_IN*]->(w1) | [iib1, wm1, ii1, wm2, iib2, w2, ii2]], " +
+    " [(w1)<-[f1:FEATURES]-(p1)-[idb2:IS_DRIVEN_BY]->(pm2:PropertyModel) | [f1, p1, idb2, pm2]], " +
+    " [(w1)<-[:IS_IN*]-(w2)<-[f2:FEATURES]-(p2:Property)-[idb1:IS_DRIVEN_BY]->(pm1:PropertyModel)<-[isb1:IS_SORTED_BY]-(wm3:WorkpackModel)<-[:IS_INSTANCE_BY]-(w2) | [f2, p2, idb1, pm1, isb1, wm3]] " +
+    "]"
+  )
+  Optional<Workpack> findWorkpackWithModelStructureById(Long id);
+
+  @Query(
+    "MATCH (w1:Workpack{deleted:false}) " +
+    "WHERE id(w1)=$id " +
+    "RETURN w1, [ " +
+    " [(w1)-[iib1:IS_INSTANCE_BY]->(wm1:WorkpackModel)<-[ii1:IS_IN*..1]-(wm2:WorkpackModel)<-[iib2:IS_INSTANCE_BY]-(w2:Workpack{deleted:false})-[ii2:IS_IN*..1]->(w1) | [iib1, wm1, ii1, wm2, iib2, w2, ii2]], " +
+    " [(w1)<-[f1:FEATURES]-(p1)-[idb2:IS_DRIVEN_BY]->(pm2:PropertyModel) | [f1, p1, idb2, pm2]], " +
+    " [(w1)<-[:IS_IN*..1]-(w2)<-[f2:FEATURES]-(p2:Property)-[idb1:IS_DRIVEN_BY]->(pm1:PropertyModel)<-[isb1:IS_SORTED_BY]-(wm3:WorkpackModel)<-[:IS_INSTANCE_BY]-(w2) | [f2, p2, idb1, pm1, isb1, wm3]], " +
     " [(w1)<-[:IS_IN*..1]-(w2)<-[ii3:IS_IN*..1]-(w3:Workpack{deleted:false}) | [ii3, w3]] " +
-    "]")
+    "]"
+  )
   Optional<Workpack> findWorkpackWithModelStructureByIdFirstLevel(Long id);
 
   @Query("MATCH (w:Workpack)<-[f:FEATURES]-(p:Property) " +
@@ -74,18 +74,9 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
           + "AND (id(wm)=$idWorkPackModel OR id(wm2)=$idWorkPackModel OR $idWorkPackModel IS NULL) "
           + "AND ($term IS NULL OR $term = '' OR score > $searchCutOffScore) "
           + "RETURN w, rf, p, ii, pm, wm, lt, wm2, bt, [ "
-          + " [ (w)<-[f:FEATURES]-(p:Property)-[d:IS_DRIVEN_BY]->(pm:PropertyModel) | [f, p, d, pm] ], "
-          + " [ (w)<-[wi:IS_IN]-(w2:Workpack) | [wi, w2] ], "
-          + " [ (w)-[wi2:IS_IN]->(w3:Workpack) | [wi2, w3] ], "
-          + " [ (w)<-[wa:APPLIES_TO]-(ca:CostAccount) | [wa, ca] ], "
-          + " [ (w)<-[wfg:FEATURES]-(wg:Group) | [wfg, wg] ], "
-          + " [ (wg)-[wgps:GROUPS]->(wgp:Property)-[gpd:IS_DRIVEN_BY]->(gpm:PropertyModel) | [wgps, wgp, gpd, gpm] ], "
-          + " [ (ca)<-[f1:FEATURES]-(p2:Property)-[d1:IS_DRIVEN_BY]->(pmc:PropertyModel) | [ca, f1, p2, d1, pmc ] ], "
-          + " [ (wm)<-[wmi:IS_IN]-(wm2:WorkpackModel) | [wmi,wm2] ], "
-          + " [ (wm)-[wmi2:IS_IN]->(wm3:WorkpackModel) | [wmi2,wm3] ], "
-          + " [ (wm)<-[f2:FEATURES]-(pm2:PropertyModel) | [f2, pm2] ], "
-          + " [ (wm)-[featureGroup:FEATURES]->(group:GroupModel) | [featureGroup, group] ], "
-          + " [ (group)-[groups:GROUPS]->(groupedProperty:PropertyModel) | [groups, groupedProperty] ], "
+          + " [ (wm)<-[f2:FEATURES]-(pm1:PropertyModel) | [f2, pm1] ], "
+          + " [ (wm)-[isSortedBy:IS_SORTED_BY]->(pm1) | [isSortedBy] ], "
+          + " [ (w)<-[f1:FEATURES]-(p1:Property)-[idb:IS_DRIVEN_BY]->(pm1) | [f1, p1] ], "
           + " [ (w)-[sharedWith:IS_SHARED_WITH]->(office:Office) | [sharedWith, office]], "
           + " [ (w)-[isLinkedTo:IS_LINKED_TO]->(workpackModel:WorkpackModel) | [isLinkedTo, workpackModel] ] "
           + "] "
@@ -205,13 +196,10 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
          + " RETURN w, rf, p, io, o, ii, pm, wm, [ "
          + " [(p)<-[cp:CAN_ACCESS_PLAN]-(p2:Person) | [cp, p2] ],"
          + " [(w)<-[ca:CAN_ACCESS_WORKPACK]-(p:Person) | [ca, p] ],"
-         + " [(w)<-[wi:IS_IN*]-(w2:Workpack{deleted:false})-[ii_2:IS_INSTANCE_BY]->(wm_2:WorkpackModel) | [wi, w2, " +
-         "ii_2, wm_2] ],"
+         + " [(w)<-[wi:IS_IN*]-(w2:Workpack{deleted:false})-[ii_2:IS_INSTANCE_BY]->(wm_2:WorkpackModel) | [wi, w2, ii_2, wm_2] ],"
          + " [(w2)<-[ca2:CAN_ACCESS_WORKPACK]-(p2:Person) | [ca2, p2] ],"
          + " [(w2)-[rf_2:BELONGS_TO]->(p_2:Plan)-[io_2:IS_ADOPTED_BY]->(o_2:Office) | [rf_2, p_2, io_2, o_2] ],"
-         + " [(w)-[wi2:IS_IN*]->(w3:Workpack{deleted:false})-[ii_3:IS_INSTANCE_BY]->(wm_3:WorkpackModel) | [wi2, w3, " +
-         "ii_3, " +
-         "wm_3] ],"
+         + " [(w)-[wi2:IS_IN*]->(w3:Workpack{deleted:false})-[ii_3:IS_INSTANCE_BY]->(wm_3:WorkpackModel) | [wi2, w3, ii_3, wm_3] ],"
          + " [(w3)-[rf_3:BELONGS_TO]->(p_3:Plan)-[io_3:IS_ADOPTED_BY]->(o_3:Office) | [rf_3, p_3, io_3, o_3] ],"
          + " [(wm)<-[wmi:IS_IN*]-(wm2:WorkpackModel) | [wmi,wm2] ]"
          + " ]")
@@ -226,18 +214,11 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
          "RETURN w, belongsTo, isStructuredBy, plan, instanceBy, planModel, model, [ " +
          " [(w)-[isLinkedTo:IS_LINKED_TO]-(modelLinked:WorkpackModel) | [isLinkedTo, modelLinked] ], " +
          " [(w)<-[f1:FEATURES]-(p1:Property)-[d1:IS_DRIVEN_BY]->(pm1:PropertyModel) | [f1, p1, d1, pm1] ], " +
-         " [(w)<-[wi:IS_IN*]-(w2:Workpack{deleted:false,canceled:false})<-[f2:FEATURES]-(p2:Property)" +
-         "-[d2:IS_DRIVEN_BY]->" +
-         "(pm2:PropertyModel) | [wi,w2,f2, p2, d2, pm2] ], " +
+         " [(w)<-[wi:IS_IN*]-(w2:Workpack{deleted:false,canceled:false})<-[f2:FEATURES]-(p2:Property)-[d2:IS_DRIVEN_BY]->(pm2:PropertyModel) | [wi,w2,f2, p2, d2, pm2] ], " +
          " [(w2)-[bt:BELONGS_TO]->(p:Plan) | [bt, p]], " +
-         " [(w2)-[ib2:IS_INSTANCE_BY]->(wm2:WorkpackModel)<-[f5:FEATURES]-(pm5:PropertyModel) | [ib2, wm2, f5, pm5] " +
-         "], " +
+         " [(w2)-[ib2:IS_INSTANCE_BY]->(wm2:WorkpackModel)<-[f5:FEATURES]-(pm5:PropertyModel) | [ib2, wm2, f5, pm5] ], " +
          " [(model)<-[f4:FEATURES]-(pm4:PropertyModel) | [f4, pm4] ], " +
-         " [(model)-[sortedBy:IS_SORTED_BY]->(sorter:PropertyModel) | [sortedBy, sorter] ], " +
-         " [(model)<-[wmi:IS_IN*]-(wm2:WorkpackModel)<-[f6:FEATURES]-(pm6:PropertyModel) | [wmi,wm2, f6, pm6] ], " +
-         " [(wm2)-[sortedBy2:IS_SORTED_BY]->(sorter2:PropertyModel) | [sortedBy2, sorter2] ], " +
-         " [(model)-[gmf:FEATURES]->(gm:GroupModel) | [gmf, gm] ], " +
-         " [(gm)-[gms:GROUPS]->(gpm:PropertyModel) | [gms, gpm] ] " +
+         " [(model)<-[wmi:IS_IN*]-(wm2:WorkpackModel)<-[f6:FEATURES]-(pm6:PropertyModel) | [wmi,wm2, f6, pm6] ] " +
          " ]"
   )
   Set<Workpack> findAllByPlanWithProperties(@Param("idPlan") Long idPlan);
@@ -247,29 +228,19 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
          + " RETURN w, ii, wm, [ "
          + " [(w)-[bt:BELONGS_TO]->(pl:Plan) | [bt, pl]], "
          + " [(w)<-[lt:IS_LINKED_TO]-(wml:WorkpackModel) | [lt, wml] ], "
-         + " [(wml)<-[mii:IS_IN*]-(wmlc:WorkpackModel) | [mii, wmlc] ], "
+         + " [(wml)<-[mii:IS_IN]-(wmlc:WorkpackModel) | [mii, wmlc] ], "
          + " [(w)<-[f1:FEATURES]-(p1:Property)-[d1:IS_DRIVEN_BY]->(pm1:PropertyModel) | [f1, p1, d1, pm1] ], "
-         + " [(w)-[wi:IS_IN*]->(w2:Workpack)<-[f2:FEATURES]-(p2:Property)-[d2:IS_DRIVEN_BY]->(pm2:PropertyModel) | " +
-         "[wi,w2,f2, " +
-         "p2, d2, pm2] ], "
+         + " [(w)-[wi:IS_IN*]->(w2:Workpack)<-[f2:FEATURES]-(p2:Property)-[d2:IS_DRIVEN_BY]->(pm2:PropertyModel) | [wi, w2, f2, p2, d2, pm2] ], "
          + " [(w)<-[wi2:IS_IN]-(w3:Workpack)-[:BELONGS_TO]->(pl) | [wi2, w3] ], "
-         + " [(w)<-[f2:FEATURES]-(l:LocalitySelection)-[v1:VALUES]->(l1:Locality) | [f2,l,v1,l1]], "
-         + " [(w)<-[f3:FEATURES]-(o:OrganizationSelection)-[v2:VALUES]->(o1:Organization) | [f3,o,v2,o1]], "
-         + " [(w)<-[f4:FEATURES]-(u:UnitSelection)-[v3:VALUES]->(u1:UnitMeasure) | [f4,u,v3,u1]], "
-         + " [(w2)-[bt2:BELONGS_TO]->(pl2:Plan) | [bt2, pl2] ], "
-         + " [(w2)<-[f5:FEATURES]-(l2:LocalitySelection)-[v4:VALUES]->(l2:Locality) | [f5, l2, v4, l2]], "
-         + " [(w2)<-[f6:FEATURES]-(o2:OrganizationSelection)-[v5:VALUES]->(o2:Organization) | [f6,o2,v5,o2]], "
-         + " [(w2)<-[f7:FEATURES]-(u2:UnitSelection)-[v6:VALUES]->(u2:UnitMeasure) | [f7,u2,v6,u2]], "
+         + " [(w)<-[f1:FEATURES]-(p1:Property)-[d1:IS_DRIVEN_BY]->(pm1:PropertyModel) | [f1, p1, d1, pm1] ], "
+         + " [(w)<-[f2:FEATURES]-(l:LocalitySelection:OrganizationSelection:UnitSelection)-[v1:VALUES]->(l1:Locality:Organization:UnitMeasure) | [f2,l,v1,l1]], "
          + " [(w)<-[wfg:FEATURES]-(wg:Group) | [wfg, wg] ], "
          + " [(wg)-[wgps:GROUPS]->(wgp:Property)-[gpd:IS_DRIVEN_BY]->(gpm:PropertyModel) | [wgps, wgp, gpd, gpm] ], "
-         + " [(wgp)-[values:VALUES]->(entity) | [values, entity]], "
-         + " [(w2)-[ib2:IS_INSTANCE_BY]->(wm2:WorkpackModel)<-[f8:FEATURES]-(pm5:PropertyModel) | [ib2, wm2, f8, pm5]" +
-         " ], "
+         + " [(wgp)-[v2:VALUES]->(anyValue) | [v2, anyValue]], "
+         + " [(w2)-[ib2:IS_INSTANCE_BY]->(wm2:WorkpackModel)<-[f8:FEATURES]-(pm5:PropertyModel) | [ib2, wm2, f8, pm5] ], "
          + " [(wm)<-[f9:FEATURES]-(pm4:PropertyModel) | [f9, pm4] ], "
-         + " [(wm)-[featureGroupModel:FEATURES]->(groupModel:GroupModel) | [featureGroupModel, groupModel] ], "
-         + " [(groupModel)-[groupModels:GROUPS]->(groupedPropertiesModel:PropertyModel) | [groupModels, " +
-         "groupedPropertiesModel]" +
-         " ] "
+         + " [(wm)-[f3:FEATURES]->(gm:GroupModel) | [f3, gm] ], "
+         + " [(gm)-[g:GROUPS]->(gpm2:PropertyModel) | [g, gpm2] ] "
          + " ]"
   )
   Optional<Workpack> findByIdWithParent(@Param("id") Long id);
@@ -565,9 +536,11 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
     "MATCH (workpack:Workpack)-[belongsTo:BELONGS_TO]->(plan:Plan) " +
     "WHERE id(workpack)=$idWorkpack " +
     "AND id(plan)=$idPlan " +
-    "RETURN workpack"
+    "RETURN workpack, [" +
+    "  [ (workpack)-[ii:IS_INSTANCE_BY]->(wm:WorkpackModel) | [ii, wm] ] " +
+    "]"
   )
-  Workpack findByIdWorkpackAndIdPlan(
+  Optional<Workpack> findByIdWorkpackAndIdPlan(
     Long idWorkpack,
     Long idPlan
   );

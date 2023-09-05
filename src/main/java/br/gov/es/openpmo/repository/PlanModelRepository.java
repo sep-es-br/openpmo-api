@@ -43,7 +43,7 @@ public interface PlanModelRepository extends Neo4jRepository<PlanModel, Long>, C
           "apoc.text.levenshteinSimilarity(apoc.text.clean(p.name), apoc.text.clean($term)) AS nameScore, " +
           "apoc.text.levenshteinSimilarity(apoc.text.clean(p.fullName), apoc.text.clean($term)) AS fullNameScore " +
           "WITH *, CASE WHEN nameScore > fullNameScore THEN nameScore ELSE fullNameScore END AS score " +
-          "WHERE score > $searchCutOffScore " +
+          "WHERE score > $searchCutOffScore OR $term IS NULL OR $term = '' " +
           "RETURN p,r,o " +
           "ORDER BY score DESC")
   List<PlanModel> findAllInOfficeByTerm(

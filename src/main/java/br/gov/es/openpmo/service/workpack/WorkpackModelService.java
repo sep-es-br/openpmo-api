@@ -213,7 +213,8 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
     if (workpackModel != null) {
       workpackModel.dashboardConfiguration(workpackModelParamDto.getDashboardConfiguration());
       workpackModel.setProperties(propertyModels);
-      if (workpackModelParamDto.getSortBy() != null && workpackModel.getProperties() != null && !workpackModel.getProperties().isEmpty()) {
+      if (workpackModelParamDto.getSortBy() != null && workpackModel.getProperties() != null && !workpackModel.getProperties()
+        .isEmpty()) {
         workpackModel.setSortBy(
           workpackModel.getProperties().stream()
             .filter(p -> p.getName() != null && p.getName().equals(workpackModelParamDto.getSortBy()))
@@ -222,6 +223,41 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
       }
     }
     return workpackModel;
+  }
+
+
+  public WorkpackModelDetailDto getWorkpackModelDetailWithoutChildren(final WorkpackModel workpackModel) {
+    List<WorkpackModelDto> parent = null;
+    PropertyModelDto sortBy = null;
+    if (workpackModel.getParent() != null) {
+      parent = workpackModel.getParent().stream()
+        .map(this::getWorkpackModelDto)
+        .collect(Collectors.toList());
+      workpackModel.setParent(null);
+    }
+    List<? extends PropertyModelDto> properties = null;
+    if (workpackModel.getProperties() != null && !workpackModel.getProperties().isEmpty()) {
+      properties = this.getPropertyModelDtosFromEntities.execute(workpackModel.getProperties());
+    }
+    if (workpackModel.getSortBy() != null) {
+      sortBy = this.getPropertyModelDtoFromEntity.execute(workpackModel.getSortBy());
+      workpackModel.setSortBy(null);
+    }
+    final WorkpackModelDetailDto detailDto = this.convertWorkpackModelDetailDto(workpackModel);
+    if (detailDto != null) {
+      detailDto.dashboardConfiguration(workpackModel);
+      detailDto.setParent(parent);
+      detailDto.setProperties(properties);
+      detailDto.setSortBy(sortBy);
+    }
+    if (detailDto != null && detailDto.getChildren() != null) {
+      final Set<WorkpackModelDetailDto> sortedChildren = detailDto.getChildren().stream()
+        .sorted(Comparator.comparing(WorkpackModelDetailDto::getPositionOrElseZero)
+                  .thenComparing(WorkpackModelDetailDto::getModelName))
+        .collect(Collectors.toCollection(LinkedHashSet::new));
+      detailDto.setChildren(sortedChildren);
+    }
+    return detailDto;
   }
 
   public WorkpackModelDetailDto getWorkpackModelDetailDto(final WorkpackModel workpackModel) {
@@ -255,9 +291,9 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
       detailDto.setSortBy(sortBy);
     }
     if (detailDto != null && detailDto.getChildren() != null) {
-      final LinkedHashSet<WorkpackModelDetailDto> sortedChildren = detailDto.getChildren().stream()
+      final Set<WorkpackModelDetailDto> sortedChildren = detailDto.getChildren().stream()
         .sorted(Comparator.comparing(WorkpackModelDetailDto::getPositionOrElseZero)
-          .thenComparing(WorkpackModelDetailDto::getModelName))
+                  .thenComparing(WorkpackModelDetailDto::getModelName))
         .collect(Collectors.toCollection(LinkedHashSet::new));
       detailDto.setChildren(sortedChildren);
     }

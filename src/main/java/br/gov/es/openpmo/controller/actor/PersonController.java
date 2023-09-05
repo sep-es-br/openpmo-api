@@ -53,8 +53,11 @@ import java.util.Optional;
 public class PersonController {
 
   private final PersonService personService;
+
   private final PersonPermissionsService personPermissionsService;
+
   private final ResponseHandler responseHandler;
+
   private final ICanAccessService canAccessService;
   private final TokenService tokenService;
 
@@ -103,9 +106,7 @@ public class PersonController {
       parameters.getUserStatus(),
       parameters.getCcbMemberStatus(),
       parameters.getName(),
-      officeScope,
-      parameters.getPlanScope(),
-      parameters.getWorkpackScope(),
+      parameters.getScope(),
       pageable,
       uriComponentsBuilder
     );

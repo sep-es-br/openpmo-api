@@ -610,26 +610,11 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final CustomFilter filter = this.findCustomFilterById(idFilter);
 
     final Map<String, Object> params = new HashMap<>();
-    params.put(
-      "idPlan",
-      idPlan
-    );
-    params.put(
-      "idPlanModel",
-      idPlanModel
-    );
-    params.put(
-      "idWorkPackModel",
-      idWorkpackModel
-    );
-    params.put(
-      "searchCutOffScore",
-      searchCutOffScore
-    );
-    params.put(
-      "term",
-      term
-    );
+    params.put("idPlan", idPlan);
+    params.put("idPlanModel", idPlanModel);
+    params.put("idWorkPackModel", idWorkpackModel);
+    params.put("searchCutOffScore", searchCutOffScore);
+    params.put("term", term);
 
     final List<Workpack> workpacks = this.findAllWorkpack.execute(
       filter,
@@ -1046,7 +1031,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
       workpackDetailDto.setCanceled(workpack.isCanceled());
       workpackDetailDto.setHasScheduleSectionActive(this.hasScheduleSectionActive(workpack));
       if (workpackModel != null) {
-        workpackDetailDto.setModel(this.workpackModelService.getWorkpackModelDetailDto(workpackModel));
+        workpackDetailDto.setModel(this.workpackModelService.getWorkpackModelDetailWithoutChildren(workpackModel));
       }
       return workpackDetailDto;
     }

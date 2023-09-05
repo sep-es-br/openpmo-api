@@ -144,7 +144,8 @@ public class IsFavoritedByService {
     final Long idWorkpack,
     final Long idPlan
   ) {
-    return this.workpackRepository.findByIdWorkpackAndIdPlan(idWorkpack, idPlan);
+    return this.workpackRepository.findByIdWorkpackAndIdPlan(idWorkpack, idPlan)
+      .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
   }
 
   private void unfavorite(final IsFavoritedBy maybeFavorite) {

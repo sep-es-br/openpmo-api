@@ -19,7 +19,13 @@ import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.enumerator.PermissionLevelEnum.EDIT;
@@ -81,16 +87,23 @@ public class WorkpackPermissionVerifier {
     final Long idWorkpack
   ) {
     final Person person = this.personService.findById(idUser);
+    if (Boolean.TRUE.equals(person.getAdministrator())) {
+      return new ArrayList<>();
+    }
     final Plan plan = this.findPlanById(idPlan);
+
     final List<PermissionDto> permissionsOffice = this.fetchOfficePermissions(plan.getOffice(), person);
+
     final List<PermissionDto> permissionsPlan = this.fetchPlanPermissions(idPlan, idUser);
-    final Set<Workpack> workpacks = this.getAllWorkpacksUsingPlan(idPlan);
-    final Workpack workpack = this.getWorkpack(workpacks, idWorkpack);
 
-    if(workpack == null) return null;
+    final Optional<Workpack> maybeWorkpack = this.workpackRepository.findByIdWorkpackAndIdPlan(idWorkpack, idPlan);
 
-    if(hasStakeholderSessionActive(workpack)) {
-      List<PermissionDto> permissions = this.fetchPermissionsFromWorkpack(workpack, idUser, idPlan);
+    if (!maybeWorkpack.isPresent()) return null;
+
+    final Workpack workpack = maybeWorkpack.get();
+
+    if (hasStakeholderSessionActive(workpack)) {
+      final List<PermissionDto> permissions = this.fetchPermissionsFromWorkpack(workpack, idUser, idPlan);
       return this.fetchPermissions(
         permissions,
         permissionsPlan,
@@ -100,7 +113,14 @@ public class WorkpackPermissionVerifier {
       );
     }
     final List<PermissionDto> permissions = this.fetchPermissionsFromWorkpack(workpack, idUser, idPlan);
-    return this.fetchPermissions(permissions, permissionsPlan, permissionsOffice, idWorkpack, idPlan);
+
+    return this.fetchPermissions(
+      permissions,
+      permissionsPlan,
+      permissionsOffice,
+      idWorkpack,
+      idPlan
+    );
   }
 
   private Set<Workpack> getAllWorkpacksUsingPlan(final Long idPlan) {
@@ -114,17 +134,22 @@ public class WorkpackPermissionVerifier {
     final Long idWorkpack,
     final Long idPlan
   ) {
-    if(permissionsWorkpack != null && permissionsWorkpack.stream().anyMatch(WorkpackPermissionVerifier::hasEditLevel)) {
-      return permissionsWorkpack.stream().filter(permission -> permission.getIdPlan().equals(idPlan)).collect(Collectors.toList());
+    if (permissionsWorkpack != null && permissionsWorkpack.stream()
+      .anyMatch(WorkpackPermissionVerifier::hasEditLevel)) {
+      return permissionsWorkpack.stream()
+        .filter(permission -> permission.getIdPlan().equals(idPlan))
+        .collect(Collectors.toList());
     }
-    if(permissionsPlan.stream().anyMatch(WorkpackPermissionVerifier::hasEditLevel)) {
+    if (permissionsPlan.stream().anyMatch(WorkpackPermissionVerifier::hasEditLevel)) {
       return this.verifyLinkedPermission(permissionsPlan, idWorkpack, idPlan);
     }
-    if(permissionsOffice.stream().anyMatch(WorkpackPermissionVerifier::hasEditLevel)) {
+    if (permissionsOffice.stream().anyMatch(WorkpackPermissionVerifier::hasEditLevel)) {
       return this.verifyLinkedPermission(permissionsOffice, idWorkpack, idPlan);
     }
-    if(permissionsWorkpack != null && !permissionsWorkpack.isEmpty()) {
-      return permissionsWorkpack.stream().filter(permission -> permission.getIdPlan().equals(idPlan)).collect(Collectors.toList());
+    if (permissionsWorkpack != null && !permissionsWorkpack.isEmpty()) {
+      return permissionsWorkpack.stream()
+        .filter(permission -> permission.getIdPlan().equals(idPlan))
+        .collect(Collectors.toList());
     }
     return permissionsPlan.isEmpty() ? permissionsOffice : permissionsPlan;
   }
@@ -136,11 +161,11 @@ public class WorkpackPermissionVerifier {
   ) {
     final boolean notLinked = !this.planService.hasLinkWithWorkpack(idWorkpack, idPlan);
 
-    if(notLinked) return permissions;
+    if (notLinked) return permissions;
 
     final Workpack workpack = this.findSharedWorkpackByIdPlan(idWorkpack, idPlan);
 
-    if(workpack.hasSharedWith()) {
+    if (workpack.hasSharedWith()) {
       final PermissionDto sharedPermission = workpack.getSharedWith().stream()
         .filter(shared -> shared.containsPlan(idPlan))
         .map(PermissionDto::of)
@@ -165,7 +190,7 @@ public class WorkpackPermissionVerifier {
     final Long idPlan
   ) {
     final Person person = this.personService.findById(idUser);
-    if(TRUE.equals(person.getAdministrator())) {
+    if (TRUE.equals(person.getAdministrator())) {
       return workpackList;
     }
     final Plan plan = this.findPlanById(idPlan);
@@ -173,11 +198,11 @@ public class WorkpackPermissionVerifier {
     final List<PermissionDto> permissionsPlan = this.fetchPlanPermissions(idPlan, idUser);
 
     final Set<Workpack> workpacks = this.getAllWorkpacksUsingPlan(idPlan);
-    for(final Iterator<WorkpackDetailParentDto> it = workpackList.iterator(); it.hasNext(); ) {
+    for (final Iterator<WorkpackDetailParentDto> it = workpackList.iterator(); it.hasNext(); ) {
       final WorkpackDetailParentDto workpackDetailDto = it.next();
       final Workpack workpack = this.getWorkpack(workpacks, workpackDetailDto.getId());
-      if(workpack != null) {
-        if(hasStakeholderSessionActive(workpack)) {
+      if (workpack != null) {
+        if (hasStakeholderSessionActive(workpack)) {
           List<PermissionDto> permissions = this.fetchPermissionsFromWorkpack(workpack, idUser, idPlan);
           permissions = this.fetchPermissions(
             permissions,
@@ -186,9 +211,9 @@ public class WorkpackPermissionVerifier {
             workpackDetailDto.getId(),
             idPlan
           );
-          if((permissions.isEmpty())) {
+          if ((permissions.isEmpty())) {
             permissions = this.fetchReadOnlyPermissions(workpack.getId(), idUser, idPlan);
-            if(permissions.isEmpty()) {
+            if (permissions.isEmpty()) {
               it.remove();
               continue;
             }
@@ -199,13 +224,19 @@ public class WorkpackPermissionVerifier {
 
         List<PermissionDto> permissions = this.fetchPermissionsFromWorkpack(workpack, idUser, idPlan);
 
-        permissions = this.fetchPermissions(permissions, permissionsPlan, permissionsOffice, workpackDetailDto.getId(), idPlan);
+        permissions = this.fetchPermissions(
+          permissions,
+          permissionsPlan,
+          permissionsOffice,
+          workpackDetailDto.getId(),
+          idPlan
+        );
 
-        if(permissions.isEmpty()) {
+        if (permissions.isEmpty()) {
           permissions = this.fetchReadOnlyPermissions(workpack.getId(), idUser, idPlan);
         }
 
-        if(permissions.isEmpty()) {
+        if (permissions.isEmpty()) {
           it.remove();
           continue;
         }
@@ -231,7 +262,7 @@ public class WorkpackPermissionVerifier {
     final Long idPlan
   ) {
     final List<PermissionDto> permissions = new ArrayList<>();
-    if(this.hasPermissionReadWorkpack(idWorkpack, idUser, idPlan)) {
+    if (this.hasPermissionReadWorkpack(idWorkpack, idUser, idPlan)) {
       final PermissionDto dto = new PermissionDto();
       dto.setId(0L);
       dto.setLevel(READ);
@@ -249,14 +280,14 @@ public class WorkpackPermissionVerifier {
       .filter(w -> w.getId().equals(id))
       .findFirst();
 
-    if(workpack.isPresent()) {
+    if (workpack.isPresent()) {
       return workpack.get();
     }
 
-    for(final Workpack w : workpacks) {
-      if(w.getChildren() != null) {
+    for (final Workpack w : workpacks) {
+      if (w.getChildren() != null) {
         final Workpack workpackFetched = this.getWorkpack(w.getChildren(), id);
-        if(workpackFetched != null) {
+        if (workpackFetched != null) {
           return workpackFetched;
         }
       }
@@ -297,11 +328,11 @@ public class WorkpackPermissionVerifier {
     final Long userId,
     final Long planId
   ) {
-    if(hasStakeholderSessionActive(workpack) && workpack.sameOriginalPlan(planId)) {
+    if (hasStakeholderSessionActive(workpack) && workpack.sameOriginalPlan(planId)) {
       final List<PermissionDto> permissionDtos = ifCanAccessWorkpackThenFetchPermissions(workpack, userId);
-      if(permissionDtos != null && !permissionDtos.isEmpty()) return permissionDtos;
+      if (permissionDtos != null && !permissionDtos.isEmpty()) return permissionDtos;
     }
-    if(workpack.getParent() != null) {
+    if (workpack.getParent() != null) {
       return this.fetchPermissionsFromWorkpackParent(workpack.getParent(), userId, planId);
     }
     return Collections.emptyList();
@@ -312,7 +343,7 @@ public class WorkpackPermissionVerifier {
     final Long userId,
     final Long planId
   ) {
-    for(final Workpack workpack : parent) {
+    for (final Workpack workpack : parent) {
       return this.fetchPermissionsFromWorkpack(workpack, userId, planId);
     }
     return Collections.emptyList();

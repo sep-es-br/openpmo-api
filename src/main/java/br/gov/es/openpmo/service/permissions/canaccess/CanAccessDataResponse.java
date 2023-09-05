@@ -19,13 +19,14 @@ public class CanAccessDataResponse implements ICanAccessDataResponse {
   private final ICanAccessManagementDataResponse canAccessManagement;
 
   public CanAccessDataResponse(
-      final Boolean edit,
-      final Boolean read,
-      final Boolean basicRead,
-      final Boolean admin,
-      final Boolean self,
-      final String key,
-      final ICanAccessManagementDataResponse canAccessManagement) {
+    final Boolean edit,
+    final Boolean read,
+    final Boolean basicRead,
+    final Boolean admin,
+    final Boolean self,
+    final String key,
+    final ICanAccessManagementDataResponse canAccessManagement
+  ) {
     this.edit = edit;
     this.read = read;
     this.basicRead = basicRead;
@@ -34,6 +35,43 @@ public class CanAccessDataResponse implements ICanAccessDataResponse {
     this.key = key;
     this.canAccessManagement = canAccessManagement;
   }
+
+  public static CanAccessDataResponse administrator(final String key, final Boolean self) {
+    return new CanAccessDataResponse(
+      false,
+      false,
+      false,
+      true,
+      self,
+      key,
+      new CanAccessManagementDataResponse(true, true)
+    );
+  }
+
+  public static CanAccessDataResponse edit(final String key, final Boolean editManagement, final Boolean self) {
+    return new CanAccessDataResponse(
+      true,
+      false,
+      false,
+      false,
+      self,
+      key,
+      new CanAccessManagementDataResponse(editManagement, true)
+    );
+  }
+
+  public static CanAccessDataResponse read(final String key, final Boolean editManagement, final Boolean self) {
+    return new CanAccessDataResponse(
+      false,
+      true,
+      false,
+      false,
+      self,
+      key,
+      new CanAccessManagementDataResponse(editManagement, true)
+    );
+  }
+
 
   @Override
   public String getKey() {
@@ -92,7 +130,7 @@ public class CanAccessDataResponse implements ICanAccessDataResponse {
 
   @Override
   public void ensureCanAccessAdminResource() {
-    if (Boolean.FALSE.equals(this.getAdmin())) {
+    if (Boolean.FALSE.equals(this.admin)) {
       throw new CannotAccessResourceException(CANNOT_ACCESS_ADMIN_RESOURCE);
     }
   }

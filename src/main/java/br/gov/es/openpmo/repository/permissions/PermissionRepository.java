@@ -15,16 +15,16 @@ public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, C
   @Query(
     "MATCH" +
     "(p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-(a:AuthService)," +
-    "    path=shortestPath((n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO|IS_STRUCTURED_BY|IS_FORSEEN_ON|APPLIES_TO|FEATURES|MITIGATES|IS_TRIGGER_BY|ADDRESSES|IS_REPORTED_FOR|IS_BELONGS_TO|SCOPE_TO|IS_LINKED_TO|COMPOSES|IS_BASELINED_BY*0..]->(m)) " +
+    "    path=(n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO|IS_STRUCTURED_BY|IS_FORSEEN_ON|APPLIES_TO|FEATURES|MITIGATES|IS_TRIGGER_BY|ADDRESSES|IS_REPORTED_FOR|IS_BELONGS_TO|SCOPE_TO|IS_LINKED_TO|COMPOSES|IS_BASELINED_BY*0..]->(m) " +
     "WHERE id(n) IN $ids " +
     "AND (" +
     "  (m)<-[:CAN_ACCESS_WORKPACK {permissionLevel:'EDIT'}]-(p) OR " +
     "  (m)<-[:CAN_ACCESS_OFFICE {permissionLevel:'EDIT'}]-(p) OR " +
     "  (m)<-[:CAN_ACCESS_PLAN {permissionLevel:'EDIT'}]-(p) " +
     ")" +
-    "RETURN count(path)"
+    "RETURN count(path)>0"
   )
-  Long hasEditPermission(
+  boolean hasEditPermission(
     @Param("ids") List<Long> ids,
     @Param("sub") String sub
   );
@@ -32,7 +32,7 @@ public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, C
   @Query(
     "MATCH " +
     "    (p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-(a:AuthService), " +
-    "    path=shortestPath((n)<-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO|IS_STRUCTURED_BY|IS_FORSEEN_ON|APPLIES_TO|FEATURES|MITIGATES|IS_TRIGGER_BY|ADDRESSES|IS_REPORTED_FOR|IS_BELONGS_TO|SCOPE_TO|IS_LINKED_TO|COMPOSES|IS_BASELINED_BY*0..]-(m)) " +
+    "    path=(n)<-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO|IS_STRUCTURED_BY|IS_FORSEEN_ON|APPLIES_TO|FEATURES|MITIGATES|IS_TRIGGER_BY|ADDRESSES|IS_REPORTED_FOR|IS_BELONGS_TO|SCOPE_TO|IS_LINKED_TO|COMPOSES|IS_BASELINED_BY*0..]-(m) " +
     "    WHERE id(n) IN $ids " +
     "    AND (" +
     "    (m)<-[:CAN_ACCESS_WORKPACK {permissionLevel:'EDIT'} ]-(p) OR " +
@@ -42,8 +42,8 @@ public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, C
     "    (m)<-[:CAN_ACCESS_OFFICE {permissionLevel:'EDIT'} ]-(p) OR " +
     "    (m)<-[:CAN_ACCESS_OFFICE {permissionLevel:'READ'} ]-(p) " +
     ")" +
-    "RETURN count(path)")
-  Long hasBasicReadPermission(
+    "RETURN count(path)>0")
+  boolean hasBasicReadPermission(
     @Param("ids") List<Long> ids,
     @Param("sub") String sub
   );
@@ -51,7 +51,7 @@ public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, C
   @Query(
     "MATCH  " +
     "    (p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-(a:AuthService), " +
-    "    path=shortestPath((n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO|IS_STRUCTURED_BY|IS_FORSEEN_ON|APPLIES_TO|FEATURES|MITIGATES|IS_TRIGGER_BY|ADDRESSES|IS_REPORTED_FOR|IS_BELONGS_TO|SCOPE_TO|IS_LINKED_TO|COMPOSES|IS_BASELINED_BY*0..]->(m)) " +
+    "    path=(n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO|IS_STRUCTURED_BY|IS_FORSEEN_ON|APPLIES_TO|FEATURES|MITIGATES|IS_TRIGGER_BY|ADDRESSES|IS_REPORTED_FOR|IS_BELONGS_TO|SCOPE_TO|IS_LINKED_TO|COMPOSES|IS_BASELINED_BY*0..]->(m) " +
     "    WHERE id(n) IN $ids " +
     "    AND ( " +
     "    (m)<-[:CAN_ACCESS_WORKPACK {permissionLevel:'EDIT'} ]-(p) OR " +
@@ -61,21 +61,21 @@ public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, C
     "    (m)<-[:CAN_ACCESS_PLAN {permissionLevel:'EDIT'}]-(p) OR " +
     "    (m)<-[:CAN_ACCESS_PLAN {permissionLevel:'READ'}]-(p) " +
     ") " +
-    "RETURN count(path)"
+    "RETURN count(path)>0"
   )
-  Long hasReadPermission(
+  boolean hasReadPermission(
     @Param("ids") List<Long> ids,
     @Param("sub") String sub
   );
 
   @Query("MATCH  " +
          "    (p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-(a:AuthService), " +
-         "    path=shortestPath((n)-[*0..]->(m)) " +
+         "    path=(n)-[*0..]->(m) " +
          "    WHERE id(n) IN $ids AND " +
          "    (m)<-[:CAN_ACCESS_OFFICE {permissionLevel:'EDIT'}]-(p) " +
-         "RETURN count(path) "
+         "RETURN count(path)>0 "
   )
-  Long hasEditManagementPermission(
+  boolean hasEditManagementPermission(
     @Param("ids") List<Long> ids,
     @Param("sub") String sub
   );

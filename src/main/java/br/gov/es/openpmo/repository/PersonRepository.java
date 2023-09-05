@@ -1,6 +1,5 @@
 package br.gov.es.openpmo.repository;
 
-import br.gov.es.openpmo.dto.person.queries.AllPersonInOfficeQuery;
 import br.gov.es.openpmo.dto.person.queries.PersonByFullNameQuery;
 import br.gov.es.openpmo.dto.person.queries.PersonDetailQuery;
 import br.gov.es.openpmo.dto.person.queries.PersonPermissionDetailQuery;
@@ -44,96 +43,40 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   )
   List<Person> findByIdOfficeReturnDistinctPerson(@Param("idOffice") Long idOffice);
 
-  @Query(
-    "MATCH (person:Person)-[isInContactBookOf:IS_IN_CONTACT_BOOK_OF]->(office:Office) " +
-    "WHERE id(office)=$officeScope " +
-    "MATCH (office)<-[:IS_ADOPTED_BY]-(plan:Plan)<-[:BELONGS_TO]-(workpack:Workpack) " +
-    "WITH *, collect(distinct person) as personList " +
-    "WITH office, personList, isInContactBookOf, plan, workpack, " +
-    "  [ uniquePerson IN personList WHERE " +
-    "    ( " +
-    "        toLower(uniquePerson.fullName) CONTAINS toLower($name) OR " +
-    "        toLower(uniquePerson.name) CONTAINS toLower($name) OR " +
-    "        $name IS NULL " +
-    "    ) " +
-    "    AND " +
-    "    ( " +
-    "        ('ALL'=$userFilter OR $userFilter IS NULL) OR " +
-    "        ('USER'=$userFilter AND exists((uniquePerson)-[:IS_AUTHENTICATED_BY]->(:AuthService))) OR " +
-    "        ('NON_USER'=$userFilter AND NOT exists((uniquePerson)-[:IS_AUTHENTICATED_BY]->(:AuthService))) " +
-    "    ) " +
-    "    AND " +
-    "    ( " +
-    "      ('ALL'=$stakeholderFilter OR $stakeholderFilter IS NULL) OR " +
-    "      ('STAKEHOLDER'=$stakeholderFilter AND exists((uniquePerson)-[:IS_STAKEHOLDER_IN]->(workpack))) OR " +
-    "      ('NON_STAKEHOLDER'=$stakeholderFilter AND NOT exists((uniquePerson)-[:IS_STAKEHOLDER_IN]->(:Workpack))) " +
-    "    ) " +
-    "    AND " +
-    "    ( " +
-    "      ('ALL'=$ccbMemberFilter OR $ccbMemberFilter IS NULL) OR " +
-    "      ('CCB_MEMBERS'=$ccbMemberFilter AND exists((uniquePerson)-[:IS_CCB_MEMBER_FOR]->(workpack))) OR " +
-    "      ('NON_CCB_MEMBERS'=$ccbMemberFilter AND NOT exists((uniquePerson)-[:IS_CCB_MEMBER_FOR]->(:Workpack))) " +
-    "    ) " +
-    "    AND " +
-    "    ( " +
-    "        ( " +
-    "            ( " +
-    "                $workpackScope IS NULL OR $workpackScope = [] AND " +
-    "                (exists((uniquePerson)-[:IS_STAKEHOLDER_IN]->(workpack)) OR exists((uniquePerson)-[:IS_CCB_MEMBER_FOR]->(workpack))) " +
-    "            ) " +
-    "            OR " +
-    "            ( " +
-    "                $workpackScope IS NOT NULL OR $workpackScope <> [] " +
-    "                AND " +
-    "                (exists((uniquePerson)-[:IS_STAKEHOLDER_IN]->(workpack)) OR exists((uniquePerson)-[:IS_CCB_MEMBER_FOR]->(workpack))) " +
-    "                AND " +
-    "                id(workpack) IN $workpackScope " +
-    "            ) " +
-    "        ) " +
-    "        OR " +
-    "        ( " +
-    "            ( " +
-    "                $planScope IS NULL OR $planScope = [] AND " +
-    "                exists((uniquePerson)-[:CAN_ACCESS_PLAN]->(plan)) " +
-    "            ) " +
-    "            OR " +
-    "            ( " +
-    "                $planScope IS NOT NULL OR $planScope <> [] AND " +
-    "                exists((uniquePerson)-[:CAN_ACCESS_PLAN]->(plan)) AND " +
-    "                id(plan) IN $planScope " +
-    "            ) " +
-    "        ) " +
-    "        OR " +
-    "        ( " +
-    "            ( " +
-    "                $workpackScope IS NULL OR $workpackScope = [] AND " +
-    "                exists((uniquePerson)-[:CAN_ACCESS_WORKPACK]->(workpack)) " +
-    "            ) " +
-    "            OR " +
-    "            ( " +
-    "                $workpackScope IS NOT NULL OR $workpackScope <> [] AND " +
-    "                exists((uniquePerson)-[:CAN_ACCESS_WORKPACK]->(workpack)) AND " +
-    "                id(workpack) IN $workpackScope " +
-    "            ) " +
-    "        ) " +
-    "        OR " +
-    "        ( " +
-    "            exists((uniquePerson)-[:CAN_ACCESS_OFFICE]->(office)) " +
-    "        ) " +
-    "    ) ] as uniquePersonFiltered " +
-    "UNWIND uniquePersonFiltered as result " +
-    "RETURN DISTINCT result, isInContactBookOf, office, [" +
-    "  [ [ (result)<-[isPortraitOf:IS_A_PORTRAIT_OF]-(avatar:File) | [isPortraitOf, avatar] ] ] " +
-    "] "
-  )
+  @Query("MATCH (p:Person)-[:IS_IN_CONTACT_BOOK_OF| CAN_ACCESS_OFFICE|CAN_ACCESS_PLAN|CAN_ACCESS_WORKPACK|IS_STAKEHOLDER_IN|IS_CCB_MEMBER_FOR]->()-[:IS_IN|BELONGS_TO|IS_ADOPTED_BY*0..]->(e) " +
+   "WHERE id(e) in $list " +
+   "and ($name is null or " +
+   " (apoc.text.clean(p.name) contains apoc.text.clean($name) or apoc.text.clean(p.fullName) contains apoc.text.clean($name)) " +
+   ") " +
+   "and " +
+   " ( " +
+   "  ('ALL'=$userFilter OR $userFilter IS NULL) OR " +
+   "  ('USER'=$userFilter AND exists((p)-[:IS_AUTHENTICATED_BY]->(:AuthService))) OR " +
+   "  ('NON_USER'=$userFilter AND NOT exists((p)-[:IS_AUTHENTICATED_BY]->(:AuthService))) " +
+   " ) " +
+   "AND " +
+   "( " +
+   " ('ALL'=$stakeholderFilter OR $stakeholderFilter IS NULL) OR " +
+   " ('STAKEHOLDER'=$stakeholderFilter AND exists((p)-[:IS_STAKEHOLDER_IN]->()) OR " +
+   " ('NON_STAKEHOLDER'=$stakeholderFilter AND NOT exists((p)-[:IS_STAKEHOLDER_IN]->())) " +
+   " ) " +
+   ") " +
+   "AND " +
+   "( " +
+   " ('ALL'=$ccbMemberFilter OR $ccbMemberFilter IS NULL) OR " +
+   " ('CCB_MEMBERS'=$ccbMemberFilter AND exists((p)-[:IS_CCB_MEMBER_FOR]->())) OR " +
+   " ('NON_CCB_MEMBERS'=$ccbMemberFilter AND NOT exists((p)-[:IS_CCB_MEMBER_FOR]->())) " +
+   ") " +
+   "with distinct p " +
+   "OPTIONAL MATCH (p)<-[isPortraitOf:IS_A_PORTRAIT_OF]-(avatar:File) " +
+   "return distinct p, avatar " +
+   "order by apoc.text.clean(p.name)")
   Streamable<Person> findAllFilteringBy(
     StakeholderFilterEnum stakeholderFilter,
     UserFilterEnum userFilter,
     CcbMemberFilterEnum ccbMemberFilter,
     String name,
-    Long officeScope,
-    Long[] planScope,
-    Long[] workpackScope
+    Long[] list
   );
 
   @Query("MATCH (person:Person)-[isInContactBookOf:IS_IN_CONTACT_BOOK_OF]->(office:Office) " +

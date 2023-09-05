@@ -18,6 +18,8 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Component
 public class GetWorkpackBreakdownStructure {
@@ -38,23 +40,6 @@ public class GetWorkpackBreakdownStructure {
     this.canAccessData = canAccessData;
   }
 
-  private static Set<Workpack> getWorkpacks(
-    final Workpack parent,
-    final WorkpackModel child
-  ) {
-    final Set<? extends Workpack> childWorkpacks = child.getInstances();
-    if (childWorkpacks == null) {
-      return new HashSet<>();
-    }
-    final Set<Workpack> workpacks = new HashSet<>();
-    for (final Workpack workpack : childWorkpacks) {
-      if (parent.containsChild(workpack)) {
-        workpacks.add(workpack);
-      }
-    }
-    return workpacks;
-  }
-
   public WorkpackBreakdownStructure execute(
     final Long idWorkpack,
     final Boolean allLevels,
@@ -63,7 +48,7 @@ public class GetWorkpackBreakdownStructure {
     if (idWorkpack == null) {
       throw new IllegalStateException("Id do workpack nulo!");
     }
-    final Workpack workpack = getWorkpack(idWorkpack, allLevels);
+    final Workpack workpack = this.getWorkpack(idWorkpack, allLevels);
     final WorkpackModel model = workpack.getWorkpackModelInstance();
     final WorkpackBreakdownStructure rootStructure = new WorkpackBreakdownStructure();
     if (model == null) {
@@ -85,7 +70,10 @@ public class GetWorkpackBreakdownStructure {
     return rootStructure;
   }
 
-  private Workpack getWorkpack(Long idWorkpack, Boolean allLevels) {
+  private Workpack getWorkpack(
+    final Long idWorkpack,
+    final Boolean allLevels
+  ) {
     if (allLevels) {
       return this.workpackRepository.findWorkpackWithModelStructureById(idWorkpack)
         .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
@@ -94,7 +82,10 @@ public class GetWorkpackBreakdownStructure {
       .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
   }
 
-  private boolean hasOnlyBasicReadPermission(final Long idWorkpack, final String authorization) {
+  private boolean hasOnlyBasicReadPermission(
+    final Long idWorkpack,
+    final String authorization
+  ) {
     final ICanAccessDataResponse canAccessData = this.canAccessData.execute(idWorkpack, authorization);
     if (canAccessData.getAdmin()) {
       return false;
@@ -133,15 +124,17 @@ public class GetWorkpackBreakdownStructure {
       summary.setWorkpackModelType(child.getType());
       summary.setWorkpackModelPosition(child.getPosition());
       workpackModelBreakdownStructure.setRepresentation(summary);
-      final List<WorkpackBreakdownStructure> workpackBreakdownStructures = new ArrayList<>();
-      for (final Workpack workpack : workpacks) {
+      final List<WorkpackBreakdownStructure> workpackBreakdownStructures = new CopyOnWriteArrayList<>();
+
+      workpacks.parallelStream().forEach(workpack -> {
         final WorkpackBreakdownStructure structure = this.getStructure(
           workpack,
           child,
           allLevels
         );
         workpackBreakdownStructures.add(structure);
-      }
+      });
+
       workpackBreakdownStructures.sort(Comparator.comparing(
         WorkpackBreakdownStructure::getOrder,
         Comparator.nullsLast(Comparator.naturalOrder())
@@ -171,13 +164,26 @@ public class GetWorkpackBreakdownStructure {
       structure.setWorkpackModels(Collections.emptyList());
       return structure;
     }
-    final List<WorkpackModelBreakdownStructure> children = this.getChildren(
-      workpack,
-      child,
-      true
-    );
+    final List<WorkpackModelBreakdownStructure> children = this.getChildren(workpack, child, true);
     structure.setWorkpackModels(children);
     return structure;
+  }
+
+  private static Set<Workpack> getWorkpacks(
+    final Workpack parent,
+    final WorkpackModel child
+  ) {
+    final Set<? extends Workpack> childWorkpacks = child.getInstances();
+    if (childWorkpacks == null) {
+      return new HashSet<>();
+    }
+    final Set<Workpack> workpacks = new HashSet<>();
+    for (final Workpack workpack : childWorkpacks) {
+      if (parent.containsChild(workpack)) {
+        workpacks.add(workpack);
+      }
+    }
+    return workpacks;
   }
 
 }
