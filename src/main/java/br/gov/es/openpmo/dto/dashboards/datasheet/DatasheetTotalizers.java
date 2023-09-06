@@ -14,9 +14,4 @@ public class DatasheetTotalizers {
     return this.workpacksByModel;
   }
 
-  public void sort() {
-    this.workpacksByModel
-      .forEach(WorkpacksByModelResponse::sortWorkpacks);
-  }
-
 }

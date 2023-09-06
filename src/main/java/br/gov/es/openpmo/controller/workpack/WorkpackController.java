@@ -25,6 +25,7 @@ import br.gov.es.openpmo.service.completed.ICompleteWorkpackService;
 import br.gov.es.openpmo.service.completed.IDeliverableEndManagementService;
 import br.gov.es.openpmo.service.dashboards.v2.IDashboardService;
 import br.gov.es.openpmo.service.journals.JournalCreator;
+import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessData;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.workpack.GetWorkpackName;
 import br.gov.es.openpmo.service.workpack.WorkpackHasChildren;
@@ -82,6 +83,8 @@ public class WorkpackController {
 
   private final ICanAccessService canAccessService;
 
+  private final ICanAccessData canAccessData;
+
   private final WorkpackHasChildren workpackHasChildren;
 
   private final IsFavoritedByService isFavoritedByService;
@@ -98,6 +101,7 @@ public class WorkpackController {
     final IDeliverableEndManagementService deliverableEndManagementService,
     final IDashboardService dashboardService,
     final ICanAccessService canAccessService,
+    final ICanAccessData canAccessData,
     final WorkpackHasChildren workpackHasChildren,
     final IsFavoritedByService isFavoritedByService
   ) {
@@ -111,6 +115,7 @@ public class WorkpackController {
     this.deliverableEndManagementService = deliverableEndManagementService;
     this.dashboardService = dashboardService;
     this.canAccessService = canAccessService;
+    this.canAccessData = canAccessData;
     this.workpackHasChildren = workpackHasChildren;
     this.isFavoritedByService = isFavoritedByService;
   }
@@ -128,7 +133,6 @@ public class WorkpackController {
       idPlan,
       authorization
     );
-    final Long idUser = this.tokenService.getUserId(authorization);
 
     final List<Workpack> workpacks = this.workpackService.findAll(
       idPlan,
@@ -142,15 +146,10 @@ public class WorkpackController {
       return ResponseEntity.noContent().build();
     }
 
-    final List<WorkpackDetailParentDto> workpackDetailDtos = workpacks.parallelStream()
+    final List<WorkpackDetailParentDto> response = workpacks.parallelStream()
+      .filter(workpack -> this.canAccessData.execute(workpack.getId(), authorization).canReadResource())
       .map(workpack -> this.mapToWorkpackDetailParentDto(workpack, idWorkpackModel))
       .collect(Collectors.toList());
-
-    final List<WorkpackDetailParentDto> response = this.workpackPermissionVerifier.verify(
-      workpackDetailDtos,
-      idUser,
-      idPlan
-    );
 
     response.forEach(workpackDetailDto -> {
       final SimpleDashboard dashboard = this.dashboardService.buildSimple(workpackDetailDto.getId());
@@ -186,7 +185,6 @@ public class WorkpackController {
       idPlan,
       authorization
     );
-    final Long idUser = this.tokenService.getUserId(authorization);
     final List<Workpack> workpacks = this.workpackService.findAllUsingParent(
       idPlan,
       idPlanModel,
@@ -197,21 +195,17 @@ public class WorkpackController {
       workpackLinked
     );
 
-    final List<WorkpackDetailParentDto> workpackList = workpacks.parallelStream()
+    final List<WorkpackDetailParentDto> verify = workpacks.parallelStream()
+      .filter(workpack -> this.canAccessData.execute(workpack.getId(), authorization).canReadResource())
       .map(workpack -> this.mapToWorkpackDetailParentDto(
         workpack,
         idWorkpackModel
       ))
       .collect(Collectors.toList());
 
-    if (workpackList.isEmpty()) {
+    if (verify.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
-    final List<WorkpackDetailParentDto> verify = this.workpackPermissionVerifier.verify(
-      workpackList,
-      idUser,
-      idPlan
-    );
 
     verify.parallelStream().filter(workpackDetailDto -> !workpackDetailDto.isCanceled())
       .forEach(workpackDetailDto -> {

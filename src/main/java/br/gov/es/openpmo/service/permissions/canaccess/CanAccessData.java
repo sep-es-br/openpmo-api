@@ -100,15 +100,38 @@ public class CanAccessData implements ICanAccessData {
     final String authorizationHeader
   ) {
     final PersonDataResponse personData = this.getPerson(authorizationHeader);
+    final boolean isAdministrator = isAdministrator(personData);
+
+    final Boolean self = isSelfId(personData, ids);
+
+    if (isAdministrator) {
+      return CanAccessDataResponse.administrator(personData.getKey(), self);
+    }
+
+    final boolean editManagement = hasPermission(
+      ids,
+      personData.getKey(),
+      this.permissionRepository::hasEditManagementPermission
+    );
+
+    final boolean edit = hasPermission(ids, personData.getKey(), this.permissionRepository::hasEditPermission);
+    if (edit) {
+      return CanAccessDataResponse.edit(personData.getKey(), editManagement, self);
+    }
+    final boolean read = hasPermission(ids, personData.getKey(), this.permissionRepository::hasReadPermission);
+    if (read) {
+      return CanAccessDataResponse.read(personData.getKey(), editManagement, self);
+    }
+
     return new CanAccessDataResponse(
-      hasPermission(ids, personData.getKey(), this.permissionRepository::hasEditPermission),
-      hasPermission(ids, personData.getKey(), this.permissionRepository::hasReadPermission),
+      false,
+      false,
       hasPermission(ids, personData.getKey(), this.permissionRepository::hasBasicReadPermission),
-      isAdministrator(personData),
-      isSelfId(personData, ids),
+      false,
+      self,
       personData.getKey(),
       new CanAccessManagementDataResponse(
-        hasPermission(ids, personData.getKey(), this.permissionRepository::hasEditManagementPermission),
+        editManagement,
         true
       )
     );
