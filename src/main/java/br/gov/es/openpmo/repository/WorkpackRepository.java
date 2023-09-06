@@ -224,24 +224,34 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   Set<Workpack> findAllByPlanWithProperties(@Param("idPlan") Long idPlan);
 
   @Query("MATCH (w:Workpack{deleted:false})-[ii:IS_INSTANCE_BY]->(wm:WorkpackModel) "
-         + " WHERE id(w) = $id "
-         + " RETURN w, ii, wm, [ "
-         + " [(w)-[bt:BELONGS_TO]->(pl:Plan) | [bt, pl]], "
-         + " [(w)<-[lt:IS_LINKED_TO]-(wml:WorkpackModel) | [lt, wml] ], "
-         + " [(wml)<-[mii:IS_IN]-(wmlc:WorkpackModel) | [mii, wmlc] ], "
-         + " [(w)<-[f1:FEATURES]-(p1:Property)-[d1:IS_DRIVEN_BY]->(pm1:PropertyModel) | [f1, p1, d1, pm1] ], "
-         + " [(w)-[wi:IS_IN*]->(w2:Workpack)<-[f2:FEATURES]-(p2:Property)-[d2:IS_DRIVEN_BY]->(pm2:PropertyModel) | [wi, w2, f2, p2, d2, pm2] ], "
-         + " [(w)<-[wi2:IS_IN]-(w3:Workpack)-[:BELONGS_TO]->(pl) | [wi2, w3] ], "
-         + " [(w)<-[f1:FEATURES]-(p1:Property)-[d1:IS_DRIVEN_BY]->(pm1:PropertyModel) | [f1, p1, d1, pm1] ], "
-         + " [(w)<-[f2:FEATURES]-(l:LocalitySelection:OrganizationSelection:UnitSelection)-[v1:VALUES]->(l1:Locality:Organization:UnitMeasure) | [f2,l,v1,l1]], "
-         + " [(w)<-[wfg:FEATURES]-(wg:Group) | [wfg, wg] ], "
-         + " [(wg)-[wgps:GROUPS]->(wgp:Property)-[gpd:IS_DRIVEN_BY]->(gpm:PropertyModel) | [wgps, wgp, gpd, gpm] ], "
-         + " [(wgp)-[v2:VALUES]->(anyValue) | [v2, anyValue]], "
-         + " [(w2)-[ib2:IS_INSTANCE_BY]->(wm2:WorkpackModel)<-[f8:FEATURES]-(pm5:PropertyModel) | [ib2, wm2, f8, pm5] ], "
-         + " [(wm)<-[f9:FEATURES]-(pm4:PropertyModel) | [f9, pm4] ], "
-         + " [(wm)-[f3:FEATURES]->(gm:GroupModel) | [f3, gm] ], "
-         + " [(gm)-[g:GROUPS]->(gpm2:PropertyModel) | [g, gpm2] ] "
-         + " ]"
+    + " WHERE id(w) = $id "
+    + " RETURN w, ii, wm, [ "
+    + " [(w)-[bt:BELONGS_TO]->(pl:Plan) | [bt, pl]], "
+    + " [(w)<-[lt:IS_LINKED_TO]-(wml:WorkpackModel) | [lt, wml] ], "
+    + " [(wml)<-[mii:IS_IN*]-(wmlc:WorkpackModel) | [mii, wmlc] ], "
+    + " [(w)<-[f1:FEATURES]-(p1:Property)-[d1:IS_DRIVEN_BY]->(pm1:PropertyModel) | [f1, p1, d1, pm1] ], "
+    + " [(w)-[wi:IS_IN*]->(w2:Workpack)<-[f2:FEATURES]-(p2:Property)-[d2:IS_DRIVEN_BY]->(pm2:PropertyModel) | " +
+    "[wi,w2,f2, " +
+    "p2, d2, pm2] ], "
+    + " [(w)<-[wi2:IS_IN]-(w3:Workpack)-[:BELONGS_TO]->(pl) | [wi2, w3] ], "
+    + " [(w)<-[f2:FEATURES]-(l:LocalitySelection)-[v1:VALUES]->(l1:Locality) | [f2,l,v1,l1]], "
+    + " [(w)<-[f3:FEATURES]-(o:OrganizationSelection)-[v2:VALUES]->(o1:Organization) | [f3,o,v2,o1]], "
+    + " [(w)<-[f4:FEATURES]-(u:UnitSelection)-[v3:VALUES]->(u1:UnitMeasure) | [f4,u,v3,u1]], "
+    + " [(w2)-[bt2:BELONGS_TO]->(pl2:Plan) | [bt2, pl2] ], "
+    + " [(w2)<-[f5:FEATURES]-(l2:LocalitySelection)-[v4:VALUES]->(l2:Locality) | [f5, l2, v4, l2]], "
+    + " [(w2)<-[f6:FEATURES]-(o2:OrganizationSelection)-[v5:VALUES]->(o2:Organization) | [f6,o2,v5,o2]], "
+    + " [(w2)<-[f7:FEATURES]-(u2:UnitSelection)-[v6:VALUES]->(u2:UnitMeasure) | [f7,u2,v6,u2]], "
+    + " [(w)<-[wfg:FEATURES]-(wg:Group) | [wfg, wg] ], "
+    + " [(wg)-[wgps:GROUPS]->(wgp:Property)-[gpd:IS_DRIVEN_BY]->(gpm:PropertyModel) | [wgps, wgp, gpd, gpm] ], "
+    + " [(wgp)-[values:VALUES]->(entity) | [values, entity]], "
+    + " [(w2)-[ib2:IS_INSTANCE_BY]->(wm2:WorkpackModel)<-[f8:FEATURES]-(pm5:PropertyModel) | [ib2, wm2, f8, pm5]" +
+    " ], "
+    + " [(wm)<-[f9:FEATURES]-(pm4:PropertyModel) | [f9, pm4] ], "
+    + " [(wm)-[featureGroupModel:FEATURES]->(groupModel:GroupModel) | [featureGroupModel, groupModel] ], "
+    + " [(groupModel)-[groupModels:GROUPS]->(groupedPropertiesModel:PropertyModel) | [groupModels, " +
+    "groupedPropertiesModel]" +
+    " ] "
+    + " ]"
   )
   Optional<Workpack> findByIdWithParent(@Param("id") Long id);
 

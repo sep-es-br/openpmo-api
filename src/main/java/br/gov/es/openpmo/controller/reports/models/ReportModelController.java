@@ -121,11 +121,7 @@ public class ReportModelController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<ResponseBase<GetReportModelByIdResponse>> getReportModelById(
-    @Authorization final String authorization,
-    @PathVariable final Long id
-  ) {
-    this.canAccessService.ensureCanAccessManagementResource(id, authorization);
+  public ResponseEntity<ResponseBase<GetReportModelByIdResponse>> getReportModelById(@PathVariable final Long id) {
     log.info("Chamando service GetReportModelDetailById.");
     final GetReportModelByIdResponse response = this.getReportModelDetailById.execute(id);
     log.info("Retornando com sucesso.");
