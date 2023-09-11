@@ -45,7 +45,7 @@ public class LocalityController {
   public ResponseEntity<ResponseBase<List<LocalityDto>>> indexBase(@RequestParam("id-domain") final Long idDomain,
       @Authorization final String authorization) {
 
-    this.canAccessService.ensureCanReadResource(idDomain, authorization);
+//    this.canAccessService.ensureCanReadResource(idDomain, authorization);
     final List<LocalityDto> localities = this.localityService.findAll(idDomain).stream()
         .map(o -> this.modelMapper.map(o, LocalityDto.class))
         .collect(Collectors.toList());
@@ -62,7 +62,7 @@ public class LocalityController {
       @RequestParam(required = false) final String term,
       @Authorization final String authorization) {
 
-    this.canAccessService.ensureCanReadResource(idDomain, authorization);
+//    this.canAccessService.ensureCanReadResource(idDomain, authorization);
     final List<LocalityDto> localities = this.localityService.findAllFirstLevel(idDomain, idFilter, term)
         .stream()
         .map(o -> this.modelMapper.map(o, LocalityDto.class))
@@ -78,7 +78,7 @@ public class LocalityController {
       @RequestParam("id-domain") final Long idDomain,
       @Authorization final String authorization) {
 
-    this.canAccessService.ensureCanReadResource(idDomain, authorization);
+//    this.canAccessService.ensureCanReadResource(idDomain, authorization);
     final List<LocalityPropertyDto> localities = this.localityService.findAllByDomainProperties(idDomain).stream()
         .map(locality -> this.modelMapper.map(locality, LocalityPropertyDto.class))
         .sorted()
@@ -97,7 +97,7 @@ public class LocalityController {
       @RequestParam(required = false) final String term,
       @Authorization final String authorization) {
 
-    this.canAccessService.ensureCanReadResource(id, authorization);
+//    this.canAccessService.ensureCanReadResource(id, authorization);
     final LocalityDetailDto localityDto = this.modelMapper.map(
         this.localityService.findById(id, idFilter, term),
         LocalityDetailDto.class);
