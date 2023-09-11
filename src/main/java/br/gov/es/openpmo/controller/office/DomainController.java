@@ -8,13 +8,21 @@ import br.gov.es.openpmo.dto.domain.DomainStoreDto;
 import br.gov.es.openpmo.dto.domain.DomainUpdateDto;
 import br.gov.es.openpmo.model.office.Domain;
 import br.gov.es.openpmo.service.office.DomainService;
-import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessManagementData;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import io.swagger.annotations.Api;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -34,8 +42,8 @@ public class DomainController {
   public DomainController(
       final DomainService domainService,
       final ModelMapper modelMapper,
-      final ICanAccessService canAccessService,
-      final ICanAccessManagementData canAccessManagementData) {
+      final ICanAccessService canAccessService
+  ) {
     this.domainService = domainService;
     this.modelMapper = modelMapper;
     this.canAccessService = canAccessService;
@@ -48,7 +56,7 @@ public class DomainController {
       @RequestParam(required = false) final String term,
       @Authorization final String authorization) {
 
-//    this.canAccessService.ensureCanAccessManagementOrReadResource(idOffice, authorization);
+    this.canAccessService.ensureCanReadResource(idOffice, authorization);
     final List<DomainDto> domains = this.domainService.findAll(idOffice, idFilter, term)
         .stream()
         .map(o -> this.modelMapper.map(o, DomainDto.class))
@@ -64,7 +72,7 @@ public class DomainController {
   @GetMapping("{id}")
   public ResponseEntity<ResponseBase<DomainDto>> findById(@PathVariable final Long id,
       @Authorization final String authorization) {
-//    this.canAccessService.ensureCanReadResource(id, authorization);
+    this.canAccessService.ensureCanReadResource(id, authorization);
     final DomainDto domainDto = this.modelMapper.map(this.domainService.findById(id), DomainDto.class);
     final ResponseBase<DomainDto> response = new ResponseBase<DomainDto>()
         .setData(domainDto)

@@ -49,7 +49,7 @@ public class UnitMeasureController {
       @RequestParam(required = false) final String term,
       @Authorization final String authorization
   ) {
-//    this.canAccessService.ensureCanReadResource(idOffice, authorization);
+    this.canAccessService.ensureCanReadResource(idOffice, authorization);
     final List<UnitMeasureDto> unitMeasures = new ArrayList<>();
     this.unitMeasureService.findAll(idOffice, term, idFilter)
         .forEach(registro -> unitMeasures.add(new UnitMeasureDto(registro)));
@@ -62,7 +62,7 @@ public class UnitMeasureController {
   public ResponseEntity<ResponseBase<UnitMeasureDto>> findById(@PathVariable final Long id,
       @Authorization final String authorization) {
 
-//    this.canAccessService.ensureCanReadResource(id, authorization);
+    this.canAccessService.ensureCanReadResource(id, authorization);
     final UnitMeasureDto officeDto = new UnitMeasureDto(this.unitMeasureService.findById(id));
     final ResponseBase<UnitMeasureDto> response = new ResponseBase<UnitMeasureDto>().setData(officeDto)
         .setSuccess(true);
