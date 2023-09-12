@@ -9,17 +9,23 @@ import br.gov.es.openpmo.dto.costaccount.CostAccountStoreDto;
 import br.gov.es.openpmo.dto.costaccount.CostAccountUpdateDto;
 import br.gov.es.openpmo.dto.costaccount.CostDto;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
-import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.workpack.CostAccountService;
-import br.gov.es.openpmo.service.workpack.WorkpackService;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
-import java.util.HashSet;
 import java.util.List;
 
 @Api
@@ -29,17 +35,14 @@ import java.util.List;
 public class CostAccountController {
 
   private final CostAccountService costAccountService;
-  private final WorkpackService workpackService;
   private final ICanAccessService canAccessService;
 
   @Autowired
   public CostAccountController(
     final CostAccountService costAccountService,
-    final WorkpackService workpackService,
     final ICanAccessService canAccessService
   ) {
     this.costAccountService = costAccountService;
-    this.workpackService = workpackService;
     this.canAccessService = canAccessService;
   }
 
@@ -89,12 +92,6 @@ public class CostAccountController {
   ) {
     this.canAccessService.ensureCanEditResource(costAccountStoreDto.getIdWorkpack(), authorization);
     final CostAccount costAccount = this.costAccountService.getCostAccount(costAccountStoreDto);
-    final Workpack workpack = this.workpackService.findById(costAccountStoreDto.getIdWorkpack());
-    if (workpack.getCosts() == null) {
-      workpack.setCosts(new HashSet<>());
-    }
-    workpack.getCosts().add(costAccount);
-    this.workpackService.update(workpack);
     return ResponseEntity.ok(ResponseBase.of(new EntityDto(costAccount.getId())));
   }
 
@@ -105,7 +102,6 @@ public class CostAccountController {
   ) {
     this.canAccessService.ensureCanEditResource(costAccountUpdateDto.getIdWorkpack(), authorization);
     final CostAccount costAccount = this.costAccountService.getCostAccount(costAccountUpdateDto);
-    this.costAccountService.save(costAccount);
     return ResponseEntity.ok(ResponseBase.of(EntityDto.of(costAccount)));
   }
 

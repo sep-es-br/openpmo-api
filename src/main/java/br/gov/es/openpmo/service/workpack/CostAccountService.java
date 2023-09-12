@@ -5,24 +5,47 @@ import br.gov.es.openpmo.dto.costaccount.CostAccountDto;
 import br.gov.es.openpmo.dto.costaccount.CostAccountStoreDto;
 import br.gov.es.openpmo.dto.costaccount.CostAccountUpdateDto;
 import br.gov.es.openpmo.dto.costaccount.CostDto;
-import br.gov.es.openpmo.dto.workpack.*;
+import br.gov.es.openpmo.dto.workpack.CurrencyDto;
+import br.gov.es.openpmo.dto.workpack.DateDto;
+import br.gov.es.openpmo.dto.workpack.IntegerDto;
+import br.gov.es.openpmo.dto.workpack.LocalitySelectionDto;
+import br.gov.es.openpmo.dto.workpack.NumberDto;
+import br.gov.es.openpmo.dto.workpack.OrganizationSelectionDto;
+import br.gov.es.openpmo.dto.workpack.PropertyDto;
+import br.gov.es.openpmo.dto.workpack.SelectionDto;
+import br.gov.es.openpmo.dto.workpack.TextAreaDto;
+import br.gov.es.openpmo.dto.workpack.TextDto;
+import br.gov.es.openpmo.dto.workpack.ToggleDto;
+import br.gov.es.openpmo.dto.workpack.UnitSelectionDto;
+import br.gov.es.openpmo.dto.workpack.WorkpackName;
 import br.gov.es.openpmo.exception.NegocioException;
+import br.gov.es.openpmo.exception.RegistroNaoEncontradoException;
 import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.model.properties.Currency;
 import br.gov.es.openpmo.model.properties.Date;
 import br.gov.es.openpmo.model.properties.Integer;
+import br.gov.es.openpmo.model.properties.LocalitySelection;
 import br.gov.es.openpmo.model.properties.Number;
-import br.gov.es.openpmo.model.properties.*;
+import br.gov.es.openpmo.model.properties.OrganizationSelection;
+import br.gov.es.openpmo.model.properties.Property;
+import br.gov.es.openpmo.model.properties.Selection;
+import br.gov.es.openpmo.model.properties.Text;
+import br.gov.es.openpmo.model.properties.TextArea;
+import br.gov.es.openpmo.model.properties.Toggle;
+import br.gov.es.openpmo.model.properties.UnitSelection;
 import br.gov.es.openpmo.model.relations.Consumes;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.CostAccountModel;
 import br.gov.es.openpmo.repository.ConsumesRepository;
+import br.gov.es.openpmo.repository.CostAccountModelRepository;
 import br.gov.es.openpmo.repository.CostAccountRepository;
 import br.gov.es.openpmo.repository.CustomFilterRepository;
+import br.gov.es.openpmo.repository.PropertyRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllCostAccountUsingCustomFilter;
 import br.gov.es.openpmo.service.reports.models.GetPropertyModelDtoFromEntity;
+import br.gov.es.openpmo.utils.ApplicationMessage;
 import br.gov.es.openpmo.utils.TextSimilarityScore;
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
@@ -30,11 +53,31 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import static br.gov.es.openpmo.utils.ApplicationMessage.*;
-import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.*;
+import static br.gov.es.openpmo.utils.ApplicationMessage.COST_ACCOUNT_DELETE_RELATIONSHIP_ERROR;
+import static br.gov.es.openpmo.utils.ApplicationMessage.COST_ACCOUNT_NOT_FOUND;
+import static br.gov.es.openpmo.utils.ApplicationMessage.CUSTOM_FILTER_NOT_FOUND;
+import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_NOT_FOUND;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_CURRENCY;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_DATE;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_INTEGER;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_LOCALITY_SELECTION;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_NUMBER;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_ORGANIZATION_SELECTION;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_SELECTION;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_TEXT;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_TEXT_AREA;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_TOGGLE;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_UNIT_SELECTION;
 
 @Service
 public class CostAccountService {
@@ -61,7 +104,9 @@ public class CostAccountService {
 
   private final ModelMapper modelMapper;
 
-  private final FindCostAccountModel findCostAccountModel;
+  private final CostAccountModelRepository costAccountModelRepository;
+
+  private final PropertyRepository propertyRepository;
 
   @Autowired
   public CostAccountService(
@@ -76,7 +121,8 @@ public class CostAccountService {
     final GetPropertyModelDtoFromEntity getPropertyModelDtoFromEntity,
     final WorkpackService workpackService,
     final ModelMapper modelMapper,
-    final FindCostAccountModel findCostAccountModel
+    final CostAccountModelRepository costAccountModelRepository,
+    final PropertyRepository propertyRepository
   ) {
     this.costAccountRepository = costAccountRepository;
     this.consumesRepository = consumesRepository;
@@ -89,7 +135,8 @@ public class CostAccountService {
     this.getPropertyModelDtoFromEntity = getPropertyModelDtoFromEntity;
     this.workpackService = workpackService;
     this.modelMapper = modelMapper;
-    this.findCostAccountModel = findCostAccountModel;
+    this.costAccountModelRepository = costAccountModelRepository;
+    this.propertyRepository = propertyRepository;
   }
 
   public List<CostAccountDto> findAllByIdWorkpack(
@@ -395,33 +442,45 @@ public class CostAccountService {
     Set<Property> properties = null;
     Long idCostAccount = null;
     Long idCostAccountModel = null;
+    Workpack workpack = null;
     if (cost instanceof CostAccountStoreDto) {
-      if (((CostAccountStoreDto) cost).getProperties() != null
-        && !(((CostAccountStoreDto) cost).getProperties()).isEmpty()) {
-        final CostAccountStoreDto store = (CostAccountStoreDto) cost;
+      final CostAccountStoreDto store = (CostAccountStoreDto) cost;
+      final List<? extends PropertyDto> propertyDtos = store.getProperties();
+      if (propertyDtos != null && !propertyDtos.isEmpty()) {
         properties = this.workpackService.getProperties(store.getProperties());
         idCostAccountModel = store.getIdCostAccountModel();
         store.setProperties(null);
+        workpack = this.workpackRepository.findById(store.getIdWorkpack(), 0)
+          .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
       }
     } else {
       idCostAccount = ((CostAccountUpdateDto) cost).getId();
-      if ((((CostAccountUpdateDto) cost).getProperties()) != null
-        && !(((CostAccountUpdateDto) cost).getProperties()).isEmpty()) {
-        final CostAccountUpdateDto update = (CostAccountUpdateDto) cost;
+      final CostAccountUpdateDto update = (CostAccountUpdateDto) cost;
+      final List<? extends PropertyDto> propertyDtos = update.getProperties();
+      if (propertyDtos != null && !propertyDtos.isEmpty()) {
         properties = this.workpackService.getProperties(update.getProperties());
         idCostAccountModel = update.getIdCostAccountModel();
         update.setProperties(null);
       }
     }
-    final CostAccount costAccount;
+    CostAccount costAccount;
     if (idCostAccount == null) {
       costAccount = this.modelMapper.map(cost, CostAccount.class);
+      costAccount.setWorkpack(workpack);
     } else {
       costAccount = this.findById(idCostAccount);
     }
     costAccount.setProperties(properties);
-    final CostAccountModel costAccountModel = this.findCostAccountModel.execute(idCostAccountModel);
+    final CostAccountModel costAccountModel = this.costAccountModelRepository.findById(idCostAccountModel, 0)
+      .orElseThrow(() -> new RegistroNaoEncontradoException(ApplicationMessage.COST_ACCOUNT_MODEL_NOT_FOUND));
     costAccount.setInstance(costAccountModel);
+    costAccount = this.save(costAccount);
+    if (properties != null && !properties.isEmpty()) {
+      for (Property property : properties) {
+        property.setCostAccount(costAccount);
+      }
+      this.propertyRepository.saveAll(properties);
+    }
     return costAccount;
   }
 

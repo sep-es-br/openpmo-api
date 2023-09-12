@@ -22,7 +22,16 @@ import br.gov.es.openpmo.service.workpack.WorkpackService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -302,7 +311,7 @@ public class MenuService {
     menuItemDto.setIdWorkpackModelLinked(linkedModel.getId());
 
     if (workpack.hasPropertyModel()) {
-      permission = this.addLinkedWorkpackIfPermited(
+      permission = this.addWorkpackIfPermited(
         permission,
         permittedWorkpackId,
         menu,
@@ -416,39 +425,19 @@ public class MenuService {
   }
 
   private boolean addWorkpackIfPermited(
-    final boolean permission,
+    boolean permission,
     final Set<Long> permittedWorkpacksId,
     final Collection<? super WorkpackMenuDto> generalMenu,
     final Workpack workpack,
     final WorkpackMenuDto currentMenuItem
   ) {
-    if (
-      permission ||
-      permittedWorkpacksId.contains(workpack.getId()) ||
-      this.isChildrenWithPermission(workpack.getChildren(), permittedWorkpacksId)
-    ) {
-      generalMenu.add(currentMenuItem);
-      return true;
+    if (isWorkpackWithPermission(permittedWorkpacksId, workpack)) {
+      permission = true;
     }
-    return false;
-  }
-
-  private boolean addLinkedWorkpackIfPermited(
-    final boolean permission,
-    final Set<Long> permittedWorkpacksId,
-    final Collection<? super WorkpackMenuDto> generalMenu,
-    final Workpack workpack,
-    final WorkpackMenuDto currentMenuItem
-  ) {
-    if (
-      permission ||
-      permittedWorkpacksId.contains(workpack.getId()) ||
-      this.isChildrenWithPermission(workpack.getChildren(), permittedWorkpacksId)
-    ) {
+    if (permission || this.isChildrenWithPermission(workpack.getChildren(), permittedWorkpacksId)) {
       generalMenu.add(currentMenuItem);
-      return true;
     }
-    return false;
+    return permission;
   }
 
   private boolean isChildrenWithPermission(

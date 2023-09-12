@@ -4,6 +4,7 @@ import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.baselines.Snapshotable;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.relations.IsPropertySnapshotOf;
+import br.gov.es.openpmo.model.workpacks.CostAccount;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -56,6 +57,9 @@ public abstract class Property<T, V> extends Entity implements HasValue<V>, Snap
   @Relationship(type = "IS_SNAPSHOT_OF", direction = INCOMING)
   private Set<IsPropertySnapshotOf> snapshots;
 
+  @Relationship(type = "FEATURES")
+  private CostAccount costAccount;
+
   protected Property() {
   }
 
@@ -84,6 +88,14 @@ public abstract class Property<T, V> extends Entity implements HasValue<V>, Snap
 
   public void setSnapshots(final Set<IsPropertySnapshotOf> snapshots) {
     this.snapshots = snapshots;
+  }
+
+  public CostAccount getCostAccount() {
+    return costAccount;
+  }
+
+  public void setCostAccount(CostAccount costAccount) {
+    this.costAccount = costAccount;
   }
 
   @Transient

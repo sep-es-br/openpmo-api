@@ -12,18 +12,11 @@ import java.util.List;
 @Repository
 public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, CustomRepository {
 
-  @Query(
-    "MATCH" +
-    "(p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-(a:AuthService)," +
-    "    path=(n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO|IS_STRUCTURED_BY|IS_FORSEEN_ON|APPLIES_TO|FEATURES|MITIGATES|IS_TRIGGER_BY|ADDRESSES|IS_REPORTED_FOR|IS_BELONGS_TO|SCOPE_TO|IS_LINKED_TO|COMPOSES|IS_BASELINED_BY*0..]->(m) " +
-    "WHERE id(n) IN $ids " +
-    "AND (" +
-    "  (m)<-[:CAN_ACCESS_WORKPACK {permissionLevel:'EDIT'}]-(p) OR " +
-    "  (m)<-[:CAN_ACCESS_OFFICE {permissionLevel:'EDIT'}]-(p) OR " +
-    "  (m)<-[:CAN_ACCESS_PLAN {permissionLevel:'EDIT'}]-(p) " +
-    ")" +
-    "RETURN count(path)>0"
-  )
+  @Query("MATCH " +
+    "   (m)<-[:CAN_ACCESS_WORKPACK|CAN_ACCESS_PLAN|CAN_ACCESS_OFFICE {permissionLevel:'EDIT'}]-(p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
+    "MATCH path=((n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO|IS_STRUCTURED_BY|IS_FORSEEN_ON|APPLIES_TO|FEATURES|MITIGATES|IS_TRIGGER_BY|ADDRESSES|IS_REPORTED_FOR|IS_BELONGS_TO|SCOPE_TO|IS_LINKED_TO|COMPOSES|IS_BASELINED_BY*0..]->(m)) " +
+    "    WHERE id(n) IN $ids " +
+    "RETURN count(path)>0")
   boolean hasEditPermission(
     @Param("ids") List<Long> ids,
     @Param("sub") String sub
@@ -57,7 +50,7 @@ public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, C
          "    WHERE (p)-[:IS_AUTHENTICATED_BY {key:$sub}]->() " +
          "WITH p, m " +
          "MATCH " +
-         "    path=((n)-[*0..]->(m)) " +
+         "    path=shortestPath((n)-[*0..]->(m)) " +
          "    WHERE id(n) IN $ids " +
          "RETURN count(path)>0 "
   )
