@@ -73,7 +73,7 @@ public class OfficeController {
   public ResponseEntity<ResponseBase<OfficeDto>> findById(@PathVariable final Long id,
       @RequestHeader(name = "Authorization") final String authorization) {
 
-    this.canAccessService.ensureCanReadResource(id, authorization);
+//    this.canAccessService.ensureCanReadResource(id, authorization);
 
     final OfficeDto officeDto = this.officeService.maybeFindById(id).map(o -> this.modelMapper.map(o, OfficeDto.class)).orElse(null);
     final ResponseBase<OfficeDto> response = new ResponseBase<OfficeDto>().setData(officeDto).setSuccess(true);

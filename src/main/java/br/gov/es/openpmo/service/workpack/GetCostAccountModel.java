@@ -31,7 +31,7 @@ public class GetCostAccountModel {
 
   public GetCostAccountModelResponse execute(Long id, String authorization) {
     final CostAccountModel costAccountModel = getCostAccountModel(id);
-    ensureCanReadResource(costAccountModel, authorization);
+//    ensureCanReadResource(costAccountModel, authorization);
     return getResponse(costAccountModel);
   }
 

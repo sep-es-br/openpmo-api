@@ -26,7 +26,7 @@ public class GetCostAccountModelByIdPlanModel {
   }
 
   public GetCostAccountModelResponse execute(Long idPlanModel, String authorization) {
-    ensureCanReadResource(idPlanModel, authorization);
+//    ensureCanReadResource(idPlanModel, authorization);
     final Optional<CostAccountModel> costAccountModelByPlainModel = getCostAccountModelByIdPlainModel(idPlanModel);
     return costAccountModelByPlainModel.map(this::getResponse).orElse(null);
   }

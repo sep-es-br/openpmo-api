@@ -58,7 +58,7 @@ public class PlanModelController {
     @Authorization final String authorization
   ) {
 
-    this.canAccessService.ensureCanReadResource(idOffice, authorization);
+//    this.canAccessService.ensureCanReadResource(idOffice, authorization);
     final List<PlanModelDto> planModels = new ArrayList<>();
 
     this.planModelService.findAllInOffice(idOffice, idFilter, term)
@@ -73,7 +73,7 @@ public class PlanModelController {
     @Authorization final String authorization
   ) {
 
-    this.canAccessService.ensureCanReadResource(id, authorization);
+//    this.canAccessService.ensureCanReadResource(id, authorization);
     final PlanModelDto planModelDto = new PlanModelDto(this.planModelService.findById(id));
     return ResponseEntity.ok(ResponseBase.of(planModelDto));
   }

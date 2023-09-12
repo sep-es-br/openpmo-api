@@ -49,7 +49,7 @@ public class OrganizationController {
       @RequestParam(required = false) final String term,
       @Authorization final String authorization) {
 
-    this.canAccessService.ensureCanReadResource(idOffice, authorization);
+//    this.canAccessService.ensureCanReadResource(idOffice, authorization);
 
     final List<OrganizationDto> organizations = new ArrayList<>();
     this.organizationService.findAll(idOffice, idFilter, term)
@@ -65,7 +65,7 @@ public class OrganizationController {
   public ResponseEntity<ResponseBase<OrganizationDto>> findById(@PathVariable final Long id,
       @Authorization final String authorization) {
 
-    this.canAccessService.ensureCanReadResource(id, authorization);
+//    this.canAccessService.ensureCanReadResource(id, authorization);
 
     final OrganizationDto officeDto = new OrganizationDto(this.organizationService.findById(id));
     final ResponseBase<OrganizationDto> response = new ResponseBase<OrganizationDto>().setData(officeDto)
