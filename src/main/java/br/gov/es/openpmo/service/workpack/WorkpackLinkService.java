@@ -75,7 +75,7 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
     final Workpack workpack,
     final WorkpackModel workpackModel
   ) {
-    if(!workpack.hasSameModelType(workpackModel)) {
+    if (!workpack.hasSameModelType(workpackModel)) {
       throw new NegocioException(WORKPACK_MODEL_TYPE_MISMATCH);
     }
   }
@@ -87,9 +87,9 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
     final Set<WorkpackModel> linkedChildren = Optional.ofNullable(modelLinked.getChildren()).orElse(Collections.emptySet());
     final Iterable<WorkpackModel> modelChildrenLinked = new ArrayList<>(linkedChildren);
     final List<WorkpackModelLinkedDetailDto> childrenDetail = new ArrayList<>();
-    for(final WorkpackModel children : modelChildrenLinked) {
+    for (final WorkpackModel children : modelChildrenLinked) {
       final Optional<WorkpackModel> maybeOriginalEquivalent = findOriginalModelEquivalence(children, childrenOriginalModel);
-      if(maybeOriginalEquivalent.isPresent()) {
+      if (maybeOriginalEquivalent.isPresent()) {
         final WorkpackModelLinkedDetailDto dto = new WorkpackModelLinkedDetailDto();
         dto.setIdWorkpackModelOriginal(maybeOriginalEquivalent.get().getId());
         dto.setIdWorkpackModelLinked(children.getId());
@@ -113,14 +113,15 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
     this.belongsToRepository.save(belongsTo);
   }
 
+  @Transactional
   public void linkWorkpackToWorkpackModel(
     final Long idWorkpack,
-    final Long idworkpackModel,
+    final Long idWorkpackModel,
     final Long idPlan,
     final Long idParent
   ) {
     final Workpack workpack = this.workpackService.findById(idWorkpack);
-    final WorkpackModel workpackModel = this.workpackModelService.findById(idworkpackModel);
+    final WorkpackModel workpackModel = this.workpackModelService.findById(idWorkpackModel);
     ifNotSameModelTypeThrowException(workpack, workpackModel);
     this.makeWorkpackLinkedBelongTo(idPlan, workpack);
     this.ifHasParentCreateRelationshipAsChildren(idParent, workpack);
@@ -133,17 +134,40 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
     final Workpack workpack,
     final WorkpackModel workpackModel
   ) {
-    final IsLinkedTo isLinkedTo = new IsLinkedTo();
-    isLinkedTo.setWorkpack(workpack);
-    isLinkedTo.setWorkpackModel(workpackModel);
-    this.repository.save(isLinkedTo);
+    this.repository.linkWorkpackAndWorkpackModel(workpack.getId(), workpackModel.getId());
+    createLinkBetweenChildren(workpack.getChildren(), workpackModel.getChildren());
+  }
+
+  private void createLinkBetweenChildren(
+    Iterable<Workpack> workpacks,
+    Iterable<WorkpackModel> workpackModels
+  ) {
+    if (workpacks == null || workpackModels == null) {
+      return;
+    }
+    for (Workpack workpack : workpacks) {
+      createLinkWithCompatibleModel(workpack, workpackModels);
+    }
+  }
+
+  private void createLinkWithCompatibleModel(
+    Workpack workpack,
+    Iterable<WorkpackModel> workpackModels
+  ) {
+    final WorkpackModel originalModel = workpack.getWorkpackModelInstance();
+    for (WorkpackModel workpackModel : workpackModels) {
+      if (originalModel.isCompatibleWith(workpackModel)) {
+        createLinkBetween(workpack, workpackModel);
+        return;
+      }
+    }
   }
 
   private void ifHasParentCreateRelationshipAsChildren(
     final Long idParent,
     final Workpack workpack
   ) {
-    if(Objects.nonNull(idParent)) {
+    if (Objects.nonNull(idParent)) {
       final Workpack parent = this.workpackService.findById(idParent);
       parent.addChildren(workpack);
       this.workpackService.saveDefault(workpack);
@@ -198,7 +222,7 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
       idWorkpack,
       idworkpackModel
     );
-    if(!maybeLinkedTo.isPresent()) {
+    if (!maybeLinkedTo.isPresent()) {
       throw new NegocioException("Link not found.");
     }
 
@@ -209,10 +233,10 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
     final PropertyModel property,
     final Iterable<? extends PropertyModel> linkedPropertiesModel
   ) {
-    if(linkedPropertiesModel == null) return false;
-    for(final PropertyModel linkedPropertyModel : linkedPropertiesModel) {
-      if(property.hasSameType(linkedPropertyModel) &&
-         linkedPropertyModel.getName().equalsIgnoreCase(property.getName())) {
+    if (linkedPropertiesModel == null) return false;
+    for (final PropertyModel linkedPropertyModel : linkedPropertiesModel) {
+      if (property.hasSameType(linkedPropertyModel) &&
+        linkedPropertyModel.getName().equalsIgnoreCase(property.getName())) {
         return true;
       }
     }
@@ -236,14 +260,14 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
     final Workpack workpack,
     final Long idWorkpackModelLinked
   ) {
-    if(TRUE.equals(workpack.getPublicShared())) {
+    if (TRUE.equals(workpack.getPublicShared())) {
       return Collections.singletonList(of(workpack));
     }
     final Optional<IsSharedWith> sharedPermissions =
       this.workpackSharedRepository.commonSharedWithBetweenLinkedWorkpackModelAndWorkpack(
-      workpack.getId(),
-      idWorkpackModelLinked
-    );
+        workpack.getId(),
+        idWorkpackModelLinked
+      );
     return sharedPermissions.map(isSharedWith -> Collections.singletonList(of(isSharedWith)))
       .orElseGet(() -> Collections.singletonList(read()));
   }
@@ -274,18 +298,53 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
     return this.repository.findWorkpackParentLinked(idWorkpack, idPlan);
   }
 
-
   @Transactional
   public void unlink(
     final Long idWorkpack,
     final Long idWorkpackModel,
     final Long idPlan
   ) {
+    final Workpack workpack = this.workpackService.findById(idWorkpack);
+    final WorkpackModel workpackModel = this.workpackModelService.findById(idWorkpackModel);
     this.repository.unlinkPermissions(idPlan, idWorkpackModel, idWorkpack);
     this.repository.unlinkParentRelation(idPlan, idWorkpackModel, idWorkpack);
-    this.repository.unlinkWorkpackModelAndPlan(idPlan, idWorkpackModel, idWorkpack);
+    this.repository.unlinkPlan(idPlan, idWorkpack);
+    unlinkBetween(workpack, workpackModel);
     this.workpackRepository.findAllInHierarchy(idWorkpack)
       .forEach(worpackId -> this.dashboardService.calculate(worpackId, true));
+  }
+
+  private void unlinkBetween(
+    final Workpack workpack,
+    final WorkpackModel workpackModel
+  ) {
+    this.repository.unlinkWorkpackModel(workpack.getId(), workpackModel.getId());
+    unlinkBetweenChildren(workpack.getChildren(), workpackModel.getChildren());
+  }
+
+  private void unlinkBetweenChildren(
+    Iterable<Workpack> workpacks,
+    Iterable<WorkpackModel> workpackModels
+  ) {
+    if (workpacks == null || workpackModels == null) {
+      return;
+    }
+    for (Workpack workpack : workpacks) {
+      unlinkWithCompatibleModel(workpack, workpackModels);
+    }
+  }
+
+  private void unlinkWithCompatibleModel(
+    Workpack workpack,
+    Iterable<WorkpackModel> workpackModels
+  ) {
+    final WorkpackModel originalModel = workpack.getWorkpackModelInstance();
+    for (WorkpackModel workpackModel : workpackModels) {
+      if (originalModel.isCompatibleWith(workpackModel)) {
+        unlinkBetween(workpack, workpackModel);
+        return;
+      }
+    }
   }
 
 }

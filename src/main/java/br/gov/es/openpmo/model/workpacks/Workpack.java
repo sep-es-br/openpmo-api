@@ -10,7 +10,14 @@ import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.properties.Property;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
-import br.gov.es.openpmo.model.relations.*;
+import br.gov.es.openpmo.model.relations.BelongsTo;
+import br.gov.es.openpmo.model.relations.CanAccessWorkpack;
+import br.gov.es.openpmo.model.relations.IsBaselinedBy;
+import br.gov.es.openpmo.model.relations.IsFavoritedBy;
+import br.gov.es.openpmo.model.relations.IsLinkedTo;
+import br.gov.es.openpmo.model.relations.IsSharedWith;
+import br.gov.es.openpmo.model.relations.IsSnapshotOf;
+import br.gov.es.openpmo.model.relations.IsWorkpackSnapshotOf;
 import br.gov.es.openpmo.model.schedule.Schedule;
 import br.gov.es.openpmo.model.workpacks.models.ProjectModel;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
@@ -28,9 +35,18 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.util.ObjectUtils;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
-import static br.gov.es.openpmo.utils.WorkpackInstanceType.*;
+import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_DELIVERABLE;
+import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_MILESTONE;
+import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_ORGANIZER;
+import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_PORTFOLIO;
+import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_PROGRAM;
+import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_PROJECT;
 import static org.neo4j.ogm.annotation.Relationship.INCOMING;
 
 @JsonTypeInfo(use = Id.NAME, property = "type")
@@ -638,6 +654,23 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
     if (CollectionUtils.isEmpty(this.linkedTo)) return false;
     return this.linkedTo.stream()
       .anyMatch(relation -> relation.getWorkpackModelId().equals(idWorkpackModel));
+  }
+
+  @Transient
+  public boolean isLinkedTo(final WorkpackModel linkedModel) {
+    if (linkedModel == null) {
+      return false;
+    }
+    if (this.linkedTo == null) {
+      return false;
+    }
+    for (IsLinkedTo isLinkedTo : this.linkedTo) {
+      WorkpackModel originalModel = isLinkedTo.getWorkpackModel();
+      if (originalModel.equals(linkedModel)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public boolean isInstanceByOrLinkedTo(final Long idWorkpackModel) {

@@ -463,4 +463,11 @@ public abstract class WorkpackModel extends Entity {
   public boolean hasLinkedWorkpack() {
     return CollectionUtils.isNotEmpty(this.linkedToRelationship);
   }
+
+  @Transient
+  public boolean isCompatibleWith(WorkpackModel other) {
+    return Objects.equals(this.getModelName(), other.getModelName())
+      && Objects.equals(this.getType(), other.getType());
+  }
+
 }

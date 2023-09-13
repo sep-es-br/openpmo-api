@@ -12,7 +12,14 @@ import br.gov.es.openpmo.service.workpack.WorkpackSharedService;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -54,14 +61,14 @@ public class WorkpackLinkController {
   @PostMapping("/{id-workpack}/link/to/workpackModel/{id-workpack-model}")
   public ResponseEntity<ResponseBaseItens<ComboDto>> createLink(
     @PathVariable("id-workpack") final Long idWorkpack,
-    @PathVariable("id-workpack-model") final Long idworkpackModel,
+    @PathVariable("id-workpack-model") final Long idWorkpackModel,
     @RequestParam("id-plan") final Long idPlan,
     @RequestParam(value = "id-parent", required = false) final Long idParent,
     @RequestHeader("Authorization") final String authorization
   ) {
 
     this.canAccessService.ensureCanEditResource(idParent, authorization);
-    this.workpackLinkService.linkWorkpackToWorkpackModel(idWorkpack, idworkpackModel, idPlan, idParent);
+    this.workpackLinkService.linkWorkpackToWorkpackModel(idWorkpack, idWorkpackModel, idPlan, idParent);
     return ResponseEntity.ok(ResponseBaseItens.of(null));
   }
 
