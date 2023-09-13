@@ -5,7 +5,6 @@ import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.person.favorite.WorkpackFavoritedDetail;
 import br.gov.es.openpmo.dto.person.favorite.WorkpackFavoritedRequest;
 import br.gov.es.openpmo.service.actors.IsFavoritedByService;
-import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import io.swagger.annotations.Api;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,14 +28,8 @@ public class IsFavoritedByController {
 
   private final IsFavoritedByService isFavoritedByService;
 
-  private final ICanAccessService canAccessService;
-
-  public IsFavoritedByController(
-    final IsFavoritedByService isFavoritedByService,
-    final ICanAccessService canAccessService
-  ) {
+  public IsFavoritedByController(final IsFavoritedByService isFavoritedByService) {
     this.isFavoritedByService = isFavoritedByService;
-    this.canAccessService = canAccessService;
   }
 
   @Transactional
@@ -46,7 +39,6 @@ public class IsFavoritedByController {
     @RequestBody @Valid final WorkpackFavoritedRequest request,
     @Authorization final String authorization
   ) {
-    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
     this.isFavoritedByService.toggleFavorite(idWorkpack, request, authorization);
     return ResponseEntity.ok(ResponseBase.success());
   }

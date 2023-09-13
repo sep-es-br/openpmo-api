@@ -12,6 +12,7 @@ import br.gov.es.openpmo.repository.PersonRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.permissions.canaccess.CanAccessData;
+import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.workpack.GetWorkpackName;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.stereotype.Component;
@@ -37,13 +38,16 @@ public class IsFavoritedByService {
 
   private final IsFavoritedByRepository isFavoritedByRepository;
 
+  private final ICanAccessService canAccessService;
+
   public IsFavoritedByService(
     final TokenService tokenService,
     final GetWorkpackName getWorkpackName,
     final WorkpackRepository workpackRepository,
     final CanAccessData canAccessData,
     final PersonRepository personRepository,
-    final IsFavoritedByRepository isFavoritedByRepository
+    final IsFavoritedByRepository isFavoritedByRepository,
+    final ICanAccessService canAccessService
   ) {
     this.tokenService = tokenService;
     this.getWorkpackName = getWorkpackName;
@@ -51,6 +55,7 @@ public class IsFavoritedByService {
     this.canAccessData = canAccessData;
     this.personRepository = personRepository;
     this.isFavoritedByRepository = isFavoritedByRepository;
+    this.canAccessService = canAccessService;
   }
 
   public Set<WorkpackFavoritedDetail> findAllFavoritesWorkpack(
@@ -129,6 +134,7 @@ public class IsFavoritedByService {
       this.unfavorite(maybeFavorite.get());
       return;
     }
+    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
     this.favorite(request, person, workpack);
   }
 
