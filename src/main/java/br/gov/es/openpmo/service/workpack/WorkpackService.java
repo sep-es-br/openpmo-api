@@ -499,7 +499,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
         }
       }
     }
-    if (!propertyModelFound && propertyModel.isRequired()) {
+    if (!propertyModelFound && propertyModel.isRequired() && propertyModel.isActive()) {
       throw new NegocioException(PROPERTY_REQUIRED_NOT_FOUND + "$" + propertyModel.getLabel());
     }
   }

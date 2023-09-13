@@ -26,15 +26,26 @@ public interface StakeholderRepository extends Neo4jRepository<IsStakeholderIn, 
     @Param("idWorkpack") Long idWorkpack
   );
 
-  @Query("MATCH (p:Actor)-[is:IS_STAKEHOLDER_IN]->(o:Workpack) WHERE id(o) = $idWorkpack AND (id(p) = $idActor OR $idActor IS " +
-         "NULL) RETURN p,o,is")
+  @Query("MATCH (p:Actor)-[is:IS_STAKEHOLDER_IN]->(o:Workpack) " +
+    "WHERE id(o)=$idWorkpack AND ($idActor IS NULL OR id(p)=$idActor) " +
+    "RETURN p,o,is")
   List<IsStakeholderIn> findByIdWorkpackAndIdActor(
     @Param("idWorkpack") Long idWorkpack,
     @Param("idActor") Long idActor
   );
 
-  @Query("MATCH (p:Person)-[is:IS_STAKEHOLDER_IN]->(o:Workpack) WHERE id(o) = $idWorkpack AND (id(p) = $idPerson) RETURN p,o,is")
+  @Query("MATCH (p:Person)-[is:IS_STAKEHOLDER_IN]->(o:Workpack) " +
+    "WHERE id(o)=$idWorkpack AND id(p)=$idPerson " +
+    "RETURN p,o,is")
   List<IsStakeholderIn> findByIdWorkpackAndIdPerson(
+    @Param("idWorkpack") Long idWorkpack,
+    @Param("idPerson") Long idPerson
+  );
+
+  @Query("MATCH (p:Person)-[is:IS_STAKEHOLDER_IN]->(o:Workpack) " +
+    "WHERE id(o)=$idWorkpack AND id(p)=$idPerson " +
+    "RETURN count(is)>0")
+  boolean existsByIdWorkpackAndIdPerson(
     @Param("idWorkpack") Long idWorkpack,
     @Param("idPerson") Long idPerson
   );

@@ -196,6 +196,19 @@ public class StakeholderService {
     final StakeholderParamDto request,
     final String authorization
   ) {
+    final Long idWorkpack = Optional.of(request)
+      .map(StakeholderParamDto::getIdWorkpack)
+      .orElse(null);
+    final Long idPerson = Optional.of(request)
+      .map(StakeholderParamDto::getPerson)
+      .map(PersonStakeholderParamDto::getId)
+      .orElse(null);
+    if (this.repository.existsByIdWorkpackAndIdPerson(idWorkpack, idPerson)) {
+      throw new NegocioException(ApplicationMessage.ALREADY_EXISTS_PERMISSION);
+    }
+    if (this.workpackPermissionRepository.existsByIdWorkpackAndIdPerson(idWorkpack, idPerson)) {
+      throw new NegocioException(ApplicationMessage.ALREADY_EXISTS_PERMISSION);
+    }
     final Person target = this.createOrUpdatePerson(request);
     final Workpack workpack = this.serviceWorkpack.findByIdDefault(request.getIdWorkpack());
     final List<RoleDto> roles = request.getRoles();
@@ -270,14 +283,14 @@ public class StakeholderService {
     }
 
     final Person person = this.buildPerson(new Person(), request);
-    if (!this.personService.existsPersonByFullName(person.getFullName(), workpackId)) {
+    if (this.personService.existsPersonByFullName(person.getFullName(), workpackId)) {
       throw new NegocioException(ApplicationMessage.PERSON_ALREADY_EXISTS);
     }
     this.personService.save(person);
 
     final String key = personDto.getKey();
 
-    if (TRUE.equals(personDto.getIsUser()) && this.personService.existsByKey(key)) {
+    if (TRUE.equals(personDto.getIsUser()) && !this.personService.existsByKey(key)) {
       this.personService.createAuthenticationRelationship(key, personDto.getEmail(), personDto.getGuid(), person);
     }
 

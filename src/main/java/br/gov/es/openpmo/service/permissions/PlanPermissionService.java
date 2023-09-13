@@ -24,6 +24,7 @@ import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.journals.JournalCreator;
 import br.gov.es.openpmo.service.office.OfficeService;
 import br.gov.es.openpmo.service.office.plan.PlanService;
+import br.gov.es.openpmo.utils.ApplicationMessage;
 import br.gov.es.openpmo.utils.TextSimilarityScore;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -304,6 +305,16 @@ public class PlanPermissionService {
     final PlanPermissionParamDto request,
     final String authorization
   ) {
+    final Long idPlan = Optional.of(request)
+      .map(PlanPermissionParamDto::getIdPlan)
+      .orElse(null);
+    final Long idPerson = Optional.of(request)
+      .map(PlanPermissionParamDto::getPerson)
+      .map(PersonDto::getId)
+      .orElse(null);
+    if (this.repository.existsByIdWorkpackAndIdPerson(idPlan, idPerson)) {
+      throw new NegocioException(ApplicationMessage.ALREADY_EXISTS_PERMISSION);
+    }
     final Person author = this.getPersonByAuthorization(authorization);
     final Office office = this.officeService.findOfficeByPlan(request.getIdPlan())
       .orElseThrow(() -> new NegocioException(OFFICE_NOT_FOUND));

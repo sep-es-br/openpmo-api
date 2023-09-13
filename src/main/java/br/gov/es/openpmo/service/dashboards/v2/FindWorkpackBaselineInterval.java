@@ -48,7 +48,7 @@ public class FindWorkpackBaselineInterval {
     for (Baseline baseline : baselines) {
       final IsBaselinedBy baselinedBy = baseline.getBaselinedBy();
       final Workpack project = baselinedBy.getWorkpack();
-      final Workpack workpack = this.findWorkpackFromParent(project, workpackId);
+      final Workpack workpack = this.findWorkpackFromChildren(project, workpackId);
       DateInterval interval;
       if (workpack == null) {
         interval = getInterval(project, baseline);
@@ -139,22 +139,20 @@ public class FindWorkpackBaselineInterval {
     return new DateInterval(initialDate, endDate);
   }
 
-  private Workpack findWorkpackFromParent(Workpack workpack, Long toBeFound) {
+  private Workpack findWorkpackFromChildren(Workpack workpack, Long toBeFound) {
     if (workpack == null) {
       return null;
     }
-    final Set<Workpack> parents = workpack.getParent();
-    if (parents == null) {
+    if (Objects.equals(workpack.getId(), toBeFound)) {
+      return workpack;
+    }
+    final Set<Workpack> children = workpack.getChildren();
+    if (children == null) {
       return null;
     }
-    for (Workpack parent : parents) {
-      if (Objects.equals(parent.getId(), toBeFound)) {
-        return parent;
-      }
-    }
-    for (Workpack parent : parents) {
-      final Workpack found = findWorkpackFromParent(parent, toBeFound);
-      if (found != null && Objects.equals(found.getId(), toBeFound)) {
+    for (Workpack child : children) {
+      final Workpack found = findWorkpackFromChildren(child, toBeFound);
+      if (found != null) {
         return found;
       }
     }
