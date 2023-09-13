@@ -143,6 +143,16 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
     Long idWorkpack
   );
 
+  @Query("MATCH (person:Person {fullName: $fullName})-[:IS_IN_CONTACT_BOOK_OF]->(office:Office) " +
+    "OPTIONAL MATCH (person)-[:CAN_ACCESS_WORKPACK]->(workpack:Workpack)-[:BELONGS_TO]->(:Plan)-[:IS_ADOPTED_BY]->(office) " +
+    "WITH * " +
+    "WHERE id(workpack)=$idWorkpack " +
+    "RETURN count(person)>0")
+  boolean existsPersonByFullName(
+    String fullName,
+    Long idWorkpack
+  );
+
   @Query("MATCH (person:Person) " +
          "OPTIONAL MATCH (person)-[contact:IS_IN_CONTACT_BOOK_OF]->(office:Office) " +
          "WITH person, contact, office " +
@@ -229,5 +239,9 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
          "WHERE id(person)=$personId " +
          "RETURN person, belongsTo, isFavoritedBy, plan, workpack")
   Optional<Person> findPersonWithFavoriteWorkpacks(Long personId);
+
+  @Query("MATCH (person:Person)-[:IS_AUTHENTICATED_BY {key: $key}]->(:AuthService) " +
+    "RETURN count(person)>0")
+  boolean existsByKey(@Param("key") String key);
 
 }

@@ -45,6 +45,7 @@ import br.gov.es.openpmo.service.permissions.OfficePermissionService;
 import br.gov.es.openpmo.service.permissions.PlanPermissionService;
 import br.gov.es.openpmo.service.permissions.RoleService;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
+import br.gov.es.openpmo.utils.ApplicationMessage;
 import br.gov.es.openpmo.utils.TextSimilarityScore;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -195,12 +196,13 @@ public class StakeholderService {
     final StakeholderParamDto request,
     final String authorization
   ) {
-    final Person author = this.getPersonByAuthorization(authorization);
     final Person target = this.createOrUpdatePerson(request);
-    final Workpack workpack = this.serviceWorkpack.findById(request.getIdWorkpack());
-    if (request.getRoles() != null && !(request.getRoles()).isEmpty()) {
-      request.getRoles().forEach(role -> this.repository.save(
-        this.buildIsStakeholderIn(
+    final Workpack workpack = this.serviceWorkpack.findByIdDefault(request.getIdWorkpack());
+    final List<RoleDto> roles = request.getRoles();
+    if (roles != null && !roles.isEmpty()) {
+      final Collection<IsStakeholderIn> isStakeholderIns = new ArrayList<>();
+      for (RoleDto role : roles) {
+        final IsStakeholderIn isStakeholderIn = this.buildIsStakeholderIn(
           target,
           null,
           workpack,
@@ -208,30 +210,37 @@ public class StakeholderService {
           role.getFrom(),
           role.getTo(),
           role.isActive()
-        )));
+        );
+        isStakeholderIns.add(isStakeholderIn);
+      }
+      this.repository.saveAll(isStakeholderIns);
     }
-    if (request.getPermissions() != null && !(request.getPermissions()).isEmpty()) {
+    final List<PermissionDto> permissions = request.getPermissions();
+    if (permissions != null && !permissions.isEmpty()) {
       this.saveIsInContactBook(
         request,
         target
       );
-      request.getPermissions().forEach(permission -> {
-        this.workpackPermissionRepository.save(
-          this.buildCanAccessWorkpack(
-            target,
-            workpack,
-            permission,
-            permission.getId(),
-            request.getIdPlan()
-          ));
-        this.journalCreator.workpackPermission(
-          workpack,
+      final Collection<CanAccessWorkpack> canAccessWorkpacks = new ArrayList<>();
+      for (PermissionDto permission : permissions) {
+        final CanAccessWorkpack canAccessWorkpack = this.buildCanAccessWorkpack(
           target,
-          author,
-          request.getGratherPermissionLevel(),
-          JournalAction.CREATED
+          workpack,
+          permission,
+          permission.getId(),
+          request.getIdPlan()
         );
-      });
+        canAccessWorkpacks.add(canAccessWorkpack);
+      }
+      this.workpackPermissionRepository.saveAll(canAccessWorkpacks);
+      final Person author = this.getPersonByAuthorization(authorization);
+      this.journalCreator.workpackPermission(
+        workpack,
+        target,
+        author,
+        request.getGratherPermissionLevel(),
+        JournalAction.CREATED
+      );
     }
     return target;
   }
@@ -243,8 +252,7 @@ public class StakeholderService {
 
   private Person createOrUpdatePerson(final StakeholderParamDto request) {
     final PersonStakeholderParamDto personDto = request.getPerson();
-
-    if (this.isInvalidNonUser(personDto)) {
+    if (!personDto.getIsUser() && personDto.getContactEmail() == null) {
       throw new NegocioException(EMAIL_NOT_NULL);
     }
 
@@ -255,46 +263,25 @@ public class StakeholderService {
       final Optional<Person> maybePerson = this.personService.maybeFindPersonById(personId);
 
       if (maybePerson.isPresent()) {
-        final Person person = this.buildPerson(
-          maybePerson.get(),
-          request
-        );
-        this.createOrUpdateContactInformation(
-          request,
-          personId,
-          workpackId,
-          person
-        );
+        final Person person = this.buildPerson(maybePerson.get(), request);
+        this.createOrUpdateContactInformation(request, personId, workpackId, person);
         return person;
       }
     }
 
-    final Person person = this.buildPerson(
-      new Person(),
-      request
-    );
-    this.throwExceptionIfFullNameAlreadyExists(
-      person,
-      workpackId
-    );
+    final Person person = this.buildPerson(new Person(), request);
+    if (!this.personService.existsPersonByFullName(person.getFullName(), workpackId)) {
+      throw new NegocioException(ApplicationMessage.PERSON_ALREADY_EXISTS);
+    }
     this.personService.save(person);
 
     final String key = personDto.getKey();
 
-    if (TRUE.equals(personDto.getIsUser()) && this.authenticationNotExists(key)) {
-      this.personService.createAuthenticationRelationship(
-        key,
-        request.getPerson().getEmail(),
-        request.getPerson().getGuid(),
-        person
-      );
+    if (TRUE.equals(personDto.getIsUser()) && this.personService.existsByKey(key)) {
+      this.personService.createAuthenticationRelationship(key, personDto.getEmail(), personDto.getGuid(), person);
     }
 
-    this.createContactRelationshipWithOffice(
-      person,
-      request,
-      new IsInContactBookOf()
-    );
+    this.createContactRelationshipWithOffice(person, request, new IsInContactBookOf());
     return person;
   }
 
@@ -323,17 +310,10 @@ public class StakeholderService {
     final StakeholderParamDto request,
     final Person person
   ) {
-    final Office office = this.officeService
-      .findOfficeByWorkpack(
-        request.getIdWorkpack(),
-        request.getIdPlan()
-      )
+    final Office office = this.officeService.findOfficeByPlan(request.getIdPlan())
       .orElseThrow(() -> new NegocioException(OFFICE_NOT_FOUND));
 
-    if (!this.isInContactBookOfService.existsByPersonIdAndOfficeId(
-      person.getId(),
-      office.getId()
-    )) {
+    if (!this.isInContactBookOfService.existsByPersonIdAndOfficeId(person.getId(), office.getId())) {
       final IsInContactBookOf isInContactBookOf = new IsInContactBookOf();
       isInContactBookOf.setPerson(person);
       isInContactBookOf.setOffice(office);
@@ -357,10 +337,6 @@ public class StakeholderService {
       workpack,
       planId
     );
-  }
-
-  private boolean isInvalidNonUser(final PersonStakeholderParamDto personDto) {
-    return !personDto.getIsUser() && personDto.getContactEmail() == null;
   }
 
   private Person buildPerson(
@@ -396,21 +372,6 @@ public class StakeholderService {
     );
   }
 
-  private void throwExceptionIfFullNameAlreadyExists(
-    final Person person,
-    final Long idWorkpack
-  ) {
-    this.personService.findPersonByFullName(
-      person.getFullName(),
-      idWorkpack
-    );
-  }
-
-  private boolean authenticationNotExists(final String key) {
-    final Optional<Person> maybePerson = this.personService.findByKey(key);
-    return !maybePerson.isPresent();
-  }
-
   private void createContactRelationshipWithOffice(
     final Person person,
     final StakeholderParamDto request,
@@ -423,11 +384,7 @@ public class StakeholderService {
     isInContactBookOf.setPhoneNumber(dto.getPhoneNumber());
     isInContactBookOf.setPerson(person);
 
-    final Office officeByWorkpack = this.officeService
-      .findOfficeByWorkpack(
-        request.getIdWorkpack(),
-        request.getIdPlan()
-      )
+    final Office officeByWorkpack = this.officeService.findOfficeByPlan(request.getIdPlan())
       .orElseThrow(() -> new NegocioException(OFFICE_NOT_FOUND));
 
     isInContactBookOf.setOffice(officeByWorkpack);
@@ -670,7 +627,7 @@ public class StakeholderService {
     );
   }
 
-  private PermissionLevelEnum getGratherPermissionLevel(final List<? extends CanAccessWorkpack> permissions) {
+  private PermissionLevelEnum getGratherPermissionLevel(final Collection<? extends CanAccessWorkpack> permissions) {
     final boolean hasEdit = permissions.stream()
       .map(CanAccessWorkpack::getPermissionLevel)
       .anyMatch(level -> level.equals(PermissionLevelEnum.EDIT));
@@ -954,7 +911,7 @@ public class StakeholderService {
   ) {
     final Map<Actor, List<RoleDto>> mappedRoles = this.mapAndExtractRoles(query);
     final Map<Person, List<PermissionDto>> mappedPermissions = StakeholderService.mapAndExtractPermissions(query);
-    final Set<StakeholderDto> stakeholderDtos = new HashSet<>();
+    final Collection<StakeholderDto> stakeholderDtos = new HashSet<>();
     mappedRoles.keySet().forEach(actor -> {
       final StakeholderDto stakeholderDto = new StakeholderDto();
       final double nameScore = this.textSimilarityScore.execute(actor.getName(), term);

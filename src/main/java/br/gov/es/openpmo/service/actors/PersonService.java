@@ -302,6 +302,13 @@ public class PersonService {
     }
   }
 
+  public boolean existsPersonByFullName(
+    final String fullName,
+    final Long idWorkpack
+  ) {
+    return this.repository.existsPersonByFullName(fullName, idWorkpack);
+  }
+
   public Optional<PersonGetByIdDto> maybeFindPersonDataByKey(
     final String key,
     final Long idOffice,
@@ -353,6 +360,10 @@ public class PersonService {
 
   public Optional<Person> findByKey(final String key) {
     return this.repository.findByKey(key);
+  }
+
+  public boolean existsByKey(final String key) {
+    return this.repository.existsByKey(key);
   }
 
   public Person findPersonByKey(final String key) {
