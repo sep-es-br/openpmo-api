@@ -107,8 +107,10 @@ import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -677,12 +679,14 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final Long idParent
   ) {
     validateWorkpack(workpack);
-    this.workpackRepository.save(workpack);
+    this.workpackRepository.save(workpack, 0);
+
     this.ifNewWorkpackAddRelationship(
       workpack,
       idPlan,
       idParent
     );
+
     return EntityDto.of(workpack);
   }
 
@@ -693,6 +697,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
   ) {
     if (idPlan != null && idParent != null) {
       final Plan workpackParentPlan = this.planService.findNotLinkedBelongsTo(idParent);
+
       if (!idPlan.equals(workpackParentPlan.getId())) {
         throw new NegocioException(ApplicationMessage.WORKPACK_PARENT_PLAN_MISMATCH);
       }
@@ -701,12 +706,14 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
       if (!this.planService.existsById(idPlan)) {
         throw new NegocioException(PLAN_NOT_FOUND);
       }
+
       this.workpackRepository.createBelongsToRelationship(workpack.getId(), idPlan);
     }
     if (idParent != null) {
       if (!this.existsById(idParent)) {
         throw new NegocioException(WORKPACK_NOT_FOUND);
       }
+
       this.workpackRepository.createIsInRelationship(workpack.getId(), idParent);
     }
   }

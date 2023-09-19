@@ -50,9 +50,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Api
@@ -161,15 +164,6 @@ public class WorkpackController {
       : ResponseEntity.ok(new ResponseBaseWorkpack().setData(response).setMessage(SUCESSO).setSuccess(true));
   }
 
-  private WorkpackDetailParentDto mapToWorkpackDetailParentDto(
-    final Workpack workpack,
-    final Long idWorkpackModel
-  ) {
-    final WorkpackDetailParentDto itemDetail = this.workpackService.getWorkpackDetailParentDto(workpack);
-    itemDetail.applyLinkedStatus(workpack, idWorkpackModel);
-    return itemDetail;
-  }
-
   @GetMapping("/parent")
   public ResponseEntity<ResponseBaseWorkpack> indexBase(
     @RequestParam("id-plan") final Long idPlan,
@@ -265,18 +259,23 @@ public class WorkpackController {
       Arrays.asList(request.getIdPlan(), request.getIdParent()),
       authorization
     );
+
     final Workpack workpack = this.workpackService.getWorkpack(request);
+
     final EntityDto response = this.workpackService.save(
       workpack,
       request.getIdPlan(),
       request.getIdParent()
     );
+
     final Long idPerson = this.tokenService.getUserId(authorization);
+
     this.journalCreator.edition(
       workpack,
       JournalAction.CREATED,
       idPerson
     );
+
     if (workpack instanceof Milestone) {
       this.workpackService.calculateDashboard(workpack, true);
     }
@@ -430,6 +429,15 @@ public class WorkpackController {
     final WorkpackHasChildrenResponse response = this.workpackHasChildren.execute(idWorkpack, authorization);
 
     return ResponseEntity.ok(ResponseBase.of(response));
+  }
+
+  private WorkpackDetailParentDto mapToWorkpackDetailParentDto(
+    final Workpack workpack,
+    final Long idWorkpackModel
+  ) {
+    final WorkpackDetailParentDto itemDetail = this.workpackService.getWorkpackDetailParentDto(workpack);
+    itemDetail.applyLinkedStatus(workpack, idWorkpackModel);
+    return itemDetail;
   }
 
 }

@@ -544,7 +544,10 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
     "AND id(plan)=$idPlan " +
     "RETURN workpack, [" +
     "  [ (workpack)-[ii:IS_INSTANCE_BY]->(wm:WorkpackModel) | [ii, wm] ], " +
-    "  [ (workpack)<-[ca:CAN_ACCESS_WORKPACK]-(p:Person) | [ca, p] ] " +
+    "  [ (workpack)<-[ca:CAN_ACCESS_WORKPACK]-(p:Person) | [ca, p] ], " +
+    "  [ (workpack)-[i:IS_IN*]->(pw:Workpack) | [i, pw] ], " +
+    "  [ (pw)-[ii2:IS_INSTANCE_BY]->(wm2:WorkpackModel) | [ii2, wm2] ], " +
+    "  [ (pw)<-[ca2:CAN_ACCESS_WORKPACK]-(p2:Person) | [ca2, p2] ] " +
     "]"
   )
   Optional<Workpack> findByIdWorkpackAndIdPlan(
