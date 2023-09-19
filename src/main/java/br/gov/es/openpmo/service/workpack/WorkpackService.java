@@ -679,7 +679,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final Long idParent
   ) {
     validateWorkpack(workpack);
-    this.workpackRepository.save(workpack, 0);
+    this.workpackRepository.save(workpack);
 
     this.ifNewWorkpackAddRelationship(
       workpack,
