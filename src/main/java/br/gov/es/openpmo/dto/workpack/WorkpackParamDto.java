@@ -1,9 +1,11 @@
 package br.gov.es.openpmo.dto.workpack;
 
+import br.gov.es.openpmo.model.workpacks.Workpack;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.swagger.annotations.ApiModel;
+import org.modelmapper.ModelMapper;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -84,5 +86,7 @@ public abstract class WorkpackParamDto {
     return dateDto.map(DateDto::getReason)
       .orElse(null);
   }
+
+  public abstract Workpack getWorkpack(ModelMapper modelMapper);
 
 }

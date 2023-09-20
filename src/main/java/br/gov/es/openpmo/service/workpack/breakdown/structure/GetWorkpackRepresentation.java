@@ -2,13 +2,11 @@ package br.gov.es.openpmo.service.workpack.breakdown.structure;
 
 import br.gov.es.openpmo.dto.dashboards.v2.SimpleDashboard;
 import br.gov.es.openpmo.dto.schedule.ScheduleDto;
-import br.gov.es.openpmo.dto.workpack.WorkpackName;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.MilestoneRepresentation;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.ScheduleMeasureUnit;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.ScheduleRepresentation;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.WorkpackRepresentation;
 import br.gov.es.openpmo.enumerator.MilestoneStatus;
-import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.office.UnitMeasure;
 import br.gov.es.openpmo.model.properties.HasValue;
 import br.gov.es.openpmo.model.schedule.Schedule;
@@ -24,7 +22,6 @@ import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.dashboards.v2.DashboardService;
 import br.gov.es.openpmo.service.schedule.ScheduleService;
 import br.gov.es.openpmo.service.workpack.MilestoneService;
-import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -62,9 +59,7 @@ public class GetWorkpackRepresentation {
     final Long workpackId = workpack.getId();
     workpackRepresentation.setIdWorkpack(workpackId);
     workpackRepresentation.setWorkpackType(workpack.getType());
-    final WorkpackName workpackName = this.workpackRepository.findWorkpackNameAndFullname(workpackId)
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NAME_NOT_FOUND));
-    workpackRepresentation.setWorkpackName(workpackName.getName());
+    workpackRepresentation.setWorkpackName(this.workpackRepository.findWorkpackName(workpackId));
     if (this.hasDashboard(workpack)) {
       final SimpleDashboard dashboard = this.dashboardService.buildSimple(workpackId);
       workpackRepresentation.setDashboard(dashboard);

@@ -50,12 +50,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Api
@@ -260,13 +257,9 @@ public class WorkpackController {
       authorization
     );
 
-    final Workpack workpack = this.workpackService.getWorkpack(request);
+    final Workpack workpack = this.workpackService.criarWorkpack(request);
 
-    final EntityDto response = this.workpackService.save(
-      workpack,
-      request.getIdPlan(),
-      request.getIdParent()
-    );
+    final EntityDto response = EntityDto.of(workpack);
 
     final Long idPerson = this.tokenService.getUserId(authorization);
 

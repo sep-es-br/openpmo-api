@@ -318,6 +318,13 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
          "fullNameProperty.value AS fullName")
   Optional<WorkpackName> findWorkpackNameAndFullname(@Param("idWorkpack") Long idWorkpack);
 
+  @Query("MATCH (workpack:Workpack)-[:IS_INSTANCE_BY]->(:WorkpackModel)" +
+    "<-[:FEATURES]-(:PropertyModel{name:'name'})" +
+    "<-[:IS_DRIVEN_BY]-(nameProperty:Property)-[:FEATURES]->(workpack) " +
+    "WHERE id(workpack)=$idWorkpack " +
+    "RETURN nameProperty.value")
+  String findWorkpackName(@Param("idWorkpack") Long idWorkpack);
+
   @Query("MATCH (workpack:Workpack) " +
          "OPTIONAL MATCH (workpack)<-[snapshotOf:IS_SNAPSHOT_OF]-(:Workpack) " +
          "WITH workpack, snapshotOf " +

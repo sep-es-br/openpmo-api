@@ -1,7 +1,6 @@
 package br.gov.es.openpmo.service.workpack;
 
 import br.gov.es.openpmo.configuration.properties.AppProperties;
-import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.plan.PlanDto;
 import br.gov.es.openpmo.dto.workpack.CurrencyDto;
 import br.gov.es.openpmo.dto.workpack.DateDto;
@@ -86,6 +85,7 @@ import br.gov.es.openpmo.model.workpacks.models.ProjectModel;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.CustomFilterRepository;
 import br.gov.es.openpmo.repository.MilestoneRepository;
+import br.gov.es.openpmo.repository.PropertyRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllWorkpackByParentUsingCustomFilter;
 import br.gov.es.openpmo.repository.custom.filters.FindAllWorkpackUsingCustomFilter;
@@ -204,6 +204,8 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
 
   private final GetWorkpackName getWorkpackName;
 
+  private final PropertyRepository propertyRepository;
+
   @Autowired
   public WorkpackService(
     final WorkpackModelService workpackModelService,
@@ -225,7 +227,8 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final HasScheduleSessionActive hasScheduleSessionActive,
     final MilestoneRepository milestoneRepository,
     final AppProperties appProperties,
-    final GetWorkpackName getWorkpackName
+    final GetWorkpackName getWorkpackName,
+    final PropertyRepository propertyRepository
   ) {
     this.workpackModelService = workpackModelService;
     this.planService = planService;
@@ -247,6 +250,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     this.milestoneRepository = milestoneRepository;
     this.appProperties = appProperties;
     this.getWorkpackName = getWorkpackName;
+    this.propertyRepository = propertyRepository;
   }
 
   private static void addSharedWith(
@@ -668,56 +672,6 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
 
   public void saveDefault(final Workpack workpack) {
     this.workpackRepository.save(workpack);
-  }
-
-  @Transactional
-  public EntityDto save(
-    final Workpack workpack,
-    final Long idPlan,
-    final Long idParent
-  ) {
-    validateWorkpack(workpack);
-    this.workpackRepository.save(workpack);
-
-    this.ifNewWorkpackAddRelationship(
-      workpack,
-      idPlan,
-      idParent
-    );
-
-    return EntityDto.of(workpack);
-  }
-
-  private void ifNewWorkpackAddRelationship(
-    final Workpack workpack,
-    final Long idPlan,
-    final Long idParent
-  ) {
-    if (idPlan != null && idParent != null) {
-      final Plan workpackParentPlan = this.planService.findNotLinkedBelongsTo(idParent);
-
-      if (!idPlan.equals(workpackParentPlan.getId())) {
-        throw new NegocioException(ApplicationMessage.WORKPACK_PARENT_PLAN_MISMATCH);
-      }
-    }
-    if (idPlan != null) {
-      if (!this.planService.existsById(idPlan)) {
-        throw new NegocioException(PLAN_NOT_FOUND);
-      }
-
-      this.workpackRepository.createBelongsToRelationship(workpack.getId(), idPlan);
-    }
-    if (idParent != null) {
-      if (!this.existsById(idParent)) {
-        throw new NegocioException(WORKPACK_NOT_FOUND);
-      }
-
-      this.workpackRepository.createIsInRelationship(workpack.getId(), idParent);
-    }
-  }
-
-  private boolean existsById(final Long id) {
-    return this.workpackRepository.existsById(id);
   }
 
   public Workpack findById(final Long id) {
@@ -1236,6 +1190,51 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     }
     if (workpack != null) {
       workpack.setProperties(properties);
+    }
+    return workpack;
+  }
+
+  @Transactional
+  public Workpack criarWorkpack(final WorkpackParamDto workpackParamDto) {
+    Set<Property> properties = null;
+    List<? extends PropertyDto> propertyDtos = workpackParamDto.getProperties();
+    if (propertyDtos != null && !propertyDtos.isEmpty()) {
+      properties = this.getProperties(propertyDtos);
+    }
+    WorkpackModel workpackModel = this.workpackModelService.findById(workpackParamDto.getIdWorkpackModel());
+    Iterable<PropertyModel> propertyModels = workpackModel.getProperties();
+    for (PropertyModel propertyModel : propertyModels) {
+      validateProperty(propertyModel, properties);
+    }
+    workpackParamDto.setProperties(null);
+    Workpack workpack = workpackParamDto.getWorkpack(modelMapper);
+    workpack = this.workpackRepository.save(workpack);
+    this.workpackRepository.createIsInstanceByRelationship(workpack.getId(), workpackModel.getId());
+    if (properties != null && !properties.isEmpty()) {
+      final Iterable<Property> savedProperties = this.propertyRepository.saveAll(properties);
+      for (Property property : savedProperties) {
+        this.propertyRepository.createFeaturesRelationship(property.getId(), workpack.getId());
+      }
+    }
+    Long idPlan = workpackParamDto.getIdPlan();
+    Long idParent = workpackParamDto.getIdParent();
+    if (idPlan != null && idParent != null) {
+      final Plan workpackParentPlan = this.planService.findNotLinkedBelongsTo(idParent);
+      if (!idPlan.equals(workpackParentPlan.getId())) {
+        throw new NegocioException(ApplicationMessage.WORKPACK_PARENT_PLAN_MISMATCH);
+      }
+    }
+    if (idPlan != null) {
+      if (!this.planService.existsById(idPlan)) {
+        throw new NegocioException(PLAN_NOT_FOUND);
+      }
+      this.workpackRepository.createBelongsToRelationship(workpack.getId(), idPlan);
+    }
+    if (idParent != null) {
+      if (!this.workpackRepository.existsById(idParent)) {
+        throw new NegocioException(WORKPACK_NOT_FOUND);
+      }
+      this.workpackRepository.createIsInRelationship(workpack.getId(), idParent);
     }
     return workpack;
   }

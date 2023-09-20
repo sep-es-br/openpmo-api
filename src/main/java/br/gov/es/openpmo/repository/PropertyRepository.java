@@ -81,4 +81,12 @@ public interface PropertyRepository extends Neo4jRepository<Property, Long> {
   )
   Optional<Property> findByWorkpackIdAndPropertyModelId(Long idWorkpack, Long idPropertyModel);
 
+  @Query("match (p:Property), (w:Workpack) " +
+    "where id(p)=$propertyId and id(w)=$workpackId " +
+    "create (p)-[:FEATURES]->(w)")
+  void createFeaturesRelationship(
+    Long propertyId,
+    Long workpackId
+  );
+
 }
