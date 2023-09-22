@@ -699,7 +699,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
       properties
     );
     validateWorkpack(workpackUpdate);
-    final Workpack savedWorkpack = this.workpackRepository.save(workpackUpdate, 1);
+    final Workpack savedWorkpack = this.workpackRepository.save(workpackUpdate, 2);
     if (workpack instanceof Milestone) {
       final boolean concluded = this.milestoneRepository.isConcluded(workpackId);
       final boolean onActualBaseline = this.milestoneRepository.isOnActualBaseline(workpackId);

@@ -96,6 +96,7 @@ public class GetWorkpackRepresentation {
         workpackRepresentation.setSchedule(scheduleRepresentation);
       }
     }
+
     return workpackRepresentation;
   }
 

@@ -1,11 +1,9 @@
 package br.gov.es.openpmo.service.properties;
 
-import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.model.properties.Property;
 import br.gov.es.openpmo.repository.CustomFilterRepository;
 import br.gov.es.openpmo.repository.PropertyRepository;
-import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -36,7 +34,7 @@ public class GetSorterProperty {
 
     if (maybeDefaultCustomFilter.isPresent()) {
 
-      final Optional<Property> property = this.repository.findByWorkpackIdAndPropertyModelId(
+      final Optional<Property<?,?>> property = this.repository.findByWorkpackIdAndPropertyModelId(
         idWorkpack,
         Long.valueOf(maybeDefaultCustomFilter.get().getSortBy()
         )
@@ -48,10 +46,9 @@ public class GetSorterProperty {
       return SorterProperty.definedByCustomFilter(property.get(), maybeDefaultCustomFilter.get());
     }
 
-    final Property<?, ?> property = this.repository.findWorkpackModelSorterPropertyByWorkpackId(idWorkpack)
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_SORTER_PROPERTY_NOT_FOUND));
-
-    return SorterProperty.definedByWorkpackModel(property);
+    return this.repository.findWorkpackModelSorterPropertyByWorkpackId(idWorkpack)
+      .map(SorterProperty::definedByWorkpackModel)
+      .orElse(SorterProperty.empty());
   }
 
 }

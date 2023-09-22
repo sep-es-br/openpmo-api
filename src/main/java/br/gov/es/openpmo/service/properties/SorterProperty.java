@@ -44,7 +44,7 @@ public class SorterProperty<T> {
     );
   }
 
-  public static SorterProperty<Void> empty() {
+  public static <T> SorterProperty<T> empty() {
     return new SorterProperty<>(
       null,
       SortByDirectionEnum.ASC,
