@@ -74,12 +74,12 @@ public class DashboardService implements IDashboardService {
   ) {
     final YearMonth valid = DashboardService.thisOrPreviousMonth(yearMonth);
 
-    final YearMonth minDate = dateList.parallelStream()
+    final YearMonth minDate = dateList.stream()
       .min(LocalDate::compareTo)
       .map(YearMonth::from)
       .orElse(valid);
 
-    final YearMonth maxDate = dateList.parallelStream()
+    final YearMonth maxDate = dateList.stream()
       .max(LocalDate::compareTo)
       .map(YearMonth::from)
       .orElse(valid);
@@ -119,7 +119,7 @@ public class DashboardService implements IDashboardService {
       return true;
     }
 
-    return baselines.parallelStream()
+    return baselines.stream()
       .map(Baseline::getId)
       .anyMatch(id -> Objects.equals(dataChart.getIdBaseline(), id));
   }
@@ -186,7 +186,7 @@ public class DashboardService implements IDashboardService {
   }
 
   private TripleConstraintDataChart getTripleConstraint(final DashboardParameters parameters) {
-    return this.getTripleConstraintList(parameters).parallelStream().findFirst().orElse(null);
+    return this.getTripleConstraintList(parameters).stream().findFirst().orElse(null);
   }
 
   private BigDecimal getEarnedValue(final Optional<PerformanceIndexesByStep> indexes) {
@@ -238,14 +238,14 @@ public class DashboardService implements IDashboardService {
   ) {
     final List<Baseline> filteredBaselines = this.getBaselines(workpackId, baselineId);
 
-    final List<LocalDate> dateList = tripleConstraintData.parallelStream()
+    final List<LocalDate> dateList = tripleConstraintData.stream()
       .map(TripleConstraintData::getMesAno)
       .collect(Collectors.toList());
 
     final YearMonth finalYearMonth = DashboardService.clampYearMonth(yearMonth, dateList);
 
     return tripleConstraintData
-      .parallelStream()
+      .stream()
       .map(TripleConstraintData::getResponse)
       .filter(dataChart -> DashboardService.samePeriod(dataChart, finalYearMonth))
       .filter(dataChart -> DashboardService.sameBaseline(dataChart, baselineId, filteredBaselines))
@@ -260,7 +260,7 @@ public class DashboardService implements IDashboardService {
       this.baselineRepository.findApprovedOrProposedBaselinesByAnyWorkpackId(workpackId);
 
     if (baselineId != null) {
-      return baselines.parallelStream()
+      return baselines.stream()
         .filter(baseline -> Objects.equals(baseline.getId(), baselineId))
         .collect(Collectors.toList());
     }
@@ -364,7 +364,7 @@ public class DashboardService implements IDashboardService {
     final YearMonth yearMonth
   ) {
     final List<LocalDate> dateList = earnedValueAnalysis.getPerformanceIndexes()
-      .parallelStream()
+      .stream()
       .map(PerformanceIndexesByStep::getDate)
       .map(YearMonth::atEndOfMonth)
       .collect(Collectors.toList());
@@ -382,7 +382,7 @@ public class DashboardService implements IDashboardService {
     final YearMonth yearMonth
   ) {
     final List<LocalDate> dateList = earnedValueAnalysis.getEarnedValueByStep()
-      .parallelStream()
+      .stream()
       .map(EarnedValueByStep::getDate)
       .map(YearMonth::atEndOfMonth)
       .collect(Collectors.toList());

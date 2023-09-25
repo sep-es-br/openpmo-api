@@ -176,7 +176,7 @@ public class RoleService {
     final String key
   ) {
     return this.acessoCidadaoApi.findAllPublicAgents(idPerson)
-      .parallelStream()
+      .stream()
       .filter(publicAgent -> Objects.equals(publicAgent.getSub(), key))
       .findFirst()
       .orElse(null);

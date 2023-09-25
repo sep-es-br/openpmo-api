@@ -146,7 +146,7 @@ public class WorkpackController {
       return ResponseEntity.noContent().build();
     }
 
-    final List<WorkpackDetailParentDto> response = workpacks.parallelStream()
+    final List<WorkpackDetailParentDto> response = workpacks.stream()
       .filter(workpack -> this.canAccessData.execute(workpack.getId(), authorization).canReadResource())
       .map(workpack -> this.mapToWorkpackDetailParentDto(workpack, idWorkpackModel))
       .collect(Collectors.toList());
@@ -186,7 +186,7 @@ public class WorkpackController {
       workpackLinked
     );
 
-    final List<WorkpackDetailParentDto> verify = workpacks.parallelStream()
+    final List<WorkpackDetailParentDto> verify = workpacks.stream()
       .filter(workpack -> this.canAccessData.execute(workpack.getId(), authorization).canReadResource())
       .map(workpack -> this.mapToWorkpackDetailParentDto(
         workpack,
@@ -198,7 +198,7 @@ public class WorkpackController {
       return ResponseEntity.noContent().build();
     }
 
-    verify.parallelStream().filter(workpackDetailDto -> !workpackDetailDto.isCanceled())
+    verify.stream().filter(workpackDetailDto -> !workpackDetailDto.isCanceled())
       .forEach(workpackDetailDto -> {
         final SimpleDashboard dashboard = this.dashboardService.buildSimple(workpackDetailDto.getId());
         workpackDetailDto.setDashboard(dashboard);

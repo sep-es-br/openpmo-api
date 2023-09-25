@@ -219,7 +219,7 @@ public class PersonService {
       scope
     );
     final long total = streamableQueryResult.stream().count();
-    final List<PersonListDto> response = streamableQueryResult.stream().parallel()
+    final List<PersonListDto> response = streamableQueryResult.stream()
       .skip(pageable.getOffset())
       .limit(pageable.getPageSize())
       .map(query -> PersonListDto.of(query, uriComponentsBuilder))

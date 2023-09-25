@@ -14,7 +14,7 @@ public interface Scope {
 
     default void enablePermission() {
         this.setHasPermission(true);
-        this.getChildren().parallelStream().forEach(Scope::enablePermission);
+        this.getChildren().stream().forEach(Scope::enablePermission);
     }
 
     default void disablePermission() {

@@ -93,7 +93,7 @@ public class MenuService {
 
     final List<Office> offices = this.officeService.findAll();
 
-    offices.parallelStream().forEach(office -> {
+    offices.stream().forEach(office -> {
       final List<PermissionDto> permissions = this.fetchOfficePermissions(new PortfolioMenuRequest(office.getId(), idUser));
 
       final boolean hasPermission = this.hasAnyPermission(idUser, permissions);
@@ -266,7 +266,7 @@ public class MenuService {
 
     final Set<WorkpackMenuDto> generalMenuItem = Collections.synchronizedSet(new HashSet<>(0));
 
-    workpacks.parallelStream().forEach(workpack -> {
+    workpacks.stream().forEach(workpack -> {
       final Set<BelongsTo> workpackBelongsToRelation = workpack.getBelongsTo();
 
       final boolean isLinked = workpackBelongsToRelation.stream()

@@ -17,7 +17,7 @@ public class GetPortfolioParents implements IGetPortfolioParents {
 
   @Override
   public PortfolioParentsResponse execute(final Long idPlan, final Long idWorkpack) {
-    final List<Long> parentsId = this.repository.findWorkpackParentsHierarchy(idPlan, idWorkpack).parallelStream()
+    final List<Long> parentsId = this.repository.findWorkpackParentsHierarchy(idPlan, idWorkpack).stream()
       .map(Workpack::getId)
       .collect(Collectors.toList());
     return PortfolioParentsResponse.of(parentsId);
