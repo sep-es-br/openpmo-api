@@ -154,6 +154,7 @@ public class PlanService implements BreadcrumbPlanHelper {
         planDto.getId(),
         idUser
       );
+      canAccessPlans.removeIf(c -> c.getPermissionLevel() == PermissionLevelEnum.NONE);
       final List<PermissionDto> planPermissions = new ArrayList<>();
       if(!canAccessPlans.isEmpty()) {
         canAccessPlans.forEach(p -> {
@@ -165,7 +166,8 @@ public class PlanService implements BreadcrumbPlanHelper {
         });
       }
       List<PermissionDto> permissions = this.getPermissions(planPermissions, officePermissions);
-      if(permissions == null || permissions.isEmpty()) {
+      permissions.removeIf(c -> c.getLevel() == PermissionLevelEnum.NONE);
+      if(permissions.isEmpty()) {
         permissions = this.getPermissionReadWorkpack(planDto.getId(), idUser);
       }
       if(permissions.isEmpty()) {

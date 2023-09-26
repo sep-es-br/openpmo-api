@@ -14,7 +14,6 @@ import br.gov.es.openpmo.repository.OfficePermissionRepository;
 import br.gov.es.openpmo.repository.OfficeRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllOfficeUsingCustomFilter;
 import br.gov.es.openpmo.service.actors.PersonService;
-
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -44,7 +43,7 @@ public class OfficeService {
   private final CustomFilterRepository customFilterRepository;
   private final FindAllOfficeUsingCustomFilter findAllOffice;
   private final AppProperties appProperties;
-  
+
   @Autowired
   public OfficeService(
     final OfficeRepository officeRepository,
@@ -59,7 +58,7 @@ public class OfficeService {
     this.officePermissionRepository = officePermissionRepository;
     this.customFilterRepository = customFilterRepository;
     this.findAllOffice = findAllOffice;
-    this.appProperties = appProperties; 
+    this.appProperties = appProperties;
   }
 
   public List<Office> findAll(final Long idFilter, final String term) {
@@ -80,7 +79,7 @@ public class OfficeService {
     }
     return this.findAllOffice.execute(filter, map);
   }
-  
+
 	public List<Office> findByNameOrFullName(String name) {
 		List<Office> offices = this.officeRepository.findAllOfficeByNameOrFullName(name,
 				appProperties.getSearchCutOffScore());
@@ -129,6 +128,7 @@ public class OfficeService {
         officeId,
         idUser
       );
+      canAccessOffices.removeIf(c -> c.getPermissionLevel() == PermissionLevelEnum.NONE);
       if(canAccessOffices.isEmpty()) {
         if(!this.hasPermissionPlanWorkpack(officeId, idUser)) {
           it.remove();
