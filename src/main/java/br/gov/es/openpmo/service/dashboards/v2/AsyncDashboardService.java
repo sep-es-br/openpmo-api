@@ -4,6 +4,7 @@ import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.DashboardEarnedValueA
 import br.gov.es.openpmo.dto.dashboards.tripleconstraint.DateIntervalQuery;
 import br.gov.es.openpmo.dto.dashboards.tripleconstraint.TripleConstraintDataChart;
 import br.gov.es.openpmo.exception.NegocioException;
+import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.dashboards.Dashboard;
 import br.gov.es.openpmo.model.dashboards.DashboardMonth;
@@ -83,9 +84,8 @@ public class AsyncDashboardService implements IAsyncDashboardService {
         .orElse(null);
       final List<DashboardMonth> months = dashboard.getMonths();
       if (months != null && !months.isEmpty()) {
-        for (DashboardMonth month : months) {
-          this.dashboardMonthRepository.deleteWithNodes(month.getId());
-        }
+        final List<Long> monthsId = months.stream().map(Entity::getId).collect(Collectors.toList());
+        this.dashboardMonthRepository.deleteWithNodes(monthsId);
         dashboard.setMonths(new ArrayList<>());
       }
       dashboard.addMonths(dashboardMonths);
