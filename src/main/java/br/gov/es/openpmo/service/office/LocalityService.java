@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -192,11 +193,7 @@ public class LocalityService {
       filter,
       params
     );
-    final List<Long> localitiesId = localities.stream().map(Locality::getId).collect(Collectors.toList());
-    this.filterChildren(
-      locality,
-      localitiesId
-    );
+    locality.setChildren(new LinkedHashSet<>(localities));
     return locality;
   }
 

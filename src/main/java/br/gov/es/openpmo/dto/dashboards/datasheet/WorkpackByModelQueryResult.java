@@ -17,6 +17,8 @@ public class WorkpackByModelQueryResult {
 
   private String icon;
 
+  private Long level;
+
   public Long getIdWorkpackModel() {
     return this.idWorkpackModel;
   }
@@ -69,4 +71,11 @@ public class WorkpackByModelQueryResult {
     this.icon = icon;
   }
 
+  public Long getLevel() {
+    return level;
+  }
+
+  public void setLevel(Long level) {
+    this.level = level;
+  }
 }

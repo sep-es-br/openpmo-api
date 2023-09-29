@@ -98,7 +98,8 @@ public class WorkpackLinkController {
 
     final WorkpackDetailDto response = this.workpackLinkService.getByIdWorkpack(
         idWorkpack,
-        idWorpackModelLinked);
+        idWorpackModelLinked,
+        idPlan);
 
     if (response != null) {
       response.setPermissions(this.workpackPermissionVerifier.fetchPermissions(

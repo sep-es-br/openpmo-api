@@ -590,4 +590,23 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
 
   @Override
   List<Workpack> findAll();
+
+  @Query("match (w:Workpack)<-[:IS_IN]-(x:Workpack)-[a:IS_INSTANCE_BY|IS_LINKED_TO]->(m:WorkpackModel)-[:IS_IN]->(n:WorkpackModel)<-[:IS_INSTANCE_BY|IS_LINKED_TO]-(w) " +
+    "where id(w)=$idWorkpackActual and id(m)=$idWorkpackModel " +
+    "return x,a,m, [ " +
+    " [(x)<-[b:IS_IN]-(y:Workpack)-[c:IS_INSTANCE_BY|IS_LINKED_TO]->(l:WorkpackModel)-[d:IS_IN]->(cc:WorkpackModel) | [b,y,c,l,d,cc]], " +
+    " [(x)-[aa:IS_INSTANCE_BY]->(s:WorkpackModel)<-[f:FEATURES]-(k:PropertyModel{name:'name'})<-[e:IS_DRIVEN_BY]-(p:Property)-[g:FEATURES]->(x) | [aa,s,f,k,e,p,g]], " +
+    " [(x)<-[jj:IS_IN]-(z:Workpack)-[c:IS_INSTANCE_BY|IS_LINKED_TO]->(r:WorkpackModel)<-[h:FEATURES]-(o:PropertyModel{name:'name'})<-[u:IS_DRIVEN_BY]-(q:Property)-[j:FEATURES]->(z) | [jj,z,c,r,h,o,u,q,j]] " +
+    "]")
+  Set<Workpack> findWorkpackByWorkpackModelLevel1(Long idWorkpackActual, Long idWorkpackModel);
+
+  @Query("match (w:Workpack)<-[:IS_IN]-(:Workpack)<-[:IS_IN]-(x:Workpack)-[a:IS_INSTANCE_BY|IS_LINKED_TO]->(m:WorkpackModel)-[:IS_IN]->(:WorkpackModel)-[:IS_IN]->(n:WorkpackModel)<-[:IS_INSTANCE_BY|IS_LINKED_TO]-(w) " +
+    "where id(w)=$idWorkpackActual and id(m)=$idWorkpackModel " +
+    "return x,a,m, [ " +
+    " [(x)<-[b:IS_IN]-(y:Workpack)-[c:IS_INSTANCE_BY|IS_LINKED_TO]->(l:WorkpackModel)-[d:IS_IN]->(cc:WorkpackModel) | [b,y,c,l,d,cc]], " +
+    " [(x)-[aa:IS_INSTANCE_BY]->(s:WorkpackModel)<-[f:FEATURES]-(k:PropertyModel{name:'name'})<-[e:IS_DRIVEN_BY]-(p:Property)-[g:FEATURES]->(x) | [aa,s,f,k,e,p,g]], " +
+    " [(x)<-[jj:IS_IN]-(z:Workpack)-[c:IS_INSTANCE_BY|IS_LINKED_TO]->(r:WorkpackModel)<-[h:FEATURES]-(o:PropertyModel{name:'name'})<-[u:IS_DRIVEN_BY]-(q:Property)-[j:FEATURES]->(z) | [jj,z,c,r,h,o,u,q,j]] " +
+    "]")
+  Set<Workpack> findWorkpackByWorkpackModelLevel2(Long idWorkpackActual, Long idWorkpackModel);
+
 }

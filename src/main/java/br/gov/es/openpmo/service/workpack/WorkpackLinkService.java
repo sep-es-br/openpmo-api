@@ -1,10 +1,12 @@
 package br.gov.es.openpmo.service.workpack;
 
 import br.gov.es.openpmo.dto.permission.PermissionDto;
+import br.gov.es.openpmo.dto.plan.PlanDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackDetailDto;
 import br.gov.es.openpmo.dto.workpackLink.WorkpackModelLinkedDetailDto;
 import br.gov.es.openpmo.dto.workpackLink.WorkpackModelLinkedDto;
 import br.gov.es.openpmo.exception.NegocioException;
+import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.relations.BelongsTo;
@@ -176,7 +178,8 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
 
   public WorkpackDetailDto getByIdWorkpack(
     final Long idWorkpack,
-    final Long idWorkpackModelLinked
+    final Long idWorkpackModelLinked,
+    final Long idPlan
   ) {
     final Optional<Workpack> maybeWorkpack = this.workpackService.mayeFindById(idWorkpack);
     if (!maybeWorkpack.isPresent()) {
@@ -189,7 +192,7 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
 
     this.filterPropertiesWithMismatchType(workpackModelOriginal, workpackModelLinked.getProperties());
 
-    final WorkpackDetailDto workpackDetailDto = this.workpackService.getWorkpackDetailDto(workpack);
+    final WorkpackDetailDto workpackDetailDto = this.getWorkpackDetailDto(workpack, idPlan);
 
     workpackDetailDto.setModelLinked(this.returnBuildedWorkpackModelLinkedDto(
       workpackModelLinked,
@@ -201,6 +204,21 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
       idWorkpackModelLinked
     ));
 
+    return workpackDetailDto;
+  }
+
+  public WorkpackDetailDto getWorkpackDetailDto(
+    final Workpack workpack,
+    final Long idPlan
+  ) {
+    final WorkpackDetailDto workpackDetailDto = this.workpackService.getWorkpackDetailDto(workpack);
+    if (idPlan != null) {
+      final Plan plan = this.planService.findById(idPlan);
+      workpackDetailDto.setPlan(PlanDto.of(plan));
+      workpack.getParentByPlan(plan)
+        .map(Entity::getId)
+        .ifPresent(workpackDetailDto::setIdParent);
+    }
     return workpackDetailDto;
   }
 

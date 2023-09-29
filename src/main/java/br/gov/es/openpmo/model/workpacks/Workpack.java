@@ -9,7 +9,9 @@ import br.gov.es.openpmo.model.baselines.Snapshotable;
 import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.properties.Property;
+import br.gov.es.openpmo.model.properties.Text;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
+import br.gov.es.openpmo.model.properties.models.TextModel;
 import br.gov.es.openpmo.model.relations.BelongsTo;
 import br.gov.es.openpmo.model.relations.CanAccessWorkpack;
 import br.gov.es.openpmo.model.relations.IsBaselinedBy;
@@ -35,6 +37,7 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.util.ObjectUtils;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
@@ -214,6 +217,26 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
     return Optional.ofNullable(workpackModel)
       .map(WorkpackModel::getModelName)
       .orElse(null);
+  }
+
+  @Transient
+  public String getWorkpackName() {
+    if (this.properties == null) {
+      return null;
+    }
+    for (Property<?, ?> property : this.properties) {
+      if (property instanceof Text) {
+        final Text text = (Text) property;
+        final TextModel driver = text.getDriver();
+        if (driver == null) {
+          continue;
+        }
+        if (Objects.equals(driver.getName(), "name")) {
+          return text.getValue();
+        }
+      }
+    }
+    return null;
   }
 
   public boolean isDeleted() {
@@ -697,6 +720,9 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
     final Set<Workpack> parents = this.getParent();
     if (parents == null || parents.isEmpty()) {
       return Optional.empty();
+    }
+    if (parents.size() == 1) {
+      return Optional.of(new ArrayList<>(parents).get(0));
     }
     return parents.stream()
       .filter(parent -> parent.isOriginalPlan(plan))

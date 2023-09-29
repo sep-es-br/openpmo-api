@@ -28,7 +28,7 @@ public class FindAllLocalityUsingCustomFilter extends FindAllUsingCustomFilterBu
           final StringBuilder query
   ) {
     query.append("MATCH (domain:Domain)<-[:IS_ROOT_OF]-(root:Locality) ")
-            .append("MATCH (root)<-[:IS_IN*]-(").append(this.nodeName).append(":Locality)-[:BELONGS_TO]->(domain) ")
+            .append("MATCH (root)<-[:IS_IN]-(").append(this.nodeName).append(":Locality)-[:BELONGS_TO]->(domain) ")
             .append("WITH *, apoc.text.levenshteinSimilarity(apoc.text.clean(").append(this.nodeName).append(".name), apoc.text.clean($term)) AS nameScore, ")
             .append("apoc.text.levenshteinSimilarity(apoc.text.clean(").append(this.nodeName).append(".fullName), apoc.text.clean($term)) AS fullNameScore ")
             .append("WITH *, CASE WHEN nameScore > fullNameScore THEN nameScore ELSE fullNameScore END AS score ");

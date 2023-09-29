@@ -142,4 +142,11 @@ public interface WorkpackModelRepository extends Neo4jRepository<WorkpackModel, 
   )
   Long findActualPosition(@Param("idWorkpackModel") Long idWorkpackModel);
 
+  @Query("MATCH (wm:WorkpackModel) " +
+    "WHERE id(wm)=$idWorkpackModel " +
+    "RETURN wm, [ " +
+    "    [ (wm)<-[i:IS_IN*]-(wmc:WorkpackModel) | [i,wmc] ] " +
+    "]")
+  Optional<WorkpackModel> findByIdWithChildren(Long idWorkpackModel);
+
 }

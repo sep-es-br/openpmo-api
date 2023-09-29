@@ -2,6 +2,7 @@ package br.gov.es.openpmo.dto.domain;
 
 import br.gov.es.openpmo.enumerator.LocalityTypesEnum;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class LocalityDetailDto {
@@ -14,7 +15,7 @@ public class LocalityDetailDto {
   private DomainDto domain;
   private DomainDto domainRoot;
   private LocalityTypesEnum type;
-  private Set<LocalityDetailDto> children;
+  private LinkedHashSet<LocalityDetailDto> children;
 
   public Long getId() {
     return this.id;
@@ -68,7 +69,7 @@ public class LocalityDetailDto {
     return this.children;
   }
 
-  public void setChildren(final Set<LocalityDetailDto> children) {
+  public void setChildren(final LinkedHashSet<LocalityDetailDto> children) {
     this.children = children;
   }
 

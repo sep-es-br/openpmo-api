@@ -540,9 +540,8 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
 
     final Map<String, Object> params = new HashMap<>();
     params.put("idPlan", idPlan);
-    params.put("idPlanModel", idPlanModel);
-    params.put("idWorkPackModel", idWorkpackModel);
-    params.put("idWorkPackParent", idWorkpackParent);
+    params.put("idWorkpackModel", idWorkpackModel);
+    params.put("idWorkpackParent", idWorkpackParent);
     params.put("term", term);
     params.put("searchCutOffScore", this.appProperties.getSearchCutOffScore());
 

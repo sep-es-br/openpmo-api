@@ -320,7 +320,7 @@ public abstract class FindStakeholderAndPermissionUsingCustomFilterBuilder exten
       }
     },
     LEVEL(
-      "level",
+      "permissionLevel",
       "canAccessWorkpack",
       null
     ) {

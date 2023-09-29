@@ -12,10 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -32,26 +32,37 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
   @Override
   public DatasheetResponse build(final DashboardParameters parameters) {
     final Long workpackId = parameters.getWorkpackId();
+    final Long workpackModelId = getWorkpackModelId(parameters);
     final UriComponentsBuilder uriComponentsBuilder = parameters.getUriComponentsBuilder();
 
     return new DatasheetResponse(
-      this.getDatasheetTotalizers(workpackId),
+      this.getDatasheetTotalizers(workpackId, workpackModelId),
       this.getDatasheetStakeholders(workpackId, uriComponentsBuilder)
     );
   }
 
-  private DatasheetTotalizers getDatasheetTotalizers(final Long workpackId) {
-    return new DatasheetTotalizers(this.getWorkpackByModel(workpackId));
+  private static Long getWorkpackModelId(DashboardParameters parameters) {
+    if (Boolean.TRUE.equals(parameters.getLinked())) {
+      return parameters.getWorkpackModelLinkedId();
+    }
+    return parameters.getWorkpackModelId();
   }
 
-  private List<WorkpacksByModelResponse> getWorkpackByModel(final Long workpackId) {
-    final List<WorkpackByModelQueryResult> queryResults = Optional.ofNullable(workpackId)
-      .map(this.repository::workpackByModel)
-      .orElse(Collections.emptyList());
+  private DatasheetTotalizers getDatasheetTotalizers(final Long workpackId, Long workpackModelId) {
+    return new DatasheetTotalizers(this.getWorkpackByModel(workpackId, workpackModelId));
+  }
 
-    return queryResults.stream()
-      .map(WorkpacksByModelResponse::from)
-      .collect(Collectors.toList());
+  private List<WorkpacksByModelResponse> getWorkpackByModel(final Long workpackId, Long workpackModelId) {
+    if (workpackId == null) {
+      return Collections.emptyList();
+    }
+    List<WorkpackByModelQueryResult> queryResults = this.repository.workpackByModel(workpackId, workpackModelId);
+    List<WorkpacksByModelResponse> result = new ArrayList<>();
+    for (WorkpackByModelQueryResult queryResult : queryResults) {
+      WorkpacksByModelResponse from = WorkpacksByModelResponse.from(queryResult);
+      result.add(from);
+    }
+    return result;
   }
 
   private Set<DatasheetStakeholderResponse> getDatasheetStakeholders(

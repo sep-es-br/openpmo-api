@@ -12,10 +12,12 @@ import java.util.List;
 @Repository
 public interface DashboardDatasheetRepository extends Neo4jRepository<Workpack, Long> {
 
-  @Query("MATCH (current:Workpack{deleted:false})<-[:IS_IN*1..]-(child:Workpack{deleted:false})-[:IS_INSTANCE_BY|:IS_LINKED_TO]->(m:WorkpackModel) " +
-    "WHERE id(current)=$workpackId " +
-    "return count(child) AS quantity, m.modelName AS singularName, m.modelNameInPlural AS pluralName, m.fontIcon AS icon")
-  List<WorkpackByModelQueryResult> workpackByModel(Long workpackId);
+  @Query("MATCH p = (current:Workpack{deleted:false})<-[:IS_IN*]-(child:Workpack{deleted:false}), " +
+    "(current)-[:IS_INSTANCE_BY|IS_LINKED_TO]->(n:WorkpackModel), " +
+    "(child)-[:IS_INSTANCE_BY|IS_LINKED_TO]->(m:WorkpackModel)-[:IS_IN*]->(n) " +
+    "WHERE id(current)=$workpackId and id(n)=$workpackModelId " +
+    "return id(m) as idWorkpackModel, count(child) AS quantity, m.modelName AS singularName, m.modelNameInPlural AS pluralName, m.fontIcon AS icon, length(p) as level")
+  List<WorkpackByModelQueryResult> workpackByModel(Long workpackId, Long workpackModelId);
 
   @Query("MATCH (a:Actor)-[s:IS_STAKEHOLDER_IN{active:true}]->(w:Workpack{deleted:false,canceled:false}) " +
          "OPTIONAL MATCH (w)-[:IS_IN*]->(v:Workpack{deleted:false,canceled:false}) " +

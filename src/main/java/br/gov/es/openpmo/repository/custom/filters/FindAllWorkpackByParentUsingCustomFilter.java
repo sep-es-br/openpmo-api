@@ -40,19 +40,40 @@ public class FindAllWorkpackByParentUsingCustomFilter extends FindAllUsingCustom
     final StringBuilder query
   ) {
     query.append(
-      "MATCH (node:Workpack{deleted:false})-[rf:BELONGS_TO]->(p:Plan)-[is:IS_STRUCTURED_BY]->(pm:PlanModel), " +
-      "(node)-[ii:IS_INSTANCE_BY]->(wm:WorkpackModel)<-[:FEATURES]-(propertyModel:PropertyModel), " +
-      "(node)-[wc:IS_IN]->(wp:Workpack), " +
-      "(node)<-[:FEATURES]-(property:Property)-[:IS_DRIVEN_BY]->(propertyModel), " +
-      "(node)<-[:FEATURES]-(name:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}), " +
-      "(node)<-[:FEATURES]-(fullName:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'fullName'}) " +
-      "OPTIONAL MATCH (propertyModel)-[:GROUPS]->(groupedProperty:PropertyModel) " +
-      "OPTIONAL MATCH (node)<-[:FEATURES]-(:Property)-[:VALUES]->(values) " +
-      "WITH *, apoc.text.levenshteinSimilarity(apoc.text.clean(name.value), apoc.text.clean($term)) AS nameScore, " +
-      "apoc.text.levenshteinSimilarity(apoc.text.clean(fullName.value), apoc.text.clean($term)) AS fullNameScore " +
-      "WITH *, CASE WHEN nameScore > fullNameScore THEN nameScore ELSE fullNameScore END AS score, " +
-      "collect( property ) + collect( name ) + collect( fullName ) as properties, " +
-      "collect( id(values) ) as selectedValues ");
+      "MATCH (pl:Plan), (wm:WorkpackModel), (p:Workpack) " +
+      "WHERE id(pl)=$idPlan AND id(wm)=$idWorkpackModel AND id(p)=$idWorkpackParent " +
+      "OPTIONAL MATCH (w:Workpack{deleted:false})-[:IS_IN]->(p) " +
+      "OPTIONAL MATCH (w)-[:IS_INSTANCE_BY]->(wm) " +
+      "OPTIONAL MATCH (w)-[bt1:BELONGS_TO]->(pl) " +
+      "OPTIONAL MATCH (w)<-[:FEATURES]-(property1:Property) " +
+      "OPTIONAL MATCH (w)<-[:FEATURES]-(name1:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}) " +
+      "OPTIONAL MATCH (w)<-[:FEATURES]-(fullName1:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'fullName'}) " +
+      "OPTIONAL MATCH (w)<-[:FEATURES]-(:Property)-[:VALUES]->(values1) " +
+      "WITH *, " +
+      "  apoc.text.levenshteinSimilarity(apoc.text.clean(name1.value), apoc.text.clean($term)) AS nameScore1, " +
+      "  apoc.text.levenshteinSimilarity(apoc.text.clean(fullName1.value), apoc.text.clean($term)) AS fullNameScore1 " +
+      "WITH *, CASE WHEN nameScore1 > fullNameScore1 THEN nameScore1 ELSE fullNameScore1 END AS score1, " +
+      "  collect( property1 ) + collect( name1 ) + collect( fullName1 ) AS properties1, " +
+      "  collect( id(values1) ) AS selectedValues1 " +
+      "OPTIONAL MATCH (p)<-[:IS_IN]-(v:Workpack{deleted:false})-[:IS_LINKED_TO]->(wm) " +
+      "OPTIONAL MATCH (v)-[bt2:BELONGS_TO]->(pl) " +
+      "OPTIONAL MATCH (w)<-[:FEATURES]-(property2:Property) " +
+      "OPTIONAL MATCH (v)<-[:FEATURES]-(name2:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}) " +
+      "OPTIONAL MATCH (v)<-[:FEATURES]-(fullName2:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'fullName'}) " +
+      "OPTIONAL MATCH (v)<-[:FEATURES]-(:Property)-[:VALUES]->(values2) " +
+      "WITH *," +
+      "    apoc.text.levenshteinSimilarity(apoc.text.clean(name2.value), apoc.text.clean($term)) AS nameScore2, " +
+      "    apoc.text.levenshteinSimilarity(apoc.text.clean(fullName2.value), apoc.text.clean($term)) AS fullNameScore2 " +
+      "WITH *, CASE WHEN nameScore2 > fullNameScore2 THEN nameScore2 ELSE fullNameScore2 END AS score2, " +
+      "  collect( property2 ) + collect( name2 ) + collect( fullName2 ) AS properties2, " +
+      "  collect( id(values2) ) AS selectedValues2 " +
+      "WITH *, " +
+      "  collect(properties1) + collect(properties2) AS allProperties, " +
+      "  collect(selectedValues1) + collect(selectedValues2) AS allSelectedValues " +
+      "UNWIND allProperties AS properties " +
+      "UNWIND allSelectedValues AS selectedValues " +
+      "WITH * "
+    );
   }
 
   @Override
@@ -60,30 +81,29 @@ public class FindAllWorkpackByParentUsingCustomFilter extends FindAllUsingCustom
     final CustomFilter filter,
     final StringBuilder query
   ) {
-    query.append("WHERE (")
-      .append("   id(p)=$idPlan ")
-      .append("   AND (id(pm)=$idPlanModel OR $idPlanModel IS NULL) ")
-      .append("   AND (id(wm)=$idWorkPackModel OR $idWorkPackModel IS NULL) ")
-      .append("   AND id(wp)=$idWorkPackParent ")
-      .append("   AND ($term is null OR $term = '' OR score > $searchCutOffScore)")
-      .append(") ");
+    query.append(
+      "WHERE ( (bt1.linked=null OR bt1.linked=false) AND ($term IS NULL OR $term = '' OR score1 > $searchCutOffScore) ) OR " +
+      "      ( bt2.linked=true AND ($term IS NULL OR $term = '' OR score2 > $searchCutOffScore) ) "
+    );
   }
 
   @Override
   public void buildReturnClause(final StringBuilder query) {
-    query.append("RETURN node, rf, p, ii, pm, wm, [ " +
-                 " [(node)<-[f:FEATURES]-(p:Property)-[d:IS_DRIVEN_BY]->(pm:PropertyModel) | [f, p, d, pm] ], " +
-                 " [(node)<-[wi:IS_IN]-(w2:Workpack) | [wi, w2] ], " +
-                 " [(node)-[wi2:IS_IN]->(w3:Workpack) | [wi2, w3] ], " +
-                 " [(node)<-[wa:APPLIES_TO]-(ca:CostAccount) | [wa, ca] ], " +
-                 " [(ca)<-[f1:FEATURES]-(p2:Property)-[d1:IS_DRIVEN_BY]->(pmc:PropertyModel) | [ca, f1, p2, d1, pmc ] ], " +
-                 " [(wm)<-[wmi:IS_IN]-(wm2:WorkpackModel) | [wmi,wm2] ], " +
-                 " [(wm)-[wmi2:IS_IN]->(wm3:WorkpackModel) | [wmi2,wm3] ], " +
-                 " [(wm)<-[f2:FEATURES]-(pm2:PropertyModel) | [f2, pm2] ], " +
-                 " [(node)-[sharedWith:IS_SHARED_WITH]->(office:Office) | [sharedWith, office]], " +
-                 " [(node)-[isLinkedTo:IS_LINKED_TO]->(workpackModel:WorkpackModel) | [isLinkedTo, workpackModel] ], " +
-                 " [(wp)-[parentSharedWith]->(officeParent:Office) | [parentSharedWith, officeParent]] " +
-                 "] ");
+    query.append(
+      "WITH *, CASE WHEN coalesce(score1, 0) > coalesce(score2, 0) THEN score1 ELSE score2 END AS score " +
+      "WITH score, collect(w)+collect(v) AS workpackList " +
+      "UNWIND workpackList AS workpacks " +
+      "RETURN workpacks, [ " +
+      "    [ (workpacks)<-[f:FEATURES]-(p:Property)-[d:IS_DRIVEN_BY]->(pm:PropertyModel) | [f, p, d, pm] ], " +
+      "    [ (workpacks)-[iib:IS_INSTANCE_BY]->(m1:WorkpackModel) | [iib, m1] ], " +
+      "    [ (m1)<-[f2:FEATURES]-(pm2:PropertyModel) | [f2, pm2] ], " +
+      "    [ (workpacks)-[ilt:IS_LINKED_TO]->(m2:WorkpackModel) | [ilt, m2] ], " +
+      "    [ (m2)<-[f3:FEATURES]-(pm3:PropertyModel) | [f3, pm3] ], " +
+      "    [ (workpacks)-[bt:BELONGS_TO]->(pn:Plan) | [bt,pn] ], " +
+      "    [ (workpacks)<-[ii:IS_IN]->(z:Workpack) | [ii, z] ], " +
+      "    [ (workpacks)-[isw:IS_SHARED_WITH]->(o:Office) | [isw, o] ] " +
+      "] "
+    );
   }
 
   @Override
@@ -129,9 +149,8 @@ public class FindAllWorkpackByParentUsingCustomFilter extends FindAllUsingCustom
   public String[] getDefinedExternalParams() {
     return new String[]{
       "idPlan",
-      "idPlanModel",
-      "idWorkPackModel",
-      "idWorkPackParent",
+      "idWorkpackModel",
+      "idWorkpackParent",
       "term",
       "searchCutOffScore"
     };
