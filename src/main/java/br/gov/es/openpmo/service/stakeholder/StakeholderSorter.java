@@ -1,6 +1,8 @@
 package br.gov.es.openpmo.service.stakeholder;
 
+import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.dto.stakeholder.StakeholderDto;
+import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.model.actors.OrganizationEnum;
 
 import java.util.Comparator;
@@ -57,6 +59,19 @@ public enum StakeholderSorter {
     final Boolean administrator1 = t1.getPerson().isAdministrator();
     final Boolean administrator2 = t2.getPerson().isAdministrator();
     return administrator1.compareTo(administrator2);
+  }),
+  LEVEL("permissionLevel", (t1, t2) -> {
+    if(!t1.isPerson()) return -1;
+    if(!t2.isPerson()) return 1;
+    final PermissionLevelEnum permissions1 = t1.getPermissions().stream()
+      .map(PermissionDto::getLevel)
+      .max(Comparator.comparingInt(PermissionLevelEnum::getLevel))
+      .orElse(PermissionLevelEnum.NONE);
+    final PermissionLevelEnum permissions2 = t1.getPermissions().stream()
+      .map(PermissionDto::getLevel)
+      .max(Comparator.comparingInt(PermissionLevelEnum::getLevel))
+      .orElse(PermissionLevelEnum.NONE);
+    return permissions1.compareTo(permissions2);
   });
 
 
