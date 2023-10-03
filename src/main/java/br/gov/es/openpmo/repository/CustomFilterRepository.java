@@ -50,9 +50,9 @@ public interface CustomFilterRepository extends Neo4jRepository<CustomFilter, Lo
   @Query("MATCH (customFilter:CustomFilter) WHERE ID(customFilter)=$idFilter RETURN customFilter, [" +
          "  [ (rules:Rules)-[has:HAS]->(customFilter) | [rules, has] ]," +
          "  [ (customFilter)-[for:FOR]->(workpackModel:WorkpackModel) | [for, workpackModel] ]," +
-         "  [ (workpackModel)<-[feat:FEATURES]-(propertyModel:PropertyModel) | [feat, propertyModel] ]," +
-         "  [ (workpackModel)<-[featGroup:FEATURES]-(groupModel:GroupModel) | [featGroup, groupModel] ]," +
-         "  [ (groupModel)-[groups:GROUPS]->(groupedProperty:PropertyModel) | [groups, groupedProperty] ]" +
+         "  [ (customFilter)-[:FOR]->(:WorkpackModel)<-[feat:FEATURES]-(propertyModel:PropertyModel) | [feat, propertyModel] ]," +
+         "  [ (customFilter)-[:FOR]->(:WorkpackModel)<-[featGroup:FEATURES]-(groupModel:GroupModel) | [featGroup, groupModel] ]," +
+         "  [ (customFilter)-[:FOR]->(:WorkpackModel)<-[:FEATURES]-(:GroupModel)-[groups:GROUPS]->(groupedProperty:PropertyModel) | [groups, groupedProperty] ]" +
          "]")
   Optional<CustomFilter> findByIdWithRelationships(@Param("idFilter") Long idFilter);
 

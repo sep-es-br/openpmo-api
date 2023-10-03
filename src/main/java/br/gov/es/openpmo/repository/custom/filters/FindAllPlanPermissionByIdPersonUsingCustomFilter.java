@@ -13,12 +13,12 @@ import org.springframework.stereotype.Service;
 import java.text.MessageFormat;
 
 @Service
-public class FindAllOfficePermissionUsingCustomFilter extends FindAllUsingCustomFilterBuilder {
+public class FindAllPlanPermissionByIdPersonUsingCustomFilter extends FindAllUsingCustomFilterBuilder {
 
   private final OfficePermissionRepository repository;
 
   @Autowired
-  public FindAllOfficePermissionUsingCustomFilter(final OfficePermissionRepository repository) {
+  public FindAllPlanPermissionByIdPersonUsingCustomFilter(final OfficePermissionRepository repository) {
     this.repository = repository;
   }
 
@@ -32,11 +32,8 @@ public class FindAllOfficePermissionUsingCustomFilter extends FindAllUsingCustom
     final CustomFilter filter,
     final StringBuilder query
   ) {
-    query.append("MATCH (person:Person)-[").append(this.nodeName).append(":CAN_ACCESS_OFFICE]->")
-      .append("(office:Office)").append(" ")
-      .append("OPTIONAL MATCH (person)-[contact:IS_IN_CONTACT_BOOK_OF]->(office)").append(" ")
-      .append("OPTIONAL MATCH (person)-[auth:IS_AUTHENTICATED_BY]->(:AuthService)").append(" ")
-      .append("WITH *").append(" ");
+    query.append("MATCH (person:Person)-[").append(this.nodeName).append(":CAN_ACCESS_PLAN]->")
+      .append("(plan:Plan)").append(" ");
   }
 
   @Override
@@ -44,12 +41,7 @@ public class FindAllOfficePermissionUsingCustomFilter extends FindAllUsingCustom
     final CustomFilter filter,
     final StringBuilder query
   ) {
-    query.append("WHERE ID(office)=$idOffice").append(" ");
-  }
-
-  @Override
-  public void buildReturnClause(final StringBuilder query) {
-    query.append("RETURN ").append(this.nodeName).append(", office, person");
+    query.append("WHERE ID(plan)=$idPlan AND id(person)=$idPerson").append(" ");
   }
 
   @Override
@@ -59,7 +51,10 @@ public class FindAllOfficePermissionUsingCustomFilter extends FindAllUsingCustom
         case "name":
           return MessageFormat.format("(person.name =~ ''.*'' + ${0} + ''.*'') ", label);
         case "email":
-          return MessageFormat.format("((auth.email =~ ''.*'' + ${0} + ''.*'') or (contact.email =~ ''.*'' + ${0} + ''.*'')) ", label);
+          return MessageFormat.format(
+            "((auth.email =~ ''.*'' + ${0} + ''.*'') or (contact.email =~ ''.*'' + ${0} + ''.*'')) ",
+            label
+          );
         case "level":
         case "permissionLevel":
           return MessageFormat.format("(node.permissionLevel =~ ''.*'' + ${0} + ''.*'') ", label);
@@ -83,6 +78,11 @@ public class FindAllOfficePermissionUsingCustomFilter extends FindAllUsingCustom
   }
 
   @Override
+  public void buildReturnClause(final StringBuilder query) {
+    query.append("RETURN ").append(this.nodeName).append(", plan, person");
+  }
+
+  @Override
   protected boolean hasAppendedBooleanBlock() {
     return true;
   }
@@ -94,7 +94,7 @@ public class FindAllOfficePermissionUsingCustomFilter extends FindAllUsingCustom
 
   @Override
   public String[] getDefinedExternalParams() {
-    return new String[]{"idOffice"};
+    return new String[]{"idPlan", "idPerson"};
   }
 
 }

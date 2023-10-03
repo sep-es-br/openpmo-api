@@ -42,6 +42,9 @@ public class FindAllDomainUsingCustomFilter extends FindAllUsingCustomFilterBuil
     query.append("WHERE ( ID(o) = $idOffice OR $idOffice IS NULL ) ");
     query.append("OPTIONAL MATCH (").append(this.nodeName).append(")<-[bt:BELONGS_TO]-(l:Locality) ");
     String complementWITH = ", bt, l ";
+    if (!filter.isSimilarityFilter()) {
+      query.append("WITH * ");
+    }
     buildFilterBySimilarity(filter, query, complementWITH);
     if (!filter.isSimilarityFilter() && filter.getRules() != null && !filter.getRules().isEmpty()) {
     	if (hasAppendedBooleanBlock()) query.append(" WHERE TRUE ");

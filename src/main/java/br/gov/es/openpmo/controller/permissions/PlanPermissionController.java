@@ -52,13 +52,14 @@ public class PlanPermissionController {
   @GetMapping
   public ResponseEntity<ResponseBase<List<PlanPermissionDto>>> indexBase(
     @RequestParam(name = "id-plan") final Long idPlan,
+    @RequestParam(required = false) final Long idFilter,
     @RequestParam(name = "key", required = false) final String key,
     @RequestParam(required = false) final String term,
     @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanReadManagementResource(idPlan, key, authorization);
     final Long idPerson = this.tokenService.getUserId(authorization);
-    final List<PlanPermissionDto> plans = this.service.findAllDto(idPlan, key, idPerson, term).stream()
+    final List<PlanPermissionDto> plans = this.service.findAllDto(idPlan, idFilter, key, idPerson, term).stream()
       .map(o -> this.modelMapper.map(o, PlanPermissionDto.class))
       .collect(Collectors.toList());
     return plans.isEmpty() ?

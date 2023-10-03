@@ -10,13 +10,17 @@ import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.exception.RegistroNaoEncontradoException;
 import br.gov.es.openpmo.model.actors.Person;
+import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.model.journals.JournalAction;
 import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.relations.CanAccessPlan;
 import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
 import br.gov.es.openpmo.model.relations.IsInContactBookOf;
+import br.gov.es.openpmo.repository.CustomFilterRepository;
 import br.gov.es.openpmo.repository.PlanPermissionRepository;
+import br.gov.es.openpmo.repository.custom.filters.FindAllPlanPermissionByIdPersonUsingCustomFilter;
+import br.gov.es.openpmo.repository.custom.filters.FindAllPlanPermissionUsingCustomFilter;
 import br.gov.es.openpmo.service.actors.IsAuthenticatedByService;
 import br.gov.es.openpmo.service.actors.IsInContactBookOfService;
 import br.gov.es.openpmo.service.actors.PersonService;
@@ -37,6 +41,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import static br.gov.es.openpmo.utils.ApplicationMessage.CUSTOM_FILTER_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.OFFICE_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PLAN_PERMISSION_NOT_FOUND;
 
@@ -44,6 +49,8 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.PLAN_PERMISSION_NOT_FOU
 public class PlanPermissionService {
 
   private final PlanPermissionRepository repository;
+
+  private final CustomFilterRepository customFilterRepository;
 
   private final PlanService planService;
 
@@ -65,9 +72,14 @@ public class PlanPermissionService {
 
   private final TokenService tokenService;
 
+  private final FindAllPlanPermissionUsingCustomFilter findAllPlanPermission;
+
+  private final FindAllPlanPermissionByIdPersonUsingCustomFilter findAllPlanPermissionByIdPerson;
+
   @Autowired
   public PlanPermissionService(
     final PlanPermissionRepository repository,
+    final CustomFilterRepository customFilterRepository,
     final PlanService planService,
     final PersonService personService,
     final OfficeService officeService,
@@ -77,9 +89,12 @@ public class PlanPermissionService {
     final AppProperties appProperties,
     final TextSimilarityScore textSimilarityScore,
     final JournalCreator journalCreator,
-    final TokenService tokenService
+    final TokenService tokenService,
+    final FindAllPlanPermissionUsingCustomFilter findAllPlanPermission,
+    final FindAllPlanPermissionByIdPersonUsingCustomFilter findAllPlanPermissionByIdPerson
   ) {
     this.repository = repository;
+    this.customFilterRepository = customFilterRepository;
     this.planService = planService;
     this.personService = personService;
     this.officeService = officeService;
@@ -90,6 +105,8 @@ public class PlanPermissionService {
     this.textSimilarityScore = textSimilarityScore;
     this.journalCreator = journalCreator;
     this.tokenService = tokenService;
+    this.findAllPlanPermission = findAllPlanPermission;
+    this.findAllPlanPermissionByIdPerson = findAllPlanPermissionByIdPerson;
   }
 
   public void delete(
@@ -130,6 +147,7 @@ public class PlanPermissionService {
 
   public List<PlanPermissionDto> findAllDto(
     final Long idPlan,
+    final Long idFilter,
     final String key,
     final Long idPerson,
     final String term
@@ -137,7 +155,7 @@ public class PlanPermissionService {
     final List<RoleResource> resources = this.roleService.getRolesByKey(idPerson, key);
     final List<PlanPermissionDto> plansPermissionDto = new ArrayList<>();
     final Plan plan = this.planService.findById(idPlan);
-    final List<CanAccessPlan> listPlansPermission = this.listPlansPermissions(plan, key);
+    final List<CanAccessPlan> listPlansPermission = this.listPlansPermissions(plan, key, idFilter);
     final Map<Person, List<PermissionDto>> mapPermission = new HashMap<>();
     listPlansPermission.forEach(p -> {
       final PermissionDto dto = new PermissionDto();
@@ -163,12 +181,39 @@ public class PlanPermissionService {
     });
 
     plansPermissionDto.removeIf(dto -> !StringUtils.isBlank(term)
-                                       && this.textSimilarityScore.execute(
+      && this.textSimilarityScore.execute(
       dto.getPerson().getName() + dto.getPerson().getFullName(),
       term
     ) <= this.appProperties.getSearchCutOffScore());
 
     return plansPermissionDto;
+  }
+
+  private List<CanAccessPlan> listPlansPermissions(
+    final Plan plan,
+    final String key,
+    final Long idFilter
+  ) {
+    if (idFilter == null) {
+      return this.listPlansPermissions(plan, key);
+    }
+
+    final CustomFilter filter = this.customFilterRepository
+      .findById(idFilter)
+      .orElseThrow(() -> new NegocioException(CUSTOM_FILTER_NOT_FOUND));
+
+    final Map<String, Object> params = new HashMap<>();
+    params.put("idPlan", plan.getId());
+
+    if (key == null || key.isEmpty()) {
+      return this.findAllPlanPermission.execute(filter, params);
+    }
+
+    final Person person = this.personService.findPersonByKey(key);
+
+    params.put("idPerson", person.getId());
+
+    return this.findAllPlanPermissionByIdPerson.execute(filter, params);
   }
 
   private List<CanAccessPlan> listPlansPermissions(

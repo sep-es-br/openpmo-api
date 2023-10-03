@@ -16,7 +16,7 @@ public interface DashboardDatasheetRepository extends Neo4jRepository<Workpack, 
     "(current)-[:IS_INSTANCE_BY|IS_LINKED_TO]->(n:WorkpackModel), " +
     "(child)-[:IS_INSTANCE_BY|IS_LINKED_TO]->(m:WorkpackModel)-[:IS_IN*]->(n) " +
     "WHERE id(current)=$workpackId and id(n)=$workpackModelId " +
-    "return id(m) as idWorkpackModel, count(child) AS quantity, m.modelName AS singularName, m.modelNameInPlural AS pluralName, m.fontIcon AS icon, length(p) as level")
+    "return id(m) as idWorkpackModel, count(distinct child) AS quantity, m.modelName AS singularName, m.modelNameInPlural AS pluralName, m.fontIcon AS icon, length(p) as level")
   List<WorkpackByModelQueryResult> workpackByModel(Long workpackId, Long workpackModelId);
 
   @Query("MATCH (a:Actor)-[s:IS_STAKEHOLDER_IN{active:true}]->(w:Workpack{deleted:false,canceled:false}) " +

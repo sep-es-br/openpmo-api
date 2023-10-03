@@ -2,14 +2,19 @@ package br.gov.es.openpmo.service.dashboards.v2;
 
 import br.gov.es.openpmo.dto.dashboards.DashboardMenuResponse;
 import br.gov.es.openpmo.exception.RegistroNaoEncontradoException;
+import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.WorkpackModelRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
+import br.gov.es.openpmo.service.workpack.GetPropertyValue;
+import br.gov.es.openpmo.service.workpack.PropertyComparator;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACKMODEL_NOT_FOUND;
@@ -30,11 +35,11 @@ public class GetDashboardMenu {
 
   public List<DashboardMenuResponse> execute(Long idWorkpackActual, Long idWorkpackModel, Long menuLevel) {
     final WorkpackModel workpackModel = getWorkpackModel(idWorkpackModel);
-    final Set<Workpack> workpacks = getWorkpacks(idWorkpackActual, idWorkpackModel, menuLevel);
+    final List<Workpack> workpacks = getWorkpacks(idWorkpackActual, idWorkpackModel, menuLevel);
     return getResponses(workpacks, workpackModel);
   }
 
-  private Set<Workpack> getWorkpacks(Long idWorkpackActual, Long idWorkpackModel, Long menuLevel) {
+  private List<Workpack> getWorkpacks(Long idWorkpackActual, Long idWorkpackModel, Long menuLevel) {
     if (menuLevel == 1) {
       return this.workpackRepository.findWorkpackByWorkpackModelLevel1(idWorkpackActual, idWorkpackModel);
     }
@@ -46,10 +51,11 @@ public class GetDashboardMenu {
       .orElseThrow(() -> new RegistroNaoEncontradoException(WORKPACKMODEL_NOT_FOUND));
   }
 
-  private static List<DashboardMenuResponse> getResponses(Set<Workpack> workpacks, WorkpackModel workpackModel) {
+  private static List<DashboardMenuResponse> getResponses(List<Workpack> workpacks, WorkpackModel workpackModel) {
     if (workpacks.isEmpty()) {
       return new ArrayList<>();
     }
+    sortWorkpacks(workpacks, workpackModel);
     final List<DashboardMenuResponse> result = new ArrayList<>();
     for (Workpack workpack : workpacks) {
       final DashboardMenuResponse response = new DashboardMenuResponse();
@@ -81,29 +87,54 @@ public class GetDashboardMenu {
     if (workpacks.isEmpty()) {
       return new ArrayList<>();
     }
+    final Map<WorkpackModel, List<Workpack>> map = new HashMap<>();
+    for (WorkpackModel workpackModel : workpackModels) {
+      for (Workpack workpack : workpacks) {
+        if (workpack.isInstanceByOrLinkedTo(workpackModel.getId())) {
+          final List<Workpack> list = map.computeIfAbsent(workpackModel, k -> new ArrayList<>());
+          list.add(workpack);
+        }
+      }
+      if (map.containsKey(workpackModel)) {
+        sortWorkpacks(map.get(workpackModel), workpackModel);
+      }
+    }
     final List<DashboardMenuResponse> result = new ArrayList<>();
-    for (Workpack workpack : workpacks) {
-      final DashboardMenuResponse response = new DashboardMenuResponse();
-      response.setId(workpack.getId());
-      response.setName(workpack.getWorkpackName());
-      for (WorkpackModel workpackModel : workpackModels) {
-        if (workpack.isLinkedTo(workpackModel)) {
-          response.setLinked(true);
-          response.setIdWorkpackModel(workpackModel.getId());
-          response.setIcon(workpackModel.getFontIcon());
+    for (List<Workpack> value : map.values()) {
+      for (Workpack workpack : value) {
+        final DashboardMenuResponse response = new DashboardMenuResponse();
+        response.setId(workpack.getId());
+        response.setName(workpack.getWorkpackName());
+        for (WorkpackModel workpackModel : workpackModels) {
+          if (workpack.isLinkedTo(workpackModel)) {
+            response.setLinked(true);
+            response.setIdWorkpackModel(workpackModel.getId());
+            response.setIcon(workpackModel.getFontIcon());
+          }
         }
-      }
-      if (!Boolean.TRUE.equals(response.getLinked())) {
-        final WorkpackModel instance = workpack.getWorkpackModelInstance();
-        if (instance != null) {
-          response.setLinked(false);
-          response.setIdWorkpackModel(instance.getId());
-          response.setIcon(instance.getFontIcon());
+        if (!Boolean.TRUE.equals(response.getLinked())) {
+          final WorkpackModel instance = workpack.getWorkpackModelInstance();
+          if (instance != null) {
+            response.setLinked(false);
+            response.setIdWorkpackModel(instance.getId());
+            response.setIcon(instance.getFontIcon());
+          }
         }
+        result.add(response);
       }
-      result.add(response);
     }
     return result;
+  }
+
+  private static void sortWorkpacks(
+    final List<Workpack> responses,
+    final WorkpackModel workpackModel
+  ) {
+    final PropertyModel sortBy = workpackModel.getSortBy();
+    responses.sort((first, second) -> PropertyComparator.compare(
+      GetPropertyValue.getValueProperty(first, sortBy),
+      GetPropertyValue.getValueProperty(second, sortBy)
+    ));
   }
 
 }

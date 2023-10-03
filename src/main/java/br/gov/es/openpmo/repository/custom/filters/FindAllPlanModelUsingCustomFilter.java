@@ -4,12 +4,11 @@ package br.gov.es.openpmo.repository.custom.filters;
 import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.repository.PlanModelRepository;
 import br.gov.es.openpmo.repository.custom.FindAllUsingCustomFilterBuilder;
-
-import java.util.Map;
-
 import org.neo4j.ogm.session.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
 
 @Service
 public class FindAllPlanModelUsingCustomFilter extends FindAllUsingCustomFilterBuilder {
@@ -50,15 +49,19 @@ public class FindAllPlanModelUsingCustomFilter extends FindAllUsingCustomFilterB
   public void buildReturnClause(final StringBuilder query) {
     query.append("RETURN ").append(this.nodeName).append(", r, o");
   }
-  
+
   @Override
   public void buildOrderingAndDirectionClause(
     final CustomFilter filter,
     Map<String, Object> params,
     final StringBuilder query
   ) {
-	if (filter.isSimilarityFilter()) query.append(" ").append("ORDER BY ");
-	buildOrderingBySimilarity(filter, query);
+    if (filter.isSimilarityFilter()) {
+      query.append(" ").append("ORDER BY ");
+      buildOrderingBySimilarity(filter, query);
+    } else {
+      super.buildOrderingAndDirectionClause(filter, params, query);
+    }
   }
 
   @Override

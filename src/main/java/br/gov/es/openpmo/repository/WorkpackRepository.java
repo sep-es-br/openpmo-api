@@ -591,22 +591,26 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   @Override
   List<Workpack> findAll();
 
-  @Query("match (w:Workpack)<-[:IS_IN]-(x:Workpack)-[a:IS_INSTANCE_BY|IS_LINKED_TO]->(m:WorkpackModel)-[:IS_IN]->(n:WorkpackModel)<-[:IS_INSTANCE_BY|IS_LINKED_TO]-(w) " +
+  @Query("match (w:Workpack)<-[:IS_IN]-(x:Workpack)-[z:IS_INSTANCE_BY|IS_LINKED_TO]->(m:WorkpackModel)-[:IS_IN]->(:WorkpackModel)<-[:IS_INSTANCE_BY|IS_LINKED_TO]-(w) " +
     "where id(w)=$idWorkpackActual and id(m)=$idWorkpackModel " +
-    "return x,a,m, [ " +
-    " [(x)<-[b:IS_IN]-(y:Workpack)-[c:IS_INSTANCE_BY|IS_LINKED_TO]->(l:WorkpackModel)-[d:IS_IN]->(cc:WorkpackModel) | [b,y,c,l,d,cc]], " +
-    " [(x)-[aa:IS_INSTANCE_BY]->(s:WorkpackModel)<-[f:FEATURES]-(k:PropertyModel{name:'name'})<-[e:IS_DRIVEN_BY]-(p:Property)-[g:FEATURES]->(x) | [aa,s,f,k,e,p,g]], " +
-    " [(x)<-[jj:IS_IN]-(z:Workpack)-[c:IS_INSTANCE_BY|IS_LINKED_TO]->(r:WorkpackModel)<-[h:FEATURES]-(o:PropertyModel{name:'name'})<-[u:IS_DRIVEN_BY]-(q:Property)-[j:FEATURES]->(z) | [jj,z,c,r,h,o,u,q,j]] " +
+    "return x,z,m, [ " +
+    " [(x)<-[a:IS_IN]-(b:Workpack)-[c:IS_INSTANCE_BY|IS_LINKED_TO]->(d:WorkpackModel)-[e:IS_IN]->(f:WorkpackModel) | [a,b,c,d,e,f]], " +
+    " [(x)-[a:IS_INSTANCE_BY]->(b:WorkpackModel)<-[c:FEATURES]-(d:PropertyModel{name:'name'})<-[e:IS_DRIVEN_BY]-(f:Property)-[g:FEATURES]->(x) | [a,b,c,d,e,f,g]], " +
+    " [(x)<-[a:IS_IN]-(b:Workpack)-[c:IS_INSTANCE_BY|IS_LINKED_TO]->(d:WorkpackModel)<-[e:FEATURES]-(f:PropertyModel{name:'name'})<-[g:IS_DRIVEN_BY]-(h:Property)-[i:FEATURES]->(b) | [a,b,c,d,e,f,g,h,i]], " +
+    " [(x)-[:IS_INSTANCE_BY]->(:WorkpackModel)-[a:IS_SORTED_BY]->(b:PropertyModel)<-[c:IS_DRIVEN_BY]-(d:Property)-[e:FEATURES]->(x) | [a,b,c,d,e]], " +
+    " [(x)<-[a:IS_IN]-(b:Workpack)-[c:IS_INSTANCE_BY]->(d:WorkpackModel)-[e:IS_SORTED_BY]->(f:PropertyModel)<-[g:IS_DRIVEN_BY]-(h:Property)-[i:FEATURES]->(b) | [a,b,c,d,e,f,g,h,i]] " +
     "]")
-  Set<Workpack> findWorkpackByWorkpackModelLevel1(Long idWorkpackActual, Long idWorkpackModel);
+  List<Workpack> findWorkpackByWorkpackModelLevel1(Long idWorkpackActual, Long idWorkpackModel);
 
-  @Query("match (w:Workpack)<-[:IS_IN]-(:Workpack)<-[:IS_IN]-(x:Workpack)-[a:IS_INSTANCE_BY|IS_LINKED_TO]->(m:WorkpackModel)-[:IS_IN]->(:WorkpackModel)-[:IS_IN]->(n:WorkpackModel)<-[:IS_INSTANCE_BY|IS_LINKED_TO]-(w) " +
+  @Query("match (w:Workpack)<-[:IS_IN]-(:Workpack)<-[:IS_IN]-(x:Workpack)-[z:IS_INSTANCE_BY|IS_LINKED_TO]->(m:WorkpackModel)-[:IS_IN]->(:WorkpackModel)-[:IS_IN]->(:WorkpackModel)<-[:IS_INSTANCE_BY|IS_LINKED_TO]-(w) " +
     "where id(w)=$idWorkpackActual and id(m)=$idWorkpackModel " +
-    "return x,a,m, [ " +
-    " [(x)<-[b:IS_IN]-(y:Workpack)-[c:IS_INSTANCE_BY|IS_LINKED_TO]->(l:WorkpackModel)-[d:IS_IN]->(cc:WorkpackModel) | [b,y,c,l,d,cc]], " +
-    " [(x)-[aa:IS_INSTANCE_BY]->(s:WorkpackModel)<-[f:FEATURES]-(k:PropertyModel{name:'name'})<-[e:IS_DRIVEN_BY]-(p:Property)-[g:FEATURES]->(x) | [aa,s,f,k,e,p,g]], " +
-    " [(x)<-[jj:IS_IN]-(z:Workpack)-[c:IS_INSTANCE_BY|IS_LINKED_TO]->(r:WorkpackModel)<-[h:FEATURES]-(o:PropertyModel{name:'name'})<-[u:IS_DRIVEN_BY]-(q:Property)-[j:FEATURES]->(z) | [jj,z,c,r,h,o,u,q,j]] " +
+    "return x,z,m, [ " +
+    " [(x)<-[a:IS_IN]-(b:Workpack)-[c:IS_INSTANCE_BY|IS_LINKED_TO]->(d:WorkpackModel)-[e:IS_IN]->(f:WorkpackModel) | [a,b,c,d,e,f]], " +
+    " [(x)-[a:IS_INSTANCE_BY]->(b:WorkpackModel)<-[c:FEATURES]-(d:PropertyModel{name:'name'})<-[e:IS_DRIVEN_BY]-(f:Property)-[g:FEATURES]->(x) | [a,b,c,d,e,f,g]], " +
+    " [(x)<-[a:IS_IN]-(b:Workpack)-[c:IS_INSTANCE_BY|IS_LINKED_TO]->(d:WorkpackModel)<-[e:FEATURES]-(f:PropertyModel{name:'name'})<-[g:IS_DRIVEN_BY]-(h:Property)-[i:FEATURES]->(b) | [a,b,c,d,e,f,g,h,i]], " +
+    " [(x)-[:IS_INSTANCE_BY]->(:WorkpackModel)-[a:IS_SORTED_BY]->(b:PropertyModel)<-[c:IS_DRIVEN_BY]-(d:Property)-[e:FEATURES]->(x) | [a,b,c,d,e]], " +
+    " [(x)<-[a:IS_IN]-(b:Workpack)-[c:IS_INSTANCE_BY]->(d:WorkpackModel)-[e:IS_SORTED_BY]->(f:PropertyModel)<-[g:IS_DRIVEN_BY]-(h:Property)-[i:FEATURES]->(b) | [a,b,c,d,e,f,g,h,i]] " +
     "]")
-  Set<Workpack> findWorkpackByWorkpackModelLevel2(Long idWorkpackActual, Long idWorkpackModel);
+  List<Workpack> findWorkpackByWorkpackModelLevel2(Long idWorkpackActual, Long idWorkpackModel);
 
 }

@@ -42,8 +42,7 @@ public class FindAllWorkpackByParentUsingCustomFilter extends FindAllUsingCustom
     query.append(
       "MATCH (pl:Plan), (wm:WorkpackModel), (p:Workpack) " +
       "WHERE id(pl)=$idPlan AND id(wm)=$idWorkpackModel AND id(p)=$idWorkpackParent " +
-      "OPTIONAL MATCH (w:Workpack{deleted:false})-[:IS_IN]->(p) " +
-      "OPTIONAL MATCH (w)-[:IS_INSTANCE_BY]->(wm) " +
+      "OPTIONAL MATCH (p)<-[:IS_IN]-(w:Workpack{deleted:false})-[:IS_INSTANCE_BY]->(wm) " +
       "OPTIONAL MATCH (w)-[bt1:BELONGS_TO]->(pl) " +
       "OPTIONAL MATCH (w)<-[:FEATURES]-(property1:Property) " +
       "OPTIONAL MATCH (w)<-[:FEATURES]-(name1:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}) " +
@@ -82,8 +81,10 @@ public class FindAllWorkpackByParentUsingCustomFilter extends FindAllUsingCustom
     final StringBuilder query
   ) {
     query.append(
-      "WHERE ( (bt1.linked=null OR bt1.linked=false) AND ($term IS NULL OR $term = '' OR score1 > $searchCutOffScore) ) OR " +
-      "      ( bt2.linked=true AND ($term IS NULL OR $term = '' OR score2 > $searchCutOffScore) ) "
+      "WHERE ( " +
+      "    ( (bt1.linked=null OR bt1.linked=false) AND ($term IS NULL OR $term = '' OR score1 > $searchCutOffScore) ) OR " +
+      "    ( bt2.linked=true AND ($term IS NULL OR $term = '' OR score2 > $searchCutOffScore) )" +
+      ") "
     );
   }
 
@@ -96,9 +97,9 @@ public class FindAllWorkpackByParentUsingCustomFilter extends FindAllUsingCustom
       "RETURN workpacks, [ " +
       "    [ (workpacks)<-[f:FEATURES]-(p:Property)-[d:IS_DRIVEN_BY]->(pm:PropertyModel) | [f, p, d, pm] ], " +
       "    [ (workpacks)-[iib:IS_INSTANCE_BY]->(m1:WorkpackModel) | [iib, m1] ], " +
-      "    [ (m1)<-[f2:FEATURES]-(pm2:PropertyModel) | [f2, pm2] ], " +
+      "    [ (workpacks)-[:IS_INSTANCE_BY]->(:WorkpackModel)<-[f2:FEATURES]-(pm2:PropertyModel) | [f2, pm2] ], " +
       "    [ (workpacks)-[ilt:IS_LINKED_TO]->(m2:WorkpackModel) | [ilt, m2] ], " +
-      "    [ (m2)<-[f3:FEATURES]-(pm3:PropertyModel) | [f3, pm3] ], " +
+      "    [ (workpacks)-[:IS_LINKED_TO]->(:WorkpackModel)<-[f3:FEATURES]-(pm3:PropertyModel) | [f3, pm3] ], " +
       "    [ (workpacks)-[bt:BELONGS_TO]->(pn:Plan) | [bt,pn] ], " +
       "    [ (workpacks)<-[ii:IS_IN]->(z:Workpack) | [ii, z] ], " +
       "    [ (workpacks)-[isw:IS_SHARED_WITH]->(o:Office) | [isw, o] ] " +

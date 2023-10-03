@@ -65,7 +65,7 @@ public interface ApplyFilterUsingPropertyModel {
         );
       }
       return MessageFormat.format(
-        "ANY( pr IN properties WHERE pr.value {0} ${1} AND {2} ) ",
+        "ANY( pr IN properties WHERE (pr.value {0} ${1} or toFloat(pr.value) {0} ${1}) AND {2} ) ",
         operador,
         label,
         propertyLinkedToPropertyModelTemplate

@@ -4,6 +4,7 @@ import br.gov.es.openpmo.enumerator.GeneralOperatorsEnum;
 import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.model.filter.LogicOperatorEnum;
 import br.gov.es.openpmo.model.filter.Rules;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.neo4j.ogm.session.Session;
 import org.springframework.util.StringUtils;
 
@@ -115,6 +116,9 @@ public abstract class AbstractCustomFilterBuilder {
     }
     if ("true".equalsIgnoreCase(value) || "false".equalsIgnoreCase(value)) {
       return Boolean.valueOf(value);
+    }
+    if (NumberUtils.isCreatable(value)) {
+      return NumberUtils.createNumber(value);
     }
     return value;
   }

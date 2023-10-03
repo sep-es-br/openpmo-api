@@ -13,12 +13,12 @@ import org.springframework.stereotype.Service;
 import java.text.MessageFormat;
 
 @Service
-public class FindAllOfficePermissionUsingCustomFilter extends FindAllUsingCustomFilterBuilder {
+public class FindAllPlanPermissionUsingCustomFilter extends FindAllUsingCustomFilterBuilder {
 
   private final OfficePermissionRepository repository;
 
   @Autowired
-  public FindAllOfficePermissionUsingCustomFilter(final OfficePermissionRepository repository) {
+  public FindAllPlanPermissionUsingCustomFilter(final OfficePermissionRepository repository) {
     this.repository = repository;
   }
 
@@ -32,9 +32,8 @@ public class FindAllOfficePermissionUsingCustomFilter extends FindAllUsingCustom
     final CustomFilter filter,
     final StringBuilder query
   ) {
-    query.append("MATCH (person:Person)-[").append(this.nodeName).append(":CAN_ACCESS_OFFICE]->")
-      .append("(office:Office)").append(" ")
-      .append("OPTIONAL MATCH (person)-[contact:IS_IN_CONTACT_BOOK_OF]->(office)").append(" ")
+    query.append("MATCH (person:Person)-[").append(this.nodeName).append(":CAN_ACCESS_PLAN]->")
+      .append("(plan:Plan)").append(" ")
       .append("OPTIONAL MATCH (person)-[auth:IS_AUTHENTICATED_BY]->(:AuthService)").append(" ")
       .append("WITH *").append(" ");
   }
@@ -44,12 +43,12 @@ public class FindAllOfficePermissionUsingCustomFilter extends FindAllUsingCustom
     final CustomFilter filter,
     final StringBuilder query
   ) {
-    query.append("WHERE ID(office)=$idOffice").append(" ");
+    query.append("WHERE ID(plan)=$idPlan").append(" ");
   }
 
   @Override
   public void buildReturnClause(final StringBuilder query) {
-    query.append("RETURN ").append(this.nodeName).append(", office, person");
+    query.append("RETURN ").append(this.nodeName).append(", plan, person");
   }
 
   @Override
@@ -94,7 +93,7 @@ public class FindAllOfficePermissionUsingCustomFilter extends FindAllUsingCustom
 
   @Override
   public String[] getDefinedExternalParams() {
-    return new String[]{"idOffice"};
+    return new String[]{"idPlan"};
   }
 
 }

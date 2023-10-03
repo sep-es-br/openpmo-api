@@ -38,11 +38,9 @@ public class FindAllCostAccountUsingCustomFilter extends FindAllUsingCustomFilte
     final StringBuilder query
   ) {
     query.append(
-                 "MATCH (workpack:Workpack{deleted: false})-[belongsTo:BELONGS_TO]->(plan:Plan), " +
-                 "(workpack)-[:IS_INSTANCE_BY]->(wm:WorkpackModel)<-[:FEATURES]-(propertyModel:PropertyModel), " +
-                 "(workpack)<-[:FEATURES]-(property:Property)-[:IS_DRIVEN_BY]->(propertyModel) " +
-                 "OPTIONAL MATCH (propertyModel)-[:GROUPS]->(groupedProperty:PropertyModel) " +
-                 "OPTIONAL MATCH (workpack)<-[:FEATURES]-(:Property)-[:VALUES]->(values) " +
+                 "MATCH (plan:Plan)<-[belongsTo:BELONGS_TO]-(workpack:Workpack{deleted: false})<-[a:APPLIES_TO]-(costAccount:CostAccount)-[i:IS_INSTANCE_BY]->(costAccountModel:CostAccountModel), " +
+                 "(costAccount)<-[f:FEATURES]-(property:Property)-[d:IS_DRIVEN_BY]->(propertyModel:PropertyModel)-[g:FEATURES]->(costAccountModel) " +
+                 "OPTIONAL MATCH (property)-[v:VALUES]->(values) " +
                  "WITH *, " +
                  "collect( property ) as properties, " +
                  "collect( id(values) ) as selectedValues ");
@@ -61,15 +59,8 @@ public class FindAllCostAccountUsingCustomFilter extends FindAllUsingCustomFilte
 
   @Override
   public void buildReturnClause(final StringBuilder query) {
-    query.append("RETURN workpack, [ ")
-      .append("  [(workpack)<-[appliesTo:APPLIES_TO]-(node:CostAccount) | [appliesTo, node] ], ")
-      .append("  [(node)<-[f1:FEATURES]-(p1:Property)-[d1:IS_DRIVEN_BY]->(pm1:PropertyModel) | [f1, p1, d1, pm1] ], ")
-      .append("  [(p2)-[v1:VALUES]->(o:Organization) | [v1, o] ], ")
-      .append("  [(p2)-[v2:VALUES]-(l:Locality) | [v2, l] ], ")
-      .append("  [(p2)-[v3:VALUES]-(u:UnitMeasure) | [v3, u] ], ")
-      .append("  [(workpack)-[isIn:IS_IN*]->(w2:Workpack)-[:BELONGS_TO]->(plan) | [isIn, w2] ], ")
-      .append("  [(w2)<-[i2:APPLIES_TO]-(c2:CostAccount) | [i2, c2] ], ")
-      .append("  [(c2)<-[f2:FEATURES]-(p2:Property)-[d2:IS_DRIVEN_BY]->(pm2:PropertyModel) | [f2, p2, d2, pm2] ] ")
+    query.append("RETURN costAccount, i, costAccountModel, a, workpack, belongsTo, plan, f, property, v, values, d, propertyModel, g, [")
+      .append("[(costAccount)<-[a1:FEATURES]-(b1:Property)-[c1:IS_DRIVEN_BY]->(d1:PropertyModel)-[e1:FEATURES]->(costAccountModel)|[a1,b1,c1,d1,e1]]")
       .append("]");
   }
 

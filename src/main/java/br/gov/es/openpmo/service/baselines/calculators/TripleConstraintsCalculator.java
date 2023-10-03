@@ -100,19 +100,29 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
       return null;
     }
 
-    return consumesProposed.stream()
-      .map(Consumes::getStep)
-      .map(Step::getPlannedWork)
-      .reduce(BigDecimal.ZERO, BigDecimal::add);
+    BigDecimal acc = BigDecimal.ZERO;
+    for (Consumes consumes : consumesProposed) {
+      Step step = consumes.getStep();
+      BigDecimal plannedWork = step.getPlannedWork();
+      if (plannedWork != null) {
+        acc = acc.add(plannedWork);
+      }
+    }
+    return acc;
   }
 
   private static BigDecimal getTotalCostOfStep(final Collection<? extends Consumes> consumes) {
     if(consumes.isEmpty()) {
       return null;
     }
-    return consumes.stream()
-      .map(Consumes::getPlannedCost)
-      .reduce(BigDecimal.ZERO, BigDecimal::add);
+    BigDecimal acc = BigDecimal.ZERO;
+    for (Consumes consume : consumes) {
+      BigDecimal plannedCost = consume.getPlannedCost();
+      if (plannedCost != null) {
+        acc = acc.add(plannedCost);
+      }
+    }
+    return acc;
   }
 
   @Override

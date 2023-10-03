@@ -29,18 +29,28 @@ public class StepDataCollector implements IStepDataCollector {
     if(steps.isEmpty()) {
       return null;
     }
-    return steps.stream()
-      .map(Step::getPlannedWork)
-      .reduce(BigDecimal.ZERO, BigDecimal::add);
+    BigDecimal acc = BigDecimal.ZERO;
+    for (Step step : steps) {
+      BigDecimal plannedWork = step.getPlannedWork();
+      if (plannedWork != null) {
+        acc = acc.add(plannedWork);
+      }
+    }
+    return acc;
   }
 
   private static BigDecimal getTotalCostOfStep(final Collection<? extends Consumes> consumes) {
     if(consumes.isEmpty()) {
       return null;
     }
-    return consumes.stream()
-      .map(Consumes::getPlannedCost)
-      .reduce(BigDecimal.ZERO, BigDecimal::add);
+    BigDecimal acc = BigDecimal.ZERO;
+    for (Consumes consume : consumes) {
+      BigDecimal plannedCost = consume.getPlannedCost();
+      if (plannedCost != null) {
+        acc = acc.add(plannedCost);
+      }
+    }
+    return acc;
   }
 
   @Override

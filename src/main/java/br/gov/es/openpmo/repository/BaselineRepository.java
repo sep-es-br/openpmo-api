@@ -287,9 +287,9 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
             "OPTIONAL MATCH (w)<-[:IS_IN*]-(v:Workpack{deleted:false})-[:IS_BASELINED_BY]->(bDown:Baseline) " +
             "WHERE bDown.active=true OR bDown.status IN ['APPROVED', 'PROPOSED'] " +
             "WITH w,bDirect,bUp,bDown " +
-            "UNWIND CASE bDirect WHEN null THEN " +
-            "        CASE bUp WHEN null THEN " +
-            "            CASE bDown WHEN null THEN [] ELSE bDown END " +
+            "UNWIND CASE WHEN bDirect is null THEN " +
+            "        CASE WHEN bUp is null THEN " +
+            "            CASE WHEN bDown is null THEN [] ELSE bDown END " +
             "        ELSE bUp END " +
             "    ELSE bDirect END AS baselines " +
             "RETURN baselines")
@@ -334,39 +334,6 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
             "    min(startDates) AS initialDate, " +
             "    max(unwindScheduleEndDates) AS endDate")
     Optional<DateIntervalQuery> findScheduleIntervalInSnapshotsOfBaseline(Long idBaseline);
-
-    @Query("MATCH (b:Baseline)<-[:IS_BASELINED_BY]-(p:Project{deleted:false})<-[:IS_SNAPSHOT_OF]-(ps:Project) " +
-            "WHERE id(b) IN $baselineIds " +
-            "OPTIONAL MATCH (w:Workpack{deleted:false})<-[:IS_IN*]->(p) " +
-            "WITH * " +
-            "WHERE id(w)=$workpackId " +
-            "OPTIONAL MATCH (w)<-[:IS_IN*]-(:Deliverable{deleted:false})<-[:FEATURES]-(:Schedule)<-[:IS_SNAPSHOT_OF]-(s1:Schedule)-[:COMPOSES]->(b) " +
-            "OPTIONAL MATCH (w)<-[:IS_IN*]-(:Milestone{deleted:false})<-[:FEATURES]-(:Date)<-[:IS_SNAPSHOT_OF]-(d1:Date)-[:COMPOSES]->(b) " +
-            "OPTIONAL MATCH (w)<-[:FEATURES]-(:Schedule)<-[:IS_SNAPSHOT_OF]-(s2:Schedule)-[:COMPOSES]->(b) " +
-            "OPTIONAL MATCH (w)<-[:FEATURES]-(:Date)<-[:IS_SNAPSHOT_OF]-(d2:Date)-[:COMPOSES]->(baseline) " +
-            "OPTIONAL MATCH (p)<-[:IS_IN*]-(:Deliverable{deleted:false})<-[:FEATURES]-(:Schedule)<-[:IS_SNAPSHOT_OF]-(s3:Schedule)-[:COMPOSES]->(b) " +
-            "OPTIONAL MATCH (p)<-[:IS_IN*]-(:Milestone{deleted:false})<-[:FEATURES]-(:Date)<-[:IS_SNAPSHOT_OF]-(d3:Date)-[:COMPOSES]->(b) " +
-            "WITH * " +
-            "WITH " +
-            "    CASE id(w) WHEN $workpackId THEN collect(DISTINCT datetime(s1.start)) ELSE [] END + " +
-            "    CASE id(w) WHEN $workpackId THEN collect(DISTINCT datetime(s2.start)) ELSE [] END + " +
-            "    CASE id(p) WHEN $workpackId THEN collect(DISTINCT datetime(s3.start)) ELSE [] END + " +
-            "    CASE id(w) WHEN $workpackId THEN collect(DISTINCT datetime(d1.value)) ELSE [] END + " +
-            "    CASE id(w) WHEN $workpackId THEN collect(DISTINCT datetime(d2.value)) ELSE [] END + " +
-            "    CASE id(p) WHEN $workpackId THEN collect(DISTINCT datetime(d3.value)) ELSE [] END AS startDatesList, " +
-            "    CASE id(w) WHEN $workpackId THEN collect(DISTINCT datetime(s1.end)) ELSE [] END + " +
-            "    CASE id(w) WHEN $workpackId THEN collect(DISTINCT datetime(s2.end)) ELSE [] END + " +
-            "    CASE id(p) WHEN $workpackId THEN collect(DISTINCT datetime(s3.end)) ELSE [] END + " +
-            "    CASE id(w) WHEN $workpackId THEN collect(DISTINCT datetime(d1.value)) ELSE [] END + " +
-            "    CASE id(w) WHEN $workpackId THEN collect(DISTINCT datetime(d2.value)) ELSE [] END + " +
-            "    CASE id(p) WHEN $workpackId THEN collect(DISTINCT datetime(d3.value)) ELSE [] END AS endDatesList " +
-            "UNWIND startDatesList AS startDates " +
-            "UNWIND endDatesList AS endDates " +
-            "RETURN min(startDates) AS initialDate, max(endDates) AS endDate ")
-    Optional<DateIntervalQuery> fetchIntervalOfSchedules(
-            Long workpackId,
-            List<Long> baselineIds
-    );
 
     @Query("MATCH (w:Workpack)-[ii:IS_BASELINED_BY]->(b:Baseline), " +
             "(p:Person)-[c:IS_CCB_MEMBER_FOR{active:true}]->(w), " +

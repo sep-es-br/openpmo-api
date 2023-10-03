@@ -56,6 +56,7 @@ public class FindAllOfficePermissionByIdPersonUsingCustomFilter extends FindAllU
             label
           );
         case "level":
+        case "permissionLevel":
           return MessageFormat.format("(node.permissionLevel =~ ''.*'' + ${0} + ''.*'') ", label);
         default:
           throw new UnsupportedOperationException("Propriedade não suportada!");
@@ -68,6 +69,7 @@ public class FindAllOfficePermissionByIdPersonUsingCustomFilter extends FindAllU
         case "email":
           return MessageFormat.format("((auth.email {0} ${1}) or (contact.email {0} ${1}) ", operador, label);
         case "level":
+        case "permissionLevel":
           return MessageFormat.format("(node.permissionLevel {0} ${1}) ", operador, label);
         default:
           throw new UnsupportedOperationException("Propriedade não suportada!");
