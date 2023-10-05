@@ -9,6 +9,7 @@ import br.gov.es.openpmo.dto.menu.PortfolioParentsResponse;
 import br.gov.es.openpmo.dto.menu.WorkpackMenuDto;
 import br.gov.es.openpmo.dto.menu.WorkpackModelParentsResponse;
 import br.gov.es.openpmo.service.authentication.TokenService;
+import br.gov.es.openpmo.service.properties.GetSorterProperty;
 import br.gov.es.openpmo.service.ui.IGetPortfolioParents;
 import br.gov.es.openpmo.service.ui.IGetWorkpackModelParents;
 import br.gov.es.openpmo.service.ui.MenuService;
@@ -64,6 +65,7 @@ public class MenuController {
 
     final Long idUser = this.tokenService.getUserId(authorization);
     final List<MenuOfficeDto> offices = this.menuService.findAllOffice(idUser);
+    GetSorterProperty.clear();
 
     if (offices.isEmpty()) {
       return ResponseEntity.noContent().build();
@@ -82,6 +84,7 @@ public class MenuController {
     final Long idUser = this.tokenService.getUserId(authorization);
     final Set<WorkpackMenuDto> portfolios = this.menuService
       .findAllPortfolio(new PortfolioMenuRequest(idOffice, idPlan, idUser));
+    GetSorterProperty.clear();
 
     if (portfolios.isEmpty()) {
       return ResponseEntity.noContent().build();

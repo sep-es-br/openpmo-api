@@ -339,7 +339,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
   public Set<WorkpackModelDetailDto> getChildren(final Collection<? extends WorkpackModel> childrens) {
     if (childrens != null && !childrens.isEmpty()) {
       final Collection<WorkpackModelDetailDto> set = new HashSet<>();
-      childrens.stream().forEach(w -> {
+      childrens.forEach(w -> {
         Set<WorkpackModelDetailDto> childrenChild = null;
         if (w.getChildren() != null && !w.getChildren().isEmpty()) {
           childrenChild = this.getChildren(w.getChildren());

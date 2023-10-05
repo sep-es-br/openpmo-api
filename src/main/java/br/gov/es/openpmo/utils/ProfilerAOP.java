@@ -9,13 +9,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class ProfilerAOP {
 
-    @Around("@annotation(br.gov.es.openpmo.configuration.Profile)")
-    public Object measureMethodExecutionTime(ProceedingJoinPoint pjp) throws Throwable {
-        final Profiler profiler = Profiler.of(pjp.getTarget().getClass().getName());
-        profiler.start(pjp.getSignature().getName());
-        Object retval = pjp.proceed();
-        profiler.end();
-        return retval;
-    }
+  @Around("@annotation(br.gov.es.openpmo.configuration.Profile)")
+  public Object measureMethodExecutionTime(ProceedingJoinPoint pjp) throws Throwable {
+    final Profiler profiler = Profiler.of(pjp.getTarget().getClass().getName(), pjp.getSignature().getName());
+    profiler.start();
+    Object retval = pjp.proceed();
+    profiler.end();
+    return retval;
+  }
 
 }

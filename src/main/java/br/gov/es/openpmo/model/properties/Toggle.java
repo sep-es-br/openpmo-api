@@ -1,10 +1,8 @@
 package br.gov.es.openpmo.model.properties;
 
 import br.gov.es.openpmo.enumerator.CategoryEnum;
-import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.properties.models.ToggleModel;
-import br.gov.es.openpmo.model.workpacks.Workpack;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -17,12 +15,6 @@ public class Toggle extends Property<Toggle, Boolean> {
 
   private CategoryEnum category;
 
-  @Relationship("FEATURES")
-  private Workpack workpack;
-
-  @Relationship(type = "COMPOSES")
-  private Baseline baseline;
-
   @Relationship("IS_DRIVEN_BY")
   private ToggleModel driver;
 
@@ -34,16 +26,6 @@ public class Toggle extends Property<Toggle, Boolean> {
     final Toggle toggle = new Toggle();
     toggle.setValue(this.value);
     return toggle;
-  }
-
-  @Override
-  public Baseline getBaseline() {
-    return this.baseline;
-  }
-
-  @Override
-  public void setBaseline(final Baseline baseline) {
-    this.baseline = baseline;
   }
 
   @Override
@@ -89,16 +71,6 @@ public class Toggle extends Property<Toggle, Boolean> {
     }
     final Toggle toggle = (Toggle) o;
     return Objects.equals(this.driver, toggle.driver);
-  }
-
-  @Override
-  public Workpack getWorkpack() {
-    return this.workpack;
-  }
-
-  @Override
-  public void setWorkpack(final Workpack workpack) {
-    this.workpack = workpack;
   }
 
   @Override

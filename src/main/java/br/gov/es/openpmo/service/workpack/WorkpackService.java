@@ -1261,7 +1261,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
   private List<? extends PropertyDto> getPropertiesDto(final Collection<? extends Property> properties) {
     if (properties != null && !properties.isEmpty()) {
       final List<PropertyDto> list = new ArrayList<>();
-      properties.stream().forEach(property -> {
+      properties.forEach(property -> {
         final String typeName = property.getClass().getTypeName();
         switch (typeName) {
           case TYPE_MODEL_NAME_INTEGER:

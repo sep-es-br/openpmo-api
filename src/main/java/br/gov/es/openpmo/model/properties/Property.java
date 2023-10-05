@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.model.properties;
 
 import br.gov.es.openpmo.model.Entity;
+import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.baselines.Snapshotable;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.relations.IsPropertySnapshotOf;
@@ -57,15 +58,17 @@ public abstract class Property<T, V> extends Entity implements HasValue<V>, Snap
   @Relationship(type = "IS_SNAPSHOT_OF", direction = INCOMING)
   private Set<IsPropertySnapshotOf> snapshots;
 
+  @Relationship(type = "COMPOSES")
+  private Baseline baseline;
+
+  @Relationship("FEATURES")
+  private Workpack workpack;
+
   @Relationship(type = "FEATURES")
   private CostAccount costAccount;
 
   protected Property() {
   }
-
-  public abstract Workpack getWorkpack();
-
-  public abstract void setWorkpack(Workpack workpack);
 
   public abstract PropertyModel getPropertyModel();
 
@@ -88,6 +91,24 @@ public abstract class Property<T, V> extends Entity implements HasValue<V>, Snap
 
   public void setSnapshots(final Set<IsPropertySnapshotOf> snapshots) {
     this.snapshots = snapshots;
+  }
+
+  @Override
+  public Baseline getBaseline() {
+    return baseline;
+  }
+
+  @Override
+  public void setBaseline(Baseline baseline) {
+    this.baseline = baseline;
+  }
+
+  public Workpack getWorkpack() {
+    return workpack;
+  }
+
+  public void setWorkpack(Workpack workpack) {
+    this.workpack = workpack;
   }
 
   public CostAccount getCostAccount() {

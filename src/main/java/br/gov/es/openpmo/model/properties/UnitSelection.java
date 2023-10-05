@@ -1,11 +1,9 @@
 package br.gov.es.openpmo.model.properties;
 
 import br.gov.es.openpmo.enumerator.CategoryEnum;
-import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.office.UnitMeasure;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.properties.models.UnitSelectionModel;
-import br.gov.es.openpmo.model.workpacks.Workpack;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -19,12 +17,6 @@ public class UnitSelection extends Property<UnitSelection, UnitMeasure> {
 
   private CategoryEnum category;
 
-  @Relationship("FEATURES")
-  private Workpack workpack;
-
-  @Relationship(type = "COMPOSES")
-  private Baseline baseline;
-
   @Relationship("IS_DRIVEN_BY")
   private UnitSelectionModel driver;
 
@@ -36,16 +28,6 @@ public class UnitSelection extends Property<UnitSelection, UnitMeasure> {
     final UnitSelection unitSelection = new UnitSelection();
     unitSelection.setValue(this.value);
     return unitSelection;
-  }
-
-  @Override
-  public Baseline getBaseline() {
-    return this.baseline;
-  }
-
-  @Override
-  public void setBaseline(final Baseline baseline) {
-    this.baseline = baseline;
   }
 
   @Override
@@ -74,16 +56,6 @@ public class UnitSelection extends Property<UnitSelection, UnitMeasure> {
 
   public void setDriver(final UnitSelectionModel driver) {
     this.driver = driver;
-  }
-
-  @Override
-  public Workpack getWorkpack() {
-    return this.workpack;
-  }
-
-  @Override
-  public void setWorkpack(final Workpack workpack) {
-    this.workpack = workpack;
   }
 
   @Override

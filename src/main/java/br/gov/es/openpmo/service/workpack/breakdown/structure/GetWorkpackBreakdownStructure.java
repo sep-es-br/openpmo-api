@@ -122,7 +122,7 @@ public class GetWorkpackBreakdownStructure {
         summary.setWorkpackModelPosition(child.getPosition());
         workpackModelBreakdownStructure.setRepresentation(summary);
         final List<WorkpackBreakdownStructure> workpackBreakdownStructures = new CopyOnWriteArrayList<>();
-        workpacks.stream().forEach(workpack -> {
+        workpacks.forEach(workpack -> {
           final WorkpackBreakdownStructure structure = this.getStructure(
             workpack,
             child,

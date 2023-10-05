@@ -6,10 +6,24 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 @Repository
 public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone, Long> {
+
+  @Query("match (w:Workpack)<-[i:IS_IN*]-(m:Milestone)<-[f:FEATURES]-(d:Date) " +
+    "optional match (w)-[ii:IS_IN*0..]-(:Project{deleted:false,canceled:false})-[:IS_BASELINED_BY]->(b:Baseline) " +
+    "with * " +
+    "where id(w)=$workpackId and ($baselineId is null or id(b)=$baselineId) " +
+    "and w.deleted=false and w.canceled=false " +
+    "and m.deleted=false and m.canceled=false " +
+    "and b.active=true " +
+    "return m, f, d, [ " +
+    "    [(m)<-[iso:IS_SNAPSHOT_OF]-(ms:Milestone)-[c:COMPOSES]->(b) | [iso,ms,c]], " +
+    "    [(d)<-[iso2:IS_SNAPSHOT_OF]-(d3:Date)-[f3:FEATURES]->(ms2:Milestone)-[c2:COMPOSES]->(b) | [iso2,d3,f3,ms2,c2]] " +
+    "]")
+  List<Milestone> findByParentId(Long workpackId, Long baselineId);
 
   @Query("match (m:Milestone{deleted:false,canceled:false})-[:IS_IN]->(w:Workpack{deleted:false,canceled:false}) " +
          "where id(m)=$milestoneId " +

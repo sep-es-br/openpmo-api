@@ -1,11 +1,9 @@
 package br.gov.es.openpmo.model.properties;
 
 import br.gov.es.openpmo.enumerator.CategoryEnum;
-import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.office.Locality;
 import br.gov.es.openpmo.model.properties.models.LocalitySelectionModel;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
-import br.gov.es.openpmo.model.workpacks.Workpack;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -22,12 +20,6 @@ public class LocalitySelection extends Property<LocalitySelection, Set<Locality>
 
   private CategoryEnum category;
 
-  @Relationship(type = "COMPOSES")
-  private Baseline baseline;
-
-  @Relationship("FEATURES")
-  private Workpack workpack;
-
   @Relationship("IS_DRIVEN_BY")
   private LocalitySelectionModel driver;
 
@@ -40,16 +32,6 @@ public class LocalitySelection extends Property<LocalitySelection, Set<Locality>
     final HashSet<Locality> value = Optional.ofNullable(this.value).map(HashSet::new).orElse(null);
     localitySelection.setValue(value);
     return localitySelection;
-  }
-
-  @Override
-  public Baseline getBaseline() {
-    return this.baseline;
-  }
-
-  @Override
-  public void setBaseline(final Baseline baseline) {
-    this.baseline = baseline;
   }
 
   @Override
@@ -96,16 +78,6 @@ public class LocalitySelection extends Property<LocalitySelection, Set<Locality>
     }
     final LocalitySelection that = (LocalitySelection) o;
     return Objects.equals(this.driver, that.driver);
-  }
-
-  @Override
-  public Workpack getWorkpack() {
-    return this.workpack;
-  }
-
-  @Override
-  public void setWorkpack(final Workpack workpack) {
-    this.workpack = workpack;
   }
 
   @Override

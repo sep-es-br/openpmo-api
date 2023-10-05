@@ -1,10 +1,8 @@
 package br.gov.es.openpmo.model.properties;
 
 import br.gov.es.openpmo.enumerator.CategoryEnum;
-import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.properties.models.CurrencyModel;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
-import br.gov.es.openpmo.model.workpacks.Workpack;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -18,12 +16,6 @@ public class Currency extends Property<Currency, BigDecimal> {
 
   private CategoryEnum category;
 
-  @Relationship("FEATURES")
-  private Workpack workpack;
-
-  @Relationship(type = "COMPOSES")
-  private Baseline baseline;
-
   @Relationship("IS_DRIVEN_BY")
   private CurrencyModel driver;
 
@@ -35,16 +27,6 @@ public class Currency extends Property<Currency, BigDecimal> {
     final Currency currency = new Currency();
     currency.setValue(this.value);
     return currency;
-  }
-
-  @Override
-  public Baseline getBaseline() {
-    return this.baseline;
-  }
-
-  @Override
-  public void setBaseline(final Baseline baseline) {
-    this.baseline = baseline;
   }
 
   @Override
@@ -91,16 +73,6 @@ public class Currency extends Property<Currency, BigDecimal> {
     }
     final Currency currency = (Currency) o;
     return Objects.equals(this.driver, currency.driver);
-  }
-
-  @Override
-  public Workpack getWorkpack() {
-    return this.workpack;
-  }
-
-  @Override
-  public void setWorkpack(final Workpack workpack) {
-    this.workpack = workpack;
   }
 
   @Override

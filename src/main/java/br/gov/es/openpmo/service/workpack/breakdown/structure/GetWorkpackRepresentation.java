@@ -8,7 +8,7 @@ import br.gov.es.openpmo.dto.workpack.breakdown.structure.ScheduleRepresentation
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.WorkpackRepresentation;
 import br.gov.es.openpmo.enumerator.MilestoneStatus;
 import br.gov.es.openpmo.model.office.UnitMeasure;
-import br.gov.es.openpmo.model.properties.HasValue;
+import br.gov.es.openpmo.model.properties.Property;
 import br.gov.es.openpmo.model.schedule.Schedule;
 import br.gov.es.openpmo.model.workpacks.Deliverable;
 import br.gov.es.openpmo.model.workpacks.Milestone;
@@ -26,6 +26,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.Set;
 
 @Component
 public class GetWorkpackRepresentation {
@@ -77,12 +78,12 @@ public class GetWorkpackRepresentation {
       workpackRepresentation.setMilestone(milestoneRepresentation);
     }
     if (workpack instanceof Deliverable) {
-      final Optional<Schedule> scheduleOptional = this.scheduleRepository.findScheduleByWorkpackId(workpackId);
+      final Optional<Schedule> scheduleOptional = this.scheduleRepository.findScheduleUnitMeasureByWorkpackId(workpackId);
       if (scheduleOptional.isPresent()) {
         final Schedule schedule = scheduleOptional.get();
         final ScheduleDto scheduleDto = this.scheduleService.mapsToScheduleDto(schedule);
         final ScheduleRepresentation scheduleRepresentation = new ScheduleRepresentation();
-        scheduleRepresentation.setUnitMeasure(this.buildUnitMeasure(workpackId));
+        scheduleRepresentation.setUnitMeasure(this.buildUnitMeasure(schedule.getWorkpack()));
         scheduleRepresentation.setEnd(scheduleDto.getEnd());
         scheduleRepresentation.setStart(scheduleDto.getStart());
         scheduleRepresentation.setBaselineEnd(scheduleDto.getBaselineEnd());
@@ -107,14 +108,15 @@ public class GetWorkpackRepresentation {
            workpack instanceof Organizer;
   }
 
-  private ScheduleMeasureUnit buildUnitMeasure(final Long workpackId) {
-    final Optional<Workpack> workpackUnitMeasure = this.workpackRepository.findWorkpackUnitMeasure(workpackId);
-    return workpackUnitMeasure
-      .map(Workpack::getProperties)
-      .flatMap(properties -> properties.stream().filter(property -> property.getValue() instanceof UnitMeasure).findFirst())
-      .map(HasValue::getValue)
-      .map(unitMeasure -> ScheduleMeasureUnit.of((UnitMeasure) unitMeasure))
-      .orElse(null);
+  private ScheduleMeasureUnit buildUnitMeasure(final Workpack workpack) {
+    final Set<Property> properties = workpack.getProperties();
+    for (Property property : properties) {
+      final Object value = property.getValue();
+      if (value instanceof UnitMeasure) {
+        return ScheduleMeasureUnit.of((UnitMeasure) value);
+      }
+    }
+    return null;
   }
 
 }

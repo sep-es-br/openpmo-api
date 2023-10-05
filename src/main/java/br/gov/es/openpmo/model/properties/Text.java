@@ -1,10 +1,8 @@
 package br.gov.es.openpmo.model.properties;
 
 import br.gov.es.openpmo.enumerator.CategoryEnum;
-import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.properties.models.TextModel;
-import br.gov.es.openpmo.model.workpacks.Workpack;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -16,12 +14,6 @@ public class Text extends Property<Text, String> {
   private String value;
 
   private CategoryEnum category;
-
-  @Relationship(type = "COMPOSES")
-  private Baseline baseline;
-
-  @Relationship("FEATURES")
-  private Workpack workpack;
 
   @Relationship("IS_DRIVEN_BY")
   private TextModel driver;
@@ -57,16 +49,6 @@ public class Text extends Property<Text, String> {
   }
 
   @Override
-  public Baseline getBaseline() {
-    return this.baseline;
-  }
-
-  @Override
-  public void setBaseline(final Baseline baseline) {
-    this.baseline = baseline;
-  }
-
-  @Override
   public CategoryEnum getCategory() {
     return this.category;
   }
@@ -90,16 +72,6 @@ public class Text extends Property<Text, String> {
   @Override
   public void setValue(final String value) {
     this.value = value;
-  }
-
-  @Override
-  public Workpack getWorkpack() {
-    return this.workpack;
-  }
-
-  @Override
-  public void setWorkpack(final Workpack workpack) {
-    this.workpack = workpack;
   }
 
   @Override

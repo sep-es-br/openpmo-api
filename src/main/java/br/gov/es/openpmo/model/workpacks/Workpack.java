@@ -224,7 +224,7 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
     if (this.properties == null) {
       return null;
     }
-    for (Property<?, ?> property : this.properties) {
+    for (Property property : this.properties) {
       if (property instanceof Text) {
         final Text text = (Text) property;
         final TextModel driver = text.getDriver();

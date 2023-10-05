@@ -2,10 +2,8 @@ package br.gov.es.openpmo.model.properties;
 
 import br.gov.es.openpmo.enumerator.CategoryEnum;
 import br.gov.es.openpmo.model.actors.Organization;
-import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.properties.models.OrganizationSelectionModel;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
-import br.gov.es.openpmo.model.workpacks.Workpack;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -22,12 +20,6 @@ public class OrganizationSelection extends Property<OrganizationSelection, Set<O
 
   private CategoryEnum category;
 
-  @Relationship("FEATURES")
-  private Workpack workpack;
-
-  @Relationship(type = "COMPOSES")
-  private Baseline baseline;
-
   @Relationship("IS_DRIVEN_BY")
   private OrganizationSelectionModel driver;
 
@@ -39,16 +31,6 @@ public class OrganizationSelection extends Property<OrganizationSelection, Set<O
     final OrganizationSelection organizationSelection = new OrganizationSelection();
     organizationSelection.setValue(Optional.ofNullable(this.value).map(HashSet::new).orElse(null));
     return organizationSelection;
-  }
-
-  @Override
-  public Baseline getBaseline() {
-    return this.baseline;
-  }
-
-  @Override
-  public void setBaseline(final Baseline baseline) {
-    this.baseline = baseline;
   }
 
   @Override
@@ -95,16 +77,6 @@ public class OrganizationSelection extends Property<OrganizationSelection, Set<O
     }
     final OrganizationSelection that = (OrganizationSelection) o;
     return Objects.equals(this.driver, that.driver);
-  }
-
-  @Override
-  public Workpack getWorkpack() {
-    return this.workpack;
-  }
-
-  @Override
-  public void setWorkpack(final Workpack workpack) {
-    this.workpack = workpack;
   }
 
   @Override

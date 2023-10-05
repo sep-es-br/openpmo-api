@@ -32,6 +32,15 @@ public interface ScheduleRepository extends Neo4jRepository<Schedule, Long> {
          "]")
   Optional<Schedule> findScheduleByWorkpackId(Long idWorkpack);
 
+  @Query("MATCH (s:Schedule)-[f:FEATURES]->(w:Workpack) " +
+    "WHERE id(w)=$idWorkpack " +
+    "RETURN s, f, w, [" +
+    "  [(s)<-[c:COMPOSES]-(st:Step) | [c, st] ]," +
+    "  [(s)<-[:COMPOSES]-(:Step)-[c1:CONSUMES]->(ca:CostAccount) | [c1, ca] ], " +
+    "  [(w)<-[ff:FEATURES]-(pp:Property)-[vv:VALUES]->(uu:UnitMeasure) | [ff,pp,vv,uu]] " +
+    "]")
+  Optional<Schedule> findScheduleUnitMeasureByWorkpackId(Long idWorkpack);
+
   @Query("MATCH (m:Schedule)<-[i:IS_SNAPSHOT_OF]-(s:Schedule)-[c:COMPOSES]->(b:Baseline) " +
          "WHERE id(m)=$idSchedule AND id(b)=$idBaseline " +
          "RETURN s, [ " +

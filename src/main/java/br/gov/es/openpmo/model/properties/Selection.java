@@ -1,10 +1,8 @@
 package br.gov.es.openpmo.model.properties;
 
 import br.gov.es.openpmo.enumerator.CategoryEnum;
-import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.properties.models.SelectionModel;
-import br.gov.es.openpmo.model.workpacks.Workpack;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -17,12 +15,6 @@ public class Selection extends Property<Selection, String> {
 
   private CategoryEnum category;
 
-  @Relationship(type = "COMPOSES")
-  private Baseline baseline;
-
-  @Relationship("FEATURES")
-  private Workpack workpack;
-
   @Relationship("IS_DRIVEN_BY")
   private SelectionModel driver;
 
@@ -34,16 +26,6 @@ public class Selection extends Property<Selection, String> {
     final Selection selection = new Selection();
     selection.setValue(this.value);
     return selection;
-  }
-
-  @Override
-  public Baseline getBaseline() {
-    return this.baseline;
-  }
-
-  @Override
-  public void setBaseline(final Baseline baseline) {
-    this.baseline = baseline;
   }
 
   @Override
@@ -90,16 +72,6 @@ public class Selection extends Property<Selection, String> {
     }
     final Selection selection = (Selection) o;
     return Objects.equals(this.driver, selection.driver);
-  }
-
-  @Override
-  public Workpack getWorkpack() {
-    return this.workpack;
-  }
-
-  @Override
-  public void setWorkpack(final Workpack workpack) {
-    this.workpack = workpack;
   }
 
   @Override

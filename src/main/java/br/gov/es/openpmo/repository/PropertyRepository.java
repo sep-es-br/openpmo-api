@@ -68,18 +68,17 @@ public interface PropertyRepository extends Neo4jRepository<Property, Long> {
 
   @Query(
     "MATCH (workpack:Workpack)-[:IS_INSTANCE_BY]->(model:WorkpackModel)-[isSortedBy:IS_SORTED_BY]->(sorterModel:PropertyModel) " +
-    "WHERE id(workpack)=$idWorkpack " +
     "MATCH (workpack)<-[features:FEATURES]-(sorter:Property)-[isDrivenBy:IS_DRIVEN_BY]->(sorterModel) " +
     "return workpack, sorter, isDrivenBy, sorterModel, model, isSortedBy"
   )
-  Optional<Property<?, ?>> findWorkpackModelSorterPropertyByWorkpackId(@Param("idWorkpack") Long idWorkpack);
+  List<Property> findAllSorterProperties();
 
   @Query(
     "MATCH (workpack:Workpack)<-[featuresWorkpack:FEATURES]-(property:Property)-[isDrivenBy:IS_DRIVEN_BY]->(propertyModel:PropertyModel)" +
-    "WHERE id(workpack)=$idWorkpack AND id(propertyModel)=$idPropertyModel " +
+    "WHERE id(propertyModel)=$idPropertyModel " +
     "RETURN property, workpack, featuresWorkpack, isDrivenBy, propertyModel"
   )
-  Optional<Property<?, ?>> findByWorkpackIdAndPropertyModelId(Long idWorkpack, Long idPropertyModel);
+  List<Property> findAllByPropertyModelId(Long idPropertyModel);
 
   @Query("match (p:Property), (w:Workpack) " +
     "where id(p)=$propertyId and id(w)=$workpackId " +

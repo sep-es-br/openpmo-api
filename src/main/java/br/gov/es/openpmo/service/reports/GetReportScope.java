@@ -71,7 +71,7 @@ public class GetReportScope {
       return;
     }
     scope.disablePermission();
-    scope.getChildren().stream().forEach(child -> applyPermissionsToScope(child, fetchPermissionFunction));
+    scope.getChildren().forEach(child -> applyPermissionsToScope(child, fetchPermissionFunction));
   }
 
   private Function<Long, CanAccessDataResponse> fetchPermission(final String authorization) {

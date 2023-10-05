@@ -32,7 +32,7 @@ public interface WorkpackSharedRepository extends Neo4jRepository<IsSharedWith, 
     + "WHERE id(model) = $idWorkpackModel "
     + "RETURN office, planModel, sharedWith, workpack, instanceBy, instance, model, isInInstance, instanceChildren, [ "
     + "    [(workpack)-[bt:BELONGS_TO{linked:false}]->(originalPlan:Plan) | [bt, originalPlan]], "
-    + "    [(originalPlan:Plan)-[iab:IS_ADOPTED_BY]->(originalOffice:Office) | [iab, originalOffice]] " +
+    + "    [(workpack)-[:BELONGS_TO{linked:false}]->(:Plan)-[iab:IS_ADOPTED_BY]->(originalOffice:Office) | [iab, originalOffice]] " +
     "]"
   )
   List<IsSharedWith> listAllWorkpacksShared(Long idWorkpackModel);

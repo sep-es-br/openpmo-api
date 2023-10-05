@@ -1,10 +1,8 @@
 package br.gov.es.openpmo.model.properties;
 
 import br.gov.es.openpmo.enumerator.CategoryEnum;
-import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.properties.models.NumberModel;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
-import br.gov.es.openpmo.model.workpacks.Workpack;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -19,12 +17,6 @@ public class Number extends Property<Number, Double> {
 
   private CategoryEnum category;
 
-  @Relationship("FEATURES")
-  private Workpack workpack;
-
-  @Relationship(type = "COMPOSES")
-  private Baseline baseline;
-
   @Relationship("IS_DRIVEN_BY")
   private NumberModel driver;
 
@@ -36,16 +28,6 @@ public class Number extends Property<Number, Double> {
     final Number number = new Number();
     number.setValue(this.value);
     return number;
-  }
-
-  @Override
-  public Baseline getBaseline() {
-    return this.baseline;
-  }
-
-  @Override
-  public void setBaseline(final Baseline baseline) {
-    this.baseline = baseline;
   }
 
   @Override
@@ -92,16 +74,6 @@ public class Number extends Property<Number, Double> {
     }
     final Number number = (Number) o;
     return Objects.equals(this.driver, number.driver);
-  }
-
-  @Override
-  public Workpack getWorkpack() {
-    return this.workpack;
-  }
-
-  @Override
-  public void setWorkpack(final Workpack workpack) {
-    this.workpack = workpack;
   }
 
   @Override
