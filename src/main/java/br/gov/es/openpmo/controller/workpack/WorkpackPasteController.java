@@ -8,8 +8,14 @@ import br.gov.es.openpmo.service.workpack.PasteToWorkpackService;
 import br.gov.es.openpmo.utils.ResponseHandler;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;
 
@@ -52,7 +58,6 @@ public class WorkpackPasteController {
     return this.responseHandler.success(response);
   }
 
-  @Transactional
   @PostMapping("/{idWorkpack}/paste-to/{idWorkpackModelTo}")
   public Response<Void> pastesWorkpackTo(
     @PathVariable final Long idWorkpack,
@@ -82,6 +87,12 @@ public class WorkpackPasteController {
       idParentTo,
       idWorkpackModelTo
     );
+
+    if (idParentFrom != null) {
+      this.pasteToWorkpackService.calculateDashboard(idParentFrom);
+    }
+
+    this.pasteToWorkpackService.calculateDashboard(idWorkpack);
 
     return this.responseHandler.success();
   }

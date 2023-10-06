@@ -17,6 +17,7 @@ import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -118,6 +119,7 @@ public class PasteToWorkpackService {
     }
   }
 
+  @Transactional
   public void pastesWorkpackTo(
     final Long idWorkpack,
     final Long idPlanFrom,
@@ -144,15 +146,9 @@ public class PasteToWorkpackService {
     }
 
     this.handlePasteWorkpack(workpack, workpackModel, plan);
-
-    if(idParentFrom != null) {
-      this.calculateDashboard(idParentFrom);
-    }
-
-    this.calculateDashboard(idWorkpack);
   }
 
-  private void calculateDashboard(final Long workpackId) {
+  public void calculateDashboard(final Long workpackId) {
     this.workpackRepository.findAllInHierarchy(workpackId)
       .forEach(worpackId -> this.dashboardService.calculate(worpackId, true));
   }

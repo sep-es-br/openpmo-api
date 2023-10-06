@@ -295,14 +295,11 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
          "RETURN w, [ " +
          " [(w)<-[f1:FEATURES]-(p:Property) | [f1,p]], " +
          " [(w)-[a:IS_INSTANCE_BY]->(m:WorkpackModel) | [a,m]], " +
-         " [(w)<-[i:IS_IN*]-(v:Workpack{canceled:false})<-[h:FEATURES]-(q:Property) | [i,v,h,q]], " +
-         " [(v)-[ii:IS_INSTANCE_BY]->(n:WorkpackModel) | [ii,n]], " +
-         " [(w)<-[f2:FEATURES]-(l:LocalitySelection)-[v1:VALUES]->(l1:Locality) | [f2,l,v1,l1]], " +
-         " [(w)<-[f3:FEATURES]-(o:OrganizationSelection)-[v2:VALUES]->(o1:Organization) | [f3,o,v2,o1]], " +
-         " [(w)<-[f4:FEATURES]-(u:UnitSelection)-[v3:VALUES]->(u1:UnitMeasure) | [f4,u,v3,u1]], " +
-         " [(v)-[f5:FEATURES]-(l:LocalitySelection)-[v1:VALUES]->(l1:Locality) | [f5,l,v1,l1]], " +
-         " [(v)-[f6:FEATURES]-(o:OrganizationSelection)-[v2:VALUES]->(o1:Organization) | [f6,o,v2,o1]], " +
-         " [(v)-[f7:FEATURES]-(u:UnitSelection)-[v3:VALUES]->(u1:UnitMeasure) | [f7,u,v3,u1]] " +
+         " [(w)<-[f2:FEATURES]-(l)-[v1:VALUES]->(l1) | [f2,l,v1,l1]], " +
+         " [(w)<-[i:IS_IN*]-(v:Workpack{canceled:false}) | [i,v]], " +
+         " [(w)<-[i:IS_IN*]-(:Workpack{canceled:false})<-[h:FEATURES]-(q:Property) | [h,q]], " +
+         " [(w)<-[i:IS_IN*]-(:Workpack{canceled:false})-[ii:IS_INSTANCE_BY]->(n:WorkpackModel) | [ii,n]], " +
+         " [(w)<-[i:IS_IN*]-(:Workpack{canceled:false})-[f5:FEATURES]-(l)-[v1:VALUES]->(l1) | [f5,l,v1,l1]] " +
          "]")
   Optional<Workpack> findWithPropertiesAndModelAndChildrenById(Long idWorkpack);
 

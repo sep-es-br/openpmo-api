@@ -100,7 +100,7 @@ public interface WorkpackModelRepository extends Neo4jRepository<WorkpackModel, 
          "RETURN wm, [ " +
          "    [ (wm)<-[f:FEATURES]-(pm:PropertyModel) | [f,pm] ], " +
          "    [ (wm)<-[i:IS_IN*]-(wmc:WorkpackModel) | [i,wmc] ], " +
-         "    [ (wmc)<-[fc:FEATURES]-(pmc:PropertyModel) | [fc,pmc] ] " +
+         "    [ (wm)<-[i:IS_IN*]-(:WorkpackModel)<-[fc:FEATURES]-(pmc:PropertyModel) | [fc,pmc] ] " +
          "]")
   Optional<WorkpackModel> findByIdWorkpackWithChildren(Long idWorkpackModel);
 
