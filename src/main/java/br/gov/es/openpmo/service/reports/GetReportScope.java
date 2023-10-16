@@ -105,7 +105,7 @@ public class GetReportScope {
     }
 
     return items.stream()
-      .sorted(Comparator.comparing(ReportScopeItem::getName))
+      .sorted(Comparator.comparing(ReportScopeItem::getName, Comparator.nullsLast(Comparator.naturalOrder())))
       .collect(Collectors.toList());
   }
 

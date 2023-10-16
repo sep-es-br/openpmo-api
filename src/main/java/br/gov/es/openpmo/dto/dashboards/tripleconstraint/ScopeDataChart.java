@@ -11,7 +11,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintUtils.ONE_HUNDRED;
-import static br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintUtils.roundOneDecimal;
 import static java.math.BigDecimal.ONE;
 import static java.math.BigDecimal.ZERO;
 
@@ -25,9 +24,8 @@ public class ScopeDataChart {
   private BigDecimal plannedWork;
   @JsonProperty("foreseenValue")
   private BigDecimal foreseenWork;
-  @JsonProperty
   private BigDecimal totalPlannedWork;
-  @JsonIgnore
+  @JsonProperty("actualValue")
   private BigDecimal actualWork;
   @JsonIgnore
   private CostDataChart costDataChart;
@@ -239,13 +237,6 @@ public class ScopeDataChart {
     );
 
     this.unitCost = calculator.calculate();
-  }
-
-  public void round() {
-    this.variation = roundOneDecimal(this.variation);
-    this.plannedVariationPercent = roundOneDecimal(this.plannedVariationPercent);
-    this.actualVariationPercent = roundOneDecimal(this.actualVariationPercent);
-    this.foreseenVariationPercent = roundOneDecimal(this.foreseenVariationPercent);
   }
 
   public BigDecimal getVariation() {

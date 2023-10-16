@@ -12,6 +12,8 @@ public class PerformanceIndexes extends Entity {
   @Relationship("IS_AT")
   private DashboardMonth month;
 
+  private Long idBaseline;
+
   private BigDecimal actualCost;
 
   private BigDecimal plannedValue;
@@ -36,6 +38,14 @@ public class PerformanceIndexes extends Entity {
 
   public void setMonth(DashboardMonth month) {
     this.month = month;
+  }
+
+  public Long getIdBaseline() {
+    return idBaseline;
+  }
+
+  public void setIdBaseline(Long idBaseline) {
+    this.idBaseline = idBaseline;
   }
 
   public BigDecimal getActualCost() {
@@ -124,6 +134,7 @@ public class PerformanceIndexes extends Entity {
 
   public static PerformanceIndexes of(PerformanceIndexesData data) {
     final PerformanceIndexes performanceIndexes = new PerformanceIndexes();
+    performanceIndexes.setIdBaseline(data.getIdBaseline());
     performanceIndexes.setMonth(new DashboardMonth(data.getDate().atEndOfMonth()));
     performanceIndexes.setActualCost(data.getActualCost());
     performanceIndexes.setPlannedValue(data.getPlannedValue());

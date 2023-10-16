@@ -7,8 +7,11 @@ import org.neo4j.ogm.annotation.Relationship;
 import org.springframework.data.annotation.Transient;
 
 import java.time.LocalDate;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.time.YearMonth;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 @NodeEntity
 public class Dashboard extends Entity {
@@ -18,35 +21,6 @@ public class Dashboard extends Entity {
 
   @Relationship(value = "IS_PART_OF", direction = Relationship.INCOMING)
   private List<DashboardMonth> months;
-
-  public List<TripleConstraint> getTripleConstraint() {
-    if (this.months == null) {
-      return Collections.emptyList();
-    }
-    return this.months.stream()
-      .map(DashboardMonth::getTripleConstraint)
-      .filter(Objects::nonNull)
-      .collect(Collectors.toList());
-  }
-
-  public List<EarnedValue> getEarnedValue() {
-    if (this.months == null) {
-      return Collections.emptyList();
-    }
-    return this.months.stream()
-      .map(DashboardMonth::getEarnedValue)
-      .filter(Objects::nonNull)
-      .collect(Collectors.toList());
-  }
-
-  public List<PerformanceIndexes> getPerformanceIndexes() {
-    if (this.months == null) {
-      return Collections.emptyList();
-    }
-    return this.months.stream()
-      .map(DashboardMonth::getPerformanceIndexes)
-      .collect(Collectors.toList());
-  }
 
   public Workpack getWorkpack() {
     return this.workpack;
@@ -65,11 +39,16 @@ public class Dashboard extends Entity {
   }
 
   public void addMonth(DashboardMonth month) {
-    Objects.requireNonNull(month, "Month cannot be null!");
     if (this.months == null) {
       this.months = new ArrayList<>();
     }
-    final boolean containsMonth = this.months.stream().anyMatch(month::isSameMonth);
+    boolean containsMonth = false;
+    for (DashboardMonth dashboardMonth : this.months) {
+      if (month.isSameMonth(dashboardMonth)) {
+        containsMonth = true;
+        break;
+      }
+    }
     if (!containsMonth) {
       month.setDashboard(this);
       this.months.add(month);
@@ -95,12 +74,15 @@ public class Dashboard extends Entity {
     if (this.months == null) {
       return Optional.empty();
     }
-    return this.months.stream()
-      .filter(month -> month.isAt(date))
-      .findFirst();
+    for (DashboardMonth month : this.months) {
+      if (month.isAt(date)) {
+        return Optional.of(month);
+      }
+    }
+    return Optional.empty();
   }
 
-  public void setTripleConstraint(TripleConstraint tripleConstraint) {
+  public void addTripleConstraint(TripleConstraint tripleConstraint) {
     if (tripleConstraint == null) {
       return;
     }
@@ -109,57 +91,115 @@ public class Dashboard extends Entity {
     final Optional<DashboardMonth> maybeMonth = this.monthAt(date);
     if (maybeMonth.isPresent()) {
       final DashboardMonth month = maybeMonth.get();
-      month.setTripleConstraint(tripleConstraint);
+      month.addTripleConstraints(tripleConstraint);
     } else {
       tripleConstraintMonth.setDashboard(this);
-      tripleConstraintMonth.setTripleConstraint(tripleConstraint);
+      tripleConstraintMonth.addTripleConstraints(tripleConstraint);
       this.addMonth(tripleConstraintMonth);
     }
   }
 
-  public void setTripleConstraint(Iterable<TripleConstraint> tripleConstraints) {
+  public void addTripleConstraints(Iterable<TripleConstraint> tripleConstraints) {
     for (TripleConstraint tripleConstraint : tripleConstraints) {
-      this.setTripleConstraint(tripleConstraint);
+      this.addTripleConstraint(tripleConstraint);
     }
   }
 
-  public void setEarnedValue(EarnedValue earnedValue) {
+  public void addEarnedValue(EarnedValue earnedValue) {
     final DashboardMonth earnedValueMonth = earnedValue.getMonth();
     final LocalDate date = earnedValueMonth.getDate();
     final Optional<DashboardMonth> maybeMonth = this.monthAt(date);
     if (maybeMonth.isPresent()) {
       final DashboardMonth month = maybeMonth.get();
-      month.setEarnedValue(earnedValue);
+      month.addEarnedValue(earnedValue);
     } else {
       earnedValueMonth.setDashboard(this);
-      earnedValueMonth.setEarnedValue(earnedValue);
+      earnedValueMonth.addEarnedValue(earnedValue);
       this.addMonth(earnedValueMonth);
     }
   }
 
-  public void setEarnedValue(Iterable<EarnedValue> earnedValues) {
+  public void addEarnedValues(Iterable<EarnedValue> earnedValues) {
     for (EarnedValue earnedValue : earnedValues) {
-      this.setEarnedValue(earnedValue);
+      this.addEarnedValue(earnedValue);
     }
   }
 
-  public void setPerformanceIndexes(PerformanceIndexes performanceIndexes) {
+  public void addPerformanceIndexes(PerformanceIndexes performanceIndexes) {
     final DashboardMonth performanceIndexesMonth = performanceIndexes.getMonth();
     final LocalDate date = performanceIndexesMonth.getDate();
     final Optional<DashboardMonth> maybeMonth = this.monthAt(date);
     if (maybeMonth.isPresent()) {
       final DashboardMonth month = maybeMonth.get();
-      month.setPerformanceIndexes(performanceIndexes);
+      month.addPerformanceIndexes(performanceIndexes);
     } else {
       performanceIndexesMonth.setDashboard(this);
-      performanceIndexesMonth.setPerformanceIndexes(performanceIndexes);
+      performanceIndexesMonth.addPerformanceIndexes(performanceIndexes);
       this.addMonth(performanceIndexesMonth);
     }
   }
 
-  public void setPerformanceIndexes(Iterable<PerformanceIndexes> performanceIndexes) {
+  public void addPerformanceIndexes(Iterable<PerformanceIndexes> performanceIndexes) {
     for (PerformanceIndexes performanceIndex : performanceIndexes) {
-      this.setPerformanceIndexes(performanceIndex);
+      this.addPerformanceIndexes(performanceIndex);
     }
   }
+
+  @Transient
+  public List<EarnedValue> getEarnedValues(Long baselineId) {
+    if (this.months == null) {
+      return Collections.emptyList();
+    }
+    List<EarnedValue> earnedValues = new ArrayList<>();
+    for (DashboardMonth month : this.months) {
+      EarnedValue earnedValue = month.getEarnedValue(baselineId);
+      if (earnedValue != null) {
+        earnedValues.add(earnedValue);
+      }
+    }
+    return earnedValues;
+  }
+
+  @Transient
+  public List<PerformanceIndexes> getPerformanceIndexes(Long baselineId) {
+    if (this.months == null) {
+      return Collections.emptyList();
+    }
+    List<PerformanceIndexes> performanceIndexes = new ArrayList<>();
+    for (DashboardMonth month : this.months) {
+      PerformanceIndexes indexes = month.getPerformanceIndexes(baselineId);
+      if (indexes != null) {
+        performanceIndexes.add(indexes);
+      }
+    }
+    return performanceIndexes;
+  }
+
+  @Transient
+  public List<TripleConstraint> getTripleConstraint(Long baselineId) {
+    if (this.months == null) {
+      return Collections.emptyList();
+    }
+    List<TripleConstraint> tripleConstraints = new ArrayList<>();
+    for (DashboardMonth month : this.months) {
+      final TripleConstraint tripleConstraint = month.getTripleConstraint(baselineId);
+      if (tripleConstraint != null) {
+        tripleConstraints.add(tripleConstraint);
+      }
+    }
+    return tripleConstraints;
+  }
+
+  @Transient
+  public List<YearMonth> getYearMonths() {
+    if (this.months == null) {
+      return Collections.emptyList();
+    }
+    final List<YearMonth> dates = new ArrayList<>();
+    for (DashboardMonth month : this.months) {
+      dates.add(month.toYearMonth());
+    }
+    return dates;
+  }
+
 }

@@ -41,7 +41,7 @@ public class EarnedValueByStepQueryResult {
     this.masterStepList = masterStepList;
   }
 
-  public EarnedValueByStep toEarnedValueByStep() {
+  public EarnedValueByStep toEarnedValueByStep(Long idBaseline) {
     final EarnedValueByStep result = new EarnedValueByStep();
 
     final BigDecimal plannedValue = sum(this.snapshotConsumesList, Consumes::getPlannedCost);
@@ -50,6 +50,7 @@ public class EarnedValueByStepQueryResult {
     final BigDecimal estimatedCost = sum(this.masterConsumesList, Consumes::getPlannedCost);
     final BigDecimal actualWork = sum(this.masterStepList, Step::getActualWork);
 
+    result.setIdBaseline(idBaseline);
     result.setPlannedValue(plannedValue);
     result.setActualCost(actualCost);
     result.setEstimatedCost(estimatedCost);

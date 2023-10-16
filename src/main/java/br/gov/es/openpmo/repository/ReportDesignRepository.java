@@ -23,11 +23,12 @@ public interface ReportDesignRepository extends Neo4jRepository<ReportDesign, Lo
     "where id(rd)=$id " +
     "match (rd)-[i:IS_DESIGNED_FOR]->(pl:PlanModel) " +
     "optional match (rd)<-[p:PARAMETERIZES]-(pm:PropertyModel) " +
-    "optional match (pm)-[d:DEFAULTS_TO]->(n) " +
+    "optional match (rd)<-[:PARAMETERIZES]-(:PropertyModel)-[d:DEFAULTS_TO]->(n) " +
     "optional match (rd)<-[s:IS_SOURCE_TEMPLATE_OF]-(ts:File) " +
+    "optional match (rd)<-[:IS_SOURCE_TEMPLATE_OF]-(:File)<-[ic:IS_COMPILATION_OF]-(ct:File) " +
     "optional match (rd)<-[c:IS_COMPILED_TEMPLATE_OF]-(cs:File) " +
-    "with rd, i, pl, p, pm, d, n, s, ts, c, cs " +
-    "return rd, i, pl, p, pm, d, n, s, ts, c, cs")
+    "with rd, i, pl, p, pm, d, n, s, ts, c, cs, ic, ct " +
+    "return rd, i, pl, p, pm, d, n, s, ts, c, cs, ic, ct")
   Optional<ReportDesign> findByIdWithRelationships(@Param("id") Long id);
 
   @Query(

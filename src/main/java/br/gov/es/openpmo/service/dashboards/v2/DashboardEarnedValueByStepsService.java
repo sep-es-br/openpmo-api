@@ -13,7 +13,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.YearMonth;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_NOT_FOUND;
@@ -61,7 +65,7 @@ public class DashboardEarnedValueByStepsService implements IDashboardEarnedValue
       final EarnedValueByStepQueryResult value =
         this.getEarnedValueByStep(workpackId, baselineIds, month);
 
-      accumulate.add(value.toEarnedValueByStep());
+      accumulate.add(value.toEarnedValueByStep(null));
       list.add(accumulate.copy(true));
     }
 
@@ -70,12 +74,19 @@ public class DashboardEarnedValueByStepsService implements IDashboardEarnedValue
 
   @Override
   public List<EarnedValueByStep> calculate(final Long workpackId, final Optional<DateIntervalQuery> dateIntervalQuery) {
-    final List<Long> baselineIds = this.getBaselines(workpackId).stream()
+    final boolean isProject = this.workpackRepository.isProject(workpackId);
+
+    final List<Long> baselineIds = this.getBaselines(workpackId, isProject).stream()
       .map(Baseline::getId)
       .collect(Collectors.toList());
 
     if (baselineIds.isEmpty()) {
       return Collections.emptyList();
+    }
+
+    Long idBaseline = null;
+    if (isProject) {
+      idBaseline = baselineIds.get(0);
     }
 
     final DateIntervalQuery interval = dateIntervalQuery
@@ -88,18 +99,18 @@ public class DashboardEarnedValueByStepsService implements IDashboardEarnedValue
       final EarnedValueByStepQueryResult value =
         this.getEarnedValueByStep(workpackId, baselineIds, month);
 
-      accumulate.add(value.toEarnedValueByStep());
+      accumulate.add(value.toEarnedValueByStep(idBaseline));
       list.add(accumulate.copy(true));
     }
 
     return list;
   }
 
-  private List<Baseline> getBaselines(final Long workpackId) {
+  private List<Baseline> getBaselines(final Long workpackId, boolean isProject) {
     final List<Baseline> baselines =
       this.baselineRepository.findApprovedOrProposedBaselinesByAnyWorkpackId(workpackId);
 
-    if (this.workpackRepository.isProject(workpackId)) {
+    if (isProject) {
       return baselines;
     }
 

@@ -41,15 +41,19 @@ public class GetSorterProperty {
     if (maybeDefaultCustomFilter.isPresent()) {
       final CustomFilter customFilter = maybeDefaultCustomFilter.get();
       final Long idPropertyModel = Long.valueOf(customFilter.getSortBy());
-      final Optional<Property> property = getProperty(idWorkpack, idPropertyModel);
-      return property
-        .<SorterProperty<?>>map(value -> SorterProperty.definedByCustomFilter(value, customFilter))
-        .orElseGet(SorterProperty::empty);
+      final Optional<Property> maybeProperty = getProperty(idWorkpack, idPropertyModel);
+      if (maybeProperty.isPresent()) {
+        final Property property = maybeProperty.get();
+        return SorterProperty.definedByCustomFilter(property, customFilter);
+      }
+      return SorterProperty.empty();
     }
-    final Optional<Property> sorterProperty = getSorterProperty(idWorkpack);
-    return sorterProperty
-      .<SorterProperty<?>>map(SorterProperty::definedByWorkpackModel)
-      .orElseGet(SorterProperty::empty);
+    final Optional<Property> maybeProperty = getSorterProperty(idWorkpack);
+    if (maybeProperty.isPresent()) {
+      final Property property = maybeProperty.get();
+      return SorterProperty.definedByWorkpackModel(property);
+    }
+    return SorterProperty.empty();
   }
 
   private Optional<Property> getProperty(Long idWorkpack, Long idPropertyModel) {

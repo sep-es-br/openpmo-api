@@ -530,8 +530,8 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
         term,
         workpackLinked
       );
-      if (!StringUtils.hasText(term) && Objects.nonNull(idWorkpackModel)) {
-        this.sortByWorkpackModel(idWorkpackModel, workpacks);
+      if (!StringUtils.hasText(term) && Objects.nonNull(idWorkpackModel) && !workpacks.isEmpty()) {
+        this.sortByWorkpackModel(workpacks, workpacks.get(0).getWorkpackModelInstance());
       }
       return workpacks;
     }
@@ -586,10 +586,6 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
   private CustomFilter findCustomFilterById(final Long idFilter) {
     return this.customFilterRepository.findByIdWithRelationships(idFilter)
       .orElseThrow(() -> new NegocioException(CUSTOM_FILTER_NOT_FOUND));
-  }
-
-  private WorkpackModel getWorkpackModelById(final Long idWorkpackModel) {
-    return this.workpackModelService.findById(idWorkpackModel);
   }
 
   public List<Workpack> findAll(
@@ -648,13 +644,12 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
       searchCutOffScore
     );
     if (!StringUtils.hasText(term) && Objects.nonNull(idWorkpackModel)) {
-      this.sortByWorkpackModel(idWorkpackModel, workpacks);
+      this.sortByWorkpackModel(workpacks, workpacks.get(0).getWorkpackModelInstance());
     }
     return workpacks;
   }
 
-  private void sortByWorkpackModel(final Long idWorkpackModel, final List<Workpack> workpacks) {
-    final WorkpackModel workpackModel = this.getWorkpackModelById(idWorkpackModel);
+  private void sortByWorkpackModel(final List<Workpack> workpacks, WorkpackModel workpackModel) {
     if (workpackModel != null && workpackModel.getSortBy() != null) {
       workpacks.sort((first, second) -> PropertyComparator.compare(
         getValueProperty(

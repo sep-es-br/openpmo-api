@@ -12,114 +12,114 @@ import java.util.Set;
 public interface WorkpackModelRepository extends Neo4jRepository<WorkpackModel, Long> {
 
   @Query("MATCH (w:WorkpackModel)-[wp:BELONGS_TO]->(pm:PlanModel) "
-         + "WHERE id(pm) = $id AND NOT (w)-[:IS_IN]->(:WorkpackModel) "
-         + " RETURN w, wp, pm, ["
-         + "  [(w)-[is:IS_SORTED_BY]->(ps:PropertyModel) | [is, ps] ] "
-         + "]")
+    + "WHERE id(pm) = $id AND NOT (w)-[:IS_IN]->(:WorkpackModel) "
+    + " RETURN w, wp, pm, ["
+    + "  [(w)-[is:IS_SORTED_BY]->(ps:PropertyModel) | [is, ps] ] "
+    + "]")
   List<WorkpackModel> findAllByIdPlanModel(@Param("id") Long id);
 
   @Query("MATCH (w:WorkpackModel)-[wp:BELONGS_TO]->(pm:PlanModel) "
-         + "WHERE id(w) = $id "
-         + "RETURN w, wp, pm, [ "
-         + "  [(w)-[i:IS_IN*]->(w2:WorkpackModel) | [i, w2]], "
-         + "  [(w)<-[i2:IS_IN*]-(w3:WorkpackModel) | [i2,w3] ],"
-         + "  [(w)<-[ib:IS_INSTANCE_BY]-(w4:Workpack) | [ib, w4]],"
-         + "  [(w)-[:IS_IN*]->(:WorkpackModel)<-[ib2:IS_INSTANCE_BY]-(w5:Workpack) | [ib2, w5]],"
-         + "  [(w)<-[:IS_IN*]-(:WorkpackModel)<-[ib3:IS_INSTANCE_BY]-(w6:Workpack) | [ib3, w6]],"
-         + "  [(w)<-[f:FEATURES]-(p:PropertyModel) | [f, p] ], "
-         + "  [(w)-[is:IS_SORTED_BY]->(ps:PropertyModel) | [is, ps] ], "
-         + "  [(w)-[featureGroup:FEATURES]->(group:GroupModel) | [featureGroup, group] ], "
-         + "  [(group)-[groups:GROUPS]->(groupedProperty:PropertyModel) | [groups, groupedProperty] ], "
-         + "  [(p)-[dl:DEFAULTS_TO]->(l:Locality) | [dl, l] ], "
-         + "  [(p)-[ir:IS_LIMITED_BY]->(dm:Domain) | [ir, dm] ], "
-         + "  [(p)-[du:DEFAULTS_TO]->(u:UnitMeasure) | [du, u] ], "
-         + "  [(p)-[d:DEFAULTS_TO]->(o:Organization) | [d, o] ]"
-         + "] ")
+    + "WHERE id(w) = $id "
+    + "RETURN w, wp, pm, [ "
+    + "  [(w)-[i:IS_IN*]->(w2:WorkpackModel) | [i, w2]], "
+    + "  [(w)<-[i2:IS_IN*]-(w3:WorkpackModel) | [i2,w3] ],"
+    + "  [(w)<-[ib:IS_INSTANCE_BY]-(w4:Workpack) | [ib, w4]],"
+    + "  [(w)-[:IS_IN*]->(:WorkpackModel)<-[ib2:IS_INSTANCE_BY]-(w5:Workpack) | [ib2, w5]],"
+    + "  [(w)<-[:IS_IN*]-(:WorkpackModel)<-[ib3:IS_INSTANCE_BY]-(w6:Workpack) | [ib3, w6]],"
+    + "  [(w)<-[f:FEATURES]-(p:PropertyModel) | [f, p] ], "
+    + "  [(w)-[is:IS_SORTED_BY]->(ps:PropertyModel) | [is, ps] ], "
+    + "  [(w)-[featureGroup:FEATURES]->(group:GroupModel) | [featureGroup, group] ], "
+    + "  [(group)-[groups:GROUPS]->(groupedProperty:PropertyModel) | [groups, groupedProperty] ], "
+    + "  [(p)-[dl:DEFAULTS_TO]->(l:Locality) | [dl, l] ], "
+    + "  [(p)-[ir:IS_LIMITED_BY]->(dm:Domain) | [ir, dm] ], "
+    + "  [(p)-[du:DEFAULTS_TO]->(u:UnitMeasure) | [du, u] ], "
+    + "  [(p)-[d:DEFAULTS_TO]->(o:Organization) | [d, o] ]"
+    + "] ")
   Optional<WorkpackModel> findAllByIdWorkpackModel(@Param("id") Long id);
 
   @Query("MATCH (w:Workpack)-[wp:IS_INSTANCE_BY]->(wm:WorkpackModel) "
-         + "WHERE id(w) = $idWorkpack "
-         + " RETURN wm , ["
-         + "  [(wm)-[is:IS_SORTED_BY]->(ps:PropertyModel) | [is, ps] ], "
-         + "  [(wm)<-[i:IS_IN]-(wm2:WorkpackModel) |[i,wm2] ],"
-         + "  [(wm)<-[f:FEATURES]-(p:PropertyModel) |[f, p] ]"
-         + "] ")
+    + "WHERE id(w) = $idWorkpack "
+    + " RETURN wm , ["
+    + "  [(wm)-[is:IS_SORTED_BY]->(ps:PropertyModel) | [is, ps] ], "
+    + "  [(wm)<-[i:IS_IN]-(wm2:WorkpackModel) |[i,wm2] ],"
+    + "  [(wm)<-[f:FEATURES]-(p:PropertyModel) |[f, p] ]"
+    + "] ")
   Optional<WorkpackModel> findByIdWorkpack(@Param("idWorkpack") Long idWorkpack);
 
   @Query("MATCH (w:WorkpackModel)-[rf:BELONGS_TO]->(p:PlanModel) "
-         + " WHERE id(w) = $id "
-         + " RETURN  w, rf, p, [ "
-         + "  [(w)-[wi:IS_IN*]->(w2:WorkpackModel) | [wi, w2] ]"
-         + " ]")
+    + " WHERE id(w) = $id "
+    + " RETURN  w, rf, p, [ "
+    + "  [(w)-[wi:IS_IN*]->(w2:WorkpackModel) | [wi, w2] ]"
+    + " ]")
   Optional<WorkpackModel> findByIdWithParents(@Param("id") Long id);
 
   @Query("MATCH (wm:WorkpackModel)-[wp:BELONGS_TO]->(pm:PlanModel) "
-         + "WHERE id(pm)=$id AND NOT (wm)-[:IS_IN]->(:WorkpackModel) "
-         + " RETURN wm, wp, pm , ["
-         + "  [(wm)<-[i:IS_IN*]-(wm2:WorkpackModel)-[:BELONGS_TO]->(:PlanModel) | [i,wm2] ], "
-         + "  [(wm)<-[features:FEATURES]-(propertyModel:PropertyModel) | [features, propertyModel] ], "
-         + "  [(wm2)<-[features2:FEATURES]-(propertyModel2:PropertyModel) | [features2, propertyModel2] ], "
-         + "  [(wm)-[isSortedBy1:IS_SORTED_BY]->(sorter1:PropertyModel) | [isSortedBy1, sorter1] ], "
-         + "  [(wm2)-[isSortedBy2:IS_SORTED_BY]->(sorter2:PropertyModel) | [isSortedBy2, sorter2] ], "
-         + "  [(propertyModel)-[groups:GROUPS]->(groupedProperty:PropertyModel) | [groups, groupedProperty] ], "
-         + "  [(propertyModel2)-[groups2:GROUPS]->(groupedProperty2:PropertyModel) | [groups2, groupedProperty2] ] "
-         + "] ")
+    + "WHERE id(pm)=$id AND NOT (wm)-[:IS_IN]->(:WorkpackModel) "
+    + " RETURN wm, wp, pm , ["
+    + "  [(wm)<-[i:IS_IN*]-(wm2:WorkpackModel)-[:BELONGS_TO]->(:PlanModel) | [i,wm2] ], "
+    + "  [(wm)<-[features:FEATURES]-(propertyModel:PropertyModel) | [features, propertyModel] ], "
+    + "  [(wm2)<-[features2:FEATURES]-(propertyModel2:PropertyModel) | [features2, propertyModel2] ], "
+    + "  [(wm)-[isSortedBy1:IS_SORTED_BY]->(sorter1:PropertyModel) | [isSortedBy1, sorter1] ], "
+    + "  [(wm2)-[isSortedBy2:IS_SORTED_BY]->(sorter2:PropertyModel) | [isSortedBy2, sorter2] ], "
+    + "  [(propertyModel)-[groups:GROUPS]->(groupedProperty:PropertyModel) | [groups, groupedProperty] ], "
+    + "  [(propertyModel2)-[groups2:GROUPS]->(groupedProperty2:PropertyModel) | [groups2, groupedProperty2] ] "
+    + "] ")
   Set<WorkpackModel> findAllByIdPlanModelWithChildren(@Param("id") Long id);
 
   @Query("MATCH (children:WorkpackModel)-[isIn:IS_IN]->(parent:WorkpackModel) " +
-         "WHERE id(children)=$childrenId AND id(parent)=$parentId " +
-         "DETACH DELETE isIn")
+    "WHERE id(children)=$childrenId AND id(parent)=$parentId " +
+    "DETACH DELETE isIn")
   void deleteRelationshipBetween(
     Long childrenId,
     Long parentId
   );
 
   @Query("MATCH (target:WorkpackModel) " +
-         "OPTIONAL MATCH (target)<-[:FEATURES]-(targetProperty:PropertyModel) " +
-         "OPTIONAL MATCH (target)<-[:IS_IN*]-(children:WorkpackModel) " +
-         "OPTIONAL MATCH (children)<-[:FEATURES]-(childrenProperty:PropertyModel) " +
-         "OPTIONAL MATCH (childrenProperty)-[childrenGroup:GROUPS]->(childrenPropertyGroup:PropertyModel) " +
-         "OPTIONAL MATCH (targetProperty)-[targetGroup:GROUPS]->(targetPropertyGroup:PropertyModel) " +
-         "WITH target, children, targetProperty, childrenProperty, childrenGroup, childrenPropertyGroup, targetPropertyGroup, " +
-         "targetGroup " +
-         "WHERE id(target)=$id " +
-         "DETACH DELETE target, children, targetProperty, childrenProperty, childrenGroup, childrenPropertyGroup, " +
-         "targetPropertyGroup, targetGroup ")
+    "OPTIONAL MATCH (target)<-[:FEATURES]-(targetProperty:PropertyModel) " +
+    "OPTIONAL MATCH (target)<-[:IS_IN*]-(children:WorkpackModel) " +
+    "OPTIONAL MATCH (children)<-[:FEATURES]-(childrenProperty:PropertyModel) " +
+    "OPTIONAL MATCH (childrenProperty)-[childrenGroup:GROUPS]->(childrenPropertyGroup:PropertyModel) " +
+    "OPTIONAL MATCH (targetProperty)-[targetGroup:GROUPS]->(targetPropertyGroup:PropertyModel) " +
+    "WITH target, children, targetProperty, childrenProperty, childrenGroup, childrenPropertyGroup, targetPropertyGroup, " +
+    "targetGroup " +
+    "WHERE id(target)=$id " +
+    "DETACH DELETE target, children, targetProperty, childrenProperty, childrenGroup, childrenPropertyGroup, " +
+    "targetPropertyGroup, targetGroup ")
   void deleteCascadeAllNodesRelated(Long id);
 
   @Query("MATCH (w:Workpack)-[i:IS_INSTANCE_BY]->(m:WorkpackModel) " +
-         "WHERE id(w)=$idWorkpack AND id(m)=$idWorkpackModel " +
-         "RETURN count(i)>0")
+    "WHERE id(w)=$idWorkpack AND id(m)=$idWorkpackModel " +
+    "RETURN count(i)>0")
   boolean isWorkpackInstanceByModel(
     Long idWorkpack,
     Long idWorkpackModel
   );
 
   @Query("MATCH (wm:WorkpackModel) " +
-         "WHERE id(wm)=$idWorkpackModel " +
-         "RETURN wm, [ " +
-         "    [ (wm)<-[f:FEATURES]-(pm:PropertyModel) | [f,pm] ], " +
-         "    [ (wm)<-[i:IS_IN*]-(wmc:WorkpackModel) | [i,wmc] ], " +
-         "    [ (wm)<-[i:IS_IN*]-(:WorkpackModel)<-[fc:FEATURES]-(pmc:PropertyModel) | [fc,pmc] ] " +
-         "]")
+    "WHERE id(wm)=$idWorkpackModel " +
+    "RETURN wm, [ " +
+    "    [ (wm)<-[f:FEATURES]-(pm:PropertyModel) | [f,pm] ], " +
+    "    [ (wm)<-[i:IS_IN*]-(wmc:WorkpackModel) | [i,wmc] ], " +
+    "    [ (wm)<-[i:IS_IN*]-(:WorkpackModel)<-[fc:FEATURES]-(pmc:PropertyModel) | [fc,pmc] ] " +
+    "]")
   Optional<WorkpackModel> findByIdWorkpackWithChildren(Long idWorkpackModel);
 
   @Query("MATCH (w:Workpack)-[i:IS_INSTANCE_BY]->(:WorkpackModel) " +
-         "WHERE id(w)=$workpackId " +
-         "DETACH DELETE i")
+    "WHERE id(w)=$workpackId " +
+    "DETACH DELETE i")
   void deleteRelationshipByWorkpackId(Long workpackId);
 
   @Query("MATCH (w:Workpack), (m:WorkpackModel) " +
-         "WHERE id(w)=$workpackId AND id(m)=$workpackModelId " +
-         "CREATE (w)-[:IS_INSTANCE_BY]->(m)")
+    "WHERE id(w)=$workpackId AND id(m)=$workpackModelId " +
+    "CREATE (w)-[:IS_INSTANCE_BY]->(m)")
   void createRelationshipByWorkpackIdAndModelId(
     Long workpackId,
     Long workpackModelId
   );
 
   @Query("MATCH (w:WorkpackModel), (p:PropertyModel) " +
-         "WHERE id(w)=$workpackModelId AND id(p)=$propertyModelId " +
-         "CREATE (w)<-[:FEATURES]-(p)")
+    "WHERE id(w)=$workpackModelId AND id(p)=$propertyModelId " +
+    "CREATE (w)<-[:FEATURES]-(p)")
   void createFeaturesRelationship(
     Long workpackModelId,
     Long propertyModelId
@@ -127,18 +127,18 @@ public interface WorkpackModelRepository extends Neo4jRepository<WorkpackModel, 
 
   @Query(
     "MATCH (model:WorkpackModel)-[:BELONGS_TO]->(planModel:PlanModel) " +
-    "WHERE id(model)=$idWorkpackModel " +
-    "OPTIONAL MATCH (model)-[:IS_IN*1..]->(parent:WorkpackModel)-[:BELONGS_TO]->(parentPlanModel:PlanModel) " +
-    "WITH *, collect(id(parent)) + collect(id(planModel)) + collect(id(parentPlanModel)) as hierarchyGroup " +
-    "UNWIND hierarchyGroup as hierarchy " +
-    "RETURN hierarchy"
+      "WHERE id(model)=$idWorkpackModel " +
+      "OPTIONAL MATCH (model)-[:IS_IN*1..]->(parent:WorkpackModel)-[:BELONGS_TO]->(parentPlanModel:PlanModel) " +
+      "WITH *, collect(id(parent)) + collect(id(planModel)) + collect(id(parentPlanModel)) as hierarchyGroup " +
+      "UNWIND hierarchyGroup as hierarchy " +
+      "RETURN hierarchy"
   )
   Set<Long> findWorkpackModelParentsHierarchy(@Param("idWorkpackModel") Long idWorkpackModel);
 
   @Query(
     "MATCH (wm1:WorkpackModel)<-[:IS_IN]-(wm2:WorkpackModel) " +
-    "WHERE id(wm1)=$idWorkpackModel " +
-    "RETURN max(wm2.position)"
+      "WHERE id(wm1)=$idWorkpackModel " +
+      "RETURN max(wm2.position)"
   )
   Long findActualPosition(@Param("idWorkpackModel") Long idWorkpackModel);
 
@@ -149,4 +149,10 @@ public interface WorkpackModelRepository extends Neo4jRepository<WorkpackModel, 
     "]")
   Optional<WorkpackModel> findByIdWithChildren(Long idWorkpackModel);
 
+  @Query("MATCH (parent:WorkpackModel)<-[:IS_IN]-(model:WorkpackModel) " +
+    "WHERE id(parent)=$idParentModel and id(model)=$idWorkpackModel " +
+    "RETURN model, [ " +
+    " [(model)<-[i:IS_IN*]->(family:WorkpackModel) | [i,family]] " +
+    "]")
+  Optional<WorkpackModel> findAllByIdWithParents(Long idWorkpackModel, Long idParentModel);
 }

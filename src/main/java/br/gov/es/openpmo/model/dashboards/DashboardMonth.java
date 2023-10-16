@@ -7,6 +7,9 @@ import org.springframework.data.annotation.Transient;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 @NodeEntity
 public class DashboardMonth extends Entity {
@@ -15,13 +18,13 @@ public class DashboardMonth extends Entity {
   private Dashboard dashboard;
 
   @Relationship(value = "IS_AT", direction = Relationship.INCOMING)
-  private EarnedValue earnedValue;
+  private List<EarnedValue> earnedValues;
 
   @Relationship(value = "IS_AT", direction = Relationship.INCOMING)
-  private PerformanceIndexes performanceIndexes;
+  private List<PerformanceIndexes> performanceIndexes;
 
   @Relationship(value = "IS_AT", direction = Relationship.INCOMING)
-  private TripleConstraint tripleConstraint;
+  private List<TripleConstraint> tripleConstraints;
 
   private LocalDate date;
 
@@ -48,42 +51,66 @@ public class DashboardMonth extends Entity {
     this.date = date;
   }
 
-  public EarnedValue getEarnedValue() {
-    return earnedValue;
+  public List<EarnedValue> getEarnedValues() {
+    return earnedValues;
   }
 
-  public void setEarnedValue(EarnedValue earnedValue) {
-    if (this.earnedValue == null) {
+  public void addEarnedValue(EarnedValue earnedValue) {
+    if (this.earnedValues == null) {
       earnedValue.setMonth(this);
-      this.earnedValue = earnedValue;
+      this.earnedValues = new ArrayList<>();
+      this.earnedValues.add(earnedValue);
     } else {
-      this.earnedValue.retain(earnedValue);
+      for (EarnedValue value : earnedValues) {
+        if (Objects.equals(value.getIdBaseline(), earnedValue.getIdBaseline())) {
+          value.retain(earnedValue);
+          return;
+        }
+      }
+      earnedValue.setMonth(this);
+      this.earnedValues.add(earnedValue);
     }
   }
 
-  public PerformanceIndexes getPerformanceIndexes() {
+  public List<PerformanceIndexes> getPerformanceIndexes() {
     return performanceIndexes;
   }
 
-  public void setPerformanceIndexes(PerformanceIndexes performanceIndexes) {
+  public void addPerformanceIndexes(PerformanceIndexes performanceIndexes) {
     if (this.performanceIndexes == null) {
       performanceIndexes.setMonth(this);
-      this.performanceIndexes = performanceIndexes;
+      this.performanceIndexes = new ArrayList<>();
+      this.performanceIndexes.add(performanceIndexes);
     } else {
-      this.performanceIndexes.retain(performanceIndexes);
+      for (PerformanceIndexes index : this.performanceIndexes) {
+        if (Objects.equals(index.getIdBaseline(), performanceIndexes.getIdBaseline())) {
+          index.retain(performanceIndexes);
+          return;
+        }
+      }
+      performanceIndexes.setMonth(this);
+      this.performanceIndexes.add(performanceIndexes);
     }
   }
 
-  public TripleConstraint getTripleConstraint() {
-    return tripleConstraint;
+  public List<TripleConstraint> getTripleConstraints() {
+    return tripleConstraints;
   }
 
-  public void setTripleConstraint(TripleConstraint tripleConstraint) {
-    if (this.tripleConstraint == null) {
+  public void addTripleConstraints(TripleConstraint tripleConstraint) {
+    if (this.tripleConstraints == null) {
       tripleConstraint.setMonth(this);
-      this.tripleConstraint = tripleConstraint;
+      this.tripleConstraints = new ArrayList<>();
+      this.tripleConstraints.add(tripleConstraint);
     } else {
-      this.tripleConstraint.retain(tripleConstraint);
+      for (TripleConstraint constraint : this.tripleConstraints) {
+        if (Objects.equals(constraint.getIdBaseline(), tripleConstraint.getIdBaseline())) {
+          constraint.retain(tripleConstraint);
+          return;
+        }
+      }
+      tripleConstraint.setMonth(this);
+      this.tripleConstraints.add(tripleConstraint);
     }
   }
 
@@ -101,6 +128,45 @@ public class DashboardMonth extends Entity {
   @Transient
   public boolean isSameMonth(DashboardMonth month) {
     return isAt(month.date);
+  }
+
+  @Transient
+  public EarnedValue getEarnedValue(Long baselineId) {
+    if (this.earnedValues == null) {
+      return null;
+    }
+    for (EarnedValue earnedValue : this.earnedValues) {
+      if (Objects.equals(earnedValue.getIdBaseline(), baselineId)) {
+        return earnedValue;
+      }
+    }
+    return null;
+  }
+
+  @Transient
+  public PerformanceIndexes getPerformanceIndexes(Long baselineId) {
+    if (this.performanceIndexes == null) {
+      return null;
+    }
+    for (PerformanceIndexes indexes : this.performanceIndexes) {
+      if (Objects.equals(indexes.getIdBaseline(), baselineId)) {
+        return indexes;
+      }
+    }
+    return null;
+  }
+
+  @Transient
+  public TripleConstraint getTripleConstraint(Long baselineId) {
+    if (this.tripleConstraints == null) {
+      return null;
+    }
+    for (TripleConstraint tripleConstraint : this.tripleConstraints) {
+      if (Objects.equals(tripleConstraint.getIdBaseline(), baselineId)) {
+        return tripleConstraint;
+      }
+    }
+    return null;
   }
 
 }

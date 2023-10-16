@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.model.workpacks;
 
 import br.gov.es.openpmo.exception.NegocioException;
+import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.properties.Date;
 import br.gov.es.openpmo.model.properties.Property;
 import br.gov.es.openpmo.model.relations.IsPropertySnapshotOf;
@@ -10,7 +11,10 @@ import org.neo4j.ogm.annotation.Relationship;
 import org.springframework.data.annotation.Transient;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Set;
+
+import static br.gov.es.openpmo.model.baselines.Status.PROPOSED;
 
 @NodeEntity
 public class Milestone extends Workpack {
@@ -63,7 +67,7 @@ public class Milestone extends Workpack {
   }
 
   @Transient
-  private LocalDate getMilestoneDate() {
+  public LocalDate getMilestoneDate() {
     if (this.milestoneDate != null) {
       return this.milestoneDate;
     }
@@ -72,7 +76,7 @@ public class Milestone extends Workpack {
   }
 
   @Transient
-  private LocalDate getSnapshotDate() {
+  public LocalDate getSnapshotDate() {
     if (this.snapshotDate != null) {
       return this.snapshotDate;
     }
@@ -88,6 +92,43 @@ public class Milestone extends Workpack {
       }
     }
     return null;
+  }
+
+  @Transient
+  public LocalDate getSnapshotDateActiveOrProposedBaseline() {
+    if (this.snapshotDate != null) {
+      return this.snapshotDate;
+    }
+    final Set<IsPropertySnapshotOf> snapshots = this.getDate().getSnapshots();
+    if (snapshots == null) {
+      return null;
+    }
+    LocalDate snapshotDateActive = null;
+    LocalDate snapshotDateProposed = null;
+    LocalDateTime baselineProposalDate = null;
+    for (IsPropertySnapshotOf snapshot : snapshots) {
+      Property property = snapshot.getSnapshot();
+      Baseline baseline = property.getBaseline();
+      if (baseline.isActive()) {
+        snapshotDateActive = ((Date) property).toLocalDate();
+        break;
+      }
+      if (baseline.getStatus() == PROPOSED) {
+        if (baselineProposalDate == null) {
+          baselineProposalDate = baseline.getProposalDate();
+          snapshotDateProposed = ((Date) property).toLocalDate();
+        } else if (baseline.getProposalDate().isAfter(baselineProposalDate)) {
+          baselineProposalDate = baseline.getProposalDate();
+          snapshotDateProposed = ((Date) property).toLocalDate();
+        }
+      }
+    }
+    if (snapshotDateActive != null) {
+      this.snapshotDate = snapshotDateActive;
+    } else {
+      this.snapshotDate = snapshotDateProposed;
+    }
+    return this.snapshotDate;
   }
 
   @Transient

@@ -21,6 +21,7 @@ import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -89,12 +90,11 @@ public class AsyncDashboardService implements IAsyncDashboardService {
         dashboard.setMonths(new ArrayList<>());
       }
       dashboard.addMonths(dashboardMonths);
-      this.dashboardRepository.save(dashboard);
     }
 
     Optional.of(worpackId)
-      .map(this::getTripleConstraint)
-      .ifPresent(dashboard::setTripleConstraint);
+      .map(id -> getTripleConstraint(id, dashboard.getYearMonths()))
+      .ifPresent(dashboard::addTripleConstraints);
 
     final Optional<EarnedValueAnalysisData> maybeEarnedValueAnalysisData = Optional.of(worpackId)
       .map(id -> getEarnedValueAnalysis(id, baselineInterval));
@@ -110,8 +110,8 @@ public class AsyncDashboardService implements IAsyncDashboardService {
         .map(PerformanceIndexes::of)
         .collect(Collectors.toList());
 
-      dashboard.setEarnedValue(earnedValues);
-      dashboard.setPerformanceIndexes(performanceIndexes);
+      dashboard.addEarnedValues(earnedValues);
+      dashboard.addPerformanceIndexes(performanceIndexes);
     }
 
     this.dashboardRepository.save(dashboard);
@@ -149,9 +149,9 @@ public class AsyncDashboardService implements IAsyncDashboardService {
     return this.earnedValueAnalysisService.calculate(worpackId, dateIntervalQuery);
   }
 
-  private List<TripleConstraint> getTripleConstraint(@NonNull final Long worpackId) {
+  private List<TripleConstraint> getTripleConstraint(@NonNull final Long worpackId, List<YearMonth> yearMonths) {
     return Optional.of(worpackId)
-      .map(this::calculateTripleConstraintDataChart)
+      .map(id -> calculateTripleConstraintDataChart(id, yearMonths))
       .map(this::convertToTripleConstraintData)
       .orElse(null);
   }
@@ -162,8 +162,8 @@ public class AsyncDashboardService implements IAsyncDashboardService {
       .collect(Collectors.toList());
   }
 
-  private List<TripleConstraintDataChart> calculateTripleConstraintDataChart(final Long worpackId) {
-    return this.tripleConstraintService.calculate(worpackId);
+  private List<TripleConstraintDataChart> calculateTripleConstraintDataChart(final Long worpackId, List<YearMonth> yearMonths) {
+    return this.tripleConstraintService.calculate(worpackId, yearMonths);
   }
 
   private List<Long> getActiveBaselineIds(final Long workpackId) {

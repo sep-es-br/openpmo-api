@@ -23,7 +23,19 @@ import br.gov.es.openpmo.service.workpack.WorkpackModelService;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import java.util.ArrayList;
@@ -150,18 +162,15 @@ public class WorkpackModelController {
     return ResponseEntity.ok(ResponseBase.of(new EntityDto(workpackModel.getId())));
   }
 
+  @Transactional
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> delete(
     @PathVariable final Long id,
     @RequestParam(required = false) final Long idParent,
     @RequestHeader("Authorization") final String authorization
   ) {
-
     this.canAccessService.ensureCanEditResource(id, authorization);
-
-    final WorkpackModel workpackModel = this.workpackModelService.findById(id);
-    final WorkpackModel workpackModelParent = idParent != null ? this.workpackModelService.findById(idParent) : null;
-    this.deleteService.delete(workpackModel, workpackModelParent);
+    this.deleteService.delete(id, idParent);
     return ResponseEntity.ok().build();
   }
 

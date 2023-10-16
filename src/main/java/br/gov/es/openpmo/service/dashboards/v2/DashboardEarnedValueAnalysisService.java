@@ -57,7 +57,7 @@ public class DashboardEarnedValueAnalysisService implements IDashboardEarnedValu
     final EarnedValueAnalysisDerivedVariables variables,
     final boolean baselinesEmpty
   ) {
-    if(baselinesEmpty) {
+    if (baselinesEmpty) {
       return null;
     }
 
@@ -71,7 +71,7 @@ public class DashboardEarnedValueAnalysisService implements IDashboardEarnedValu
     final EarnedValueAnalysisDerivedVariables variables,
     final boolean baselinesEmpty
   ) {
-    if(baselinesEmpty) {
+    if (baselinesEmpty) {
       return null;
     }
 
@@ -84,6 +84,10 @@ public class DashboardEarnedValueAnalysisService implements IDashboardEarnedValu
   @Override
   public DashboardEarnedValueAnalysis build(final DashboardParameters parameters, Optional<DateIntervalQuery> dateIntervalQuery) {
     final List<EarnedValueByStep> earnedValueByStepList = this.getEarnedValueByStep(parameters, dateIntervalQuery);
+    Long idBaseline = null;
+    if (!earnedValueByStepList.isEmpty()) {
+      idBaseline = earnedValueByStepList.get(0).getIdBaseline();
+    }
     final List<PerformanceIndexesByStep> performanceIndexesList = new ArrayList<>();
 
     final Long workpackId = parameters.getWorkpackId();
@@ -92,11 +96,12 @@ public class DashboardEarnedValueAnalysisService implements IDashboardEarnedValu
     final Optional<EarnedValueByStep> atCompletion = earnedValueByStepList.stream()
       .max(Comparator.comparing(EarnedValueByStep::getDate));
 
-    for(final EarnedValueByStep step : earnedValueByStepList) {
+    for (final EarnedValueByStep step : earnedValueByStepList) {
       final EarnedValueAnalysisVariables variables = getVariables(step);
       final EarnedValueAnalysisDerivedVariables derivedVariables = getDerivedVariables(variables);
 
       final PerformanceIndexesByStep performanceIndexes = new PerformanceIndexesByStep(
+        idBaseline,
         variables.getActualCost(),
         variables.getPlannedValue(),
         variables.getEarnedValue(),
@@ -119,17 +124,22 @@ public class DashboardEarnedValueAnalysisService implements IDashboardEarnedValu
   @Override
   public DashboardEarnedValueAnalysis calculate(final Long workpackId, final Optional<DateIntervalQuery> dateIntervalQuery) {
     final List<EarnedValueByStep> earnedValueByStepList = this.getEarnedValueBySteps.calculate(workpackId, dateIntervalQuery);
+    Long idBaseline = null;
+    if (!earnedValueByStepList.isEmpty()) {
+      idBaseline = earnedValueByStepList.get(0).getIdBaseline();
+    }
     final List<PerformanceIndexesByStep> performanceIndexesList = new ArrayList<>();
     final boolean baselinesEmpty = this.isBaselinesEmpty(workpackId);
 
     final Optional<EarnedValueByStep> atCompletion = earnedValueByStepList.stream()
       .max(Comparator.comparing(EarnedValueByStep::getDate));
 
-    for(final EarnedValueByStep step : earnedValueByStepList) {
+    for (final EarnedValueByStep step : earnedValueByStepList) {
       final EarnedValueAnalysisVariables variables = getVariables(step);
       final EarnedValueAnalysisDerivedVariables derivedVariables = getDerivedVariables(variables);
 
       final PerformanceIndexesByStep performanceIndexes = new PerformanceIndexesByStep(
+        idBaseline,
         variables.getActualCost(),
         variables.getPlannedValue(),
         variables.getEarnedValue(),

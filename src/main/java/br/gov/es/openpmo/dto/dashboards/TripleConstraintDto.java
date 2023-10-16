@@ -1,86 +1,60 @@
-package br.gov.es.openpmo.model.dashboards;
+package br.gov.es.openpmo.dto.dashboards;
 
-import br.gov.es.openpmo.dto.dashboards.tripleconstraint.TripleConstraintDataChart;
-import br.gov.es.openpmo.model.Entity;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
-import org.springframework.data.annotation.Transient;
+import br.gov.es.openpmo.model.dashboards.TripleConstraint;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-@NodeEntity
-public class TripleConstraint extends Entity {
-
-  @Relationship("IS_AT")
-  private DashboardMonth month;
-
-  private Long idBaseline;
-
-  private BigDecimal costActualValue;
+public class TripleConstraintDto {
 
   private BigDecimal costVariation;
-
   private BigDecimal costPlannedValue;
-
   private BigDecimal costForeseenValue;
+  private BigDecimal costActualValue;
 
   private LocalDate schedulePlannedStartDate;
-
   private LocalDate schedulePlannedEndDate;
-
   private LocalDate scheduleForeseenStartDate;
-
   private LocalDate scheduleForeseenEndDate;
-
   private LocalDate scheduleActualStartDate;
-
   private LocalDate scheduleActualEndDate;
-
   private BigDecimal scheduleVariation;
-
   private BigDecimal schedulePlannedValue;
-
   private BigDecimal scheduleForeseenValue;
-
   private BigDecimal scheduleActualValue;
 
+  private BigDecimal scopeActualValue;
   private BigDecimal scopeVariation;
-
   private BigDecimal scopePlannedVariationPercent;
-
   private BigDecimal scopeForeseenVariationPercent;
-
   private BigDecimal scopeActualVariationPercent;
-
   private BigDecimal scopePlannedValue;
-
   private BigDecimal scopeForeseenValue;
 
-  private BigDecimal scopeActualValue;
-
-  public DashboardMonth getMonth() {
-    return month;
-  }
-
-  public void setMonth(DashboardMonth month) {
-    this.month = month;
-  }
-
-  public Long getIdBaseline() {
-    return idBaseline;
-  }
-
-  public void setIdBaseline(Long idBaseline) {
-    this.idBaseline = idBaseline;
-  }
-
-  public BigDecimal getCostActualValue() {
-    return costActualValue;
-  }
-
-  public void setCostActualValue(BigDecimal costActualValue) {
-    this.costActualValue = costActualValue;
+  public static TripleConstraintDto of(TripleConstraint tripleConstraint) {
+    final TripleConstraintDto dto = new TripleConstraintDto();
+    dto.setCostVariation(tripleConstraint.getCostVariation());
+    dto.setCostPlannedValue(tripleConstraint.getCostPlannedValue());
+    dto.setCostForeseenValue(tripleConstraint.getCostForeseenValue());
+    dto.setCostActualValue(tripleConstraint.getCostActualValue());
+    dto.setSchedulePlannedStartDate(tripleConstraint.getSchedulePlannedStartDate());
+    dto.setSchedulePlannedEndDate(tripleConstraint.getSchedulePlannedEndDate());
+    dto.setScheduleForeseenStartDate(tripleConstraint.getScheduleForeseenStartDate());
+    dto.setScheduleForeseenEndDate(tripleConstraint.getScheduleForeseenEndDate());
+    dto.setScheduleActualStartDate(tripleConstraint.getScheduleActualStartDate());
+    dto.setScheduleActualEndDate(tripleConstraint.getScheduleActualEndDate());
+    dto.setScheduleVariation(tripleConstraint.getScheduleVariation());
+    dto.setSchedulePlannedValue(tripleConstraint.getSchedulePlannedValue());
+    dto.setScheduleForeseenValue(tripleConstraint.getScheduleForeseenValue());
+    dto.setScheduleActualValue(tripleConstraint.getScheduleActualValue());
+    dto.setScopeActualValue(tripleConstraint.getScopeActualValue());
+    dto.setScopeVariation(tripleConstraint.getScopeVariation());
+    dto.setScopePlannedVariationPercent(tripleConstraint.getScopePlannedVariationPercent());
+    dto.setScopeForeseenVariationPercent(tripleConstraint.getScopeForeseenVariationPercent());
+    dto.setScopeActualVariationPercent(tripleConstraint.getScopeActualVariationPercent());
+    dto.setScopePlannedValue(tripleConstraint.getScopePlannedValue());
+    dto.setScopeForeseenValue(tripleConstraint.getScopeForeseenValue());
+    return dto;
   }
 
   public BigDecimal getCostVariation() {
@@ -105,6 +79,14 @@ public class TripleConstraint extends Entity {
 
   public void setCostForeseenValue(BigDecimal costForeseenValue) {
     this.costForeseenValue = costForeseenValue;
+  }
+
+  public BigDecimal getCostActualValue() {
+    return costActualValue;
+  }
+
+  public void setCostActualValue(BigDecimal costActualValue) {
+    this.costActualValue = costActualValue;
   }
 
   public LocalDate getSchedulePlannedStartDate() {
@@ -241,63 +223,5 @@ public class TripleConstraint extends Entity {
 
   public void setScopeActualValue(BigDecimal scopeActualValue) {
     this.scopeActualValue = scopeActualValue;
-  }
-
-  @Transient
-  public void retain(TripleConstraint tripleConstraint) {
-    this.setIdBaseline(tripleConstraint.getIdBaseline());
-    this.setCostActualValue(tripleConstraint.getCostActualValue());
-    this.setCostVariation(tripleConstraint.getCostVariation());
-    this.setCostPlannedValue(tripleConstraint.getCostPlannedValue());
-    this.setCostForeseenValue(tripleConstraint.getCostForeseenValue());
-    this.setSchedulePlannedStartDate(tripleConstraint.getSchedulePlannedStartDate());
-    this.setSchedulePlannedEndDate(tripleConstraint.getSchedulePlannedEndDate());
-    this.setScheduleForeseenStartDate(tripleConstraint.getScheduleForeseenStartDate());
-    this.setScheduleForeseenEndDate(tripleConstraint.getScheduleForeseenEndDate());
-    this.setScheduleActualStartDate(tripleConstraint.getScheduleActualStartDate());
-    this.setScheduleActualEndDate(tripleConstraint.getScheduleActualEndDate());
-    this.setScheduleVariation(tripleConstraint.getScheduleVariation());
-    this.setSchedulePlannedValue(tripleConstraint.getSchedulePlannedValue());
-    this.setScheduleForeseenValue(tripleConstraint.getScheduleForeseenValue());
-    this.setScheduleActualValue(tripleConstraint.getScheduleActualValue());
-    this.setScopeActualValue(tripleConstraint.getScopeActualValue());
-    this.setScopeVariation(tripleConstraint.getScopeVariation());
-    this.setScopePlannedVariationPercent(tripleConstraint.getScopePlannedVariationPercent());
-    this.setScopeForeseenVariationPercent(tripleConstraint.getScopeForeseenVariationPercent());
-    this.setScopeActualVariationPercent(tripleConstraint.getScopeActualVariationPercent());
-    this.setScopePlannedValue(tripleConstraint.getScopePlannedValue());
-    this.setScopeForeseenValue(tripleConstraint.getScopeForeseenValue());
-  }
-
-  @Transient
-  public static TripleConstraint of(TripleConstraintDataChart dataChart) {
-    if (dataChart == null) {
-      return null;
-    }
-    final TripleConstraint tripleConstraint = new TripleConstraint();
-    tripleConstraint.setMonth(new DashboardMonth(dataChart.getMesAno()));
-    tripleConstraint.setIdBaseline(dataChart.getIdBaseline());
-    tripleConstraint.setCostActualValue(dataChart.getCost().getActualValue());
-    tripleConstraint.setCostVariation(dataChart.getCost().getVariation());
-    tripleConstraint.setCostPlannedValue(dataChart.getCost().getPlannedValue());
-    tripleConstraint.setCostForeseenValue(dataChart.getCost().getForeseenValue());
-    tripleConstraint.setSchedulePlannedStartDate(dataChart.getSchedule().getPlannedStartDate());
-    tripleConstraint.setSchedulePlannedEndDate(dataChart.getSchedule().getPlannedEndDate());
-    tripleConstraint.setScheduleForeseenStartDate(dataChart.getSchedule().getForeseenStartDate());
-    tripleConstraint.setScheduleForeseenEndDate(dataChart.getSchedule().getForeseenEndDate());
-    tripleConstraint.setScheduleActualStartDate(dataChart.getSchedule().getActualStartDate());
-    tripleConstraint.setScheduleActualEndDate(dataChart.getSchedule().getActualEndDate());
-    tripleConstraint.setScheduleVariation(dataChart.getSchedule().getVariation());
-    tripleConstraint.setSchedulePlannedValue(dataChart.getSchedule().getPlannedValue());
-    tripleConstraint.setScheduleForeseenValue(dataChart.getSchedule().getForeseenValue());
-    tripleConstraint.setScheduleActualValue(dataChart.getSchedule().getActualValue());
-    tripleConstraint.setScopeActualValue(dataChart.getScope().getActualWork());
-    tripleConstraint.setScopeVariation(dataChart.getScope().getVariation());
-    tripleConstraint.setScopePlannedVariationPercent(dataChart.getScope().getPlannedVariationPercent());
-    tripleConstraint.setScopeForeseenVariationPercent(dataChart.getScope().getForeseenVariationPercent());
-    tripleConstraint.setScopeActualVariationPercent(dataChart.getScope().getActualVariationPercent());
-    tripleConstraint.setScopePlannedValue(dataChart.getScope().getPlannedWork());
-    tripleConstraint.setScopeForeseenValue(dataChart.getScope().getForeseenWork());
-    return tripleConstraint;
   }
 }

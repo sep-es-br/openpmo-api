@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -35,6 +37,7 @@ public class PurgeDashboards {
 
   @Async
   public void execute() {
+    final Instant start = Instant.now();
     logger.info("Início do cálculo dos dashboards!");
     logger.info("Buscando workpacks...");
     final List<Workpack> workpacks = this.workpackRepository.findAll();
@@ -46,6 +49,8 @@ public class PurgeDashboards {
     calculateForClass(workpacks, Program.class);
     calculateForClass(workpacks, Portfolio.class);
     logger.info("Fim do cálculo dos dashboards!");
+    final Instant end = Instant.now();
+    logTime(start, end);
   }
 
   private void removeMilestones(Collection<Workpack> workpacks) {
@@ -81,6 +86,16 @@ public class PurgeDashboards {
       }
     }
     return list;
+  }
+
+  private void logTime(Instant start, Instant end) {
+    final Duration between = Duration.between(start, end);
+    long seconds = between.getSeconds();
+    final long hours = (seconds - (seconds % 3600)) / 3600;
+    seconds = seconds - (hours * 3600);
+    final long minutes = (seconds - (seconds % 60)) / 60;
+    seconds = seconds - (minutes * 60);
+    logger.info("Tempo decorrido: {}h{}min{}s.", hours, minutes, seconds);
   }
 
 }

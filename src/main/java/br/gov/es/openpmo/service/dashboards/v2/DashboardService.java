@@ -15,7 +15,6 @@ import br.gov.es.openpmo.dto.dashboards.v2.Interval;
 import br.gov.es.openpmo.dto.dashboards.v2.SimpleDashboard;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
-import br.gov.es.openpmo.model.dashboards.Dashboard;
 import br.gov.es.openpmo.model.dashboards.EarnedValueAnalysisData;
 import br.gov.es.openpmo.model.dashboards.TripleConstraintData;
 import br.gov.es.openpmo.repository.BaselineRepository;
@@ -294,7 +293,7 @@ public class DashboardService implements IDashboardService {
   @Nullable
   private List<TripleConstraintData> getTripleConstraintData(final DashboardParameters parameters) {
     return this.dashboardRepository.findByWorkpackId(parameters.getWorkpackId())
-      .map(Dashboard::getTripleConstraint)
+      .map(dashboard -> dashboard.getTripleConstraint(parameters.getBaselineId()))
       .map(tripleConstraints -> tripleConstraints.stream().map(TripleConstraintData::of).collect(Collectors.toList()))
       .orElse(null);
   }
@@ -309,7 +308,7 @@ public class DashboardService implements IDashboardService {
     final Long workpackId = parameters.getWorkpackId();
 
     final DashboardEarnedValueAnalysis earnedValueAnalysis = this.dashboardRepository.findByWorkpackId(workpackId)
-      .map(EarnedValueAnalysisData::of)
+      .map(from -> EarnedValueAnalysisData.of(from, parameters.getBaselineId()))
       .map(EarnedValueAnalysisData::getResponse)
       .orElse(null);
 
@@ -330,6 +329,7 @@ public class DashboardService implements IDashboardService {
 
     if (performanceIndexes.isEmpty()) {
       performanceIndexes.add(new PerformanceIndexesByStep(
+        null,
         BigDecimal.ZERO,
         BigDecimal.ZERO,
         BigDecimal.ZERO,

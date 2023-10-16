@@ -1,12 +1,18 @@
 package br.gov.es.openpmo.dto.workpack;
 
-import br.gov.es.openpmo.dto.dashboards.v2.SimpleDashboard;
+import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
+import br.gov.es.openpmo.dto.dashboards.MilestoneDto;
+import br.gov.es.openpmo.dto.dashboards.RiskDto;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.dto.plan.PlanDto;
 import br.gov.es.openpmo.model.relations.IsLinkedTo;
 import br.gov.es.openpmo.model.workpacks.Workpack;
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.swagger.annotations.ApiModel;
 
@@ -72,7 +78,11 @@ public abstract class WorkpackDetailParentDto {
 
   private Boolean completed;
 
-  private SimpleDashboard dashboard;
+  private DashboardMonthDto dashboard;
+
+  private List<MilestoneDto> milestones;
+
+  private List<RiskDto> risks;
 
   public static <TYPE extends WorkpackDetailParentDto> WorkpackDetailParentDto of(
     final Workpack workpack,
@@ -263,12 +273,28 @@ public abstract class WorkpackDetailParentDto {
     this.reason = reason;
   }
 
-  public SimpleDashboard getDashboard() {
-    return this.dashboard;
+  public DashboardMonthDto getDashboard() {
+    return dashboard;
   }
 
-  public void setDashboard(final SimpleDashboard dashboard) {
+  public void setDashboard(DashboardMonthDto dashboard) {
     this.dashboard = dashboard;
+  }
+
+  public List<MilestoneDto> getMilestones() {
+    return milestones;
+  }
+
+  public void setMilestones(List<MilestoneDto> milestones) {
+    this.milestones = milestones;
+  }
+
+  public List<RiskDto> getRisks() {
+    return risks;
+  }
+
+  public void setRisks(List<RiskDto> risks) {
+    this.risks = risks;
   }
 
   public String getActiveBaselineName() {

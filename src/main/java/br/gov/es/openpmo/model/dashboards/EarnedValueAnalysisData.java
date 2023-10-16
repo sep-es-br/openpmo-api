@@ -31,15 +31,15 @@ public class EarnedValueAnalysisData {
     return to;
   }
 
-  public static EarnedValueAnalysisData of(final Dashboard from) {
+  public static EarnedValueAnalysisData of(final Dashboard from, final Long baselineId) {
     if (from == null) {
       return null;
     }
 
     final EarnedValueAnalysisData to = new EarnedValueAnalysisData();
 
-    apply(from.getEarnedValue(), EarnedValueByStepData::of, to::setEarnedValueByStep, HashSet::new);
-    apply(from.getPerformanceIndexes(), PerformanceIndexesData::of, to::setPerformanceIndexes, HashSet::new);
+    apply(from.getEarnedValues(baselineId), EarnedValueByStepData::of, to::setEarnedValueByStep, HashSet::new);
+    apply(from.getPerformanceIndexes(baselineId), PerformanceIndexesData::of, to::setPerformanceIndexes, HashSet::new);
 
     return to;
   }

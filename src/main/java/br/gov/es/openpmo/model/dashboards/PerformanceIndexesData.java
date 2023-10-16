@@ -11,6 +11,8 @@ import static br.gov.es.openpmo.model.dashboards.DashboardUtils.apply;
 
 public class PerformanceIndexesData {
 
+  private Long idBaseline;
+
   private BigDecimal actualCost;
 
   private BigDecimal plannedValue;
@@ -35,6 +37,7 @@ public class PerformanceIndexesData {
 
     final PerformanceIndexesData to = new PerformanceIndexesData();
 
+    to.setIdBaseline(from.getIdBaseline());
     to.setActualCost(from.getActualCost());
     to.setPlannedValue(from.getPlannedValue());
     to.setEarnedValue(from.getEarnedValue());
@@ -55,6 +58,7 @@ public class PerformanceIndexesData {
 
     final PerformanceIndexesData to = new PerformanceIndexesData();
 
+    to.setIdBaseline(from.getIdBaseline());
     to.setActualCost(from.getActualCost());
     to.setPlannedValue(from.getPlannedValue());
     to.setEarnedValue(from.getEarnedValue());
@@ -65,6 +69,14 @@ public class PerformanceIndexesData {
     to.setSchedulePerformanceIndex(SchedulePerformanceIndexData.of(from));
 
     return to;
+  }
+
+  public Long getIdBaseline() {
+    return idBaseline;
+  }
+
+  public void setIdBaseline(Long idBaseline) {
+    this.idBaseline = idBaseline;
   }
 
   public BigDecimal getActualCost() {
@@ -133,6 +145,7 @@ public class PerformanceIndexesData {
 
   public PerformanceIndexesByStep getResponse() {
     return new PerformanceIndexesByStep(
+      this.idBaseline,
       this.actualCost,
       this.plannedValue,
       this.earnedValue,

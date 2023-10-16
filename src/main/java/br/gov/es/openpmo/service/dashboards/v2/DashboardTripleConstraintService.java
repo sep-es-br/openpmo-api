@@ -14,9 +14,13 @@ import br.gov.es.openpmo.repository.WorkpackRepository;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.YearMonth;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_NOT_FOUND;
@@ -60,24 +64,17 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
     final Long baselineId = parameters.getBaselineId();
 
     final Set<Long> deliverablesId = this.getDeliverablesId(workpackId);
-    return this.calculateForMonth(workpackId, baselineId, yearMonth, deliverablesId);
+    return this.calculateForMonth(workpackId, baselineId, yearMonth, deliverablesId, false);
   }
 
   @Override
   @NonNull
-  public List<TripleConstraintDataChart> calculate(@NonNull final Long workpackId) {
-    Optional<DateIntervalQuery> dateIntervalQuery;
-    final List<Long> baselineIds = this.getActiveBaselineIds(workpackId);
-    if (baselineIds.isEmpty()) {
-      dateIntervalQuery = this.findWorkpackInterval.execute(workpackId);
-    } else {
-      dateIntervalQuery = this.findWorkpackBaselineInterval.execute(workpackId, baselineIds);
+  public List<TripleConstraintDataChart> calculate(@NonNull final Long workpackId, List<YearMonth> yearMonths) {
+    if (yearMonths == null) {
+      return Collections.emptyList();
     }
-    return dateIntervalQuery
-      .filter(DateIntervalQuery::isValid)
-      .map(DateIntervalQuery::toYearMonths)
-      .map(months -> this.calculateForAllMonths(workpackId, months))
-      .orElseGet(ArrayList::new);
+    final boolean isProject = this.workpackRepository.isProject(workpackId);
+    return this.calculateForAllMonths(workpackId, yearMonths, isProject);
   }
 
   private Set<Long> getDeliverablesId(final Long workpackId) {
@@ -94,12 +91,15 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
     final Long workpackId,
     final Long baselineId,
     final YearMonth yearMonth,
-    final Iterable<Long> deliverablesId
+    final Iterable<Long> deliverablesId,
+    final boolean isProject
   ) {
     final TripleConstraintDataChart tripleConstraint = new TripleConstraintDataChart();
 
-    tripleConstraint.setIdBaseline(baselineId);
-    tripleConstraint.setMesAno(this.getMesAno(yearMonth));
+    if (isProject) {
+      tripleConstraint.setIdBaseline(baselineId);
+    }
+    tripleConstraint.setMesAno(yearMonth.atEndOfMonth());
 
     this.buildScheduleDataChart(baselineId, workpackId, tripleConstraint, yearMonth);
 
@@ -110,34 +110,38 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
     return tripleConstraint;
   }
 
-  public LocalDate getMesAno(final YearMonth yearMonth) {
-    final LocalDate now = LocalDate.now();
-    if (yearMonth == null) {
-      return now;
-    }
-    final LocalDate endOfMonth = yearMonth.atEndOfMonth();
-    if (now.isBefore(endOfMonth)) {
-      return now;
-    }
-    return endOfMonth;
-  }
-
   private List<TripleConstraintDataChart> calculateForAllMonths(
-    @NonNull final Long workpackId,
-    @NonNull final Iterable<YearMonth> months
+    final Long workpackId,
+    final List<YearMonth> months,
+    final boolean isProject
   ) {
     final List<TripleConstraintDataChart> charts = new ArrayList<>();
     final Set<Long> deliverablesId = this.getDeliverablesId(workpackId);
 
+    List<YearMonth> yearMonths;
+    if (isProject) {
+      yearMonths = months;
+    } else {
+      yearMonths = months.stream()
+        .filter(m -> !m.isAfter(YearMonth.now()))
+        .collect(Collectors.toList());
+      if (yearMonths.isEmpty()) {
+        yearMonths = months.stream()
+          .min(Comparator.naturalOrder())
+          .map(Collections::singletonList)
+          .orElseGet(Collections::emptyList);
+      }
+    }
+
     final List<Baseline> baselines = this.getBaselines(workpackId);
     if (baselines.isEmpty()) {
-      for (final YearMonth month : months) {
-        charts.add(this.calculateForMonth(workpackId, null, month, deliverablesId));
+      for (final YearMonth month : yearMonths) {
+        charts.add(this.calculateForMonth(workpackId, null, month, deliverablesId, isProject));
       }
     } else {
-      for (final YearMonth month : months) {
+      for (final YearMonth month : yearMonths) {
         for (final Baseline baseline : baselines) {
-          charts.add(this.calculateForMonth(workpackId, baseline.getId(), month, deliverablesId));
+          charts.add(this.calculateForMonth(workpackId, baseline.getId(), month, deliverablesId, isProject));
         }
       }
     }
@@ -162,18 +166,6 @@ public class DashboardTripleConstraintService implements IDashboardTripleConstra
       .max(Comparator.comparing(Baseline::getProposalDate))
       .map(Collections::singletonList)
       .orElseGet(ArrayList::new);
-  }
-
-  private void calculateForBaseline(
-    final Long workpackId,
-    final Long baselineId,
-    final Iterable<YearMonth> months,
-    final Iterable<Long> deliverablesId,
-    final Collection<? super TripleConstraintDataChart> charts
-  ) {
-    for (final YearMonth month : months) {
-      charts.add(this.calculateForMonth(workpackId, baselineId, month, deliverablesId));
-    }
   }
 
   private void buildScheduleDataChart(

@@ -7,6 +7,8 @@ import java.time.YearMonth;
 
 public class PerformanceIndexesByStep {
 
+  private final Long idBaseline;
+
   private final BigDecimal actualCost;
 
   private final BigDecimal plannedValue;
@@ -25,6 +27,7 @@ public class PerformanceIndexesByStep {
   private final YearMonth date;
 
   public PerformanceIndexesByStep(
+    final Long idBaseline,
     final BigDecimal actualCost,
     final BigDecimal plannedValue,
     final BigDecimal earnedValue,
@@ -34,6 +37,7 @@ public class PerformanceIndexesByStep {
     final SchedulePerformanceIndex schedulePerformanceIndex,
     final YearMonth date
   ) {
+    this.idBaseline = idBaseline;
     this.actualCost = actualCost;
     this.plannedValue = plannedValue;
     this.earnedValue = earnedValue;
@@ -42,6 +46,10 @@ public class PerformanceIndexesByStep {
     this.costPerformanceIndex = costPerformanceIndex;
     this.schedulePerformanceIndex = schedulePerformanceIndex;
     this.date = date;
+  }
+
+  public Long getIdBaseline() {
+    return idBaseline;
   }
 
   public BigDecimal getActualCost() {

@@ -7,11 +7,17 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 @Repository
 public interface RiskRepository extends Neo4jRepository<Risk, Long>, CustomRepository {
+
+  @Query("match (w:Workpack)<-[:IS_IN*0..]-(:Workpack)<-[:IS_FORSEEN_ON]-(r:Risk) " +
+    "where id(w)=$workpackId " +
+    "return distinct r")
+  List<Risk> findByWorkpackId(Long workpackId);
 
   @Query("match (w:Workpack{deleted:false,canceled:false}) " +
          "where id(w)=$workpackId " +

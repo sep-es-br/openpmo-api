@@ -6,6 +6,8 @@ import java.math.BigDecimal;
 
 public class ScopeData {
 
+  private BigDecimal actualValue;
+
   private BigDecimal variation;
 
   private BigDecimal plannedVariationPercent;
@@ -24,6 +26,7 @@ public class ScopeData {
     }
 
     final ScopeData to = new ScopeData();
+    to.setActualValue(from.getActualWork());
     to.setVariation(from.getVariation());
     to.setPlannedVariationPercent(from.getPlannedVariationPercent());
     to.setForeseenVariationPercent(from.getForeseenVariationPercent());
@@ -39,6 +42,7 @@ public class ScopeData {
     }
 
     final ScopeData to = new ScopeData();
+    to.setActualValue(from.getScopeActualValue());
     to.setVariation(from.getScopeVariation());
     to.setPlannedVariationPercent(from.getScopePlannedVariationPercent());
     to.setForeseenVariationPercent(from.getScopeForeseenVariationPercent());
@@ -46,6 +50,14 @@ public class ScopeData {
     to.setPlannedValue(from.getScopePlannedValue());
     to.setForeseenValue(from.getScopeForeseenValue());
     return to;
+  }
+
+  public BigDecimal getActualValue() {
+    return actualValue;
+  }
+
+  public void setActualValue(BigDecimal actualValue) {
+    this.actualValue = actualValue;
   }
 
   public BigDecimal getActualVariationPercent() {
@@ -82,6 +94,7 @@ public class ScopeData {
 
   public ScopeDataChart getResponse() {
     final ScopeDataChart scopeDataChart = new ScopeDataChart();
+    scopeDataChart.setActualWork(this.actualValue);
     scopeDataChart.setVariation(this.variation);
     scopeDataChart.setPlannedVariationPercent(this.plannedVariationPercent);
     scopeDataChart.setForeseenVariationPercent(this.foreseenVariationPercent);

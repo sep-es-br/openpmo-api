@@ -6,7 +6,6 @@ import br.gov.es.openpmo.dto.workpackmodel.params.properties.PropertyModelDto;
 import br.gov.es.openpmo.model.actors.File;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.reports.ReportDesign;
-import br.gov.es.openpmo.repository.ReportDesignRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -24,18 +23,14 @@ public class GetReportModelDetailById {
 
   private static final Logger log = LoggerFactory.getLogger(GetReportModelDetailById.class);
 
-  private final ReportDesignRepository reportDesignRepository;
-
   private final GetReportModelById getReportModelById;
 
   private final GetPropertyModelDtoFromEntity getPropertyModelDtoFromEntity;
 
   public GetReportModelDetailById(
-    final ReportDesignRepository reportDesignRepository,
     final GetReportModelById getReportModelById,
     final GetPropertyModelDtoFromEntity getPropertyModelDtoFromEntity
   ) {
-    this.reportDesignRepository = reportDesignRepository;
     this.getReportModelById = getReportModelById;
     this.getPropertyModelDtoFromEntity = getPropertyModelDtoFromEntity;
   }

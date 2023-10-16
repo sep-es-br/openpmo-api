@@ -1,15 +1,17 @@
 package br.gov.es.openpmo.service.workpack.breakdown.structure;
 
-import br.gov.es.openpmo.dto.dashboards.v2.SimpleDashboard;
-import br.gov.es.openpmo.dto.schedule.ScheduleDto;
-import br.gov.es.openpmo.dto.workpack.breakdown.structure.MilestoneRepresentation;
+import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
+import br.gov.es.openpmo.dto.dashboards.MilestoneDto;
+import br.gov.es.openpmo.dto.dashboards.RiskDto;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.ScheduleMeasureUnit;
-import br.gov.es.openpmo.dto.workpack.breakdown.structure.ScheduleRepresentation;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.WorkpackRepresentation;
-import br.gov.es.openpmo.enumerator.MilestoneStatus;
+import br.gov.es.openpmo.model.baselines.Baseline;
+import br.gov.es.openpmo.model.dashboards.Dashboard;
+import br.gov.es.openpmo.model.dashboards.DashboardMonth;
 import br.gov.es.openpmo.model.office.UnitMeasure;
 import br.gov.es.openpmo.model.properties.Property;
-import br.gov.es.openpmo.model.schedule.Schedule;
+import br.gov.es.openpmo.model.properties.UnitSelection;
+import br.gov.es.openpmo.model.risk.Risk;
 import br.gov.es.openpmo.model.workpacks.Deliverable;
 import br.gov.es.openpmo.model.workpacks.Milestone;
 import br.gov.es.openpmo.model.workpacks.Organizer;
@@ -17,42 +19,29 @@ import br.gov.es.openpmo.model.workpacks.Portfolio;
 import br.gov.es.openpmo.model.workpacks.Program;
 import br.gov.es.openpmo.model.workpacks.Project;
 import br.gov.es.openpmo.model.workpacks.Workpack;
-import br.gov.es.openpmo.repository.ScheduleRepository;
-import br.gov.es.openpmo.repository.WorkpackRepository;
-import br.gov.es.openpmo.service.dashboards.v2.DashboardService;
-import br.gov.es.openpmo.service.schedule.ScheduleService;
-import br.gov.es.openpmo.service.workpack.MilestoneService;
+import br.gov.es.openpmo.repository.BaselineRepository;
+import br.gov.es.openpmo.repository.RiskRepository;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.util.Optional;
+import java.time.YearMonth;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 
 @Component
 public class GetWorkpackRepresentation {
 
-  private final DashboardService dashboardService;
+  private final BaselineRepository baselineRepository;
 
-  private final MilestoneService milestoneService;
-
-  private final ScheduleService scheduleService;
-
-  private final ScheduleRepository scheduleRepository;
-
-  private final WorkpackRepository workpackRepository;
+  private final RiskRepository riskRepository;
 
   public GetWorkpackRepresentation(
-    final DashboardService dashboardService,
-    final MilestoneService milestoneService,
-    final ScheduleService scheduleService,
-    final ScheduleRepository scheduleRepository,
-    final WorkpackRepository workpackRepository
+    final BaselineRepository baselineRepository,
+    final RiskRepository riskRepository
   ) {
-    this.dashboardService = dashboardService;
-    this.milestoneService = milestoneService;
-    this.scheduleService = scheduleService;
-    this.scheduleRepository = scheduleRepository;
-    this.workpackRepository = workpackRepository;
+    this.baselineRepository = baselineRepository;
+    this.riskRepository = riskRepository;
   }
 
   public WorkpackRepresentation execute(final Workpack workpack) {
@@ -60,63 +49,71 @@ public class GetWorkpackRepresentation {
     final Long workpackId = workpack.getId();
     workpackRepresentation.setIdWorkpack(workpackId);
     workpackRepresentation.setWorkpackType(workpack.getType());
-    workpackRepresentation.setWorkpackName(this.workpackRepository.findWorkpackName(workpackId));
+    workpackRepresentation.setWorkpackName(workpack.getWorkpackName());
     if (this.hasDashboard(workpack)) {
-      final SimpleDashboard dashboard = this.dashboardService.buildSimple(workpackId);
-      workpackRepresentation.setDashboard(dashboard);
+      final Dashboard dashboard = workpack.getDashboard();
+      if (dashboard != null) {
+        final List<DashboardMonth> months = dashboard.getMonths();
+        final LocalDate lastMonth = YearMonth.now().minusMonths(1).atDay(1);
+        boolean seen = false;
+        DashboardMonth best = null;
+        Comparator<DashboardMonth> comparator = Comparator.comparing(DashboardMonth::getDate);
+        for (DashboardMonth month : months) {
+          if (!month.getDate().isBefore(lastMonth)) {
+            if (!seen || comparator.compare(month, best) < 0) {
+              seen = true;
+              best = month;
+            }
+          }
+        }
+        if (seen) {
+          Long baselineId = null;
+          if (workpack instanceof Project) {
+            baselineId = this.getBaselineId(workpack.getId());
+          }
+          final DashboardMonthDto monthDto = DashboardMonthDto.of(best, baselineId);
+          workpackRepresentation.setDashboard(monthDto);
+        }
+      }
+      final List<Risk> risks = this.riskRepository.findByWorkpackId(workpack.getId());
+      final List<RiskDto> riskDtos = RiskDto.of(risks);
+      workpackRepresentation.setRisks(riskDtos);
     }
     if (workpack instanceof Milestone) {
-      final LocalDate milestoneDate = this.milestoneService.getMilestoneDate(workpackId);
-      final LocalDate baselineDate = this.milestoneService.getBaselineDate(workpackId);
-      final LocalDate expirationDate = this.milestoneService.getExpirationDate(workpackId);
-      final MilestoneStatus status = this.milestoneService.getStatus(workpackId);
-      final MilestoneRepresentation milestoneRepresentation = new MilestoneRepresentation();
-      milestoneRepresentation.setMilestoneDate(milestoneDate);
-      milestoneRepresentation.setBaselineDate(baselineDate);
-      milestoneRepresentation.setExpirationDate(expirationDate);
-      milestoneRepresentation.setMilestoneStatus(status);
-      workpackRepresentation.setMilestone(milestoneRepresentation);
+      workpackRepresentation.setMilestone(MilestoneDto.of((Milestone) workpack));
     }
     if (workpack instanceof Deliverable) {
-      final Optional<Schedule> scheduleOptional = this.scheduleRepository.findScheduleUnitMeasureByWorkpackId(workpackId);
-      if (scheduleOptional.isPresent()) {
-        final Schedule schedule = scheduleOptional.get();
-        final ScheduleDto scheduleDto = this.scheduleService.mapsToScheduleDto(schedule);
-        final ScheduleRepresentation scheduleRepresentation = new ScheduleRepresentation();
-        scheduleRepresentation.setUnitMeasure(this.buildUnitMeasure(schedule.getWorkpack()));
-        scheduleRepresentation.setEnd(scheduleDto.getEnd());
-        scheduleRepresentation.setStart(scheduleDto.getStart());
-        scheduleRepresentation.setBaselineEnd(scheduleDto.getBaselineEnd());
-        scheduleRepresentation.setBaselineStart(scheduleDto.getBaselineStart());
-        scheduleRepresentation.setBaselinePlanned(scheduleDto.getBaselineCost());
-        scheduleRepresentation.setBaselineCost(scheduleDto.getBaselineCost());
-        scheduleRepresentation.setPlaned(scheduleDto.getPlaned());
-        scheduleRepresentation.setActual(scheduleDto.getActual());
-        scheduleRepresentation.setPlanedCost(scheduleDto.getPlanedCost());
-        scheduleRepresentation.setActualCost(scheduleDto.getActualCost());
-        workpackRepresentation.setSchedule(scheduleRepresentation);
-      }
+      final ScheduleMeasureUnit unitMeasure = this.buildUnitMeasure((Deliverable) workpack);
+      workpackRepresentation.setUnitMeasure(unitMeasure);
     }
-
     return workpackRepresentation;
   }
 
   private boolean hasDashboard(final Workpack workpack) {
     return workpack instanceof Portfolio ||
-           workpack instanceof Program ||
-           workpack instanceof Project ||
-           workpack instanceof Organizer;
+      workpack instanceof Program ||
+      workpack instanceof Project ||
+      workpack instanceof Organizer ||
+      workpack instanceof Deliverable;
   }
 
-  private ScheduleMeasureUnit buildUnitMeasure(final Workpack workpack) {
+  private ScheduleMeasureUnit buildUnitMeasure(final Deliverable workpack) {
     final Set<Property> properties = workpack.getProperties();
     for (Property property : properties) {
-      final Object value = property.getValue();
-      if (value instanceof UnitMeasure) {
-        return ScheduleMeasureUnit.of((UnitMeasure) value);
+      if (property instanceof UnitSelection) {
+        final UnitMeasure value = ((UnitSelection) property).getValue();
+        return ScheduleMeasureUnit.of(value);
       }
     }
     return null;
+  }
+
+  private Long getBaselineId(final Long workpackId) {
+    final List<Baseline> baselines = this.baselineRepository.findApprovedOrProposedBaselinesByAnyWorkpackId(workpackId);
+    if (baselines.isEmpty()) {
+      return null;
+    }
+    return baselines.get(0).getId();
   }
 
 }

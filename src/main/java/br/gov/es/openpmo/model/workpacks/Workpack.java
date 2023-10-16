@@ -6,6 +6,7 @@ import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.baselines.Snapshotable;
+import br.gov.es.openpmo.model.dashboards.Dashboard;
 import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.properties.Property;
@@ -82,6 +83,9 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
 
   @Relationship(type = "BELONGS_TO")
   private Set<BelongsTo> belongsTo;
+
+  @Relationship(type = "BELONGS_TO", direction = INCOMING)
+  private Dashboard dashboard;
 
   @Relationship(type = "IS_IN")
   private Set<Workpack> parent;
@@ -395,6 +399,14 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
 
   public void setBelongsTo(final Set<BelongsTo> belongsTo) {
     this.belongsTo = belongsTo;
+  }
+
+  public Dashboard getDashboard() {
+    return dashboard;
+  }
+
+  public void setDashboard(Dashboard dashboard) {
+    this.dashboard = dashboard;
   }
 
   @Transient

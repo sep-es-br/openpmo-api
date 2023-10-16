@@ -5,7 +5,9 @@ import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.Response;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.completed.CompleteWorkpackRequest;
-import br.gov.es.openpmo.dto.dashboards.v2.SimpleDashboard;
+import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
+import br.gov.es.openpmo.dto.dashboards.MilestoneDto;
+import br.gov.es.openpmo.dto.dashboards.RiskDto;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.dto.workpack.EndDeliverableManagementRequest;
 import br.gov.es.openpmo.dto.workpack.ResponseBaseWorkpack;
@@ -16,14 +18,21 @@ import br.gov.es.openpmo.dto.workpack.WorkpackHasChildrenResponse;
 import br.gov.es.openpmo.dto.workpack.WorkpackNameResponse;
 import br.gov.es.openpmo.dto.workpack.WorkpackParamDto;
 import br.gov.es.openpmo.exception.NegocioException;
+import br.gov.es.openpmo.model.baselines.Baseline;
+import br.gov.es.openpmo.model.dashboards.Dashboard;
+import br.gov.es.openpmo.model.dashboards.DashboardMonth;
 import br.gov.es.openpmo.model.journals.JournalAction;
+import br.gov.es.openpmo.model.risk.Risk;
 import br.gov.es.openpmo.model.workpacks.Milestone;
+import br.gov.es.openpmo.model.workpacks.Project;
 import br.gov.es.openpmo.model.workpacks.Workpack;
+import br.gov.es.openpmo.repository.BaselineRepository;
+import br.gov.es.openpmo.repository.RiskRepository;
+import br.gov.es.openpmo.repository.dashboards.DashboardMilestoneRepository;
 import br.gov.es.openpmo.service.actors.IsFavoritedByService;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.completed.ICompleteWorkpackService;
 import br.gov.es.openpmo.service.completed.IDeliverableEndManagementService;
-import br.gov.es.openpmo.service.dashboards.v2.IDashboardService;
 import br.gov.es.openpmo.service.journals.JournalCreator;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessData;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
@@ -50,7 +59,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -79,8 +91,6 @@ public class WorkpackController {
 
   private final IDeliverableEndManagementService deliverableEndManagementService;
 
-  private final IDashboardService dashboardService;
-
   private final ICanAccessService canAccessService;
 
   private final ICanAccessData canAccessData;
@@ -88,6 +98,12 @@ public class WorkpackController {
   private final WorkpackHasChildren workpackHasChildren;
 
   private final IsFavoritedByService isFavoritedByService;
+
+  private final BaselineRepository baselineRepository;
+
+  private final DashboardMilestoneRepository dashboardMilestoneRepository;
+
+  private final RiskRepository riskRepository;
 
   @Autowired
   public WorkpackController(
@@ -99,11 +115,13 @@ public class WorkpackController {
     final GetWorkpackName getWorkpackName,
     final ICompleteWorkpackService completeDeliverableService,
     final IDeliverableEndManagementService deliverableEndManagementService,
-    final IDashboardService dashboardService,
     final ICanAccessService canAccessService,
     final ICanAccessData canAccessData,
     final WorkpackHasChildren workpackHasChildren,
-    final IsFavoritedByService isFavoritedByService
+    final IsFavoritedByService isFavoritedByService,
+    final BaselineRepository baselineRepository,
+    final DashboardMilestoneRepository dashboardMilestoneRepository,
+    final RiskRepository riskRepository
   ) {
     this.responseHandler = responseHandler;
     this.workpackService = workpackService;
@@ -113,11 +131,13 @@ public class WorkpackController {
     this.getWorkpackName = getWorkpackName;
     this.completeDeliverableService = completeDeliverableService;
     this.deliverableEndManagementService = deliverableEndManagementService;
-    this.dashboardService = dashboardService;
     this.canAccessService = canAccessService;
     this.canAccessData = canAccessData;
     this.workpackHasChildren = workpackHasChildren;
     this.isFavoritedByService = isFavoritedByService;
+    this.baselineRepository = baselineRepository;
+    this.dashboardMilestoneRepository = dashboardMilestoneRepository;
+    this.riskRepository = riskRepository;
   }
 
   @GetMapping
@@ -142,23 +162,16 @@ public class WorkpackController {
       term
     );
 
-    if (workpacks.isEmpty()) {
-      return ResponseEntity.noContent().build();
-    }
-
     final List<WorkpackDetailParentDto> response = workpacks.stream()
       .filter(workpack -> this.canAccessData.execute(workpack.getId(), authorization).canReadResource())
       .map(workpack -> this.mapToWorkpackDetailParentDto(workpack, idWorkpackModel))
       .collect(Collectors.toList());
 
-    response.forEach(workpackDetailDto -> {
-      final SimpleDashboard dashboard = this.dashboardService.buildSimple(workpackDetailDto.getId());
-      workpackDetailDto.setDashboard(dashboard);
-    });
+    if (response.isEmpty()) {
+      return ResponseEntity.noContent().build();
+    }
 
-    return response.isEmpty()
-      ? ResponseEntity.noContent().build()
-      : ResponseEntity.ok(new ResponseBaseWorkpack().setData(response).setMessage(SUCESSO).setSuccess(true));
+    return ResponseEntity.ok(new ResponseBaseWorkpack().setData(response).setMessage(SUCESSO).setSuccess(true));
   }
 
   @GetMapping("/parent")
@@ -188,24 +201,14 @@ public class WorkpackController {
 
     final List<WorkpackDetailParentDto> verify = workpacks.stream()
       .filter(workpack -> this.canAccessData.execute(workpack.getId(), authorization).canReadResource())
-      .map(workpack -> this.mapToWorkpackDetailParentDto(
-        workpack,
-        idWorkpackModel
-      ))
+      .map(workpack -> this.mapToWorkpackDetailParentDto(workpack, idWorkpackModel))
       .collect(Collectors.toList());
 
     if (verify.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
 
-    verify.stream().filter(workpackDetailDto -> !workpackDetailDto.isCanceled())
-      .forEach(workpackDetailDto -> {
-        final SimpleDashboard dashboard = this.dashboardService.buildSimple(workpackDetailDto.getId());
-        workpackDetailDto.setDashboard(dashboard);
-      });
-    return verify.isEmpty()
-      ? ResponseEntity.noContent().build()
-      : ResponseEntity.ok(new ResponseBaseWorkpack().setData(verify).setMessage(SUCESSO).setSuccess(true));
+    return ResponseEntity.ok(new ResponseBaseWorkpack().setData(verify).setMessage(SUCESSO).setSuccess(true));
   }
 
   @GetMapping("/{idWorkpack}")
@@ -430,7 +433,45 @@ public class WorkpackController {
   ) {
     final WorkpackDetailParentDto itemDetail = this.workpackService.getWorkpackDetailParentDto(workpack);
     itemDetail.applyLinkedStatus(workpack, idWorkpackModel);
+    final Dashboard dashboard = workpack.getDashboard();
+    if (dashboard != null) {
+      final List<DashboardMonth> months = dashboard.getMonths();
+      final LocalDate lastMonth = YearMonth.now().minusMonths(1).atDay(1);
+      boolean seen = false;
+      DashboardMonth best = null;
+      Comparator<DashboardMonth> comparator = Comparator.comparing(DashboardMonth::getDate);
+      for (DashboardMonth month : months) {
+        if (!month.getDate().isBefore(lastMonth)) {
+          if (!seen || comparator.compare(month, best) < 0) {
+            seen = true;
+            best = month;
+          }
+        }
+      }
+      if (seen) {
+        Long baselineId = null;
+        if (workpack instanceof Project) {
+          baselineId = this.getBaselineId(workpack.getId());
+        }
+        final DashboardMonthDto monthDto = DashboardMonthDto.of(best, baselineId);
+        itemDetail.setDashboard(monthDto);
+      }
+    }
+    final List<Milestone> milestones = this.dashboardMilestoneRepository.findByParentId(workpack.getId());
+    final List<MilestoneDto> milestoneDtos = MilestoneDto.of(milestones);
+    itemDetail.setMilestones(milestoneDtos);
+    final List<Risk> risks = this.riskRepository.findByWorkpackId(workpack.getId());
+    final List<RiskDto> riskDtos = RiskDto.of(risks);
+    itemDetail.setRisks(riskDtos);
     return itemDetail;
   }
 
+  private Long getBaselineId(final Long workpackId) {
+    final List<Baseline> baselines =
+      this.baselineRepository.findApprovedOrProposedBaselinesByAnyWorkpackId(workpackId);
+    if (baselines.isEmpty()) {
+      return null;
+    }
+    return baselines.get(0).getId();
+  }
 }

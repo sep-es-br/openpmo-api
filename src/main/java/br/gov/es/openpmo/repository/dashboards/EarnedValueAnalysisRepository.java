@@ -75,8 +75,6 @@ public interface EarnedValueAnalysisRepository extends Neo4jRepository<Workpack,
          "    snapshotStepList, " +
          "    masterConsumesList, " +
          "    masterStepList, " +
-         "    masterCostAccountList, " +
-         "    snapshotCostAccountList, " +
          "    $endOfMonth AS date "
   )
   EarnedValueByStepQueryResult getEarnedValueByStep(

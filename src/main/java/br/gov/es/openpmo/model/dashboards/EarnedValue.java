@@ -13,8 +13,9 @@ public class EarnedValue extends Entity {
   @Relationship("IS_AT")
   private DashboardMonth month;
 
-  private BigDecimal plannedValue;
+  private Long idBaseline;
 
+  private BigDecimal plannedValue;
   private BigDecimal actualCost;
   private BigDecimal estimatedCost;
   private BigDecimal earnedValue;
@@ -22,6 +23,7 @@ public class EarnedValue extends Entity {
   @Transient
   public static EarnedValue of(final EarnedValueByStepData data) {
     final EarnedValue earnedValue = new EarnedValue();
+    earnedValue.idBaseline = data.getIdBaseline();
     earnedValue.month = new DashboardMonth(data.getDate().atEndOfMonth());
     earnedValue.plannedValue = data.getPlannedValue();
     earnedValue.actualCost = data.getActualCost();
@@ -30,20 +32,20 @@ public class EarnedValue extends Entity {
     return earnedValue;
   }
 
-  public BigDecimal getEstimatedCost() {
-    return this.estimatedCost;
-  }
-
-  public void setEstimatedCost(final BigDecimal estimatedCost) {
-    this.estimatedCost = estimatedCost;
-  }
-
   public DashboardMonth getMonth() {
     return this.month;
   }
 
   public void setMonth(final DashboardMonth month) {
     this.month = month;
+  }
+
+  public Long getIdBaseline() {
+    return idBaseline;
+  }
+
+  public void setIdBaseline(Long idBaseline) {
+    this.idBaseline = idBaseline;
   }
 
   public BigDecimal getPlannedValue() {
@@ -60,6 +62,14 @@ public class EarnedValue extends Entity {
 
   public void setActualCost(final BigDecimal actualCost) {
     this.actualCost = actualCost;
+  }
+
+  public BigDecimal getEstimatedCost() {
+    return this.estimatedCost;
+  }
+
+  public void setEstimatedCost(final BigDecimal estimatedCost) {
+    this.estimatedCost = estimatedCost;
   }
 
   public BigDecimal getEarnedValue() {

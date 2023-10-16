@@ -25,6 +25,16 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
     "]")
   List<Milestone> findByParentId(Long workpackId, Long baselineId);
 
+  @Query("match (w:Workpack)<-[i:IS_IN*]-(m:Milestone)<-[f:FEATURES]-(d:Date) " +
+    "where id(w)=$workpackId " +
+    "and w.deleted=false and w.canceled=false " +
+    "and m.deleted=false and m.canceled=false " +
+    "return m, f, d, [ " +
+    "    [(m)<-[iso:IS_SNAPSHOT_OF]-(ms:Milestone)-[c:COMPOSES]->(b) | [iso,ms,c,b]], " +
+    "    [(d)<-[iso2:IS_SNAPSHOT_OF]-(d3:Date)-[c2:COMPOSES]->(b2) | [iso2,d3,c2,b2]] " +
+    "]")
+  List<Milestone> findByParentId(Long workpackId);
+
   @Query("match (m:Milestone{deleted:false,canceled:false})-[:IS_IN]->(w:Workpack{deleted:false,canceled:false}) " +
          "where id(m)=$milestoneId " +
          "return id(w)")

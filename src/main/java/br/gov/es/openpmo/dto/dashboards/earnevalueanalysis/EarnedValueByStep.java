@@ -11,6 +11,8 @@ import java.util.Optional;
 
 public class EarnedValueByStep {
 
+  private Long idBaseline;
+
   private BigDecimal plannedValue;
 
   private BigDecimal actualCost;
@@ -38,6 +40,14 @@ public class EarnedValueByStep {
     return result;
   }
 
+  public Long getIdBaseline() {
+    return idBaseline;
+  }
+
+  public void setIdBaseline(Long idBaseline) {
+    this.idBaseline = idBaseline;
+  }
+
   public BigDecimal getPlannedValue() {
     return this.plannedValue;
   }
@@ -57,6 +67,7 @@ public class EarnedValueByStep {
   public EarnedValueByStep copy(final boolean all) {
     final EarnedValueByStep obj = new EarnedValueByStep();
 
+    obj.idBaseline = this.idBaseline;
     obj.plannedValue = this.plannedValue;
     obj.plannedWork = this.plannedWork;
     obj.actualWork = this.actualWork;
@@ -116,6 +127,7 @@ public class EarnedValueByStep {
   }
 
   public void add(final EarnedValueByStep other) {
+    this.idBaseline = other.idBaseline;
     this.plannedValue = this.plannedValue.add(other.plannedValue);
     this.actualCost = this.actualCost.add(other.actualCost);
     this.estimatedCost = this.estimatedCost.add(other.estimatedCost);

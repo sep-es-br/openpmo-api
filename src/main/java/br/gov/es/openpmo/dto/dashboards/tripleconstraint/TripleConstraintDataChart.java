@@ -55,12 +55,6 @@ public class TripleConstraintDataChart {
     this.scope.sumScopeData(scopeData);
   }
 
-  public void round() {
-    this.cost.round();
-    this.schedule.round();
-    this.scope.round();
-  }
-
   public Long getIdBaseline() {
     return this.idBaseline;
   }
