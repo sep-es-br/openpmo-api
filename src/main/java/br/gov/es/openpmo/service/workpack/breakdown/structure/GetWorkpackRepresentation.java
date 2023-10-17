@@ -102,7 +102,9 @@ public class GetWorkpackRepresentation {
     for (Property property : properties) {
       if (property instanceof UnitSelection) {
         final UnitMeasure value = ((UnitSelection) property).getValue();
-        return ScheduleMeasureUnit.of(value);
+        if (value != null) {
+          return ScheduleMeasureUnit.of(value);
+        }
       }
     }
     return null;
