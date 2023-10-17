@@ -27,6 +27,9 @@ public class WorkpackRepresentation {
   private MilestoneDto milestone;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
+  private List<MilestoneDto> milestones;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   private ScheduleMeasureUnit unitMeasure;
 
   public Long getIdWorkpack() {
@@ -67,6 +70,14 @@ public class WorkpackRepresentation {
 
   public void setMilestone(MilestoneDto milestone) {
     this.milestone = milestone;
+  }
+
+  public List<MilestoneDto> getMilestones() {
+    return milestones;
+  }
+
+  public void setMilestones(List<MilestoneDto> milestones) {
+    this.milestones = milestones;
   }
 
   public String getWorkpackType() {

@@ -21,6 +21,7 @@ import br.gov.es.openpmo.model.workpacks.Project;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.RiskRepository;
+import br.gov.es.openpmo.repository.dashboards.DashboardMilestoneRepository;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -36,12 +37,16 @@ public class GetWorkpackRepresentation {
 
   private final RiskRepository riskRepository;
 
+  private final DashboardMilestoneRepository dashboardMilestoneRepository;
+
   public GetWorkpackRepresentation(
     final BaselineRepository baselineRepository,
-    final RiskRepository riskRepository
+    final RiskRepository riskRepository,
+    final DashboardMilestoneRepository dashboardMilestoneRepository
   ) {
     this.baselineRepository = baselineRepository;
     this.riskRepository = riskRepository;
+    this.dashboardMilestoneRepository = dashboardMilestoneRepository;
   }
 
   public WorkpackRepresentation execute(final Workpack workpack) {
@@ -75,6 +80,9 @@ public class GetWorkpackRepresentation {
           workpackRepresentation.setDashboard(monthDto);
         }
       }
+      final List<Milestone> milestones = this.dashboardMilestoneRepository.findByParentId(workpack.getId());
+      final List<MilestoneDto> milestoneDtos = MilestoneDto.of(milestones);
+      workpackRepresentation.setMilestones(milestoneDtos);
       final List<Risk> risks = this.riskRepository.findByWorkpackId(workpack.getId());
       final List<RiskDto> riskDtos = RiskDto.of(risks);
       workpackRepresentation.setRisks(riskDtos);
