@@ -2,7 +2,6 @@ package br.gov.es.openpmo.service.dashboards.v2;
 
 import br.gov.es.openpmo.dto.dashboards.DashboardParameters;
 import br.gov.es.openpmo.dto.dashboards.MilestoneDataChart;
-import br.gov.es.openpmo.model.workpacks.Milestone;
 import br.gov.es.openpmo.repository.dashboards.DashboardMilestoneRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -10,7 +9,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -41,7 +39,20 @@ public class DashboardMilestoneService implements IDashboardMilestoneService {
     final Long idWorkpack = parameters.getWorkpackId();
     final YearMonth yearMonth = parameters.getYearMonth();
     final LocalDate refDate = getMinOfNowAnd(yearMonth);
-    return getMilestoneDataChart(idWorkpack, idBaseline, refDate);
+
+    final Long concluded = this.getConcluded(idBaseline, idWorkpack);
+    final Long lateConcluded = this.getLateConcluded(idBaseline, idWorkpack);
+    final Long late = this.getLate(idBaseline, idWorkpack, refDate);
+    final Long onTime = this.getOnTime(idBaseline, idWorkpack, refDate);
+    final Long quantity = this.getQuantity(concluded, lateConcluded, late, onTime);
+
+    return new MilestoneDataChart(
+      quantity,
+      concluded,
+      lateConcluded,
+      late,
+      onTime
+    );
   }
 
   @Override
@@ -50,33 +61,13 @@ public class DashboardMilestoneService implements IDashboardMilestoneService {
     final YearMonth yearMonth
   ) {
     final LocalDate refDate = getMinOfNowAnd(yearMonth);
-    return getMilestoneDataChart(worpackId, null, refDate);
-  }
 
-  private MilestoneDataChart getMilestoneDataChart(Long idWorkpack, Long idBaseline, LocalDate refDate) {
-    final List<Milestone> milestones = this.repository.findByParentId(idWorkpack, idBaseline);
-    Long concluded = 0L;
-    Long lateConcluded = 0L;
-    Long late = 0L;
-    Long onTime = 0L;
-    for (Milestone milestone : milestones) {
-      if (milestone.isConcluded() && !milestone.isLateConcluded()) {
-        concluded++;
-        continue;
-      }
-      if (milestone.isLateConcluded()) {
-        lateConcluded++;
-        continue;
-      }
-      if (milestone.isLate(refDate)) {
-        late++;
-        continue;
-      }
-      if (milestone.isOnTime(refDate)) {
-        onTime++;
-      }
-    }
-    final Long quantity = concluded + lateConcluded + late + onTime;
+    final Long concluded = this.getConcluded(null, worpackId);
+    final Long lateConcluded = this.getLateConcluded(null, worpackId);
+    final Long late = this.getLate(null, worpackId, refDate);
+    final Long onTime = this.getOnTime(null, worpackId, refDate);
+    final Long quantity = this.getQuantity(concluded, lateConcluded, late, onTime);
+
     return new MilestoneDataChart(
       quantity,
       concluded,

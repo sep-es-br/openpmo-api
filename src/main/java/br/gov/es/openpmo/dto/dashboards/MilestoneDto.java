@@ -15,7 +15,7 @@ public class MilestoneDto {
 
   public static MilestoneDto of(Milestone milestone) {
     final MilestoneDto milestoneDto = new MilestoneDto();
-    milestoneDto.setCompleted(milestoneDto.isCompleted());
+    milestoneDto.setCompleted(Boolean.TRUE.equals(milestone.getCompleted()));
     milestoneDto.setMilestoneDate(milestone.getMilestoneDate());
     milestoneDto.setSnapshotDate(milestone.getSnapshotDateActiveOrProposedBaseline());
     return milestoneDto;
