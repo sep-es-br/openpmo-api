@@ -10,20 +10,24 @@ import java.util.Optional;
 @Repository
 public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
 
-  @Query("match (dashboard:Dashboard)-[:BELONGS_TO]->(workpack:Workpack{deleted:false,canceled:false}) " +
-    "where id(workpack)=$workpackId " +
-    "return dashboard, [" +
-    "  [ (dashboard)<-[isPartOf:IS_PART_OF]-(month:DashboardMonth) | [isPartOf, month] ], " +
-    "  [ (dashboard)<-[:IS_PART_OF]-(:DashboardMonth)<-[isAt:IS_AT]-(entities) | [ isAt, entities] ] " +
-    "] "
+  @Query("MATCH (dashboard:Dashboard)-[:BELONGS_TO]->(workpack:Workpack{deleted:false,canceled:false}) " +
+         "WHERE id(workpack)=$workpackId " +
+         "RETURN dashboard, [" +
+         "  [ (dashboard)<-[isPartOf:IS_PART_OF]-(month:DashboardMonth) | [isPartOf, month] ], " +
+         "  [ (dashboard)<-[:IS_PART_OF]-(:DashboardMonth)<-[isAt:IS_AT]-(entities) | [ isAt, entities] ] " +
+         "] "
   )
   Optional<Dashboard> findByWorkpackId(Long workpackId);
 
-  @Query("match (dashboard:Dashboard)-[:BELONGS_TO]->(workpack:Workpack{deleted:false,canceled:false}) " +
-    "where id(workpack)=$workpackId " +
-    "return dashboard, [" +
-    "  [ (dashboard)<-[isPartOf:IS_PART_OF]-(month:DashboardMonth) | [isPartOf, month] ] " +
-    "]")
+  @Query("MATCH (dashboard:Dashboard)-[:BELONGS_TO]->(workpack:Workpack{deleted:false,canceled:false}) " +
+         "WHERE id(workpack)=$workpackId " +
+         "RETURN dashboard, [" +
+         "  [ (dashboard)<-[isPartOf:IS_PART_OF]-(month:DashboardMonth) | [isPartOf, month] ] " +
+         "]")
   Optional<Dashboard> findByWorkpackIdForInterval(Long workpackId);
+
+  @Query("MATCH (d:Dashboard)<-[:IS_PART_OF]-(dm:DashboardMonth)<-[:IS_AT]-(n) " +
+         "DETACH DELETE d, dm, n")
+  void purgeAllDashboards();
 
 }

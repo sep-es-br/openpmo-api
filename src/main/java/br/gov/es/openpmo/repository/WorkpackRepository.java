@@ -128,7 +128,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
           "    [ (workpacks)<-[f:FEATURES]-(p:Property)-[d:IS_DRIVEN_BY]->(pm:PropertyModel) | [f, p, d, pm] ], " +
           "    [ (workpacks)-[iib:IS_INSTANCE_BY]->(m1:WorkpackModel) | [iib, m1] ], " +
           "    [ (workpacks)-[:IS_INSTANCE_BY]->(:WorkpackModel)<-[f2:FEATURES]-(pm2:PropertyModel) | [f2, pm2] ], " +
-          "    [ (workpacks)-[:IS_INSTANCE_BY]->(:WorkpackModel)<-[isb:IS_SORTED_BY]-(pms:PropertyModel) | [isb, pms] ], " +
+          "    [ (workpacks)-[:IS_INSTANCE_BY]->(:WorkpackModel)-[isb:IS_SORTED_BY]->(pms:PropertyModel) | [isb, pms] ], " +
           "    [ (workpacks)-[ilt:IS_LINKED_TO]->(m2:WorkpackModel) | [ilt, m2] ], " +
           "    [ (workpacks)-[:IS_LINKED_TO]->(:WorkpackModel)<-[f3:FEATURES]-(pm3:PropertyModel) | [f3, pm3] ], " +
           "    [ (workpacks)-[bt:BELONGS_TO]->(pn:Plan) | [bt,pn] ], " +
@@ -163,7 +163,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
           "    [ (workpacks)<-[f:FEATURES]-(p:Property)-[d:IS_DRIVEN_BY]->(pm:PropertyModel) | [f, p, d, pm] ], " +
           "    [ (workpacks)-[iib:IS_INSTANCE_BY]->(m1:WorkpackModel) | [iib, m1] ], " +
           "    [ (workpacks)-[:IS_INSTANCE_BY]->(:WorkpackModel)<-[f2:FEATURES]-(pm2:PropertyModel) | [f2, pm2] ], " +
-          "    [ (workpacks)-[:IS_INSTANCE_BY]->(:WorkpackModel)<-[isb:IS_SORTED_BY]-(pms:PropertyModel) | [isb, pms] ], " +
+          "    [ (workpacks)-[:IS_INSTANCE_BY]->(:WorkpackModel)-[isb:IS_SORTED_BY]->(pms:PropertyModel) | [isb, pms] ], " +
           "    [ (workpacks)-[ilt:IS_LINKED_TO]->(m2:WorkpackModel) | [ilt, m2] ], " +
           "    [ (workpacks)-[:IS_LINKED_TO]->(:WorkpackModel)<-[f3:FEATURES]-(pm3:PropertyModel) | [f3, pm3] ], " +
           "    [ (workpacks)-[bt:BELONGS_TO]->(pn:Plan) | [bt,pn] ], " +

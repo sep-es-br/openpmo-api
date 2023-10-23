@@ -9,6 +9,8 @@ import br.gov.es.openpmo.repository.StepRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.completed.ICompleteWorkpackService;
 import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -19,6 +21,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class UpdateStatusService {
+
+  private static final Logger log = LoggerFactory.getLogger(UpdateStatusService.class);
 
   private final WorkpackRepository workpackRepository;
 
@@ -48,19 +52,46 @@ public class UpdateStatusService {
     return this.stepRepository.findDeliverablesByScheduleId(scheduleId);
   }
 
-  public void update(final Collection<Deliverable> deliverables, Boolean calculateInterval) {
+  public void update(final Collection<? extends Deliverable> deliverables, final Boolean calculateInterval) {
     final Collection<Workpack> analyzedDeliverables = new ArrayList<>();
 
     for (final Deliverable deliverable : deliverables) {
       this.updateIfCompleted(deliverable, analyzedDeliverables);
     }
 
-    for (Workpack workpack : analyzedDeliverables) {
+    for (final Workpack workpack : analyzedDeliverables) {
       final CompleteWorkpackRequest request = new CompleteWorkpackRequest(workpack.getCompleted(), null);
       this.completeWorkpackService.apply(workpack.getId(), request);
     }
 
     this.updateDashboards(deliverables, calculateInterval);
+  }
+
+  public void updateOnlyCompletedFlag(final List<? extends Deliverable> deliverables) {
+    final List<Workpack> analyzedDeliverables = new ArrayList<>();
+
+    for (final Deliverable deliverable : deliverables) {
+      log.info(
+        "{}: Calculando completed {} de {} | ID do Workpack = {}.",
+        Deliverable.class.getSimpleName(),
+        deliverables.indexOf(deliverable) + 1,
+        deliverables.size(),
+        deliverable.getId()
+      );
+      this.updateIfCompleted(deliverable, analyzedDeliverables);
+    }
+
+    for (final Workpack workpack : analyzedDeliverables) {
+      log.info(
+        "{}: Alterando flag completed {} de {} | ID do Workpack = {}.",
+        Deliverable.class.getSimpleName(),
+        analyzedDeliverables.indexOf(workpack) + 1,
+        analyzedDeliverables.size(),
+        workpack.getId()
+      );
+      final CompleteWorkpackRequest request = new CompleteWorkpackRequest(workpack.getCompleted(), null);
+      this.completeWorkpackService.apply(workpack.getId(), request);
+    }
   }
 
   private void updateIfCompleted(
@@ -95,7 +126,6 @@ public class UpdateStatusService {
     }
   }
 
-
   private boolean hasScheduleRelated(final Deliverable deliverable) {
     return this.workpackRepository.hasScheduleRelated(deliverable.getId());
   }
@@ -118,7 +148,7 @@ public class UpdateStatusService {
     return this.stepRepository.hasWorkToCompleteComparingWithMaster(idDeliverable);
   }
 
-  private void updateDashboards(final Collection<? extends Deliverable> deliverables, Boolean calculateInterval) {
+  private void updateDashboards(final Collection<? extends Deliverable> deliverables, final Boolean calculateInterval) {
     final List<Long> deliverablesId = deliverables.stream()
       .map(Deliverable::getId)
       .collect(Collectors.toList());
