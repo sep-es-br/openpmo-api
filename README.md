@@ -39,8 +39,7 @@ A API do OpenPMO espera que já exista o nó do serviço de autenticação criad
 ```cypher
 
 CREATE (authService:AuthService {
-  server:   'nome-do-servico-de-autenticacao',
-  endpoint: 'endpoint-de-logout-do-servico-de-autenticacao'
+  server:   'nome-do-servico-de-autenticacao'
 })
 ```
 
@@ -63,6 +62,10 @@ segue a explicação e exemplo de cada propriedade necessária para o correto fu
   - Define o diretório do servidor onde será armazenado arquivos relacionados ao `journal`. Preferencialmente deve-se coloca-lo no mesmo diretório
     base das imagens.
   - Exemplo: `app.journalPath=/tmp/open-pmo/journal/`
+- `app.reportPath`
+  - Define o diretório do servidor onde será armazenado arquivos relacionados aos relatórios. Preferencialmente deve-se coloca-lo no mesmo diretório
+    base das imagens e journal.
+  - Exemplo: `app.reportPath=/tmp/open-pmo/report/`
 - `app.scheduler.*`
   - Essas propriedades definem constantes de tempo onde uma tarefa deve ser iniciada pelo `scheduler` do Spring Boot. Não é recomendado
     alteração exceto se o código-fonte esteja a ser alterado em conjunto.
@@ -95,6 +98,23 @@ segue a explicação e exemplo de cada propriedade necessária para o correto fu
   - Define url para chamada de API do organograma.
 - `org.neo4j.driver.pool.max-connection-pool-size`
   - Define o tamanho máximo da pool de conexões com o banco de dados Neo4j.
+  - Exemplo: `org.neo4j.driver.pool.max-connection-pool-size=100`
+- `app.searchCutOffScore`
+  - Define o `score` mínimo para que um nó seja retornado em uma busca textual ao comparar com outro texto utilizando o `algoritmo de levenshtein`.
+  - O valor desse `score` deve variar entre 0 (inclusivo) e 1 (inclusivo)
+  - Exemplo: `app.searchCutOffScore=0.15`
+- `spring.servlet.multipart.max-file-size`
+  - Define o tamanho máximo de um arquivo que pode ser enviado para a API.
+  - Exemplo: `spring.servlet.multipart.max-file-size=10MB`
+- `spring.servlet.multipart.max-request-size`
+  - Define o tamanho máximo de uma requisição que pode ser enviada para a API.
+  - Exemplo: `spring.servlet.multipart.max-request-size=10MB`
+- `spring.data.web.pageable.default-page-size`
+  - Define o tamanho padrão de uma página de dados retornada pela API.
+  - Exemplo: `spring.data.web.pageable.default-page-size=15`
+- `spring.data.web.pageable.max-page-size`
+  - Define o tamanho máximo de uma página de dados retornada pela API.
+  - Exemplo: `spring.data.web.pageable.max-page-size=1000`
 
 - Para desabilitar os logs consultas do Neo4j deve-se adicionar as seguintes propriedades ao `application.properties`
 
