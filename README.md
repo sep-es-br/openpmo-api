@@ -3,8 +3,8 @@
 O produto é composto por 3 componentes:
 
 * Frontend Angular, montado a partir do repositório no github
-* Backend (Java Restfull API), montado com Gradle a partir do reposótior no github
-* Banco de dados Neo4j, versão 3.5
+* Backend (Java 8, Spring Boot 2.2.12.RELEASE), montado com Gradle a partir do repositório no github
+* Banco de dados Neo4j, versão 4.4.19
 
 Os componentes podem ser hospedados em um único servidor ou em servidores distintos.
 
@@ -93,3 +93,15 @@ segue a explicação e exemplo de cada propriedade necessária para o correto fu
   - Define propriedades de configuração para chamadas da API do E-Docs.
 - `api.organograma.uri.webapi`
   - Define url para chamada de API do organograma.
+- `org.neo4j.driver.pool.max-connection-pool-size`
+  - Define o tamanho máximo da pool de conexões com o banco de dados Neo4j.
+
+- Para desabilitar os logs consultas do Neo4j deve-se adicionar as seguintes propriedades ao `application.properties`
+
+```properties
+logging.level.org.neo4j.ogm.drivers.bolt.request.BoltRequest=OFF
+logging.level.org.neo4j.ogm.context.GraphEntityMapper=OFF
+logging.level.org.neo4j.ogm.drivers.bolt.response.BoltResponse=OFF
+logging.level.org.neo4j.ogm.metadata.reflect.EntityAccessManager=OFF
+logging.level.org.neo4j.ogm.context.SingleUseEntityMapper=OFF
+```
