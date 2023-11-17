@@ -18,6 +18,7 @@ import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.repository.dashboards.DashboardMonthRepository;
 import br.gov.es.openpmo.repository.dashboards.DashboardRepository;
 import br.gov.es.openpmo.utils.ApplicationMessage;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
@@ -42,6 +43,9 @@ public class SyncDashboardService implements ISyncDashboardService {
   private final FindWorkpackInterval findWorkpackInterval;
   private final BaselineRepository baselineRepository;
 
+  @Value("${app.dashboards.enable}")
+  private Boolean enable;
+
   public SyncDashboardService(
     final DashboardRepository dashboardRepository,
     final DashboardMonthRepository dashboardMonthRepository,
@@ -64,6 +68,10 @@ public class SyncDashboardService implements ISyncDashboardService {
 
   @Override
   public void calculate(@NonNull final Long worpackId, final Boolean calculateInterval) {
+    if (!enable) {
+      return;
+    }
+
     Optional<DateIntervalQuery> baselineInterval;
     final List<Long> activeBaselineIds = getActiveBaselineIds(worpackId);
     if (activeBaselineIds.isEmpty()) {
