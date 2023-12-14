@@ -213,7 +213,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
           Double searchCutOffScore
   );
 
-  @Query("OPTIONAL MATCH (w:Workpack{deleted:false})-[ro:BELONGS_TO]->(pl:Plan), (w)-[wp:IS_INSTANCE_BY]->(wm:WorkpackModel) "
+  @Query("MATCH (w:Workpack{deleted:false})-[ro:BELONGS_TO]->(pl:Plan), (w)-[wp:IS_INSTANCE_BY]->(wm:WorkpackModel) "
 //         + "WITH w, ro, pl, wp, wm "
          + "WHERE id(w) = $id " +
           " OPTIONAL MATCH (w)<-[f:FEATURES]-(p:Property)-[d:IS_DRIVEN_BY]->(pm:PropertyModel) " +
