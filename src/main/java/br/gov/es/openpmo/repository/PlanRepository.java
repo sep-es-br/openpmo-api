@@ -59,14 +59,21 @@ public interface PlanRepository extends Neo4jRepository<Plan, Long>, CustomRepos
     "where id(p)=$idPlan " +
     "optional match (p)<-[bt:BELONGS_TO{linked:false}]-(w:Workpack{deleted:false}) " +
     "where NOT (w)-[:IS_IN]->(:Workpack) " +
+    " OPTIONAL MATCH (w)<-[isIn:IS_IN*]-(children:Workpack{deleted:false}) " +
+    " OPTIONAL MATCH (w)-[iib:IS_INSTANCE_BY]->(wm) " +
+    " OPTIONAL MATCH (w)<-[isIn:IS_IN*]-(children)-[iib2:IS_INSTANCE_BY]->(wm2) " +
+    " OPTIONAL MATCH (w)<-[wf1:FEATURES]-(wName:Property)-[ii1:IS_DRIVEN_BY]->(pm1:PropertyModel{name: 'name'}) " +
+    " OPTIONAL MATCH (w)<-[wf2:FEATURES]-(wFullName:Property)-[ii2:IS_DRIVEN_BY]->(pm2:PropertyModel{name: 'fullName'}) " +
+    " OPTIONAL MATCH (w)<-[isIn:IS_IN*]-(children)<-[cf1:FEATURES]-(cName:Property)-[ii3:IS_DRIVEN_BY]->(pm3:PropertyModel{name: 'name'}) " +
+    " OPTIONAL MATCH (w)<-[isIn:IS_IN*]-(children)<-[cf2:FEATURES]-(cFullName:Property)-[ii4:IS_DRIVEN_BY]->(pm4:PropertyModel{name: 'fullName'}) " +
     "return p, bt, w, [ " +
-    "    [ (w)<-[isIn:IS_IN*]-(children:Workpack{deleted:false}) | [ isIn, children] ], " +
-    "    [ (w)-[iib:IS_INSTANCE_BY]->(wm) | [iib, wm] ], " +
-    "    [ (w)<-[isIn:IS_IN*]-(children)-[iib2:IS_INSTANCE_BY]->(wm2) | [iib2, wm2] ], " +
-    "    [ (w)<-[wf1:FEATURES]-(wName:Property)-[ii1:IS_DRIVEN_BY]->(pm1:PropertyModel{name: 'name'}) | [wf1, wName, ii1, pm1] ], " +
-    "    [ (w)<-[wf2:FEATURES]-(wFullName:Property)-[ii2:IS_DRIVEN_BY]->(pm2:PropertyModel{name: 'fullName'}) | [wf2, wFullName, ii2, pm2] ], " +
-    "    [ (w)<-[isIn:IS_IN*]-(children)<-[cf1:FEATURES]-(cName:Property)-[ii3:IS_DRIVEN_BY]->(pm3:PropertyModel{name: 'name'}) | [cf1, cName, ii3, pm3] ], " +
-    "    [ (w)<-[isIn:IS_IN*]-(children)<-[cf2:FEATURES]-(cFullName:Property)-[ii4:IS_DRIVEN_BY]->(pm4:PropertyModel{name: 'fullName'}) | [cf2, cFullName, ii4, pm4] ] " +
+    "    [  [ isIn, children] ], " +
+    "    [  [iib, wm] ], " +
+    "    [  [iib2, wm2] ], " +
+    "    [  [wf1, wName, ii1, pm1] ], " +
+    "    [  [wf2, wFullName, ii2, pm2] ], " +
+    "    [  [cf1, cName, ii3, pm3] ], " +
+    "    [  [cf2, cFullName, ii4, pm4] ] " +
     "] "
   )
   Optional<Plan> findFirstLevelStructurePlanById(@Param("idPlan") Long idPlan);

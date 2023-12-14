@@ -34,9 +34,11 @@ public interface IssueRepository extends Neo4jRepository<Issue, Long>, CustomRep
     "OPTIONAL MATCH (risk)-[forSeenOn:IS_FORSEEN_ON]->(forSeenWorkpack)  " +
     "WITH issue, reportedFor, reportedForWorkpack, triggeredBy, risk, forSeenOn, forSeenWorkpack  " +
     "WHERE id(issue)=$id " +
+    " OPTIONAL MATCH (issue)<-[addresses:ADDRESSES]-(issueResponse:IssueResponse) " +
+    " OPTIONAL MATCH (risk)<-[mitigates:MITIGATES]-(riskResponse) " +
     "RETURN issue, reportedFor, reportedForWorkpack, triggeredBy, risk, forSeenOn, forSeenWorkpack, [ " +
-    "   [ (issue)<-[addresses:ADDRESSES]-(issueResponse:IssueResponse) | [addresses, issueResponse] ],  " +
-    "   [ (risk)<-[mitigates:MITIGATES]-(riskResponse) | [mitigates, riskResponse] ]  " +
+    "   [ [addresses, issueResponse] ],  " +
+    "   [ [mitigates, riskResponse] ]  " +
     "]"
   )
   Optional<Issue> findIssueDetailById(Long id);

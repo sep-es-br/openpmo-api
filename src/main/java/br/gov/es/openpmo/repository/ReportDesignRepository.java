@@ -45,8 +45,8 @@ public interface ReportDesignRepository extends Neo4jRepository<ReportDesign, Lo
   List<ReportDesign> findActiveByPlanModelId(@Param("planModelId") Long planModelId);
 
   @Query(
-    "MATCH (plan:Plan)-[:IS_STRUCTURED_BY]->(model:PlanModel) " +
-    "WHERE id(plan) = $idPlan AND EXISTS((model)<-[:IS_DESIGNED_FOR]-(:ReportDesign{active:true})) " +
+    "MATCH (plan:Plan)-[:IS_STRUCTURED_BY]->(model:PlanModel)<-[:IS_DESIGNED_FOR]-(:ReportDesign{active:true}) " +
+    "WHERE id(plan) = $idPlan " +
     "RETURN model")
   Optional<PlanModel> hasModelFromReportsActiveAndPlan(@Param("idPlan") Long idPlan);
 

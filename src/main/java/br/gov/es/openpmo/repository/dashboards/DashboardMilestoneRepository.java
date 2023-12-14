@@ -19,9 +19,11 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
     "and w.deleted=false and w.canceled=false " +
     "and m.deleted=false and m.canceled=false " +
     "and b.active=true " +
+    "OPTIONAL MATCH (m)<-[iso:IS_SNAPSHOT_OF]-(ms:Milestone)-[c:COMPOSES]->(b) " +
+    "OPTIONAL MATCH (d)<-[iso2:IS_SNAPSHOT_OF]-(d3:Date)-[f3:FEATURES]->(ms2:Milestone)-[c2:COMPOSES]->(b) " +
     "return m, f, d, [ " +
-    "    [(m)<-[iso:IS_SNAPSHOT_OF]-(ms:Milestone)-[c:COMPOSES]->(b) | [iso,ms,c]], " +
-    "    [(d)<-[iso2:IS_SNAPSHOT_OF]-(d3:Date)-[f3:FEATURES]->(ms2:Milestone)-[c2:COMPOSES]->(b) | [iso2,d3,f3,ms2,c2]] " +
+    "    [[iso,ms,c]], " +
+    "    [[iso2,d3,f3,ms2,c2]] " +
     "]")
   List<Milestone> findByParentId(Long workpackId, Long baselineId);
 
@@ -29,9 +31,11 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
     "where id(w)=$workpackId " +
     "and w.deleted=false and w.canceled=false " +
     "and m.deleted=false and m.canceled=false " +
+    "OPTIONAL MATCH (m)<-[iso:IS_SNAPSHOT_OF]-(ms:Milestone)-[c:COMPOSES]->(b) " +
+    "OPTIONAL MATCH (d)<-[iso2:IS_SNAPSHOT_OF]-(d3:Date)-[c2:COMPOSES]->(b2) " +
     "return m, f, d, [ " +
-    "    [(m)<-[iso:IS_SNAPSHOT_OF]-(ms:Milestone)-[c:COMPOSES]->(b) | [iso,ms,c,b]], " +
-    "    [(d)<-[iso2:IS_SNAPSHOT_OF]-(d3:Date)-[c2:COMPOSES]->(b2) | [iso2,d3,c2,b2]] " +
+    "    [[iso,ms,c,b]], " +
+    "    [[iso2,d3,c2,b2]] " +
     "]")
   List<Milestone> findByParentId(Long workpackId);
 

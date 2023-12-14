@@ -40,11 +40,13 @@ public interface RiskRepository extends Neo4jRepository<Risk, Long>, CustomRepos
 
   @Query("match (risk:Risk) " +
          "where id(risk)=$riskId " +
+         " OPTIONAL MATCH (risk)-[isReportedFor:IS_FORSEEN_ON]->(workpack:Workpack{deleted:false,canceled:false}) " +
+         " OPTIONAL MATCH (risk)<-[mitigates:MITIGATES]-(response:RiskResponse) " +
+         " OPTIONAL MATCH (response)<-[responsibleFor:IS_RESPONSIBLE_FOR]-(responsible:Person) " +
          "return risk, [ " +
-         "   [ (risk)-[isReportedFor:IS_FORSEEN_ON]->(workpack:Workpack{deleted:false,canceled:false}) | [isReportedFor, " +
-         "workpack] ], " +
-         "   [ (risk)<-[mitigates:MITIGATES]-(response:RiskResponse) | [mitigates, response] ], " +
-         "   [ (response)<-[responsibleFor:IS_RESPONSIBLE_FOR]-(responsible:Person) | [responsibleFor, responsible] ] " +
+         "   [ [isReportedFor, workpack] ], " +
+         "   [ [mitigates, response] ], " +
+         "   [ [responsibleFor, responsible] ] " +
          "]")
   Optional<Risk> findRiskDetailById(Long riskId);
 

@@ -855,9 +855,10 @@ public class StakeholderService {
     final String term,
     final Long idFilter
   ) {
-    final Workpack workpack = this.serviceWorkpack.findById(idWorkpack);
+    //final Workpack workpack = this.serviceWorkpack.findById(idWorkpack);
     return this.findStakeholderAndPermissions(
-      workpack.getId(),
+      //workpack.getId(),
+      idWorkpack,
       term,
       idFilter
     );

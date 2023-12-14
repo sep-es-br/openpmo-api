@@ -101,8 +101,9 @@ public interface WorkpackLinkRepository extends Neo4jRepository<IsLinkedTo, Long
     "MATCH (wm:WorkpackModel)-[bt:BELONGS_TO]->(plm:PlanModel)<-[st:IS_STRUCTURED_BY]-(pl:Plan) " +
     "MATCH (w)-[ii:IS_IN*]->(wp:Workpack)-[lt:IS_LINKED_TO]->(wm) " +
     "WHERE id(w)=$idWorkpack AND id(pl)=$idPlan " +
+    " OPTIONAL MATCH (wp)-[ii2:IS_IN*]->(wpp:Workpack)-[bt2:BELONGS_TO]->(pl2:Plan) " +
     "RETURN wp, lt, wm, [" +
-    "   [ (wp)-[ii2:IS_IN*]->(wpp:Workpack)-[bt2:BELONGS_TO]->(pl2:Plan) | [ii2, wpp, bt2, pl2] ] " +
+    "   [ [ii2, wpp, bt2, pl2] ] " +
     "]"
   )
   Optional<IsLinkedTo> findWorkpackParentLinked(

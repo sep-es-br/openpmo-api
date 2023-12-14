@@ -181,7 +181,7 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
     final Long idWorkpackModelLinked,
     final Long idPlan
   ) {
-    final Optional<Workpack> maybeWorkpack = this.workpackService.mayeFindById(idWorkpack);
+    final Optional<Workpack> maybeWorkpack = this.workpackService.maybeFindById(idWorkpack);
     if (!maybeWorkpack.isPresent()) {
       return null;
     }

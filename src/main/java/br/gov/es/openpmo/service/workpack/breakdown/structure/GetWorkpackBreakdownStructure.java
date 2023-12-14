@@ -71,8 +71,8 @@ public class GetWorkpackBreakdownStructure {
 
   private Workpack getWorkpack(
     final Long idWorkpack,
-    final Boolean allLevels
-  ) {
+    final Boolean allLevels) 
+  {
     if (allLevels) {
       return this.workpackRepository.findWorkpackWithModelStructureById(idWorkpack)
         .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));

@@ -41,9 +41,11 @@ public interface StepRepository extends Neo4jRepository<Step, Long> {
          "OPTIONAL MATCH (step)<-[:IS_SNAPSHOT_OF]-(snapshot:Step)-[:COMPOSES]->(baseline:Baseline{active:true}) " +
          "WITH step, snapshot, baseline " +
          "WHERE id(step)=$idStep  " +
+         " OPTIONAL MATCH (snapshot)-[consumes:CONSUMES]->(snapshotCostAccount:CostAccount) " +
+         " OPTIONAL MATCH (snapshotCostAccount)-[isSnapshotOf:IS_SNAPSHOT_OF]->(costAccount:CostAccount) " +
          "RETURN snapshot, [ " +
-         "    [(snapshot)-[consumes:CONSUMES]->(snapshotCostAccount:CostAccount) | [consumes, snapshotCostAccount]]," +
-         "    [(snapshotCostAccount)-[isSnapshotOf:IS_SNAPSHOT_OF]->(costAccount:CostAccount) | [isSnapshotOf, costAccount]] " +
+         "    [ [consumes, snapshotCostAccount]]," +
+         "    [ [isSnapshotOf, costAccount]] " +
          "]")
   Optional<Step> findSnapshotOfActiveBaseline(Long idStep);
 
