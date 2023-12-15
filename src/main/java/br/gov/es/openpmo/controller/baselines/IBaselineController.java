@@ -52,7 +52,7 @@ public interface IBaselineController {
     @RequestHeader(name = "Authorization") String authorization
   );
 
-  @Transactional
+  @Transactional(timeout = 6000)
   @PutMapping("/{id-baseline}/submit")
   Response<Void> submit(
     @PathVariable("id-baseline") Long idBaseline,
