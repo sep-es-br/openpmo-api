@@ -152,22 +152,28 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
             Long idWorkpack,
             Long idBaseline
     );
+    @Query( 
+        " MATCH (w:Workpack{deleted:false})-[:IS_BASELINED_BY]->(b:Baseline)     " +
+        " WHERE id(b)=$idBaseline " +
+        " OPTIONAL MATCH (w)<-[i:IS_IN*0..]-(v:Workpack{deleted:false})   " +
+        " OPTIONAL MATCH (v)<-[h:FEATURES]-(q:Property)     " +
+        " OPTIONAL MATCH (v)-[ii:IS_INSTANCE_BY]->(n:WorkpackModel)     " +
+        " OPTIONAL MATCH (q)-[v4:VALUES]->(l2:Locality)     " +
+        " OPTIONAL MATCH (q)-[v5:VALUES]->(o2:Organization)     " +
+        " OPTIONAL MATCH (q)-[v6:VALUES]->(u2:UnitMeasure)     " +
 
-    @Query("MATCH (w:Workpack{deleted:false})-[:IS_BASELINED_BY]->(b:Baseline) " +
-            "WHERE id(b)=$idBaseline " +
-            "RETURN w, [ " +
-            " [(w)<-[f1:FEATURES]-(p:Property) | [f1,p]], " +
-            " [(w)-[a:IS_INSTANCE_BY]->(m:WorkpackModel) | [a,m]], " +
-            " [(w)<-[i:IS_IN*]-(v:Workpack{deleted:false}) | [i,v]], " +
-            " [(v)<-[h:FEATURES]-(q:Property) | [h,q]], " +
-            " [(v)-[ii:IS_INSTANCE_BY]->(n:WorkpackModel) | [ii,n]], " +
-            " [(w)<-[f2:FEATURES]-(l:LocalitySelection)-[v1:VALUES]->(l1:Locality) | [f2,l,v1,l1]], " +
-            " [(w)<-[f3:FEATURES]-(o:OrganizationSelection)-[v2:VALUES]->(o1:Organization) | [f3,o,v2,o1]], " +
-            " [(w)<-[f4:FEATURES]-(u:UnitSelection)-[v3:VALUES]->(u1:UnitMeasure) | [f4,u,v3,u1]], " +
-            " [(v)-[f5:FEATURES]-(l:LocalitySelection)-[v1:VALUES]->(l1:Locality) | [f5,l,v1,l1]], " +
-            " [(v)-[f6:FEATURES]-(o:OrganizationSelection)-[v2:VALUES]->(o1:Organization) | [f6,o,v2,o1]], " +
-            " [(v)-[f7:FEATURES]-(u:UnitSelection)-[v3:VALUES]->(u1:UnitMeasure) | [f7,u,v3,u1]] " +
-            "]")
+        " with *, " +
+        " case when id(w)= id(v) then v end as parent, " +
+        " case when id(w)<> id(v) then v end as child  " +
+
+        " RETURN parent, [      " +
+        " [[i,child]],     " +
+        " [[h,q]],     " +
+        " [[ii,n]],       " +
+        " [[v4,l2]],     " +
+        " [[v5,o2]],     " +
+        " [[v6,u2]]     " +
+        " ]  ") 
     Optional<Workpack> findNotDeletedWorkpackWithPropertiesAndModelAndChildrenByBaselineId(Long idBaseline);
 
     @Query("MATCH (m:Workpack{deleted:false})<-[:IS_SNAPSHOT_OF]-(s:Workpack)-[:COMPOSES]->(b:Baseline) " +
