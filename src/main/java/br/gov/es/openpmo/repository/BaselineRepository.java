@@ -251,39 +251,35 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
             Long idWorkpack
     );
 
-    @Query("MATCH (b:Baseline)<-[c:COMPOSES]-(w:Workpack)-[iso:IS_SNAPSHOT_OF]->(m:Workpack)" +
-            "-[ibb:IS_BASELINED_BY]->(b) " +
-            "WHERE id(b)=$idBaseline " +
-        "OPTIONAL MATCH (w)-[iso2:IS_SNAPSHOT_OF]->(m2:Workpack) " +
-        "OPTIONAL MATCH (w)-[iso2]-(m2)-[a1:IS_INSTANCE_BY]->(mm:WorkpackModel) " +
-        "OPTIONAL MATCH (w)<-[f1:FEATURES]-(p:Property) " +
-        "OPTIONAL MATCH (w)-[a:IS_INSTANCE_BY]->(m:WorkpackModel) " +
-        "OPTIONAL MATCH (w)<-[i:IS_IN*]-(v:Workpack)<-[h:FEATURES]-(q:Property) " +
-        "OPTIONAL MATCH (v)-[iso3:IS_SNAPSHOT_OF]->(m3:Workpack) " +
-        "OPTIONAL MATCH (v)-[iso3]-(m3)-[a2:IS_INSTANCE_BY]->(mm2:WorkpackModel) " +
-        "OPTIONAL MATCH (v)-[ii:IS_INSTANCE_BY]->(n:WorkpackModel) " +
-        "OPTIONAL MATCH (w)<-[f2:FEATURES]-(l:LocalitySelection)-[v1:VALUES]->(l1:Locality) " +
-        "OPTIONAL MATCH (w)<-[f3:FEATURES]-(o:OrganizationSelection)-[v2:VALUES]->(o1:Organization) " +
-        "OPTIONAL MATCH (w)<-[f4:FEATURES]-(u:UnitSelection)-[v3:VALUES]->(u1:UnitMeasure) " +
-        "OPTIONAL MATCH (v)-[f5:FEATURES]-(l:LocalitySelection)-[v1:VALUES]->(l1:Locality) " +
-        "OPTIONAL MATCH (v)-[f6:FEATURES]-(o:OrganizationSelection)-[v2:VALUES]->(o1:Organization) " +
-        "OPTIONAL MATCH (v)-[f7:FEATURES]-(u:UnitSelection)-[v3:VALUES]->(u1:UnitMeasure) " +
-            "RETURN w, c, b, [ " +
-            " [ [iso2, m2]], " +
-            " [ [a1, mm]], " +
-            " [ [f1,p]], " +
-            " [ [a,m]], " +
-            " [ [i,v,h,q]], " +
-            " [ [iso3, m3]], " +
-            " [ [a2, mm2]], " +
-            " [ [ii,n]], " +
-            " [ [f2,l,v1,l1]], " +
-            " [ [f3,o,v2,o1]], " +
-            " [ [f4,u,v3,u1]], " +
-            " [ [f5,l,v1,l1]], " +
-            " [ [f6,o,v2,o1]], " +
-            " [ [f7,u,v3,u1]] " +
-            "]")
+    @Query(" MATCH (b:Baseline)<-[c:COMPOSES]-(w:Workpack)-[iso:IS_SNAPSHOT_OF]->(mw:Workpack) " +
+        " -[ibb:IS_BASELINED_BY]->(b)  " +
+        " WHERE id(b)=$idBaseline  " +
+        " OPTIONAL MATCH (w)-[iso2:IS_SNAPSHOT_OF]->(m2:Workpack)  " +
+        " OPTIONAL MATCH (m2)-[a1:IS_INSTANCE_BY]->(mm:WorkpackModel)  " +
+        " OPTIONAL MATCH (w)<-[f1:FEATURES]-(p:Property)  " +
+        " OPTIONAL MATCH (w)-[a:IS_INSTANCE_BY]->(m:WorkpackModel)  " +
+        " OPTIONAL MATCH (w)<-[i:IS_IN*]-(v:Workpack)<-[h:FEATURES]-(q:Property)  " +
+        " OPTIONAL MATCH (n:WorkpackModel)<-[ii:IS_INSTANCE_BY]-(v)-[iso3:IS_SNAPSHOT_OF]->(m3:Workpack)-[a2:IS_INSTANCE_BY]->(mm2:WorkpackModel)  " +
+        " OPTIONAL MATCH (w)<-[f2:FEATURES]-(ls1:LocalitySelection)-[v1:VALUES]->(l1:Locality)  " +
+        " OPTIONAL MATCH (w)<-[f3:FEATURES]-(os1:OrganizationSelection)-[v2:VALUES]->(o1:Organization)  " +
+        " OPTIONAL MATCH (w)<-[f4:FEATURES]-(us1:UnitSelection)-[v3:VALUES]->(u1:UnitMeasure)  " +
+        " OPTIONAL MATCH (v)-[f5:FEATURES]-(ls2:LocalitySelection)-[v4:VALUES]->(l2:Locality)  " +
+        " OPTIONAL MATCH (v)-[f6:FEATURES]-(os2:OrganizationSelection)-[v5:VALUES]->(o2:Organization)  " +
+        " OPTIONAL MATCH (v)-[f7:FEATURES]-(us2:UnitSelection)-[v6:VALUES]->(u2:UnitMeasure) " +
+        " RETURN w, c, b, [  " +
+        "  [iso2, m2],  " +
+        "  [a1, mm],  " +
+        "  [f1,p],  " +
+        "  [a,m],  " +
+        "  [i,v,h,q],  " +
+        "  [iso3, m3, a2, mm2, ii, n],  " +
+        "  [f2,ls1,v1,l1],  " +
+        "  [f3,os1,v2,o1],  " +
+        "  [f4,us1,v3,u1],  " +
+        "  [f5,ls2,v4,l2],  " +
+        "  [f6,os2,v5,o2],  " +
+        "  [f7,us2,v6,u2]  " +
+        " ] ")
     Optional<Workpack> findWorkpackProjectSnapshotFromBaseline(Long idBaseline);
 
     @Query("MATCH (w:Workpack{deleted:true})<-[:IS_SNAPSHOT_OF]-(s:Workpack) " +
