@@ -125,16 +125,16 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
             "OPTIONAL MATCH (s)-[i1:IS_INSTANCE_BY]->(m1:WorkpackModel) " +
             "OPTIONAL MATCH (s)<-[f1:FEATURES]-(p1:Property) " +
             "OPTIONAL MATCH (s)<-[fa:FEATURES]-(s1:Schedule) " +
-            "OPTIONAL MATCH (s)<-[fa]-(s1)<-[c1:COMPOSES]-(st1:Step) " +
-            "OPTIONAL MATCH (s)<-[fa]-(s1)-[c1]-(st1)-[c2:CONSUMES]->(ca1:CostAccount) " +
+            "OPTIONAL MATCH (s1)<-[c1:COMPOSES]-(st1:Step) " +
+            "OPTIONAL MATCH (st1)-[c2:CONSUMES]->(ca1:CostAccount) " +
             "OPTIONAL MATCH (s)<-[i2:IS_IN*]-(r:Workpack)-[:COMPOSES]->(b) " +
-            "OPTIONAL MATCH (s)<-[i2*]-(r)-[d:COMPOSES]->(b) " +
-            "OPTIONAL MATCH (s)<-[i2*]-(r)-[g2:IS_SNAPSHOT_OF]->(t:Workpack) " +
-            "OPTIONAL MATCH (s)<-[i2*]-(r)-[i3:IS_INSTANCE_BY]->(m2:WorkpackModel) " +
-            "OPTIONAL MATCH (s)<-[i2*]-(r)<-[f2:FEATURES]-(p2:Property) " +
-            "OPTIONAL MATCH (s)<-[i2*]-(r)<-[fb:FEATURES]-(s2:Schedule) " +
-            "OPTIONAL MATCH (s)<-[i2*]-(r)<-[fb]-(s2)<-[c2:COMPOSES]-(st2:Step) " +
-            "OPTIONAL MATCH (s)<-[i2*]-(r)<-[fb]-(s2)<-[c2]-(st2)-[c3:CONSUMES]->(ca2:CostAccount) " +
+            "OPTIONAL MATCH (r)-[d:COMPOSES]->(b) " +
+            "OPTIONAL MATCH (r)-[g2:IS_SNAPSHOT_OF]->(t:Workpack) " +
+            "OPTIONAL MATCH (r)-[i3:IS_INSTANCE_BY]->(m2:WorkpackModel) " +
+            "OPTIONAL MATCH (r)<-[f2:FEATURES]-(p2:Property) " +
+            "OPTIONAL MATCH (r)<-[fb:FEATURES]-(s2:Schedule) " +
+            "OPTIONAL MATCH (s2)<-[c2:COMPOSES]-(st2:Step) " +
+            "OPTIONAL MATCH (st2)-[c3:CONSUMES]->(ca2:CostAccount) " +
             "RETURN s,c,b, [ " +
             " [[i1,m1]], " +
             " [[f1,p1]], " +
@@ -339,24 +339,24 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
             "RETURN baselines")
     List<Baseline> findApprovedOrProposedBaselinesByAnyWorkpackId(Long workpackId);
 
-    @Query("MATCH (b:Baseline), (s:Workpack) " +
-            "WHERE id(b)=$baselineId AND id(s)=$snapshotId " +
+    @Query("MATCH (b:Baseline) WHERE id(b)=$baselineId " +
+            "MATCH (s:Workpack) WHERE id(s)=$snapshotId " +
             "CREATE (b)<-[:COMPOSES]-(s)")
     void createComposesRelationshipWithWorkpack(
             Long baselineId,
             Long snapshotId
     );
 
-    @Query("MATCH (b:Baseline), (w:Workpack{deleted:false}) " +
-            "WHERE id(b)=$baselineId AND id(w)=$workpackId " +
+    @Query("MATCH (b:Baseline) WHERE id(b)=$baselineId " +
+            "MATCH (w:Workpack{deleted:false}) WHERE id(w)=$workpackId " +
             "CREATE (b)<-[:IS_BASELINED_BY]-(w)")
     void createIsBaselinedByRelationship(
             @Param("baselineId") Long baselineId,
             @Param("workpackId") Long workpackId
     );
 
-    @Query("MATCH (b:Baseline), (s:Property) " +
-            "WHERE id(b)=$baselineId AND id(s)=$propertyId " +
+    @Query("MATCH (b:Baseline) WHERE id(b)=$baselineId  " +
+            "MATCH (s:Property) WHERE id(s)=$propertyId " +
             "CREATE (b)<-[:COMPOSES]-(s)")
     void createComposesRelationshipWithProperty(
             Long baselineId,

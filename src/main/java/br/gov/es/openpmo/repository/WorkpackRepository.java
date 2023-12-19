@@ -384,18 +384,17 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
          " OPTIONAL MATCH (w)-[a:IS_INSTANCE_BY]->(m:WorkpackModel) " +
          " OPTIONAL MATCH (w)<-[f2:FEATURES]-(l)-[v1:VALUES]->(l1) " +
          " OPTIONAL MATCH (w)<-[i:IS_IN*]-(v:Workpack{canceled:false}) " +
-         " OPTIONAL MATCH (w)<-[i:IS_IN*]-(:Workpack{canceled:false})<-[h:FEATURES]-(q:Property) " +
-         " OPTIONAL MATCH (w)<-[i:IS_IN*]-(:Workpack{canceled:false})-[ii:IS_INSTANCE_BY]->(n:WorkpackModel) " +
-         " OPTIONAL MATCH (w)<-[i:IS_IN*]-(:Workpack{canceled:false})-[f5:FEATURES]-(l2)-[v2:VALUES]->(l3) " +
-         " OPTIONAL MATCH " +
-         "RETURN w, [ " +
-         " [[f1,p]], " +
-         " [[a,m]], " +
-         " [[f2,l,v1,l1]], " +
-         " [[i,v]], " +
-         " [[h,q]], " +
-         " [[ii,n]], " +
-         " [[f5,l2,v2,l3]] " +
+         " OPTIONAL MATCH (v)<-[h:FEATURES]-(q:Property) " +
+         " OPTIONAL MATCH (v)-[ii:IS_INSTANCE_BY]->(n:WorkpackModel) " +
+         " OPTIONAL MATCH (v)-[f5:FEATURES]-(l2)-[v2:VALUES]->(l3) " +
+         " RETURN w, [ " +
+         " [f1,p], " +
+         " [a,m], " +
+         " [f2,l,v1,l1], " +
+         " [i,v], " +
+         " [h,q], " +
+         " [ii,n], " +
+         " [f5,l2,v2,l3] " +
          "]")
   Optional<Workpack> findWithPropertiesAndModelAndChildrenById(Long idWorkpack);
 
@@ -503,24 +502,24 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
     Long parentId
   );
 
-  @Query("MATCH (w:Workpack), (p:Workpack) " +
-         "WHERE id(w)=$childId AND id(p)=$parentId " +
+  @Query("MATCH (w:Workpack) WHERE id(w)=$childId  " +
+         "MATCH (p:Workpack) WHERE id(p)=$parentId " +
          "CREATE (w)-[:IS_IN]->(p)")
   void createIsInRelationship(
     @Param("childId") Long childId,
     @Param("parentId") Long parentId
   );
 
-  @Query("MATCH (w:Workpack), (wm:WorkpackModel) " +
-         "WHERE id(w)=$workpackId AND id(wm)=$workpackModelId " +
+  @Query("MATCH (w:Workpack) WHERE id(w)=$workpackId " +
+         "MATCH (wm:WorkpackModel) WHERE id(wm)=$workpackModelId " +
          "CREATE (w)-[:IS_INSTANCE_BY]->(wm)")
   void createIsInstanceByRelationship(
     Long workpackId,
     Long workpackModelId
   );
 
-  @Query("MATCH (w:Workpack), (p:Property) " +
-         "WHERE id(w)=$workpackId AND id(p)=$propertyId " +
+  @Query("MATCH (w:Workpack) WHERE id(w)=$workpackId  " +
+         "MATCH (p:Property) WHERE id(p)=$propertyId " +
          "CREATE (w)<-[:FEATURES]-(p)")
   void createFeaturesRelationship(
     Long workpackId,
@@ -662,9 +661,9 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   )
   boolean hasChildren(@Param("idWorkpack") Long idWorkpack);
 
-  @Query("MATCH (w:Workpack), (p:Plan) " +
-          "WHERE id(w)=$idWorkpack AND id(p)=$idPlan " +
-          "CREATE (w)-[:BELONGS_TO{linked: false}]->(p)")
+  @Query("MATCH (w:Workpack) WHERE id(w)=$idWorkpack  " +
+         "MATCH (p:Plan) WHERE id(p)=$idPlan " +
+         "CREATE (w)-[:BELONGS_TO{linked: false}]->(p)")
   void createBelongsToRelationship(@Param("idWorkpack") Long idWorkpack, @Param("idPlan") Long idPlan);
 
   @Override

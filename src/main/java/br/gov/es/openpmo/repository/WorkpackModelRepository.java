@@ -137,16 +137,16 @@ public interface WorkpackModelRepository extends Neo4jRepository<WorkpackModel, 
     "DETACH DELETE i")
   void deleteRelationshipByWorkpackId(Long workpackId);
 
-  @Query("MATCH (w:Workpack), (m:WorkpackModel) " +
-    "WHERE id(w)=$workpackId AND id(m)=$workpackModelId " +
+  @Query("MATCH (w:Workpack) WHERE id(w)=$workpackId " +
+    "MATCH (m:WorkpackModel) WHERE id(m)=$workpackModelId " +
     "CREATE (w)-[:IS_INSTANCE_BY]->(m)")
   void createRelationshipByWorkpackIdAndModelId(
     Long workpackId,
     Long workpackModelId
   );
 
-  @Query("MATCH (w:WorkpackModel), (p:PropertyModel) " +
-    "WHERE id(w)=$workpackModelId AND id(p)=$propertyModelId " +
+  @Query("MATCH (w:WorkpackModel) WHERE id(w)=$workpackModelId " +
+    "MATCH (p:PropertyModel) WHERE id(p)=$propertyModelId " +
     "CREATE (w)<-[:FEATURES]-(p)")
   void createFeaturesRelationship(
     Long workpackModelId,

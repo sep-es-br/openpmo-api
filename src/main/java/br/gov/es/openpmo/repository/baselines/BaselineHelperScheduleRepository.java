@@ -8,8 +8,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface BaselineHelperScheduleRepository extends Neo4jRepository<Schedule, Long> {
 
-  @Query("match (schedule:Schedule), (step:Step) " +
-         "where id(schedule)=$scheduleId and id(step)=$stepId " +
+  @Query("match (schedule:Schedule) where id(schedule)=$scheduleId " +
+         "match (step:Step) where id(step)=$stepId " +
          "create (schedule)<-[:COMPOSES]-(step)")
   void createComposesRelationship(
     Long scheduleId,

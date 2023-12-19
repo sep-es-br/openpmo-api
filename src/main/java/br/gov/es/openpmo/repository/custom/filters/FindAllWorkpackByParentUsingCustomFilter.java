@@ -40,8 +40,9 @@ public class FindAllWorkpackByParentUsingCustomFilter extends FindAllUsingCustom
     final StringBuilder query
   ) {
     query.append(
-      "MATCH (pl:Plan), (wm:WorkpackModel), (p:Workpack) " +
-      "WHERE id(pl)=$idPlan AND id(wm)=$idWorkpackModel AND id(p)=$idWorkpackParent " +
+      "MATCH (pl:Plan)          WHERE id(pl)=$idPlan " +
+      "MATCH (wm:WorkpackModel) WHERE id(wm)=$idWorkpackModel " +
+      "MATCH (p:Workpack)       WHERE id(p)=$idWorkpackParent " +
       "OPTIONAL MATCH (p)<-[:IS_IN]-(w:Workpack{deleted:false})-[:IS_INSTANCE_BY]->(wm) " +
       "OPTIONAL MATCH (w)-[bt1:BELONGS_TO]->(pl) " +
       "OPTIONAL MATCH (w)<-[:FEATURES]-(property1:Property) " +

@@ -31,8 +31,8 @@ public interface WorkpackLinkRepository extends Neo4jRepository<IsLinkedTo, Long
     Long idPlan
   );
 
-  @Query("match (w:Workpack), (wm:WorkpackModel) " +
-    "where id(w)=$idWorkpack and id(wm)=$idWorkpackModel " +
+  @Query("match (w:Workpack) where id(w)=$idWorkpack " +
+    "match (wm:WorkpackModel) where id(wm)=$idWorkpackModel " +
     "create (w)-[:IS_LINKED_TO]->(wm)")
   void linkWorkpackAndWorkpackModel(
     Long idWorkpack,

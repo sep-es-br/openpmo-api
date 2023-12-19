@@ -64,8 +64,8 @@ public interface PropertyRepository extends Neo4jRepository<Property, Long> {
     Long propertyId
   );
 
-  @Query("match (p:Property), (pm:PropertyModel) " +
-         "where id(p)=$propertyId and id(pm)=$propertyModelId " +
+  @Query("match (p:Property) where id(p)=$propertyId  " +
+         "match (pm:PropertyModel) where id(pm)=$propertyModelId " +
          "create (p)-[:IS_DRIVEN_BY]->(pm)")
   void createIsDrivenByRelationship(
     Long propertyId,
@@ -87,8 +87,8 @@ public interface PropertyRepository extends Neo4jRepository<Property, Long> {
   )
   List<Property> findAllByPropertyModelId(Long idPropertyModel);
 
-  @Query("match (p:Property), (w:Workpack) " +
-    "where id(p)=$propertyId and id(w)=$workpackId " +
+  @Query("match (p:Property) where id(p)=$propertyId " +
+    "match (w:Workpack) where id(w)=$workpackId " +
     "create (p)-[:FEATURES]->(w)")
   void createFeaturesRelationship(
     Long propertyId,
