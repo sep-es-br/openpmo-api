@@ -275,24 +275,20 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   Set<Workpack> findAllUsingPlan(@Param("idPlan") Long idPlan);
 
   @Query(
-       " MATCH (plan:Plan)<-[belongsTo:BELONGS_TO]-(w:Workpack{deleted:false,canceled:false})-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
-       ", (plan)-[isStructuredBy:IS_STRUCTURED_BY]->(planModel:PlanModel) " +
-       " WHERE id(plan)=$idPlan and NOT (w)-[:IS_IN]->(:Workpack)" +
-       " OPTIONAL MATCH (w)-[isLinkedTo:IS_LINKED_TO]-(modelLinked:WorkpackModel)" +
-       " OPTIONAL MATCH (w)<-[f1:FEATURES]-(p1:Property)-[d1:IS_DRIVEN_BY]->(pm1:PropertyModel)-[f4:FEATURES]->(model) " +
-       "     where pm1.name in ['name', 'fullName']" +
-       " OPTIONAL MATCH (w)<-[wi:IS_IN*]-(w2:Workpack{deleted:false,canceled:false})-[bt:BELONGS_TO]->(p:Plan)" +
-       " OPTIONAL MATCH (w2)<-[f2:FEATURES]-(p2:Property)-[d2:IS_DRIVEN_BY]->(pm2:PropertyModel)-[f5:FEATURES]->(wm2:WorkpackModel)<-[ib2:IS_INSTANCE_BY]-(w2)-[wmi:IS_IN]->()" +
-       "     where pm2.name in ['name', 'fullName']" +
-       " RETURN w, belongsTo, isStructuredBy, plan, instanceBy, planModel, model, [ " +
-       "  [ [isLinkedTo, modelLinked] ], " +
-       "  [ [f1, p1, d1, pm1] ], " +
-       "  [ [wi,w2,f2, p2, d2, pm2] ], " +
-       "  [ [bt, p]], " +
-       "  [ [ib2, wm2, f5, pm2] ], " +
-       "  [ [f4, pm1] ], " +
-       "  [ [wmi,wm2, f5, pm2] ] " +
-       "  ]       " 
+       "  MATCH (plan:Plan)<-[belongsTo:BELONGS_TO]-(pw:Workpack{deleted:false,canceled:false})  " +
+       "  , (plan)-[isStructuredBy:IS_STRUCTURED_BY]->(planModel:PlanModel)  " +
+       "  WHERE id(plan)=$idPlan and not (pw)-[:IS_IN]->(:Workpack)  " +
+       "  MATCH (pw)<-[wi:IS_IN*0..]-(w:Workpack{deleted:false,canceled:false})-[bt:BELONGS_TO]->(pl:Plan)  " +
+       "  OPTIONAL MATCH (w)-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel)  " +
+       "  OPTIONAL MATCH (w)-[isLinkedTo:IS_LINKED_TO]-(modelLinked:WorkpackModel)  " +
+       "  OPTIONAL MATCH (w)<-[f:FEATURES]-(p:Property)-[d:IS_DRIVEN_BY]->(pm:PropertyModel) where pm.name in ['name', 'fullName']  " +
+       "  RETURN pw, belongsTo, isStructuredBy, plan, planModel, [   " +
+       "    [wi,w] , " +
+       "    [instanceBy, model] ,   " +
+       "    [isLinkedTo, modelLinked] ,   " +
+       "    [f, p, d, pm],   " +
+       "    [bt, pl] " +
+       "  ]  " 
   )
   Set<Workpack> findAllByPlanWithProperties(@Param("idPlan") Long idPlan);
 
