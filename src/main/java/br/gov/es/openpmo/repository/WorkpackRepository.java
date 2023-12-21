@@ -292,6 +292,22 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   )
   Set<Workpack> findAllByPlanWithProperties(@Param("idPlan") Long idPlan);
 
+  @Query( " MATCH (w:Workpack{deleted:false})-[wbt:BELONGS_TO]->(wpl:Plan) " 
+  + " 	, (w)-[wmr:IS_INSTANCE_BY|IS_LINKED_TO]->(wm:WorkpackModel) " 
+  + " WHERE id(w) = $id " 
+  + " OPTIONAL MATCH (w)<-[wf:FEATURES]-(wpp:Property)-[wdb:IS_DRIVEN_BY]->(wppm:PropertyModel) " 
+  + " WHERE wppm.name in ['name', 'fullName'] " 
+  + " OPTIONAL MATCH (w)-[ii:IS_IN*]->(pw:Workpack)-[pwbt:BELONGS_TO]->(pwpl:Plan) " 
+  + " 	, (pw)<-[pwf:FEATURES]-(pwpp:Property)-[pwdb:IS_DRIVEN_BY]->(pwppm:PropertyModel) " 
+  + " 	, (pw)-[pwmr:IS_INSTANCE_BY|IS_LINKED_TO]->(pwm:WorkpackModel) " 
+  + " WHERE pwppm.name in ['name', 'fullName'] " 
+  + " RETURN w,  " 
+  + " [ [wbt,wpl,wmr,wm], " 
+  + "   [wf,wf,wpp,wdb,wppm], " 
+  + "   [ii,pw,pwbt,pwpl,pwf,pwpp,pwdb,pwppm,pwmr,pwm] " 
+  + " ] " )
+  Optional<Workpack> findByIdWithParent(@Param("id") Long id);  
+
   @Query(" MATCH (w:Workpack{deleted:false})"
   + " WHERE id(w) = $id"
   + " optional match (w)-[bt:BELONGS_TO]->(pl:Plan)"
@@ -332,7 +348,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   + " [values, entity], "
   + " [ib2, wm2, f8, pm5], "
   + " [f9, pm4], [featureGroupModel, groupModel], [groupModels, groupedPropertiesModel] ]")
-  Optional<Workpack> findByIdWithParent(@Param("id") Long id);
+  Optional<Workpack> findByIdWithParent___lento(@Param("id") Long id);
 
   @Query("MATCH (w:Workpack{deleted:false})<-[:IS_IN*]-(child:Workpack{deleted:false})<-[canAccess:CAN_ACCESS_WORKPACK]-(p:Person) " +
          " WHERE id(w) = $idWorkpack " +

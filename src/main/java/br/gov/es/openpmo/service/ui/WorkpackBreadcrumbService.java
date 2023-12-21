@@ -302,7 +302,15 @@ public class WorkpackBreadcrumbService {
   ) {
     final boolean isInSamePlan = isInPlan(workpack, idPlan);
     if(isInSamePlan) {
-      breadcrumbs.add(this.fromWorkpack(workpack));
+//      breadcrumbs.add(this.fromWorkpack(workpack));
+      BreadcrumbDto breadcrumb = new BreadcrumbDto();
+      breadcrumb.setId(workpack.getId());
+      breadcrumb.setType(workpack.getType());
+      breadcrumb.setName(workpack.getWorkpackName());
+      breadcrumb.setFullName(workpack.getWorkpackFullName());
+      breadcrumb.setModelName(workpack.getWorkpackModelInstance().getModelName());
+      breadcrumbs.add(breadcrumb);
+
       if(workpack.getParent() != null) {
         this.addWorkpackParentLinkedToBreadcrumb(workpack.getParent(), breadcrumbs, idPlan);
       }

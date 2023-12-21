@@ -11,7 +11,9 @@ import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.properties.Property;
 import br.gov.es.openpmo.model.properties.Text;
+import br.gov.es.openpmo.model.properties.TextArea;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
+import br.gov.es.openpmo.model.properties.models.TextAreaModel;
 import br.gov.es.openpmo.model.properties.models.TextModel;
 import br.gov.es.openpmo.model.relations.BelongsTo;
 import br.gov.es.openpmo.model.relations.CanAccessWorkpack;
@@ -243,6 +245,28 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
     return null;
   }
 
+@Transient
+  public String getWorkpackFullName() {
+    if (this.properties == null) {
+      return null;
+    }
+    for (Property property : this.properties) {
+      if (property instanceof TextArea) {
+        final TextArea text = (TextArea) property;
+        final TextAreaModel driver = text.getDriver();
+        if (driver == null) {
+          continue;
+        }
+        if (Objects.equals(driver.getName(), "fullName")) {
+          return text.getValue();
+        }
+      }
+    }
+    return null;
+  }
+
+
+  
   public boolean isDeleted() {
     return this.deleted;
   }
