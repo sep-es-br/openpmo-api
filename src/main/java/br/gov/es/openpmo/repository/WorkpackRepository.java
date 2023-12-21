@@ -56,30 +56,26 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   Optional<Workpack> findWorkpackWithModelStructureById(Long id);
 
   @Query(
-       " MATCH  " +
-       " (w1:Workpack{deleted:false})-[iib1:IS_INSTANCE_BY]->(wm1:WorkpackModel), (w1)<-[ii2:IS_IN*0..1]-(w:Workpack) " +
-       "     WHERE id(w1)=$id " +
-       " OPTIONAL MATCH (w)-[iib2:IS_INSTANCE_BY]->(wm:WorkpackModel)-[ii1:IS_IN*0..1]->(wm1) " +
-       " OPTIONAL MATCH (w)<-[f:FEATURES]-(p:Property)-[idb:IS_DRIVEN_BY]->(pm:PropertyModel) " +
-       " OPTIONAL MATCH (p)<-[isp:IS_SNAPSHOT_OF]-(d:Date)-[c:COMPOSES]->(b:Baseline)  where b.active and not b.cancelation " +
-       " OPTIONAL MATCH (w)<-[ff:FEATURES]-(us:UnitSelection)-[v:VALUES]->(um:UnitMeasure) " +
-       " OPTIONAL MATCH (w)<-[bt:BELONGS_TO]-(ds:Dashboard)<-[ipo:IS_PART_OF]-(dm:DashboardMonth)<-[ia:IS_AT]-(n) " +
-       " OPTIONAL MATCH (pm)<-[isb:IS_SORTED_BY]-(wm) " +
-       " OPTIONAL MATCH (w1)<-[ii3:IS_IN*2]-(w3:Workpack{deleted:false}) " +
-       " RETURN w1,  " +
-       " [   " +
-       " 	[ [iib1, wm1, ii1, wm, iib2, w, ii2]],   " +
-       " 	case when id(w) = id(w1) then  [ [f, p, idb, pm]] end,   " +
-       " 	case when id(w) = id(w1) then  [ [ff,us,v,um]   ] end,   " +
-       " 	case when id(w) <> id(w1) then [ [f,p,idb,pm]   ] end,   " +
-       " 	case when id(w) <> id(w1) then [ [ff,us,v,um]   ] end,   " +
-       " 	case when id(w) <> id(w1) then [ [f,p,idb,pm,isb,wm]] end,   " +
-       " 	[ [ii3, w3]],   " +
-       " 	[ [f,isp,d,c,b]],   " +
- //      " 	[ [f,d,c,b]],   " +
- //      " 	[ [bt,ds,ipo,dm,ia,n]],   " +
-       " 	[ [bt,ds,ipo,dm,ia,n]]    " +
-       " ] "
+       " MATCH   " 
+       + " (w1:Workpack{deleted:false})-[iib1:IS_INSTANCE_BY]->(wm1:WorkpackModel) " 
+       + " WHERE id(w1)=$id " 
+       + " OPTIONAL MATCH (w1)<-[ii:IS_IN*0..1]-(w:Workpack)-[iib:IS_INSTANCE_BY]->(wm:WorkpackModel)-[ii1:IS_IN*0..1]->(wm1) " 
+       + " OPTIONAL MATCH (w1)<-[f1:FEATURES]-(p1:Property)-[idb1:IS_DRIVEN_BY]->(pm1:PropertyModel)  " 
+       + " OPTIONAL MATCH (w)<-[f:FEATURES]-(p:Property)-[idb:IS_DRIVEN_BY]->(pm:PropertyModel)  " 
+       + " OPTIONAL MATCH (p)<-[isp:IS_SNAPSHOT_OF]-(d:Date)-[c:COMPOSES]->(b:Baseline)  where b.active and not b.cancelation " 
+       + " OPTIONAL MATCH (w)<-[ff:FEATURES]-(us:UnitSelection)-[v:VALUES]->(um:UnitMeasure) " 
+       + " OPTIONAL MATCH (w)<-[bt:BELONGS_TO]-(ds:Dashboard)<-[ipo:IS_PART_OF]-(dm:DashboardMonth)<-[ia:IS_AT]-(n) " 
+       + " OPTIONAL MATCH (pm)<-[isb:IS_SORTED_BY]-(wm)  " 
+       + "  " 
+       + " return w1, f1, p1,idb1,pm1, [ " 
+       + "     [iib1,wm1], " 
+       + "     [ii,w,iib,wm,ii1], " 
+       + " 	[f,p,idb,pm], " 
+       + " 	[isp,d,c,b], " 
+       + " 	[ff,us,v,um], " 
+       + " 	[bt,ds,ipo,dm,ia,n], " 
+       + " 	[isb] " 
+       + " ] "
   )
   Optional<Workpack> findWorkpackWithModelStructureByIdFirstLevel(Long id);
 
