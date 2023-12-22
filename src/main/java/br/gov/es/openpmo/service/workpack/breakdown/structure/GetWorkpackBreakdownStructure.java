@@ -160,7 +160,7 @@ public class GetWorkpackBreakdownStructure {
       structure.setWorkpackModels(children);
       return structure;
     }
-    structure.setHasChildren(workpack.hasChildren());
+    structure.setHasChildren(workpack.isIsParent());
     structure.setWorkpackModels(Collections.emptyList());
     return structure;
   }

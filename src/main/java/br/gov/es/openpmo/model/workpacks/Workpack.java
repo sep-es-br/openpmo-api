@@ -161,6 +161,11 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
   @JsonIgnore
   private LocalDate previousDate;
 
+  @Transient
+  @org.neo4j.ogm.annotation.Property(name="isParent")
+  @JsonIgnore
+   private Boolean isParent;
+
   public Workpack() {
   }
 
@@ -771,4 +776,61 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
       .filter(plan::equals)
       .isPresent();
   }
+
+    /**
+     * @return Boolean return the publicShared
+     */
+    public Boolean isPublicShared() {
+        return publicShared;
+    }
+
+    /**
+     * @return boolean return the isCancelable
+     */
+    public boolean isIsCancelable() {
+        return isCancelable;
+    }
+
+    /**
+     * @param isCancelable the isCancelable to set
+     */
+    public void setIsCancelable(boolean isCancelable) {
+        this.isCancelable = isCancelable;
+    }
+
+    /**
+     * @return boolean return the isCanceled
+     */
+    public boolean isIsCanceled() {
+        return isCanceled;
+    }
+
+    /**
+     * @param isCanceled the isCanceled to set
+     */
+    public void setIsCanceled(boolean isCanceled) {
+        this.isCanceled = isCanceled;
+    }
+
+    /**
+     * @return Boolean return the completed
+     */
+    public Boolean isCompleted() {
+        return completed;
+    }
+
+    /**
+     * @return Boolean return the isParent
+     */
+    public Boolean isIsParent() {
+        return isParent;
+    }
+
+    /**
+     * @param isParent the isParent to set
+     */
+    public void setIsParent(Boolean isParent) {
+        this.isParent = isParent;
+    }
+
 }
