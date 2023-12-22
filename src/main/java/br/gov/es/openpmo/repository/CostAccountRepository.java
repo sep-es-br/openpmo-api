@@ -40,17 +40,17 @@ public interface CostAccountRepository extends Neo4jRepository<CostAccount, Long
 
   @Query("MATCH (c:CostAccount)-[i:APPLIES_TO]->(w:Workpack) "
     + " WHERE id(c) = $id "
-    + " RETURN c, i, w, [ "
     + " OPTIONAL MATCH (c)<-[f1:FEATURES]-(p1:Property)-[d1:IS_DRIVEN_BY]->(pm1:PropertyModel) " 
     + " OPTIONAL MATCH (p1)-[v1:VALUES]->(o:Organization) " 
     + " OPTIONAL MATCH (p1)-[v2:VALUES]-(l:Locality) " 
     + " OPTIONAL MATCH (p1)-[v3:VALUES]-(u:UnitMeasure) " 
     + " OPTIONAL MATCH (c)-[ii:IS_INSTANCE_BY]->(cm:CostAccountModel) " 
-    + " [ [f1, p1, d1, pm1] ], "
-    + " [ [v1, o] ], "
-    + " [ [v2, l] ], "
-    + " [ [v3, u] ], "
-    + " [ [ii,cm]] "
+    + " RETURN c, i, w, [ "
+    + " [f1, p1, d1, pm1], "
+    + " [v1, o], "
+    + " [v2, l], "
+    + " [v3, u], "
+    + " [ii,cm] "
     + "]")
   Optional<CostAccount> findByIdWithPropertyModel(@Param("id") Long id);
 
