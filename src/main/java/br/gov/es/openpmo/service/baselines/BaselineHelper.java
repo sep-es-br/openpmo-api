@@ -65,6 +65,16 @@ public class BaselineHelper {
     return repository.save(snapshot);
   }
 
+  public <T extends Snapshotable<T>> T createSnapshotWithBaselineRelationship(
+    final T snapshotable,
+    final Neo4jRepository<? super T, Long> repository,
+    final Baseline baseline
+  ) {
+    final T snapshot = snapshotable.snapshot();
+    snapshot.setBaseline(baseline);
+    return repository.save(snapshot);
+  }
+
   public <T extends Snapshotable<T>> void createBaselineSnapshotRelationship(
     final Baseline baseline,
     final T snapshot,

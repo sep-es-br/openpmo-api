@@ -463,8 +463,8 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
     final Baseline activeBaseline = this.getActiveBaseline(workpack);
     final Workpack snapshot = this.getSnapshot(workpack, activeBaseline);
 
-    final Workpack newSnapshot = this.baselineHelper.createSnapshot(snapshot, this.workpackRepository);
-    this.baselineHelper.createBaselineSnapshotRelationship(baseline, newSnapshot, this.workpackRepository);
+    final Workpack newSnapshot = this.baselineHelper.createSnapshotWithBaselineRelationship(snapshot, this.workpackRepository, baseline);
+    //this.baselineHelper.createBaselineSnapshotRelationship(baseline, newSnapshot, this.workpackRepository);
     this.createMasterSnapshotRelationship(this.getWorpackMaster(snapshot), newSnapshot);
     this.snapshotProperties(snapshot, newSnapshot, baseline);
     this.createScheduleWorkpackRelationship(baseline, workpack, newSnapshot);
@@ -504,8 +504,8 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
     final Workpack child,
     final Workpack parent
   ) {
-    final Workpack newSnapshot = this.baselineHelper.createSnapshot(child, this.workpackRepository);
-    this.baselineHelper.createBaselineSnapshotRelationship(baseline, newSnapshot, this.workpackRepository);
+    final Workpack newSnapshot = this.baselineHelper.createSnapshotWithBaselineRelationship(child, this.workpackRepository, baseline);
+    //this.baselineHelper.createBaselineSnapshotRelationship(baseline, newSnapshot, this.workpackRepository);
     this.createMasterSnapshotRelationship(this.getWorpackMaster(child), newSnapshot);
     this.linkChildAndParentSnapshots(newSnapshot, parent);
     this.snapshotProperties(child, newSnapshot, baseline);
@@ -547,8 +547,8 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
     final Workpack workpackSnapshot
   ) {
     this.scheduleRepository.findScheduleByWorkpackId(workpack.getId()).ifPresent(schedule -> {
-      final Schedule scheduleSnapshot = this.baselineHelper.createSnapshot(schedule, this.scheduleRepository);
-      this.baselineHelper.createBaselineSnapshotRelationship(baseline, scheduleSnapshot, this.scheduleRepository);
+      final Schedule scheduleSnapshot = this.baselineHelper.createSnapshotWithBaselineRelationship(schedule, this.scheduleRepository, baseline);
+      //this.baselineHelper.createBaselineSnapshotRelationship(baseline, scheduleSnapshot, this.scheduleRepository);
       this.createMasterSnapshotRelationship(this.getScheduleMaster(schedule), scheduleSnapshot);
       this.createFeatureRelationship(workpackSnapshot, scheduleSnapshot);
       this.createStepScheduleRelationship(baseline, schedule, scheduleSnapshot, workpackSnapshot);
@@ -560,8 +560,8 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
     final Workpack workpackSnapshot,
     final Baseline baseline
   ) {
-    final Property snapshot = this.baselineHelper.createSnapshot(property, this.propertyRepository);
-    this.baselineHelper.createBaselineSnapshotRelationship(baseline, snapshot, this.propertyRepository);
+    final Property snapshot = this.baselineHelper.createSnapshotWithBaselineRelationship(property, this.propertyRepository, baseline);
+//    this.baselineHelper.createBaselineSnapshotRelationship(baseline, snapshot, this.propertyRepository);
     this.createMasterSnapshotRelationship(this.getPropertyMaster(property), snapshot);
     this.createFeatureRelationship(workpackSnapshot, snapshot);
   }
@@ -598,8 +598,8 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
     final Workpack workpackSnapshot
   ) {
     for(final Step step : this.stepRepository.findAllByScheduleId(schedule.getId())) {
-      final Step stepSnapshot = this.baselineHelper.createSnapshot(step, this.stepRepository);
-      this.baselineHelper.createBaselineSnapshotRelationship(baseline, stepSnapshot, this.stepRepository);
+      final Step stepSnapshot = this.baselineHelper.createSnapshotWithBaselineRelationship(step, this.stepRepository, baseline);
+    //  this.baselineHelper.createBaselineSnapshotRelationship(baseline, stepSnapshot, this.stepRepository);
       this.baselineHelper.createComposesRelationship(scheduleSnapshot, stepSnapshot);
       this.createMasterSnapshotRelationship(this.getStepMaster(step), stepSnapshot);
       this.createCostAccountStepRelationship(baseline, step, stepSnapshot, workpackSnapshot);
@@ -620,8 +620,8 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
         continue;
       }
 
-      final CostAccount costAccountSnapshot = this.baselineHelper.createSnapshot(costAccount, this.costAccountRepository);
-      this.baselineHelper.createBaselineSnapshotRelationship(baseline, costAccountSnapshot, this.costAccountRepository);
+      final CostAccount costAccountSnapshot = this.baselineHelper.createSnapshotWithBaselineRelationship(costAccount, this.costAccountRepository, baseline);
+//      this.baselineHelper.createBaselineSnapshotRelationship(baseline, costAccountSnapshot, this.costAccountRepository);
       this.baselineHelper.createAppliesToRelationship(workpackSnapshot, costAccountSnapshot);
       this.firstTimeSubmitBaselineService.createConsumesRelationship(step, costAccount, stepSnapshot, costAccountSnapshot);
       this.createMasterSnapshotRelationship(costAccount, costAccountSnapshot);

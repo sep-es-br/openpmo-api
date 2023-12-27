@@ -171,32 +171,22 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
             Long idBaseline
     );
 
-    @Query("MATCH (w:Workpack{deleted:false})-[:IS_BASELINED_BY]->(b:Baseline) " +
-            "WHERE id(b)=$idBaseline " +
-            "OPTIONAL MATCH (w)<-[f1:FEATURES]-(p:Property) " +
-            "OPTIONAL MATCH (w)-[a:IS_INSTANCE_BY]->(m:WorkpackModel) " +
-            "OPTIONAL MATCH (w)<-[i:IS_IN*]-(v:Workpack{deleted:false}) " +
-            "OPTIONAL MATCH (v)<-[h:FEATURES]-(q:Property) " +
-            "OPTIONAL MATCH (v)-[ii:IS_INSTANCE_BY]->(n:WorkpackModel) " +
-            "OPTIONAL MATCH (w)<-[f2:FEATURES]-(l:LocalitySelection)-[v1:VALUES]->(l1:Locality) " +
-            "OPTIONAL MATCH (w)<-[f3:FEATURES]-(o:OrganizationSelection)-[v2:VALUES]->(o1:Organization) " +
-            "OPTIONAL MATCH (w)<-[f4:FEATURES]-(u:UnitSelection)-[v3:VALUES]->(u1:UnitMeasure) " +
-            "OPTIONAL MATCH (v)-[f5:FEATURES]-(l:LocalitySelection)-[v1:VALUES]->(l1:Locality) " +
-            "OPTIONAL MATCH (v)-[f6:FEATURES]-(o:OrganizationSelection)-[v2:VALUES]->(o1:Organization) " +
-            "OPTIONAL MATCH (v)-[f7:FEATURES]-(u:UnitSelection)-[v3:VALUES]->(u1:UnitMeasure) " +
-            "RETURN w, [ " +
-            " [[f1,p]], " +
-            " [[a,m]], " +
-            " [[i,v]], " +
-            " [[h,q]], " +
-            " [[ii,n]], " +
-            " [[f2,l,v1,l1]], " +
-            " [[f3,o,v2,o1]], " +
-            " [[f4,u,v3,u1]], " +
-            " [[f5,l,v1,l1]], " +
-            " [[f6,o,v2,o1]], " +
-            " [[f7,u,v3,u1]] " +
-            "]")
+    @Query(" MATCH (w:Workpack{deleted:false})-[:IS_BASELINED_BY]->(b:Baseline) " +
+        " , (w)-[a:IS_INSTANCE_BY]->(m:WorkpackModel) " +
+        " WHERE id(b)=$idBaseline " +
+        " OPTIONAL MATCH (w)<-[i:IS_IN*0..]-(v:Workpack{deleted:false}) " +
+        " OPTIONAL MATCH (v)<-[f1:FEATURES]-(p:Property) " +
+        " OPTIONAL MATCH (p)-[v1:VALUES]->(l1:Locality) " +
+        " OPTIONAL MATCH (p)-[v2:VALUES]->(o1:Organization) " +
+        " OPTIONAL MATCH (p)-[v3:VALUES]->(u1:UnitMeasure) " +
+        " RETURN w, [   " +
+        "  [a,m], " +
+        "  [i,v], " +
+        "  [f1,p], " +
+        "  [v1,l1], " +
+        "  [v2,o1],   " +
+        "  [v3,u1] " +
+        " ] ")
     Optional<Workpack> findNotDeletedWorkpackWithPropertiesAndModelAndChildrenByBaselineId(Long idBaseline);
 
     @Query("MATCH (m:Workpack{deleted:false})<-[:IS_SNAPSHOT_OF]-(s:Workpack)-[:COMPOSES]->(b:Baseline) " +
