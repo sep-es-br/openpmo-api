@@ -288,6 +288,37 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   )
   Set<Workpack> findAllByPlanWithProperties(@Param("idPlan") Long idPlan);
 
+  @Query(" MATCH (o:Office)<-[:IS_ADOPTED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO]-(pw:Workpack{deleted:false,canceled:false}) " 
+       + " , (pw)<-[wi:IS_IN*0..]-(w:Workpack{deleted:false,canceled:false})-[isa:IS_INSTANCE_BY|IS_LINKED_TO]->(model:WorkpackModel) " 
+       + " , (usr:Person) " 
+       + " WHERE id(plan)=$idPlan " 
+       + "     AND not (pw)-[:IS_IN]->(:Workpack)  " 
+       + "     AND id(w) <> id(pw) " 
+       + "     AND id(usr)= $idUsr  " 
+       + "     AND (   usr.administrator " 
+       + "         OR  (usr)-[:CAN_ACCESS_OFFICE]->(o) " 
+       + "         OR  (usr)-[:CAN_ACCESS_PLAN]->(plan) " 
+       + "         OR (usr)-[:CAN_ACCESS_WORKPACK]->(w)-[:IS_IN*0..]->(pw) " 
+       + "         OR (usr)-[:CAN_ACCESS_WORKPACK]->()<-[:IS_IN*0..]-(w) " 
+       + "     ) " 
+       + " OPTIONAL MATCH (pw)<-[pf:FEATURES]-(pp:Property)-[ppidb:IS_DRIVEN_BY]->(ppm:PropertyModel) where ppm.name in ['name', 'fullName']   " 
+       + " OPTIONAL MATCH (pw)-[pisa:IS_INSTANCE_BY|IS_LINKED_TO]->(pmodel:WorkpackModel)   " 
+       + " OPTIONAL MATCH (pw)<-[wi:IS_IN*]-(w:Workpack{deleted:false,canceled:false})-[isa:IS_INSTANCE_BY|IS_LINKED_TO]->(model:WorkpackModel)   " 
+       + " OPTIONAL MATCH (w)-[bt:BELONGS_TO]-(pl:Plan)   " 
+       + " OPTIONAL MATCH (w)<-[f:FEATURES]-(p:Property)-[pidb:IS_DRIVEN_BY]->(pm:PropertyModel) where pm.name in ['name', 'fullName']   " 
+       + " return pw,  " 
+       + " [  " 
+       + " 	[belongsTo, plan],   " 
+       + " 	[pf,pp,ppidb,ppm],   " 
+       + " 	[pisa,pmodel],   " 
+       + " 	[wi,w],   " 
+       + " 	[isa,model],   " 
+       + " 	[bt,pl],   " 
+       + " 	[f,p,pidb,pm]   " 
+       + " ] "
+  )
+  Set<Workpack> findAllByPlanWithMenuProperties(@Param("idPlan") Long idPlan, @Param("idUsr") Long idUsr);
+
   @Query( " MATCH (w:Workpack{deleted:false})-[wbt:BELONGS_TO]->(wpl:Plan) " 
   + " 	, (w)-[wmr:IS_INSTANCE_BY|IS_LINKED_TO]->(wm:WorkpackModel) " 
   + " WHERE id(w) = $id " 
@@ -368,6 +399,21 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
          ") " +
          "RETURN id(workpack)")
   Set<Long> findAllWorkpacksWithPermissions(
+    @Param("idPlan") Long idPlan,
+    @Param("idPerson") Long idPerson
+  );
+
+  @Query("MATCH (person:Person) " +
+         "WHERE id(person)=$idPerson " +
+         "MATCH (plan:Plan)<-[belongsTo:BELONGS_TO]-(workpack:Workpack{deleted:false}) " +
+         "OPTIONAL MATCH (workpack)<-[permission:CAN_ACCESS_WORKPACK]-(person) " +
+         "WITH plan, belongsTo, workpack, permission, person " +
+         "WHERE id(plan)=$idPlan AND ( " +
+         " ( (workpack)<-[:CAN_ACCESS_WORKPACK]-(person) ) OR " +
+         " ( person.administrator=true ) " +
+         ") " +
+         "RETURN id(workpack)")
+  Set<Long> findAllWorkpacksWithPermissions4Menu(
     @Param("idPlan") Long idPlan,
     @Param("idPerson") Long idPerson
   );

@@ -1612,6 +1612,11 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     return this.workpackRepository.findAllByPlanWithProperties(idPlan);
   }
 
+  public Set<Workpack> findAllByIdPlan4Menu(final Long idPlan, final Long idUsr) {
+    return this.workpackRepository.findAllByPlanWithMenuProperties(idPlan, idUsr);
+  }
+
+
   public void calculateDashboard(final Workpack workpack, final Boolean calculateInterval) {
     final Long id = workpack.getId();
     final Set<Workpack> parents = this.workpackRepository.findParentsById(id);
