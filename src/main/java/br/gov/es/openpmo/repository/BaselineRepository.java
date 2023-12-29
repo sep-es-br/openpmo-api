@@ -192,6 +192,7 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
     @Query(" MATCH (w:Workpack{deleted:false})-[a:IS_INSTANCE_BY]->(m:WorkpackModel) " +
         " WHERE id(w)=$idWorkpack " +
         " OPTIONAL MATCH (w)<-[i:IS_IN*0..]-(v:Workpack{deleted:false}) " +
+        " OPTIONAL MATCH (v)-[viib:IS_INSTANCE_BY]->(vm:WorkpackModel) " +
         " OPTIONAL MATCH (v)<-[f1:FEATURES]-(p:Property) " +
         " OPTIONAL MATCH (p)-[v1:VALUES]->(l1:Locality) " +
         " OPTIONAL MATCH (p)-[v2:VALUES]->(o1:Organization) " +
@@ -199,6 +200,7 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
         " RETURN w, [   " +
         "  [a,m], " +
         "  [i,v], " +
+        "  [viib,vm], " +
         "  [f1,p], " +
         "  [v1,l1], " +
         "  [v2,o1],   " +

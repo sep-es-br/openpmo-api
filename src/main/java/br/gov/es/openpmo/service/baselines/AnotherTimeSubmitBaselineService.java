@@ -174,7 +174,8 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
       this.snapshotViaActiveBaseline(baseline, workpack);
     }
     else {
-      this.firstTimeSubmitBaselineService.submit(baseline, workpack.getId(), null, null);
+      // Todo: Ajustar recursão para demais baselines
+      // this.firstTimeSubmitBaselineService.submit(baseline, workpack.getId(), null, null);
     }
   }
 

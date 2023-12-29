@@ -10,11 +10,10 @@ import java.util.Optional;
 @FunctionalInterface
 public interface IFirstTimeSubmitBaselineService {
 
-  void submit(
+  List<Long> submit(
     final Baseline baseline,
     final Long workpackId,
-    final List<UpdateRequest> updates,
-    final Optional<Workpack> parentSnapshot
+    final Optional<Long> parentId
   );
 
 }

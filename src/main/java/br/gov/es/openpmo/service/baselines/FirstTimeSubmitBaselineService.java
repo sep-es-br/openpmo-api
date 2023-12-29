@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -189,14 +190,18 @@ public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineS
   */
 
   @Override
-  public void submit(
+  public List<Long> submit(
     final Baseline baseline,
     final Long workpackId,
-    final List<UpdateRequest> updates,
-    final Optional<Workpack> parentSnapshot)
+    final Optional<Long> parentId)
   {
+
     final Workpack workpack = this.baselineRepository.findNotDeletedWorkpackWithPropertiesAndModelAndChildrenByWorkpackId(workpackId)
-                                                                 .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
+                                                              .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
+
+    if (!isNotDeleted(workpack)) {
+      return new ArrayList<Long>();
+    }
 
     final Workpack workpackSnapshot = this.baselineHelper.createSnapshot(workpack, this.workpackRepository);
     this.baselineHelper.createBaselineSnapshotRelationship(baseline, workpackSnapshot, this.workpackRepository);
@@ -204,20 +209,19 @@ public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineS
     this.snapshotProperties(workpack, workpackSnapshot, baseline);
     this.createScheduleWorkpackRelationship(baseline, workpack, workpackSnapshot);
 
-    if (parentSnapshot != null) {
-      this.linkChildAndParentSnapshots(workpackSnapshot, parentSnapshot.get());
+    if (parentId != null) {
+      this.linkChildAndParentSnapshots(
+        workpackSnapshot, 
+        this.baselineRepository.findSnapshotByMasterIdAndBaselineId(parentId.get(), baseline.getId()).get()
+      );
     }
 
-    final Workpack[] children = getChildrenOrEmpty(workpack).toArray(new Workpack[0]);
-    for (int i=0; i < children.length ; i++) {
-      if (isNotDeleted(children[i]) && isAllowedForSnapshotting(children[i], updates)) {
-        this.submit(baseline, children[i].getId(), updates, Optional.of(workpackSnapshot));
-      }
-    }
+    List<Long> childrenToReturn = new ArrayList<Long>();;
+    getChildrenOrEmpty(workpack).forEach(w -> {
+      childrenToReturn.add(w.getId());
+    });
 
-//    getChildrenOrEmpty(workpack).stream()
-//      .filter(child -> canSnapshotWorkpack(child, updates))
-//      .forEach(child -> this.submit(baseline, child, updates, Optional.of(workpackSnapshot)));
+    return childrenToReturn;
 
   }
 

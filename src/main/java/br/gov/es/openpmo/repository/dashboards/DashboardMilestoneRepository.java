@@ -61,7 +61,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
   @Query("  MATCH     " +
        "      (m:Milestone{deleted:false,canceled:false})-[:IS_IN*0..]->(w:Workpack{deleted:false,canceled:false}),     " +
        "      (:DateModel{name:'Data'})<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m)     " +
-       "  WHERE id(w)=$workpackId and m.completed is null or m.completed=false   " +
+       "  WHERE id(w)=$workpackId and (m.completed is null or m.completed=false)   " +
        "  " +
        "  OPTIONAL MATCH (d)<-[:IS_SNAPSHOT_OF]-(sd:Date)-[:COMPOSES]->(:Baseline{active:true})   " +
        "  WITH m,d,sd    " +
@@ -87,7 +87,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
        " WHERE   " +
        "  id(w)=$workpackId and id(b)=$baselineId   " +
        " AND   " +
-       "  m.completed is null or m.completed=false   " +
+       "  (m.completed is null or m.completed=false) " +
        " AND  " +
        " (	((sd is null) and date(datetime(d.value)) < date($refDate)) " +
        " 	OR  " +
@@ -109,12 +109,12 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
   @Query("  MATCH     " +
        "      (m:Milestone{deleted:false,canceled:false})-[:IS_IN*0..]->(w:Workpack{deleted:false,canceled:false}),     " +
        "      (:DateModel{name:'Data'})<-[:IS_DRIVEN_BY]-(d:Date)-[:FEATURES]->(m)     " +
-       "  WHERE id(w)=$workpackId and m.completed is null or m.completed=false   " +
+       "  WHERE id(w)=$workpackId and (m.completed is null or m.completed=false)   " +
        "  " +
        "  OPTIONAL MATCH (d)<-[:IS_SNAPSHOT_OF]-(sd:Date)-[:COMPOSES]->(:Baseline{active:true})   " +
        "  WITH m,d,sd    " +
-       "  WHERE ((sd is null) and (date(datetime(d.value)) < date($refDate)))   " +
-       "     OR ((sd is not null)  " +
+       "  WHERE ( (sd is null) and (date(datetime(d.value)) < date($refDate)) )   " +
+       "    OR ((sd is not null)  " +
        " 		and (  " +
        " 			(date(datetime(d.value)) > date(datetime(sd.value))) " +
        " 			or " +
@@ -135,7 +135,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
        " WHERE   " +
        "  id(w)=$workpackId and id(b)=$baselineId   " +
        " AND   " +
-       "  m.completed is null or m.completed=false   " +
+       "  (m.completed is null or m.completed=false)   " +
        " AND  " +
        " (	((sd is null) and date(datetime(d.value)) < date($refDate)) " +
        " 	OR  " +
