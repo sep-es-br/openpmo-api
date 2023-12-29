@@ -11,7 +11,7 @@ public interface IAnotherTimeSubmitBaselineService {
 
   void submit(
     Baseline baseline,
-    Workpack workpack,
+    Long workpackId,
     List<UpdateRequest> updates
   );
 

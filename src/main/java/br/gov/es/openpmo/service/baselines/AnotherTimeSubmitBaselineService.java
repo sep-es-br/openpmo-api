@@ -97,9 +97,13 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
   @Override
   public void submit(
     final Baseline baseline,
-    final Workpack workpack,
+    final Long workpackId,
     final List<UpdateRequest> updates
   ) {
+
+    final Workpack workpack = this.baselineRepository.findNotDeletedWorkpackWithPropertiesAndModelAndChildrenByBaselineId(baseline.getId())
+                                                     .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
+
     this.checksStructureChanges(baseline, workpack, updates);
     this.checksNewChanges(baseline, updates);
     this.checksDeletedChanges(baseline, updates);
@@ -170,7 +174,7 @@ public class AnotherTimeSubmitBaselineService implements IAnotherTimeSubmitBasel
       this.snapshotViaActiveBaseline(baseline, workpack);
     }
     else {
-      this.firstTimeSubmitBaselineService.submit(baseline, workpack, null);
+      this.firstTimeSubmitBaselineService.submit(baseline, workpack.getId(), null, null);
     }
   }
 

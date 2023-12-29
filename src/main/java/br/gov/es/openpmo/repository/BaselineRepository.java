@@ -189,6 +189,24 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
         " ] ")
     Optional<Workpack> findNotDeletedWorkpackWithPropertiesAndModelAndChildrenByBaselineId(Long idBaseline);
 
+    @Query(" MATCH (w:Workpack{deleted:false})-[a:IS_INSTANCE_BY]->(m:WorkpackModel) " +
+        " WHERE id(w)=$idWorkpack " +
+        " OPTIONAL MATCH (w)<-[i:IS_IN*0..]-(v:Workpack{deleted:false}) " +
+        " OPTIONAL MATCH (v)<-[f1:FEATURES]-(p:Property) " +
+        " OPTIONAL MATCH (p)-[v1:VALUES]->(l1:Locality) " +
+        " OPTIONAL MATCH (p)-[v2:VALUES]->(o1:Organization) " +
+        " OPTIONAL MATCH (p)-[v3:VALUES]->(u1:UnitMeasure) " +
+        " RETURN w, [   " +
+        "  [a,m], " +
+        "  [i,v], " +
+        "  [f1,p], " +
+        "  [v1,l1], " +
+        "  [v2,o1],   " +
+        "  [v3,u1] " +
+        " ] ")
+    Optional<Workpack> findNotDeletedWorkpackWithPropertiesAndModelAndChildrenByWorkpackId(Long idWorkpack);
+
+
     @Query("MATCH (m:Workpack{deleted:false})<-[:IS_SNAPSHOT_OF]-(s:Workpack)-[:COMPOSES]->(b:Baseline) " +
             "WHERE id(m)=$idWorkpack AND id(b)=$idBaseline " +
             "RETURN count(s)>0")

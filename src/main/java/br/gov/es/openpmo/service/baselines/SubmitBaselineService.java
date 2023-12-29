@@ -3,11 +3,15 @@ package br.gov.es.openpmo.service.baselines;
 import br.gov.es.openpmo.dto.baselines.SubmitBaselineRequest;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
+import br.gov.es.openpmo.model.baselines.Status;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
 import br.gov.es.openpmo.service.journals.JournalCreator;
 import br.gov.es.openpmo.utils.ApplicationMessage;
+
+import java.time.LocalDateTime;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -46,11 +50,12 @@ public class SubmitBaselineService implements ISubmitBaselineService {
     final Long idPerson
   ) {
     final Baseline baseline = this.getDraftBaselineById(idBaseline);
-    final Workpack workpack = this.getWorkpackByBaseline(baseline);
-    this.submit(request, baseline, workpack);
+//    final Workpack workpack = this.getWorkpackByBaseline(baseline);
+    // final Long workpackId = baseline.getBaselinedBy().getIdWorkpack();
+    this.submit(request, baseline);
 
     this.journalCreator.baseline(baseline, idPerson);
-    this.dashboardService.calculate(workpack.getId(), true);
+    this.dashboardService.calculate(baseline.getBaselinedBy().getIdWorkpack(), true);
   }
 
   private Workpack getWorkpackByBaseline(final Baseline baseline) {
@@ -64,19 +69,28 @@ public class SubmitBaselineService implements ISubmitBaselineService {
 
   private void submit(
     final SubmitBaselineRequest request,
-    final Baseline baseline,
-    final Workpack workpack
+    final Baseline baseline
   ) {
-    if(this.isFirstTimeSubmittingBaseline(workpack)) {
-      this.firstTimeSubmitBaselineService.submit(baseline, workpack, request.getUpdates());
+    final Long workpackId = baseline.getBaselinedBy().getIdWorkpack();
+    if(this.isFirstTimeSubmittingBaseline(workpackId)) {
+      this.firstTimeSubmitBaselineService.submit(baseline, workpackId, null, null);
     }
     else {
-      this.anotherTimeSubmitBaselineService.submit(baseline, workpack, request.getUpdates());
+      this.anotherTimeSubmitBaselineService.submit(baseline, workpackId, request.getUpdates());
     }
+
+    baseline.setStatus(Status.PROPOSED);
+    baseline.setProposalDate(LocalDateTime.now());
+    this.baselineRepository.save(baseline, 0);
+
+    // Added this line to avoid broken relationships
+    baseline.getBaselinedBy().setId(null);
+    baseline.getProposer().setId(null);
+    this.baselineRepository.save(baseline);
   }
 
-  private boolean isFirstTimeSubmittingBaseline(final Workpack workpack) {
-    return !this.baselineRepository.workpackHasActiveBaseline(workpack.getId());
+  private boolean isFirstTimeSubmittingBaseline(final Long workpackId) {
+    return !this.baselineRepository.workpackHasActiveBaseline(workpackId);
   }
 
   private Baseline getDraftBaselineById(final Long idBaseline) {
