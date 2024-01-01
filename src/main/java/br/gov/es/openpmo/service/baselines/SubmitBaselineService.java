@@ -85,12 +85,12 @@ public class SubmitBaselineService implements ISubmitBaselineService {
     final Optional<Long> parentId
   ) {
     //final Long workpackId = baseline.getBaselinedBy().getIdWorkpack();
-    List<Long> childrenIds;
+    Long[] childrenIds;
     if(this.isFirstTimeSubmittingBaseline(workpackId)) {
       childrenIds = this.firstTimeSubmitBaselineService.submit(baseline, workpackId, parentId);
-      childrenIds.forEach(id -> {
-        this.submit(request, baseline, id, Optional.of(workpackId));
-      });
+      for (int i=0; i < childrenIds.length; i++) {
+        this.submit(request, baseline, childrenIds[i], Optional.of(workpackId));
+      }
     }
     else {
       this.anotherTimeSubmitBaselineService.submit(baseline, workpackId, request.getUpdates());

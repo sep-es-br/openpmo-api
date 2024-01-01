@@ -2,6 +2,7 @@ package br.gov.es.openpmo.service.baselines;
 
 import br.gov.es.openpmo.dto.baselines.UpdateRequest;
 import br.gov.es.openpmo.exception.NegocioException;
+import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.baselines.Status;
 import br.gov.es.openpmo.model.properties.Property;
@@ -19,6 +20,7 @@ import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Array;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -190,20 +192,20 @@ public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineS
   */
 
   @Override
-  public List<Long> submit(
-    final Baseline baseline,
-    final Long workpackId,
-    final Optional<Long> parentId)
+  public Long[] submit(
+    Baseline baseline,
+    Long workpackId,
+    Optional<Long> parentId)
   {
 
-    final Workpack workpack = this.baselineRepository.findNotDeletedWorkpackWithPropertiesAndModelAndChildrenByWorkpackId(workpackId)
+    Workpack workpack = this.baselineRepository.findNotDeletedWorkpackWithPropertiesAndModelAndChildrenByWorkpackId(workpackId)
                                                               .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
 
     if (!isNotDeleted(workpack)) {
-      return new ArrayList<Long>();
+      return new Long[0];
     }
 
-    final Workpack workpackSnapshot = this.baselineHelper.createSnapshot(workpack, this.workpackRepository);
+    Workpack workpackSnapshot = this.baselineHelper.createSnapshot(workpack, this.workpackRepository);
     this.baselineHelper.createBaselineSnapshotRelationship(baseline, workpackSnapshot, this.workpackRepository);
     this.createMasterSnapshotRelationship(workpack, workpackSnapshot);
     this.snapshotProperties(workpack, workpackSnapshot, baseline);
@@ -212,16 +214,23 @@ public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineS
     if (parentId != null) {
       this.linkChildAndParentSnapshots(
         workpackSnapshot, 
-        this.baselineRepository.findSnapshotByMasterIdAndBaselineId(parentId.get(), baseline.getId()).get()
+        this.baselineRepository
+          .findSnapshotByMasterIdAndBaselineId(parentId.get(), baseline.getId())
+          .get()
       );
     }
 
-    List<Long> childrenToReturn = new ArrayList<Long>();;
-    getChildrenOrEmpty(workpack).forEach(w -> {
-      childrenToReturn.add(w.getId());
-    });
+    // Nulling this variable to help GC, since we are not going to use it anymore
+    workpackSnapshot = null;
 
-    return childrenToReturn;
+    Long[] children = getChildrenOrEmpty(workpack)
+                      .stream()
+                      .map(c -> c.getId())
+                      .toArray(Long[]::new);
+    
+    // Nulling this variable to help GC, since we are not going to use it anymore
+    workpack = null;
+    return children;
 
   }
 
