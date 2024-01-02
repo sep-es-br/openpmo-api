@@ -205,8 +205,9 @@ public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineS
       return new Long[0];
     }
 
-    Workpack workpackSnapshot = this.baselineHelper.createSnapshot(workpack, this.workpackRepository);
-    this.baselineHelper.createBaselineSnapshotRelationship(baseline, workpackSnapshot, this.workpackRepository);
+    Workpack workpackSnapshot = this.baselineHelper
+        .createSnapshotWithBaselineRelationship(workpack, this.workpackRepository, baseline);
+    //this.baselineHelper.createBaselineSnapshotRelationship(baseline, workpackSnapshot, this.workpackRepository);
     this.createMasterSnapshotRelationship(workpack, workpackSnapshot);
     this.snapshotProperties(workpack, workpackSnapshot, baseline);
     this.createScheduleWorkpackRelationship(baseline, workpack, workpackSnapshot);
@@ -288,8 +289,8 @@ public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineS
   }
 
   private void createMasterSnapshotRelationship(
-    final Workpack workpack,
-    final Workpack snapshot
+    Workpack workpack,
+    Workpack snapshot
   ) {
     this.baselineHelper.createMasterSnapshotRelationship(
       workpack,
@@ -305,8 +306,10 @@ public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineS
     final Workpack workpackSnapshot
   ) {
     this.getScheduleByWorkpackId(workpack).ifPresent(schedule -> {
-      final Schedule scheduleSnapshot = this.baselineHelper.createSnapshot(schedule, this.scheduleRepository);
-      this.baselineHelper.createBaselineSnapshotRelationship(baseline, scheduleSnapshot);
+      final Schedule scheduleSnapshot = 
+        this.baselineHelper
+        .createSnapshotWithBaselineRelationship(schedule, this.scheduleRepository,baseline);
+//      this.baselineHelper.createBaselineSnapshotRelationship(baseline, scheduleSnapshot);
       this.baselineHelper.createFeatureRelationship(workpackSnapshot, scheduleSnapshot);
       this.createMasterSnapshotRelationship(schedule, scheduleSnapshot);
       this.createStepScheduleRelationship(baseline, schedule, scheduleSnapshot, workpackSnapshot);
@@ -325,8 +328,10 @@ public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineS
   ) {
     final List<Step> steps = this.stepRepository.findAllByScheduleId(schedule.getId());
     for(final Step step : steps) {
-      final Step stepSnapshot = this.baselineHelper.createSnapshot(step, this.stepRepository);
-      this.baselineHelper.createBaselineSnapshotRelationship(baseline, stepSnapshot, this.stepRepository);
+      final Step stepSnapshot = 
+        this.baselineHelper
+        .createSnapshotWithBaselineRelationship(step, this.stepRepository, baseline);
+      //this.baselineHelper.createBaselineSnapshotRelationship(baseline, stepSnapshot, this.stepRepository);
       this.baselineHelper.createComposesRelationship(scheduleSnapshot, stepSnapshot);
       this.createMasterSnapshotRelationship(step, stepSnapshot);
       this.createCostAccountStepRelationship(baseline, step, stepSnapshot, workpackSnapshot);

@@ -51,7 +51,7 @@ public class SubmitBaselineService implements ISubmitBaselineService {
     final SubmitBaselineRequest request,
     final Long idPerson
   ) {
-    final Baseline baseline = this.getDraftBaselineById(idBaseline);
+    Baseline baseline = this.getDraftBaselineById(idBaseline);
 //    final Workpack workpack = this.getWorkpackByBaseline(baseline);
     // final Long workpackId = baseline.getBaselinedBy().getIdWorkpack();
     this.submit(request, baseline, baseline.getIdWorkpack(), null);
@@ -61,9 +61,9 @@ public class SubmitBaselineService implements ISubmitBaselineService {
     this.baselineRepository.save(baseline, 0);
 
     // Added this line to avoid broken relationships
-    baseline.getBaselinedBy().setId(null);
-    baseline.getProposer().setId(null);
-    this.baselineRepository.save(baseline);    
+//    baseline.getBaselinedBy().setId(null);
+//    baseline.getProposer().setId(null);
+//    this.baselineRepository.save(baseline);    
 
     this.journalCreator.baseline(baseline, idPerson);
     this.dashboardService.calculate(baseline.getBaselinedBy().getIdWorkpack(), true);
