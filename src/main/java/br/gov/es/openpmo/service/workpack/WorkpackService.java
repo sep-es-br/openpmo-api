@@ -1238,7 +1238,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final Long idPlan
   ) {
     final WorkpackDetailDto workpackDetailDto = this.getWorkpackDetailDto(workpack);
-    /*
+    
     if (idPlan != null) {
       final Plan plan = this.planService.findById(idPlan);
       workpackDetailDto.setPlan(PlanDto.of(plan));
@@ -1246,7 +1246,8 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
         .map(Entity::getId)
         .ifPresent(workpackDetailDto::setIdParent);
     }
-    */
+    
+
     return workpackDetailDto;
   }
 

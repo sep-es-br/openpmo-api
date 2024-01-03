@@ -219,7 +219,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
           " OPTIONAL MATCH (w)<-[wfg:FEATURES]-(wg:Group) " +
           " OPTIONAL MATCH (wg)-[wgps:GROUPS]->(wgp:Property)-[gpd:IS_DRIVEN_BY]->(gpm:PropertyModel) " +
           " OPTIONAL MATCH (w)<-[wi:IS_IN]-(w2:Workpack{deleted:false}) " + //-[wp2:IS_INSTANCE_BY]->(wm1:WorkpackModel) " +
-       //   " OPTIONAL MATCH (w)-[wi2:IS_IN]->(w3:Workpack{deleted:false})-[wp3:IS_INSTANCE_BY]->(wm3:WorkpackModel) " +
+          " OPTIONAL MATCH (w)-[wi2:IS_IN]->(w3:Workpack{deleted:false}) " + //-[wp3:IS_INSTANCE_BY]->(wm3:WorkpackModel) " +
           " OPTIONAL MATCH (w)<-[wa:APPLIES_TO]-(ca:CostAccount) " +
           " OPTIONAL MATCH (ca)<-[f1:FEATURES]-(p2:Property)-[d1:IS_DRIVEN_BY]->(pmc:PropertyModel) " +
        //   " OPTIONAL MATCH (wm)<-[wmi:IS_IN*]-(wm2:WorkpackModel) " +
@@ -227,22 +227,24 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
           " OPTIONAL MATCH (wm)<-[f2:FEATURES]-(pm2:PropertyModel) " +
           " OPTIONAL MATCH (wm)-[featureGroup:FEATURES]->(group:GroupModel) " +
           " OPTIONAL MATCH (group)-[groups:GROUPS]->(groupedProperty:PropertyModel) " +
-          "RETURN w, [ [[ro, pl]] , [[wp, wm]], "
-         + " [ [f, p, d, pm] ], "
-         + " [ [v1, o] ], "
-         + " [ [v2, l] ], "
-         + " [ [v3, u] ], "
-         + " [ [wfg, wg] ], "
-         + " [ [wgps, wgp, gpd, gpm] ], "
-         + " [ [wi, w2] ], "
-       //  + " [ [wi2, w3, wp3, wm3] ],"
-         + " [ [wa, ca] ],"
-         + " [ [ca, f1, p2, d1, pmc ] ],"
+          "RETURN w, [ "
+         + " [ro, pl], "
+         + " [wp, wm], "
+         + " [f, p, d, pm], "
+         + " [v1, o], "
+         + " [v2, l], "
+         + " [v3, u], "
+         + " [wfg, wg], "
+         + " [wgps, wgp, gpd, gpm], "
+         + " [wi, w2], "
+         + " [wi2, w3], " //, wp3, wm3],"
+         + " [wa, ca],"
+         + " [ca, f1, p2, d1, pmc],"
        //  + " [ [wmi,wm2] ],"
        //  + " [ [wmi2,wm3] ],"
-         + " [ [f2, pm2] ], "
-         + " [ [featureGroup, group] ], "
-         + " [ [groups, groupedProperty] ] "
+         + " [f2, pm2], "
+         + " [featureGroup, group], "
+         + " [groups, groupedProperty] "
          + "]")
   Optional<Workpack> findByIdWorkpack(@Param("id") Long id);
 

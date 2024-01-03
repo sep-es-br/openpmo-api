@@ -225,7 +225,7 @@ public class WorkpackController {
     final Long idPerson = this.tokenService.getUserId(authorization);
 
     final Optional<Workpack> maybeWorkpack = this.workpackService.maybeFindById(idWorkpack); 
-//    final Optional<Workpack> maybeWorkpack = this.workpackService.maybeFindByIdWithParent(idWorkpack);
+    //final Optional<Workpack> maybeWorkpack = this.workpackService.maybeFindByIdWithParent(idWorkpack);
 
     if (!maybeWorkpack.isPresent()) {
       return ResponseEntity.ok(ResponseBaseWorkpackDetail.of(null));
