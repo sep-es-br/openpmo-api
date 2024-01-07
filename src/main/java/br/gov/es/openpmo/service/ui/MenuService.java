@@ -94,7 +94,8 @@ public class MenuService {
     final List<Office> offices = this.officeService.findAll();
 
     offices.forEach(office -> {
-      final List<PermissionDto> permissions = this.fetchOfficePermissions(new PortfolioMenuRequest(office.getId(), idUser));
+      final List<PermissionDto> permissions = 
+        this.fetchOfficePermissions(new PortfolioMenuRequest(office.getId(), idUser));
 
       final boolean hasPermission = this.hasAnyPermission(idUser, permissions);
 
@@ -197,6 +198,9 @@ public class MenuService {
     }
 
 */
+    workpacks.forEach(w -> {
+
+    });
     command.getMenus().addAll(this.buildWorkpackStructure(
       workpacks,
       command.getIdPlan(),
@@ -228,9 +232,7 @@ public class MenuService {
   }
 
   private List<PermissionDto> fetchOfficePermissions(final PortfolioMenuRequest request) {
-    final Office office = this.findOfficeById(request.getIdOffice());
-    final Person person = this.findPersonById(request.getIdUser());
-    return this.workpackPermissionVerifier.fetchOfficePermissions(office, person);
+    return this.workpackPermissionVerifier.fetchOfficePermissions(request.getIdOffice(), request.getIdUser());
   }
 
   private boolean hasAnyPermission(
@@ -268,13 +270,14 @@ public class MenuService {
     final Set<WorkpackMenuDto> generalMenuItem = Collections.synchronizedSet(new HashSet<>(0));
 
     workpacks.forEach(workpack -> {
-      final Set<BelongsTo> workpackBelongsToRelation = workpack.getBelongsTo();
+     //final List<BelongsTo> workpackBelongsToRelation = workpack.getBelongsTo();
 
-      final boolean isLinked = workpackBelongsToRelation.stream()
-        .anyMatch(belongsTo -> idPlan.equals(belongsTo.getIdPlan()) && Boolean.TRUE.equals(belongsTo.getLinked()));
+      // Não importa se é lincado ou não 
+      //final boolean isLinked = workpackBelongsToRelation.stream()
+      //  .anyMatch(belongsTo -> idPlan.equals(belongsTo.getIdPlan()) && Boolean.TRUE.equals(belongsTo.getLinked()));
 
-      if (isLinked) {
-        final WorkpackModel linkedModel = this.fetchLinkedModel(workpack, idPlan);
+     /* if (workpack.get) {
+        final WorkpackModel linkedModel = this.fetchLinkedModel(workpack.getId(), idPlan);
         this.addLinkedWorkpack(
           idPlan,
           idUser,
@@ -285,6 +288,7 @@ public class MenuService {
           linkedModel
         );
       } else {
+*/        
         this.addWorkpack(
           idPlan,
           idUser,
@@ -293,7 +297,8 @@ public class MenuService {
           generalMenuItem,
           workpack
         );
-      }
+
+//    }
     });
 
     return generalMenuItem;
@@ -308,10 +313,11 @@ public class MenuService {
     final Workpack workpack,
     final WorkpackModel linkedModel
   ) {
-    final WorkpackMenuDto menuItemDto = WorkpackMenuDto.of(workpack, idPlan, this.getSorterProperty.execute(workpack.getId(), idUser));
+    final WorkpackMenuDto menuItemDto = 
+      WorkpackMenuDto.of(workpack, idPlan, this.getSorterProperty.execute(workpack.getId(), idUser));
     menuItemDto.setIdWorkpackModelLinked(linkedModel.getId());
 
-    if (workpack.hasPropertyModel()) {
+//    if (workpack.hasPropertyModel()) {
       //permission = this.addWorkpackIfPermited(
       //  permission,
       //  permittedWorkpackId,
@@ -320,7 +326,7 @@ public class MenuService {
       //  menuItemDto
       //);
       menu.add(menuItemDto);
-    }
+//    }
 
     if (workpack.getChildren() != null) {
       menuItemDto.setChildren(this.buildWorkpackLinkedStructure(
@@ -345,10 +351,10 @@ public class MenuService {
     final Set<WorkpackMenuDto> menu = new HashSet<>(0);
 
     for (final Workpack workpack : children) {
-      final Optional<WorkpackModel> maybeLinkedModelEquivalent =
-        this.findWorkpackModelEquivalent(workpack.getWorkpackModelInstance(), linkedChildrenModel.getChildren());
+      //final Optional<WorkpackModel> maybeLinkedModelEquivalent =
+      //  this.findWorkpackModelEquivalent(workpack.getIdWorkpackModel(), linkedChildrenModel.getChildren());
 
-      if (!maybeLinkedModelEquivalent.isPresent()) continue;
+      //if (!maybeLinkedModelEquivalent.isPresent()) continue;
 
       this.addLinkedWorkpack(
         idPlan,
@@ -357,7 +363,7 @@ public class MenuService {
 //        idWorkpackStakeholder,
         menu,
         workpack,
-        maybeLinkedModelEquivalent.get()
+        null //maybeLinkedModelEquivalent.get()
       );
     }
     return menu;
@@ -389,10 +395,10 @@ public class MenuService {
   }
 
   private WorkpackModel fetchLinkedModel(
-    final Workpack workpack,
+    final Long idWorkpack,
     final Long idPlan
   ) {
-    return this.workpackService.findWorkpackModelLinked(workpack.getId(), idPlan);
+    return this.workpackService.findWorkpackModelLinked(idWorkpack, idPlan);
   }
 
   private void addWorkpack(
@@ -409,7 +415,7 @@ public class MenuService {
       this.getSorterProperty.execute(workpack.getId(), idUser)
     );
 
-    /* Agora a query só retorna os itens permitidos
+    /* Agora a query só retorna os itens permitidoss
     permission = this.addWorkpackIfPermited(
       permission,
       permittedWorkpacksId,

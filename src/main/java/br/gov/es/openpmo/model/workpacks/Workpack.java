@@ -151,6 +151,10 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
 
   @Transient
   @JsonIgnore
+  private String wpName;
+
+  @Transient
+  @JsonIgnore
   private boolean reasonRequired;
 
   @Transient
@@ -164,7 +168,7 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
   @Transient
   @org.neo4j.ogm.annotation.Property(name="isParent")
   @JsonIgnore
-   private Boolean isParent;
+  private Boolean isParent;
 
   public Workpack() {
   }
@@ -831,6 +835,20 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
      */
     public void setIsParent(Boolean isParent) {
         this.isParent = isParent;
+    }
+
+    /**
+     * @return String return the wpName
+     */
+    public String getWpName() {
+        return wpName;
+    }
+
+    /**
+     * @param wpName the wpName to set
+     */
+    public void setWpName(String wpName) {
+        this.wpName = wpName;
     }
 
 }
