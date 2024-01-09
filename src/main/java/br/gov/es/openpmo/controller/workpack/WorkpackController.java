@@ -62,6 +62,7 @@ import javax.validation.Valid;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -223,7 +224,8 @@ public class WorkpackController {
     );
     final Long idPerson = this.tokenService.getUserId(authorization);
 
-    final Optional<Workpack> maybeWorkpack = this.workpackService.maybeFindByIdWithParent(idWorkpack);
+    final Optional<Workpack> maybeWorkpack = this.workpackService.maybeFindById(idWorkpack); 
+    //final Optional<Workpack> maybeWorkpack = this.workpackService.maybeFindByIdWithParent(idWorkpack);
 
     if (!maybeWorkpack.isPresent()) {
       return ResponseEntity.ok(ResponseBaseWorkpackDetail.of(null));
@@ -440,11 +442,13 @@ public class WorkpackController {
       boolean seen = false;
       DashboardMonth best = null;
       Comparator<DashboardMonth> comparator = Comparator.comparing(DashboardMonth::getDate);
-      for (DashboardMonth month : months) {
-        if (!month.getDate().isBefore(lastMonth)) {
-          if (!seen || comparator.compare(month, best) < 0) {
-            seen = true;
-            best = month;
+      if (months != null) {
+        for (DashboardMonth month : months) {
+          if (!month.getDate().isBefore(lastMonth)) {
+            if (!seen || comparator.compare(month, best) < 0) {
+              seen = true;
+              best = month;
+            }
           }
         }
       }

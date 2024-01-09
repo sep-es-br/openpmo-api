@@ -21,8 +21,8 @@ public interface PropertyModelRepository extends Neo4jRepository<PropertyModel, 
          "detach delete i")
   void deleteRelationshipByPropertyId(Long propertyId);
 
-  @Query("match (p:Property), (m:PropertyModel) " +
-         "where id(p)=$propertyId and id(m)=$propertyModelId " +
+  @Query("match (p:Property) where id(p)=$propertyId " +
+         "match (m:PropertyModel) where id(m)=$propertyModelId " +
          "create (p)-[:IS_DRIVEN_BY]->(m)")
   void createRelationshipByPropertyIdAndModelId(
     Long propertyId,

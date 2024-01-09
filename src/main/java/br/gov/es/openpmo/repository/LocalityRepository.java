@@ -66,8 +66,9 @@ public interface LocalityRepository extends Neo4jRepository<Locality, Long>, Cus
     "    apoc.text.levenshteinSimilarity(apoc.text.clean(node.fullName), apoc.text.clean($term)) AS fullNameScore  " +
     "WITH *, CASE WHEN nameScore > fullNameScore THEN nameScore ELSE fullNameScore END AS score  " +
     "WHERE id(domain)=$idDomain AND ($term is null OR $term = '' OR score > $searchCutOffScore) " +
+    " OPTIONAL MATCH (node)<-[isIn:IS_IN]-(children:Locality)-[:BELONGS_TO]->(domain) " +
     "RETURN node, [ " +
-    "    [ (node)<-[isIn:IS_IN]-(children:Locality)-[:BELONGS_TO]->(domain) | [isIn, children] ] " +
+    "    [ [isIn, children] ] " +
     "] " +
     "ORDER BY score DESC "
   )

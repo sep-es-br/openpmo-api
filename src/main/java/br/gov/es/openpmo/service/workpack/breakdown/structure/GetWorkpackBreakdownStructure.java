@@ -71,8 +71,8 @@ public class GetWorkpackBreakdownStructure {
 
   private Workpack getWorkpack(
     final Long idWorkpack,
-    final Boolean allLevels
-  ) {
+    final Boolean allLevels) 
+  {
     if (allLevels) {
       return this.workpackRepository.findWorkpackWithModelStructureById(idWorkpack)
         .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
@@ -160,7 +160,7 @@ public class GetWorkpackBreakdownStructure {
       structure.setWorkpackModels(children);
       return structure;
     }
-    structure.setHasChildren(workpack.hasChildren());
+    structure.setHasChildren(workpack.isIsParent());
     structure.setWorkpackModels(Collections.emptyList());
     return structure;
   }

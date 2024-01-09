@@ -30,9 +30,11 @@ public interface WorkpackSharedRepository extends Neo4jRepository<IsSharedWith, 
     + "OPTIONAL MATCH (instance)<-[isInInstance:IS_IN*]-(instanceChildren:WorkpackModel) "
     + "WITH office, planModel, model, sharedWith, workpack, instanceBy, instance, isInInstance, instanceChildren "
     + "WHERE id(model) = $idWorkpackModel "
+    + " OPTIONAL MATCH (workpack)-[bt:BELONGS_TO{linked:false}]->(originalPlan:Plan) "
+    + " OPTIONAL MATCH (workpack)-[:BELONGS_TO{linked:false}]->(:Plan)-[iab:IS_ADOPTED_BY]->(originalOffice:Office) "
     + "RETURN office, planModel, sharedWith, workpack, instanceBy, instance, model, isInInstance, instanceChildren, [ "
-    + "    [(workpack)-[bt:BELONGS_TO{linked:false}]->(originalPlan:Plan) | [bt, originalPlan]], "
-    + "    [(workpack)-[:BELONGS_TO{linked:false}]->(:Plan)-[iab:IS_ADOPTED_BY]->(originalOffice:Office) | [iab, originalOffice]] " +
+    + "    [ [bt, originalPlan]], "
+    + "    [ [iab, originalOffice]] " +
     "]"
   )
   List<IsSharedWith> listAllWorkpacksShared(Long idWorkpackModel);
@@ -44,9 +46,11 @@ public interface WorkpackSharedRepository extends Neo4jRepository<IsSharedWith, 
     + "OPTIONAL MATCH (instance)<-[isInInstance:IS_IN*]-(instanceChildren:WorkpackModel) "
     + "WITH office, planModel, workpack, adoptedBy, belongsTo, instanceBy, instance, isInInstance, instanceChildren "
     + "WHERE workpack.public=true "
+    + " OPTIONAL MATCH (workpack)-[bt:BELONGS_TO{linked:false}]->(originalPlan:Plan) "
+    + " OPTIONAL MATCH (originalPlan:Plan)-[iab:IS_ADOPTED_BY]->(originalOffice:Office) "
     + "RETURN office, planModel, workpack, adoptedBy, belongsTo, instanceBy, instance, isInInstance, instanceChildren, [ "
-    + "    [(workpack)-[bt:BELONGS_TO{linked:false}]->(originalPlan:Plan) | [bt, originalPlan]], "
-    + "    [(originalPlan:Plan)-[iab:IS_ADOPTED_BY]->(originalOffice:Office) | [iab, originalOffice]] " +
+    + "    [ [bt, originalPlan]], "
+    + "    [ [iab, originalOffice]] " +
     "]"
   )
   List<Workpack> listAllWorkpacksPublic();

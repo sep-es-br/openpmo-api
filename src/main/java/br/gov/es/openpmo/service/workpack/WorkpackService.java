@@ -673,7 +673,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
       .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
   }
 
-  public Optional<Workpack> mayeFindById(final Long id) {
+  public Optional<Workpack> maybeFindById(final Long id) {
     return this.workpackRepository.findByIdWorkpack(id);
   }
 
@@ -1238,6 +1238,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final Long idPlan
   ) {
     final WorkpackDetailDto workpackDetailDto = this.getWorkpackDetailDto(workpack);
+    
     if (idPlan != null) {
       final Plan plan = this.planService.findById(idPlan);
       workpackDetailDto.setPlan(PlanDto.of(plan));
@@ -1245,6 +1246,8 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
         .map(Entity::getId)
         .ifPresent(workpackDetailDto::setIdParent);
     }
+    
+
     return workpackDetailDto;
   }
 
@@ -1609,6 +1612,11 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
   public Set<Workpack> findAllByIdPlan(final Long idPlan) {
     return this.workpackRepository.findAllByPlanWithProperties(idPlan);
   }
+
+  public Set<Workpack> findAllByIdPlan4Menu(final Long idPlan, final Long idUsr) {
+    return this.workpackRepository.findAllByPlanWithMenuProperties(idPlan, idUsr);
+  }
+
 
   public void calculateDashboard(final Workpack workpack, final Boolean calculateInterval) {
     final Long id = workpack.getId();

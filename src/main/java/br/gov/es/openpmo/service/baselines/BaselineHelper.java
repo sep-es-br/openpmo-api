@@ -45,10 +45,10 @@ public class BaselineHelper {
   }
 
   public <T extends Snapshotable<T>, R extends IsSnapshotOf<T>> void createMasterSnapshotRelationship(
-    final T master,
-    final T snapshot,
-    final Neo4jRepository<? super R, Long> repository,
-    final BiFunction<T, T, R> constructor
+    T master,
+    T snapshot,
+    Neo4jRepository<? super R, Long> repository,
+    BiFunction<T, T, R> constructor
   ) {
     master.setCategory(CategoryEnum.MASTER);
     snapshot.setCategory(CategoryEnum.SNAPSHOT);
@@ -63,6 +63,16 @@ public class BaselineHelper {
   ) {
     final T snapshot = snapshotable.snapshot();
     return repository.save(snapshot);
+  }
+
+  public <T extends Snapshotable<T>> T createSnapshotWithBaselineRelationship(
+    T snapshotable,
+    Neo4jRepository<? super T, Long> repository,
+    Baseline baseline
+  ) {
+    T snapshot = snapshotable.snapshot();
+    snapshot.setBaseline(baseline);
+    return repository.save(snapshot,1);
   }
 
   public <T extends Snapshotable<T>> void createBaselineSnapshotRelationship(

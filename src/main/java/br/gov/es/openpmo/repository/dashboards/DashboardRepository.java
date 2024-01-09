@@ -12,9 +12,11 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
 
   @Query("MATCH (dashboard:Dashboard)-[:BELONGS_TO]->(workpack:Workpack{deleted:false,canceled:false}) " +
          "WHERE id(workpack)=$workpackId " +
+         "OPTIONAL MATCH (dashboard)<-[isPartOf:IS_PART_OF]-(month:DashboardMonth) " +
+         "OPTIONAL MATCH (dashboard)<-[:IS_PART_OF]-(:DashboardMonth)<-[isAt:IS_AT]-(entities) " +
          "RETURN dashboard, [" +
-         "  [ (dashboard)<-[isPartOf:IS_PART_OF]-(month:DashboardMonth) | [isPartOf, month] ], " +
-         "  [ (dashboard)<-[:IS_PART_OF]-(:DashboardMonth)<-[isAt:IS_AT]-(entities) | [ isAt, entities] ] " +
+         "  [ [isPartOf, month] ], " +
+         "  [ [ isAt, entities] ] " +
          "] "
   )
   Optional<Dashboard> findByWorkpackId(Long workpackId);

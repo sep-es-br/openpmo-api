@@ -107,12 +107,12 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
     Long idOffice
   );
 
-  @Query("MATCH (p:Person), (o:Office)<-[]-(pl:Plan)<-[]-(w:Workpack) " +
-         "WHERE id(p)=$idPerson AND id(o)=$idOffice " +
+  @Query("MATCH (p:Person) WHERE id(p)=$idPerson " +
+         "MATCH (o:Office)<-[]-(pl:Plan) WHERE id(o)=$idOffice " +
          "OPTIONAL MATCH (p)-[cao:CAN_ACCESS_OFFICE]->(o) " +
          "OPTIONAL MATCH (p)-[cap:CAN_ACCESS_PLAN]->(pl) " +
-         "OPTIONAL MATCH (p)-[caw:CAN_ACCESS_WORKPACK]->(w) " +
-         "WITH p, o, pl, w, cao, cap, caw " +
+         "OPTIONAL MATCH (p)-[caw:CAN_ACCESS_WORKPACK]->(w)-[]->(pl) " +
+         "WITH cao, cap, caw " +
          "DETACH DELETE cao, cap, caw")
   void deleteAllPermissionsBy(
     Long idPerson,
@@ -179,8 +179,8 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
     Long idWorkpack
   );
 
-  @Query("MATCH (person:Person), (office:Office) " +
-         "WHERE id(person)=$personId AND id(office)=$officeId " +
+  @Query("MATCH (person:Person) WHERE id(person)=$personId " +
+         "MATCH (office:Office) WHERE id(office)=$officeId " +
          "OPTIONAL MATCH (workpack:Workpack)-[]->(plan:Plan)-[]->(office) " +
          "WITH * " +
          "OPTIONAL MATCH (person)-[canAccessOffice:CAN_ACCESS_OFFICE]->(office) " +

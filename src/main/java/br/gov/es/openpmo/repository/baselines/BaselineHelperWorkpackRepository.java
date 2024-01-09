@@ -8,24 +8,24 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface BaselineHelperWorkpackRepository extends Neo4jRepository<Workpack, Long> {
 
-  @Query("match (w:Workpack), (p:Workpack) " +
-         "where id(w)=$childId AND id(p)=$parentId " +
+  @Query("match (w:Workpack) where id(w)=$childId " +
+         "match (p:Workpack) where id(p)=$parentId " +
          "create (w)-[:IS_IN]->(p)")
   void createIsInRelationship(
     Long childId,
     Long parentId
   );
 
-  @Query("match (w:Workpack), (c:CostAccount) " +
-         "where id(w)=$workpackId and id(c)=$costAccountId " +
+  @Query("match (w:Workpack) where id(w)=$workpackId " +
+         "match (c:CostAccount) where id(c)=$costAccountId " +
          "create (w)<-[:APPLIES_TO]-(c)")
   void createAppliesToRelationship(
     Long workpackId,
     Long costAccountId
   );
 
-  @Query("match (w:Workpack), (s:Schedule) " +
-         "where id(w)=$workpackId and id(s)=$scheduleId " +
+  @Query("match (w:Workpack) where id(w)=$workpackId  " +
+         "match (s:Schedule) where id(s)=$scheduleId " +
          "create (w)<-[:FEATURES]-(s)")
   void createFeaturesRelationship(
     Long workpackId,

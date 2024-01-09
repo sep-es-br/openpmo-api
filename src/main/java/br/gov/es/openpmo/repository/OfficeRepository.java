@@ -18,14 +18,21 @@ public interface OfficeRepository extends Neo4jRepository<Office, Long>, CustomR
     "MATCH (office)<-[adoptedBy:IS_ADOPTED_BY]-(plan) " +
     "MATCH (plan)<-[belongsTo:BELONGS_TO]-(parent:Workpack{deleted:false, canceled:false}) " +
     "WHERE NOT EXISTS( (parent)-[:IS_IN]->(:Workpack) ) " +
+    " OPTIONAL MATCH (parent)<-[rel1:FEATURES]-(name:Property)-[rel7:IS_DRIVEN_BY]->(pm1:PropertyModel{name:'name'}) " +
+    " OPTIONAL MATCH (parent)<-[rel2:FEATURES]-(fullName:Property)-[rel8:IS_DRIVEN_BY]->(pm2:PropertyModel{name:'fullName'}) " +
+    " OPTIONAL MATCH (parent)-[rel3:IS_INSTANCE_BY]->(parentWorkpackModel:WorkpackModel) " +
+    " OPTIONAL MATCH (parent)<-[rel4:IS_IN*]-(children:Workpack{deleted:false, canceled:false}) " +
+    " OPTIONAL MATCH (children)<-[rel5:FEATURES]-(cName:Property)-[rel9:IS_DRIVEN_BY]->(pm3:PropertyModel{name:'name'}) " +
+    " OPTIONAL MATCH (children)<-[rel6:FEATURES]-(cFullName:Property)-[rel10:IS_DRIVEN_BY]->(pm4:PropertyModel{name:'fullName'}) " +
+    " OPTIONAL MATCH (children)-[rel11:IS_INSTANCE_BY]->(childrenWorkpackModel:WorkpackModel) " +
     "RETURN office, adoptedBy, plan, belongsTo, parent, [" +
-    "  [ (parent)<-[rel1:FEATURES]-(name:Property)-[rel7:IS_DRIVEN_BY]->(pm1:PropertyModel{name:'name'}) | [rel1, name, rel7, pm1] ], " +
-    "  [ (parent)<-[rel2:FEATURES]-(fullName:Property)-[rel8:IS_DRIVEN_BY]->(pm2:PropertyModel{name:'fullName'}) | [rel2, fullName, rel8, pm2] ], " +
-    "  [ (parent)-[rel3:IS_INSTANCE_BY]->(parentWorkpackModel:WorkpackModel) | [rel3, parentWorkpackModel] ], " +
-    "  [ (parent)<-[rel4:IS_IN*]-(children:Workpack{deleted:false, canceled:false}) | [rel4, children] ], " +
-    "  [ (children)<-[rel5:FEATURES]-(cName:Property)-[rel9:IS_DRIVEN_BY]->(pm3:PropertyModel{name:'name'}) | [rel5, cName, rel9, pm3] ], " +
-    "  [ (children)<-[rel6:FEATURES]-(cFullName:Property)-[rel10:IS_DRIVEN_BY]->(pm4:PropertyModel{name:'fullName'}) | [rel6, cFullName, rel10, pm4] ], " +
-    "  [ (children)-[rel11:IS_INSTANCE_BY]->(childrenWorkpackModel:WorkpackModel) | [rel11, childrenWorkpackModel] ] " +
+    "  [  [rel1, name, rel7, pm1] ], " +
+    "  [  [rel2, fullName, rel8, pm2] ], " +
+    "  [  [rel3, parentWorkpackModel] ], " +
+    "  [  [rel4, children] ], " +
+    "  [  [rel5, cName, rel9, pm3] ], " +
+    "  [  [rel6, cFullName, rel10, pm4] ], " +
+    "  [  [rel11, childrenWorkpackModel] ] " +
     "] "
   )
   Optional<Office> findOfficeTreeViewById(Long idOffice);

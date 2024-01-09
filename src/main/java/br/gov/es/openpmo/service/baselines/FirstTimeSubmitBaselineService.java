@@ -2,6 +2,7 @@ package br.gov.es.openpmo.service.baselines;
 
 import br.gov.es.openpmo.dto.baselines.UpdateRequest;
 import br.gov.es.openpmo.exception.NegocioException;
+import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.baselines.Status;
 import br.gov.es.openpmo.model.properties.Property;
@@ -19,7 +20,9 @@ import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Array;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -121,9 +124,17 @@ public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineS
     final Collection<? extends UpdateRequest> updates,
     final Workpack workpack
   ) {
-    return updates.stream()
-      .filter(update -> update.getIdWorkpack().equals(workpack.getId()))
-      .anyMatch(UpdateRequest::isIncluded);
+//    return updates.stream()
+//      .filter(update -> update.getIdWorkpack().equals(workpack.getId()))
+//      .anyMatch(UpdateRequest::isIncluded);
+
+    final UpdateRequest[] updatesArr = updates.toArray(new UpdateRequest[0]);
+    for (int i=0; i<updatesArr.length; i++) {
+      if (updatesArr[i].getIdWorkpack().equals(workpack.getId()) && updatesArr[i].isIncluded()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static Set<Workpack> getChildrenOrEmpty(final Workpack parent) {
@@ -151,11 +162,18 @@ public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineS
     final Workpack parentSnapshot,
     final List<UpdateRequest> updates
   ) {
-    getChildrenOrEmpty(parent).stream()
-      .filter(child -> canSnapshotWorkpack(child, updates))
-      .forEach(child -> this.snapshot(baseline, child, parentSnapshot, updates));
+    //getChildrenOrEmpty(parent).stream()
+    //  .filter(child -> canSnapshotWorkpack(child, updates))
+    //  .forEach(child -> this.snapshot(baseline, child, parentSnapshot, updates));
+    final Workpack[] children = getChildrenOrEmpty(parent).toArray(new Workpack[0]);
+    for (int i=0; i < children.length ; i++) {
+      if (isNotDeleted(children[i]) && isAllowedForSnapshotting(children[i], updates)) {
+        this.snapshot(baseline, children[i], parentSnapshot, updates);
+      }
+    }
   }
 
+  /* 
   @Override
   public void submit(
     final Baseline baseline,
@@ -167,17 +185,62 @@ public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineS
     this.changeStatusToProposed(baseline);
 
     // Added this line to repair the broken relationships
-    baseline.getBaselinedBy().setId(null);
-    baseline.getProposer().setId(null);
-    this.baselineRepository.save(baseline);
+    //baseline.getBaselinedBy().setId(null);
+    //baseline.getProposer().setId(null);
+    //this.baselineRepository.save(baseline);
+  }
+  */
+
+  @Override
+  public Long[] submit(
+    Baseline baseline,
+    Long workpackId,
+    Optional<Long> parentId)
+  {
+
+    Workpack workpack = this.baselineRepository.findNotDeletedWorkpackWithPropertiesAndModelAndChildrenByWorkpackId(workpackId)
+                                                              .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
+
+    if (!isNotDeleted(workpack)) {
+      return new Long[0];
+    }
+
+    Workpack workpackSnapshot = this.baselineHelper
+        .createSnapshotWithBaselineRelationship(workpack, this.workpackRepository, baseline);
+    //this.baselineHelper.createBaselineSnapshotRelationship(baseline, workpackSnapshot, this.workpackRepository);
+    this.createMasterSnapshotRelationship(workpack, workpackSnapshot);
+    this.snapshotProperties(workpack, workpackSnapshot, baseline);
+    this.createScheduleWorkpackRelationship(baseline, workpack, workpackSnapshot);
+
+    if (parentId != null) {
+      this.linkChildAndParentSnapshots(
+        workpackSnapshot, 
+        this.baselineRepository
+          .findSnapshotByMasterIdAndBaselineId(parentId.get(), baseline.getId())
+          .get()
+      );
+    }
+
+    // Nulling this variable to help GC, since we are not going to use it anymore
+    workpackSnapshot = null;
+
+    Long[] children = getChildrenOrEmpty(workpack)
+                      .stream()
+                      .map(c -> c.getId())
+                      .toArray(Long[]::new);
+    
+    // Nulling this variable to help GC, since we are not going to use it anymore
+    workpack = null;
+    return children;
+
   }
 
   public Workpack createSnapshot(
     final Baseline baseline,
     final Workpack workpack
   ) {
-    final Workpack workpackSnapshot = this.baselineHelper.createSnapshot(workpack, this.workpackRepository);
-    this.baselineHelper.createBaselineSnapshotRelationship(baseline, workpackSnapshot, this.workpackRepository);
+    final Workpack workpackSnapshot = this.baselineHelper.createSnapshotWithBaselineRelationship(workpack, this.workpackRepository, baseline);
+    //this.baselineHelper.createBaselineSnapshotRelationship(baseline, workpackSnapshot, this.workpackRepository);
     this.snapshotProperties(workpack, workpackSnapshot, baseline);
     this.createMasterSnapshotRelationship(workpack, workpackSnapshot);
     this.createScheduleWorkpackRelationship(baseline, workpack, workpackSnapshot);
@@ -199,8 +262,8 @@ public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineS
     final Workpack workpackSnapshot,
     final Baseline baseline
   ) {
-    final Property snapshot = this.baselineHelper.createSnapshot(property, this.propertyRepository);
-    this.baselineHelper.createBaselineSnapshotRelationship(baseline, snapshot, this.propertyRepository);
+    final Property snapshot = this.baselineHelper.createSnapshotWithBaselineRelationship(property, this.propertyRepository, baseline);
+    //this.baselineHelper.createBaselineSnapshotRelationship(baseline, snapshot, this.propertyRepository);
     this.createMasterSnapshotRelationship(property, snapshot);
     this.createFeatureRelationship(workpackSnapshot, snapshot);
   }
@@ -226,8 +289,8 @@ public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineS
   }
 
   private void createMasterSnapshotRelationship(
-    final Workpack workpack,
-    final Workpack snapshot
+    Workpack workpack,
+    Workpack snapshot
   ) {
     this.baselineHelper.createMasterSnapshotRelationship(
       workpack,
@@ -243,8 +306,10 @@ public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineS
     final Workpack workpackSnapshot
   ) {
     this.getScheduleByWorkpackId(workpack).ifPresent(schedule -> {
-      final Schedule scheduleSnapshot = this.baselineHelper.createSnapshot(schedule, this.scheduleRepository);
-      this.baselineHelper.createBaselineSnapshotRelationship(baseline, scheduleSnapshot);
+      final Schedule scheduleSnapshot = 
+        this.baselineHelper
+        .createSnapshotWithBaselineRelationship(schedule, this.scheduleRepository,baseline);
+//      this.baselineHelper.createBaselineSnapshotRelationship(baseline, scheduleSnapshot);
       this.baselineHelper.createFeatureRelationship(workpackSnapshot, scheduleSnapshot);
       this.createMasterSnapshotRelationship(schedule, scheduleSnapshot);
       this.createStepScheduleRelationship(baseline, schedule, scheduleSnapshot, workpackSnapshot);
@@ -263,8 +328,10 @@ public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineS
   ) {
     final List<Step> steps = this.stepRepository.findAllByScheduleId(schedule.getId());
     for(final Step step : steps) {
-      final Step stepSnapshot = this.baselineHelper.createSnapshot(step, this.stepRepository);
-      this.baselineHelper.createBaselineSnapshotRelationship(baseline, stepSnapshot, this.stepRepository);
+      final Step stepSnapshot = 
+        this.baselineHelper
+        .createSnapshotWithBaselineRelationship(step, this.stepRepository, baseline);
+      //this.baselineHelper.createBaselineSnapshotRelationship(baseline, stepSnapshot, this.stepRepository);
       this.baselineHelper.createComposesRelationship(scheduleSnapshot, stepSnapshot);
       this.createMasterSnapshotRelationship(step, stepSnapshot);
       this.createCostAccountStepRelationship(baseline, step, stepSnapshot, workpackSnapshot);
@@ -286,8 +353,8 @@ public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineS
         continue;
       }
 
-      final CostAccount costAccountSnapshot = this.baselineHelper.createSnapshot(costAccount, this.costAccountRepository);
-      this.baselineHelper.createBaselineSnapshotRelationship(baseline, costAccountSnapshot);
+      final CostAccount costAccountSnapshot = this.baselineHelper.createSnapshotWithBaselineRelationship(costAccount, this.costAccountRepository, baseline);
+      //this.baselineHelper.createBaselineSnapshotRelationship(baseline, costAccountSnapshot);
       this.baselineHelper.createAppliesToRelationship(workpackSnapshot, costAccountSnapshot);
       this.createConsumesRelationship(step, costAccount, stepSnapshot, costAccountSnapshot);
       this.createMasterSnapshotRelationship(costAccount, costAccountSnapshot);
@@ -338,6 +405,8 @@ public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineS
   }
 
   private void changeStatusToProposed(final Baseline baseline) {
+    baseline.getBaselinedBy().setId(null);
+    baseline.getProposer().setId(null);
     baseline.setStatus(Status.PROPOSED);
     baseline.setProposalDate(LocalDateTime.now());
     this.baselineRepository.save(baseline, 0);
@@ -349,8 +418,8 @@ public class FirstTimeSubmitBaselineService implements IFirstTimeSubmitBaselineS
     final Workpack parentSnapshot,
     final List<UpdateRequest> updates
   ) {
-    final Workpack childSnapshot = this.baselineHelper.createSnapshot(child, this.workpackRepository);
-    this.baselineHelper.createBaselineSnapshotRelationship(baseline, childSnapshot, this.workpackRepository);
+    final Workpack childSnapshot = this.baselineHelper.createSnapshotWithBaselineRelationship(child, this.workpackRepository, baseline);
+//    this.baselineHelper.createBaselineSnapshotRelationship(baseline, childSnapshot, this.workpackRepository);
     this.createMasterSnapshotRelationship(child, childSnapshot);
     this.linkChildAndParentSnapshots(childSnapshot, parentSnapshot);
     this.snapshotProperties(child, childSnapshot, baseline);

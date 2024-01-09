@@ -92,7 +92,7 @@ public class WorkpackPermissionVerifier {
     }
     final Plan plan = this.findPlanById(idPlan);
 
-    final List<PermissionDto> permissionsOffice = this.fetchOfficePermissions(plan.getOffice(), person);
+    final List<PermissionDto> permissionsOffice = this.fetchOfficePermissions(plan.getOffice().getId(), idUser);
 
     final List<PermissionDto> permissionsPlan = this.fetchPlanPermissions(idPlan, idUser);
 
@@ -194,7 +194,7 @@ public class WorkpackPermissionVerifier {
       return workpackList;
     }
     final Plan plan = this.findPlanById(idPlan);
-    final List<PermissionDto> permissionsOffice = this.fetchOfficePermissions(plan.getOffice(), person);
+    final List<PermissionDto> permissionsOffice = this.fetchOfficePermissions(plan.getOffice().getId(), idUser);
     final List<PermissionDto> permissionsPlan = this.fetchPlanPermissions(idPlan, idUser);
 
     final Set<Workpack> workpacks = this.getAllWorkpacksUsingPlan(idPlan);
@@ -296,12 +296,12 @@ public class WorkpackPermissionVerifier {
   }
 
   public List<PermissionDto> fetchOfficePermissions(
-    final Office office,
-    final Person person
+    final Long officeId,
+    final Long personId
   ) {
     final List<CanAccessOffice> canAccessOffices = this.officePermissionService.findByOfficeAndPerson(
-      office.getId(),
-      person.getId()
+      officeId,
+      personId
     );
     return canAccessOffices.stream()
       .map(PermissionDto::of)

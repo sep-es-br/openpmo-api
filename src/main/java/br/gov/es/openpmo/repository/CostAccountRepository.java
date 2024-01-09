@@ -13,30 +13,44 @@ import java.util.Optional;
 
 public interface CostAccountRepository extends Neo4jRepository<CostAccount, Long>, CustomRepository {
 
-  @Query("MATCH (workpack:Workpack{deleted: false})-[belongsTo:BELONGS_TO]->(plan:Plan) "
-    + " WHERE id(workpack) = $idWorkpack "
-    + " AND belongsTo.linked=false "
-    + " RETURN workpack, [ "
-    + " [(workpack)<-[i:APPLIES_TO]-(c:CostAccount) | [i, c] ], "
-    + " [(c)<-[f1:FEATURES]-(p1:Property)-[d1:IS_DRIVEN_BY]->(pm1:PropertyModel) | [f1, p1, d1, pm1] ], "
-    + " [(p2)-[v1:VALUES]->(o:Organization) | [v1, o] ], "
-    + " [(p2)-[v2:VALUES]-(l:Locality) | [v2, l] ], "
-    + " [(p2)-[v3:VALUES]-(u:UnitMeasure) | [v3, u] ], "
-    + " [(workpack)-[i:IS_IN*]->(w2:Workpack)-[:BELONGS_TO]->(plan) | [i, w2] ], "
-    + " [(w2)<-[i:APPLIES_TO]-(c2:CostAccount) | [i, c2] ], "
-    + " [(c2)<-[f2:FEATURES]-(p2:Property)-[d2:IS_DRIVEN_BY]->(pm2:PropertyModel)  | [f2, p2, d2, pm2] ] , "
-    + " [(c)-[ii:IS_INSTANCE_BY]->(cm:CostAccountModel) | [ii,cm]] "
-    + "]")
+  @Query(" MATCH (workpack:Workpack{deleted: false})-[belongsTo:BELONGS_TO]->(plan:Plan)  " + 
+  "       WHERE id(workpack) = $idWorkpack  " + 
+  "       AND belongsTo.linked=false " + 
+  " OPTIONAL MATCH (workpack)<-[at:APPLIES_TO]-(c:CostAccount) " + 
+  " OPTIONAL MATCH (c)-[ib:IS_INSTANCE_BY]->(cm:CostAccountModel) " + 
+  " OPTIONAL MATCH (c)<-[f1:FEATURES]-(p1:Property)-[d1:IS_DRIVEN_BY]->(pm1:PropertyModel) " + 
+  " OPTIONAL MATCH (p1)-[v1:VALUES]->(o:Organization) " + 
+  " OPTIONAL MATCH (p1)-[v2:VALUES]-(l:Locality) " + 
+  " OPTIONAL MATCH (p1)-[v3:VALUES]-(u:UnitMeasure) " + 
+  " OPTIONAL MATCH (workpack)-[ii:IS_IN*]->(w2:Workpack)-[:BELONGS_TO]->(plan) " + 
+  " OPTIONAL MATCH (w2)<-[at2:APPLIES_TO]-(c2:CostAccount)-[ib2:IS_INSTANCE_BY]->(cm2) " + 
+  " OPTIONAL MATCH (c2)<-[f2:FEATURES]-(p2:Property)-[d2:IS_DRIVEN_BY]->(pm2:PropertyModel) " + 
+  " RETURN workpack, [ " + 
+  "    [ [at, c] ] " + 
+  "   ,[ [ib,cm] ]  " + 
+  "   ,[ [f1, p1, d1, pm1] ] " + 
+  "   ,[ [v1, o] ] " + 
+  "   ,[ [v2, l] ] " + 
+  "   ,[ [v3, u] ] " + 
+  "   ,[ [ii, w2] ] " + 
+  "   ,[ [at2, c2, ib2, cm2] ] " + 
+  "   ,[ [f2, p2, d2, pm2] ] " +
+  " ] ")
   Optional<Workpack> findWorkpackWithCosts(@Param("idWorkpack") Long idWorkpack);
 
   @Query("MATCH (c:CostAccount)-[i:APPLIES_TO]->(w:Workpack) "
     + " WHERE id(c) = $id "
+    + " OPTIONAL MATCH (c)<-[f1:FEATURES]-(p1:Property)-[d1:IS_DRIVEN_BY]->(pm1:PropertyModel) " 
+    + " OPTIONAL MATCH (p1)-[v1:VALUES]->(o:Organization) " 
+    + " OPTIONAL MATCH (p1)-[v2:VALUES]-(l:Locality) " 
+    + " OPTIONAL MATCH (p1)-[v3:VALUES]-(u:UnitMeasure) " 
+    + " OPTIONAL MATCH (c)-[ii:IS_INSTANCE_BY]->(cm:CostAccountModel) " 
     + " RETURN c, i, w, [ "
-    + " [(c)<-[f1:FEATURES]-(p1:Property)-[d1:IS_DRIVEN_BY]->(pm1:PropertyModel) | [f1, p1, d1, pm1] ], "
-    + " [(p1)-[v1:VALUES]->(o:Organization) | [v1, o] ], "
-    + " [(p1)-[v2:VALUES]-(l:Locality) | [v2, l] ], "
-    + " [(p1)-[v3:VALUES]-(u:UnitMeasure) | [v3, u] ], "
-    + " [(c)-[ii:IS_INSTANCE_BY]->(cm:CostAccountModel) | [ii,cm]] "
+    + " [f1, p1, d1, pm1], "
+    + " [v1, o], "
+    + " [v2, l], "
+    + " [v3, u], "
+    + " [ii,cm] "
     + "]")
   Optional<CostAccount> findByIdWithPropertyModel(@Param("id") Long id);
 

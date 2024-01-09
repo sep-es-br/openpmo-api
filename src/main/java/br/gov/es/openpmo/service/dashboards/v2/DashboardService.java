@@ -212,15 +212,25 @@ public class DashboardService implements IDashboardService {
   }
 
   private RiskDataChart getRisk(final DashboardParameters parameters) {
-    return Optional.of(parameters)
+    RiskDataChart myRet = Optional.of(parameters)
       .map(this.riskService::build)
       .orElse(null);
+    
+    return myRet;
+    
+    //return Optional.of(parameters)
+    //  .map(this.riskService::build)
+    //  .orElse(null);
   }
 
   private MilestoneDataChart getMilestone(final DashboardParameters parameters) {
-    return Optional.of(parameters)
+    MilestoneDataChart myRet = Optional.of(parameters)
       .map(this.milestoneService::build)
       .orElse(null);
+    return myRet;  
+//    return Optional.of(parameters)
+//      .map(this.milestoneService::build)
+//      .orElse(null);
   }
 
   private List<TripleConstraintDataChart> getTripleConstraintList(final DashboardParameters parameters) {
@@ -233,10 +243,18 @@ public class DashboardService implements IDashboardService {
     final Long workpackId = parameters.getWorkpackId();
     final Long baselineId = parameters.getBaselineId();
 
-    return Optional.of(parameters)
+
+    List<TripleConstraintDataChart> myRet = Optional.of(parameters)
       .map(this::getTripleConstraintData)
       .map(data -> this.getTripleConstraintDataChart(workpackId, baselineId, yearMonth, data))
       .orElseGet(() -> Collections.singletonList(this.tripleConstraintService.build(parameters)));
+
+    return myRet;
+
+//    return Optional.of(parameters)
+//      .map(this::getTripleConstraintData)
+//      .map(data -> this.getTripleConstraintDataChart(workpackId, baselineId, yearMonth, data))
+//      .orElseGet(() -> Collections.singletonList(this.tripleConstraintService.build(parameters)));
   }
 
   private List<TripleConstraintDataChart> getTripleConstraintDataChart(
@@ -299,9 +317,14 @@ public class DashboardService implements IDashboardService {
   }
 
   private DatasheetResponse getDatasheet(final DashboardParameters parameters) {
-    return Optional.of(parameters)
+    DatasheetResponse myRet = Optional.of(parameters)
       .map(this.datasheetService::build)
       .orElse(null);
+    
+    return myRet;
+//    return Optional.of(parameters)
+//      .map(this.datasheetService::build)
+//      .orElse(null);
   }
 
   private DashboardEarnedValueAnalysis getEarnedValueAnalysis(final DashboardParameters parameters) {
