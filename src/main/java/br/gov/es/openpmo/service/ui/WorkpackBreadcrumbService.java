@@ -92,7 +92,7 @@ public class WorkpackBreadcrumbService {
 
     if(maybeBelongsTo.isPresent()) {
       final BelongsTo belongsTo = maybeBelongsTo.get();
-      return this.workpackBelongsToPlan(idWorkpack, idPlan, belongsTo.getLinked());
+      return this.workpackBelongsToPlan(idWorkpack, idPlan, Boolean.TRUE.equals(belongsTo.getLinked()) );
     }
     else {
       return this.maybeBelongsToInParent(idWorkpack, idPlan);
@@ -302,15 +302,7 @@ public class WorkpackBreadcrumbService {
   ) {
     final boolean isInSamePlan = isInPlan(workpack, idPlan);
     if(isInSamePlan) {
-//      breadcrumbs.add(this.fromWorkpack(workpack));
-      BreadcrumbDto breadcrumb = new BreadcrumbDto();
-      breadcrumb.setId(workpack.getId());
-      breadcrumb.setType(workpack.getType());
-      breadcrumb.setName(workpack.getWorkpackName());
-      breadcrumb.setFullName(workpack.getWorkpackFullName());
-      breadcrumb.setModelName(workpack.getWorkpackModelInstance().getModelName());
-      breadcrumbs.add(breadcrumb);
-
+      breadcrumbs.add(this.fromWorkpack(workpack));
       if(workpack.getParent() != null) {
         this.addWorkpackParentLinkedToBreadcrumb(workpack.getParent(), breadcrumbs, idPlan);
       }
