@@ -643,7 +643,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
       term,
       searchCutOffScore
     );
-    if ((!workpacks.isEmpty() && !StringUtils.hasText(term) && Objects.nonNull(idWorkpackModel)) {
+    if (!workpacks.isEmpty() && !StringUtils.hasText(term) && Objects.nonNull(idWorkpackModel)) {
       this.sortByWorkpackModel(workpacks, workpacks.get(0).getWorkpackModelInstance());
     }
     return workpacks;
