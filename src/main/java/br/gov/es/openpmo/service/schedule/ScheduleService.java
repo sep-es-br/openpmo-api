@@ -138,7 +138,7 @@ public class ScheduleService {
   ) {
     for (final Consumes snapshot : consumesSnapshot) {
       if (snapshot.getIdCostAccountMaster().equals(consumes.getIdCostAccount())) {
-        final BigDecimal plannedCost = snapshot.getPlannedCost();
+        final BigDecimal plannedCost = (snapshot.getPlannedCost() == null) ? BigDecimal.valueOf(0) : snapshot.getPlannedCost();
         return Optional.of(plannedCost);
       }
     }
