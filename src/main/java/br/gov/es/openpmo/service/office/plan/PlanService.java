@@ -259,7 +259,7 @@ public class PlanService implements BreadcrumbPlanHelper {
   ) {
     final List<BelongsTo> belongsTos = this.planRepository.hasLinkWithWorkpack(idWorkpack, idPlan);
     return Optional.ofNullable(belongsTos)
-      .map(relation -> relation.stream().anyMatch(a -> Boolean.TRUE.equals(a.getLinked())))
+      .map(relation -> relation.stream().anyMatch(BelongsTo::getLinked))
       .orElse(false);
   }
 
