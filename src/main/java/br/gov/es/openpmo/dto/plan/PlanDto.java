@@ -11,7 +11,7 @@ import java.util.List;
 public class PlanDto {
 
   private Long id;
-  private Long idPlanModel;
+  private PlanModelDto planModel;
   private Long idOffice;
   private String name;
   private String fullName;
@@ -28,7 +28,7 @@ public class PlanDto {
     final PlanDto dto = new PlanDto();
     dto.id = plan.getId();
     if (plan.getPlanModel() != null) {
-      dto.idPlanModel = plan.getPlanModel().getId();
+      dto.planModel = PlanModelDto.of(plan.getPlanModel());
     }
     dto.name = plan.getName();
     dto.fullName = plan.getFullName();
@@ -54,12 +54,12 @@ public class PlanDto {
     this.id = id;
   }
 
-  public Long getIdPlanModel() {
-    return this.idPlanModel;
+  public PlanModelDto getPlanModel() {
+    return planModel;
   }
 
-  public void setIdPlanModel(final Long idPlanModel) {
-    this.idPlanModel = idPlanModel;
+  public void setPlanModel(PlanModelDto planModel) {
+    this.planModel = planModel;
   }
 
   public Long getIdOffice() {
