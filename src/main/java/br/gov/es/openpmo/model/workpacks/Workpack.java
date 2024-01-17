@@ -635,12 +635,13 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
 
   @Transient
   public Optional<Plan> getOriginalPlan() {
-    return Optional.ofNullable(this.belongsTo)
-      .flatMap(relation -> relation.stream()
-        .filter(a -> !a.getLinked())
-        .findFirst()
-      )
-      .map(BelongsTo::getPlan);
+    final Optional<Plan> originalPlan = Optional.ofNullable(this.belongsTo)
+            .flatMap(relation -> relation.stream()
+                    .filter(a -> !Boolean.TRUE.equals(a.getLinked()))
+                    .findFirst()
+            )
+            .map(BelongsTo::getPlan);
+    return originalPlan;
   }
 
   @Transient

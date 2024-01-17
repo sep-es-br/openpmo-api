@@ -92,7 +92,7 @@ public class WorkpackBreadcrumbService {
 
     if(maybeBelongsTo.isPresent()) {
       final BelongsTo belongsTo = maybeBelongsTo.get();
-      return this.workpackBelongsToPlan(idWorkpack, idPlan, belongsTo.getLinked());
+      return this.workpackBelongsToPlan(idWorkpack, idPlan, Boolean.TRUE.equals(belongsTo.getLinked()) );
     }
     else {
       return this.maybeBelongsToInParent(idWorkpack, idPlan);
