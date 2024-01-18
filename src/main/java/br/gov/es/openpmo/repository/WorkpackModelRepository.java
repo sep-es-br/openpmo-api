@@ -120,6 +120,7 @@ public interface WorkpackModelRepository extends Neo4jRepository<WorkpackModel, 
     Long idWorkpackModel
   );
 
+/* 
   @Query("MATCH (wm:WorkpackModel) " +
     "WHERE id(wm)=$idWorkpackModel " +
     " OPTIONAL MATCH (wm)<-[f:FEATURES]-(pm:PropertyModel) " +
@@ -130,6 +131,16 @@ public interface WorkpackModelRepository extends Neo4jRepository<WorkpackModel, 
     "    [  [i,wmc] ], " +
     "    [  [fc,pmc] ] " +
     "]")
+  Optional<WorkpackModel> findByIdWorkpackWithChildren(Long idWorkpackModel);
+
+  */
+  @Query("MATCH (wm:WorkpackModel) " +
+  "WHERE id(wm)=$idWorkpackModel " +
+  "RETURN wm, [ " +
+  "    [ (wm)<-[f:FEATURES]-(pm:PropertyModel) | [f,pm] ], " +
+  "    [ (wm)<-[i:IS_IN*]-(wmc:WorkpackModel) | [i,wmc] ], " +
+  "    [ (wm)<-[i:IS_IN*]-(:WorkpackModel)<-[fc:FEATURES]-(pmc:PropertyModel) | [fc,pmc] ] " +
+  "]")
   Optional<WorkpackModel> findByIdWorkpackWithChildren(Long idWorkpackModel);
 
   @Query("MATCH (w:Workpack)-[i:IS_INSTANCE_BY]->(:WorkpackModel) " +
