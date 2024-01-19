@@ -43,7 +43,7 @@ public class DashboardMilestoneService implements IDashboardMilestoneService {
     final YearMonth yearMonth = parameters.getYearMonth();
     final LocalDate refDate = getMinOfNowAnd(yearMonth);
 
-    final List<MilestoneDateDto> milestones = idBaseline.equals(null) ? this.repository.findByParentId(idWorkpack)
+    final List<MilestoneDateDto> milestones = idBaseline == null ? this.repository.findByParentId(idWorkpack)
             : this.repository.findByParentAndBaselineId(idWorkpack, idBaseline);
     final List<MilestoneDto> milestoneDtos = MilestoneDto.setMilestonesOfMiletonesDate(milestones);
     return milestoneDtos;
