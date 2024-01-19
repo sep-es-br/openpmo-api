@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.dto.dashboards.v2;
 
 import br.gov.es.openpmo.dto.dashboards.MilestoneDataChart;
+import br.gov.es.openpmo.dto.dashboards.MilestoneDto;
 import br.gov.es.openpmo.dto.dashboards.RiskDataChart;
 import br.gov.es.openpmo.dto.dashboards.datasheet.DatasheetResponse;
 import br.gov.es.openpmo.dto.dashboards.datasheet.DatasheetStakeholderResponse;
@@ -20,7 +21,7 @@ public class DashboardResponse {
 
   private final RiskDataChart risk;
 
-  private final MilestoneDataChart milestone;
+  private final List<MilestoneDto> milestones;
 
   private final List<TripleConstraintDataChart> tripleConstraint;
 
@@ -32,13 +33,13 @@ public class DashboardResponse {
   @JsonCreator
   public DashboardResponse(
     final RiskDataChart risk,
-    final MilestoneDataChart milestone,
+    final List<MilestoneDto> milestones,
     final List<TripleConstraintDataChart> tripleConstraint,
     final DatasheetResponse datasheet,
     final DashboardEarnedValueAnalysis earnedValueAnalysis
   ) {
     this.risk = risk;
-    this.milestone = milestone;
+    this.milestones = milestones;
     this.datasheet = datasheet;
     this.earnedValueAnalysis = earnedValueAnalysis;
     this.tripleConstraint = tripleConstraint;
@@ -48,8 +49,8 @@ public class DashboardResponse {
     return this.risk;
   }
 
-  public MilestoneDataChart getMilestone() {
-    return this.milestone;
+  public List<MilestoneDto> getMilestones() {
+    return this.milestones;
   }
 
   public List<TripleConstraintDataChart> getTripleConstraint() {

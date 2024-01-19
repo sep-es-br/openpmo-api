@@ -1,7 +1,7 @@
 package br.gov.es.openpmo.service.dashboards.v2;
 
 import br.gov.es.openpmo.dto.dashboards.DashboardParameters;
-import br.gov.es.openpmo.dto.dashboards.MilestoneDataChart;
+import br.gov.es.openpmo.dto.dashboards.MilestoneDto;
 import br.gov.es.openpmo.dto.dashboards.RiskDataChart;
 import br.gov.es.openpmo.dto.dashboards.datasheet.DatasheetResponse;
 import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.CostPerformanceIndex;
@@ -11,7 +11,6 @@ import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.PerformanceIndexesByS
 import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.SchedulePerformanceIndex;
 import br.gov.es.openpmo.dto.dashboards.tripleconstraint.TripleConstraintDataChart;
 import br.gov.es.openpmo.dto.dashboards.v2.DashboardResponse;
-import br.gov.es.openpmo.dto.dashboards.v2.Interval;
 import br.gov.es.openpmo.dto.dashboards.v2.SimpleDashboard;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
@@ -153,7 +152,7 @@ public class DashboardService implements IDashboardService {
 
     return new DashboardResponse(
       this.getRisk(parameters),
-      this.getMilestone(parameters),
+      this.getMilestones(parameters),
       this.getTripleConstraintList(parameters),
       this.getDatasheet(parameters),
       this.getEarnedValueAnalysis(parameters)
@@ -163,35 +162,36 @@ public class DashboardService implements IDashboardService {
   @Override
   @Transactional
   public SimpleDashboard buildSimple(final Long workpackId) {
-    final Interval interval = this.intervalService.calculateFor(workpackId);
-    final YearMonth date;
-
-    if (interval.getStartDate() == null || interval.getEndDate() == null) {
-      date = null;
-    } else {
-      final YearMonth previousMonth = YearMonth.now().minusMonths(1);
-      final YearMonth startMonth = YearMonth.from(interval.getStartDate());
-      final YearMonth endMonth = YearMonth.from(interval.getEndDate());
-      date = DashboardService.clampDate(previousMonth, startMonth, endMonth);
-    }
-
-    // TODO: verificar se é necessário informar o 'planId'
-    final DashboardParameters parameters =
-      new DashboardParameters(false, workpackId, null, null, null, null, date, false, null, null);
-
-    final Optional<PerformanceIndexesByStep> performanceIndexes = Optional.of(parameters)
-      .map(this::getEarnedValueAnalysis)
-      .map(DashboardEarnedValueAnalysis::getPerformanceIndexes)
-      .flatMap(indexes -> indexes.stream().findFirst());
-
-    return new SimpleDashboard(
-      this.getRisk(parameters),
-      this.getMilestone(parameters),
-      date == null ? null : this.getTripleConstraint(parameters),
-      date == null ? null : this.getCostPerformanceIndex(performanceIndexes),
-      date == null ? null : this.getSchedulePerformanceIndex(performanceIndexes),
-      date == null ? null : this.getEarnedValue(performanceIndexes)
-    );
+//    final Interval interval = this.intervalService.calculateFor(workpackId);
+//    final YearMonth date;
+//
+//    if (interval.getStartDate() == null || interval.getEndDate() == null) {
+//      date = null;
+//    } else {
+//      final YearMonth previousMonth = YearMonth.now().minusMonths(1);
+//      final YearMonth startMonth = YearMonth.from(interval.getStartDate());
+//      final YearMonth endMonth = YearMonth.from(interval.getEndDate());
+//      date = DashboardService.clampDate(previousMonth, startMonth, endMonth);
+//    }
+//
+//    // TODO: verificar se é necessário informar o 'planId'
+//    final DashboardParameters parameters =
+//      new DashboardParameters(false, workpackId, null, null, null, null, date, false, null, null);
+//
+//    final Optional<PerformanceIndexesByStep> performanceIndexes = Optional.of(parameters)
+//      .map(this::getEarnedValueAnalysis)
+//      .map(DashboardEarnedValueAnalysis::getPerformanceIndexes)
+//      .flatMap(indexes -> indexes.stream().findFirst());
+//
+//    return new SimpleDashboard(
+//      this.getRisk(parameters),
+//      // this.getMilestone(parameters),
+//      date == null ? null : this.getTripleConstraint(parameters),
+//      date == null ? null : this.getCostPerformanceIndex(performanceIndexes),
+//      date == null ? null : this.getSchedulePerformanceIndex(performanceIndexes),
+//      date == null ? null : this.getEarnedValue(performanceIndexes)
+//    );
+    return null;
   }
 
   private TripleConstraintDataChart getTripleConstraint(final DashboardParameters parameters) {
@@ -212,25 +212,15 @@ public class DashboardService implements IDashboardService {
   }
 
   private RiskDataChart getRisk(final DashboardParameters parameters) {
-    RiskDataChart myRet = Optional.of(parameters)
+    return Optional.of(parameters)
       .map(this.riskService::build)
       .orElse(null);
-    
-    return myRet;
-    
-    //return Optional.of(parameters)
-    //  .map(this.riskService::build)
-    //  .orElse(null);
   }
 
-  private MilestoneDataChart getMilestone(final DashboardParameters parameters) {
-    MilestoneDataChart myRet = Optional.of(parameters)
+  private List<MilestoneDto> getMilestones(final DashboardParameters parameters) {
+    return Optional.of(parameters)
       .map(this.milestoneService::build)
       .orElse(null);
-    return myRet;  
-//    return Optional.of(parameters)
-//      .map(this.milestoneService::build)
-//      .orElse(null);
   }
 
   private List<TripleConstraintDataChart> getTripleConstraintList(final DashboardParameters parameters) {
@@ -243,18 +233,10 @@ public class DashboardService implements IDashboardService {
     final Long workpackId = parameters.getWorkpackId();
     final Long baselineId = parameters.getBaselineId();
 
-
-    List<TripleConstraintDataChart> myRet = Optional.of(parameters)
+    return Optional.of(parameters)
       .map(this::getTripleConstraintData)
       .map(data -> this.getTripleConstraintDataChart(workpackId, baselineId, yearMonth, data))
       .orElseGet(() -> Collections.singletonList(this.tripleConstraintService.build(parameters)));
-
-    return myRet;
-
-//    return Optional.of(parameters)
-//      .map(this::getTripleConstraintData)
-//      .map(data -> this.getTripleConstraintDataChart(workpackId, baselineId, yearMonth, data))
-//      .orElseGet(() -> Collections.singletonList(this.tripleConstraintService.build(parameters)));
   }
 
   private List<TripleConstraintDataChart> getTripleConstraintDataChart(
@@ -317,14 +299,9 @@ public class DashboardService implements IDashboardService {
   }
 
   private DatasheetResponse getDatasheet(final DashboardParameters parameters) {
-    DatasheetResponse myRet = Optional.of(parameters)
+    return Optional.of(parameters)
       .map(this.datasheetService::build)
       .orElse(null);
-    
-    return myRet;
-//    return Optional.of(parameters)
-//      .map(this.datasheetService::build)
-//      .orElse(null);
   }
 
   private DashboardEarnedValueAnalysis getEarnedValueAnalysis(final DashboardParameters parameters) {
