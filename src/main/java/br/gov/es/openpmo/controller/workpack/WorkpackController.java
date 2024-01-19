@@ -6,6 +6,7 @@ import br.gov.es.openpmo.dto.Response;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.completed.CompleteWorkpackRequest;
 import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
+import br.gov.es.openpmo.dto.dashboards.MilestoneDateDto;
 import br.gov.es.openpmo.dto.dashboards.MilestoneDto;
 import br.gov.es.openpmo.dto.dashboards.RiskDto;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
@@ -461,8 +462,8 @@ public class WorkpackController {
         itemDetail.setDashboard(monthDto);
       }
     }
-    final List<Milestone> milestones = this.dashboardMilestoneRepository.findByParentId(workpack.getId());
-    final List<MilestoneDto> milestoneDtos = MilestoneDto.of(milestones);
+    final List<MilestoneDateDto> milestones = this.dashboardMilestoneRepository.findByParentId(workpack.getId());
+    final List<MilestoneDto> milestoneDtos = MilestoneDto.setMilestonesOfMiletonesDate(milestones);
     itemDetail.setMilestones(milestoneDtos);
     final List<Risk> risks = this.riskRepository.findByWorkpackId(workpack.getId());
     final List<RiskDto> riskDtos = RiskDto.of(risks);

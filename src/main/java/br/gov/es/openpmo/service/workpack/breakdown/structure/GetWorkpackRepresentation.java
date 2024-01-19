@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.service.workpack.breakdown.structure;
 
 import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
+import br.gov.es.openpmo.dto.dashboards.MilestoneDateDto;
 import br.gov.es.openpmo.dto.dashboards.MilestoneDto;
 import br.gov.es.openpmo.dto.dashboards.RiskDto;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.ScheduleMeasureUnit;
@@ -80,8 +81,8 @@ public class GetWorkpackRepresentation {
           workpackRepresentation.setDashboard(monthDto);
         }
       }
-      final List<Milestone> milestones = this.dashboardMilestoneRepository.findByParentId(workpack.getId());
-      final List<MilestoneDto> milestoneDtos = MilestoneDto.of(milestones);
+      final List<MilestoneDateDto> milestones = this.dashboardMilestoneRepository.findByParentId(workpack.getId());
+      final List<MilestoneDto> milestoneDtos = MilestoneDto.setMilestonesOfMiletonesDate(milestones);
       workpackRepresentation.setMilestones(milestoneDtos);
       final List<Risk> risks = this.riskRepository.findByWorkpackId(workpack.getId());
       final List<RiskDto> riskDtos = RiskDto.of(risks);

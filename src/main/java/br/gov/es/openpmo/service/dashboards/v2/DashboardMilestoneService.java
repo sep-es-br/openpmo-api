@@ -2,6 +2,8 @@ package br.gov.es.openpmo.service.dashboards.v2;
 
 import br.gov.es.openpmo.dto.dashboards.DashboardParameters;
 import br.gov.es.openpmo.dto.dashboards.MilestoneDataChart;
+import br.gov.es.openpmo.dto.dashboards.MilestoneDateDto;
+import br.gov.es.openpmo.dto.dashboards.MilestoneDto;
 import br.gov.es.openpmo.repository.dashboards.DashboardMilestoneRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -34,25 +37,16 @@ public class DashboardMilestoneService implements IDashboardMilestoneService {
   }
 
   @Override
-  public MilestoneDataChart build(final DashboardParameters parameters) {
+  public List<MilestoneDto> build(final DashboardParameters parameters) {
     final Long idBaseline = parameters.getBaselineId();
     final Long idWorkpack = parameters.getWorkpackId();
     final YearMonth yearMonth = parameters.getYearMonth();
     final LocalDate refDate = getMinOfNowAnd(yearMonth);
 
-    final Long concluded = this.getConcluded(idBaseline, idWorkpack);
-    final Long lateConcluded = this.getLateConcluded(idBaseline, idWorkpack);
-    final Long late = this.getLate(idBaseline, idWorkpack, refDate);
-    final Long onTime = this.getOnTime(idBaseline, idWorkpack, refDate);
-    final Long quantity = this.getQuantity(concluded, lateConcluded, late, onTime);
-
-    return new MilestoneDataChart(
-      quantity,
-      concluded,
-      lateConcluded,
-      late,
-      onTime
-    );
+    final List<MilestoneDateDto> milestones = idBaseline.equals(null) ? this.repository.findByParentId(idWorkpack)
+            : this.repository.findByParentAndBaselineId(idWorkpack, idBaseline);
+    final List<MilestoneDto> milestoneDtos = MilestoneDto.setMilestonesOfMiletonesDate(milestones);
+    return milestoneDtos;
   }
 
   @Override
@@ -93,9 +87,15 @@ public class DashboardMilestoneService implements IDashboardMilestoneService {
     final Long baselineId,
     final Long idWorkpack
   ) {
-    final Set<Long> concluded = Optional.ofNullable(baselineId)
-      .map(blId -> this.repository.concluded(blId, idWorkpack))
-      .orElse(this.repository.concluded(idWorkpack));
+    final Set<Long> concluded = this.repository.concluded(idWorkpack);
+    final Set<Long> lateConcluded = this.repository.lateConcluded(idWorkpack);
+    concluded.removeAll(lateConcluded);
+
+    final Set<Long> concludedBaseline = Optional.ofNullable(baselineId)
+      .map(id -> this.repository.concluded(id, idWorkpack))
+      .orElse(new HashSet<>());
+
+    concluded.addAll(concludedBaseline);
     return (long) concluded.size();
   }
 
@@ -105,12 +105,18 @@ public class DashboardMilestoneService implements IDashboardMilestoneService {
     final Long workpackId,
     final Long baselineId
   ) {
+    final Set<Long> concluded = this.repository.concluded(parentId);
+    final Set<Long> lateConcluded = this.repository.lateConcluded(baselineId, workpackId);
+    concluded.removeAll(lateConcluded);
+    if (concluded.contains(milestoneId)) {
+      return true;
+    }
 
-    final Set<Long> concluded = Optional.ofNullable(baselineId)
+    final Set<Long> concludedBaseline = Optional.ofNullable(baselineId)
       .map(id -> this.repository.concluded(id, workpackId))
-      .orElse(this.repository.concluded(parentId));
+      .orElse(new HashSet<>());
 
-    return concluded.contains(milestoneId);
+    return concludedBaseline.contains(milestoneId);
   }
 
   private Long getLateConcluded(
@@ -142,9 +148,13 @@ public class DashboardMilestoneService implements IDashboardMilestoneService {
       return null;
     }
 
-    final Set<Long> late = Optional.ofNullable(baselineId)
+    final Set<Long> late = this.repository.late(idWorkpack, refDate);
+
+    final Set<Long> lateBaseline = Optional.ofNullable(baselineId)
       .map(id -> this.repository.late(id, idWorkpack, refDate))
-      .orElse(this.repository.late(idWorkpack, refDate));
+      .orElse(new HashSet<>());
+
+    late.addAll(lateBaseline);
     return (long) late.size();
   }
 
@@ -156,11 +166,16 @@ public class DashboardMilestoneService implements IDashboardMilestoneService {
   ) {
     final LocalDate refDate = LocalDate.now();
 
-    final Set<Long> late = Optional.ofNullable(baselineId)
-      .map(id -> this.repository.late(id, workpackId, refDate))
-      .orElse(this.repository.late(parentId, refDate));
+    final Set<Long> late = this.repository.late(parentId, refDate);
+    if (late.contains(milestoneId)) {
+      return true;
+    }
 
-    return late.contains(milestoneId);
+    final Set<Long> lateBaseline = Optional.ofNullable(baselineId)
+      .map(id -> this.repository.late(id, workpackId, refDate))
+      .orElse(new HashSet<>());
+
+    return lateBaseline.contains(milestoneId);
   }
 
   private Long getOnTime(
@@ -172,10 +187,13 @@ public class DashboardMilestoneService implements IDashboardMilestoneService {
       return null;
     }
 
-    final Set<Long> onTime = Optional.ofNullable(baselineId)
-      .map(id -> this.repository.onTime(id, idWorkpack, refDate))
-      .orElse(this.repository.onTime(idWorkpack, refDate));
+    final Set<Long> onTime = this.repository.onTime(idWorkpack, refDate);
 
+    final Set<Long> onTimeBaseline = Optional.ofNullable(baselineId)
+      .map(id -> this.repository.onTime(id, idWorkpack, refDate))
+      .orElse(new HashSet<>());
+
+    onTime.addAll(onTimeBaseline);
     return (long) onTime.size();
   }
 
@@ -187,11 +205,16 @@ public class DashboardMilestoneService implements IDashboardMilestoneService {
   ) {
     final LocalDate refDate = LocalDate.now();
 
-    final Set<Long> onTime = Optional.ofNullable(baselineId)
-      .map(id -> this.repository.onTime(id, workpackId, refDate))
-      .orElse(this.repository.onTime(parentId, refDate));
+    final Set<Long> onTime = this.repository.onTime(parentId, refDate);
+    if (onTime.contains(milestoneId)) {
+      return true;
+    }
 
-    return onTime.contains(milestoneId);
+    final Set<Long> onTimeBaseline = Optional.ofNullable(baselineId)
+      .map(id -> this.repository.onTime(id, workpackId, refDate))
+      .orElse(new HashSet<>());
+
+    return onTimeBaseline.contains(milestoneId);
   }
 
 }

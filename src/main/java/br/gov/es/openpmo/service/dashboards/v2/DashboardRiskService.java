@@ -2,10 +2,14 @@ package br.gov.es.openpmo.service.dashboards.v2;
 
 import br.gov.es.openpmo.dto.dashboards.DashboardParameters;
 import br.gov.es.openpmo.dto.dashboards.RiskDataChart;
+import br.gov.es.openpmo.dto.dashboards.RiskDataChartDto;
 import br.gov.es.openpmo.model.risk.Importance;
+import br.gov.es.openpmo.model.risk.StatusOfRisk;
 import br.gov.es.openpmo.repository.RiskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 import static br.gov.es.openpmo.model.risk.Importance.HIGH;
 import static br.gov.es.openpmo.model.risk.Importance.LOW;
@@ -29,28 +33,44 @@ public class DashboardRiskService implements IDashboardRiskService {
 
   @Override
   public RiskDataChart build(final Long workpackId) {
+    List<RiskDataChartDto> counts = this.repository.countRisksOfWorkpack(workpackId);
+    Long totalOpenedRisks = this.countTotalOpenedRisks(counts);
+    Long totalByImportanceHigh = this.countRisksByImportance(counts, HIGH);
+    Long totalByImportanceLow = this.countRisksByImportance(counts, LOW);
+    Long totalByImportanceMedium = this.countRisksByImportance(counts, MEDIUM);
+    Long totalClosedRisks = this.countTotalClosedRisks(counts);
+
     return new RiskDataChart(
-      this.countTotalOpenedRisks(workpackId),
-      this.countRisksByImportance(workpackId, HIGH),
-      this.countRisksByImportance(workpackId, LOW),
-      this.countRisksByImportance(workpackId, MEDIUM),
-      this.countTotalClosedRisks(workpackId)
+      totalOpenedRisks,
+      totalByImportanceHigh,
+      totalByImportanceLow,
+      totalByImportanceMedium,
+      totalClosedRisks
     );
   }
 
-  private Long countTotalOpenedRisks(final Long workpackId) {
-    return this.repository.countAllOpenedRisksOfWorkpack(workpackId);
+  private Long countTotalOpenedRisks(List<RiskDataChartDto> counts) {
+    return counts.stream()
+            .filter(item -> item.getStatus().toLowerCase().equals(StatusOfRisk.OPEN.getStatus()))
+            .map(RiskDataChartDto::getCount)
+            .reduce(0L, Long::sum);
   }
 
   private Long countRisksByImportance(
-    final Long workpackId,
-    final Importance importance
+          List<RiskDataChartDto> counts,
+          final Importance importance
   ) {
-    return this.repository.countOpenedRiskOfWorkpackByImportance(workpackId, importance.name());
+    return counts.stream()
+            .filter(item -> item.getStatus().toLowerCase().equals(StatusOfRisk.OPEN.getStatus()) &&
+                    item.getImportance().toLowerCase().equals(importance.getImportance()))
+            .map(RiskDataChartDto::getCount)
+            .reduce(0L, (subtotal, item) -> subtotal + item);
   }
 
-  private Long countTotalClosedRisks(final Long workpacKId) {
-    return this.repository.countClosedRisksOfWorkpack(workpacKId);
+  private Long countTotalClosedRisks(List<RiskDataChartDto> counts) {
+    return counts.stream()
+            .filter(item -> !item.getStatus().toLowerCase().equals(StatusOfRisk.OPEN.getStatus()))
+            .map(RiskDataChartDto::getCount)
+            .reduce(0L, (subtotal, item) -> subtotal + item);
   }
-
 }

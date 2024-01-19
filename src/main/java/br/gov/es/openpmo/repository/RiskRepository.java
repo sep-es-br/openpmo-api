@@ -92,4 +92,12 @@ public interface RiskRepository extends Neo4jRepository<Risk, Long>, CustomRepos
          "return count(distinct risks)")
   Long countClosedRisksOfWorkpack(@Param("workpackId") Long workpackId);
 
+  @Query("MATCH (w:Workpack{deleted: false , canceled: false }) " +
+          "WHERE id(w)=$workpackId " +
+          "OPTIONAL MATCH (w)<-[:IS_FORSEEN_ON]-(r1:Risk) " +
+          "WITH w, r1 " +
+          "OPTIONAL MATCH (w)<-[:IS_IN*]-(v:Workpack{deleted: false , canceled: false })<-[:IS_FORSEEN_ON]-(r2:Risk) " +
+          "WITH collect(r1) + collect(r2) AS riskList UNWIND riskList AS risks " +
+          "RETURN count( DISTINCT risks) AS count, risks.status AS status, risks.importance AS importance")
+  List<RiskDataChartDto> countRisksOfWorkpack(@Param("workpackId") Long workpackId);
 }
