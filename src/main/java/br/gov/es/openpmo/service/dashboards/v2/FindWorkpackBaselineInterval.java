@@ -3,12 +3,7 @@ package br.gov.es.openpmo.service.dashboards.v2;
 import br.gov.es.openpmo.dto.dashboards.tripleconstraint.DateInterval;
 import br.gov.es.openpmo.dto.dashboards.tripleconstraint.DateIntervalQuery;
 import br.gov.es.openpmo.model.baselines.Baseline;
-import br.gov.es.openpmo.model.properties.Date;
-import br.gov.es.openpmo.model.properties.Property;
-import br.gov.es.openpmo.model.relations.IsBaselinedBy;
-import br.gov.es.openpmo.model.relations.IsPropertySnapshotOf;
-import br.gov.es.openpmo.model.relations.IsScheduleSnapshotOf;
-import br.gov.es.openpmo.model.relations.IsSnapshotOf;
+import br.gov.es.openpmo.model.relations.*;
 import br.gov.es.openpmo.model.schedule.Schedule;
 import br.gov.es.openpmo.model.workpacks.Deliverable;
 import br.gov.es.openpmo.model.workpacks.Milestone;
@@ -22,7 +17,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Component
 public class FindWorkpackBaselineInterval {
@@ -89,34 +83,27 @@ public class FindWorkpackBaselineInterval {
       }
     }
     if (workpack instanceof Milestone) {
-      final Set<Property> properties = workpack.getProperties();
-      if (properties != null) {
-        final List<Date> dates = properties.stream()
-          .filter(Date.class::isInstance)
-          .map(Date.class::cast)
-          .collect(Collectors.toList());
-        for (Date date : dates) {
-          final Set<IsPropertySnapshotOf> dateSnapshots = date.getSnapshots();
-          if (dateSnapshots == null) {
-            continue;
+      final LocalDate milestoneDate = workpack.getDate().toLocalDate();
+      if (milestoneDate != null) {
+        final Set<IsWorkpackSnapshotOf> workpackSnapshots = workpack.getSnapshots();
+        if (workpackSnapshots == null) {
+          return new DateInterval(initialDate, endDate);
+        }
+        final Optional<Workpack> workpackSnapshot = workpackSnapshots.stream()
+                .map(IsSnapshotOf::getSnapshot)
+                .filter(snapshot -> snapshot.getBaseline() == baseline)
+                .findFirst();
+        if (workpackSnapshot.isPresent()) {
+          final LocalDateTime value = workpackSnapshot.get().getDate();
+          if (value == null) {
+            return new DateInterval(initialDate, endDate);
           }
-          final Optional<Property> dateSnapshot = dateSnapshots.stream()
-            .map(IsSnapshotOf::getSnapshot)
-            .filter(snapshot -> snapshot.getBaseline() == baseline)
-            .findFirst();
-          if (dateSnapshot.isPresent()) {
-            final Date snapshot = (Date) dateSnapshot.get();
-            final LocalDateTime value = snapshot.getValue();
-            if (value == null) {
-              continue;
-            }
-            final LocalDate localDate = value.toLocalDate();
-            if (initialDate == null || initialDate.isAfter(localDate)) {
-              initialDate = localDate;
-            }
-            if (endDate == null || endDate.isBefore(localDate)) {
-              endDate = localDate;
-            }
+          final LocalDate localDate = value.toLocalDate();
+          if (initialDate == null || initialDate.isAfter(localDate)) {
+            initialDate = localDate;
+          }
+          if (endDate == null || endDate.isBefore(localDate)) {
+            endDate = localDate;
           }
         }
       }
@@ -146,6 +133,7 @@ public class FindWorkpackBaselineInterval {
     if (Objects.equals(workpack.getId(), toBeFound)) {
       return workpack;
     }
+    // TO DO REFATORAÇÃO - BUSCAR OS FILHOS DO PROJETO DO CACHE
     final Set<Workpack> children = workpack.getChildren();
     if (children == null) {
       return null;

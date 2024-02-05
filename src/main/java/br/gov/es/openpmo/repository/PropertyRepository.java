@@ -15,21 +15,17 @@ public interface PropertyRepository extends Neo4jRepository<Property, Long> {
 
   @Query("match (ls:Property) " +
          "where id(ls)=$idLocalitySelection " +
-         " OPTIONAL MATCH (ls)-[v:VALUES]->(l:Locality) " +
          "return ls, [ " +
-         "    [[v,l]] " +
+         "    [(ls)-[v:VALUES]->(l:Locality) | [v,l]] " +
          "]")
   Optional<Property> findByIdWithProperties(Long idLocalitySelection);
 
   @Query("match (m:Property)<-[i:IS_SNAPSHOT_OF]-(s:Property)-[c:COMPOSES]->(b:Baseline)  " +
          "where id(m)=$idProperty and id(b)=$idBaseline " +
-         " OPTIONAL MATCH (s)<-[v1:VALUES]->(l:Locality) " +
-         " OPTIONAL MATCH (s)<-[v2:VALUES]->(o:Organization) " +
-         " OPTIONAL MATCH (s)<-[v3:VALUES]->(u:UnitMeasure) " +
          "return s, [ " +
-         "    [ [v1,l]],  " +
-         "    [ [v2,o]],  " +
-         "    [ [v3,u]] " +
+         "    [(s)<-[v1:VALUES]->(l:Locality) | [v1,l]],  " +
+         "    [(s)<-[v2:VALUES]->(o:Organization) | [v2,o]],  " +
+         "    [(s)<-[v3:VALUES]->(u:UnitMeasure) | [v3,u]] " +
          "]")
   Optional<Property> findSnapshotByMasterIdAndBaselineId(
     Long idProperty,
@@ -38,13 +34,10 @@ public interface PropertyRepository extends Neo4jRepository<Property, Long> {
 
   @Query("match (a:Property)-[:IS_SNAPSHOT_OF]->(m:Property)<-[i:IS_SNAPSHOT_OF]-(s:Property)-[c:COMPOSES]->(b:Baseline)   " +
          "where id(a)=$idProperty and id(b)=$idBaseline  " +
-         " OPTIONAL MATCH (s)<-[v1:VALUES]->(l:Locality) " +
-         " OPTIONAL MATCH (s)<-[v2:VALUES]->(o:Organization) " +
-         " OPTIONAL MATCH (s)<-[v3:VALUES]->(u:UnitMeasure) " +
          "return s, [  " +
-         "    [ [v1,l]],   " +
-         "    [ [v2,o]],   " +
-         "    [ [v3,u]]  " +
+         "    [(s)<-[v1:VALUES]->(l:Locality) | [v1,l]],   " +
+         "    [(s)<-[v2:VALUES]->(o:Organization) | [v2,o]],   " +
+         "    [(s)<-[v3:VALUES]->(u:UnitMeasure) | [v3,u]]  " +
          "]")
   Optional<Property> findAnotherSnapshotOfMasterBySnapshotIdAndAnotherBaselineId(
     Long idProperty,
@@ -64,8 +57,8 @@ public interface PropertyRepository extends Neo4jRepository<Property, Long> {
     Long propertyId
   );
 
-  @Query("match (p:Property) where id(p)=$propertyId  " +
-         "match (pm:PropertyModel) where id(pm)=$propertyModelId " +
+  @Query("match (p:Property), (pm:PropertyModel) " +
+         "where id(p)=$propertyId and id(pm)=$propertyModelId " +
          "create (p)-[:IS_DRIVEN_BY]->(pm)")
   void createIsDrivenByRelationship(
     Long propertyId,
@@ -87,8 +80,8 @@ public interface PropertyRepository extends Neo4jRepository<Property, Long> {
   )
   List<Property> findAllByPropertyModelId(Long idPropertyModel);
 
-  @Query("match (p:Property) where id(p)=$propertyId " +
-    "match (w:Workpack) where id(w)=$workpackId " +
+  @Query("match (p:Property), (w:Workpack) " +
+    "where id(p)=$propertyId and id(w)=$workpackId " +
     "create (p)-[:FEATURES]->(w)")
   void createFeaturesRelationship(
     Long propertyId,

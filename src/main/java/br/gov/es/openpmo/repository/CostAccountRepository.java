@@ -1,7 +1,8 @@
 package br.gov.es.openpmo.repository;
 
+import br.gov.es.openpmo.dto.EntityDto;
+import br.gov.es.openpmo.dto.schedule.ConsumesDto;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
-import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
@@ -13,44 +14,25 @@ import java.util.Optional;
 
 public interface CostAccountRepository extends Neo4jRepository<CostAccount, Long>, CustomRepository {
 
-  @Query(" MATCH (workpack:Workpack{deleted: false})-[belongsTo:BELONGS_TO]->(plan:Plan)  " + 
-  "       WHERE id(workpack) = $idWorkpack  " + 
-  "       AND belongsTo.linked=false " + 
-  " OPTIONAL MATCH (workpack)<-[at:APPLIES_TO]-(c:CostAccount) " + 
-  " OPTIONAL MATCH (c)-[ib:IS_INSTANCE_BY]->(cm:CostAccountModel) " + 
-  " OPTIONAL MATCH (c)<-[f1:FEATURES]-(p1:Property)-[d1:IS_DRIVEN_BY]->(pm1:PropertyModel) " + 
-  " OPTIONAL MATCH (p1)-[v1:VALUES]->(o:Organization) " + 
-  " OPTIONAL MATCH (p1)-[v2:VALUES]-(l:Locality) " + 
-  " OPTIONAL MATCH (p1)-[v3:VALUES]-(u:UnitMeasure) " + 
-  " OPTIONAL MATCH (workpack)-[ii:IS_IN*]->(w2:Workpack)-[:BELONGS_TO]->(plan) " + 
-  " OPTIONAL MATCH (w2)<-[at2:APPLIES_TO]-(c2:CostAccount)-[ib2:IS_INSTANCE_BY]->(cm2) " + 
-  " OPTIONAL MATCH (c2)<-[f2:FEATURES]-(p2:Property)-[d2:IS_DRIVEN_BY]->(pm2:PropertyModel) " + 
-  " RETURN workpack, [ " + 
-  "    [ [at, c] ] " + 
-  "   ,[ [ib,cm] ]  " + 
-  "   ,[ [f1, p1, d1, pm1] ] " + 
-  "   ,[ [v1, o] ] " + 
-  "   ,[ [v2, l] ] " + 
-  "   ,[ [v3, u] ] " + 
-  "   ,[ [ii, w2] ] " + 
-  "   ,[ [at2, c2, ib2, cm2] ] " + 
-  "   ,[ [f2, p2, d2, pm2] ] " +
-  " ] ")
-  Optional<Workpack> findWorkpackWithCosts(@Param("idWorkpack") Long idWorkpack);
+  @Query("MATCH (c:CostAccount)-[ap:APPLIES_TO]->(workpack:Workpack{deleted: false})-[belongsTo:BELONGS_TO]->(plan:Plan) " +
+      ", (c)<-[f1:FEATURES]-(p1:Property)-[d1:IS_DRIVEN_BY]->(pm1:PropertyModel) " +
+      "WHERE id(workpack) IN $ids  AND belongsTo.linked=false " +
+      "RETURN c,f1,p1,d1,pm1,ap, workpack, [  " +
+      " [(p1)-[v1:VALUES]->(o:Organization) | [v1, o] ], " +
+      " [(p1)-[v2:VALUES]->(l:Locality) | [v2, l] ],  " +
+      " [(p1)-[v3:VALUES]->(u:UnitMeasure) | [v3, u] ] " +
+      "]"
+  )
+  List<CostAccount> findAllByWorkpackId(List<Long> ids);
 
   @Query("MATCH (c:CostAccount)-[i:APPLIES_TO]->(w:Workpack) "
     + " WHERE id(c) = $id "
-    + " OPTIONAL MATCH (c)<-[f1:FEATURES]-(p1:Property)-[d1:IS_DRIVEN_BY]->(pm1:PropertyModel) " 
-    + " OPTIONAL MATCH (p1)-[v1:VALUES]->(o:Organization) " 
-    + " OPTIONAL MATCH (p1)-[v2:VALUES]-(l:Locality) " 
-    + " OPTIONAL MATCH (p1)-[v3:VALUES]-(u:UnitMeasure) " 
-    + " OPTIONAL MATCH (c)-[ii:IS_INSTANCE_BY]->(cm:CostAccountModel) " 
     + " RETURN c, i, w, [ "
-    + " [f1, p1, d1, pm1], "
-    + " [v1, o], "
-    + " [v2, l], "
-    + " [v3, u], "
-    + " [ii,cm] "
+    + " [(c)<-[f1:FEATURES]-(p1:Property)-[d1:IS_DRIVEN_BY]->(pm1:PropertyModel) | [f1, p1, d1, pm1] ], "
+    + " [(c)<-[fo:FEATURES]-(po:Property)-[v1:VALUES]->(o:Organization) | [fo, po, v1, o] ], "
+    + " [(c)<-[fl:FEATURES]-(pl:Property)-[v2:VALUES]-(l:Locality) | [fl, pl, v2, l] ], "
+    + " [(c)<-[fu:FEATURES]-(pu:Property)-[v3:VALUES]-(u:UnitMeasure) | [fu, pu, v3, u] ], "
+    + " [(c)-[ii:IS_INSTANCE_BY]->(cm:CostAccountModel) | [ii,cm]] "
     + "]")
   Optional<CostAccount> findByIdWithPropertyModel(@Param("id") Long id);
 
@@ -90,5 +72,19 @@ public interface CostAccountRepository extends Neo4jRepository<CostAccount, Long
     "where id(c)=$id and toLower(pm.name) = 'limit' " +
     "return p.value")
   BigDecimal findCostAccountLimitById(Long id);
+
+  @Query(
+      "MATCH (snapshot:Step)-[i2:IS_SNAPSHOT_OF]->(step:Step) " +
+          ", (snapshot)-[consume:CONSUMES]->(ca2:CostAccount)-[cas:IS_SNAPSHOT_OF]->(mca:CostAccount) " +
+          " WHERE id(snapshot) IN $snapshotStepIds " +
+          " RETURN id(consume) as id, id(snapshot) as stepSnapshotId, id(mca) as costAccountMasterId " +
+          ", consume.actualCost as actualCost, consume.plannedCost as plannedCost "
+  )
+  List<ConsumesDto> findAllConsumesByStepIds(List<Long> snapshotStepIds);
+
+  @Query("MATCH (s:Schedule)<-[c1:COMPOSES]-(st1:Step)-[cs1:CONSUMES]->(c:CostAccount)<-[:FEATURES]-(name:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}) " +
+      "WHERE id(s) IN $ids " +
+      "RETURN id(c) as id, name.value as name ")
+  List<EntityDto> findCostAccountByScheduleIds(List<Long> ids);
 
 }

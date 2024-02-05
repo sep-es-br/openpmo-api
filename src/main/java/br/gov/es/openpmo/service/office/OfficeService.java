@@ -101,6 +101,10 @@ public class OfficeService {
     return this.officeRepository.findById(id).orElseThrow(() -> new NegocioException(OFFICE_NOT_FOUND));
   }
 
+  public Office findByIdThin(final Long id) {
+    return this.officeRepository.findByIdThin(id).orElseThrow(() -> new NegocioException(OFFICE_NOT_FOUND));
+  }
+
   public Optional<Office> maybeFindById(final Long id) {
     return this.officeRepository.findById(id);
   }

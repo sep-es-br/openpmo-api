@@ -22,9 +22,16 @@ public class WorkpackModelDeleteService {
     final Long idWorkpackModel,
     final Long idParentModel
   ) {
-    this.workpackModelRepository
-      .findAllByIdWithParents(idWorkpackModel, idParentModel)
-      .ifPresent(workpackModel -> deleteWorkpackModel(workpackModel, idParentModel));
+    if (idParentModel != null) {
+      this.workpackModelRepository
+              .findAllByIdWithParents(idWorkpackModel, idParentModel)
+              .ifPresent(workpackModel -> deleteWorkpackModel(workpackModel, idParentModel));
+    } else {
+      this.workpackModelRepository
+              .findByIdWithChildren(idWorkpackModel)
+              .ifPresent(workpackModel -> deleteWorkpackModel(workpackModel, idParentModel));
+    }
+
   }
 
   private void deleteWorkpackModel(WorkpackModel workpackModel, Long idParentModel) {
@@ -38,8 +45,10 @@ public class WorkpackModelDeleteService {
       return;
     }
     final Set<WorkpackModel> children = workpackModel.getChildren();
-    for (WorkpackModel child : children) {
-      deleteWorkpackModel(child, workpackModel.getId());
+    if (children != null) {
+      for (WorkpackModel child : children) {
+        deleteWorkpackModel(child, workpackModel.getId());
+      }
     }
     this.workpackModelRepository.delete(workpackModel);
   }

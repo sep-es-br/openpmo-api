@@ -7,6 +7,13 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.function.Function;
 
+import org.springframework.data.neo4j.annotation.QueryResult;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import br.gov.es.openpmo.model.schedule.Schedule;
+
+@QueryResult
 public class ScheduleDto {
 
   private Long id;
@@ -18,6 +25,20 @@ public class ScheduleDto {
   private BigDecimal baselineCost = BigDecimal.ZERO;
   private List<GroupStepDto> groupStep;
   private Long idWorkpack;
+
+  @JsonIgnore
+  private Long idSnapshot;
+
+  public ScheduleDto() {
+  }
+
+  public ScheduleDto(Schedule schedule) {
+    this.id = schedule.getId();
+    this.end = schedule.getEnd();
+    this.start = schedule.getStart();
+    this.idWorkpack = schedule.getIdWorkpack();
+  }
+
 
   public LocalDate getBaselineEnd() {
     return this.baselineEnd;
@@ -173,5 +194,11 @@ public class ScheduleDto {
     this.baselineCost = baselineCost;
   }
 
+  public Long getIdSnapshot() {
+    return idSnapshot;
+  }
 
+  public void setIdSnapshot(Long idSnapshot) {
+    this.idSnapshot = idSnapshot;
+  }
 }

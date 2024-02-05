@@ -12,6 +12,34 @@ import java.util.Optional;
 
 public interface PlanRepository extends Neo4jRepository<Plan, Long>, CustomRepository {
 
+
+  @Query("MATCH (p: Plan)-[r:IS_ADOPTED_BY]->(o:Office) "
+      + "WHERE id(o) = $id RETURN id(p) ")
+  List<Long> findAllIdPlanInOffice(@Param("id") Long id);
+
+  @Query("MATCH (plan:Plan) " +
+      "WHERE id(plan) = $id " +
+      "RETURN plan, [ " +
+      "[ (n)-[r_i1:`IS_STRUCTURED_BY`]->(p1:`PlanModel`) | [ r_i1, p1 ] ]," +
+      "[ (n)-[r_i1:`IS_ADOPTED_BY`]->(o1:`Office`) | [ r_i1, o1 ] ] " +
+      "]"
+  )
+  Optional<Plan> findById(Long id);
+
+  @Query("MATCH (p: Plan)-[r:IS_ADOPTED_BY]->(o:Office) WHERE id(o)= $id RETURN id(p) ORDER BY p.start DESC")
+  List<Long> findAllIdsInOfficeOrderByStartDesc(@Param("id") Long id);
+
+  @Query("MATCH (p: Plan) RETURN id(p) ")
+  List<Long> findAllIds();
+
+  @Query("MATCH (person:Person)-[permission:CAN_ACCESS_PLAN]->(plan:Plan)-[r:IS_ADOPTED_BY]->(o:Office) " +
+      "WHERE id(person) = $idPerson AND id(o) = $idOffice " +
+      "RETURN id(plan)")
+  List<Long> findAllWithPermissionByUserAndOffice(
+      @Param("idOffice") Long idOffice,
+      @Param("idPerson") Long idPerson
+  );
+
   @Query("MATCH (p: Plan)-[r:IS_ADOPTED_BY]->(o:Office) "
          + ", (p)-[sb:IS_STRUCTURED_BY]->(pm:PlanModel) "
          + "WHERE id(o)= $id RETURN p,r,o,sb,pm")
@@ -59,21 +87,8 @@ public interface PlanRepository extends Neo4jRepository<Plan, Long>, CustomRepos
     "where id(p)=$idPlan " +
     "optional match (p)<-[bt:BELONGS_TO{linked:false}]-(w:Workpack{deleted:false}) " +
     "where NOT (w)-[:IS_IN]->(:Workpack) " +
-    " OPTIONAL MATCH (w)<-[isIn:IS_IN*]-(children:Workpack{deleted:false}) " +
-    " OPTIONAL MATCH (w)-[iib:IS_INSTANCE_BY]->(wm) " +
-    " OPTIONAL MATCH (w)<-[isIn:IS_IN*]-(children)-[iib2:IS_INSTANCE_BY]->(wm2) " +
-    " OPTIONAL MATCH (w)<-[wf1:FEATURES]-(wName:Property)-[ii1:IS_DRIVEN_BY]->(pm1:PropertyModel{name: 'name'}) " +
-    " OPTIONAL MATCH (w)<-[wf2:FEATURES]-(wFullName:Property)-[ii2:IS_DRIVEN_BY]->(pm2:PropertyModel{name: 'fullName'}) " +
-    " OPTIONAL MATCH (w)<-[isIn:IS_IN*]-(children)<-[cf1:FEATURES]-(cName:Property)-[ii3:IS_DRIVEN_BY]->(pm3:PropertyModel{name: 'name'}) " +
-    " OPTIONAL MATCH (w)<-[isIn:IS_IN*]-(children)<-[cf2:FEATURES]-(cFullName:Property)-[ii4:IS_DRIVEN_BY]->(pm4:PropertyModel{name: 'fullName'}) " +
     "return p, bt, w, [ " +
-    "    [  [ isIn, children] ], " +
-    "    [  [iib, wm] ], " +
-    "    [  [iib2, wm2] ], " +
-    "    [  [wf1, wName, ii1, pm1] ], " +
-    "    [  [wf2, wFullName, ii2, pm2] ], " +
-    "    [  [cf1, cName, ii3, pm3] ], " +
-    "    [  [cf2, cFullName, ii4, pm4] ] " +
+    "    [ (w)<-[isIn:IS_IN*]-(children:Workpack{deleted:false}) | [ isIn, children] ], " +
     "] "
   )
   Optional<Plan> findFirstLevelStructurePlanById(@Param("idPlan") Long idPlan);

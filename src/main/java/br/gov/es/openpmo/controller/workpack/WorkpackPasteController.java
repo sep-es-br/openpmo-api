@@ -87,6 +87,7 @@ public class WorkpackPasteController {
       idParentTo,
       idWorkpackModelTo
     );
+    this.pasteToWorkpackService.saveIdParent(idWorkpack, idParentTo);
 
     if (idParentFrom != null) {
       this.pasteToWorkpackService.calculateDashboard(idParentFrom);

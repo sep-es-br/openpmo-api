@@ -83,14 +83,15 @@ public class StepController {
   ) {
     this.canAccessService.ensureCanEditResource(stepUpdateDto.getId(), authorization);
 
-    final Step step = this.updateStep.execute(stepUpdateDto, false);
+    final Step step = this.updateStep.execute(stepUpdateDto, false, true);
 
     return ResponseEntity.ok(ResponseBase.of(new EntityDto(step.getId())));
   }
 
   @Transactional
-  @PutMapping("/batch")
+  @PutMapping("/batch/{idSchedule}")
   public ResponseEntity<ResponseBaseItens<Long>> batchUpdate(
+    @PathVariable final Long idSchedule,
     @RequestBody final List<? extends @Valid StepUpdateDto> stepUpdates,
     @Authorization final String authorization
   ) {
@@ -103,7 +104,7 @@ public class StepController {
       authorization
     );
 
-    final List<Long> ids = this.batchUpdateStep.execute(stepUpdates);
+    final List<Long> ids = this.batchUpdateStep.execute(stepUpdates, idSchedule);
 
     return ResponseEntity.ok(ResponseBaseItens.of(ids));
   }

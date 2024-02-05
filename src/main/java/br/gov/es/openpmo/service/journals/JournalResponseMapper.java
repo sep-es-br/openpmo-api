@@ -7,7 +7,6 @@ import br.gov.es.openpmo.dto.journals.OfficeField;
 import br.gov.es.openpmo.dto.journals.PersonField;
 import br.gov.es.openpmo.dto.journals.PlanField;
 import br.gov.es.openpmo.dto.journals.WorkpackField;
-import br.gov.es.openpmo.dto.workpack.WorkpackName;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.File;
 import br.gov.es.openpmo.model.actors.Person;
@@ -22,7 +21,6 @@ import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.annotation.Transient;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -140,6 +138,7 @@ public class JournalResponseMapper {
 
     final Long workpackId = this.getWorkpackId(journalEntry);
     workpackField.setId(workpackId);
+
     workpackField.setName(this.getWorkpackName(workpackId));
     workpackField.setWorkpackModelName(this.getWorkpackModelName(workpackId));
     return workpackField;
@@ -203,17 +202,14 @@ public class JournalResponseMapper {
       .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND));
   }
 
-  @Transient
-  private String getWorkpackName(final Long workpackId) {
-    return this.findWorkpackNameAndFullname(workpackId)
-      .map(WorkpackName::getName)
-      .orElse("");
-  }
-
   private String getWorkpackModelName(final Long workpackId) {
     return this.workpackModelRepository.findByIdWorkpack(workpackId)
       .map(WorkpackModel::getModelName)
       .orElse("");
+  }
+
+  private String getWorkpackName(final Long workpackId) {
+    return this.workpackRepository.findById(workpackId).get().getName();
   }
 
   private Optional<Office> maybeOffice(final JournalEntry journalEntry) {
@@ -235,10 +231,6 @@ public class JournalResponseMapper {
       .build()
       .toUri()
       .toString();
-  }
-
-  private Optional<WorkpackName> findWorkpackNameAndFullname(final Long workpackId) {
-    return this.workpackRepository.findWorkpackNameAndFullname(workpackId);
   }
 
   private static String getEndpoint(final File file) {

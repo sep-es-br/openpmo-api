@@ -5,15 +5,14 @@ import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 
 import java.util.List;
-import java.util.Optional;
 
 @FunctionalInterface
 public interface IFirstTimeSubmitBaselineService {
 
-  Long[] submit(
+  void submit(
     final Baseline baseline,
-    final Long workpackId,
-    final Optional<Long> parentId
+    final Workpack workpack,
+    final List<UpdateRequest> updates
   );
 
 }

@@ -1,10 +1,11 @@
 package br.gov.es.openpmo.dto.treeview;
 
-import br.gov.es.openpmo.model.workpacks.Workpack;
-import org.springframework.data.neo4j.annotation.QueryResult;
-
 import java.util.Objects;
 import java.util.Set;
+
+import org.springframework.data.neo4j.annotation.QueryResult;
+
+import br.gov.es.openpmo.dto.menu.WorkpackResultDto;
 
 @QueryResult
 public class WorkpackTreeViewDto {
@@ -15,13 +16,13 @@ public class WorkpackTreeViewDto {
   private Set<WorkpackTreeViewDto> children;
 
   public static WorkpackTreeViewDto of(
-    final Workpack workpack,
+    final WorkpackResultDto workpack,
     final String workpackName
   ) {
     final WorkpackTreeViewDto dto = new WorkpackTreeViewDto();
     dto.id = workpack.getId();
     dto.name = workpackName;
-    dto.icon = workpack.getIcon();
+    dto.icon = workpack.getFontIcon();
     return dto;
   }
 

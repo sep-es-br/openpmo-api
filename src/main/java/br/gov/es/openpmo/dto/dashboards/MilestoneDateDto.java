@@ -6,6 +6,7 @@ import org.springframework.data.neo4j.annotation.QueryResult;
 @QueryResult
 public class MilestoneDateDto {
 
+    private Long idWorkpack;
     private Boolean completed;
     private String milestoneDate;
 
@@ -15,6 +16,24 @@ public class MilestoneDateDto {
         this.completed = completed;
         this.milestoneDate = milestoneDate;
         this.snapshotDate = snapshotDate;
+    }
+
+    public MilestoneDateDto() {
+    }
+
+    public MilestoneDateDto(Long idWorkpack, Boolean completed, String milestoneDate, String snapshotDate) {
+        this.idWorkpack = idWorkpack;
+        this.completed = completed;
+        this.milestoneDate = milestoneDate;
+        this.snapshotDate = snapshotDate;
+    }
+
+    public Long getIdWorkpack() {
+        return idWorkpack;
+    }
+
+    public void setIdWorkpack(Long idWorkpack) {
+        this.idWorkpack = idWorkpack;
     }
 
     public Boolean getCompleted() {

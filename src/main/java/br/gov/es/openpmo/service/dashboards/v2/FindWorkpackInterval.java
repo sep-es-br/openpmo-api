@@ -49,25 +49,11 @@ public class FindWorkpackInterval {
       }
     }
     if (workpack instanceof Milestone) {
-      final Set<Property> properties = workpack.getProperties();
-      if (properties != null) {
-        final List<Date> dates = properties.stream()
-          .filter(Date.class::isInstance)
-          .map(Date.class::cast)
-          .collect(Collectors.toList());
-        for (Date date : dates) {
-          final LocalDateTime value = date.getValue();
-          if (value == null) {
-            continue;
-          }
-          final LocalDate localDate = value.toLocalDate();
-          if (initialDate == null || initialDate.isAfter(localDate)) {
-            initialDate = localDate;
-          }
-          if (endDate == null || endDate.isBefore(localDate)) {
-            endDate = localDate;
-          }
-        }
+      final LocalDateTime value = workpack.getDate();
+      if (value != null) {
+        final LocalDate localDate = value.toLocalDate();
+        initialDate = localDate;
+        endDate = localDate;
       }
     }
     final Set<Workpack> children = workpack.getChildren();

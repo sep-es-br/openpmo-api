@@ -54,18 +54,12 @@ public interface CustomFilterRepository extends Neo4jRepository<CustomFilter, Lo
     @Param("idPerson") Long idPerson
   );
 
-  @Query("MATCH (customFilter:CustomFilter) WHERE ID(customFilter)=$idFilter "
-    + " OPTIONAL MATCH (rules:Rules)-[has:HAS]->(customFilter) " 
-    + " OPTIONAL MATCH (customFilter)-[for:FOR]->(workpackModel:WorkpackModel) " 
-    + " OPTIONAL MATCH (customFilter)-[:FOR]->(:WorkpackModel)<-[feat:FEATURES]-(propertyModel:PropertyModel) " 
-    + " OPTIONAL MATCH (customFilter)-[:FOR]->(:WorkpackModel)<-[featGroup:FEATURES]-(groupModel:GroupModel) " 
-    + " OPTIONAL MATCH (customFilter)-[:FOR]->(:WorkpackModel)<-[:FEATURES]-(:GroupModel)-[groups:GROUPS]->(groupedProperty:PropertyModel) " 
-    + " RETURN customFilter, [" +
-         "  [ [rules, has] ]," +
-         "  [ [for, workpackModel] ]," +
-         "  [ [feat, propertyModel] ]," +
-         "  [ [featGroup, groupModel] ]," +
-         "  [ [groups, groupedProperty] ]" +
+  @Query("MATCH (customFilter:CustomFilter) WHERE ID(customFilter)=$idFilter RETURN customFilter, [" +
+         "  [ (rules:Rules)-[has:HAS]->(customFilter) | [rules, has] ]," +
+         "  [ (customFilter)-[for:FOR]->(workpackModel:WorkpackModel) | [for, workpackModel] ]," +
+         "  [ (customFilter)-[:FOR]->(:WorkpackModel)<-[feat:FEATURES]-(propertyModel:PropertyModel) | [feat, propertyModel] ]," +
+         "  [ (customFilter)-[:FOR]->(:WorkpackModel)<-[featGroup:FEATURES]-(groupModel:GroupModel) | [featGroup, groupModel] ]," +
+         "  [ (customFilter)-[:FOR]->(:WorkpackModel)<-[:FEATURES]-(:GroupModel)-[groups:GROUPS]->(groupedProperty:PropertyModel) | [groups, groupedProperty] ]" +
          "]")
   Optional<CustomFilter> findByIdWithRelationships(@Param("idFilter") Long idFilter);
 

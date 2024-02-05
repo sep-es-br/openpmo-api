@@ -19,7 +19,7 @@ public class FindCostAccountModel {
 
   public CostAccountModel execute(Long id) {
     Objects.requireNonNull(id, ApplicationMessage.ID_COST_ACCOUNT_MODEL_NOT_NULL);
-    return this.costAccountModelRepository.findByIdWithRelationships(id)
+    return this.costAccountModelRepository.findById(id)
       .orElseThrow(() -> new RegistroNaoEncontradoException(ApplicationMessage.COST_ACCOUNT_MODEL_NOT_FOUND));
   }
 

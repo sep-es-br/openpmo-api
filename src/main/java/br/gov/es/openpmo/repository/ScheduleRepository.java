@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.repository;
 
+import br.gov.es.openpmo.dto.schedule.ScheduleDto;
 import br.gov.es.openpmo.model.schedule.Schedule;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
@@ -11,54 +12,33 @@ import java.util.Optional;
 public interface ScheduleRepository extends Neo4jRepository<Schedule, Long> {
 
   @Query("MATCH (s:Schedule)-[f:FEATURES]->(w:Workpack) WHERE id(w) = $idWorkpack "
-         + " OPTIONAL MATCH (s)<-[c:COMPOSES]-(st:Step) "
-         + " OPTIONAL MATCH (st)-[c1:CONSUMES]->(ca:CostAccount) "
          + "RETURN s, f, w, [ "
-         + "  [ [c, st] ],"
-         + "  [ [c1, ca] ]"
+         + "  [(s)<-[c:COMPOSES]-(st:Step) | [c, st] ],"
+         + "  [(s)<-[c1:COMPOSES]-(st1:Step)-[cs1:CONSUMES]->(ca:CostAccount) | [c1, st1, cs1, ca] ]"
          + "]")
   List<Schedule> findAllByWorkpack(@Param("idWorkpack") Long idWorkpack);
 
   @Query("MATCH (s:Schedule)-[f:FEATURES]->(w:Workpack) WHERE id(s) = $id "
-         + " OPTIONAL MATCH (s)<-[c:COMPOSES]-(st:Step) "
-         + " OPTIONAL MATCH (st)-[c1:CONSUMES]->(ca:CostAccount) "
          + "RETURN s, f, w, [ "
-         + "  [ [c, st] ],"
-         + "  [ [c1, ca] ]"
+         + "  [(s)<-[c:COMPOSES]-(st:Step) | [c, st] ],"
+         + "  [(s)<-[c1:COMPOSES]-(st1:Step)-[cs1:CONSUMES]->(ca:CostAccount) | [c1, st1, cs1, ca] ]"
          + "]")
   Optional<Schedule> findByIdSchedule(@Param("id") Long id);
 
   @Query("MATCH (s:Schedule)-[f:FEATURES]->(w:Workpack) " +
          "WHERE id(w)=$idWorkpack " +
-         " OPTIONAL MATCH (s)<-[c:COMPOSES]-(st:Step) " +
-         " OPTIONAL MATCH (st)-[c1:CONSUMES]->(ca:CostAccount) " +
          "RETURN s, f, w, [" +
-         "  [ [c, st] ]," +
-         "  [ [c1, ca] ]  " +
+         "  [(s)<-[c:COMPOSES]-(st:Step) | [c, st] ]," +
+         "  [(s)<-[c1:COMPOSES]-(st1:Step)-[cs1:CONSUMES]->(ca:CostAccount) | [c1, st1, cs1, ca] ]  " +
          "]")
   Optional<Schedule> findScheduleByWorkpackId(Long idWorkpack);
 
-  @Query("MATCH (s:Schedule)-[f:FEATURES]->(w:Workpack) " +
-    "WHERE id(w)=$idWorkpack " +
-    " OPTIONAL MATCH (s)<-[c:COMPOSES]-(st:Step) " +
-    " OPTIONAL MATCH (st)-[c1:CONSUMES]->(ca:CostAccount) " +
-    " OPTIONAL MATCH (w)<-[ff:FEATURES]-(pp:Property)-[vv:VALUES]->(uu:UnitMeasure) where (pp)-[:IS_DRIVEN_BY]->(:UnitSelectionModel{name:'Unidade de Medida'}) " +
-    "RETURN s, f, w, [" +
-    "  [ [c, st] ]," +
-    "  [ [c1, ca] ], " +
-    "  [ [ff,pp,vv,uu]] " +
-    "]")
-  Optional<Schedule> findScheduleUnitMeasureByWorkpackId(Long idWorkpack);
-
   @Query("MATCH (m:Schedule)<-[i:IS_SNAPSHOT_OF]-(s:Schedule)-[c:COMPOSES]->(b:Baseline) " +
          "WHERE id(m)=$idSchedule AND id(b)=$idBaseline " +
-         " OPTIONAL MATCH (s)<-[cs:COMPOSES]-(st:Step) " +
-         " OPTIONAL MATCH (st)-[c1:CONSUMES]->(ca:CostAccount) " +
-         " OPTIONAL MATCH (ca)-[cas:IS_SNAPSHOT_OF]->(mca:CostAccount) " +
          "RETURN s, [ " +
-         "  [  [ cs, st] ], " +
-         "  [  [ c1, ca] ], " +
-         "  [  [ cas, mca ] ] " +
+         "  [ (s)<-[cs:COMPOSES]-(st:Step) | [ cs, st] ], " +
+         "  [ (s)<-[cs2:COMPOSES]-(st2:Step)-[c1:CONSUMES]->(ca:CostAccount) | [ cs2, st2, c1, ca ] ], " +
+         "  [ (s)<-[cs3:COMPOSES]-(st3:Step)-[c2:CONSUMES]->(ca2:CostAccount)-[cas:IS_SNAPSHOT_OF]->(mca:CostAccount) | [ cs3, st3, c2, ca2, cas, mca ] ] " +
          "]")
   Optional<Schedule> findSnapshotByMasterIdAndBaselineId(
     Long idSchedule,
@@ -91,14 +71,18 @@ public interface ScheduleRepository extends Neo4jRepository<Schedule, Long> {
 
   @Query("MATCH (m:Schedule)<-[i:IS_SNAPSHOT_OF]-(s:Schedule)-[c:COMPOSES]->(b:Baseline{active:true}) " +
          "WHERE id(m)=$idSchedule " +
-         " OPTIONAL MATCH (s)<-[cs:COMPOSES]-(st:Step) " +
-         " OPTIONAL MATCH (st)-[c1:CONSUMES]->(ca:CostAccount) " +
-         " OPTIONAL MATCH (ca)-[cas:IS_SNAPSHOT_OF]->(mca:CostAccount) " +
          "RETURN s, [ " +
-         "  [  [ cs, st] ], " +
-         "  [  [ c1, ca] ], " +
-         "  [  [ cas, mca ] ] " +
+         "  [ (s)<-[cs:COMPOSES]-(st:Step) | [ cs, st] ], " +
+         "  [ (s)<-[cs2:COMPOSES]-(st2:Step)-[c1:CONSUMES]->(ca:CostAccount) | [ c1, ca, st2 ] ], " +
+         "  [ (s)<-[cs3:COMPOSES]-(st3:Step)-[c2:CONSUMES]->(ca2:CostAccount)-[cas:IS_SNAPSHOT_OF]->(mca:CostAccount) | [ cs3, st3, c2, cas, mca ] ] " +
          "]")
   Optional<Schedule> findSnapshotByMasterId(Long idSchedule);
+
+  @Query("MATCH (schedule:Schedule)<-[i:IS_SNAPSHOT_OF]-(snapshot:Schedule)-[c:COMPOSES]->(b:Baseline{active:true}) " +
+      "WHERE id(schedule) IN $idSchedule " +
+      "RETURN id(schedule) as id, id(snapshot) as idSnapshot, schedule.end as end, schedule.start as start " +
+      ", snapshot.end as baselineEnd, snapshot.start as baselineStart "
+  )
+  List<ScheduleDto> findSnapshotByMasterIds(List<Long> idSchedule);
 
 }

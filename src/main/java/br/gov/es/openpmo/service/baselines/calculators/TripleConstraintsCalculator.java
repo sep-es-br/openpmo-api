@@ -7,7 +7,6 @@ import br.gov.es.openpmo.dto.baselines.ccbmemberview.ScheduleInterval;
 import br.gov.es.openpmo.dto.baselines.ccbmemberview.ScopeDetailItem;
 import br.gov.es.openpmo.dto.baselines.ccbmemberview.StepCollectedData;
 import br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintOutput;
-import br.gov.es.openpmo.dto.workpack.WorkpackName;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.relations.Consumes;
@@ -209,7 +208,7 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
   ) {
     if(master.isDeleted()) return;
 
-    final String name = this.findWorkpackName(master);
+    final String name = master.getName();
 
     final StepCollectedData stepCollectedData = this.collectStepDataOfMaster(
       idBaselineReference,
@@ -259,12 +258,6 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
       .orElse(null);
   }
 
-  private String findWorkpackName(final Workpack deliverable) {
-    return this.workpackRepository.findWorkpackNameAndFullname(deliverable.getId())
-      .map(WorkpackName::getName)
-      .orElse("");
-  }
-
   private ScheduleInterval findSnapshotOfScheduleAsScheduleInterval(
     final Long idBaseline,
     final Schedule master
@@ -311,7 +304,7 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
     final Schedule masterSchedule,
     final TripleConstraintOutput tripleConstraint
   ) {
-    final String name = this.findWorkpackName(master);
+    final String name = master.getName();
 
     final StepCollectedData stepCollectedData = this.stepDataCollector.collect(
       idBaseline,

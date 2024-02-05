@@ -17,7 +17,6 @@ import br.gov.es.openpmo.dto.workpack.TextAreaDto;
 import br.gov.es.openpmo.dto.workpack.TextDto;
 import br.gov.es.openpmo.dto.workpack.ToggleDto;
 import br.gov.es.openpmo.dto.workpack.UnitSelectionDto;
-import br.gov.es.openpmo.dto.workpack.WorkpackName;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.exception.RegistroNaoEncontradoException;
 import br.gov.es.openpmo.model.filter.CustomFilter;
@@ -45,6 +44,7 @@ import br.gov.es.openpmo.repository.PropertyRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllCostAccountUsingCustomFilter;
 import br.gov.es.openpmo.service.reports.models.GetPropertyModelDtoFromEntity;
+import br.gov.es.openpmo.utils.ApplicationCacheUtil;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import br.gov.es.openpmo.utils.TextSimilarityScore;
 import org.apache.commons.lang3.StringUtils;
@@ -108,6 +108,8 @@ public class CostAccountService {
 
   private final PropertyRepository propertyRepository;
 
+  private final ApplicationCacheUtil applicationCacheUtil;
+
   @Autowired
   public CostAccountService(
     final CostAccountRepository costAccountRepository,
@@ -122,6 +124,7 @@ public class CostAccountService {
     final WorkpackService workpackService,
     final ModelMapper modelMapper,
     final CostAccountModelRepository costAccountModelRepository,
+    final ApplicationCacheUtil applicationCacheUtil,
     final PropertyRepository propertyRepository
   ) {
     this.costAccountRepository = costAccountRepository;
@@ -136,6 +139,7 @@ public class CostAccountService {
     this.workpackService = workpackService;
     this.modelMapper = modelMapper;
     this.costAccountModelRepository = costAccountModelRepository;
+    this.applicationCacheUtil = applicationCacheUtil;
     this.propertyRepository = propertyRepository;
   }
 
@@ -251,9 +255,8 @@ public class CostAccountService {
   }
 
   private List<CostAccount> findAllByIdWorkpack(final Long idWorkpack) {
-    final Workpack workpack = this.costAccountRepository.findWorkpackWithCosts(idWorkpack)
-      .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
-    return this.fetchCostAccountFromWorkpack(workpack);
+    List<Long> idsWorkpakWithParents = applicationCacheUtil.getListIdWorkpackWithParent(idWorkpack);
+    return this.costAccountRepository.findAllByWorkpackId(idsWorkpakWithParents);
   }
 
   private List<? extends PropertyDto> getPropertiesDto(
@@ -407,11 +410,10 @@ public class CostAccountService {
     final CostAccountDto dto,
     final Long workpackId
   ) {
-    final Optional<WorkpackName> maybeWorkpackName = this.maybeGetWorkpackNameData(workpackId);
-    if (maybeWorkpackName.isPresent()) {
-      final WorkpackName workpackName = maybeWorkpackName.get();
-      dto.setWorkpackModelName(workpackName.getName());
-      dto.setWorkpackModelFullName(workpackName.getFullName());
+    final Optional<Workpack> workpack = this.workpackRepository.findById(workpackId, 0);
+    if (workpack.isPresent()) {
+      dto.setWorkpackModelName(workpack.get().getName());
+      dto.setWorkpackModelFullName(workpack.get().getFullName());
     }
   }
 
@@ -432,10 +434,6 @@ public class CostAccountService {
       costs.addAll(this.fetchCostAccountFromWorkpack(workpack));
     }
     return costs;
-  }
-
-  private Optional<WorkpackName> maybeGetWorkpackNameData(final Long workpackId) {
-    return this.workpackRepository.findWorkpackNameAndFullname(workpackId);
   }
 
   public CostAccount getCostAccount(final Object cost) {

@@ -1,12 +1,10 @@
 package br.gov.es.openpmo.service.baselines;
 
 import br.gov.es.openpmo.dto.baselines.UpdateResponse;
-import br.gov.es.openpmo.dto.workpack.WorkpackName;
 import br.gov.es.openpmo.enumerator.BaselineStatus;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.BaselineRepository;
-import br.gov.es.openpmo.repository.WorkpackRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
@@ -21,15 +19,11 @@ public class GetFirstTimeBaselineUpdatesService implements IGetFirstTimeBaseline
 
   private final BaselineRepository baselineRepository;
 
-  private final WorkpackRepository workpackRepository;
-
   @Autowired
   public GetFirstTimeBaselineUpdatesService(
-    final BaselineRepository baselineRepository,
-    final WorkpackRepository workpackRepository
+    final BaselineRepository baselineRepository
   ) {
     this.baselineRepository = baselineRepository;
-    this.workpackRepository = workpackRepository;
   }
 
   private static String getIcon(final Workpack workpack) {
@@ -49,17 +43,13 @@ public class GetFirstTimeBaselineUpdatesService implements IGetFirstTimeBaseline
       result = new UpdateResponse(
         master.getId(),
         getIcon(master),
-        this.getDescription(master),
+        master.getName(),
         BaselineStatus.NEW,
         null
       );
     }
 
     return result;
-  }
-
-  private String getDescription(final Workpack workpack) {
-    return Optional.ofNullable(workpack).map(this::getWorkpackName).orElse("");
   }
 
   @Override
@@ -81,12 +71,6 @@ public class GetFirstTimeBaselineUpdatesService implements IGetFirstTimeBaseline
     }
 
     return updates;
-  }
-
-  private String getWorkpackName(final Workpack workpack) {
-    return this.workpackRepository.findWorkpackNameAndFullname(workpack.getId())
-      .map(WorkpackName::getName)
-      .orElse(null);
   }
 
   @Nullable

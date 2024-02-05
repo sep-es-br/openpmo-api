@@ -21,7 +21,6 @@ import br.gov.es.openpmo.repository.custom.filters.FindAllPlanUsingCustomFilter;
 import br.gov.es.openpmo.service.actors.PersonService;
 import br.gov.es.openpmo.service.office.OfficeService;
 import br.gov.es.openpmo.service.permissions.OfficePermissionService;
-import br.gov.es.openpmo.service.ui.BreadcrumbPlanHelper;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +33,7 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.CUSTOM_FILTER_NOT_FOUND
 import static br.gov.es.openpmo.utils.ApplicationMessage.PLAN_NOT_FOUND;
 
 @Service
-public class PlanService implements BreadcrumbPlanHelper {
+public class PlanService {
 
   private final PlanRepository planRepository;
   private final PersonService personService;
@@ -96,6 +95,14 @@ public class PlanService implements BreadcrumbPlanHelper {
     if (StringUtils.isNotBlank(term)) filter.setSimilarityFilter(true);
 
     return this.findAllPlan.execute(filter, params);
+  }
+
+  public List<Long> findAllIdsInOfficeOrderByStartDesc(final Long idOffice) {
+    return this.planRepository.findAllIdsInOfficeOrderByStartDesc(idOffice);
+  }
+
+  public List<Long> findAllUserHasPermission(Long idOffice,  Long idPerson) {
+    return planRepository.findAllWithPermissionByUserAndOffice(idOffice, idPerson);
   }
 
   public List<Plan> findAllInOffice(final Long idOffice) {

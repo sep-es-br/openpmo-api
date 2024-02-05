@@ -148,6 +148,10 @@ public class PasteToWorkpackService {
     this.handlePasteWorkpack(workpack, workpackModel, plan);
   }
 
+  public void saveIdParent(Long idWorkpack, Long idParentTo) {
+    this.workpackRepository.setNewIdParentPasted(idWorkpack, idParentTo);
+  }
+
   public void calculateDashboard(final Long workpackId) {
     this.workpackRepository.findAllInHierarchy(workpackId)
       .forEach(worpackId -> this.dashboardService.calculate(worpackId, true));

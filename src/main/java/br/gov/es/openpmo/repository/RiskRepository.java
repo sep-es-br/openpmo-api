@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.repository;
 
+import br.gov.es.openpmo.dto.dashboards.RiskWorkpackDto;
 import br.gov.es.openpmo.dto.dashboards.RiskDataChartDto;
 import br.gov.es.openpmo.model.risk.Risk;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
@@ -19,6 +20,11 @@ public interface RiskRepository extends Neo4jRepository<Risk, Long>, CustomRepos
     "where id(w)=$workpackId " +
     "return distinct r")
   List<Risk> findByWorkpackId(Long workpackId);
+
+  @Query("match (w:Workpack)<-[:IS_IN*0..]-(:Workpack)<-[:IS_FORSEEN_ON]-(r:Risk) " +
+      "where id(w) IN $workpackId " +
+      " return id(w) as idWorkpack, r as risk ")
+  List<RiskWorkpackDto> findByWorkpackIds(List<Long> workpackId);
 
   @Query("match (w:Workpack{deleted:false,canceled:false}) " +
          "where id(w)=$workpackId " +
@@ -41,13 +47,11 @@ public interface RiskRepository extends Neo4jRepository<Risk, Long>, CustomRepos
 
   @Query("match (risk:Risk) " +
          "where id(risk)=$riskId " +
-         " OPTIONAL MATCH (risk)-[isReportedFor:IS_FORSEEN_ON]->(workpack:Workpack{deleted:false,canceled:false}) " +
-         " OPTIONAL MATCH (risk)<-[mitigates:MITIGATES]-(response:RiskResponse) " +
-         " OPTIONAL MATCH (response)<-[responsibleFor:IS_RESPONSIBLE_FOR]-(responsible:Person) " +
          "return risk, [ " +
-         "   [ [isReportedFor, workpack] ], " +
-         "   [ [mitigates, response] ], " +
-         "   [ [responsibleFor, responsible] ] " +
+         "   [ (risk)-[isReportedFor:IS_FORSEEN_ON]->(workpack:Workpack{deleted:false,canceled:false}) | [isReportedFor, " +
+         "workpack] ], " +
+         "   [ (risk)<-[mitigates:MITIGATES]-(response:RiskResponse) | [mitigates, response] ], " +
+         "   [ (risk)<-[mitigatesr:MITIGATES]-(responser:RiskResponse)<-[responsibleFor:IS_RESPONSIBLE_FOR]-(responsible:Person) | [mitigatesr, responser, responsibleFor, responsible]] " +
          "]")
   Optional<Risk> findRiskDetailById(Long riskId);
 

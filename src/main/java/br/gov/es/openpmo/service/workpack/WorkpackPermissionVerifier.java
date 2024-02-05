@@ -8,13 +8,16 @@ import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.relations.CanAccessOffice;
 import br.gov.es.openpmo.model.relations.CanAccessPlan;
+import br.gov.es.openpmo.model.relations.CanAccessWorkpack;
 import br.gov.es.openpmo.model.workpacks.Workpack;
+import br.gov.es.openpmo.repository.WorkpackPermissionRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.repository.WorkpackSharedRepository;
 import br.gov.es.openpmo.service.actors.PersonService;
 import br.gov.es.openpmo.service.office.plan.PlanService;
 import br.gov.es.openpmo.service.permissions.OfficePermissionService;
 import br.gov.es.openpmo.service.permissions.PlanPermissionService;
+import br.gov.es.openpmo.utils.ApplicationCacheUtil;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -29,6 +32,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.enumerator.PermissionLevelEnum.EDIT;
+import static br.gov.es.openpmo.enumerator.PermissionLevelEnum.NONE;
 import static br.gov.es.openpmo.enumerator.PermissionLevelEnum.READ;
 import static java.lang.Boolean.TRUE;
 
@@ -42,6 +46,8 @@ public class WorkpackPermissionVerifier {
   private final PlanPermissionService planPermissionService;
   private final OfficePermissionService officePermissionService;
   private final WorkpackSharedRepository workpackSharedRepository;
+  private final WorkpackPermissionRepository workpackPermissionRepository;
+  private final ApplicationCacheUtil applicationCacheUtil;
 
   @Autowired
   public WorkpackPermissionVerifier(
@@ -50,6 +56,8 @@ public class WorkpackPermissionVerifier {
     final WorkpackRepository workpackRepository,
     final PlanPermissionService planPermissionService,
     final OfficePermissionService officePermissionService,
+    final WorkpackPermissionRepository workpackPermissionRepository,
+    final ApplicationCacheUtil applicationCacheUtil,
     final WorkpackSharedRepository workpackSharedRepository
   ) {
     this.personService = personService;
@@ -58,6 +66,8 @@ public class WorkpackPermissionVerifier {
     this.planPermissionService = planPermissionService;
     this.officePermissionService = officePermissionService;
     this.workpackSharedRepository = workpackSharedRepository;
+    this.workpackPermissionRepository = workpackPermissionRepository;
+    this.applicationCacheUtil = applicationCacheUtil;
 
   }
 
@@ -92,35 +102,49 @@ public class WorkpackPermissionVerifier {
     }
     final Plan plan = this.findPlanById(idPlan);
 
-    final List<PermissionDto> permissionsOffice = this.fetchOfficePermissions(plan.getOffice().getId(), idUser);
+    final List<PermissionDto> permissionsOffice = this.fetchOfficePermissions(plan.getOffice(), person);
+    List<PermissionDto> permissionEditOffice = permissionsOffice.stream().filter(
+        p -> EDIT.equals(p.getLevel())).collect(Collectors.toList());
+    if (!permissionEditOffice.isEmpty()) {
+      return permissionEditOffice;
+    }
+    final List<PermissionDto> permissions = new ArrayList<>(permissionsOffice);
+
 
     final List<PermissionDto> permissionsPlan = this.fetchPlanPermissions(idPlan, idUser);
-
-    final Optional<Workpack> maybeWorkpack = this.workpackRepository.findByIdWorkpackAndIdPlan(idWorkpack, idPlan);
-
-    if (!maybeWorkpack.isPresent()) return null;
-
-    final Workpack workpack = maybeWorkpack.get();
-
-    if (hasStakeholderSessionActive(workpack)) {
-      final List<PermissionDto> permissions = this.fetchPermissionsFromWorkpack(workpack, idUser, idPlan);
-      return this.fetchPermissions(
-        permissions,
-        permissionsPlan,
-        permissionsOffice,
-        idWorkpack,
-        idPlan
-      );
+    List<PermissionDto> permissionEditPlan = permissionsPlan.stream().filter(
+        p -> p.getIdPlan().equals(idPlan) && EDIT.equals(p.getLevel())).collect(Collectors.toList());
+    if (!permissionEditPlan.isEmpty()) {
+      return permissionEditPlan;
     }
-    final List<PermissionDto> permissions = this.fetchPermissionsFromWorkpack(workpack, idUser, idPlan);
+    permissions.addAll(permissionsPlan);
 
-    return this.fetchPermissions(
-      permissions,
-      permissionsPlan,
-      permissionsOffice,
-      idWorkpack,
-      idPlan
-    );
+    List<Long> idsWorkpakWithParents = applicationCacheUtil.getListIdWorkpackWithParent(idWorkpack);
+    List<Long> idsWorkpakWithChildren = applicationCacheUtil.getListIdWorkpackChildren(idWorkpack, plan.getId());
+
+    final List<CanAccessWorkpack> canAccessWorkpack = this.workpackPermissionRepository
+        .findByIdPlanAndIdPerson(idPlan,idUser).stream()
+        .filter(c -> idsWorkpakWithChildren.stream().anyMatch(id -> id.equals(c.getIdWorkpack()))
+            || idsWorkpakWithParents.stream().anyMatch(id -> id.equals(c.getIdWorkpack())))
+        .collect(Collectors.toList());
+
+    List<CanAccessWorkpack> permissionPrent = canAccessWorkpack.stream()
+           .filter(p -> !NONE.equals(p.getPermissionLevel()) && idsWorkpakWithParents.contains(p.getIdWorkpack()))
+           .collect(Collectors.toList());
+
+    if (!permissionPrent.isEmpty()) {
+      return permissionPrent.stream().map(PermissionDto::of).collect(Collectors.toList());
+    }
+
+    List<CanAccessWorkpack> permissionChildren = canAccessWorkpack.stream()
+        .filter(p -> !NONE.equals(p.getPermissionLevel()) && idsWorkpakWithChildren.contains(p.getIdWorkpack()))
+        .collect(Collectors.toList());
+
+    if (!permissionChildren.isEmpty()) {
+      return Collections.singletonList(PermissionDto.basicRead());
+    }
+
+    return permissions.stream().filter(c -> READ.equals(c.getLevel())).collect(Collectors.toList());
   }
 
   private Set<Workpack> getAllWorkpacksUsingPlan(final Long idPlan) {
@@ -194,7 +218,7 @@ public class WorkpackPermissionVerifier {
       return workpackList;
     }
     final Plan plan = this.findPlanById(idPlan);
-    final List<PermissionDto> permissionsOffice = this.fetchOfficePermissions(plan.getOffice().getId(), idUser);
+    final List<PermissionDto> permissionsOffice = this.fetchOfficePermissions(plan.getOffice(), person);
     final List<PermissionDto> permissionsPlan = this.fetchPlanPermissions(idPlan, idUser);
 
     final Set<Workpack> workpacks = this.getAllWorkpacksUsingPlan(idPlan);
@@ -296,12 +320,12 @@ public class WorkpackPermissionVerifier {
   }
 
   public List<PermissionDto> fetchOfficePermissions(
-    final Long officeId,
-    final Long personId
+    final Office office,
+    final Person person
   ) {
     final List<CanAccessOffice> canAccessOffices = this.officePermissionService.findByOfficeAndPerson(
-      officeId,
-      personId
+      office.getId(),
+      person.getId()
     );
     return canAccessOffices.stream()
       .map(PermissionDto::of)

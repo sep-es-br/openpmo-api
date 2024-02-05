@@ -22,6 +22,15 @@ public interface WorkpackPermissionRepository extends Neo4jRepository<CanAccessW
   );
 
   @Query("MATCH (person:Person)-[canAccess:CAN_ACCESS_WORKPACK]->(workpack:Workpack) " +
+      " WHERE canAccess.idPlan = $idPlan " +
+      " AND id(person) = $idPerson " +
+      " RETURN person, canAccess, workpack")
+  List<CanAccessWorkpack> findByIdPlanAndIdPerson(
+      @Param("idPlan") Long idPlan,
+      @Param("idPerson") Long idPerson
+  );
+
+  @Query("MATCH (person:Person)-[canAccess:CAN_ACCESS_WORKPACK]->(workpack:Workpack) " +
     " WHERE id(workpack)=$idWorkpack AND id(person)=$idPerson " +
     " RETURN count(canAccess)>0")
   boolean existsByIdWorkpackAndIdPerson(

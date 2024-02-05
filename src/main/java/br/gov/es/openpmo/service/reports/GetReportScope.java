@@ -110,6 +110,7 @@ public class GetReportScope {
   }
 
   private Plan getPlanStructure(final Long idPlan) {
+    // TO DO Verificar essa query
     return this.planRepository.findFirstLevelStructurePlanById(idPlan)
       .orElseThrow(() -> new RegistroNaoEncontradoException(ApplicationMessage.PLAN_NOT_FOUND));
   }

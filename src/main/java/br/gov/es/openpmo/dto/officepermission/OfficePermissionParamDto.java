@@ -57,7 +57,7 @@ public class OfficePermissionParamDto {
 
   @JsonIgnore
   private boolean hasEdit() {
-    return this.permissions.stream().map(PermissionDto::getLevel).anyMatch(level -> level.equals(PermissionLevelEnum.EDIT));
+    return this.permissions.stream().map(PermissionDto::getLevel).anyMatch(PermissionLevelEnum.EDIT::equals);
   }
 
 }

@@ -15,7 +15,6 @@ import br.gov.es.openpmo.dto.person.queries.PersonByFullNameQuery;
 import br.gov.es.openpmo.dto.person.queries.PersonDetailQuery;
 import br.gov.es.openpmo.dto.person.queries.PersonPermissionDetailQuery;
 import br.gov.es.openpmo.dto.person.queries.PersonQuery;
-import br.gov.es.openpmo.dto.workpack.WorkpackName;
 import br.gov.es.openpmo.enumerator.CcbMemberFilterEnum;
 import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.enumerator.StakeholderFilterEnum;
@@ -111,6 +110,11 @@ public class PersonService {
 
   public Person findById(final Long id) {
     return this.repository.findById(id).orElse(null);
+  }
+
+  public Person findByIdThinElseThrow(final Long id) {
+    return this.repository.findByIdThin(id)
+        .orElseThrow(() -> new NegocioException(ApplicationMessage.PERSON_NOT_FOUND));
   }
 
   public Person findByIdOrElseThrow(final Long id) {
@@ -570,7 +574,7 @@ public class PersonService {
 
       if (canAccessWorkpacks.isEmpty()) {
         if (!isStakeholderIns.isEmpty()) {
-          item.setName(this.getName(workpack));
+          item.setName(workpack.getName());
           item.setRoles(this.getRoles(isStakeholderIns));
           item.setIcon(this.getFontIcon(workpack));
           item.setAccessLevel(PermissionLevelEnum.NONE);
@@ -582,7 +586,7 @@ public class PersonService {
           .max(PermissionLevelEnum::compareTo)
           .orElse(null);
 
-        item.setName(this.getName(workpack));
+        item.setName(workpack.getName());
         item.setRoles(this.getRoles(isStakeholderIns));
         item.setIcon(this.getFontIcon(workpack));
         item.setAccessLevel(accessLevel);
@@ -592,7 +596,7 @@ public class PersonService {
       if (!isCCBMemberFors.isEmpty()) {
         final WorkpackPermissionDetailDto item2 = new WorkpackPermissionDetailDto();
         item2.setId(workpack.getId());
-        item2.setName(this.getName(workpack));
+        item2.setName(workpack.getName());
         item2.setRoles(null);
         item2.setIcon(this.getFontIcon(workpack));
         item2.setCcbMember(Boolean.TRUE);
@@ -622,19 +626,6 @@ public class PersonService {
       .map(IsStakeholderIn::getRole)
       .filter(Objects::nonNull)
       .collect(Collectors.toList());
-  }
-
-  private String getName(final Workpack workpack) {
-    final Long id = workpack.getId();
-    final String cache = this.nameCache.get(id);
-    if (cache != null) {
-      return cache;
-    }
-    final String name = this.workpackRepository.findWorkpackNameAndFullname(id)
-      .map(WorkpackName::getName)
-      .orElse(null);
-    this.nameCache.put(id, name);
-    return name;
   }
 
   private <T> boolean contains(

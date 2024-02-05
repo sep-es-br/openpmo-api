@@ -3,8 +3,6 @@ package br.gov.es.openpmo.service.baselines;
 import br.gov.es.openpmo.configuration.properties.AppProperties;
 import br.gov.es.openpmo.dto.baselines.GetAllBaselinesResponse;
 import br.gov.es.openpmo.dto.baselines.GetAllCCBMemberBaselineResponse;
-import br.gov.es.openpmo.dto.workpack.WorkpackName;
-import br.gov.es.openpmo.dto.workpack.WorkpackNameResponse;
 import br.gov.es.openpmo.enumerator.BaselineViewStatus;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.filter.CustomFilter;
@@ -17,7 +15,6 @@ import br.gov.es.openpmo.repository.custom.filters.FindAllBaselineRejectedUsingC
 import br.gov.es.openpmo.repository.custom.filters.FindAllBaselineWaitingMyEvaluationUsingCustomFilter;
 import br.gov.es.openpmo.repository.custom.filters.FindAllBaselineWaitingOthersEvaluationsUsingCustomFilter;
 import br.gov.es.openpmo.service.filters.CustomFilterService;
-import br.gov.es.openpmo.service.workpack.GetWorkpackName;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -51,7 +48,6 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
 
   private final FindAllBaselineWaitingOthersEvaluationsUsingCustomFilter findAllBaselineWaitingOthersEvaluations;
 
-  private final GetWorkpackName getWorkpackName;
 
   @Autowired
   public GetAllBaselinesService(
@@ -63,8 +59,7 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
     final FindAllBaselineApprovedUsingCustomFilter findAllBaselineApproved,
     final FindAllBaselineRejectedUsingCustomFilter findAllBaselineRejected,
     final FindAllBaselineWaitingMyEvaluationUsingCustomFilter findAllBaselineWaitingMyEvaluation,
-    final FindAllBaselineWaitingOthersEvaluationsUsingCustomFilter findAllBaselineWaitingOthersEvaluations,
-    final GetWorkpackName getWorkpackName
+    final FindAllBaselineWaitingOthersEvaluationsUsingCustomFilter findAllBaselineWaitingOthersEvaluations
   ) {
     this.baselineRepository = baselineRepository;
     this.workpackRepository = workpackRepository;
@@ -75,18 +70,16 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
     this.findAllBaselineRejected = findAllBaselineRejected;
     this.findAllBaselineWaitingMyEvaluation = findAllBaselineWaitingMyEvaluation;
     this.findAllBaselineWaitingOthersEvaluations = findAllBaselineWaitingOthersEvaluations;
-    this.getWorkpackName = getWorkpackName;
   }
 
   private static GetAllBaselinesResponse getBaselinesResponse(
-    final Baseline baseline,
-    final WorkpackNameResponse workpackNameWrapper
+    final Baseline baseline
   ) {
     return new GetAllBaselinesResponse(
       baseline.getId(),
       baseline.getIdWorkpack(),
       baseline.getName(),
-      workpackNameWrapper.getName(),
+      baseline.getWorkpackName(),
       baseline.getStatus(),
       baseline.getDescription(),
       baseline.getActivationDate(),
@@ -134,7 +127,7 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
   @Override
   public List<GetAllBaselinesResponse> getAllByWorkpackId(final Long idWorkpack) {
     return this.baselineRepository.findAllByWorkpackId(idWorkpack).stream()
-      .map(baseline -> getBaselinesResponse(baseline, this.getWorkpackName.execute(baseline.getIdWorkpack())))
+      .map(baseline -> getBaselinesResponse(baseline))
       .collect(Collectors.toList());
   }
 
@@ -156,7 +149,7 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
     final Double searchCutOffScore = this.appProperties.getSearchCutOffScore();
     baselines = this.handleStatusBaseline(idPerson, idFilter, term, status, baselines, searchCutOffScore);
     return baselines.stream()
-      .map(baseline -> getBaselinesResponse(baseline, this.getWorkpackName.execute(baseline.getIdWorkpack())))
+      .map(baseline -> getBaselinesResponse(baseline))
       .collect(Collectors.toList());
   }
 
@@ -353,19 +346,13 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
   private GetAllCCBMemberBaselineResponse getGetAllCCBMemberBaselineResponse(final Workpack workpack) {
     final List<GetAllBaselinesResponse> baselines = new ArrayList<>();
     for (final Baseline baseline : this.getBaselines(workpack)) {
-      baselines.add(getBaselinesResponse(baseline, this.getWorkpackName.execute(baseline.getIdWorkpack())));
+      baselines.add(getBaselinesResponse(baseline));
     }
     return new GetAllCCBMemberBaselineResponse(
       workpack.getId(),
-      this.getWorkpackName(workpack),
+      workpack.getName(),
       baselines
     );
-  }
-
-  private String getWorkpackName(final Workpack workpack) {
-    return this.workpackRepository.findWorkpackNameAndFullname(workpack.getId())
-      .map(WorkpackName::getName)
-      .orElse(null);
   }
 
   private List<Baseline> getBaselines(final Workpack workpack) {

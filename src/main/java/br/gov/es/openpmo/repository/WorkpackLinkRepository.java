@@ -31,8 +31,8 @@ public interface WorkpackLinkRepository extends Neo4jRepository<IsLinkedTo, Long
     Long idPlan
   );
 
-  @Query("match (w:Workpack) where id(w)=$idWorkpack " +
-    "match (wm:WorkpackModel) where id(wm)=$idWorkpackModel " +
+  @Query("match (w:Workpack), (wm:WorkpackModel) " +
+    "where id(w)=$idWorkpack and id(wm)=$idWorkpackModel " +
     "create (w)-[:IS_LINKED_TO]->(wm)")
   void linkWorkpackAndWorkpackModel(
     Long idWorkpack,
@@ -101,9 +101,8 @@ public interface WorkpackLinkRepository extends Neo4jRepository<IsLinkedTo, Long
     "MATCH (wm:WorkpackModel)-[bt:BELONGS_TO]->(plm:PlanModel)<-[st:IS_STRUCTURED_BY]-(pl:Plan) " +
     "MATCH (w)-[ii:IS_IN*]->(wp:Workpack)-[lt:IS_LINKED_TO]->(wm) " +
     "WHERE id(w)=$idWorkpack AND id(pl)=$idPlan " +
-    " OPTIONAL MATCH (wp)-[ii2:IS_IN*]->(wpp:Workpack)-[bt2:BELONGS_TO]->(pl2:Plan) " +
     "RETURN wp, lt, wm, [" +
-    "   [ [ii2, wpp, bt2, pl2] ] " +
+    "   [ (wp)-[ii2:IS_IN*]->(wpp:Workpack)-[bt2:BELONGS_TO]->(pl2:Plan) | [ii2, wpp, bt2, pl2] ] " +
     "]"
   )
   Optional<IsLinkedTo> findWorkpackParentLinked(

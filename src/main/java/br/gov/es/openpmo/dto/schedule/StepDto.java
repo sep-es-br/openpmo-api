@@ -6,6 +6,13 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+import org.springframework.data.neo4j.annotation.QueryResult;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import br.gov.es.openpmo.model.schedule.Step;
+
+@QueryResult
 public class StepDto {
 
   private Long id;
@@ -27,6 +34,27 @@ public class StepDto {
   private LocalDate scheduleEnd;
 
   private LocalDate scheduleStart;
+
+  @JsonIgnore
+  private Long stepMasterId;
+
+  @JsonIgnore
+  private Long periodFromStartNumber;
+
+  public StepDto() {
+  }
+
+  public StepDto(Step step) {
+    this.id = step.getId();
+    this.idSchedule = step.getScheduleId();
+    this.actualWork = step.getActualWork();
+    this.plannedWork = step.getPlannedWork();
+    this.periodFromStart = step.getPeriodFromStartDate();
+    if (step.getSchedule() != null) {
+      this.scheduleEnd = step.getScheduleEnd();
+      this.scheduleStart = step.getScheduleStart();
+    }
+  }
 
   public Long getId() {
     return this.id;
@@ -106,6 +134,22 @@ public class StepDto {
 
   public void setBaselinePeriodFromStart(final LocalDate baselinePeriodFromStart) {
     this.baselinePeriodFromStart = baselinePeriodFromStart;
+  }
+
+  public Long getPeriodFromStartNumber() {
+    return periodFromStartNumber;
+  }
+
+  public void setPeriodFromStartNumber(Long periodFromStartNumber) {
+    this.periodFromStartNumber = periodFromStartNumber;
+  }
+
+  public void setStepMasterId(Long stepMasterId) {
+    this.stepMasterId = stepMasterId;
+  }
+
+  public Long getStepMasterId() {
+    return stepMasterId;
   }
 
   public BigDecimal getBaselinePlannedCost() {

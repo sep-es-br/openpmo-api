@@ -17,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.swagger.annotations.ApiModel;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -43,6 +44,8 @@ public abstract class WorkpackDetailParentDto {
   private String name;
 
   private String fullName;
+
+  private LocalDateTime date;
 
   private String fontIcon;
 
@@ -186,6 +189,14 @@ public abstract class WorkpackDetailParentDto {
 
   public void setId(final Long id) {
     this.id = id;
+  }
+
+  public LocalDateTime getDate() {
+    return date;
+  }
+
+  public void setDate(LocalDateTime date) {
+    this.date = date;
   }
 
   public PlanDto getPlan() {

@@ -20,7 +20,6 @@ import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.repository.WorkpackSharedRepository;
 import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
 import br.gov.es.openpmo.service.office.plan.PlanService;
-import br.gov.es.openpmo.service.ui.BreadcrumbWorkpackLinkedHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,12 +35,11 @@ import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.dto.permission.PermissionDto.of;
 import static br.gov.es.openpmo.dto.permission.PermissionDto.read;
-import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACKMODEL_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_MODEL_TYPE_MISMATCH;
 import static java.lang.Boolean.TRUE;
 
 @Service
-public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
+public class WorkpackLinkService {
 
   private final WorkpackLinkRepository repository;
   private final WorkpackService workpackService;
@@ -181,7 +179,7 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
     final Long idWorkpackModelLinked,
     final Long idPlan
   ) {
-    final Optional<Workpack> maybeWorkpack = this.workpackService.maybeFindById(idWorkpack);
+    final Optional<Workpack> maybeWorkpack = this.workpackService.mayeFindById(idWorkpack);
     if (!maybeWorkpack.isPresent()) {
       return null;
     }
@@ -297,23 +295,6 @@ public class WorkpackLinkService implements BreadcrumbWorkpackLinkedHelper {
     return childrenOriginalModel.stream()
       .filter(model -> model.hasSameType(children) && model.getModelName().equals(children.getModelName()))
       .findFirst();
-  }
-
-  @Override
-  public WorkpackModel findWorkpackModelLinkedByWorkpackAndPlan(
-    final Long idWorkpack,
-    final Long idPlan
-  ) {
-    return this.repository.findWorkpackModelLinkedByWorkpackAndPlan(idWorkpack, idPlan)
-      .orElseThrow(() -> new NegocioException(WORKPACKMODEL_NOT_FOUND));
-  }
-
-  @Override
-  public Optional<IsLinkedTo> findWorkpackParentLinked(
-    final Long idWorkpack,
-    final Long idPlan
-  ) {
-    return this.repository.findWorkpackParentLinked(idWorkpack, idPlan);
   }
 
   @Transactional

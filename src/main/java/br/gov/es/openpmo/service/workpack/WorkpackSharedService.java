@@ -1,7 +1,6 @@
 package br.gov.es.openpmo.service.workpack;
 
 import br.gov.es.openpmo.dto.ComboDto;
-import br.gov.es.openpmo.dto.workpack.WorkpackName;
 import br.gov.es.openpmo.dto.workpackshared.WorkpackSharedDto;
 import br.gov.es.openpmo.dto.workpackshared.WorkpackSharedParamDto;
 import br.gov.es.openpmo.exception.NegocioException;
@@ -122,7 +121,7 @@ public class WorkpackSharedService {
     final Collection<? super ComboDto> itens,
     final IsSharedWith relationship
   ) {
-    final String workpackName = this.getWorkpackName(relationship.workpackId());
+    final String workpackName = relationship.getWorkpack().getName();
     final String officeName = getOfficeName(relationship.getWorkpack());
     itens.add(new ComboDto(relationship.workpackId(), workpackName + officeName));
   }
@@ -136,12 +135,6 @@ public class WorkpackSharedService {
 
   private void deleteAllSharedRelationship(final Long idWorkpack) {
     this.deleteSharedRelationship(idWorkpack, null);
-  }
-
-  private String getWorkpackName(final Long workpackId) {
-    return this.workpackRepository.findWorkpackNameAndFullname(workpackId)
-      .map(WorkpackName::getName)
-      .orElse("");
   }
 
   private void deleteSharedRelationship(
@@ -158,7 +151,7 @@ public class WorkpackSharedService {
     final Collection<? super ComboDto> itens,
     final Workpack publicWorkpack
   ) {
-    final String workpackName = this.getWorkpackName(publicWorkpack.getId());
+    final String workpackName = publicWorkpack.getName();
     final String officeName = getOfficeName(publicWorkpack);
     itens.add(new ComboDto(publicWorkpack.getId(), workpackName + officeName));
   }

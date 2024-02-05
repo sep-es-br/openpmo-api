@@ -57,10 +57,9 @@ public class CostAccountModelController {
 
   @GetMapping("/{id}")
   public ResponseEntity<ResponseBase<GetCostAccountModelResponse>> getCostAccountModel(
-    @PathVariable final Long id,
-    @RequestHeader("Authorization") final String authorization
+    @PathVariable final Long id
   ) {
-    final GetCostAccountModelResponse response = this.getCostAccountModel.execute(id, authorization);
+    final GetCostAccountModelResponse response = this.getCostAccountModel.execute(id);
     return ResponseEntity.ok(ResponseBase.of(response));
   }
 

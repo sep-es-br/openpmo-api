@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.repository;
 
+import br.gov.es.openpmo.dto.schedule.StepDto;
 import br.gov.es.openpmo.model.schedule.Step;
 import br.gov.es.openpmo.model.workpacks.Deliverable;
 import br.gov.es.openpmo.model.workpacks.Workpack;
@@ -41,21 +42,19 @@ public interface StepRepository extends Neo4jRepository<Step, Long> {
          "OPTIONAL MATCH (step)<-[:IS_SNAPSHOT_OF]-(snapshot:Step)-[:COMPOSES]->(baseline:Baseline{active:true}) " +
          "WITH step, snapshot, baseline " +
          "WHERE id(step)=$idStep  " +
-         " OPTIONAL MATCH (snapshot)-[consumes:CONSUMES]->(snapshotCostAccount:CostAccount) " +
-         " OPTIONAL MATCH (snapshotCostAccount)-[isSnapshotOf:IS_SNAPSHOT_OF]->(costAccount:CostAccount) " +
          "RETURN snapshot, [ " +
-         "    [ [consumes, snapshotCostAccount]]," +
-         "    [ [isSnapshotOf, costAccount]] " +
+         "[(snapshot)-[consumes:CONSUMES]->(snapshotCostAccount:CostAccount) | [consumes, snapshotCostAccount]], " +
+         "[(snapshot)-[consumes2:CONSUMES]->(snapshotCostAccount2:CostAccount)-[isSnapshotOf:IS_SNAPSHOT_OF]->(costAccount:CostAccount) | [consumes2,snapshotCostAccount2, isSnapshotOf, costAccount]] " +
          "]")
   Optional<Step> findSnapshotOfActiveBaseline(Long idStep);
 
   @Query("MATCH (deliverable:Deliverable) " +
-         "WHERE id(deliverable)=$idDeliverable  " +
-         "MATCH (deliverable)<-[:FEATURES]-(:Schedule)<-[:COMPOSES]-(step:Step)  " +
-         "WITH step,  " +
-         "   toFloat(step.plannedWork) AS estimedWork,  " +
-         "   toFloat(step.actualWork) AS actualWork  " +
-         "WHERE actualWork < estimedWork  " +
+         "WHERE id(deliverable)=$idDeliverable " +
+         "MATCH (deliverable)<-[:FEATURES]-(:Schedule)<-[:COMPOSES]-(step:Step) " +
+         "WITH step, " +
+         "   toFloat(step.plannedWork) AS estimedWork, " +
+         "   toFloat(step.actualWork) AS actualWork " +
+         "WHERE actualWork < estimedWork " +
          "WITH step, estimedWork " +
          "RETURN count(DISTINCT step) > 0")
   boolean hasWorkToCompleteComparingWithMaster(Long idDeliverable);
@@ -97,5 +96,15 @@ public interface StepRepository extends Neo4jRepository<Step, Long> {
     Long idStep,
     Long idCostAccount
   );
+
+  @Query(
+      "MATCH (m:Schedule)<-[i:IS_SNAPSHOT_OF]-(s:Schedule)-[c:COMPOSES]->(b:Baseline{active:true}) " +
+          ", (s)<-[cs:COMPOSES]-(snapshot:Step)-[i2:IS_SNAPSHOT_OF]->(step:Step) " +
+          "WHERE id(s) IN $idSnapshot " +
+          "RETURN id(snapshot) as id, id(step) as stepMasterId, id(s) as idSchedule, snapshot.actualWork as actualWork " +
+          ", snapshot.periodFromStart as periodFromStartNumber " +
+          ", snapshot.plannedWork as plannedWork, s.end as scheduleEnd, s.start as scheduleStart "
+  )
+  List<StepDto> findAllStepsnapshotByScheduleSnapshotIds(List<Long> idSnapshot);
 
 }

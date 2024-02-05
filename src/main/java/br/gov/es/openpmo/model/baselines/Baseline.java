@@ -8,7 +8,6 @@ import br.gov.es.openpmo.model.relations.IsBaselinedBy;
 import br.gov.es.openpmo.model.relations.IsEvaluatedBy;
 import br.gov.es.openpmo.model.relations.IsProposedBy;
 import br.gov.es.openpmo.model.workpacks.Workpack;
-import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 import org.springframework.data.annotation.Transient;
@@ -191,8 +190,7 @@ public class Baseline extends Entity {
   public String getWorkpackName() {
     return Optional.ofNullable(this.baselinedBy)
       .map(IsBaselinedBy::getWorkpack)
-      .map(Workpack::getWorkpackModelInstance)
-      .map(WorkpackModel::getModelName)
+      .map(Workpack::getName)
       .orElse(null);
   }
 

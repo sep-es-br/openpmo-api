@@ -76,6 +76,8 @@ public abstract class WorkpackModel extends Entity {
 
   private Long position;
 
+  private String sortByField;
+
   @Relationship(type = "IS_SORTED_BY")
   private PropertyModel sortBy;
 
@@ -397,6 +399,7 @@ public abstract class WorkpackModel extends Entity {
     this.dashboardShowStakeholders = workpackModel.dashboardShowStakeholders;
     this.dashboardSessionActive = workpackModel.dashboardSessionActive;
     this.position = workpackModel.position;
+    this.sortByField = workpackModel.sortByField;
   }
 
   public Boolean getDashboardSessionActive() {
@@ -470,4 +473,11 @@ public abstract class WorkpackModel extends Entity {
       && Objects.equals(this.getType(), other.getType());
   }
 
+  public String getSortByField() {
+    return sortByField;
+  }
+
+  public void setSortByField(String sortByField) {
+    this.sortByField = sortByField;
+  }
 }

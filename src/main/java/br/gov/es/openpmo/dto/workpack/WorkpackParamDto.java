@@ -8,8 +8,8 @@ import io.swagger.annotations.ApiModel;
 import org.modelmapper.ModelMapper;
 
 import javax.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @JsonTypeInfo(use = Id.NAME, property = "type")
 @JsonSubTypes({@JsonSubTypes.Type(value = PortfolioParamDto.class, name = "Portfolio"),
@@ -27,11 +27,19 @@ public abstract class WorkpackParamDto {
 
   private Long idParent;
 
+  private String name;
+
+  private String fullName;
+
   @NotNull
   private Long idWorkpackModel;
 
   @NotNull
   private Long idPlan;
+
+  private LocalDateTime date;
+
+  private String reason;
 
   private List<? extends PropertyDto> properties;
 
@@ -75,16 +83,36 @@ public abstract class WorkpackParamDto {
     this.properties = properties;
   }
 
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public String getFullName() {
+    return fullName;
+  }
+
+  public void setFullName(String fullName) {
+    this.fullName = fullName;
+  }
+
+  public LocalDateTime getDate() {
+    return date;
+  }
+
+  public void setDate(LocalDateTime date) {
+    this.date = date;
+  }
+
   public String getReason() {
-    if (this.properties == null || this.properties.isEmpty()) {
-      return null;
-    }
-    final Optional<DateDto> dateDto = this.properties.stream()
-      .filter(DateDto.class::isInstance)
-      .map(DateDto.class::cast)
-      .findFirst();
-    return dateDto.map(DateDto::getReason)
-      .orElse(null);
+    return reason;
+  }
+
+  public void setReason(String reason) {
+    this.reason = reason;
   }
 
   public abstract Workpack getWorkpack(ModelMapper modelMapper);

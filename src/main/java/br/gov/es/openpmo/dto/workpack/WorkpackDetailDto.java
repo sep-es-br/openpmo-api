@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.swagger.annotations.ApiModel;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -30,6 +31,8 @@ public abstract class WorkpackDetailDto {
   private Long id;
 
   private Long idParent;
+
+  private Long idWorkpackModel;
 
   private PlanDto plan;
 
@@ -60,6 +63,12 @@ public abstract class WorkpackDetailDto {
   private Boolean completed;
 
   private SimpleDashboard dashboard;
+
+  private String name;
+
+  private String fullName;
+
+  private LocalDateTime date;
 
   public static <TYPE extends WorkpackDetailDto> WorkpackDetailDto of(
     final Workpack workpack,
@@ -92,6 +101,14 @@ public abstract class WorkpackDetailDto {
 
   public WorkpackModelLinkedDto getModelLinked() {
     return this.modelLinked;
+  }
+
+  public LocalDateTime getDate() {
+    return date;
+  }
+
+  public void setDate(LocalDateTime date) {
+    this.date = date;
   }
 
   public void setModelLinked(final WorkpackModelLinkedDto modelLinked) {
@@ -203,6 +220,22 @@ public abstract class WorkpackDetailDto {
     return this.hasScheduleSectionActive;
   }
 
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public String getFullName() {
+    return fullName;
+  }
+
+  public void setFullName(String fullName) {
+    this.fullName = fullName;
+  }
+
   public void setHasScheduleSectionActive(final Boolean hasScheduleSectionActive) {
     this.hasScheduleSectionActive = hasScheduleSectionActive;
   }
@@ -213,5 +246,13 @@ public abstract class WorkpackDetailDto {
 
   public void setIdParent(Long idParent) {
     this.idParent = idParent;
+  }
+
+  public Long getIdWorkpackModel() {
+    return idWorkpackModel;
+  }
+
+  public void setIdWorkpackModel(Long idWorkpackModel) {
+    this.idWorkpackModel = idWorkpackModel;
   }
 }

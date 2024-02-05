@@ -22,16 +22,21 @@ public interface JournalRepository extends Neo4jRepository<JournalEntry, Long> {
          "RETURN id(j)")
   List<Long> findAllJournalIdsByWorkpackId(Long workpackId);
 
-  @Query(" MATCH (j:JournalEntry)-[:SCOPE_TO]->(w:Workpack),(j)-[:IS_RECORDED_BY]->(p:Person) " 
-       + " WHERE (($scope IS NOT NULL AND $scope<>[] AND id(w) IN $scope) OR (id(w) = $idWorkpack)) " 
-       + " 	AND   " 
-       + " 	($from IS NULL OR (date(datetime($from)) <= date(datetime(j.date))))   " 
-       + " 	AND   " 
-       + " 	($to IS NULL OR (date(datetime(j.date)) <= date(datetime($to))))  " 
-       + " 	AND   " 
-       + " 	((j.type IN $journalType) OR ('ALL' IN $journalType))   " 
-       + " RETURN distinct j " 
-       + " ORDER BY j.date DESC " )
+  @Query("MATCH (w:Workpack), (j:JournalEntry), (p:Person) " +
+         "WHERE (($scope IS NOT NULL AND $scope<>[] AND id(w) IN $scope) OR id(w)=$idWorkpack) " +
+         " AND ( " +
+         " (w)<-[:SCOPE_TO]-(j) OR (w)<-[:IS_IN*]-(:Workpack)<-[:SCOPE_TO]-(j) OR j.type='FAIL' " +
+         ") AND ( " +
+         " (($from IS NULL OR (date(datetime($from)) <= date(datetime(j.date)))) " +
+         " AND " +
+         " ($to IS NULL OR date(datetime(j.date)) <= date(datetime($to)))) " +
+         " AND " +
+         " (j.type IN $journalType OR 'ALL' IN $journalType) " +
+         ") AND ( " +
+         " (p)<-[:IS_RECORDED_BY]-(j) " +
+         ")" +
+         "RETURN j " +
+         "ORDER BY j.date DESC")
   List<JournalEntry> findAll(
     LocalDate from,
     LocalDate to,

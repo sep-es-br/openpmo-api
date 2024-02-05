@@ -1,8 +1,11 @@
 package br.gov.es.openpmo.dto;
 
+import org.springframework.data.neo4j.annotation.QueryResult;
+
 import br.gov.es.openpmo.model.Entity;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+@QueryResult
 public class EntityDto {
 
   private Long id;

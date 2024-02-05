@@ -412,7 +412,7 @@ public class StakeholderService {
   ) {
     final Person author = this.getPersonByAuthorization(authorization);
     final Person target = this.createOrUpdatePerson(request);
-    final Workpack workpack = this.serviceWorkpack.findById(request.getIdWorkpack());
+    final Workpack workpack = this.serviceWorkpack.findByIdDefault(request.getIdWorkpack());
     final List<IsStakeholderIn> stakeholderIns =
       this.returnListStakeholderIn(
         workpack.getId(),
@@ -542,7 +542,7 @@ public class StakeholderService {
 
   public void storeStakeholderOrganization(final OrganizationStakeholderParamDto request) {
     final Organization organization = this.serviceOrganization.findById(request.getIdOrganization());
-    final Workpack workpack = this.serviceWorkpack.findById(request.getIdWorkpack());
+    final Workpack workpack = this.serviceWorkpack.findByIdDefault(request.getIdWorkpack());
     if (request.getRoles() != null) {
       request.getRoles().forEach(role -> this.repository.save(
         this.buildIsStakeholderIn(
@@ -602,7 +602,7 @@ public class StakeholderService {
     final Long idWorkpack,
     final Long idOrganization
   ) {
-    final Workpack workpack = this.serviceWorkpack.findById(idWorkpack);
+    final Workpack workpack = this.serviceWorkpack.findByIdDefault(idWorkpack);
     final Organization organization = this.serviceOrganization.findById(idOrganization);
     final List<IsStakeholderIn> stakeholders = this.repository.findByIdWorkpackAndIdActor(
       workpack.getId(),
@@ -617,7 +617,7 @@ public class StakeholderService {
     final String authorization
   ) {
     final Person author = this.getPersonByAuthorization(authorization);
-    final Workpack workpack = this.serviceWorkpack.findById(idWorkpack);
+    final Workpack workpack = this.serviceWorkpack.findByIdDefault(idWorkpack);
     final Person target = this.personService.findById(idPerson);
     final List<IsStakeholderIn> stakeholders =
       this.repository.findByIdWorkpackAndIdPerson(
@@ -653,7 +653,7 @@ public class StakeholderService {
     final Long personId,
     final Long idPerson
   ) {
-    final Workpack workpack = this.serviceWorkpack.findById(workpackId);
+    final Workpack workpack = this.serviceWorkpack.findByIdDefault(workpackId);
     final Optional<Person> maybePerson = this.personService.maybeFindPersonById(personId);
     if (!maybePerson.isPresent()) {
       return null;
@@ -830,7 +830,7 @@ public class StakeholderService {
     final Long idWorkpack,
     final Long idOrganization
   ) {
-    final Workpack workpack = this.serviceWorkpack.findById(idWorkpack);
+    final Workpack workpack = this.serviceWorkpack.findByIdDefault(idWorkpack);
     final Organization organization = this.serviceOrganization.findById(idOrganization);
     final List<IsStakeholderIn> stakeholderIns =
       this.repository.findByIdWorkpackAndIdActor(
@@ -855,9 +855,7 @@ public class StakeholderService {
     final String term,
     final Long idFilter
   ) {
-    //final Workpack workpack = this.serviceWorkpack.findById(idWorkpack);
     return this.findStakeholderAndPermissions(
-      //workpack.getId(),
       idWorkpack,
       term,
       idFilter

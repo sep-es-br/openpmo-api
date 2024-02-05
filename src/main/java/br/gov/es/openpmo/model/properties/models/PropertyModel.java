@@ -39,6 +39,8 @@ public class PropertyModel extends Entity {
 
   private String label;
 
+  private String helpText;
+
   private boolean active;
 
   private boolean fullLine;
@@ -104,10 +106,18 @@ public class PropertyModel extends Entity {
     this.sorts = sorts;
   }
 
+  public String getHelpText() {
+    return helpText;
+  }
+
+  public void setHelpText(String helpText) {
+    this.helpText = helpText;
+  }
+
   @Override
   public int hashCode() {
     return Objects.hash(super.hashCode(), this.sortIndex, this.name, this.label,
-                        this.active, this.fullLine, this.required
+      this.active, this.fullLine, this.required
     );
   }
 

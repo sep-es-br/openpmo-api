@@ -1,7 +1,6 @@
 package br.gov.es.openpmo.service.baselines;
 
 import br.gov.es.openpmo.dto.baselines.UpdateResponse;
-import br.gov.es.openpmo.dto.workpack.WorkpackName;
 import br.gov.es.openpmo.enumerator.BaselineStatus;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
@@ -83,24 +82,14 @@ public class GetAnotherTimeBaselineUpdatesService implements IGetAnotherTimeBase
     return Optional.ofNullable(workpackModel).map(WorkpackModel::getFontIcon).orElse("");
   }
 
-  private String getDescription(final Workpack workpack) {
-    return Optional.ofNullable(workpack).map(this::getWorkpackName).orElse("");
-  }
-
   private UpdateResponse getDeletedResponse(final Workpack workpack) {
     return new UpdateResponse(
       workpack.getId(),
       getIcon(workpack),
-      this.getDescription(workpack),
+      workpack.getName(),
       BaselineStatus.DELETED,
       null
     );
-  }
-
-  private String getWorkpackName(final Workpack workpack) {
-    return this.workpackRepository.findWorkpackNameAndFullname(workpack.getId())
-      .map(WorkpackName::getName)
-      .orElse(null);
   }
 
   private void addUpdatesRecursively(
@@ -209,7 +198,7 @@ public class GetAnotherTimeBaselineUpdatesService implements IGetAnotherTimeBase
     return new UpdateResponse(
       workpack.getId(),
       getIcon(workpack),
-      this.getDescription(workpack),
+      workpack.getName(),
       BaselineStatus.CHANGED,
       null
     );
@@ -244,7 +233,7 @@ public class GetAnotherTimeBaselineUpdatesService implements IGetAnotherTimeBase
     return new UpdateResponse(
       workpack.getId(),
       getIcon(workpack),
-      this.getDescription(workpack),
+      workpack.getName(),
       BaselineStatus.NEW,
       null
     );

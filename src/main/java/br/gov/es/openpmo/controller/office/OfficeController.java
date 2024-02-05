@@ -83,11 +83,13 @@ public class OfficeController {
   @GetMapping("/{id-office}/tree-view")
   public ResponseEntity<ResponseBase<OfficeTreeViewDto>> findTreeViewById(
       @PathVariable("id-office") final Long idOffice,
+      @RequestParam(value = "id-workpack", required = false) final Long idWorkpack,
+      @RequestParam(value = "id-plan", required = false) final Long idPlan,
       @RequestHeader(name = "Authorization") final String authorization) {
 
     this.canAccessService.ensureCanReadResource(idOffice, authorization);
 
-    final OfficeTreeViewDto officeTreeViewDto = this.officeTreeViewService.findOfficeTreeViewById(idOffice);
+    final OfficeTreeViewDto officeTreeViewDto = this.officeTreeViewService.findOfficeTreeViewById(idOffice, idPlan, idWorkpack);
 
     final ResponseBase<OfficeTreeViewDto> response = new ResponseBase<OfficeTreeViewDto>()
         .setData(officeTreeViewDto)

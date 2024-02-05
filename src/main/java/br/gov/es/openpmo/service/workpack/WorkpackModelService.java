@@ -31,9 +31,11 @@ import br.gov.es.openpmo.service.properties.PropertyModelService;
 import br.gov.es.openpmo.service.reports.models.GetPropertyModelDtoFromEntity;
 import br.gov.es.openpmo.service.reports.models.GetPropertyModelDtosFromEntities;
 import br.gov.es.openpmo.service.reports.models.GetPropertyModelFromDto;
-import br.gov.es.openpmo.service.ui.BreadcrumbWorkpackModelHelper;
+import br.gov.es.openpmo.utils.ApplicationCacheUtil;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import br.gov.es.openpmo.utils.WorkpackModelInstanceType;
+
+import org.apache.commons.collections4.CollectionUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -52,7 +54,7 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACKMODEL_NOT_FOUND
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_MODEL_MILESTONE_DELIVERABLE_PROGRAM_ERROR;
 
 @Service
-public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
+public class WorkpackModelService {
 
   private static final String TYPE_NAME_MODEL_PORTFOLIO = "br.gov.es.openpmo.model.workpacks.models.PortfolioModel";
 
@@ -88,6 +90,8 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
 
   private final DeletePropertyModel deletePropertyModel;
 
+  private final ApplicationCacheUtil cacheUtil;
+
   @Autowired
   public WorkpackModelService(
     final WorkpackModelRepository workpackModelRepository,
@@ -99,6 +103,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
     final GetPropertyModelDtoFromEntity getPropertyModelDtoFromEntity,
     final GetPropertyModelDtosFromEntities getPropertyModelDtosFromEntities,
     final UpdatePropertyModels updatePropertyModels,
+    final ApplicationCacheUtil cacheUtil,
     final DeletePropertyModel deletePropertyModel
   ) {
     this.workpackModelRepository = workpackModelRepository;
@@ -111,6 +116,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
     this.getPropertyModelDtosFromEntities = getPropertyModelDtosFromEntities;
     this.updatePropertyModels = updatePropertyModels;
     this.deletePropertyModel = deletePropertyModel;
+    this.cacheUtil = cacheUtil;
   }
 
   private static void ifNotMilestoneDeliverableProgramWorkpackThrowException(
@@ -130,7 +136,9 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
       workpackModel.setPlanModel(this.planModelService.findById(workpackModel.getIdPlanModel()));
       this.ifHasParentIdCreateAsChild(workpackModel, idParent);
     }
-    return this.workpackModelRepository.save(workpackModel);
+    WorkpackModel model = this.workpackModelRepository.save(workpackModel);
+    this.cacheUtil.loadAllCache();
+    return model;
   }
 
   private void ifHasParentIdCreateAsChild(
@@ -148,6 +156,10 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
       .orElseThrow(() -> new NegocioException(WORKPACKMODEL_NOT_FOUND));
   }
 
+  public List<PropertyModel> getPropertyModels(final Long idWorkpackModel) {
+    return this.workpackModelRepository.findAllPropertyModels(idWorkpackModel).stream().collect(Collectors.toList());
+  }
+
   public List<WorkpackModel> findAll(final Long idPlanModel) {
     return this.workpackModelRepository.findAllByIdPlanModel(idPlanModel)
       .stream().sorted(Comparator.comparing(WorkpackModel::getPositionOrElseZero))
@@ -161,7 +173,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
     final Set<PropertyModel> properties = workpackModel.getProperties();
     final Set<PropertyModel> propertiesToUpdate = workpackModelUpdate.getProperties();
 
-    if (workpackModelUpdate.sortByWasChanged(workpackModel.getSortBy())) {
+    if (workpackModel.getSortBy() != null && workpackModelUpdate.sortByWasChanged(workpackModel.getSortBy())) {
       propertiesToUpdate.stream()
         .filter(PropertyModel::isSortProperty)
         .findFirst()
@@ -175,12 +187,21 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
       newSortProperty.setSorts(workpackModelUpdate);
     }
 
+    if (workpackModelUpdate.getSortBy() != null && workpackModel.getSortBy() == null) {
+      workpackModelUpdate.getSortBy().setSorts(null);
+    }
+
+    if (workpackModel.getSortBy() != null) {
+      workpackModelUpdate.setSortByField(null);
+    }
+
     workpackModelUpdate.updateFields(workpackModel);
 
 
     this.updatePropertyModels.execute(properties, propertiesToUpdate);
-
-    return this.workpackModelRepository.save(workpackModelUpdate);
+    WorkpackModel model = this.workpackModelRepository.save(workpackModelUpdate);
+    this.cacheUtil.loadAllCache();
+    return model;
   }
 
   public WorkpackModel getWorkpackModel(final WorkpackModelParamDto workpackModelParamDto) {
@@ -213,13 +234,17 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
     if (workpackModel != null) {
       workpackModel.dashboardConfiguration(workpackModelParamDto.getDashboardConfiguration());
       workpackModel.setProperties(propertyModels);
-      if (workpackModelParamDto.getSortBy() != null && workpackModel.getProperties() != null && !workpackModel.getProperties()
-        .isEmpty()) {
-        workpackModel.setSortBy(
-          workpackModel.getProperties().stream()
-            .filter(p -> p.getName() != null && p.getName().equals(workpackModelParamDto.getSortBy()))
-            .findFirst().orElse(null)
-        );
+      if (workpackModelParamDto.getSortBy() != null) {
+        if (CollectionUtils.isNotEmpty(workpackModel.getProperties())) {
+          workpackModel.setSortBy(
+              workpackModel.getProperties().stream()
+                           .filter(p -> p.getName() != null && p.getName().equals(workpackModelParamDto.getSortBy()))
+                           .findFirst().orElse(null)
+          );
+        }
+        if (workpackModel.getSortBy() == null) {
+          workpackModel.setSortByField(workpackModelParamDto.getSortBy());
+        }
       }
     }
     return workpackModel;
@@ -289,6 +314,7 @@ public class WorkpackModelService implements BreadcrumbWorkpackModelHelper {
       detailDto.setParent(parent);
       detailDto.setProperties(properties);
       detailDto.setSortBy(sortBy);
+      detailDto.setSortByField(workpackModel.getSortByField());
     }
     if (detailDto != null && detailDto.getChildren() != null) {
       final Set<WorkpackModelDetailDto> sortedChildren = detailDto.getChildren().stream()
