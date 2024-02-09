@@ -584,5 +584,41 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
     "]")
   List<Workpack> findWorkpackByWorkpackModelLevel2(Long idWorkpackActual, Long idWorkpackModel);
 
+  @Query(
+      "MATCH (workpack:Workpack) " +
+      "WHERE id(workpack) IN $ids " +
+      "RETURN workpack "
+  )
+  List<Workpack> findAllWithDeletedByIdThin(List<Long> ids);
 
+  @Query(
+      "MATCH (master:Workpack)<-[of:IS_SNAPSHOT_OF]-(workpack:Workpack)-[:COMPOSES]->(b:Baseline) " +
+          "WHERE id(master) IN $ids AND ID(b) = $baseline " +
+          "RETURN workpack, of, master "
+  )
+  List<Workpack> findAllSnapshotWithDeletedByIdThin(List<Long> ids, Long baseline);
+
+  @Query(" MATCH (master:Workpack), (snapshot:Workpack) " +
+      "WHERE ID(master) = $masterId AND ID(snapshot) = $snapshotId " +
+      "SET master.category = 'MASTER' " +
+      "CREATE (snapshot)-[:IS_SNAPSHOT_OF]->(master) ")
+  void createSnapshotRelationshipWithMaster(
+      Long masterId,
+      Long snapshotId
+  );
+
+  @Query(" MATCH (baseline:Baseline), (snapshot:Workpack) " +
+      "WHERE ID(baseline) = $baselineId AND ID(snapshot) = $snapshotId " +
+      "CREATE (snapshot)-[:COMPOSES]->(baseline) ")
+  void createSnapshotRelationshipWithBaseline(
+      Long baselineId,
+      Long snapshotId
+  );
+
+  @Query (
+      "MATCH (project:Workpack{deleted:false})<-[:IS_IN*]-(children:Workpack{deleted:false})  " +
+      "WHERE id(project) = $id AND ANY(label IN labels(children) WHERE label IN ['Milestone', 'Deliverable']) " +
+      "RETURN ID(children) "
+  )
+  Set<Long> findAllDeliverableAndMilestoneByProject(Long id);
 }

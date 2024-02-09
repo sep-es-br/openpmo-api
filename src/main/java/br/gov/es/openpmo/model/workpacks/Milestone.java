@@ -1,10 +1,6 @@
 package br.gov.es.openpmo.model.workpacks;
 
-import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
-//import br.gov.es.openpmo.model.properties.Date;
-import br.gov.es.openpmo.model.properties.Property;
-import br.gov.es.openpmo.model.relations.IsPropertySnapshotOf;
 import br.gov.es.openpmo.model.relations.IsWorkpackSnapshotOf;
 import br.gov.es.openpmo.model.workpacks.models.MilestoneModel;
 import org.neo4j.ogm.annotation.NodeEntity;

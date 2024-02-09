@@ -54,8 +54,6 @@ public class ScheduleService {
 
   private final ScheduleRepository scheduleRepository;
 
-  private final IGetEquivalentStepSnapshot getEquivalentStepSnapshot;
-
   private final WorkpackService workpackService;
 
   private final ModelMapper modelMapper;
@@ -72,7 +70,6 @@ public class ScheduleService {
   public ScheduleService(
     final StepRepository stepRepository,
     final ScheduleRepository scheduleRepository,
-    final IGetEquivalentStepSnapshot getEquivalentStepSnapshot,
     final WorkpackService workpackService,
     final ModelMapper modelMapper,
     final CostAccountRepository costAccountRepository,
@@ -82,7 +79,6 @@ public class ScheduleService {
   ) {
     this.stepRepository = stepRepository;
     this.scheduleRepository = scheduleRepository;
-    this.getEquivalentStepSnapshot = getEquivalentStepSnapshot;
     this.workpackService = workpackService;
     this.modelMapper = modelMapper;
     this.costAccountRepository = costAccountRepository;
@@ -459,29 +455,6 @@ public class ScheduleService {
       scheduleDto
     );
 
-    this.scheduleRepository.findSnapshotByMasterId(schedule.getId()).ifPresent(snapshot -> {
-      scheduleDto.setBaselineStart(snapshot.getStart());
-      scheduleDto.setBaselineEnd(snapshot.getEnd());
-
-      final BigDecimal plannedWork = snapshot.getSteps().stream()
-        .map(Step::getPlannedWork)
-        .filter(Objects::nonNull)
-        .reduce(
-          BigDecimal.ZERO,
-          BigDecimal::add
-        );
-      final BigDecimal plannedCost = snapshot.getSteps().stream()
-        .flatMap(step -> step.getConsumes().stream())
-        .map(Consumes::getPlannedCost)
-        .filter(Objects::nonNull)
-        .reduce(
-          BigDecimal.ZERO,
-          BigDecimal::add
-        );
-      scheduleDto.setBaselinePlaned(plannedWork);
-      scheduleDto.setBaselineCost(plannedCost);
-    });
-
     return scheduleDto;
   }
 
@@ -578,21 +551,6 @@ public class ScheduleService {
   ) {
     final StepDto dto = this.mapsToStepDto(step);
 
-    final Optional<Step> maybeEquivalentSnapshot = this.getEquivalentStepSnapshot.execute(step);
-
-    dto.setBaselinePlannedWork(maybeEquivalentSnapshot.map(Step::getPlannedWork).orElse(null));
-    dto.setBaselinePeriodFromStart(maybeEquivalentSnapshot.map(Step::getPeriodFromStartDate).orElse(null));
-
-    for (final ConsumesDto consumes : dto.getConsumes()) {
-      consumes.setBaselinePlannedCost(null);
-      maybeEquivalentSnapshot
-        .map(Step::getConsumes)
-        .flatMap(consumesSnapshot -> getBaselinePlannedCost(
-          consumes,
-          consumesSnapshot
-        ))
-        .ifPresent(consumes::setBaselinePlannedCost);
-    }
 
     groupSteps.add(dto);
   }

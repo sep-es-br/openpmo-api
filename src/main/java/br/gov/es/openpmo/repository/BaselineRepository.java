@@ -1,6 +1,14 @@
 package br.gov.es.openpmo.repository;
 
-import br.gov.es.openpmo.dto.dashboards.tripleconstraint.DateIntervalQuery;
+import br.gov.es.openpmo.dto.EntityDto;
+import br.gov.es.openpmo.dto.baselines.BaselineConsumesStep;
+import br.gov.es.openpmo.dto.baselines.BaselineConsumesStepSubmitDto;
+import br.gov.es.openpmo.dto.baselines.BaselineResultDto;
+import br.gov.es.openpmo.dto.baselines.BaselineScheduleStep;
+import br.gov.es.openpmo.dto.baselines.BaselineScheduleSubmitDto;
+import br.gov.es.openpmo.dto.baselines.BaselineStepSubmitDto;
+import br.gov.es.openpmo.dto.baselines.BaselineWorkpackDto;
+import br.gov.es.openpmo.dto.baselines.TripleConstraintDto;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
@@ -12,6 +20,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+
 
 @Repository
 public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, CustomRepository {
@@ -325,21 +334,7 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
             Long propertyId
     );
 
-    @Query("MATCH (baseline:Baseline)<-[:IS_BASELINED_BY]-(:Project{deleted:false})<-[:IS_SNAPSHOT_OF]-(project:Project) " +
-            "WHERE id(baseline)=$idBaseline " +
-            "OPTIONAL MATCH (project)<-[:IS_IN*]-(:Deliverable{deleted:false})<-[:FEATURES]-(schedule:Schedule)-[:COMPOSES]->" +
-            "(baseline) " +
-            "OPTIONAL MATCH (project)<-[:IS_IN*]-(m:Milestone{deleted:false})-[:COMPOSES]->(baseline) " +
-            "WITH baseline, project, schedule, " +
-            "    collect(DISTINCT datetime(schedule.end)) AS scheduleEndDates, " +
-            "    collect(DISTINCT datetime(schedule.start)) AS scheduleStartDates, " +
-            "    collect(DISTINCT datetime(m.date)) AS dates " +
-            "UNWIND (scheduleStartDates+dates) AS startDates " +
-            "UNWIND (scheduleEndDates) AS unwindScheduleEndDates " +
-            "RETURN " +
-            "    min(startDates) AS initialDate, " +
-            "    max(unwindScheduleEndDates) AS endDate")
-    Optional<DateIntervalQuery> findScheduleIntervalInSnapshotsOfBaseline(Long idBaseline);
+
 
     @Query("MATCH (w:Workpack)-[ii:IS_BASELINED_BY]->(b:Baseline), " +
             "(p:Person)-[c:IS_CCB_MEMBER_FOR{active:true}]->(w) " +
@@ -405,4 +400,178 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
             Double searchCutOffScore
     );
 
+    @Query(
+        "MATCH (workpack:Workpack)-[:IS_BASELINED_BY]->(baseline:Baseline) " +
+        "WHERE ID(workpack) = $idWorkpack " +
+        "RETURN ID(workpack) AS idWorkpack, id(baseline) AS idBaseline " +
+        ", baseline.activationDate AS activationDate, baseline.proposalDate AS proposalDate " +
+        ", baseline.status AS status, baseline.name AS name, baseline.description AS description " +
+        ", baseline.message AS message, baseline.active AS active "
+    )
+    List<BaselineResultDto> findAllInWorkpackByIdWorkpack(Long idWorkpack);
+
+
+    @Query(
+        "MATCH (children:Workpack{deleted:false})-[:COMPOSES]->(baseline:Baseline) " +
+        "WHERE ID(baseline) = $id AND ANY(label IN labels(children) WHERE label IN ['Milestone', 'Deliverable']) " +
+        "WITH DISTINCT id(children)  AS ids " +
+        "MATCH (snapshot:Workpack)-[:IS_SNAPSHOT_OF]->(master:Workpack)-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
+        "WHERE ID(snapshot) IN [ids] " +
+        "RETURN ID(master) AS idMaster, ID(snapshot) AS id, snapshot.name AS name, snapshot.fullName AS fullName " +
+        ", snapshot.date AS date, model.fontIcon AS fontIcon, labels(snapshot) AS label"
+    )
+    List<BaselineWorkpackDto> findAllWorkpacBaselineById(final Long id);
+
+    @Query(
+        "MATCH (master:Workpack)<-[:IS_SNAPSHOT_OF]-(workpack:Deliverable)<-[:FEATURES]-(schedule:Schedule)<-[:COMPOSES]-(step:Step) " +
+        "WHERE ID(workpack) IN $ids " +
+        "RETURN ID(master) AS idMaster, id(workpack) AS idWorkpack, id(schedule) AS idSchedule , schedule.end AS end " +
+        ", schedule.start AS start, ID(step) AS idStep, step.plannedWork AS plannedWork "
+    )
+    List<BaselineScheduleStep> findAllBaselineScheduleStepById(final List<Long> ids);
+
+    @Query(
+        "MATCH (master:Workpack)<-[:IS_SNAPSHOT_OF]-(workpack:Deliverable)<-[:FEATURES]-(schedule:Schedule)<-[:COMPOSES]-(step:Step), " +
+        "(step)-[consumes:CONSUMES]->(cost:CostAccount) " +
+        "WHERE ID(workpack) IN $ids " +
+        "RETURN id(master) AS idMaster, id(workpack) AS idWorkpack, id(step) AS idStep, id(consumes) AS idConsumes, consumes.plannedCost AS plannedCost "
+    )
+    List<BaselineConsumesStep> findAllStepConsumesById(final List<Long> ids);
+
+    @Query(
+        "MATCH (children:Workpack{deleted:false})-[:IS_IN*]->(parent:Workpack) " +
+            "WHERE ID(parent) = $id AND ANY(label IN labels(children) WHERE label IN ['Milestone', 'Deliverable']) " +
+            "WITH DISTINCT ID(children)  AS ids " +
+            "MATCH (master:Workpack)-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
+            "WHERE ID(master) IN [ids] " +
+            "RETURN ID(master) AS idMaster, ID(master) AS id, master.name AS name, master.fullName AS fullName " +
+            ", master.date AS date, model.fontIcon AS fontIcon, labels(master) AS label "
+    )
+    List<BaselineWorkpackDto> findAllWorkpacMasterById(final Long id);
+
+    @Query(
+        "MATCH (workpack:Deliverable)<-[:FEATURES]-(schedule:Schedule)<-[:COMPOSES]-(step:Step) " +
+            "WHERE ID(workpack) IN $ids " +
+            "RETURN ID(workpack) AS idMaster, id(workpack) AS idWorkpack, id(schedule) AS idSchedule " +
+            ", schedule.end AS end, schedule.start AS start, id(step) AS idStep, step.plannedWork AS plannedWork "
+    )
+    List<BaselineScheduleStep> findAllScheduleStepMasterById(final List<Long> ids);
+
+    @Query(
+        "MATCH (workpack:Deliverable)<-[:FEATURES]-(schedule:Schedule)<-[:COMPOSES]-(step:Step), " +
+            "(step)-[consumes:CONSUMES]->(cost:CostAccount) " +
+            "WHERE ID(workpack) IN $ids " +
+            "RETURN ID(workpack) AS idMaster, ID(workpack) AS idWorkpack, ID(step) AS idStep, ID(consumes) AS idConsumes, consumes.plannedCost AS plannedCost "
+    )
+    List<BaselineConsumesStep> findAllStepConsumesMasterById(final List<Long> ids);
+
+
+
+    @Query("MATCH (s:Step)-[:COMPOSES]->(schedule:Schedule)-[:FEATURES]->(d:Deliverable) " +
+        "WHERE ID(d) IN $ids " +
+        "RETURN ID(schedule) AS idSchedule, ID(s) AS idStep, s.actualWork AS actualWork " +
+        ", s.plannedWork AS plannedWork, s.periodFromStart AS periodFromStart  ")
+    List<BaselineStepSubmitDto> findAllStepByScheduleIds(List<Long> ids);
+
+    @Query("MATCH (s:Step)<-[:IS_SNAPSHOT_OF]-(snapshotStep:Step)-[:COMPOSES]->(snapshot:Schedule)-[:IS_SNAPSHOT_OF]->(schedule:Schedule)-[:FEATURES]->(d:Deliverable) " +
+        ",(snapshotStep)-[:COMPOSES]->(b:Baseline)  " +
+        "WHERE ID(d) IN $ids AND ID(b) = $baseline " +
+        "RETURN ID(schedule) AS idSchedule, ID(s) AS idStep, snapshotStep.actualWork AS actualWork " +
+        ", snapshotStep.plannedWork AS plannedWork, snapshotStep.periodFromStart AS periodFromStart  ")
+    List<BaselineStepSubmitDto> findAllStepSnapshotByScheduleIds(List<Long> ids, Long baseline);
+
+    @Query("MATCH (s:Schedule)-[f:FEATURES]->(w:Workpack) WHERE id(w) IN $idWorkpack "
+        + "RETURN ID(s) AS idSchedule, ID(w) AS idWorkpack, s.end AS end, s.start AS start ")
+    List<BaselineScheduleSubmitDto> findAllByWorkpackId(List<Long> idWorkpack);
+
+    @Query("MATCH (b:Baseline)<-[:COMPOSES]-(s:Schedule)-[f:FEATURES]->(w:Workpack) " +
+        "WHERE id(w) IN $idWorkpack AND ID(b) = $baseline " +
+        "RETURN ID(s) AS idSchedule, ID(w) AS idWorkpack, s.end AS end, s.start AS start ")
+    List<BaselineScheduleSubmitDto> findAllByWorkpackId(List<Long> idWorkpack, Long baseline);
+
+    @Query("MATCH (b:Baseline)<-[:COMPOSES]-(snapshot:Schedule)-[:IS_SNAPSHOT_OF]->(master:Schedule)-[:FEATURES]->(w:Workpack) " +
+        "WHERE ID(w) IN $idWorkpack AND ID(b) = $baseline " +
+        "RETURN ID(master) AS idSchedule, ID(w) AS idWorkpack, snapshot.end AS end, snapshot.start AS start ")
+    List<BaselineScheduleSubmitDto> findAllSnapshotByWorkpackId(List<Long> idWorkpack, Long baseline);
+
+
+    @Query("MATCH (c:CostAccount)<-[co:CONSUMES]-(s:Step)-[cp:COMPOSES]->(sc:Schedule)-[:FEATURES]->(d:Deliverable) " +
+        "WHERE id(d) IN $ids " +
+        "RETURN ID(s) AS idStep, ID(c) AS idCostAccount, co.actualCost AS actualCost, co.plannedCost AS plannedCost "
+    )
+    List<BaselineConsumesStepSubmitDto> findAllByScheduleId(List<Long> ids);
+
+    @Query(
+        "MATCH (master:Step)-[cp:COMPOSES]->(sc:Schedule)-[:FEATURES]->(d:Deliverable) " +
+            ", (master)<-[:IS_SNAPSHOT_OF]-(snapshot:Step)-[:COMPOSES]->(baseline:Baseline) " +
+            ", (snapshot)-[consumeSnapshot:CONSUMES]->(:CostAccount)-[:IS_SNAPSHOT_OF]->(c:CostAccount) " +
+            "WHERE ID(d) IN $ids AND ID(baseline) = $baseline " +
+            "RETURN ID(master) AS idStep, ID(c) AS idCostAccount, consumeSnapshot.actualCost AS actualCost, consumeSnapshot.plannedCost AS plannedCost "
+    )
+    List<BaselineConsumesStepSubmitDto> findAllSnapshotByScheduleId(List<Long> ids, Long baseline);
+
+    @Query(
+        "MATCH (model:WorkpackModel)<-[:IS_INSTANCE_BY]-(master:Workpack)<-[:IS_SNAPSHOT_OF]-(snapshot:Workpack)-[:COMPOSES]->(baseline:Baseline) " +
+        "WHERE ID(baseline) = $idBaseline AND ANY(label IN labels(snapshot) WHERE label IN ['Milestone', 'Deliverable']) " +
+        "RETURN ID(master) AS idWorkpack, master.name AS name, master.fullName AS fullName " +
+        ", model.fontIcon AS fontIcon, labels(master) AS labels, snapshot.date AS date, snapshot.category AS category "
+    )
+    List<TripleConstraintDto> findAllTripleConstraintSnapshot(Long idBaseline);
+
+    @Query(
+        "MATCH (master:Workpack)<-[:IS_SNAPSHOT_OF]-(snapshot:Workpack)-[:COMPOSES]->(baseline:Baseline) " +
+        ", (snapshot)<-[:FEATURES]-(schedule:Schedule)<-[:COMPOSES]-(step:Step)-[:COMPOSES]-(baseline) " +
+        "WHERE ID(baseline) = $idBaseline AND ANY(label IN labels(snapshot) WHERE label IN ['Milestone', 'Deliverable']) " +
+        "RETURN ID(master) AS idWorkpack, schedule.start AS start, schedule.end AS end " +
+        ", toString(SUM(toFloat(step.plannedWork))) AS sumPlannedWork, step.category AS category "
+    )
+    List<TripleConstraintDto> findAllTripleConstraintSnapshotScheduleAndPlannedWork(Long idBaseline);
+
+    @Query(
+        "MATCH (master:Workpack)<-[:IS_SNAPSHOT_OF]-(snapshot:Workpack)-[:COMPOSES]->(baseline:Baseline) " +
+            ", (snapshot)<-[:FEATURES]-(schedule:Schedule)<-[:COMPOSES]-(step:Step)-[consume:CONSUMES]->(cc:CostAccount)-[:COMPOSES]-(baseline) " +
+            "WHERE ID(baseline) = $idBaseline AND ANY(label IN labels(snapshot) WHERE label IN ['Milestone', 'Deliverable']) " +
+            "RETURN ID(master) AS idWorkpack, toString(SUM(toFloat(consume.plannedCost))) AS sumPlannedCost, step.category AS category "
+    )
+    List<TripleConstraintDto> findAllTripleConstraintSnapshotScheduleAndPlannedCost(Long idBaseline);
+
+
+    @Query(
+        "MATCH (w:Workpack{deleted:false})-[ibb:IS_BASELINED_BY]->(b:Baseline) " +
+        "WHERE id(b)=$idBaseline " +
+        "RETURN w "
+    )
+    Optional<Workpack> findWorkpackByBaselineIdThin(Long idBaseline);
+
+    @Query(
+        "MATCH (model:WorkpackModel)<-[:IS_INSTANCE_BY]-(master:Workpack)<-[:IS_SNAPSHOT_OF]-(snapshot:Workpack)-[:COMPOSES]->(baseline:Baseline) " +
+            "WHERE ID(baseline) = $idBaseline AND ANY(label IN labels(master) WHERE label IN ['Milestone', 'Deliverable']) " +
+            "RETURN ID(master) AS idWorkpack, master.name AS name, master.fullName AS fullName " +
+            ", model.fontIcon AS fontIcon, labels(master) AS labels, master.date AS date, master.category AS category "
+    )
+    List<TripleConstraintDto> findAllTripleConstraint(Long idBaseline);
+
+    @Query(
+        "MATCH (master:Workpack)<-[:IS_SNAPSHOT_OF]-(snapshot:Workpack)-[:COMPOSES]->(baseline:Baseline) " +
+            ", (master)<-[:FEATURES]-(schedule:Schedule)<-[:COMPOSES]-(step:Step)<-[:IS_SNAPSHOT_OF]-(st:Step)-[:COMPOSES]-(baseline) " +
+            "WHERE ID(baseline) = $idBaseline AND ANY(label IN labels(master) WHERE label IN ['Milestone', 'Deliverable']) " +
+            "RETURN ID(master) AS idWorkpack, schedule.start AS start, schedule.end AS end " +
+            ", toString(SUM(toFloat(step.plannedWork))) AS sumPlannedWork, step.category AS category "
+    )
+    List<TripleConstraintDto> findAllTripleConstraintScheduleAndPlannedWork(Long idBaseline);
+
+    @Query(
+        "MATCH (master:Workpack)<-[:IS_SNAPSHOT_OF]-(snapshot:Workpack)-[:COMPOSES]->(baseline:Baseline) " +
+            ", (master)<-[:FEATURES]-(schedule:Schedule)<-[:COMPOSES]-(step:Step)-[consume:CONSUMES]->(cc:CostAccount)<-[:IS_SNAPSHOT_OF]-(sc:CostAccount)-[:COMPOSES]-(baseline) " +
+            "WHERE ID(baseline) = $idBaseline AND ANY(label IN labels(master) WHERE label IN ['Milestone', 'Deliverable']) " +
+            "RETURN ID(master) AS idWorkpack, toString(SUM(toFloat(consume.plannedCost))) AS sumPlannedCost, step.category AS category "
+    )
+    List<TripleConstraintDto> findAllTripleConstraintScheduleAndPlannedCost(Long idBaseline);
+
+
+    @Query(
+        "MATCH (workpack:Workpack)<-[:FEATURES]-(:UnitSelection)-[:VALUES]->(measure:UnitMeasure)  " +
+        "WHERE id(workpack) IN $ids " +
+        "RETURN DISTINCT ID(workpack) AS id, measure.name AS name ")
+    List<EntityDto> findUnitMeasureNameOfDeliverableWorkpack(List<Long> ids);
 }

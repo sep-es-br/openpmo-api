@@ -39,8 +39,7 @@ public class GetBaselineAsCCBMemberViewService implements IGetBaselineAsCCBMembe
     this.getAllBaselineEvaluations = getAllBaselineEvaluations;
   }
 
-  @Override
-  public BaselineDetailCCBMemberResponse getById(
+  public BaselineDetailCCBMemberResponse getByIdOld(
     final Long idBaseline,
     final Long idPerson
   ) {
@@ -56,6 +55,28 @@ public class GetBaselineAsCCBMemberViewService implements IGetBaselineAsCCBMembe
       workpackFullName,
       output,
       evaluations
+    );
+  }
+
+  @Override
+  public BaselineDetailCCBMemberResponse getById(
+      final Long idBaseline,
+      final Long idPerson
+  ) {
+    final Baseline baseline = this.findBaselineById(idBaseline);
+    final String workpackName = baseline.getBaselinedBy().getWorkpack().getName();
+    final String workpackFullName = baseline.getBaselinedBy().getWorkpack().getFullName();
+
+    final TripleConstraintOutput output = this.tripleConstraintsCalculator.calculate(idBaseline);
+
+    final List<EvaluationItem> evaluations = this.getAllEvaluations(idBaseline, idPerson);
+
+    return BaselineDetailCCBMemberResponse.of(
+        baseline,
+        workpackName,
+        workpackFullName,
+        output,
+        evaluations
     );
   }
 

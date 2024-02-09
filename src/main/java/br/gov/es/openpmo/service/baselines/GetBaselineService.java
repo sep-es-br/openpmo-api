@@ -1,83 +1,122 @@
 package br.gov.es.openpmo.service.baselines;
 
+import br.gov.es.openpmo.dto.baselines.BaselineConsumesStep;
 import br.gov.es.openpmo.dto.baselines.BaselineDetailResponse;
+import br.gov.es.openpmo.dto.baselines.BaselineResultDto;
+import br.gov.es.openpmo.dto.baselines.BaselineScheduleStep;
+import br.gov.es.openpmo.dto.baselines.BaselineWorkpackDto;
 import br.gov.es.openpmo.dto.baselines.EvaluationItem;
 import br.gov.es.openpmo.dto.baselines.UpdateResponse;
+import br.gov.es.openpmo.enumerator.BaselineStatus;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
-import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.BaselineRepository;
-import br.gov.es.openpmo.repository.WorkpackRepository;
-import br.gov.es.openpmo.utils.ApplicationMessage;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import static br.gov.es.openpmo.dto.baselines.BaselineDetailResponse.of;
 import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_NOT_FOUND;
-import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_NOT_FOUND;
 
 @Service
 public class GetBaselineService implements IGetBaselineService {
 
-  private final IGetBaselineUpdatesService updatesService;
-
-  private final IGetBaselineUpdatesFromAnotherBaselineService updatesFromAnotherBaselineService;
-
-  private final IGetFirstTimeBaselineUpdatesService getFirstTimeBaselineUpdatesService;
-
   private final BaselineRepository baselineRepository;
-
-  private final WorkpackRepository workpackRepository;
 
   private final IGetAllBaselineEvaluations getAllBaselineEvaluations;
 
   private final BaselineRepository repository;
+  private final BaselineServiceUtil baselineServiceUtil;
 
   @Autowired
   public GetBaselineService(
-    final IGetBaselineUpdatesService updatesService,
-    final IGetBaselineUpdatesFromAnotherBaselineService updatesFromAnotherBaselineService,
-    final IGetFirstTimeBaselineUpdatesService getFirstTimeBaselineUpdatesService,
     final BaselineRepository baselineRepository,
-    final WorkpackRepository workpackRepository,
     final IGetAllBaselineEvaluations getAllBaselineEvaluations,
+    final BaselineServiceUtil baselineServiceUtil,
     final BaselineRepository repository
   ) {
-    this.updatesService = updatesService;
-    this.updatesFromAnotherBaselineService = updatesFromAnotherBaselineService;
-    this.getFirstTimeBaselineUpdatesService = getFirstTimeBaselineUpdatesService;
     this.baselineRepository = baselineRepository;
-    this.workpackRepository = workpackRepository;
     this.getAllBaselineEvaluations = getAllBaselineEvaluations;
+    this.baselineServiceUtil = baselineServiceUtil;
     this.repository = repository;
   }
 
   @Override
   public BaselineDetailResponse getById(final Long idBaseline) {
-    final BaselineDetailResponse result;
+    BaselineDetailResponse result = null;
 
     final Baseline baseline = this.getBaselineById(idBaseline);
-    final BaselineDetailResponse response = of(baseline);
 
-    this.addEvaluatedBy(response, baseline.getId());
-
-    if(isCancelation(baseline)) {
-      result = response;
+    final List<BaselineResultDto> bases = this.baselineRepository.findAllInWorkpackByIdWorkpack(baseline.getIdWorkpack());
+    BaselineResultDto baseLineParam = bases.stream().filter(b -> b.getIdBaseline().equals(idBaseline)).findFirst().orElse(null);
+    BaselineResultDto baselineCompare = null;
+    if (baseLineParam != null) {
+      switch (baseLineParam.getStatus()) {
+        case PROPOSED:
+          baselineCompare = bases.stream().filter(BaselineResultDto::isActive).findFirst().orElse(null);
+          break;
+        case APPROVED:
+          baselineCompare = bases.stream().filter(
+              b -> b.getActivationDate() != null && b.getActivationDate().isBefore(
+                  baseLineParam.getActivationDate())).max(
+              Comparator.comparing(BaselineResultDto::getActivationDate)).orElse(null);
+          break;
+        case REJECTED:
+          baselineCompare = bases.stream().filter(b -> b.getActivationDate() != null && b.getActivationDate().isBefore(
+              baseLineParam.getProposalDate())).max(
+              Comparator.comparing(BaselineResultDto::getActivationDate)).orElse(null);
+          break;
+      }
+      result = this.compareBaseline(baseline, baseLineParam, baselineCompare);
     }
-    else if(isDraft(baseline)) {
-      this.addUpdates(response, baseline);
-      result = response;
-    }
-    else {
-      this.addUpdatesFromPreviousBaselineOrFromBaseline(response, baseline);
-      result = response;
-    }
-
     return result;
+  }
+
+  private BaselineDetailResponse compareBaseline(Baseline baseline, BaselineResultDto baseLineParam, BaselineResultDto baselineCompare) {
+    final List<BaselineWorkpackDto> workpacksBaseline = this.baselineRepository.findAllWorkpacBaselineById(baseLineParam.getIdBaseline());
+    if (baselineCompare == null) {
+      workpacksBaseline.forEach(w -> w.setClassification(BaselineStatus.NEW));
+      return getBaselineDetailResponse(baseline, workpacksBaseline);
+    }
+    addScheduleAndConsumes(workpacksBaseline);
+
+    final List<BaselineWorkpackDto> workpackBaselineCompare = this.baselineRepository.findAllWorkpacBaselineById(baselineCompare.getIdBaseline());
+    addScheduleAndConsumes(workpackBaselineCompare);
+
+    final List<BaselineWorkpackDto> result = baselineServiceUtil.compare(workpacksBaseline, workpackBaselineCompare);
+    result.removeIf(b -> b.getClassification() == null);
+    return getBaselineDetailResponse(baseline, result);
+  }
+
+
+  private void addScheduleAndConsumes(final List<BaselineWorkpackDto> workpacks) {
+    Set<Long> deliverablesId = workpacks.stream().filter(d -> "Deliverable".equals(d.getType())).map(
+        BaselineWorkpackDto::getId).collect(Collectors.toSet());
+    List<BaselineScheduleStep> scheduleSteps = baselineRepository.findAllBaselineScheduleStepById(new ArrayList<>(deliverablesId));
+    List<BaselineConsumesStep> stepConsumes = baselineRepository.findAllStepConsumesById(new ArrayList<>(deliverablesId));
+    for (BaselineWorkpackDto workpack : workpacks) {
+      workpack.setSchedule(
+          scheduleSteps.stream().filter(s -> s.getIdWorkpack().equals(workpack.getId())).collect(Collectors.toList()));
+      workpack.setConsumes(
+          stepConsumes.stream().filter(c -> c.getIdWorkpack().equals(workpack.getId())).collect(Collectors.toList()));
+    }
+  }
+
+  private BaselineDetailResponse getBaselineDetailResponse(Baseline baseline,List<BaselineWorkpackDto> workpacks) {
+    final BaselineDetailResponse response = BaselineDetailResponse.of(baseline);
+    final List<EvaluationItem> items = this.getEvaluationItems(baseline.getId());
+    response.setEvaluations(items);
+    response.setUpdates(new ArrayList<>(0));
+    workpacks.forEach(w -> {
+      Long id = BaselineStatus.DELETED.equals(w.getClassification()) ? w.getIdMaster() : w.getId();
+      response.getUpdates().add(new UpdateResponse(id, w.getFontIcon(), w.getName(), w.getClassification(), true));
+    });
+    return response;
   }
 
   private Baseline getBaselineById(final Long idBaseline) {
@@ -85,82 +124,8 @@ public class GetBaselineService implements IGetBaselineService {
       .orElseThrow(() -> new NegocioException(BASELINE_NOT_FOUND));
   }
 
-  private static boolean isCancelation(final Baseline baseline) {
-    return baseline.isCancelation();
-  }
-
-  private static boolean isDraft(final Baseline baseline) {
-    return baseline.isDraft();
-  }
-
-  private static Set<Workpack> getChildren(final Workpack snapshot) {
-    return snapshot.getChildren();
-  }
-
-  private void addUpdates(
-    final BaselineDetailResponse response,
-    final Baseline baseline
-  ) {
-    response.setUpdates(this.getUpdatesFromWorkpack(this.getWorkpackByBaseline(baseline)));
-  }
-
-  private void addUpdatesFromPreviousBaselineOrFromBaseline(
-    final BaselineDetailResponse response,
-    final Baseline baseline
-  ) {
-    response.setUpdates(this.getUpdates(baseline));
-  }
-
-  private void addEvaluatedBy(
-    final BaselineDetailResponse response,
-    final Long idBaseline
-  ) {
-    final List<EvaluationItem> items = this.getEvaluationItems(idBaseline);
-    response.setEvaluations(items);
-  }
-
   private List<EvaluationItem> getEvaluationItems(final Long idBaseline) {
     return this.getAllBaselineEvaluations.getEvaluations(idBaseline);
-  }
-
-  private List<UpdateResponse> getUpdatesFromWorkpack(final Workpack workpack) {
-    return this.updatesService.getUpdates(workpack.getId());
-  }
-
-  private List<UpdateResponse> getUpdates(final Baseline baseline) {
-    return this.getPreviousBaseline(baseline)
-      .map(previousBaseline -> this.getUpdatesFromPreviousBaseline(baseline, previousBaseline))
-      .orElseGet(() -> this.getUpdatesFromBaseline(baseline));
-  }
-
-  private Workpack getWorkpackByBaseline(final Baseline baseline) {
-    return this.getWorkpackById(baseline.getIdWorkpack());
-  }
-
-  private Workpack getWorkpackById(final Long idWorkpack) {
-    return this.workpackRepository.findWithPropertiesAndModelAndChildrenById(idWorkpack)
-      .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
-  }
-
-  private Optional<Baseline> getPreviousBaseline(final Baseline baseline) {
-    return this.repository.findPreviousBaseline(baseline.getId(), baseline.getIdWorkpack());
-  }
-
-  private List<UpdateResponse> getUpdatesFromBaseline(final Baseline baseline) {
-    final Workpack snapshot = this.getSnapshotFromBaseline(baseline);
-    return this.getFirstTimeBaselineUpdatesService.getUpdates(getChildren(snapshot), true);
-  }
-
-  private Workpack getSnapshotFromBaseline(final Baseline baseline) {
-    return this.baselineRepository.findWorkpackProjectSnapshotFromBaseline(baseline.getId())
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.SNAPSHOT_NOT_FOUND));
-  }
-
-  private List<UpdateResponse> getUpdatesFromPreviousBaseline(
-    final Baseline baseline,
-    final Baseline previousBaseline
-  ) {
-    return this.updatesFromAnotherBaselineService.getUpdates(previousBaseline, baseline);
   }
 
 }

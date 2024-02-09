@@ -3,6 +3,7 @@ package br.gov.es.openpmo.service.office;
 import static br.gov.es.openpmo.utils.ApplicationMessage.OFFICE_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PLAN_NOT_FOUND;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -81,6 +82,7 @@ public class OfficeTreeViewService {
 
   private List<WorkpackResultDto> getListWorkpacksById(Long idPlan, Long idWorkpack) {
     WorkpackResultDto workpack = this.cacheUtil.getWorkpackBreakdownStructure(idWorkpack, idPlan,true);
+    if (workpack == null) return new ArrayList<>(0);
     return Collections.singletonList(workpack);
   }
 

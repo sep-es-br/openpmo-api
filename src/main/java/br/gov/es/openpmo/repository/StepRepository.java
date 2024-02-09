@@ -107,4 +107,30 @@ public interface StepRepository extends Neo4jRepository<Step, Long> {
   )
   List<StepDto> findAllStepsnapshotByScheduleSnapshotIds(List<Long> idSnapshot);
 
+
+  @Query("MATCH (master:Step), (snapshot:Step) " +
+      "WHERE ID(master) = $masterId AND ID(snapshot) = $snapshotId " +
+      "SET master.category = 'MASTER' " +
+      "CREATE (snapshot)-[:IS_SNAPSHOT_OF]->(master) ")
+  void createSnapshotRelationshipWithMaster(
+      Long masterId,
+      Long snapshotId
+  );
+
+  @Query(" MATCH (baseline:Baseline), (snapshot:Step) " +
+      "WHERE ID(baseline) = $baselineId AND ID(snapshot) = $snapshotId " +
+      "CREATE (snapshot)-[:COMPOSES]->(baseline) ")
+  void createSnapshotRelationshipWithBaseline(
+      Long baselineId,
+      Long snapshotId
+  );
+
+  @Query(" MATCH (schedule:Schedule), (snapshot:Step) " +
+      "WHERE ID(schedule) = $scheduleId AND ID(snapshot) = $snapshotId " +
+      "CREATE (snapshot)-[:COMPOSES]->(schedule) ")
+  void createSnapshotRelationshipWithSchedule(
+      Long scheduleId,
+      Long snapshotId
+  );
+
 }

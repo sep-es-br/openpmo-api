@@ -85,4 +85,21 @@ public interface ScheduleRepository extends Neo4jRepository<Schedule, Long> {
   )
   List<ScheduleDto> findSnapshotByMasterIds(List<Long> idSchedule);
 
+  @Query("MATCH (master:Schedule), (snapshot:Schedule) " +
+      "WHERE ID(master) = $masterId AND ID(snapshot) = $snapshotId " +
+      "SET master.category = 'MASTER' " +
+      "CREATE (snapshot)-[:IS_SNAPSHOT_OF]->(master) ")
+  void createSnapshotRelationshipWithMaster(
+      Long masterId,
+      Long snapshotId
+  );
+
+  @Query(" MATCH (baseline:Baseline), (snapshot:Schedule) " +
+      "WHERE ID(baseline) = $baselineId AND ID(snapshot) = $snapshotId " +
+      "CREATE (snapshot)-[:COMPOSES]->(baseline) ")
+  void createSnapshotRelationshipWithBaseline(
+      Long baselineId,
+      Long snapshotId
+  );
+
 }
