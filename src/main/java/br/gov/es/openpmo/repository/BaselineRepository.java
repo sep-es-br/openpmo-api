@@ -417,6 +417,7 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
         "WITH DISTINCT id(children)  AS ids " +
         "MATCH (snapshot:Workpack)-[:IS_SNAPSHOT_OF]->(master:Workpack)-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
         "WHERE ID(snapshot) IN [ids] " +
+        "AND (master.completed = false OR master.completed IS NULL) " +
         "RETURN ID(master) AS idMaster, ID(snapshot) AS id, snapshot.name AS name, snapshot.fullName AS fullName " +
         ", snapshot.date AS date, model.fontIcon AS fontIcon, labels(snapshot) AS label"
     )
@@ -441,6 +442,7 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
     @Query(
         "MATCH (children:Workpack{deleted:false})-[:IS_IN*]->(parent:Workpack) " +
             "WHERE ID(parent) = $id AND ANY(label IN labels(children) WHERE label IN ['Milestone', 'Deliverable']) " +
+            "AND (children.completed = false OR children.completed IS NULL) " +
             "WITH DISTINCT ID(children)  AS ids " +
             "MATCH (master:Workpack)-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
             "WHERE ID(master) IN [ids] " +
