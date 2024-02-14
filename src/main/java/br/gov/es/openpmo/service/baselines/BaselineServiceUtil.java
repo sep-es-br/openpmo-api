@@ -102,6 +102,7 @@ public class BaselineServiceUtil {
         snapshot.setCategory(CategoryEnum.SNAPSHOT);
         snapshot.setPlannedWork(stepDto.getPlannedWork());
         snapshot.setActualWork(stepDto.getActualWork());
+        snapshot.setPeriodFromStart(stepDto.getPeriodFromStart());
         snapshot = stepRepository.save(snapshot);
         stepRepository.createSnapshotRelationshipWithSchedule(scheduleSnapshot.getId(), snapshot.getId());
         stepRepository.createSnapshotRelationshipWithMaster(stepDto.getIdStep(), snapshot.getId());
