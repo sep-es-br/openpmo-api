@@ -170,7 +170,7 @@ public class DashboardCacheUtil {
 
     public DashboardMonthDto getDashboardMonthDto(Long idWorkpack, boolean isDeliverable) {
         DashboardDto dashboard = getDashboardDto(idWorkpack, isDeliverable);
-        if (dashboard == null) return null;
+        if (dashboard == null || dashboard.getWorkpacks().isEmpty() ) return null;
         return DashboardMonthDto.of(dashboard);
     }
 
