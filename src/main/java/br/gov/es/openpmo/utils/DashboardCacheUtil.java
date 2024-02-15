@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.annotation.Async;
@@ -59,7 +60,7 @@ public class DashboardCacheUtil {
 
             addActualData(dashboardRepository, listDetail, null, null);
 
-            listDetail.addAll(getMilestones(dashboardRepository, balineIds));
+            listDetail.addAll(getMilestones(dashboardRepository, balineIds, null));
 
             listDetail.forEach(c -> mapWorkpackDetail.put(c.getIdWorkpack(), c));
         }
@@ -102,9 +103,10 @@ public class DashboardCacheUtil {
         );
     }
 
-    private List<DashboardWorkpackDetailDto> getMilestones(DashboardRepository dashboardRepository, final List<Long> balineIds) {
-        final List<DashboardWorkpackDetailDto> milestoneDetail = dashboardRepository.findAllMilestoneMaster();
-        final List<DashboardWorkpackDetailDto> milestoneBaseline = dashboardRepository.findAllMilestoneBaseline(balineIds);
+    private List<DashboardWorkpackDetailDto> getMilestones(DashboardRepository dashboardRepository
+        , final List<Long> balineIds, List<Long> workpackIds) {
+        final List<DashboardWorkpackDetailDto> milestoneDetail = dashboardRepository.findAllMilestoneMaster(workpackIds);
+        final List<DashboardWorkpackDetailDto> milestoneBaseline = dashboardRepository.findAllMilestoneBaseline(balineIds, workpackIds);
         milestoneBaseline.forEach(b -> milestoneDetail.stream().filter(
             m -> m.getIdWorkpack().equals(b.getIdWorkpack())).findFirst().ifPresent(x -> {
             x.setBaselineStart(b.getStart());
@@ -181,6 +183,13 @@ public class DashboardCacheUtil {
         addPlannedData(dashboardRepository, baselineIds, listDetail, workpackIds);
 
         addActualData(dashboardRepository, listDetail, workpackIds, date);
+
+        listDetail.addAll(getMilestones(dashboardRepository, baselineIds, workpackIds));
+
+        if (CollectionUtils.isEmpty(listDetail)) {
+            return null;
+        }
+
         DashboardDto dashboardDto = new DashboardDto(date);
         dashboardDto.setWorkpacks(listDetail);
 

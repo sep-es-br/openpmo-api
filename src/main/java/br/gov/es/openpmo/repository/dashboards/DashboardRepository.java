@@ -90,17 +90,19 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
   @Query(
       "MATCH (m:Milestone{deleted:false}) " +
           "WHERE (m.category <> 'SNAPSHOT' OR m.category IS NULL) AND m.date IS NOT NULL " +
+          "AND ($workpackIds IS NULL OR ID(m) IN $workpackIds) " +
           "RETURN ID(m) AS idWorkpack, left(m.date, 10) AS start, left(m.date, 10) AS end "
   )
-  List<DashboardWorkpackDetailDto> findAllMilestoneMaster();
+  List<DashboardWorkpackDetailDto> findAllMilestoneMaster(List<Long> workpackIds);
 
 
   @Query(
       "MATCH (master:Milestone)<-[:IS_SNAPSHOT_OF]-(m:Milestone{deleted:false})-[:COMPOSES]->(b:Baseline) " +
       "WHERE ID(b) IN $ids AND m.date IS NOT NULL " +
+      "AND ($workpackIds IS NULL OR ID(master) IN $workpackIds) " +
       "RETURN ID(master) AS idWorkpack,  left(m.date, 10) AS start, left(m.date, 10) AS end "
   )
-  List<DashboardWorkpackDetailDto> findAllMilestoneBaseline(List<Long> ids);
+  List<DashboardWorkpackDetailDto> findAllMilestoneBaseline(List<Long> ids, List<Long> workpackIds);
 
   @Query(
       "MATCH (w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step) " +

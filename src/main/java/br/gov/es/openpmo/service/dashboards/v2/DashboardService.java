@@ -114,6 +114,9 @@ public class DashboardService implements IDashboardService {
     }
 
     final DashboardMonthDto dashboardMonthDto = getDashboardMonthDto(parameters);
+    if (dashboardMonthDto == null) {
+      return null;
+    }
     List<EarnedValueByStepDto> stepDtos = this.getEarnedValueAnalysis(parameters);
     final LocalDate start = stepDtos.stream().map(EarnedValueByStepDto::getDate).min(LocalDate::compareTo).orElse(null);
     final LocalDate end = stepDtos.stream().map(EarnedValueByStepDto::getDate).max(LocalDate::compareTo).orElse(null);
@@ -163,7 +166,9 @@ public class DashboardService implements IDashboardService {
     final LocalDate date = YearMonth.now().isBefore(yearMonthParam) ? YearMonth.now().atDay(1) :  yearMonthParam.atDay(1);
 
     DashboardMonthDto dashboardMonthDto = dashboardCacheUtil.getListDashboardWorkpackDetailById(workpackId, baselineId, date);
-
+    if (dashboardMonthDto == null) {
+      return null;
+    }
     dashboardMonthDto.getTripleConstraint().setScheduleActualEndDate(date);
 
     if (date.isBefore(dashboardMonthDto.getTripleConstraint().getScheduleActualStartDate())) {
