@@ -79,6 +79,19 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
   )
   List<DashboardWorkpackDetailDto> findAllCostBaseline(List<Long> ids, List<Long> workpackIds);
 
+  @Query(
+          "MATCH (master:Deliverable)<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
+                  ",(st)-[:IS_SNAPSHOT_OF]->(stm:Step) " +
+                  ",(s)-[:COMPOSES]->(b:Baseline) " +
+                  "WHERE ID(b) IN $ids " +
+                  "AND ($workpackIds IS NULL OR ID(master) IN $workpackIds) " +
+                  "AND toFloat(st.plannedWork) > 0 " +
+                  "AND date.truncate('month', date(s.start) + Duration({months: stm.periodFromStart}))  <= date.truncate('month', date()) " +
+                  "AND ($yearMonth IS NULL OR (st.periodFromStart IS NOT NULL AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date($yearMonth))) " +
+                  "RETURN ID(master) AS idWorkpack, toString( SUM( (toFloat(co.plannedCost) / toFloat(st.plannedWork)) * toFloat(stm.actualWork))) AS earnedValue "
+  )
+  List<DashboardWorkpackDetailDto> findAllEarnedValueBaseline(List<Long> ids, List<Long> workpackIds, LocalDate yearMonth);
+
 
   @Query(
       "MATCH (w:Workpack{deleted:false})-[:IS_BASELINED_BY]->(b:Baseline) WHERE b.status IN ['APPROVED', 'PROPOSED'] " +

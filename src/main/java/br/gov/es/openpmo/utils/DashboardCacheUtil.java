@@ -1,9 +1,7 @@
 package br.gov.es.openpmo.utils;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -60,6 +58,8 @@ public class DashboardCacheUtil {
 
             addActualData(dashboardRepository, listDetail, null, null);
 
+            addEarnedValueData(dashboardRepository, listDetail, balineIds, null, null);
+
             listDetail.addAll(getMilestones(dashboardRepository, balineIds, null));
 
             listDetail.forEach(c -> mapWorkpackDetail.put(c.getIdWorkpack(), c));
@@ -71,6 +71,7 @@ public class DashboardCacheUtil {
         , List<Long> workpackIds, LocalDate date) {
         final List<DashboardWorkpackDetailDto> actualWork = dashboardRepository.findAllActualWork(workpackIds, date);
         final List<DashboardWorkpackDetailDto> actualCost = dashboardRepository.findAllActualCost(workpackIds, date);
+
         actualWork.forEach(
             a -> listDetail.stream().filter(d -> d.getIdWorkpack().equals(a.getIdWorkpack())).findFirst().ifPresent(
                 x -> {
@@ -101,6 +102,17 @@ public class DashboardCacheUtil {
                     w.setBaselineEnd(s.getBaselineEnd());
                 })
         );
+    }
+
+    private void addEarnedValueData(DashboardRepository dashboardRepository, List<DashboardWorkpackDetailDto> listDetail
+            , final List<Long> baselineIds, List<Long> workpackIds, LocalDate date) {
+        final List<DashboardWorkpackDetailDto> earnedValue = dashboardRepository.findAllEarnedValueBaseline(baselineIds, workpackIds, date);
+
+        earnedValue.forEach(
+                a -> listDetail.stream().filter(d -> d.getIdWorkpack().equals(a.getIdWorkpack())).findFirst().ifPresent(
+                        x -> {
+                            x.setEarnedValue(a.getEarnedValue());
+                        }));
     }
 
     private List<DashboardWorkpackDetailDto> getMilestones(DashboardRepository dashboardRepository
@@ -184,6 +196,8 @@ public class DashboardCacheUtil {
 
         addActualData(dashboardRepository, listDetail, workpackIds, date);
 
+        addEarnedValueData(dashboardRepository, listDetail, baselineIds, workpackIds, date);
+
         listDetail.addAll(getMilestones(dashboardRepository, baselineIds, workpackIds));
 
         if (CollectionUtils.isEmpty(listDetail)) {
@@ -263,15 +277,14 @@ public class DashboardCacheUtil {
                 step.setEarnedValue(BigDecimal.ZERO);
             }
 
+            step.calculateEarnedValue();
+            step.setEarnedValue(step.getEarnedValue().add(earnedValue));
             step.setPlannedCost(step.getPlannedCost().add(plannedCost));
             step.setPlannedWork(step.getPlannedWork().add(plannedWork));
             step.setEstimatedCost(step.getEstimatedCost().add(estimatedCost));
             step.setActualWork(step.getActualWork().add(actualWork));
             step.setActualCost(step.getActualCost().add(actualCost));
 
-            step.calculateEarnedValue();
-
-            step.setEarnedValue(step.getEarnedValue().add(earnedValue));
 
             plannedCost = step.getPlannedCost();
             actualCost = step.getActualCost();

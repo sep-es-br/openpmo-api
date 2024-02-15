@@ -23,16 +23,14 @@ public class DashboardWorkpackDetailDto {
     private BigDecimal earnedValue;
     private BigDecimal foreseenWorkRefMonth;
 
+
     public BigDecimal getEarnedValue() {
-        if (earnedValue == null) {
-            if (isValidBigdecimal(plannedCost) && isValidBigdecimal(actualWork) && isValidBigdecimal(plannedWork)) {
-                earnedValue = actualWork.divide(plannedWork, 6, RoundingMode.HALF_UP).multiply(plannedCost);
-            }
-        }
         return earnedValue;
     }
 
-
+    public void setEarnedValue(BigDecimal earnedValue) {
+        this.earnedValue = earnedValue;
+    }
 
     public BigDecimal getValueReferenceVariationScope() {
         if (isValidBigdecimal(plannedCost)) {

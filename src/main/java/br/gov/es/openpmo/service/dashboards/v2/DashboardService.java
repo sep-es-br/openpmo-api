@@ -7,10 +7,7 @@ import br.gov.es.openpmo.dto.dashboards.DashboardParameters;
 import br.gov.es.openpmo.dto.dashboards.MilestoneDto;
 import br.gov.es.openpmo.dto.dashboards.RiskDataChart;
 import br.gov.es.openpmo.dto.dashboards.datasheet.DatasheetResponse;
-import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.DashboardEarnedValueAnalysis;
-import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.EarnedValueByStep;
 import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.EarnedValueByStepDto;
-import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.PerformanceIndexesByStep;
 import br.gov.es.openpmo.dto.dashboards.v2.DashboardResponse;
 import br.gov.es.openpmo.dto.dashboards.v2.SimpleDashboard;
 import br.gov.es.openpmo.exception.NegocioException;
@@ -25,12 +22,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_NOT_FOUND;
 
@@ -169,7 +164,9 @@ public class DashboardService implements IDashboardService {
     if (dashboardMonthDto == null) {
       return null;
     }
-    dashboardMonthDto.getTripleConstraint().setScheduleActualEndDate(date);
+    if (dashboardMonthDto.getTripleConstraint().getScheduleActualEndDate().isAfter(date)) {
+      dashboardMonthDto.getTripleConstraint().setScheduleActualEndDate(date);
+    }
 
     if (date.isBefore(dashboardMonthDto.getTripleConstraint().getScheduleActualStartDate())) {
       dashboardMonthDto.getTripleConstraint().setScheduleActualEndDate(dashboardMonthDto.getTripleConstraint().getScheduleActualStartDate().with(TemporalAdjusters.lastDayOfMonth()));
@@ -196,14 +193,6 @@ public class DashboardService implements IDashboardService {
     return dashboardCacheUtil.getDashboardEarnedValueAnalysis(workpackId, baselineId, date);
   }
 
-  private boolean isBaselinesEmpty(final Long workpackId) {
-    final List<Baseline> baselines = this.hasActiveBaseline(workpackId)
-      ? this.findActiveBaseline(workpackId)
-      : this.findAllActiveBaselines(workpackId);
-
-    return baselines.isEmpty();
-  }
-
   private boolean hasActiveBaseline(final Long workpackId) {
     return this.workpackRepository.hasActiveBaseline(workpackId);
   }
@@ -216,34 +205,6 @@ public class DashboardService implements IDashboardService {
 
   private List<Baseline> findAllActiveBaselines(final Long workpackId) {
     return this.baselineRepository.findAllActiveBaselines(workpackId);
-  }
-
-  private List<PerformanceIndexesByStep> filterPerformanceIndexes(
-    final DashboardEarnedValueAnalysis earnedValueAnalysis,
-    final YearMonth yearMonth
-  ) {
-
-    return new ArrayList<>(0);
-  }
-
-  private List<EarnedValueByStep> handleEarnedValueBySteps(
-    final DashboardEarnedValueAnalysis earnedValueAnalysis,
-    final YearMonth yearMonth
-  ) {
-    final List<LocalDate> dateList = earnedValueAnalysis.getEarnedValueByStep()
-      .stream()
-      .map(EarnedValueByStep::getDate)
-      .map(YearMonth::atEndOfMonth)
-      .collect(Collectors.toList());
-
-    final YearMonth clampYearMonth = DashboardService.clampYearMonth(yearMonth, dateList);
-
-    final ArrayList<EarnedValueByStep> earnedValueBySteps = new ArrayList<>();
-
-    earnedValueAnalysis.getEarnedValueByStep()
-      .forEach(step -> earnedValueBySteps.add(step.copy(step.getDate().compareTo(clampYearMonth) <= 0)));
-
-    return earnedValueBySteps;
   }
 
 }

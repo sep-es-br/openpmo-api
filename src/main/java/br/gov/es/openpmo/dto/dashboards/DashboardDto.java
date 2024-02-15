@@ -110,6 +110,7 @@ public class DashboardDto {
     }
 
     public BigDecimal getCostVariation() {
+        System.out.println("getCostVariation");
         BigDecimal planned = getPlannedCost();
         BigDecimal foreseen = getForeseenCost();
         if (isValidBigdecimal(planned) && isValidBigdecimal(foreseen)) {
@@ -136,8 +137,12 @@ public class DashboardDto {
     public LocalDate getScheduleActualEndDate() {
         LocalDate start = getScheduleActualStartDate();
         LocalDate end = dateParam != null ? dateParam : LocalDate.now().minusMonths(1L).with(TemporalAdjusters.lastDayOfMonth());
+        LocalDate endSchedule = getEnd();
         if (start != null && end.isBefore(start))  {
             end = start.with(TemporalAdjusters.lastDayOfMonth());
+        }
+        if (endSchedule.isBefore(end)) {
+            return endSchedule;
         }
         return end;
     }
@@ -146,7 +151,7 @@ public class DashboardDto {
         LocalDate plannedStart = getBaselineStart();
         LocalDate plannedEnd = getBaselineEnd();
         if (plannedStart != null && plannedEnd != null) {
-            long value = ChronoUnit.MONTHS.between(plannedStart, plannedEnd);
+            long value = (ChronoUnit.DAYS.between(plannedStart, plannedEnd)) / 30;
             return new BigDecimal(value).setScale(1, RoundingMode.CEILING);
         }
         return null;
@@ -156,19 +161,19 @@ public class DashboardDto {
         LocalDate foreseenStart = getStart();
         LocalDate foreseendEnd = getEnd();
         if (foreseenStart != null && foreseendEnd != null) {
-            long value = ChronoUnit.MONTHS.between(foreseenStart, foreseendEnd);
+            long value = (ChronoUnit.DAYS.between(foreseenStart, foreseendEnd)) / 30;
             return new BigDecimal(value).setScale(1, RoundingMode.CEILING);
         }
         return null;
     }
 
     public BigDecimal getScheduleActualValue() {
-        LocalDate plannedStart = getScheduleActualStartDate();
-        LocalDate plannedEnd = getScheduleActualEndDate();
-        if (plannedStart != null && plannedEnd != null) {
-            long value = ChronoUnit.MONTHS.between(plannedStart, plannedEnd);
+        LocalDate actualStart = getScheduleActualStartDate();
+        LocalDate actualEnd = getScheduleActualEndDate();
+        if (actualStart != null && actualEnd != null) {
+            long value = (ChronoUnit.DAYS.between(actualStart, actualEnd)) / 30;
             if (value == 0) {
-                value = ChronoUnit.DAYS.between(plannedStart, plannedEnd);
+                value = ChronoUnit.DAYS.between(actualStart, actualEnd);
                 if (value > 0) {
                     value = 1;
                 }
