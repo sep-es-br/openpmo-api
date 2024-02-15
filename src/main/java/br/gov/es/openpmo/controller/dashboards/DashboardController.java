@@ -124,8 +124,8 @@ public class DashboardController implements IDashboardController {
 
   @Override
   public Response<Void> purge(String authorization) {
-    this.canAccessService.ensureIsAdministrator(authorization);
-    this.purgeDashboards.execute();
+//    this.canAccessService.ensureIsAdministrator(authorization);
+//    this.purgeDashboards.execute();
     return this.responseHandler.success();
   }
 

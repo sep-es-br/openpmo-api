@@ -3,6 +3,7 @@ package br.gov.es.openpmo.repository;
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.baselines.BaselineConsumesStep;
 import br.gov.es.openpmo.dto.baselines.BaselineConsumesStepSubmitDto;
+import br.gov.es.openpmo.dto.baselines.BaselineIntervalDto;
 import br.gov.es.openpmo.dto.baselines.BaselineResultDto;
 import br.gov.es.openpmo.dto.baselines.BaselineScheduleStep;
 import br.gov.es.openpmo.dto.baselines.BaselineScheduleSubmitDto;
@@ -74,7 +75,7 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
     List<Baseline> findAllByWorkpackId(Long idWorkpack);
 
     @Query("MATCH (w:Workpack{deleted:false})<-[:IS_SNAPSHOT_OF]-(s:Workpack)-[:COMPOSES]->(b:Baseline) " +
-            "WHERE id(w)=$idWorkpack AND w.category <> 'SNAPSHOT' AND id(b)=$idBaseline " +
+            "WHERE id(w)=$idWorkpack AND (w.category <> 'SNAPSHOT' OR w.category IS NULL) AND id(b)=$idBaseline " +
             "RETURN count(s)>0")
     boolean isSnapshotOfWorkpackComposingBaseline(
             Long idWorkpack,
@@ -83,7 +84,7 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
 
     @Query("MATCH (a:Workpack)-[:IS_SNAPSHOT_OF]->(w:Workpack{deleted:false})<-[:IS_SNAPSHOT_OF]-(s:Workpack)-[:COMPOSES]->" +
             "(b:Baseline) " +
-            "WHERE id(a)=$idWorkpack AND w.category <> 'SNAPSHOT' AND id(b)=$idBaseline " +
+            "WHERE id(a)=$idWorkpack AND (w.category <> 'SNAPSHOT' OR w.category IS NULL) AND id(b)=$idBaseline " +
             "RETURN count(s)>0")
     boolean isSnapshotOfMasterComposingBaseline(
             Long idWorkpack,
@@ -576,4 +577,18 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
         "WHERE id(workpack) IN $ids " +
         "RETURN DISTINCT ID(workpack) AS id, measure.name AS name ")
     List<EntityDto> findUnitMeasureNameOfDeliverableWorkpack(List<Long> ids);
+
+    @Query(
+        "CALL {" +
+        "    MATCH  (s:Schedule)-[:COMPOSES]->(b1:Baseline) " +
+        "    WHERE id(b1) IN $ids " +
+        "    RETURN id(b1) AS idBaseline, s.start AS startDate, s.end AS endDate " +
+        "    UNION ALL " +
+        "    MATCH (m:Milestone)-[:COMPOSES]->(b2:Baseline) " +
+        "    WHERE id(b2) IN $ids " +
+        "    RETURN id(b2) AS idBaseline,  m.date AS startDate, m.date AS endDate " +
+        "} " +
+        "RETURN idBaseline, MIN(startDate) AS minStart, MAX(endDate) AS maxEnd "
+    )
+    List<BaselineIntervalDto> findAllBaselineIntervalById(List<Long> ids);
 }

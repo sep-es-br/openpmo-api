@@ -2,12 +2,14 @@ package br.gov.es.openpmo.controller.workpack;
 
 import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.EntityDto;
+import br.gov.es.openpmo.dto.MilestoneResultDto;
 import br.gov.es.openpmo.dto.Response;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.completed.CompleteWorkpackRequest;
 import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
 import br.gov.es.openpmo.dto.dashboards.MilestoneDateDto;
 import br.gov.es.openpmo.dto.dashboards.MilestoneDto;
+import br.gov.es.openpmo.dto.dashboards.RiskResultDto;
 import br.gov.es.openpmo.dto.dashboards.RiskWorkpackDto;
 import br.gov.es.openpmo.dto.dashboards.RiskDto;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
@@ -19,13 +21,9 @@ import br.gov.es.openpmo.dto.workpack.WorkpackDetailParentDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackHasChildrenResponse;
 import br.gov.es.openpmo.dto.workpack.WorkpackParamDto;
 import br.gov.es.openpmo.exception.NegocioException;
-import br.gov.es.openpmo.model.baselines.Baseline;
-import br.gov.es.openpmo.model.dashboards.Dashboard;
-import br.gov.es.openpmo.model.dashboards.DashboardMonth;
 import br.gov.es.openpmo.model.journals.JournalAction;
 import br.gov.es.openpmo.model.risk.Risk;
 import br.gov.es.openpmo.model.workpacks.Milestone;
-import br.gov.es.openpmo.model.workpacks.Project;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.RiskRepository;
@@ -59,10 +57,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
-import java.time.LocalDate;
-import java.time.YearMonth;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -419,47 +414,17 @@ public class WorkpackController {
                                                                List<MilestoneDateDto> milestoneDates, List<RiskWorkpackDto> risks) {
     final WorkpackDetailParentDto itemDetail = this.workpackService.getWorkpackDetailParentDto(workpack);
     itemDetail.applyLinkedStatus(workpack, idWorkpackModel);
-    final Dashboard dashboard = workpack.getDashboard();
-    if (dashboard != null) {
-      final List<DashboardMonth> months = dashboard.getMonths();
-      final LocalDate lastMonth = YearMonth.now().minusMonths(1).atDay(1);
-      boolean seen = false;
-      DashboardMonth best = null;
-      Comparator<DashboardMonth> comparator = Comparator.comparing(DashboardMonth::getDate);
-      for (DashboardMonth month : months) {
-        if (!month.getDate().isBefore(lastMonth)) {
-          if (!seen || comparator.compare(month, best) < 0) {
-            seen = true;
-            best = month;
-          }
-        }
-      }
-      if (seen) {
-        Long baselineId = null;
-        if (workpack instanceof Project) {
-          baselineId = this.getBaselineId(workpack.getId());
-        }
-        final DashboardMonthDto monthDto = DashboardMonthDto.of(best, baselineId);
-        itemDetail.setDashboard(monthDto);
-      }
-    }
+    DashboardMonthDto monthDto = workpackService.getDashboardMonthDto(workpack);
+    itemDetail.setDashboard(monthDto);
     final List<MilestoneDateDto> milestones = milestoneDates.stream()
           .filter(m -> m.getIdWorkpack().equals(workpack.getId())).collect(Collectors.toList());
     final List<MilestoneDto> milestoneDtos = MilestoneDto.setMilestonesOfMiletonesDate(milestones);
-    itemDetail.setMilestones(milestoneDtos);
+    itemDetail.setMilestone(MilestoneResultDto.of(milestoneDtos));
     final List<Risk> risksWorkpack = risks.stream().filter(r -> workpack.getId().equals(r.getIdWorkpack()))
                                           .map(RiskWorkpackDto::getRisk).collect(Collectors.toList());
     final List<RiskDto> riskDtos = RiskDto.of(risksWorkpack);
-    itemDetail.setRisks(riskDtos);
+    itemDetail.setRisk(RiskResultDto.of(riskDtos));
     return itemDetail;
   }
 
-  private Long getBaselineId(final Long workpackId) {
-    final List<Baseline> baselines =
-      this.baselineRepository.findApprovedOrProposedBaselinesByAnyWorkpackId(workpackId);
-    if (baselines.isEmpty()) {
-      return null;
-    }
-    return baselines.get(0).getId();
-  }
 }

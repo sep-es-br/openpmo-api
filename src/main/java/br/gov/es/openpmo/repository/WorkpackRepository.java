@@ -135,8 +135,8 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       + " [ (w)<-[f4:FEATURES]-(u:UnitSelection)-[v3:VALUES]->(u1:UnitMeasure) | [f4,u,v3,u1]], "
       + " [ (w)-[sharedWith:IS_SHARED_WITH]->(office:Office) | [sharedWith, office]], "
       + " [ (w)-[instanceBy:IS_INSTANCE_BY]->(wm) | [instanceBy, wm] ], "
-      + " [ (w)-[isLinkedTo:IS_LINKED_TO]->(wm) | [isLinkedTo, wm] ], "
-      + " [ (w)<-[b:BELONGS_TO]-(d:Dashboard)<-[ipo:IS_PART_OF]-(dm:DashboardMonth)<-[ia:IS_AT]-(nodes) | [b,d,ipo,dm,ia,nodes] ] "
+      + " [ (w)-[isLinkedTo:IS_LINKED_TO]->(wm) | [isLinkedTo, wm] ] "
+//      + " [ (w)<-[b:BELONGS_TO]-(d:Dashboard)<-[ipo:IS_PART_OF]-(dm:DashboardMonth)<-[ia:IS_AT]-(nodes) | [b,d,ipo,dm,ia,nodes] ] "
       + "] "
       + "ORDER BY score DESC"
   )
@@ -430,7 +430,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   Optional<String> findUnitMeasureNameOfDeliverableWorkpack(Long idWorkpack);
 
   @Query("MATCH (deliverable:Deliverable{completed:false, deleted:false}) " +
-         "WHERE deliverable.category <> 'SNAPSHOT' " +
+         "WHERE (deliverable.category <> 'SNAPSHOT' OR w.category IS NULL) " +
          "RETURN deliverable")
   Set<Deliverable> findAllDeliverables();
 
@@ -442,12 +442,12 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   boolean hasDeliverableToComplete(Long idProject);
 
   @Query("MATCH (project:Project{completed:false, deleted:false}) " +
-         "WHERE project.category <> 'SNAPSHOT' " +
+         "WHERE (project.category <> 'SNAPSHOT' OR w.category IS NULL) " +
          "RETURN project")
   Collection<Project> findAllProjects();
 
   @Query("MATCH (program:Program{completed:false, deleted:false}) " +
-         "WHERE program.category <> 'SNAPSHOT' " +
+         "WHERE (program.category <> 'SNAPSHOT' OR w.category IS NULL) " +
          "RETURN program")
   Collection<Program> findAllPrograms();
 
@@ -621,4 +621,10 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       "RETURN ID(children) "
   )
   Set<Long> findAllDeliverableAndMilestoneByProject(Long id);
+
+
+  @Query("MATCH (w:Workpack)<-[:IS_IN*]-(children:Workpack) " +
+      "WHERE id(w)=$workpackId " +
+      "RETURN ID(children) ")
+  Set<Long> findAllChildren(@Param("workpackId") Long workpackId);
 }

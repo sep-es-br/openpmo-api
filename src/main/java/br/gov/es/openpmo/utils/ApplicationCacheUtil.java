@@ -145,13 +145,6 @@ public class ApplicationCacheUtil {
     }
 
 
-    public boolean hasChilcren(Long idWorkpack) {
-        Set<WorkpackResultDto> list = mapPlanWorkpackResult.values().stream().flatMap(Collection::stream).map(
-            WorkpackResultDto::new).collect(Collectors.toCollection(LinkedHashSet::new));
-        WorkpackResultDto workpack = list.stream().filter(w -> w.getId().equals(idWorkpack)).findFirst().orElse(null);
-        return workpack != null && list.stream().anyMatch(w -> workpack.getId().equals(w.getIdParent()));
-    }
-
     private void loadPlanIfChanged(Long idWorkpack) {
         Long idPlan = null;
         for (Map.Entry<Long, List<WorkpackResultDto>> entry : mapPlanWorkpackResult.entrySet()) {

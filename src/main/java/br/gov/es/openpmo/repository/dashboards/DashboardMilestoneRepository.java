@@ -41,8 +41,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
 
   @Query("MATCH (w:Workpack{deleted:false, canceled:false}) " +
       "WHERE id(w) IN $workpackId " +
-      "OPTIONAL MATCH (w)<-[:IS_SNAPSHOT_OF]-(s:Milestone{deleted:false , canceled:false }) " +
-      "OPTIONAL MATCH (s)-[:COMPOSES]->(b:Baseline{active: true }) " +
+      "OPTIONAL MATCH (w)<-[:IS_SNAPSHOT_OF]-(s:Milestone{deleted:false , canceled:false })-[:COMPOSES]->(b:Baseline{active: true }) " +
       "RETURN id(w) AS idWorkpack, w.completed AS completed, w.date AS milestoneDate, s.date AS snapshotDate")
   List<MilestoneDateDto> findByIds(List<Long> workpackId);
 

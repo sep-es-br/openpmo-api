@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.service.workpack;
 
 import br.gov.es.openpmo.configuration.properties.AppProperties;
+import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
 import br.gov.es.openpmo.dto.menu.PlanWorkpackDto;
 import br.gov.es.openpmo.dto.plan.PlanDto;
 import br.gov.es.openpmo.dto.workpack.CurrencyDto;
@@ -98,6 +99,8 @@ import br.gov.es.openpmo.service.properties.PropertyModelService;
 import br.gov.es.openpmo.service.properties.PropertyService;
 import br.gov.es.openpmo.utils.ApplicationCacheUtil;
 import br.gov.es.openpmo.utils.ApplicationMessage;
+import br.gov.es.openpmo.utils.DashboardCacheUtil;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -204,6 +207,7 @@ public class WorkpackService {
 
   private final PropertyRepository propertyRepository;
   private final  ApplicationCacheUtil cacheUtil;
+  private final DashboardCacheUtil dashboardCacheUtil;
 
   @Autowired
   public WorkpackService(
@@ -227,6 +231,7 @@ public class WorkpackService {
     final MilestoneRepository milestoneRepository,
     final AppProperties appProperties,
     final  ApplicationCacheUtil cacheUtil,
+    final DashboardCacheUtil dashboardCacheUtil,
     final PropertyRepository propertyRepository
   ) {
     this.workpackModelService = workpackModelService;
@@ -249,6 +254,7 @@ public class WorkpackService {
     this.milestoneRepository = milestoneRepository;
     this.appProperties = appProperties;
     this.propertyRepository = propertyRepository;
+    this.dashboardCacheUtil = dashboardCacheUtil;
     this.cacheUtil = cacheUtil;
   }
 
@@ -980,6 +986,12 @@ public class WorkpackService {
     detailDto.setDate(workpack.getDate());
     return detailDto;
   }
+
+  public DashboardMonthDto getDashboardMonthDto(Workpack workpack) {
+    if (workpack instanceof Milestone) return null;
+    return dashboardCacheUtil.getDashboardMonthDto(workpack.getId(), workpack instanceof Deliverable);
+  }
+
 
   public WorkpackDetailParentDto getWorkpackDetailParentDto(final Workpack workpack) {
     final WorkpackDetailParentDto detailDto = this.convertWorkpackDetailParentDto(workpack);

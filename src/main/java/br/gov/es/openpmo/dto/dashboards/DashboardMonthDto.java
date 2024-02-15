@@ -1,24 +1,14 @@
 package br.gov.es.openpmo.dto.dashboards;
 
-import br.gov.es.openpmo.model.dashboards.DashboardMonth;
-import br.gov.es.openpmo.model.dashboards.PerformanceIndexes;
-import br.gov.es.openpmo.model.dashboards.TripleConstraint;
-
 public class DashboardMonthDto {
 
   private TripleConstraintDto tripleConstraint;
   private PerformanceIndexDto performanceIndex;
 
-  public static DashboardMonthDto of(DashboardMonth dashboardMonth, Long baselineId) {
+  public static DashboardMonthDto of(DashboardDto dashboardDto) {
     final DashboardMonthDto dashboardMonthDto = new DashboardMonthDto();
-    final TripleConstraint tripleConstraint = dashboardMonth.getTripleConstraint(baselineId);
-    if (tripleConstraint != null) {
-      dashboardMonthDto.setTripleConstraint(TripleConstraintDto.of(tripleConstraint));
-    }
-    final PerformanceIndexes performanceIndexes = dashboardMonth.getPerformanceIndexes(baselineId);
-    if (performanceIndexes != null) {
-      dashboardMonthDto.setPerformanceIndex(PerformanceIndexDto.of(performanceIndexes));
-    }
+    dashboardMonthDto.setTripleConstraint(TripleConstraintDto.of(dashboardDto));
+    dashboardMonthDto.setPerformanceIndex(PerformanceIndexDto.of(dashboardDto));
     return dashboardMonthDto;
   }
 

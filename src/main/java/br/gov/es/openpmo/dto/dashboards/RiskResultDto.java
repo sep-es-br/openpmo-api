@@ -1,5 +1,13 @@
 package br.gov.es.openpmo.dto.dashboards;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.apache.commons.collections4.CollectionUtils;
+
+import br.gov.es.openpmo.dto.menu.WorkpackResultDto;
+import br.gov.es.openpmo.model.risk.Importance;
+
 public class RiskResultDto {
 
     private Long high;
@@ -12,6 +20,17 @@ public class RiskResultDto {
         this.low = low;
         this.medium = medium;
         this.total = total;
+    }
+
+    public static RiskResultDto of(final List<RiskDto> riskDtos) {
+        if (CollectionUtils.isNotEmpty(riskDtos)) {
+            long highTotal = riskDtos.stream().filter(r -> Importance.HIGH.equals(r.getImportance())).count();
+            long mediumTotal = riskDtos.stream().filter(r -> Importance.MEDIUM.equals(r.getImportance())).count();
+            long lowTotal = riskDtos.stream().filter(r -> Importance.LOW.equals(r.getImportance())).count();
+            long totalTotal = riskDtos.size();
+            return new RiskResultDto(highTotal, lowTotal, mediumTotal, totalTotal);
+        }
+        return null;
     }
 
     public Long getHigh() {

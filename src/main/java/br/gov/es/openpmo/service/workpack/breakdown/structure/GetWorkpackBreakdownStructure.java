@@ -6,15 +6,10 @@ import br.gov.es.openpmo.dto.menu.WorkpackResultDto;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.WorkpackBreakdownStructure;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.WorkpackModelBreakdownStructure;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.WorkpackModelRepresentation;
-import br.gov.es.openpmo.model.baselines.Baseline;
-import br.gov.es.openpmo.model.dashboards.Dashboard;
-import br.gov.es.openpmo.model.workpacks.Project;
 import br.gov.es.openpmo.model.workpacks.Workpack;
-import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.RiskRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.repository.dashboards.DashboardMilestoneRepository;
-import br.gov.es.openpmo.repository.dashboards.DashboardRepository;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessData;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessDataResponse;
 import br.gov.es.openpmo.utils.ApplicationCacheUtil;
@@ -22,8 +17,6 @@ import br.gov.es.openpmo.utils.ApplicationCacheUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
-import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -32,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
 
 @Component
 public class GetWorkpackBreakdownStructure {
@@ -44,8 +36,6 @@ public class GetWorkpackBreakdownStructure {
   private final ApplicationCacheUtil cacheUtil;
   private final DashboardMilestoneRepository dashboardMilestoneRepository;
   private final RiskRepository riskRepository;
-  private final DashboardRepository dashboardRepository;
-  private final BaselineRepository baselineRepository;
   private final WorkpackRepository workpackRepository;
 
 
@@ -53,9 +43,7 @@ public class GetWorkpackBreakdownStructure {
       final ApplicationCacheUtil cacheUtil,
       final DashboardMilestoneRepository dashboardMilestoneRepository,
       final RiskRepository riskRepository,
-      final DashboardRepository dashboardRepository,
       final GetWorkpackRepresentation getWorkpackRepresentation,
-      final BaselineRepository baselineRepository,
       final ICanAccessData canAccessData,
       final WorkpackRepository workpackRepository
   ) {
@@ -64,8 +52,6 @@ public class GetWorkpackBreakdownStructure {
     this.cacheUtil = cacheUtil;
     this.dashboardMilestoneRepository = dashboardMilestoneRepository;
     this.riskRepository = riskRepository;
-    this.dashboardRepository = dashboardRepository;
-    this.baselineRepository = baselineRepository;
     this.workpackRepository = workpackRepository;
   }
 
@@ -91,17 +77,13 @@ public class GetWorkpackBreakdownStructure {
       final List<Long> ids = new ArrayList<>(getIdsWorkpack(Collections.singleton(workpackDto), false));
       final List<MilestoneDateDto> milestoneDates = this.dashboardMilestoneRepository.findByParentIds(ids);
       final List<RiskWorkpackDto> risks = this.riskRepository.findByWorkpackIds(ids);
-      final List<Dashboard> dashboards = this.dashboardRepository.findAllByWorkpackId(ids, LocalDate.now());
-      final List<Long> idsDashboard = dashboards.stream().map(Dashboard::getWorkpack).filter(Project.class::isInstance)
-                      .map(Workpack::getId).collect(Collectors.toList());
-      final List<Baseline> baselines = this.baselineRepository.findApprovedOrProposedBaselinesByWorkpackIds(idsDashboard);
-      final List<WorkpackModelBreakdownStructure> children = this.getChildren(workpackDto, milestoneDates, risks, dashboards, baselines, milestoneWorkpack, deliverables);
+      final List<WorkpackModelBreakdownStructure> children = this.getChildren(workpackDto, milestoneDates, risks, milestoneWorkpack, deliverables);
       if (children.isEmpty()) {
         return null;
       }
       final WorkpackBreakdownStructure rootStructure = new WorkpackBreakdownStructure();
       rootStructure.setWorkpackModels(children);
-      rootStructure.setRepresentation(this.getWorkpackRepresentation.execute(workpackDto, milestoneDates, risks, dashboards, baselines, milestoneWorkpack, deliverables));
+      rootStructure.setRepresentation(this.getWorkpackRepresentation.execute(workpackDto, milestoneDates, risks, milestoneWorkpack, deliverables));
       return rootStructure;
     }
     return null;
@@ -154,8 +136,6 @@ public class GetWorkpackBreakdownStructure {
       final WorkpackResultDto workpackDto,
       final List<MilestoneDateDto> milestoneDates,
       final List<RiskWorkpackDto> risks,
-      final List<Dashboard> dashboards,
-      final List<Baseline> baselines,
       final List<MilestoneDateDto> milestoneWorkpack,
       final List<Workpack> deliverables
   ) {
@@ -178,7 +158,7 @@ public class GetWorkpackBreakdownStructure {
           workpackModelBreakdownStructure.setRepresentation(summary);
 
           childrens.forEach(child -> {
-            final WorkpackBreakdownStructure structure = this.getStructure(child, milestoneDates, risks, dashboards, baselines, milestoneWorkpack, deliverables);
+            final WorkpackBreakdownStructure structure = this.getStructure(child, milestoneDates, risks, milestoneWorkpack, deliverables);
             workpackBreakdownStructures.add(structure);
           });
           workpackBreakdownStructures.sort(Comparator.comparing(
@@ -204,20 +184,18 @@ public class GetWorkpackBreakdownStructure {
       final WorkpackResultDto workpackDto,
       final List<MilestoneDateDto> milestoneDates,
       final List<RiskWorkpackDto> risks,
-      final List<Dashboard> dashboards,
-      final List<Baseline> baselines,
       final List<MilestoneDateDto> milestoneWorkpack,
       final List<Workpack> deliverables
   ) {
     final WorkpackBreakdownStructure structure = new WorkpackBreakdownStructure();
     structure.setOrder(workpackDto.getName());
-    structure.setRepresentation(this.getWorkpackRepresentation.execute(workpackDto, milestoneDates, risks, dashboards, baselines, milestoneWorkpack, deliverables));
+    structure.setRepresentation(this.getWorkpackRepresentation.execute(workpackDto, milestoneDates, risks, milestoneWorkpack, deliverables));
     if (CollectionUtils.isNotEmpty(workpackDto.getChildren())) {
-      final List<WorkpackModelBreakdownStructure> children = this.getChildren(workpackDto, milestoneDates, risks, dashboards, baselines, milestoneWorkpack, deliverables);
+      final List<WorkpackModelBreakdownStructure> children = this.getChildren(workpackDto, milestoneDates, risks, milestoneWorkpack, deliverables);
       structure.setWorkpackModels(children);
       return structure;
     }
-    structure.setHasChildren(cacheUtil.hasChilcren(workpackDto.getId()));
+    structure.setHasChildren(CollectionUtils.isNotEmpty(workpackDto.getChildren()));
     structure.setWorkpackModels(Collections.emptyList());
     return structure;
   }

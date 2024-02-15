@@ -1,13 +1,16 @@
 package br.gov.es.openpmo.dto.dashboards.v2;
 
-import br.gov.es.openpmo.dto.dashboards.MilestoneDataChart;
+import br.gov.es.openpmo.dto.MilestoneResultDto;
+import br.gov.es.openpmo.dto.baselines.ccbmemberview.ScheduleInterval;
 import br.gov.es.openpmo.dto.dashboards.MilestoneDto;
+import br.gov.es.openpmo.dto.dashboards.PerformanceIndexDto;
 import br.gov.es.openpmo.dto.dashboards.RiskDataChart;
+import br.gov.es.openpmo.dto.dashboards.RiskResultDto;
+import br.gov.es.openpmo.dto.dashboards.TripleConstraintDto;
 import br.gov.es.openpmo.dto.dashboards.datasheet.DatasheetResponse;
 import br.gov.es.openpmo.dto.dashboards.datasheet.DatasheetStakeholderResponse;
 import br.gov.es.openpmo.dto.dashboards.datasheet.DatasheetTotalizers;
-import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.DashboardEarnedValueAnalysis;
-import br.gov.es.openpmo.dto.dashboards.tripleconstraint.TripleConstraintDataChart;
+import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.EarnedValueByStepDto;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
@@ -21,44 +24,62 @@ public class DashboardResponse {
 
   private final RiskDataChart risk;
 
-  private final List<MilestoneDto> milestones;
+  private final TripleConstraintDto tripleConstraint;
 
-  private final List<TripleConstraintDataChart> tripleConstraint;
+  private final PerformanceIndexDto performanceIndex;
+
+  private final ScheduleInterval scheduleInterval;
+
+  private final MilestoneResultDto milestone;
+
+
 
   @JsonUnwrapped
   private final DatasheetResponse datasheet;
 
-  private final DashboardEarnedValueAnalysis earnedValueAnalysis;
+  private final List<EarnedValueByStepDto> earnedValueByStep;
 
   @JsonCreator
   public DashboardResponse(
     final RiskDataChart risk,
-    final List<MilestoneDto> milestones,
-    final List<TripleConstraintDataChart> tripleConstraint,
+    final TripleConstraintDto tripleConstraint,
     final DatasheetResponse datasheet,
-    final DashboardEarnedValueAnalysis earnedValueAnalysis
+    final List<EarnedValueByStepDto> earnedValueByStep,
+    final PerformanceIndexDto performanceIndexes,
+    final MilestoneResultDto milestone,
+    final ScheduleInterval scheduleInterval
   ) {
     this.risk = risk;
-    this.milestones = milestones;
     this.datasheet = datasheet;
-    this.earnedValueAnalysis = earnedValueAnalysis;
+    this.earnedValueByStep = earnedValueByStep;
     this.tripleConstraint = tripleConstraint;
+    this.performanceIndex = performanceIndexes;
+    this.milestone = milestone;
+    this.scheduleInterval = scheduleInterval;
   }
 
   public RiskDataChart getRisk() {
     return this.risk;
   }
 
-  public List<MilestoneDto> getMilestones() {
-    return this.milestones;
+  public MilestoneResultDto getMilestone() {
+    return milestone;
   }
 
-  public List<TripleConstraintDataChart> getTripleConstraint() {
-    return this.tripleConstraint;
+  public TripleConstraintDto getTripleConstraint() {
+    return tripleConstraint;
   }
 
-  public DashboardEarnedValueAnalysis getEarnedValueAnalysis() {
-    return this.earnedValueAnalysis;
+  public List<EarnedValueByStepDto> getEarnedValueByStep() {
+    return this.earnedValueByStep;
+  }
+
+  public PerformanceIndexDto getPerformanceIndex() {
+    return performanceIndex;
+  }
+
+  public ScheduleInterval getScheduleInterval() {
+    return scheduleInterval;
   }
 
   @JsonIgnore

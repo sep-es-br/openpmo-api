@@ -26,7 +26,6 @@ public class EarnedValueAnalysisData {
     final EarnedValueAnalysisData to = new EarnedValueAnalysisData();
 
     apply(from.getEarnedValueByStep(), EarnedValueByStepData::of, to::setEarnedValueByStep, HashSet::new);
-    apply(from.getPerformanceIndexes(), PerformanceIndexesData::of, to::setPerformanceIndexes, HashSet::new);
 
     return to;
   }
@@ -51,15 +50,8 @@ public class EarnedValueAnalysisData {
       .sorted(Comparator.comparing(EarnedValueByStep::getDate))
       .collect(Collectors.toList());
 
-    final List<PerformanceIndexesByStep> performanceIndexes = this.getPerformanceIndexes()
-      .stream()
-      .map(PerformanceIndexesData::getResponse)
-      .sorted(Comparator.comparing(PerformanceIndexesByStep::getDate))
-      .collect(Collectors.toList());
-
     return new DashboardEarnedValueAnalysis(
-      earnedValueByStep,
-      performanceIndexes
+      earnedValueByStep
     );
   }
 

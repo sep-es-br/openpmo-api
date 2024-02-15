@@ -120,7 +120,7 @@ public class WorkpackPermissionVerifier {
     permissions.addAll(permissionsPlan);
 
     List<Long> idsWorkpakWithParents = applicationCacheUtil.getListIdWorkpackWithParent(idWorkpack);
-    List<Long> idsWorkpakWithChildren = applicationCacheUtil.getListIdWorkpackChildren(idWorkpack, plan.getId());
+    List<Long> idsWorkpakWithChildren = new ArrayList<>(workpackRepository.findAllChildren(idWorkpack));
 
     final List<CanAccessWorkpack> canAccessWorkpack = this.workpackPermissionRepository
         .findByIdPlanAndIdPerson(idPlan,idUser).stream()

@@ -116,8 +116,7 @@ public class DashboardEarnedValueAnalysisService implements IDashboardEarnedValu
     }
 
     return new DashboardEarnedValueAnalysis(
-      earnedValueByStepList,
-      performanceIndexesList
+      earnedValueByStepList
     );
   }
 
@@ -154,8 +153,7 @@ public class DashboardEarnedValueAnalysisService implements IDashboardEarnedValu
     }
 
     return new DashboardEarnedValueAnalysis(
-      earnedValueByStepList,
-      performanceIndexesList
+      earnedValueByStepList
     );
   }
 
