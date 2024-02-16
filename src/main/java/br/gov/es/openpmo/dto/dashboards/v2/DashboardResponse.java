@@ -2,10 +2,8 @@ package br.gov.es.openpmo.dto.dashboards.v2;
 
 import br.gov.es.openpmo.dto.MilestoneResultDto;
 import br.gov.es.openpmo.dto.baselines.ccbmemberview.ScheduleInterval;
-import br.gov.es.openpmo.dto.dashboards.MilestoneDto;
 import br.gov.es.openpmo.dto.dashboards.PerformanceIndexDto;
 import br.gov.es.openpmo.dto.dashboards.RiskDataChart;
-import br.gov.es.openpmo.dto.dashboards.RiskResultDto;
 import br.gov.es.openpmo.dto.dashboards.TripleConstraintDto;
 import br.gov.es.openpmo.dto.dashboards.datasheet.DatasheetResponse;
 import br.gov.es.openpmo.dto.dashboards.datasheet.DatasheetStakeholderResponse;

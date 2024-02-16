@@ -23,6 +23,8 @@ public class PerformanceIndexDto {
 
   private BigDecimal plannedValue;
 
+  private BigDecimal plannedValueRefMonth;
+
   public static PerformanceIndexDto of(DashboardDto dashboardDto) {
     final PerformanceIndexDto performanceIndexDto = new PerformanceIndexDto();
     performanceIndexDto.setEarnedValue(dashboardDto.getEarnedValue());
@@ -34,6 +36,7 @@ public class PerformanceIndexDto {
     performanceIndexDto.setPlannedValue(dashboardDto.getPlannedCost());
     performanceIndexDto.setEstimatesAtCompletion(dashboardDto.getEstimatesAtCompletion());
     performanceIndexDto.setEstimateToComplete(dashboardDto.getEstimateToComplete());
+    performanceIndexDto.setPlannedValueRefMonth(dashboardDto.getPlannedCostRefMonth());
     return performanceIndexDto;
   }
 
@@ -107,5 +110,13 @@ public class PerformanceIndexDto {
 
   public void setPlannedValue(BigDecimal plannedValue) {
     this.plannedValue = plannedValue;
+  }
+
+  public BigDecimal getPlannedValueRefMonth() {
+    return plannedValueRefMonth;
+  }
+
+  public void setPlannedValueRefMonth(BigDecimal plannedValueRefMonth) {
+    this.plannedValueRefMonth = plannedValueRefMonth;
   }
 }

@@ -29,9 +29,6 @@ public class DashboardCacheUtil {
     @Autowired
     private ApplicationContext applicationContext;
 
-    @Autowired
-    private ApplicationCacheUtil applicationCacheUtil;
-
     private final Map<Long, DashboardWorkpackDetailDto> mapWorkpackDetail = new HashMap<>(0);
     private Map<Long, DashboardBaseline> mapDashboardBaseline = new HashMap<>(0);
     private boolean loadingAll;
@@ -54,7 +51,7 @@ public class DashboardCacheUtil {
             final List<DashboardBaseline> baselines = dashboardRepository.findAllBaseline();
             final List<Long> balineIds = getBaselineIds(baselines);
 
-            addPlannedData(dashboardRepository, balineIds, listDetail, null);
+            addPlannedData(dashboardRepository, balineIds, listDetail, null, null);
 
             addActualData(dashboardRepository, listDetail, null, null);
 
@@ -87,7 +84,7 @@ public class DashboardCacheUtil {
     }
 
     private void addPlannedData(final DashboardRepository dashboardRepository, final List<Long> balineIds
-        , final List<DashboardWorkpackDetailDto> listDetail, List<Long> workpackIds) {
+        , final List<DashboardWorkpackDetailDto> listDetail, List<Long> workpackIds, LocalDate date) {
         final List<DashboardWorkpackDetailDto> snapshotDetail =  dashboardRepository.findAllScheduleAndStepBaseline(balineIds, workpackIds);
         final List<DashboardWorkpackDetailDto> snapshotCost = dashboardRepository.findAllCostBaseline(balineIds, workpackIds);
         snapshotCost.forEach(c -> snapshotDetail.stream().filter(
@@ -102,6 +99,11 @@ public class DashboardCacheUtil {
                     w.setBaselineEnd(s.getBaselineEnd());
                 })
         );
+
+        final List<DashboardWorkpackDetailDto> snapshotCostLimitedMont = dashboardRepository.findAllCostBaseline(balineIds, workpackIds, date);
+        snapshotCostLimitedMont.forEach(c -> listDetail.stream().filter(
+            d -> d.getIdWorkpack().equals(c.getIdWorkpack())).findFirst().ifPresent(
+            x -> x.setPlannedCostRefMonth(c.getPlannedCostRefMonth())));
     }
 
     private void addEarnedValueData(DashboardRepository dashboardRepository, List<DashboardWorkpackDetailDto> listDetail
@@ -160,8 +162,8 @@ public class DashboardCacheUtil {
         }
         final DashboardDto dto = new DashboardDto();
         ids.forEach(id -> {
-            DashboardWorkpackDetailDto detail = mapWorkpackDetail.get(id);
-            if (detail != null) {
+            DashboardWorkpackDetailDto detail = new DashboardWorkpackDetailDto(mapWorkpackDetail.get(id));
+            if (detail.getIdWorkpack() != null) {
                 dto.getWorkpacks().add(detail);
             }
         });
@@ -192,7 +194,7 @@ public class DashboardCacheUtil {
                          : mapDashboardBaseline.values().stream().map(DashboardBaseline::getIdBaseline).collect(
                              Collectors.toList());
 
-        addPlannedData(dashboardRepository, baselineIds, listDetail, workpackIds);
+        addPlannedData(dashboardRepository, baselineIds, listDetail, workpackIds, date);
 
         addActualData(dashboardRepository, listDetail, workpackIds, date);
 
@@ -218,7 +220,7 @@ public class DashboardCacheUtil {
         final List<Long> workpackIds = new ArrayList<>(ids);
 
         workpackIds.add(idWorkpack);
-        final List<EarnedValueByStepDto> steps = dashboardRepository.findAllEarnedValues(workpackIds);
+        final List<EarnedValueByStepDto> steps = dashboardRepository.findAllEarnedValuesStep(workpackIds);
 
         final List<EarnedValueByStepDto> listEstimatedCost = dashboardRepository.findAllEarnedValueEstimatedCost(workpackIds);
         listEstimatedCost.forEach(ac -> steps.stream().filter(e -> e.getDate().equals(ac.getDate())).findFirst().ifPresent(
@@ -244,6 +246,10 @@ public class DashboardCacheUtil {
         final List<EarnedValueByStepDto> listPlannedWork = dashboardRepository.findAllEarnedValuePlannedWork(baselineIds, workpackIds);
         listPlannedWork.forEach(ac -> steps.stream().filter(e -> e.getDate().equals(ac.getDate())).findFirst().ifPresent(
             x -> x.setPlannedWork(ac.getPlannedWork())));
+
+        final List<EarnedValueByStepDto> listEarnedValue = dashboardRepository.findAllEarnedValue(baselineIds, workpackIds);
+        listEarnedValue.forEach(ac -> steps.stream().filter(e -> e.getDate().equals(ac.getDate())).findFirst().ifPresent(
+            x -> x.setEarnedValue(ac.getEarnedValue())));
 
         loadDataEarnedValueAnalysis(steps);
 
@@ -277,7 +283,6 @@ public class DashboardCacheUtil {
                 step.setEarnedValue(BigDecimal.ZERO);
             }
 
-            step.calculateEarnedValue();
             step.setEarnedValue(step.getEarnedValue().add(earnedValue));
             step.setPlannedCost(step.getPlannedCost().add(plannedCost));
             step.setPlannedWork(step.getPlannedWork().add(plannedWork));

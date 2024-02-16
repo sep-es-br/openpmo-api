@@ -20,6 +20,7 @@ public class DashboardDto {
     private BigDecimal earnedValue;
     private BigDecimal plannedCost;
     private BigDecimal actualCost;
+    private BigDecimal plannedCostRefMonth;
 
     @JsonIgnore
     private LocalDate dateParam;
@@ -215,15 +216,15 @@ public class DashboardDto {
     }
 
     public BigDecimal getSchedulePerformanceIndexValue() {
-        if (isValidBigdecimal(getEarnedValue()) && isValidBigdecimal(getPlannedCost())) {
-            return getEarnedValue().divide(getPlannedCost(), 6, RoundingMode.HALF_UP);
+        if (isValidBigdecimal(getEarnedValue()) && isValidBigdecimal(getPlannedCostRefMonth())) {
+            return getEarnedValue().divide(getPlannedCostRefMonth(), 6, RoundingMode.HALF_UP);
         }
         return null;
     }
 
     public BigDecimal getSchedulePerformanceIndexVariation() {
-        if (isValidBigdecimal(getEarnedValue()) && isValidBigdecimal(getPlannedCost())) {
-            return getEarnedValue().subtract(getPlannedCost());
+        if (isValidBigdecimal(getEarnedValue()) && isValidBigdecimal(getPlannedCostRefMonth())) {
+            return getEarnedValue().subtract(getPlannedCostRefMonth());
         }
         return null;
     }
@@ -313,5 +314,14 @@ public class DashboardDto {
         return workpacks.stream().map(DashboardWorkpackDetailDto::getForeseenWorkRefMonth).filter(Objects::nonNull)
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
+
+    public BigDecimal getPlannedCostRefMonth() {
+        if (this.plannedCostRefMonth == null) {
+            this.plannedCostRefMonth = workpacks.stream().map(DashboardWorkpackDetailDto::getPlannedCostRefMonth).filter(Objects::nonNull)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
+        return this.plannedCostRefMonth;
+    }
+
 
 }

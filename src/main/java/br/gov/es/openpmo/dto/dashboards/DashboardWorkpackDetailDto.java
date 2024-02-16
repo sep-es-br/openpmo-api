@@ -22,7 +22,30 @@ public class DashboardWorkpackDetailDto {
     private BigDecimal actualCost;
     private BigDecimal earnedValue;
     private BigDecimal foreseenWorkRefMonth;
+    private BigDecimal plannedCostRefMonth;
 
+    public DashboardWorkpackDetailDto() {
+    }
+
+    public DashboardWorkpackDetailDto(DashboardWorkpackDetailDto dto) {
+        if (dto == null) {
+            return;
+        }
+        this.idWorkpack = dto.getIdWorkpack();
+        this.start = dto.getStart();
+        this.end = dto.getEnd();
+        this.baselineStart = dto.getBaselineStart();
+        this.baselineEnd = dto.getBaselineEnd();
+        this.foreseenCost = dto.getForeseenCost();
+        this.foreseenWork = dto.getForeseenWork();
+        this.plannedCost = dto.getPlannedCost();
+        this.plannedWork = dto.getPlannedWork();
+        this.actualWork = dto.getActualWork();
+        this.actualCost = dto.getActualCost();
+        this.earnedValue = dto.getEarnedValue();
+        this.foreseenWorkRefMonth = dto.getForeseenWorkRefMonth();
+        this.plannedCostRefMonth = dto.getPlannedCostRefMonth();
+    }
 
     public BigDecimal getEarnedValue() {
         return earnedValue;
@@ -175,5 +198,13 @@ public class DashboardWorkpackDetailDto {
 
     public void setForeseenWorkRefMonth(BigDecimal foreseenWorkRefMonth) {
         this.foreseenWorkRefMonth = foreseenWorkRefMonth;
+    }
+
+    public BigDecimal getPlannedCostRefMonth() {
+        return plannedCostRefMonth;
+    }
+
+    public void setPlannedCostRefMonth(BigDecimal plannedCostRefMonth) {
+        this.plannedCostRefMonth = plannedCostRefMonth;
     }
 }
