@@ -110,7 +110,6 @@ public class DashboardDto {
     }
 
     public BigDecimal getCostVariation() {
-        System.out.println("getCostVariation");
         BigDecimal planned = getPlannedCost();
         BigDecimal foreseen = getForeseenCost();
         if (isValidBigdecimal(planned) && isValidBigdecimal(foreseen)) {

@@ -17,6 +17,7 @@ import br.gov.es.openpmo.utils.ApplicationCacheUtil;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
 
+import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -30,6 +31,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class GetWorkpackBreakdownStructure {
 
   private final GetWorkpackRepresentation getWorkpackRepresentation;
+
+  private final Collator collator;
 
 
   private final ICanAccessData canAccessData;
@@ -53,6 +56,8 @@ public class GetWorkpackBreakdownStructure {
     this.dashboardMilestoneRepository = dashboardMilestoneRepository;
     this.riskRepository = riskRepository;
     this.workpackRepository = workpackRepository;
+    this.collator = Collator.getInstance();
+    this.collator.setStrength(Collator.PRIMARY);
   }
 
   public WorkpackBreakdownStructure execute(
@@ -161,10 +166,11 @@ public class GetWorkpackBreakdownStructure {
             final WorkpackBreakdownStructure structure = this.getStructure(child, milestoneDates, risks, milestoneWorkpack, deliverables);
             workpackBreakdownStructures.add(structure);
           });
-          workpackBreakdownStructures.sort(Comparator.comparing(
-              WorkpackBreakdownStructure::getOrder,
-              Comparator.nullsLast(Comparator.naturalOrder())
-          ));
+          if (workpackBreakdownStructures.stream().anyMatch(w -> w.getOrder() instanceof String)) {
+            workpackBreakdownStructures.sort((a,b) -> this.collator.compare(a.getOrder(), b.getOrder()));
+          } else {
+            workpackBreakdownStructures.sort((a,b) -> this.compareTo(a.getOrder(), b.getOrder()));
+          }
           workpackModelBreakdownStructure.setWorkpacks(workpackBreakdownStructures);
           structures.add(workpackModelBreakdownStructure);
         }
@@ -172,12 +178,19 @@ public class GetWorkpackBreakdownStructure {
 
       structures.sort(
           Comparator.comparing(WorkpackModelBreakdownStructure::getRepresentationPosition)
-                    .thenComparing(
-                        WorkpackModelBreakdownStructure::getName,
-                        Comparator.nullsLast(Comparator.naturalOrder())
-                    ));
+                    .thenComparing((a, b) -> this.collator.compare(a.getName(), b.getName())));
     }
     return structures;
+  }
+
+  private int compareTo(Comparable a, Comparable b) {
+    if ( a == null )
+      return b == null ? 0 : 1;
+
+    if ( b == null )
+      return 1;
+
+    return a.compareTo(b);
   }
 
   private WorkpackBreakdownStructure getStructure(
@@ -188,14 +201,14 @@ public class GetWorkpackBreakdownStructure {
       final List<Workpack> deliverables
   ) {
     final WorkpackBreakdownStructure structure = new WorkpackBreakdownStructure();
-    structure.setOrder(workpackDto.getName());
     structure.setRepresentation(this.getWorkpackRepresentation.execute(workpackDto, milestoneDates, risks, milestoneWorkpack, deliverables));
+    structure.setOrder(workpackDto.getSort());
     if (CollectionUtils.isNotEmpty(workpackDto.getChildren())) {
       final List<WorkpackModelBreakdownStructure> children = this.getChildren(workpackDto, milestoneDates, risks, milestoneWorkpack, deliverables);
       structure.setWorkpackModels(children);
       return structure;
     }
-    structure.setHasChildren(CollectionUtils.isNotEmpty(workpackDto.getChildren()));
+    structure.setHasChildren(cacheUtil.hasChilcren(workpackDto.getId(), workpackDto.getIdPlan()));
     structure.setWorkpackModels(Collections.emptyList());
     return structure;
   }

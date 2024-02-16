@@ -24,6 +24,10 @@ public class PortifolioService {
         return workpackRepository.findAllMenuCustomByIdPlan(idPlan);
     }
 
+    public List<WorkpackResultDto> findAllMenuCustomByIdPlanWithSort(Long idPlan) {
+        return workpackRepository.findAllMenuCustomByIdPlanWithSort(idPlan);
+    }
+
     public String getHashCodeMenuCustomByIdPlan(Long idPlan) {
         List<String> list = workpackRepository.getHashCodeMenuCustomByIdPlan(idPlan);
         return "" + list.hashCode();

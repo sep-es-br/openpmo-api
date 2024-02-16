@@ -46,15 +46,32 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       "RETURN DISTINCT id(w) as id, id(model) as idWorkpackModel, id(plan) as idPlan, w.idParent as idParent" +
       ", w.name as name, w.fullName as fullName, model.fontIcon as fontIcon, model.modelName as modelName" +
       ", model.modelNameInPlural as modelNameInPlural,labels(w) as labels, model.position as position " +
+      ", w.date as date, model.sortByField as sortByField " +
       "UNION ALL " +
       "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO]-(w:Workpack{deleted:false,canceled:false})-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
       ",(w)<-[:IS_IN*]-(children:Workpack)-[:IS_INSTANCE_BY]->(modelChildren:WorkpackModel)  " +
       "WHERE id(plan) = $idPlan AND (children)-[:IS_IN]->(w) " +
       "RETURN id(children) as id, id(modelChildren) as idWorkpackModel, id(plan) as idPlan,id(w) as idParent" +
       ", children.name as name, children.fullName as fullName, modelChildren.fontIcon as fontIcon, modelChildren.modelName as modelName" +
-      ", modelChildren.modelNameInPlural as modelNameInPlural, labels(children) as labels, modelChildren.position as position  "
+      ", modelChildren.modelNameInPlural as modelNameInPlural, labels(children) as labels, modelChildren.position as position " +
+      ", children.date as date, modelChildren.sortByField as sortByField "
   )
   List<WorkpackResultDto> findAllMenuCustomByIdPlan(final Long idPlan);
+
+  @Query(
+      "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO]-(w:Workpack{deleted:false,canceled:false}) " +
+          ", (w)-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel)-[:IS_SORTED_BY]->(pm:PropertyModel)<-[:IS_DRIVEN_BY]-(prop:Property)-[:FEATURES]->(w) " +
+          "WHERE id(plan) = $idPlan AND NOT (w)-[:IS_IN]->(:Workpack) " +
+          "RETURN DISTINCT id(w) as id, prop.value as sort " +
+          "UNION ALL " +
+          "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO]-(w:Workpack{deleted:false,canceled:false}) " +
+          ", (w)-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
+          ", (w)<-[:IS_IN*]-(children:Workpack)-[:IS_INSTANCE_BY]->(modelChildren:WorkpackModel) " +
+          ", (modelChildren)-[:IS_SORTED_BY]->(pm:PropertyModel)<-[:IS_DRIVEN_BY]-(prop:Property)-[:FEATURES]->(children)  " +
+          "WHERE id(plan) = $idPlan AND (children)-[:IS_IN]->(w) " +
+          "RETURN id(children) as id, prop.value as sort "
+  )
+  List<WorkpackResultDto> findAllMenuCustomByIdPlanWithSort(final Long idPlan);
 
   @Query(
       "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO]-(w:Workpack{deleted:false,canceled:false})-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +

@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.dto.menu;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -24,6 +25,9 @@ public class WorkpackResultDto {
     private String type;
     private String modelNameInPlural;
     private Long position;
+    private LocalDateTime date;
+    private String sortByField;
+    private Comparable sort;
 
     public WorkpackResultDto() {
     }
@@ -53,6 +57,9 @@ public class WorkpackResultDto {
         this.fontIcon = w.getFontIcon();
         this.modelName = w.getModelName();
         this.modelNameInPlural = w.getModelNameInPlural();
+        this.date = w.getDate();
+        this.sort = w.getSort();
+        this.sortByField = w.getSortByField();
         this.position = w.getPosition();
         if (w.getLabels() != null && !w.getLabels().isEmpty()) {
             w.getLabels().forEach(this::setType);
@@ -161,6 +168,30 @@ public class WorkpackResultDto {
 
     public void setPosition(Long position) {
         this.position = position;
+    }
+
+    public LocalDateTime getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDateTime date) {
+        this.date = date;
+    }
+
+    public String getSortByField() {
+        return sortByField;
+    }
+
+    public void setSortByField(String sortByField) {
+        this.sortByField = sortByField;
+    }
+
+    public Comparable getSort() {
+        return sort;
+    }
+
+    public void setSort(Comparable sort) {
+        this.sort = sort;
     }
 
     public Map<Long, Set<WorkpackResultDto>> getChildrenGroupedByModel() {

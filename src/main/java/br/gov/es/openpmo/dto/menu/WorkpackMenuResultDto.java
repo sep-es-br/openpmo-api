@@ -14,6 +14,8 @@ public class WorkpackMenuResultDto {
     private String name;
     private String fullName;
     private String fontIcon;
+    private Comparable sort;
+    private Long position;
     private Set<WorkpackMenuResultDto> children = new LinkedHashSet<>(0);
 
     public WorkpackMenuResultDto() {
@@ -27,6 +29,8 @@ public class WorkpackMenuResultDto {
         this.name = w.getName();
         this.fullName = w.getFullName();
         this.fontIcon = w.getFontIcon();
+        this.sort = w.getSort();
+        this.position = w.getPosition();
     }
 
     public Long getId() {
@@ -93,4 +97,19 @@ public class WorkpackMenuResultDto {
         this.children = children;
     }
 
+    public Comparable getSort() {
+        return sort;
+    }
+
+    public void setSort(Comparable sort) {
+        this.sort = sort;
+    }
+
+    public Long getPosition() {
+        return position;
+    }
+
+    public void setPosition(Long position) {
+        this.position = position;
+    }
 }

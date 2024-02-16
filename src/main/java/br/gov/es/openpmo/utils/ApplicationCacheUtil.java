@@ -55,10 +55,34 @@ public class ApplicationCacheUtil {
             if (!hashCode.equals(hash)) {
                 mapHashCode.put(planId, hashCode);
                 List<WorkpackResultDto> list = portifolioService.findAllMenuCustomByIdPlan(planId);
+                setSortByField(list);
+                List<WorkpackResultDto> listSort = portifolioService.findAllMenuCustomByIdPlanWithSort(planId);
+                listSort.forEach(s -> list.stream().filter(w -> w.getId().equals(s.getId()))
+                                          .findFirst().ifPresent(x -> x.setSort(s.getSort())));
                 mapPlanWorkpackResult.put(planId, list);
             }
         }
         loadingAll = false;
+    }
+
+    private void setSortByField(List<WorkpackResultDto> list) {
+        list.forEach(w -> {
+            if (w.getSortByField() != null) {
+                switch (w.getSortByField()) {
+                    case "name":
+                        w.setSort(w.getName());
+                        break;
+                    case "fullName":
+                        w.setSort(w.getFullName());
+                        break;
+                    case "date":
+                        w.setSort(w.getDate());
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
     }
 
     public void loadResultByPlan(Long idPlan) {
@@ -100,12 +124,6 @@ public class ApplicationCacheUtil {
         return ids;
     }
 
-    public List<Long> getListIdWorkpackChildren(Long idWorkpack, Long idPlan) {
-        List<Long> ids = new ArrayList<>(0);
-        WorkpackResultDto actual = getWorkpackBreakdownStructure(idWorkpack, idPlan, true);
-        addChildrenId(ids, actual);
-        return ids;
-    }
 
     public WorkpackResultDto getWorkpackBreakdownStructure(Long idWorkpack, Long idPlan, boolean allLevels) {
         loadPlanIfChanged(idWorkpack);
@@ -173,15 +191,11 @@ public class ApplicationCacheUtil {
         }
     }
 
-    private void addChildrenId(List<Long> ids, WorkpackResultDto actual) {
-        if (actual != null && CollectionUtils.isNotEmpty(actual.getChildren())) {
-            for (WorkpackResultDto child : actual.getChildren()) {
-                ids.add(child.getId());
-                if (CollectionUtils.isNotEmpty(child.getChildren())) {
-                    this.addChildrenId(ids, child);
-                }
-            }
-        }
+    public boolean hasChilcren(Long idWorkpack, Long idPlan) {
+        List<WorkpackResultDto> list = mapPlanWorkpackResult.get(idPlan);
+        WorkpackResultDto workpack = list.stream().filter(w -> w.getId().equals(idWorkpack)).findFirst().orElse(null);
+        return workpack != null && list.stream().anyMatch(w -> workpack.getId().equals(w.getIdParent()));
     }
+
 
 }

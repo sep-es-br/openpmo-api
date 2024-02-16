@@ -23,17 +23,21 @@ import br.gov.es.openpmo.service.workpack.WorkpackPermissionVerifier;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
 import br.gov.es.openpmo.utils.ApplicationCacheUtil;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -55,6 +59,8 @@ public class MenuService {
 
   private final ApplicationCacheUtil applicationCacheUtil;
 
+  private final Collator collator;
+
   @Autowired
   public MenuService(
     final WorkpackService workpackService,
@@ -72,6 +78,8 @@ public class MenuService {
     this.workpackPermissionVerifier = workpackPermissionVerifier;
     this.getSorterProperty = getSorterProperty;
     this.applicationCacheUtil = applicationCacheUtil;
+    this.collator = Collator.getInstance();
+    this.collator.setStrength(Collator.PRIMARY);
   }
 
   public Set<WorkpackMenuResultDto> findAllPortfolioCached(final PortfolioMenuRequest request) {
@@ -123,10 +131,48 @@ public class MenuService {
         menu.setChildren(this.sortMenusChildren(menu.getChildren()));
       }
     }
-    return menus.stream()
-                .sorted(Comparator.comparing(WorkpackMenuResultDto::getIdWorkpackModel, Comparator.nullsLast(Comparator.naturalOrder()))
-                                  .thenComparing(WorkpackMenuResultDto::getName, Comparator.nullsLast(Comparator.naturalOrder())))
-                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+    Map<ModelPosition, List<WorkpackMenuResultDto>> mapMenu = getMapMenuPosition(menus);
+    List<ModelPosition> models = new ArrayList<>(mapMenu.keySet());
+    models.sort(Comparator.comparing(ModelPosition::getPosition));
+    Set<WorkpackMenuResultDto> result = new LinkedHashSet<>(0);
+    for (ModelPosition model : models) {
+      List<WorkpackMenuResultDto> menuModel = mapMenu.get(model);
+      if (menuModel.stream().anyMatch(m -> m.getSort() instanceof String)) {
+        result.addAll(menuModel.stream()
+              .sorted(Comparator.comparing(WorkpackMenuResultDto::getIdWorkpackModel, Comparator.nullsLast(Comparator.naturalOrder()))
+                                .thenComparing((a, b) -> this.collator.compare(a.getSort(), b.getSort())))
+              .collect(Collectors.toCollection(LinkedHashSet::new)));
+        continue;
+      }
+      result.addAll(menuModel.stream()
+                             .sorted(Comparator.comparing(WorkpackMenuResultDto::getIdWorkpackModel, Comparator.nullsLast(Comparator.naturalOrder()))
+                                               .thenComparing((a,b) -> this.compareTo(a.getSort(), b.getSort())))
+                             .collect(Collectors.toCollection(LinkedHashSet::new)));
+    }
+    return result;
+  }
+
+  private Map<ModelPosition, List<WorkpackMenuResultDto>> getMapMenuPosition(Collection<WorkpackMenuResultDto> menus) {
+    final Map<ModelPosition, List<WorkpackMenuResultDto>> map = new HashMap<>(0);
+    if (CollectionUtils.isNotEmpty(menus)) {
+      menus.forEach(m -> {
+        ModelPosition key = new ModelPosition(m.getIdWorkpackModel(), m.getPosition());
+        map.computeIfAbsent(key, k -> new ArrayList<>(0));
+        map.get(key).add(m);
+      });
+    }
+    return map;
+  }
+
+  private int compareTo(Comparable a, Comparable b) {
+    if ( a == null )
+      return b == null ? 0 : 1;
+
+    if ( b == null )
+      return 1;
+
+    return a.compareTo(b);
   }
 
   private List<WorkpackMenuResultDto> getListWorkpackMenuResultDtoFull(Long idPlan) {
@@ -638,6 +684,48 @@ public class MenuService {
       return this.hasPlanPermission;
     }
 
+  }
+
+  class ModelPosition {
+
+    private Long idModel;
+    private Long position;
+
+    public ModelPosition(Long idModel, Long position) {
+      this.idModel = idModel;
+      this.position = position;
+    }
+
+    public Long getIdModel() {
+      return idModel;
+    }
+
+    public void setIdModel(Long idModel) {
+      this.idModel = idModel;
+    }
+
+    public Long getPosition() {
+      return position;
+    }
+
+    public void setPosition(Long position) {
+      this.position = position;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o)
+        return true;
+      if (o == null || getClass() != o.getClass())
+        return false;
+      ModelPosition that = (ModelPosition) o;
+      return Objects.equals(idModel, that.idModel);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(idModel);
+    }
   }
 
 }
