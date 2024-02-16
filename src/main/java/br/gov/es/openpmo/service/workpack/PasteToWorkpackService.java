@@ -129,6 +129,9 @@ public class PasteToWorkpackService {
     final Long idParentTo,
     final Long idWorkpackModelTo
   ) {
+    if (!idWorkpackModelFrom.equals(idWorkpackModelTo)) {
+      throw new NegocioException(ApplicationMessage.WORKPACK_PASTE_ERROR);
+    }
     this.validatePlan(idWorkpack, idPlanFrom);
     this.validateModel(idWorkpack, idWorkpackModelFrom);
 

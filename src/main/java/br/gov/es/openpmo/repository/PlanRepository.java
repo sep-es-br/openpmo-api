@@ -88,7 +88,7 @@ public interface PlanRepository extends Neo4jRepository<Plan, Long>, CustomRepos
     "optional match (p)<-[bt:BELONGS_TO{linked:false}]-(w:Workpack{deleted:false}) " +
     "where NOT (w)-[:IS_IN]->(:Workpack) " +
     "return p, bt, w, [ " +
-    "    [ (w)<-[isIn:IS_IN*]-(children:Workpack{deleted:false}) | [ isIn, children] ], " +
+    "[ (w)<-[isIn:IS_IN*]-(children:Workpack{deleted:false}) | [ isIn, children] ] " +
     "] "
   )
   Optional<Plan> findFirstLevelStructurePlanById(@Param("idPlan") Long idPlan);

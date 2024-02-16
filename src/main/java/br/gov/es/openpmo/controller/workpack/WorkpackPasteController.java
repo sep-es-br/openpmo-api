@@ -42,16 +42,14 @@ public class WorkpackPasteController {
     this.canAccessService = canAccessService;
   }
 
-  @GetMapping("/{idWorkpack}/check-paste/{idWorkpackModelTo}")
+  @GetMapping("/check-paste/{idWorkpackModelTo}")
   public Response<WorkpackPasteResponse> checksIfCanPasteWorkpack(
-    @PathVariable final Long idWorkpack,
     @PathVariable final Long idWorkpackModelTo,
     @RequestParam final Long idWorkpackModelFrom
   ) {
 
     // this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
     final WorkpackPasteResponse response = this.checkPasteWorkpackService.checksIfCanPasteWorkpack(
-      idWorkpack,
       idWorkpackModelTo,
       idWorkpackModelFrom);
 
