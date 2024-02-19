@@ -18,7 +18,7 @@ public final class GetPropertyByModel {
     final Workpack workpack,
     final PropertyModel propertyModel
   ) {
-    if(workpack == null || (workpack.getProperties()).isEmpty()) {
+    if(workpack == null || workpack.getProperties() == null || (workpack.getProperties()).isEmpty()) {
       return null;
     }
     for(final Property property : workpack.getProperties()) {
