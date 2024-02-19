@@ -50,19 +50,23 @@ public class ApplicationCacheUtil {
         PortifolioService portifolioService = applicationContext.getBean(PortifolioService.class);
         List<Long> planIds = portifolioService.findAllPlanIds();
         for (Long planId : planIds) {
-            String hashCode = portifolioService.getHashCodeMenuCustomByIdPlan(planId);
-            String hash = mapHashCode.get(planId);
-            if (!hashCode.equals(hash)) {
-                mapHashCode.put(planId, hashCode);
-                List<WorkpackResultDto> list = portifolioService.findAllMenuCustomByIdPlan(planId);
-                setSortByField(list);
-                List<WorkpackResultDto> listSort = portifolioService.findAllMenuCustomByIdPlanWithSort(planId);
-                listSort.forEach(s -> list.stream().filter(w -> w.getId().equals(s.getId()))
-                                          .findFirst().ifPresent(x -> x.setSort(s.getSort())));
-                mapPlanWorkpackResult.put(planId, list);
-            }
+            loadCachePlan(portifolioService, planId);
         }
         loadingAll = false;
+    }
+
+    private void loadCachePlan(PortifolioService portifolioService, Long planId) {
+        String hashCode = portifolioService.getHashCodeMenuCustomByIdPlan(planId);
+        String hash = mapHashCode.get(planId);
+        if (!hashCode.equals(hash)) {
+            mapHashCode.put(planId, hashCode);
+            List<WorkpackResultDto> list = portifolioService.findAllMenuCustomByIdPlan(planId);
+            setSortByField(list);
+            List<WorkpackResultDto> listSort = portifolioService.findAllMenuCustomByIdPlanWithSort(planId);
+            listSort.forEach(s -> list.stream().filter(w -> w.getId().equals(s.getId()))
+                                      .findFirst().ifPresent(x -> x.setSort(s.getSort())));
+            mapPlanWorkpackResult.put(planId, list);
+        }
     }
 
     private void setSortByField(List<WorkpackResultDto> list) {
@@ -88,10 +92,7 @@ public class ApplicationCacheUtil {
     public void loadResultByPlan(Long idPlan) {
         mapPlanLoading.put(idPlan, true);
         PortifolioService portifolioService = applicationContext.getBean(PortifolioService.class);
-        String hashCode = portifolioService.getHashCodeMenuCustomByIdPlan(idPlan);
-        mapHashCode.put(idPlan, hashCode);
-        List<WorkpackResultDto> list = portifolioService.findAllMenuCustomByIdPlan(idPlan);
-        mapPlanWorkpackResult.put(idPlan, list);
+        loadCachePlan(portifolioService, idPlan);
         mapPlanLoading.put(idPlan, false);
     }
 
@@ -181,7 +182,7 @@ public class ApplicationCacheUtil {
     private void addParentId(List<Long> ids, WorkpackResultDto actual, Set<WorkpackResultDto> list) {
         if (actual.getIdParent() != null) {
             WorkpackResultDto parent = list.stream().filter(w -> w.getId().equals(actual.getIdParent()))
-                                               .findFirst().orElse(null);
+                                           .findFirst().orElse(null);
             if (parent != null) {
                 ids.add(parent.getId());
                 if (parent.getIdParent() != null) {
