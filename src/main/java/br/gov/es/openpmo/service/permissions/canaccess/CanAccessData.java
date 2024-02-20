@@ -3,6 +3,7 @@ package br.gov.es.openpmo.service.permissions.canaccess;
 import br.gov.es.openpmo.repository.permissions.PermissionRepository;
 import br.gov.es.openpmo.service.actors.IGetPersonFromAuthorization;
 import br.gov.es.openpmo.service.actors.IGetPersonFromAuthorization.PersonDataResponse;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -10,6 +11,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiPredicate;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 @Component
 public class CanAccessData implements ICanAccessData {
@@ -17,12 +20,16 @@ public class CanAccessData implements ICanAccessData {
   private final IGetPersonFromAuthorization getPersonFromAuthorization;
   private final PermissionRepository permissionRepository;
 
+  private final Logger logger;
+
   public CanAccessData(
     final IGetPersonFromAuthorization getPersonFromAuthorization,
-    final PermissionRepository permissionRepository
+    final PermissionRepository permissionRepository,
+    final Logger logger
   ) {
     this.getPersonFromAuthorization = getPersonFromAuthorization;
     this.permissionRepository = permissionRepository;
+    this.logger = logger;
   }
 
   private static boolean isAdministrator(final PersonDataResponse personData) {
@@ -56,8 +63,7 @@ public class CanAccessData implements ICanAccessData {
     final String authorizationHeader
   ) {
     final PersonDataResponse personData = this.getPerson(authorizationHeader);
-    // alterado para teste de performance
-    final boolean isAdministrator = true;
+    final boolean isAdministrator = isAdministrator(personData);
 
     final List<Long> ids = Collections.singletonList(id);
     final Boolean self = isSelfId(personData, ids);
@@ -65,34 +71,42 @@ public class CanAccessData implements ICanAccessData {
     if (isAdministrator) {
       return CanAccessDataResponse.administrator(personData.getKey(), self);
     }
-
+    Instant t1 = Instant.now();
     final boolean editManagement = hasPermission(
       ids,
       personData.getKey(),
       this.permissionRepository::hasEditManagementPermission
     );
+    this.logger.error("Tempo execução hasEditManagementPermission -> " + ChronoUnit.MILLIS.between(t1, Instant.now()));
 
+    Instant t2 = Instant.now();
     final boolean edit = hasPermission(ids, personData.getKey(), this.permissionRepository::hasEditPermission);
+    this.logger.error("Tempo execução hasEditPermission -> " + ChronoUnit.MILLIS.between(t2, Instant.now()));
     if (edit) {
       return CanAccessDataResponse.edit(personData.getKey(), editManagement, self);
     }
+    Instant t3 = Instant.now();
     final boolean read = hasPermission(ids, personData.getKey(), this.permissionRepository::hasReadPermission);
+    this.logger.error("Tempo execução hasReadPermission -> " + ChronoUnit.MILLIS.between(t3, Instant.now()));
     if (read) {
       return CanAccessDataResponse.read(personData.getKey(), editManagement, self);
     }
 
-    return new CanAccessDataResponse(
-      false,
-      false,
-      hasPermission(ids, personData.getKey(), this.permissionRepository::hasBasicReadPermission),
-      false,
-      self,
-      personData.getKey(),
-      new CanAccessManagementDataResponse(
-        editManagement,
-        true
-      )
+    Instant t4 = Instant.now();
+    final CanAccessDataResponse canAccess = new CanAccessDataResponse(
+            false,
+            false,
+            hasPermission(ids, personData.getKey(), this.permissionRepository::hasBasicReadPermission),
+            false,
+            self,
+            personData.getKey(),
+            new CanAccessManagementDataResponse(
+                    editManagement,
+                    true
+            )
     );
+    this.logger.error("Tempo execução hasBasicReadPermission -> " + ChronoUnit.MILLIS.between(t4, Instant.now()));
+    return canAccess;
   }
 
   @Override
