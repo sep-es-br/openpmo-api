@@ -1165,7 +1165,9 @@ public class WorkpackService {
       this.updateWorkpackDeleteStatus(workpack);
       return;
     }
-    this.verifyForGroupedPropertiesToDelete(workpack.getProperties());
+    if (workpack.getProperties() != null) {
+      this.verifyForGroupedPropertiesToDelete(workpack.getProperties());
+    }
     this.journalDeleter.deleteJournalsByWorkpackId(workpack.getId());
     this.workpackRepository.delete(workpack);
   }
