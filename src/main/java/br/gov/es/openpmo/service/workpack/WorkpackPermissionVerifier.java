@@ -140,11 +140,19 @@ public class WorkpackPermissionVerifier {
         .filter(p -> !NONE.equals(p.getPermissionLevel()) && idsWorkpakWithChildren.contains(p.getIdWorkpack()))
         .collect(Collectors.toList());
 
+    if (!permissions.isEmpty()) {
+      List<PermissionDto>  permissionsReadOfficePlan = permissions.stream()
+                                                              .filter(c -> READ.equals(c.getLevel())).collect(Collectors.toList());
+      if (!permissionsReadOfficePlan.isEmpty()) {
+        return permissionsReadOfficePlan;
+      }
+    }
+
     if (!permissionChildren.isEmpty()) {
       return Collections.singletonList(PermissionDto.basicRead());
     }
 
-    return permissions.stream().filter(c -> READ.equals(c.getLevel())).collect(Collectors.toList());
+    return Collections.emptyList();
   }
 
   private Set<Workpack> getAllWorkpacksUsingPlan(final Long idPlan) {
