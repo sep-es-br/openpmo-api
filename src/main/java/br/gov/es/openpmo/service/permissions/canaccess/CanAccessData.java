@@ -17,6 +17,7 @@ public class CanAccessData implements ICanAccessData {
   private final IGetPersonFromAuthorization getPersonFromAuthorization;
   private final PermissionRepository permissionRepository;
 
+
   public CanAccessData(
     final IGetPersonFromAuthorization getPersonFromAuthorization,
     final PermissionRepository permissionRepository
@@ -64,34 +65,38 @@ public class CanAccessData implements ICanAccessData {
     if (isAdministrator) {
       return CanAccessDataResponse.administrator(personData.getKey(), self);
     }
-
     final boolean editManagement = hasPermission(
       ids,
       personData.getKey(),
       this.permissionRepository::hasEditManagementPermission
     );
+    if (editManagement) {
+      return CanAccessDataResponse.edit(personData.getKey(), editManagement, self);
+    }
 
     final boolean edit = hasPermission(ids, personData.getKey(), this.permissionRepository::hasEditPermission);
     if (edit) {
       return CanAccessDataResponse.edit(personData.getKey(), editManagement, self);
     }
+
     final boolean read = hasPermission(ids, personData.getKey(), this.permissionRepository::hasReadPermission);
     if (read) {
       return CanAccessDataResponse.read(personData.getKey(), editManagement, self);
     }
 
-    return new CanAccessDataResponse(
-      false,
-      false,
-      hasPermission(ids, personData.getKey(), this.permissionRepository::hasBasicReadPermission),
-      false,
-      self,
-      personData.getKey(),
-      new CanAccessManagementDataResponse(
-        editManagement,
-        true
-      )
+    final CanAccessDataResponse canAccess = new CanAccessDataResponse(
+            false,
+            false,
+            hasPermission(ids, personData.getKey(), this.permissionRepository::hasBasicReadPermission),
+            false,
+            self,
+            personData.getKey(),
+            new CanAccessManagementDataResponse(
+                    editManagement,
+                    true
+            )
     );
+    return canAccess;
   }
 
   @Override

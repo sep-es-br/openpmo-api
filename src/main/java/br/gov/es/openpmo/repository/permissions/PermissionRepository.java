@@ -12,11 +12,11 @@ import java.util.List;
 @Repository
 public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, CustomRepository {
 
-  @Query("MATCH " +
-    "   (m)<-[:CAN_ACCESS_WORKPACK|CAN_ACCESS_PLAN|CAN_ACCESS_OFFICE {permissionLevel:'EDIT'}]-(p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
-    "MATCH path=((n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO|IS_STRUCTURED_BY|IS_FORSEEN_ON|APPLIES_TO|FEATURES|MITIGATES|IS_TRIGGER_BY|ADDRESSES|IS_REPORTED_FOR|IS_BELONGS_TO|SCOPE_TO|IS_LINKED_TO|COMPOSES|IS_BASELINED_BY*0..]->(m)) " +
-    "    WHERE id(n) IN $ids " +
-    "RETURN count(path)>0")
+  @Query("MATCH (n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO|IS_STRUCTURED_BY|IS_FORSEEN_ON|APPLIES_TO|FEATURES|MITIGATES|IS_TRIGGER_BY|ADDRESSES|IS_REPORTED_FOR|IS_BELONGS_TO|SCOPE_TO|IS_LINKED_TO|COMPOSES|IS_BASELINED_BY*0..]->(m)<-[:CAN_ACCESS_WORKPACK|CAN_ACCESS_PLAN|CAN_ACCESS_OFFICE {permissionLevel:'EDIT'}]-(p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
+          "WHERE id(n) IN $ids " +
+          "with n limit 1 " +
+          "with count(n)>0 as hasEditPermission " +
+          "RETURN hasEditPermission")
   boolean hasEditPermission(
     @Param("ids") List<Long> ids,
     @Param("sub") String sub
@@ -34,12 +34,12 @@ public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, C
     @Param("sub") String sub
   );
 
-  @Query("MATCH " +
-    "   (m)<-[r:CAN_ACCESS_WORKPACK|CAN_ACCESS_PLAN|CAN_ACCESS_OFFICE]-(p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
-    "   WHERE r.permissionLevel IN ['READ', 'EDIT'] " +
-    "MATCH path=shortestPath((n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO|IS_STRUCTURED_BY|IS_FORSEEN_ON|APPLIES_TO|FEATURES|MITIGATES|IS_TRIGGER_BY|ADDRESSES|IS_REPORTED_FOR|IS_BELONGS_TO|SCOPE_TO|IS_LINKED_TO|COMPOSES|IS_BASELINED_BY*0..]->(m)) " +
-    "    WHERE id(n) IN $ids " +
-    "RETURN count(path)>0")
+  @Query("MATCH (n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO|IS_STRUCTURED_BY|IS_FORSEEN_ON|APPLIES_TO|FEATURES|MITIGATES|IS_TRIGGER_BY|ADDRESSES|IS_REPORTED_FOR|IS_BELONGS_TO|SCOPE_TO|IS_LINKED_TO|COMPOSES|IS_BASELINED_BY*0..]->(m)<-[r:CAN_ACCESS_WORKPACK|CAN_ACCESS_PLAN|CAN_ACCESS_OFFICE]-(p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
+          "WHERE id(n) IN $ids " +
+          "AND r.permissionLevel IN ['READ', 'EDIT'] " +
+          "with n limit 1 " +
+          "with count(n)>0 as hasEditPermission " +
+          "RETURN hasEditPermission")
   boolean hasReadPermission(
     @Param("ids") List<Long> ids,
     @Param("sub") String sub
