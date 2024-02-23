@@ -59,7 +59,7 @@ public class BreadcrumbController {
       @RequestParam("id-plan") final Long idPlan,
       @Authorization final String authorization) {
 
-    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
+    this.canAccessService.ensureCanReadResourceWorkpack(idWorkpack, authorization);
     final Collection<BreadcrumbDto> breadcrumbItens = this.workpackBreadcrumbService.buildWorkpackHierarchyAsBreadcrumb(
         idWorkpack,
         idPlan);

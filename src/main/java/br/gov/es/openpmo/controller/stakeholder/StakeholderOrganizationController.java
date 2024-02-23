@@ -46,7 +46,7 @@ public class StakeholderOrganizationController {
     @RequestParam(name = "id-organization", required = false) final Long idOrganization,
     @Authorization final String authorization
   ) {
-    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
+    this.canAccessService.ensureCanReadResourceWorkpack(idWorkpack, authorization);
     final StakeholderOrganizationDto organizationDto = this.stakeholderService.findOrganization(
       idWorkpack,
       idOrganization

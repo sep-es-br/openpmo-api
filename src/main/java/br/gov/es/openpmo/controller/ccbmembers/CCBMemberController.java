@@ -58,7 +58,7 @@ public class CCBMemberController implements ICCBMemberController {
   public Response<List<CCBMemberResponse>> getAll(final Long workpackId,
                                                   final String authorization) {
 
-    this.canAccessService.ensureCanReadResource(workpackId, authorization);
+    this.canAccessService.ensureCanReadResourceWorkpack(workpackId, authorization);
     final List<CCBMemberResponse> ccbMemberResponses = this.getAllService.getAll(workpackId);
     return this.controllerHelper.success(ccbMemberResponses);
   }
@@ -70,7 +70,7 @@ public class CCBMemberController implements ICCBMemberController {
       final Long idPlan,
       final String authorization
   ) {
-    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
+    this.canAccessService.ensureCanReadResourceWorkpack(idWorkpack, authorization);
     final CCBMemberResponse ccbMemberResponse = this.getByIdCCBMemberService.getById(idPerson, idWorkpack, idPlan);
     return this.controllerHelper.success(ccbMemberResponse);
   }

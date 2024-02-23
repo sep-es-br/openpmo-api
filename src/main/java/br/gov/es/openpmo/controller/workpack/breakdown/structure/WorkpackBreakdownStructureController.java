@@ -40,7 +40,7 @@ public class WorkpackBreakdownStructureController {
     @RequestParam(required = false, defaultValue = "false") final Boolean allLevels,
     @Authorization final String authorization
   ) {
-    this.canAccessService.ensureCanReadResource(
+    this.canAccessService.ensureCanReadResourceWorkpack(
       idWorkpack,
       authorization
     );

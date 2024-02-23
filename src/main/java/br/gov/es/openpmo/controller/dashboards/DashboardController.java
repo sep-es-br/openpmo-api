@@ -61,7 +61,7 @@ public class DashboardController implements IDashboardController {
   public Response<List<DashboardBaselineResponse>> getBaselines(final Long workpackId,
                                                                 @Authorization final String authorization) {
 
-    this.canAccessService.ensureCanReadResource(workpackId, authorization);
+    this.canAccessService.ensureCanReadResourceWorkpack(workpackId, authorization);
     final List<DashboardBaselineResponse> baselines = this.baselineService.getBaselines(workpackId);
     return this.responseHandler.success(baselines);
   }
@@ -70,7 +70,7 @@ public class DashboardController implements IDashboardController {
   public Response<Interval> getInterval(final Long workpackId,
                                         @Authorization final String authorization) {
 
-    this.canAccessService.ensureCanReadResource(workpackId, authorization);
+    this.canAccessService.ensureCanReadResourceWorkpack(workpackId, authorization);
     final Interval interval = this.intervalService.calculateFor(workpackId);
     return this.responseHandler.success(interval);
   }
@@ -89,7 +89,7 @@ public class DashboardController implements IDashboardController {
       @Authorization final String authorization
   ) {
 
-    this.canAccessService.ensureCanReadResource(workpackId, authorization);
+    this.canAccessService.ensureCanReadResourceWorkpack(workpackId, authorization);
 
     final Long userId = this.tokenService.getUserId(authorization);
 
@@ -117,7 +117,7 @@ public class DashboardController implements IDashboardController {
     @Authorization final String authorization
   ) {
 
-    this.canAccessService.ensureCanReadResource(workpackId, authorization);
+    this.canAccessService.ensureCanReadResourceWorkpack(workpackId, authorization);
     this.asyncDashboardService.calculate(workpackId, calculateInterval);
     return this.responseHandler.success();
   }

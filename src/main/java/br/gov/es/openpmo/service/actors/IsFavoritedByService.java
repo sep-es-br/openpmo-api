@@ -127,7 +127,7 @@ public class IsFavoritedByService {
       this.unfavorite(maybeFavorite.get());
       return;
     }
-    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
+    this.canAccessService.ensureCanReadResourceWorkpack(idWorkpack, authorization);
     this.favorite(request, person, workpack);
   }
 

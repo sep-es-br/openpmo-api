@@ -39,7 +39,7 @@ public class ScheduleController {
     @RequestParam("id-workpack") final Long idWorkpack,
     @RequestHeader(name = "Authorization") final String authorization
   ) {
-    this.canAccessService.ensureCanReadResource(
+    this.canAccessService.ensureCanReadResourceWorkpack(
       idWorkpack,
       authorization
     );

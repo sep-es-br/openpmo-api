@@ -213,7 +213,7 @@ public class WorkpackController {
     @RequestParam(value = "id-plan", required = false) final Long idPlan,
     @Authorization final String authorization
   ) {
-    this.canAccessService.ensureCanReadResource(
+    this.canAccessService.ensureCanReadResourceWorkpack(
       idWorkpack,
       authorization
     );
@@ -403,7 +403,7 @@ public class WorkpackController {
     @Authorization final String authorization,
     @PathVariable("id-workpack") final Long idWorkpack
   ) {
-    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
+    this.canAccessService.ensureCanReadResourceWorkpack(idWorkpack, authorization);
 
     final WorkpackHasChildrenResponse response = this.workpackHasChildren.execute(idWorkpack, authorization);
 

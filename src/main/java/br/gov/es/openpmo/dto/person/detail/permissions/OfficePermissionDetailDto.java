@@ -4,6 +4,7 @@ import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.model.relations.CanAccessOffice;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Objects.hash;
@@ -13,7 +14,7 @@ public class OfficePermissionDetailDto {
 
   private Long id;
   private PermissionLevelEnum accessLevel;
-  private List<PlanPermissionDetailDto> planPermissions;
+  private List<PlanPermissionDetailDto> planPermissions = new ArrayList<>(0);
 
   public OfficePermissionDetailDto() {
   }

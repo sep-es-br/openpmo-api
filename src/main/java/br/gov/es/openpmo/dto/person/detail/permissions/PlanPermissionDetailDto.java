@@ -2,6 +2,7 @@ package br.gov.es.openpmo.dto.person.detail.permissions;
 
 import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -10,7 +11,7 @@ public class PlanPermissionDetailDto {
   private Long id;
   private String name;
   private PermissionLevelEnum accessLevel;
-  private List<WorkpackPermissionDetailDto> workpacksPermission;
+  private List<WorkpackPermissionDetailDto> workpacksPermission = new ArrayList<>(0);
 
   public PlanPermissionDetailDto() {
   }

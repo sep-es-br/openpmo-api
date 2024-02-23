@@ -92,7 +92,7 @@ public class WorkpackLinkController {
       @RequestParam("id-plan") final Long idPlan,
       @RequestHeader(name = "Authorization") final String authorization) {
 
-    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
+    this.canAccessService.ensureCanReadResourceWorkpack(idWorkpack, authorization);
 
     final Long idUser = this.tokenService.getUserId(authorization);
 

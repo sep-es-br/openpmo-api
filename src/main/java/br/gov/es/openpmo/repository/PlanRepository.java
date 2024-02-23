@@ -1,5 +1,7 @@
 package br.gov.es.openpmo.repository;
 
+import br.gov.es.openpmo.dto.person.detail.permissions.CanAccessPlanResultDto;
+import br.gov.es.openpmo.dto.person.detail.permissions.PlanResultDto;
 import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.relations.BelongsTo;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
@@ -13,7 +15,19 @@ import java.util.Optional;
 public interface PlanRepository extends Neo4jRepository<Plan, Long>, CustomRepository {
 
 
-  @Query("MATCH (p: Plan)-[r:IS_ADOPTED_BY]->(o:Office) "
+
+  @Query("MATCH (p:Plan)-[r:IS_ADOPTED_BY]->(o:Office) "
+      + "WHERE id(o) = $idOffice "
+      + "RETURN id(p) AS id, p.name AS name, ID(o) AS idOffice ")
+  List<PlanResultDto> findAllPlanResultByIdOffice(Long idOffice);
+
+  @Query("MATCH (person:Person)-[permission:CAN_ACCESS_PLAN]->(plan:Plan)-[r:IS_ADOPTED_BY]->(o:Office) " +
+      "WHERE ID(person) = $idPerson AND ID(o) = $idOffice AND permission.permissionLevel <> 'NONE' " +
+      "RETURN ID(plan) AS idPlan, ID(person) AS idPerson, permission.permissionLevel AS permissionLevel " +
+      ", permission.role AS role, ID(o) AS idOffice ")
+  List<CanAccessPlanResultDto> findAllCanAccessPlanResultDtoByIdPerson(Long idPerson, Long idOffice);
+
+  @Query("MATCH (p:Plan)-[r:IS_ADOPTED_BY]->(o:Office) "
       + "WHERE id(o) = $id RETURN id(p) ")
   List<Long> findAllIdPlanInOffice(@Param("id") Long id);
 

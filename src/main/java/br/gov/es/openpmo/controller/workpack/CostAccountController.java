@@ -53,7 +53,7 @@ public class CostAccountController {
     @RequestParam(required = false) final String term,
     @Authorization final String authorization
   ) {
-    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
+    this.canAccessService.ensureCanReadResourceWorkpack(idWorkpack, authorization);
     final List<CostAccountDto> costs = this.costAccountService.findAllByIdWorkpack(idWorkpack, idFilter, term);
     if (costs.isEmpty()) {
       return ResponseEntity.noContent().build();
@@ -67,7 +67,7 @@ public class CostAccountController {
     @RequestParam("id-workpack") final Long idWorkpack,
     @Authorization final String authorization
   ) {
-    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
+    this.canAccessService.ensureCanReadResourceWorkpack(idWorkpack, authorization);
     final CostDto costDto = this.costAccountService.getCost(id, idWorkpack);
     if (costDto == null) {
       return ResponseEntity.noContent().build();

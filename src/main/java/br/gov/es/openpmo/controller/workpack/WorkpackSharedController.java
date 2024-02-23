@@ -34,7 +34,7 @@ public class WorkpackSharedController {
   public ResponseEntity<ResponseBase<List<WorkpackSharedDto>>> getAll(
       @PathVariable("idWorkpack") final Long idWorkpack,
       @RequestHeader("Authorization") final String authorization) {
-    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
+    this.canAccessService.ensureCanReadResourceWorkpack(idWorkpack, authorization);
     final List<WorkpackSharedDto> response = this.service.getAll(idWorkpack);
     return ResponseEntity.ok(ResponseBase.of(response));
   }
@@ -44,7 +44,7 @@ public class WorkpackSharedController {
       @PathVariable("idWorkpack") final Long ignored,
       @PathVariable("id") final Long id,
       @RequestHeader("Authorization") final String authorization) {
-    this.canAccessService.ensureCanReadResource(ignored, authorization);
+    this.canAccessService.ensureCanReadResourceWorkpack(ignored, authorization);
     final WorkpackSharedDto dto = this.service.getById(id);
     return ResponseEntity.ok(ResponseBase.of(dto));
   }

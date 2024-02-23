@@ -2,6 +2,7 @@ package br.gov.es.openpmo.repository;
 
 import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.office.plan.PlanModel;
+import br.gov.es.openpmo.model.relations.CanAccessOffice;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
@@ -14,6 +15,14 @@ public interface OfficeRepository extends Neo4jRepository<Office, Long>, CustomR
 
   @Query("MATCH (o:Office) WHERE id(o)=$id return o")
   Optional<Office> findByIdThin(Long id);
+
+
+  @Query(
+      "MATCH (person:Person)-[canAccessOffice:CAN_ACCESS_OFFICE]->(office:Office) " +
+      "WHERE ID(person) = $idPerson AND ID(office) = $idOffice AND canAccessOffice.permissionLevel <> 'NONE' " +
+      "RETURN canAccessOffice "
+  )
+  List<CanAccessOffice> findAllCanAccessOfficeByIdPerson(Long idPerson, Long idOffice);
 
   @Query(
     "MATCH (office:Office) " +

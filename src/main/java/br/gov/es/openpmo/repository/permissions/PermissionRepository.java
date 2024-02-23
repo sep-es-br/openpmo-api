@@ -23,6 +23,27 @@ public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, C
   );
 
   @Query(
+      " CALL {  " +
+              "MATCH (children1:Workpack)-[:IS_IN*]->(parent1:Workpack)<-[c1:CAN_ACCESS_WORKPACK]-(p1:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
+              "WHERE ID(children1) = $id " +
+              "RETURN COUNT(DISTINCT ID(c1)) AS totalPermissions " +
+              "UNION ALL " +
+              "MATCH (parent2:Workpack)<-[:IS_IN*]-(children2:Workpack)<-[c2:CAN_ACCESS_WORKPACK]-(p2:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
+              "WHERE ID(parent2) = $id " +
+              "RETURN COUNT(DISTINCT ID(c2)) AS totalPermissions " +
+              "UNION ALL " +
+              "MATCH (w:Workpack)<-[c3:CAN_ACCESS_WORKPACK]-(p3:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
+              "WHERE ID(w) = $id " +
+              "RETURN COUNT(DISTINCT ID(c3)) AS totalPermissions " +
+      "} " +
+      "RETURN SUM(totalPermissions) > 0 "
+      )
+  boolean hasPermissionWorkpack(
+      @Param("id") Long id,
+      @Param("sub") String sub
+  );
+
+  @Query(
     "MATCH " +
     "   (m)<-[r:CAN_ACCESS_WORKPACK|CAN_ACCESS_PLAN]-(p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
     "   WHERE r.permissionLevel IN ['READ', 'EDIT'] " +
@@ -57,6 +78,24 @@ public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, C
   boolean hasEditManagementPermission(
     @Param("ids") List<Long> ids,
     @Param("sub") String sub
+  );
+
+
+  @Query(
+      "CALL {  " +
+                "MATCH (w1:Workpack)-[:BELONGS_TO]->(plan1:Plan)<-[c1:CAN_ACCESS_PLAN]-(p1:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
+                "WHERE ID (w1) = $id " +
+                "RETURN COUNT(DISTINCT ID(c1)) AS totalPermissions " +
+                "UNION ALL " +
+                "MATCH (w2:Workpack)-[:BELONGS_TO]->(plan2:Plan)-[:IS_ADOPTED_BY]->(o:Office)<-[c2:CAN_ACCESS_OFFICE]-(p2:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
+                "WHERE ID (w2) = $id " +
+                "RETURN COUNT(DISTINCT ID(c2)) AS totalPermissions " +
+      "} " +
+      "RETURN SUM(totalPermissions) > 0 "
+  )
+  boolean hasPermisionOfficeOrPlan(
+      @Param("id") Long id,
+      @Param("sub") String sub
   );
 
 

@@ -28,6 +28,12 @@ public class CanAccessService implements ICanAccessService {
   }
 
   @Override
+  public void ensureCanReadResourceWorkpack(Long idWorkpack, String authorization) {
+    final ICanAccessDataResponse canAccess = this.canAccessData.executeWorkpack(idWorkpack, authorization);
+    canAccess.ensureCanReadResource();
+  }
+
+  @Override
   public void ensureCanEditResource(
     final Long id,
     final String authorization

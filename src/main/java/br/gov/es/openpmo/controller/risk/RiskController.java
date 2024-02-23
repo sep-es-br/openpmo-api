@@ -51,7 +51,7 @@ public class RiskController {
       @RequestParam(required = false) final Long idFilter,
       @RequestParam(required = false) final String term,
       @Authorization final String authorization) {
-    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
+    this.canAccessService.ensureCanReadResourceWorkpack(idWorkpack, authorization);
     final Long idPerson = this.tokenService.getUserId(authorization);
     final List<RiskCardDto> risks = this.service.findAllAsCardDto(idWorkpack, idFilter, term, idPerson);
     final ResponseBase<List<RiskCardDto>> response = ResponseBase.of(risks);

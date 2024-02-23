@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.repository;
 
+import br.gov.es.openpmo.dto.person.detail.permissions.WorkpackPermissionDetailDto;
 import br.gov.es.openpmo.dto.person.queries.PersonByFullNameQuery;
 import br.gov.es.openpmo.dto.person.queries.PersonDetailQuery;
 import br.gov.es.openpmo.dto.person.queries.PersonPermissionDetailQuery;
@@ -9,6 +10,7 @@ import br.gov.es.openpmo.enumerator.StakeholderFilterEnum;
 import br.gov.es.openpmo.enumerator.UserFilterEnum;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.office.Office;
+import br.gov.es.openpmo.model.relations.IsCCBMemberFor;
 import br.gov.es.openpmo.model.relations.IsInContactBookOf;
 import br.gov.es.openpmo.model.relations.IsStakeholderIn;
 import br.gov.es.openpmo.model.workpacks.Workpack;
@@ -246,5 +248,40 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   @Query("MATCH (person:Person)-[:IS_AUTHENTICATED_BY {key: $key}]->(:AuthService) " +
     "RETURN count(person)>0")
   boolean existsByKey(@Param("key") String key);
+
+  @Query (
+      "MATCH (person:Person)-[canAccessWorkpack:CAN_ACCESS_WORKPACK]->(workpack:Workpack)-[:IS_INSTANCE_BY]->(model:WorkpackModel) " +
+      ", (workpack)-[belongsTo:BELONGS_TO]->(plan:Plan)-[:IS_ADOPTED_BY]->(office:Office) " +
+      "WHERE id(person)=$personId AND ID(office) = $idOffice AND canAccessWorkpack.permissionLevel <> 'NONE' " +
+      "RETURN ID(workpack) AS id, workpack.name AS name, canAccessWorkpack.permissionLevel AS accessLevel " +
+      ", model.fontIcon AS icon, ID(plan) AS idPlan "
+  )
+  List<WorkpackPermissionDetailDto> findAllWorkpackPermissionDetailDtoByIdPerson(Long personId, Long idOffice);
+
+  @Query (
+      "MATCH (workpack:Workpack)-[:IS_INSTANCE_BY]->(model:WorkpackModel) " +
+          ", (workpack)-[belongsTo:BELONGS_TO]->(plan:Plan) " +
+          "WHERE id(workpack) IN $workpackIds " +
+          "RETURN ID(workpack) AS id, workpack.name AS name, 'NONE' AS accessLevel " +
+          ", model.fontIcon AS icon, ID(plan) AS idPlan "
+  )
+  List<WorkpackPermissionDetailDto> findAllWorkpackPermissionDetailDtoByIdWorkpack(List<Long> workpackIds);
+
+
+  @Query (
+      "MATCH (person:Person)-[isStakeholderIn:IS_STAKEHOLDER_IN{active: true}]->(workpack:Workpack) " +
+          ", (workpack)-[belongsTo:BELONGS_TO]->(plan:Plan)-[:IS_ADOPTED_BY]->(office:Office) " +
+          "WHERE id(person)=$personId AND ID(office) = $idOffice " +
+          "RETURN person, isStakeholderIn, workpack "
+  )
+  List<IsStakeholderIn> findAllIsStakeholderInByIdPerson(Long personId, Long idOffice);
+
+  @Query (
+      "MATCH (person:Person)-[isCCBMemberFor:IS_CCB_MEMBER_FOR{active: true}]->(workpack:Workpack) " +
+          ", (workpack)-[belongsTo:BELONGS_TO]->(plan:Plan)-[:IS_ADOPTED_BY]->(office:Office) " +
+          "WHERE id(person)=$personId AND ID(office) = $idOffice " +
+          "RETURN person, isCCBMemberFor, workpack "
+  )
+  List<IsCCBMemberFor> findAllIsCCBMemberForByIdPerson(Long personId, Long idOffice);
 
 }

@@ -10,6 +10,11 @@ public interface ICanAccessData {
     String authorizationHeader
   );
 
+  ICanAccessDataResponse executeWorkpack(
+      Long idWorkpack,
+      String authorizationHeader
+  );
+
   ICanAccessDataResponse execute(
     List<Long> ids,
     String authorizationHeader
