@@ -27,10 +27,6 @@ public interface PlanRepository extends Neo4jRepository<Plan, Long>, CustomRepos
       ", permission.role AS role, ID(o) AS idOffice ")
   List<CanAccessPlanResultDto> findAllCanAccessPlanResultDtoByIdPerson(Long idPerson, Long idOffice);
 
-  @Query("MATCH (p:Plan)-[r:IS_ADOPTED_BY]->(o:Office) "
-      + "WHERE id(o) = $id RETURN id(p) ")
-  List<Long> findAllIdPlanInOffice(@Param("id") Long id);
-
   @Query("MATCH (plan:Plan) " +
       "WHERE id(plan) = $id " +
       "RETURN plan, [ " +
@@ -97,14 +93,21 @@ public interface PlanRepository extends Neo4jRepository<Plan, Long>, CustomRepos
   );
 
   @Query(
-    "match (p:Plan) " +
-    "where id(p)=$idPlan " +
-    "optional match (p)<-[bt:BELONGS_TO{linked:false}]-(w:Workpack{deleted:false}) " +
-    "where NOT (w)-[:IS_IN]->(:Workpack) " +
-    "return p, bt, w, [ " +
-    "[ (w)<-[isIn:IS_IN*]-(children:Workpack{deleted:false}) | [ isIn, children] ] " +
-    "] "
+          "match (p:Plan)<-[bt:BELONGS_TO{linked:false}]-(w:Workpack{deleted:false}) " +
+                  "where id(p)=$idPlan " +
+                  "return id(w)"
   )
-  Optional<Plan> findFirstLevelStructurePlanById(@Param("idPlan") Long idPlan);
+  List<Long> findWorkpacksBelongsToPlan(@Param("idPlan") Long idPlan);
+
+  @Query(
+          "match (p:Plan)<-[bt:BELONGS_TO{linked:false}]-(w:Workpack{deleted:false})<-[c:CAN_ACCESS_WORKPACK]-(person:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
+                  "where id(p)=$idPlan " +
+                  "AND c.permissionLevel in ['EDIT', 'READ'] " +
+                  "return id(w)"
+  )
+  List<Long> findWorkpacksBelongsToPlanWithPermission(
+          @Param("idPlan") Long idPlan,
+          @Param("sub") String sub
+  );
 
 }

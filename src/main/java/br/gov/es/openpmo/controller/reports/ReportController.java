@@ -6,12 +6,10 @@ import br.gov.es.openpmo.dto.ResponseBaseItens;
 import br.gov.es.openpmo.dto.reports.ActiveReportItem;
 import br.gov.es.openpmo.dto.reports.GeneratedReport;
 import br.gov.es.openpmo.dto.reports.ReportRequest;
-import br.gov.es.openpmo.dto.reports.ReportScope;
 import br.gov.es.openpmo.dto.reports.models.GetReportModelFileItem;
 import br.gov.es.openpmo.service.reports.GenerateReportComponent;
 import br.gov.es.openpmo.service.reports.GetActiveReports;
 import br.gov.es.openpmo.service.reports.GetCompiledReport;
-import br.gov.es.openpmo.service.reports.GetReportScope;
 import br.gov.es.openpmo.service.reports.HasModelsFromActiveReports;
 import io.swagger.annotations.Api;
 import org.springframework.core.io.ByteArrayResource;
@@ -33,8 +31,6 @@ import java.util.List;
 @RequestMapping("/report")
 public class ReportController {
 
-  private final GetReportScope getReportScope;
-
   private final GetActiveReports getActiveReports;
 
   private final HasModelsFromActiveReports hasModelsFromActiveReports;
@@ -44,28 +40,15 @@ public class ReportController {
   private final GenerateReportComponent generateReportComponent;
 
   public ReportController(
-    final GetReportScope getReportScope,
     final GetActiveReports getActiveReports,
     final HasModelsFromActiveReports hasModelsFromActiveReports,
     final GetCompiledReport getCompiledReport,
     final GenerateReportComponent generateReportComponent
   ) {
-    this.getReportScope = getReportScope;
     this.getActiveReports = getActiveReports;
     this.hasModelsFromActiveReports = hasModelsFromActiveReports;
     this.getCompiledReport = getCompiledReport;
     this.generateReportComponent = generateReportComponent;
-  }
-
-  @GetMapping("/scope")
-  public ResponseEntity<ResponseBase<ReportScope>> getReportScope(
-    @RequestParam("id-plan") final Long idPlan,
-    @Authorization final String authorization
-  ) {
-
-    final ReportScope response = this.getReportScope.execute(idPlan, authorization);
-
-    return ResponseEntity.ok(ResponseBase.of(response));
   }
 
   @GetMapping

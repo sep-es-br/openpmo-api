@@ -408,6 +408,13 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
     Long parentId
   );
 
+  @Query("MATCH (w:Workpack)-[i:IS_IN*]->(p:Workpack) " +
+          "WHERE id(p) IN $idsWorkpacks " +
+          "RETURN id(w)")
+  List<Long> idsWorkpacksChildren(
+          List<Long> idsWorkpacks
+  );
+
   @Query("MATCH (w:Workpack), (p:Workpack) " +
          "WHERE id(w)=$childId AND id(p)=$parentId " +
          "CREATE (w)-[:IS_IN]->(p)")
@@ -439,12 +446,6 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
     Long workpackId,
     Long propertyId
   );
-
-  @Query("MATCH (workpack:Workpack) " +
-         "WHERE id(workpack)=$idWorkpack " +
-         "MATCH (workpack)<-[:FEATURES]-(:UnitSelection)-[:VALUES]->(measure:UnitMeasure) " +
-         "RETURN measure.name")
-  Optional<String> findUnitMeasureNameOfDeliverableWorkpack(Long idWorkpack);
 
   @Query("MATCH (deliverable:Deliverable{completed:false, deleted:false}) " +
          "WHERE (deliverable.category <> 'SNAPSHOT' OR w.category IS NULL) " +

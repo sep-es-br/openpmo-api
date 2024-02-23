@@ -85,10 +85,12 @@ public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, C
       "CALL {  " +
                 "MATCH (w1:Workpack)-[:BELONGS_TO]->(plan1:Plan)<-[c1:CAN_ACCESS_PLAN]-(p1:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
                 "WHERE ID (w1) = $id " +
+                "AND c1.permissionLevel in ['EDIT', 'READ']" +
                 "RETURN COUNT(DISTINCT ID(c1)) AS totalPermissions " +
                 "UNION ALL " +
                 "MATCH (w2:Workpack)-[:BELONGS_TO]->(plan2:Plan)-[:IS_ADOPTED_BY]->(o:Office)<-[c2:CAN_ACCESS_OFFICE]-(p2:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
                 "WHERE ID (w2) = $id " +
+                "AND c2.permissionLevel in ['EDIT', 'READ']" +
                 "RETURN COUNT(DISTINCT ID(c2)) AS totalPermissions " +
       "} " +
       "RETURN SUM(totalPermissions) > 0 "
@@ -97,6 +99,54 @@ public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, C
       @Param("id") Long id,
       @Param("sub") String sub
   );
+
+  @Query(
+          "CALL {  " +
+                  "MATCH (plan1:Plan)<-[c1:CAN_ACCESS_PLAN]-(p1:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
+                  "WHERE ID (plan1) = $id " +
+                  "AND c1.permissionLevel in ['EDIT', 'READ'] " +
+                  "RETURN COUNT(DISTINCT ID(c1)) AS totalPermissions " +
+                  "UNION ALL " +
+                  "MATCH (plan2:Plan)-[:IS_ADOPTED_BY]->(o:Office)<-[c2:CAN_ACCESS_OFFICE]-(p2:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
+                  "WHERE ID (plan2) = $id " +
+                  "AND c2.permissionLevel in ['EDIT', 'READ'] " +
+                  "RETURN COUNT(DISTINCT ID(c2)) AS totalPermissions " +
+                  "} " +
+                  "RETURN SUM(totalPermissions) > 0 "
+  )
+  boolean hasPermissionOfficeOrPlanByIdPlan(
+          @Param("id") Long id,
+          @Param("sub") String sub
+  );
+
+  @Query(
+          " CALL {  " +
+                  "MATCH (children1:Workpack)-[:IS_IN*]->(parent1:Workpack)<-[c1:CAN_ACCESS_WORKPACK]-(p1:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
+                  "WHERE ID(children1) = $id " +
+                  "AND c1.permissionLevel in ['EDIT', 'READ'] " +
+                  "RETURN COUNT(DISTINCT ID(c1)) AS totalPermissions " +
+                  "UNION ALL " +
+                  "MATCH (w:Workpack)<-[c3:CAN_ACCESS_WORKPACK]-(p3:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
+                  "WHERE ID(w) = $id " +
+                  "AND c3.permissionLevel in ['EDIT', 'READ'] " +
+                  "RETURN COUNT(DISTINCT ID(c3)) AS totalPermissions " +
+                  "} " +
+                  "RETURN SUM(totalPermissions) > 0 "
+  )
+  boolean hasPermissionWorkpackSelfOrParents(
+          @Param("id") Long id,
+          @Param("sub") String sub
+  );
+
+  @Query("MATCH (w:Workpack)-[i:IS_IN*]->(p:Workpack), " +
+          "(w)<-[c3:CAN_ACCESS_WORKPACK]-(p3:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
+          "WHERE id(p) IN $idsWorkpacks " +
+          "AND c3.permissionLevel in ['EDIT', 'READ'] " +
+          "RETURN id(w)")
+  List<Long> idsWorkpacksChildrenWithPermission(
+          List<Long> idsWorkpacks,
+          @Param("sub") String sub
+          );
 
 
 }

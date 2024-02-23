@@ -55,4 +55,7 @@ public class ReportRequest {
   public Long getIdPlan() {
     return this.idPlan;
   }
+
+
+
 }
