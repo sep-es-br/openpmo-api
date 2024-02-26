@@ -151,7 +151,7 @@ public class DashboardDto {
         LocalDate plannedStart = getBaselineStart();
         LocalDate plannedEnd = getBaselineEnd();
         if (plannedStart != null && plannedEnd != null) {
-            long value = (ChronoUnit.DAYS.between(plannedStart, plannedEnd)) / 30;
+            long value = (ChronoUnit.MONTHS.between(plannedStart, plannedEnd)) + 1;
             if (value == 0) {
                 value = ChronoUnit.DAYS.between(plannedStart, plannedEnd);
                 if (value > 0) {
@@ -167,7 +167,7 @@ public class DashboardDto {
         LocalDate foreseenStart = getStart();
         LocalDate foreseendEnd = getEnd();
         if (foreseenStart != null && foreseendEnd != null) {
-            long value = ((ChronoUnit.DAYS.between(foreseenStart, foreseendEnd)) / 30) ;
+            long value = ((ChronoUnit.MONTHS.between(foreseenStart, foreseendEnd)) + 1) ;
             if (value == 0) {
                 value = ChronoUnit.DAYS.between(foreseenStart, foreseendEnd);
                 if (value > 0) {
@@ -183,7 +183,7 @@ public class DashboardDto {
         LocalDate actualStart = getScheduleActualStartDate();
         LocalDate actualEnd = getScheduleActualEndDate();
         if (actualStart != null && actualEnd != null) {
-            long value = (ChronoUnit.DAYS.between(actualStart, actualEnd)) / 30;
+            long value = (ChronoUnit.MONTHS.between(actualStart, actualEnd)) + 1;
             if (value == 0) {
                 value = ChronoUnit.DAYS.between(actualStart, actualEnd);
                 if (value > 0) {

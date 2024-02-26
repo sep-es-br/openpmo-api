@@ -158,7 +158,7 @@ public class DashboardService implements IDashboardService {
 
     final Long workpackId = parameters.getWorkpackId();
     final Long baselineId = parameters.getBaselineId();
-    final LocalDate date = YearMonth.now().isBefore(yearMonthParam) ? YearMonth.now().atDay(1) :  yearMonthParam.atDay(1);
+    final LocalDate date = YearMonth.now().isBefore(yearMonthParam) ? YearMonth.now().atDay(1).with(TemporalAdjusters.lastDayOfMonth()) :  yearMonthParam.atDay(1).with(TemporalAdjusters.lastDayOfMonth());
 
     DashboardMonthDto dashboardMonthDto = dashboardCacheUtil.getListDashboardWorkpackDetailById(workpackId, baselineId, date);
     if (dashboardMonthDto == null) {
