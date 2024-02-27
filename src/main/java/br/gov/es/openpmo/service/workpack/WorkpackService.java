@@ -1170,6 +1170,7 @@ public class WorkpackService {
     }
     this.journalDeleter.deleteJournalsByWorkpackId(workpack.getId());
     this.workpackRepository.delete(workpack);
+    this.cacheUtil.loadAllCache();
   }
 
   private boolean hasSnapshot(final Workpack workpack) {

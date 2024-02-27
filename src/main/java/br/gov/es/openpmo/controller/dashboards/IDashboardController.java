@@ -4,7 +4,6 @@ import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.Response;
 import br.gov.es.openpmo.dto.dashboards.DashboardBaselineResponse;
 import br.gov.es.openpmo.dto.dashboards.v2.DashboardResponse;
-import br.gov.es.openpmo.dto.dashboards.v2.Interval;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,11 +16,6 @@ public interface IDashboardController {
 
   @GetMapping("/baselines")
   Response<List<DashboardBaselineResponse>> getBaselines(
-      @RequestParam("id-workpack") final Long workpackId,
-      @Authorization final String authorization);
-
-  @GetMapping("/schedule-interval")
-  Response<Interval> getInterval(
       @RequestParam("id-workpack") final Long workpackId,
       @Authorization final String authorization);
 

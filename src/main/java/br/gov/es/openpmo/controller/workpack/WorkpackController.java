@@ -353,6 +353,7 @@ public class WorkpackController {
     if (workpack instanceof Milestone) {
       this.workpackService.calculateDashboard();
     }
+
     return ResponseEntity.ok().build();
   }
 
