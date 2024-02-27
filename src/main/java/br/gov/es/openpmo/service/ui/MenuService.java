@@ -134,7 +134,7 @@ public class MenuService {
 
     Map<ModelPosition, List<WorkpackMenuResultDto>> mapMenu = getMapMenuPosition(menus);
     List<ModelPosition> models = new ArrayList<>(mapMenu.keySet());
-    models.sort(Comparator.comparing(ModelPosition::getPosition));
+    models.sort(Comparator.comparing(ModelPosition::getPosition, Comparator.nullsLast(Comparator.naturalOrder())));
     Set<WorkpackMenuResultDto> result = new LinkedHashSet<>(0);
     for (ModelPosition model : models) {
       List<WorkpackMenuResultDto> menuModel = mapMenu.get(model);
