@@ -1619,9 +1619,7 @@ public class WorkpackService {
     );
     workpacks.forEach(w -> w.setCanceled(true));
     this.workpackRepository.saveAll(workpacks);
-    final Set<Workpack> parents = new HashSet<>();
-    workpacks.stream().map(Entity::getId).map(this.workpackRepository::findParentsById).forEach(parents::addAll);
-    parents.stream().map(Entity::getId).forEach(worpackId -> this.dashboardService.calculate(worpackId, true));
+    this.dashboardService.calculate();
     this.cacheUtil.loadAllCache();
     return workpack;
   }
@@ -1656,10 +1654,7 @@ public class WorkpackService {
     );
     workpacks.forEach(w -> w.setCanceled(false));
     this.workpackRepository.saveAll(workpacks);
-    final Set<Workpack> parents = new HashSet<>();
-    workpacks.stream().map(Entity::getId).map(this.workpackRepository::findParentsById).forEach(parents::addAll);
-    parents.stream().map(Entity::getId)
-      .forEach(worpackId -> this.dashboardService.calculate(worpackId, true));
+    this.dashboardService.calculate();
     this.cacheUtil.loadAllCache();
   }
 
@@ -1678,11 +1673,8 @@ public class WorkpackService {
     return this.workpackRepository.findAllByPlanWithProperties(idPlan);
   }
 
-  public void calculateDashboard(final Workpack workpack, final Boolean calculateInterval) {
-    final Long id = workpack.getId();
-    final Set<Workpack> parents = this.workpackRepository.findParentsById(id);
-    parents.stream().map(Entity::getId)
-      .forEach(worpackId -> this.dashboardService.calculate(worpackId, calculateInterval));
+  public void calculateDashboard() {
+    this.dashboardService.calculate();
   }
 
 }

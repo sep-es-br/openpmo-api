@@ -83,7 +83,7 @@ public class StepController {
   ) {
     this.canAccessService.ensureCanEditResource(stepUpdateDto.getId(), authorization);
 
-    final Step step = this.updateStep.execute(stepUpdateDto, false, true);
+    final Step step = this.updateStep.execute(stepUpdateDto, false);
 
     return ResponseEntity.ok(ResponseBase.of(new EntityDto(step.getId())));
   }
@@ -120,7 +120,7 @@ public class StepController {
     );
     final List<Deliverable> deliverables = this.status.getDeliverablesByScheduleId(stepStoreParamDto.getIdSchedule());
     this.stepService.save(stepStoreParamDto);
-    this.status.update(deliverables, true);
+    this.status.update(deliverables);
     return ResponseEntity.ok().build();
   }
 
@@ -135,7 +135,7 @@ public class StepController {
     );
     final List<Deliverable> deliverables = this.status.getDeliverablesByStepId(id);
     this.stepService.delete(id);
-    this.status.update(deliverables, true);
+    this.status.update(deliverables);
     return ResponseEntity.ok().build();
   }
 

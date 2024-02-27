@@ -29,13 +29,13 @@ public class BatchUpdateStep {
     }
 
     final List<Deliverable> deliverables = this.updateStatusService.getDeliverablesByScheduleId(idSchedule);
-    this.updateStatusService.update(deliverables, false);
+    this.updateStatusService.update(deliverables);
 
     return updatedSteps;
   }
 
   private Step updateStep(final StepUpdateDto step) {
-    return this.updateStep.execute(step, false, false);
+    return this.updateStep.execute(step, false);
   }
 
 }

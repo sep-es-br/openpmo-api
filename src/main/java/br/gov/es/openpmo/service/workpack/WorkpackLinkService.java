@@ -16,7 +16,6 @@ import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.BelongsToRepository;
 import br.gov.es.openpmo.repository.WorkpackLinkRepository;
-import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.repository.WorkpackSharedRepository;
 import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
 import br.gov.es.openpmo.service.office.plan.PlanService;
@@ -47,7 +46,6 @@ public class WorkpackLinkService {
   private final BelongsToRepository belongsToRepository;
   private final WorkpackSharedRepository workpackSharedRepository;
   private final PlanService planService;
-  private final WorkpackRepository workpackRepository;
   private final IAsyncDashboardService dashboardService;
 
   @Autowired
@@ -58,7 +56,6 @@ public class WorkpackLinkService {
     final BelongsToRepository belongsToRepository,
     final WorkpackSharedRepository workpackSharedRepository,
     final PlanService planService,
-    final WorkpackRepository workpackRepository,
     final IAsyncDashboardService dashboardService
   ) {
     this.repository = repository;
@@ -67,7 +64,6 @@ public class WorkpackLinkService {
     this.belongsToRepository = belongsToRepository;
     this.workpackSharedRepository = workpackSharedRepository;
     this.planService = planService;
-    this.workpackRepository = workpackRepository;
     this.dashboardService = dashboardService;
   }
 
@@ -126,8 +122,7 @@ public class WorkpackLinkService {
     this.makeWorkpackLinkedBelongTo(idPlan, workpack);
     this.ifHasParentCreateRelationshipAsChildren(idParent, workpack);
     this.createLinkBetween(workpack, workpackModel);
-    this.workpackRepository.findAllInHierarchy(idWorkpack)
-      .forEach(worpackId -> this.dashboardService.calculate(worpackId, true));
+    this.dashboardService.calculate();
   }
 
   private void createLinkBetween(
@@ -309,8 +304,7 @@ public class WorkpackLinkService {
     this.repository.unlinkParentRelation(idPlan, idWorkpackModel, idWorkpack);
     this.repository.unlinkPlan(idPlan, idWorkpack);
     unlinkBetween(workpack, workpackModel);
-    this.workpackRepository.findAllInHierarchy(idWorkpack)
-      .forEach(worpackId -> this.dashboardService.calculate(worpackId, true));
+    this.dashboardService.calculate();
   }
 
   private void unlinkBetween(

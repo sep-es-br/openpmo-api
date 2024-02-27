@@ -99,7 +99,7 @@ public class PurgeDashboards {
         size,
         workpack.getId()
       );
-      this.syncDashboardService.calculate(workpack.getId(), true);
+      this.syncDashboardService.calculate();
     }
     workpacks.removeAll(workpackByType);
   }

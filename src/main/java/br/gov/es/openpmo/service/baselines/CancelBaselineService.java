@@ -73,8 +73,7 @@ public class CancelBaselineService implements ICancelBaselineService {
 
     this.baselineRepository.save(baselineCancelled, 0);
 
-    this.baselineRepository.findWorkpacksIdByBaselineId(baselineCancelled.getId())
-      .forEach(worpackId -> this.dashboardService.calculate(worpackId, true));
+    this.dashboardService.calculate();
 
     return EntityDto.of(baselineCancelled);
   }

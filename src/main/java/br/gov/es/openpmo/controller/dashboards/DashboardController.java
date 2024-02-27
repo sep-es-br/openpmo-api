@@ -110,23 +110,5 @@ public class DashboardController implements IDashboardController {
     return this.responseHandler.success(response);
   }
 
-  @Override
-  public Response<Void> calculate(
-    final Long workpackId,
-    final Boolean calculateInterval,
-    @Authorization final String authorization
-  ) {
-
-    this.canAccessService.ensureCanReadResourceWorkpack(workpackId, authorization);
-    this.asyncDashboardService.calculate(workpackId, calculateInterval);
-    return this.responseHandler.success();
-  }
-
-  @Override
-  public Response<Void> purge(String authorization) {
-//    this.canAccessService.ensureIsAdministrator(authorization);
-//    this.purgeDashboards.execute();
-    return this.responseHandler.success();
-  }
 
 }

@@ -25,7 +25,6 @@ import br.gov.es.openpmo.model.journals.JournalAction;
 import br.gov.es.openpmo.model.risk.Risk;
 import br.gov.es.openpmo.model.workpacks.Milestone;
 import br.gov.es.openpmo.model.workpacks.Workpack;
-import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.RiskRepository;
 import br.gov.es.openpmo.repository.dashboards.DashboardMilestoneRepository;
 import br.gov.es.openpmo.service.actors.IsFavoritedByService;
@@ -92,8 +91,6 @@ public class WorkpackController {
 
   private final IsFavoritedByService isFavoritedByService;
 
-  private final BaselineRepository baselineRepository;
-
   private final DashboardMilestoneRepository dashboardMilestoneRepository;
 
   private final RiskRepository riskRepository;
@@ -111,7 +108,6 @@ public class WorkpackController {
     final ICanAccessData canAccessData,
     final WorkpackHasChildren workpackHasChildren,
     final IsFavoritedByService isFavoritedByService,
-    final BaselineRepository baselineRepository,
     final DashboardMilestoneRepository dashboardMilestoneRepository,
     final RiskRepository riskRepository
   ) {
@@ -126,7 +122,6 @@ public class WorkpackController {
     this.canAccessData = canAccessData;
     this.workpackHasChildren = workpackHasChildren;
     this.isFavoritedByService = isFavoritedByService;
-    this.baselineRepository = baselineRepository;
     this.dashboardMilestoneRepository = dashboardMilestoneRepository;
     this.riskRepository = riskRepository;
   }
@@ -269,7 +264,7 @@ public class WorkpackController {
     );
 
     if (workpack instanceof Milestone) {
-      this.workpackService.calculateDashboard(workpack, true);
+      this.workpackService.calculateDashboard();
     }
     return ResponseEntity.ok(ResponseBase.of(response));
   }
@@ -307,7 +302,7 @@ public class WorkpackController {
       );
     }
     if (isMilestone) {
-      this.workpackService.calculateDashboard(workpack, true);
+      this.workpackService.calculateDashboard();
     }
     return ResponseEntity.ok(ResponseBase.of(EntityDto.of(workpack)));
   }
@@ -356,7 +351,7 @@ public class WorkpackController {
     final Workpack workpack = this.workpackService.findById(idWorkpack);
     this.workpackService.delete(workpack);
     if (workpack instanceof Milestone) {
-      this.workpackService.calculateDashboard(workpack, true);
+      this.workpackService.calculateDashboard();
     }
     return ResponseEntity.ok().build();
   }

@@ -1,6 +1,5 @@
 package br.gov.es.openpmo.service.dashboards.v2;
 
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import br.gov.es.openpmo.utils.DashboardCacheUtil;
@@ -17,7 +16,7 @@ public class SyncDashboardService implements ISyncDashboardService {
   }
 
   @Override
-  public void calculate(@NonNull final Long worpackId, final Boolean calculateInterval) {
+  public void calculate() {
     dashboardCacheUtil.loadAllCache();
   }
 

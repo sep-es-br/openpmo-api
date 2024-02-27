@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class UpdateStatusService {
@@ -52,7 +51,7 @@ public class UpdateStatusService {
     return this.stepRepository.findDeliverablesByScheduleId(scheduleId);
   }
 
-  public void update(final Collection<? extends Deliverable> deliverables, final Boolean calculateInterval) {
+  public void update(final Collection<? extends Deliverable> deliverables) {
     final Collection<Workpack> analyzedDeliverables = new ArrayList<>();
 
     for (final Deliverable deliverable : deliverables) {
@@ -64,7 +63,7 @@ public class UpdateStatusService {
       this.completeWorkpackService.apply(workpack.getId(), request);
     }
 
-    this.updateDashboards(deliverables, calculateInterval);
+    this.dashboardService.calculate();
   }
 
   public void updateOnlyCompletedFlag(final List<? extends Deliverable> deliverables) {
@@ -146,17 +145,6 @@ public class UpdateStatusService {
 
   private boolean hasWorkToCompleteComparingWithMaster(final Long idDeliverable) {
     return this.stepRepository.hasWorkToCompleteComparingWithMaster(idDeliverable);
-  }
-
-  private void updateDashboards(final Collection<? extends Deliverable> deliverables, final Boolean calculateInterval) {
-    final List<Long> deliverablesId = deliverables.stream()
-      .map(Deliverable::getId)
-      .collect(Collectors.toList());
-
-    this.stepRepository.findAllDeliverablesAndAscendents(deliverablesId)
-      .stream()
-      .map(Workpack::getId)
-      .forEach(worpackId -> this.dashboardService.calculate(worpackId, calculateInterval));
   }
 
 }

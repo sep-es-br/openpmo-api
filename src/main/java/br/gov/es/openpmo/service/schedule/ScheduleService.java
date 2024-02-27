@@ -598,7 +598,7 @@ public class ScheduleService {
     final Schedule schedule = this.mapToSchedule(scheduleParamDto);
     final Schedule savedSchedule = this.scheduleRepository.save(schedule);
     final List<Deliverable> deliverables = this.updateStatusService.getDeliverablesByScheduleId(savedSchedule.getId());
-    this.updateStatusService.update(deliverables, true);
+    this.updateStatusService.update(deliverables);
     return savedSchedule;
   }
 
@@ -714,7 +714,7 @@ public class ScheduleService {
 
     this.stepRepository.deleteAll(schedule.getSteps());
     this.scheduleRepository.delete(schedule);
-    this.updateStatusService.update(deliverables, true);
+    this.updateStatusService.update(deliverables);
   }
 
   public Schedule findById(final Long id) {

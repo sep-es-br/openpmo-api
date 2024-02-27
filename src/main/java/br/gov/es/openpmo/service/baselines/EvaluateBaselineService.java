@@ -115,9 +115,8 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     if (baseline.getStatus() != Status.APPROVED || baseline.isCancelation()) {
       return;
     }
+    this.dashboardService.calculate();
 
-    this.repository.findWorkpacksIdByBaselineId(baseline.getId())
-      .forEach(worpackId -> this.dashboardService.calculate(worpackId, true));
   }
 
   private boolean isAlreadyRejected(final Long idBaseline) {

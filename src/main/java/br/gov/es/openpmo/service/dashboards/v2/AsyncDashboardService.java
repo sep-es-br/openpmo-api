@@ -10,8 +10,8 @@ public class AsyncDashboardService implements IAsyncDashboardService {
   public AsyncDashboardService(final SyncDashboardService syncDashboardService) { this.syncDashboardService = syncDashboardService; }
 
   @Override
-  public void calculate(final Long workpackId, final Boolean calculateInterval) {
-    this.syncDashboardService.calculate(workpackId, calculateInterval);
+  public void calculate() {
+    this.syncDashboardService.calculate();
   }
 
 }
