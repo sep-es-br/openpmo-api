@@ -19,6 +19,7 @@ import br.gov.es.openpmo.repository.PlanRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllPlanUsingCustomFilter;
 import br.gov.es.openpmo.service.actors.PersonService;
+import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
 import br.gov.es.openpmo.service.office.OfficeService;
 import br.gov.es.openpmo.service.permissions.OfficePermissionService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
@@ -44,6 +45,7 @@ public class PlanService {
   private final FindAllPlanUsingCustomFilter findAllPlan;
   private final WorkpackRepository workpackRepository;
   private final AppProperties appProperties;
+  private final IAsyncDashboardService dashboardService;
 
   @Autowired
   public PlanService(
@@ -55,6 +57,7 @@ public class PlanService {
     final CustomFilterRepository customFilterRepository,
     final FindAllPlanUsingCustomFilter findAllPlan,
     final WorkpackRepository workpackRepository,
+    final IAsyncDashboardService dashboardService,
     final AppProperties appProperties
   ) {
     this.planRepository = planRepository;
@@ -65,6 +68,7 @@ public class PlanService {
     this.customFilterRepository = customFilterRepository;
     this.findAllPlan = findAllPlan;
     this.workpackRepository = workpackRepository;
+    this.dashboardService = dashboardService;
     this.appProperties = appProperties;
   }
 
@@ -116,7 +120,9 @@ public class PlanService {
   }
 
   public Plan save(final Plan plan) {
-    return this.planRepository.save(plan);
+    Plan saved = this.planRepository.save(plan);
+    this.dashboardService.calculate();
+    return saved;
   }
 
   public void delete(final Plan plan) {

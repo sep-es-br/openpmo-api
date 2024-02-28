@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.repository;
 
+import br.gov.es.openpmo.dto.workpack.breakdown.structure.JournalInformationDto;
 import br.gov.es.openpmo.model.actors.File;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.journals.JournalEntry;
@@ -16,6 +17,16 @@ import java.util.Optional;
 
 @Repository
 public interface JournalRepository extends Neo4jRepository<JournalEntry, Long> {
+
+  @Query (
+      "MATCH (j:JournalEntry)-[:SCOPE_TO]->(w:Workpack) " +
+      "WHERE j.type = 'INFORMATION' AND ID(w) IN $idsWorkpack " +
+      "WITH ID(w) AS wId, max(j.date) AS maxDate " +
+      "MATCH (journal:JournalEntry)-[:SCOPE_TO]->(workpack:Workpack) " +
+      "WHERE ID(workpack) = wId AND journal.date = maxDate " +
+      "RETURN ID(journal) AS id, ID(workpack) AS idWorkapck, journal.date AS date "
+  )
+  List<JournalInformationDto> findAllJournalInformationDto(List<Long> idsWorkpack);
 
   @Query("MATCH (j:JournalEntry)-[:SCOPE_TO]->(w:Workpack) " +
          "WHERE id(w)=$workpackId " +

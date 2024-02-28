@@ -20,6 +20,7 @@ import br.gov.es.openpmo.dto.workpack.WorkpackDetailDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackDetailParentDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackHasChildrenResponse;
 import br.gov.es.openpmo.dto.workpack.WorkpackParamDto;
+import br.gov.es.openpmo.dto.workpack.breakdown.structure.JournalInformationDto;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.journals.JournalAction;
 import br.gov.es.openpmo.model.risk.Risk;
@@ -32,6 +33,7 @@ import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.completed.ICompleteWorkpackService;
 import br.gov.es.openpmo.service.completed.IDeliverableEndManagementService;
 import br.gov.es.openpmo.service.journals.JournalCreator;
+import br.gov.es.openpmo.service.journals.JournalFinder;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessData;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.workpack.WorkpackHasChildren;
@@ -79,6 +81,8 @@ public class WorkpackController {
 
   private final JournalCreator journalCreator;
 
+  private final JournalFinder journalFinder;
+
   private final ICompleteWorkpackService completeDeliverableService;
 
   private final IDeliverableEndManagementService deliverableEndManagementService;
@@ -102,6 +106,7 @@ public class WorkpackController {
     final TokenService tokenService,
     final WorkpackPermissionVerifier workpackPermissionVerifier,
     final JournalCreator journalCreator,
+    final JournalFinder journalFinder,
     final ICompleteWorkpackService completeDeliverableService,
     final IDeliverableEndManagementService deliverableEndManagementService,
     final ICanAccessService canAccessService,
@@ -116,6 +121,7 @@ public class WorkpackController {
     this.tokenService = tokenService;
     this.workpackPermissionVerifier = workpackPermissionVerifier;
     this.journalCreator = journalCreator;
+    this.journalFinder = journalFinder;
     this.completeDeliverableService = completeDeliverableService;
     this.deliverableEndManagementService = deliverableEndManagementService;
     this.canAccessService = canAccessService;
@@ -162,9 +168,10 @@ public class WorkpackController {
     List<Long> ids = workpacks.stream().map(Workpack::getId).collect(Collectors.toList());
     final List<MilestoneDateDto> milestoneDates = this.dashboardMilestoneRepository.findByParentIds(ids);
     final List<RiskWorkpackDto> risks = this.riskRepository.findByWorkpackIds(ids);
+    final List<JournalInformationDto> journals = journalFinder.findAllJournalInformationDto(ids);
     return  workpacks.stream()
                      .filter(workpack -> this.canAccessData.execute(workpack.getId(), authorization).canReadResource())
-                     .map(workpack -> this.mapToWorkpackDetailParentDto(workpack, idWorkpackModel, milestoneDates, risks))
+                     .map(workpack -> this.mapToWorkpackDetailParentDto(workpack, idWorkpackModel, milestoneDates, risks, journals))
                      .collect(Collectors.toList());
   }
 
@@ -406,8 +413,9 @@ public class WorkpackController {
     return ResponseEntity.ok(ResponseBase.of(response));
   }
 
-  private WorkpackDetailParentDto mapToWorkpackDetailParentDto(final Workpack workpack, final Long idWorkpackModel,
-                                                               List<MilestoneDateDto> milestoneDates, List<RiskWorkpackDto> risks) {
+  private WorkpackDetailParentDto mapToWorkpackDetailParentDto(final Workpack workpack, final Long idWorkpackModel
+      , List<MilestoneDateDto> milestoneDates, List<RiskWorkpackDto> risks
+      , final List<JournalInformationDto> journals) {
     final WorkpackDetailParentDto itemDetail = this.workpackService.getWorkpackDetailParentDto(workpack);
     itemDetail.applyLinkedStatus(workpack, idWorkpackModel);
     DashboardMonthDto monthDto = workpackService.getDashboardMonthDto(workpack);
@@ -420,6 +428,8 @@ public class WorkpackController {
                                           .map(RiskWorkpackDto::getRisk).collect(Collectors.toList());
     final List<RiskDto> riskDtos = RiskDto.of(risksWorkpack);
     itemDetail.setRisk(RiskResultDto.of(riskDtos));
+    itemDetail.setJournalInformation(
+        journals.stream().filter(j -> j.getIdWorkapck().equals(workpack.getId())).findFirst().orElse(null));
     return itemDetail;
   }
 

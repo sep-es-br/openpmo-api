@@ -12,6 +12,8 @@ public class DashboardWorkpackDetailDto {
     private Long idWorkpack;
     private LocalDate start;
     private LocalDate end;
+    private LocalDate startPlan;
+    private LocalDate endPlan;
     private LocalDate baselineStart;
     private LocalDate baselineEnd;
     private BigDecimal foreseenCost;
@@ -34,6 +36,8 @@ public class DashboardWorkpackDetailDto {
         this.idWorkpack = dto.getIdWorkpack();
         this.start = dto.getStart();
         this.end = dto.getEnd();
+        this.startPlan = dto.getStartPlan();
+        this.endPlan = dto.getEndPlan();
         this.baselineStart = dto.getBaselineStart();
         this.baselineEnd = dto.getBaselineEnd();
         this.foreseenCost = dto.getForeseenCost();
@@ -113,7 +117,7 @@ public class DashboardWorkpackDetailDto {
     }
 
     public LocalDate getStart() {
-        return start;
+        return start.isAfter(getStartPlan()) ? start : getStartPlan();
     }
 
     public void setStart(LocalDate start) {
@@ -121,14 +125,34 @@ public class DashboardWorkpackDetailDto {
     }
 
     public LocalDate getEnd() {
-        return end;
+
+        return end.isBefore(getEndPlan()) ? end : getEndPlan();
     }
 
     public void setEnd(LocalDate end) {
         this.end = end;
     }
 
+    public LocalDate getStartPlan() {
+        return startPlan;
+    }
+
+    public void setStartPlan(LocalDate startPlan) {
+        this.startPlan = startPlan;
+    }
+
+    public LocalDate getEndPlan() {
+        return endPlan;
+    }
+
+    public void setEndPlan(LocalDate endPlan) {
+        this.endPlan = endPlan;
+    }
+
     public LocalDate getBaselineStart() {
+        if (baselineStart != null) {
+            return baselineStart.isAfter(getStartPlan()) ? baselineStart : getStartPlan();
+        }
         return baselineStart;
     }
 
@@ -137,6 +161,9 @@ public class DashboardWorkpackDetailDto {
     }
 
     public LocalDate getBaselineEnd() {
+        if (baselineEnd != null) {
+            return baselineEnd.isBefore(getEndPlan()) ? baselineEnd : getEndPlan();
+        }
         return baselineEnd;
     }
 

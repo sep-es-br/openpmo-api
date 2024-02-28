@@ -1,7 +1,6 @@
 package br.gov.es.openpmo.service.dashboards.v2;
 
 import br.gov.es.openpmo.dto.MilestoneResultDto;
-import br.gov.es.openpmo.dto.baselines.ccbmemberview.ScheduleInterval;
 import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
 import br.gov.es.openpmo.dto.dashboards.DashboardParameters;
 import br.gov.es.openpmo.dto.dashboards.MilestoneDto;
@@ -9,11 +8,6 @@ import br.gov.es.openpmo.dto.dashboards.RiskDataChart;
 import br.gov.es.openpmo.dto.dashboards.datasheet.DatasheetResponse;
 import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.EarnedValueByStepDto;
 import br.gov.es.openpmo.dto.dashboards.v2.DashboardResponse;
-import br.gov.es.openpmo.dto.dashboards.v2.SimpleDashboard;
-import br.gov.es.openpmo.exception.NegocioException;
-import br.gov.es.openpmo.model.baselines.Baseline;
-import br.gov.es.openpmo.repository.BaselineRepository;
-import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.utils.DashboardCacheUtil;
 
 import org.springframework.stereotype.Service;
@@ -22,12 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.temporal.TemporalAdjusters;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-
-import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_NOT_FOUND;
 
 @Service
 public class DashboardService implements IDashboardService {
@@ -39,47 +29,18 @@ public class DashboardService implements IDashboardService {
 
   private final IDashboardDatasheetService datasheetService;
 
-
-  private final BaselineRepository baselineRepository;
-
-  private final WorkpackRepository workpackRepository;
-
-
   private final DashboardCacheUtil dashboardCacheUtil;
 
   public DashboardService(
     final IDashboardMilestoneService milestoneService,
     final IDashboardRiskService riskService,
     final IDashboardDatasheetService datasheetService,
-    final BaselineRepository baselineRepository,
-    final WorkpackRepository workpackRepository,
     final DashboardCacheUtil dashboardCacheUtil
   ) {
     this.milestoneService = milestoneService;
     this.riskService = riskService;
     this.datasheetService = datasheetService;
-    this.baselineRepository = baselineRepository;
-    this.workpackRepository = workpackRepository;
     this.dashboardCacheUtil = dashboardCacheUtil;
-  }
-
-  private static YearMonth clampYearMonth(
-    final YearMonth yearMonth,
-    final Collection<LocalDate> dateList
-  ) {
-    final YearMonth valid = DashboardService.thisOrPreviousMonth(yearMonth);
-
-    final YearMonth minDate = dateList.stream()
-      .min(LocalDate::compareTo)
-      .map(YearMonth::from)
-      .orElse(valid);
-
-    final YearMonth maxDate = dateList.stream()
-      .max(LocalDate::compareTo)
-      .map(YearMonth::from)
-      .orElse(valid);
-
-    return DashboardService.clampDate(valid, minDate, maxDate);
   }
 
   private static YearMonth clampDate(
@@ -96,11 +57,6 @@ public class DashboardService implements IDashboardService {
     return underTest;
   }
 
-  private static YearMonth thisOrPreviousMonth(final YearMonth test) {
-    return Optional.ofNullable(test)
-      .orElseGet(() -> YearMonth.now().minusMonths(1));
-  }
-
   @Override
   @Transactional
   public DashboardResponse build(final DashboardParameters parameters) {
@@ -113,10 +69,6 @@ public class DashboardService implements IDashboardService {
       return null;
     }
     List<EarnedValueByStepDto> stepDtos = this.getEarnedValueAnalysis(parameters);
-    final LocalDate start = stepDtos.stream().map(EarnedValueByStepDto::getDate).min(LocalDate::compareTo).orElse(null);
-    final LocalDate end = stepDtos.stream().map(EarnedValueByStepDto::getDate).max(LocalDate::compareTo).orElse(null);
-    final ScheduleInterval scheduleInterval = new ScheduleInterval(start, end);
-
     List<MilestoneDto> milestones = this.getMilestones(parameters);
     MilestoneResultDto milestoneResultDto = MilestoneResultDto.of(milestones);
 
@@ -126,19 +78,9 @@ public class DashboardService implements IDashboardService {
       this.getDatasheet(parameters),
       stepDtos,
       dashboardMonthDto.getPerformanceIndex(),
-      milestoneResultDto,
-      scheduleInterval
+      milestoneResultDto
     );
   }
-
-  @Override
-  @Transactional
-  public SimpleDashboard buildSimple(final Long workpackId) {
-
-    return null;
-  }
-
-
 
   private RiskDataChart getRisk(final DashboardParameters parameters) {
     return Optional.of(parameters)
@@ -191,20 +133,6 @@ public class DashboardService implements IDashboardService {
     final LocalDate date = YearMonth.now().isBefore(yearMonthParam) ? YearMonth.now().atDay(1) :  yearMonthParam.atDay(1);
 
     return dashboardCacheUtil.getDashboardEarnedValueAnalysis(workpackId, baselineId, date);
-  }
-
-  private boolean hasActiveBaseline(final Long workpackId) {
-    return this.workpackRepository.hasActiveBaseline(workpackId);
-  }
-
-  private List<Baseline> findActiveBaseline(final Long workpackId) {
-    return this.baselineRepository.findActiveBaseline(workpackId)
-      .map(Collections::singletonList)
-      .orElseThrow(() -> new NegocioException(BASELINE_NOT_FOUND));
-  }
-
-  private List<Baseline> findAllActiveBaselines(final Long workpackId) {
-    return this.baselineRepository.findAllActiveBaselines(workpackId);
   }
 
 }

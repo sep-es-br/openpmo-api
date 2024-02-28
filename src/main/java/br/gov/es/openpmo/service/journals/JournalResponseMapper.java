@@ -6,6 +6,7 @@ import br.gov.es.openpmo.dto.journals.JournalResponse;
 import br.gov.es.openpmo.dto.journals.OfficeField;
 import br.gov.es.openpmo.dto.journals.PersonField;
 import br.gov.es.openpmo.dto.journals.PlanField;
+import br.gov.es.openpmo.dto.journals.SimpleJournalResponse;
 import br.gov.es.openpmo.dto.journals.WorkpackField;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.File;
@@ -87,6 +88,29 @@ public class JournalResponseMapper {
 
     final PlanField planField = this.getPlanField(journalEntry);
     journalResponse.setPlanField(planField);
+
+    return journalResponse;
+  }
+
+  public SimpleJournalResponse mapSimple(
+      final JournalEntry journalEntry,
+      final UriComponentsBuilder uriComponentsBuilder
+  ) {
+    final SimpleJournalResponse journalResponse = new SimpleJournalResponse();
+
+    journalResponse.setDate(journalEntry.getDate());
+
+    final InformationField informationField = getInformationField(journalEntry);
+    journalResponse.setInformationField(informationField);
+
+    final Set<EvidenceField> evidenceFieldSet = this.getEvidenceFieldSet(journalEntry, uriComponentsBuilder);
+    journalResponse.setEvidenceFieldSet(evidenceFieldSet);
+
+    final PersonField authorField = this.getAuthorField(journalEntry);
+    journalResponse.setAuthorField(authorField);
+
+    final WorkpackField workpackField = this.getWorkpackField(journalEntry);
+    journalResponse.setWorkpackField(workpackField);
 
     return journalResponse;
   }

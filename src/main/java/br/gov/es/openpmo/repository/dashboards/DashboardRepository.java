@@ -14,46 +14,55 @@ import java.util.List;
 @Repository
 public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
 
-
   @Query(
-      "MATCH (w:Deliverable{deleted:false,canceled:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step) " +
+      "MATCH (plan:Plan)<-[:BELONGS_TO]-(w:Deliverable{deleted:false,canceled:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step) " +
       "WHERE (w.category <> 'SNAPSHOT' OR w.category IS NULL) " +
+      "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date.truncate('month', date(plan.finish))" +
+      "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) >= date.truncate('month', date(plan.start))" +
       "AND ($workpackIds IS NULL OR ID(w) IN $workpackIds) " +
-      "RETURN ID(w) AS idWorkpack, s. start AS start, s.end AS end, toString(SUM(toFloat(st.plannedWork))) AS foreseenWork "
+      "RETURN ID(w) AS idWorkpack, s.start AS start, s.end AS end, plan.start AS startPlan, plan.finish AS endPlan, toString(SUM(toFloat(st.plannedWork))) AS foreseenWork "
   )
   List<DashboardWorkpackDetailDto> findAllScheduleAndStep(List<Long> workpackIds);
 
   @Query(
-      "MATCH (master:Deliverable)<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false,canceled:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step) " +
+      "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable{deleted:false,canceled:false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step) " +
       ",(st)-[:COMPOSES]->(b:Baseline) " +
       "WHERE ID(b) IN $ids " +
+      "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date.truncate('month', date(plan.finish))" +
+      "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) >= date.truncate('month', date(plan.start))" +
       "AND ($workpackIds IS NULL OR ID(master) IN $workpackIds) " +
-      "RETURN ID(master) AS idWorkpack, s.start AS baselineStart, s.end AS baselineEnd,  toString(SUM(toFloat(st.plannedWork))) AS plannedWork "
+      "RETURN ID(master) AS idWorkpack, s.start AS baselineStart, s.end AS baselineEnd, plan.start AS startPlan, plan.finish AS endPlan,  toString(SUM(toFloat(st.plannedWork))) AS plannedWork "
   )
   List<DashboardWorkpackDetailDto> findAllScheduleAndStepBaseline(List<Long> ids, List<Long> workpackIds);
 
   @Query(
-      "MATCH (w:Deliverable{deleted:false,canceled:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
+      "MATCH (plan:Plan)<-[:BELONGS_TO]-(w:Deliverable{deleted:false,canceled:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
       "WHERE (w.category <> 'SNAPSHOT' OR w.category IS NULL) " +
+      "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date.truncate('month', date(plan.finish))" +
+      "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) >= date.truncate('month', date(plan.start))" +
       "AND ($workpackIds IS NULL OR ID(w) IN $workpackIds) " +
       "RETURN ID(w) AS idWorkpack, toString(SUM(toFloat(co.plannedCost))) AS foreseenCost "
   )
   List<DashboardWorkpackDetailDto> findAllCost(List<Long> workpackIds);
 
   @Query(
-      "MATCH (master:Deliverable{deleted:false,canceled:false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable)<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
+      "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable{deleted:false,canceled:false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
           ",(s)-[:COMPOSES]->(b:Baseline) " +
           "WHERE ID(b) IN $ids " +
+          "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date.truncate('month', date(plan.finish)) " +
+          "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) >= date.truncate('month', date(plan.start)) " +
           "AND ($workpackIds IS NULL OR ID(master) IN $workpackIds) " +
           "RETURN ID(master) AS idWorkpack, toString(SUM(toFloat(co.plannedCost))) AS plannedCost "
   )
   List<DashboardWorkpackDetailDto> findAllCostBaseline(List<Long> ids, List<Long> workpackIds);
 
   @Query(
-      "MATCH (master:Deliverable{deleted:false,canceled:false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
+      "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable{deleted:false,canceled:false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
           ",(s)-[:COMPOSES]->(b:Baseline) " +
           "WHERE ID(b) IN $ids " +
           "AND ($workpackIds IS NULL OR ID(master) IN $workpackIds) " +
+          "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date.truncate('month', date(plan.finish)) " +
+          "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) >= date.truncate('month', date(plan.start)) " +
           "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) < date.truncate('month', date()) " +
           "AND ($yearMonth IS NULL OR (st.periodFromStart IS NOT NULL AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date($yearMonth))) " +
           "RETURN ID(master) AS idWorkpack, toString(SUM(toFloat(co.plannedCost))) AS plannedCostRefMonth "
@@ -61,12 +70,14 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
   List<DashboardWorkpackDetailDto> findAllCostBaseline(List<Long> ids, List<Long> workpackIds, LocalDate yearMonth);
 
   @Query(
-          "MATCH (master:Deliverable{deleted:false,canceled:false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
+          "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable{deleted:false,canceled:false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
                   ",(st)-[:IS_SNAPSHOT_OF]->(stm:Step) " +
                   ",(s)-[:COMPOSES]->(b:Baseline) " +
                   "WHERE ID(b) IN $ids " +
                   "AND ($workpackIds IS NULL OR ID(master) IN $workpackIds) " +
                   "AND toFloat(st.plannedWork) > 0 " +
+                  "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date.truncate('month', date(plan.finish)) " +
+                  "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) >= date.truncate('month', date(plan.start)) " +
                   "AND date.truncate('month', date(s.start) + Duration({months: stm.periodFromStart})) < date.truncate('month', date()) " +
                   "AND ($yearMonth IS NULL OR (st.periodFromStart IS NOT NULL AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date($yearMonth))) " +
                   "RETURN ID(master) AS idWorkpack, toString( SUM( (toFloat(co.plannedCost) / toFloat(st.plannedWork)) * toFloat(stm.actualWork))) AS earnedValue "
@@ -82,25 +93,31 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
 
 
   @Query(
-      "MATCH (m:Milestone{deleted:false,canceled:false}) " +
+      "MATCH (plan:Plan)<-[:BELONGS_TO]-(m:Milestone{deleted:false,canceled:false}) " +
           "WHERE (m.category <> 'SNAPSHOT' OR m.category IS NULL) AND m.date IS NOT NULL " +
+          "AND date.truncate('month', date(left(m.date, 10))) <= date.truncate('month', date(plan.finish)) " +
+          "AND date.truncate('month', date(left(m.date, 10))) >= date.truncate('month', date(plan.start)) " +
           "AND ($workpackIds IS NULL OR ID(m) IN $workpackIds) " +
-          "RETURN ID(m) AS idWorkpack, left(m.date, 10) AS start, left(m.date, 10) AS end "
+          "RETURN ID(m) AS idWorkpack, left(m.date, 10) AS start, left(m.date, 10) AS end, plan.start AS startPlan, plan.finish AS endPlan "
   )
   List<DashboardWorkpackDetailDto> findAllMilestoneMaster(List<Long> workpackIds);
 
 
   @Query(
-      "MATCH (master:Milestone{deleted:false,canceled:false})<-[:IS_SNAPSHOT_OF]-(m:Milestone{deleted:false})-[:COMPOSES]->(b:Baseline) " +
+      "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Milestone{deleted:false,canceled:false})<-[:IS_SNAPSHOT_OF]-(m:Milestone{deleted:false})-[:COMPOSES]->(b:Baseline) " +
       "WHERE ID(b) IN $ids AND m.date IS NOT NULL " +
       "AND ($workpackIds IS NULL OR ID(master) IN $workpackIds) " +
-      "RETURN ID(master) AS idWorkpack,  left(m.date, 10) AS start, left(m.date, 10) AS end "
+      "AND date.truncate('month', date(left(m.date, 10))) <= date.truncate('month', date(plan.finish)) " +
+      "AND date.truncate('month', date(left(m.date, 10))) >= date.truncate('month', date(plan.start)) " +
+      "RETURN ID(master) AS idWorkpack,  left(m.date, 10) AS start, left(m.date, 10) AS end, plan.start AS startPlan, plan.finish AS endPlan "
   )
   List<DashboardWorkpackDetailDto> findAllMilestoneBaseline(List<Long> ids, List<Long> workpackIds);
 
   @Query(
-      "MATCH (w:Deliverable{deleted:false,canceled:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step) " +
+      "MATCH (plan:Plan)<-[:BELONGS_TO]-(w:Deliverable{deleted:false,canceled:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step) " +
       "WHERE (w.category <> 'SNAPSHOT' OR w.category IS NULL) AND st.periodFromStart IS NOT NULL " +
+      "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date.truncate('month', date(plan.finish))" +
+      "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) >= date.truncate('month', date(plan.start))" +
       "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) < date.truncate('month', date()) " +
       "AND ($workpackIds IS NULL OR ID(w) IN $workpackIds) " +
       "AND ($yearMonth IS NULL OR (st.periodFromStart IS NOT NULL AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date($yearMonth))) " +
@@ -110,8 +127,10 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
 
 
   @Query(
-      "MATCH (w:Deliverable{deleted:false,canceled:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]-(c:CostAccount) " +
+      "MATCH (plan:Plan)<-[:BELONGS_TO]-(w:Deliverable{deleted:false,canceled:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]-(c:CostAccount) " +
       "WHERE (w.category <> 'SNAPSHOT' OR w.category IS NULL) AND st.periodFromStart IS NOT NULL " +
+      "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date.truncate('month', date(plan.finish))" +
+      "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) >= date.truncate('month', date(plan.start))" +
       "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) < date.truncate('month', date()) " +
       "AND ($workpackIds IS NULL OR ID(w) IN $workpackIds ) " +
       "AND ($yearMonth IS NULL OR (st.periodFromStart IS NOT NULL AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date($yearMonth))) " +
@@ -121,18 +140,22 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
 
 
   @Query (
-      "MATCH (w:Deliverable{deleted:false,canceled:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step) " +
+      "MATCH (plan:Plan)<-[:BELONGS_TO]-(w:Deliverable{deleted:false,canceled:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step) " +
           "WHERE (w.category <> 'SNAPSHOT' OR w.category IS NULL) AND st.periodFromStart IS NOT NULL  " +
           "AND ($workpackIds IS NULL OR ID(w) IN $workpackIds) " +
+          "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date.truncate('month', date(plan.finish)) " +
+          "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) >= date.truncate('month', date(plan.start)) " +
           "RETURN DISTINCT toString(date.truncate('month', date(s.start) + Duration({months: st.periodFromStart}))) AS date " +
           "ORDER BY date "
   )
   List<EarnedValueByStepDto> findAllEarnedValuesStep(List<Long> workpackIds);
 
   @Query (
-      "MATCH (w:Deliverable{deleted:false,canceled:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
+      "MATCH (plan:Plan)<-[:BELONGS_TO]-(w:Deliverable{deleted:false,canceled:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
       "WHERE (w.category <> 'SNAPSHOT' OR w.category IS NULL) AND st.periodFromStart IS NOT NULL  " +
       "AND ($workpackIds IS NULL OR ID(w) IN $workpackIds) " +
+      "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date.truncate('month', date(plan.finish)) " +
+      "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) >= date.truncate('month', date(plan.start)) " +
       "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) < date.truncate('month', date()) " +
       "AND ($yearMonth IS NULL OR (st.periodFromStart IS NOT NULL AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date($yearMonth))) " +
       "RETURN toString(date.truncate('month', date(s.start) + Duration({months: st.periodFromStart}))) AS date " +
@@ -142,9 +165,11 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
   List<EarnedValueByStepDto> findAllEarnedValueActualCost(List<Long> workpackIds, LocalDate yearMonth);
 
   @Query (
-      "MATCH (w:Deliverable{deleted:false,canceled:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step) " +
+      "MATCH (plan:Plan)<-[:BELONGS_TO]-(w:Deliverable{deleted:false,canceled:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step) " +
       "WHERE (w.category <> 'SNAPSHOT' OR w.category IS NULL) AND st.periodFromStart IS NOT NULL  " +
       "AND ($workpackIds IS NULL OR ID(w) IN $workpackIds) " +
+      "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date.truncate('month', date(plan.finish)) " +
+      "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) >= date.truncate('month', date(plan.start)) " +
       "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) < date.truncate('month', date()) " +
       "AND ($yearMonth IS NULL OR (st.periodFromStart IS NOT NULL AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date($yearMonth))) " +
       "RETURN toString(date.truncate('month', date(s.start) + Duration({months: st.periodFromStart}))) AS date " +
@@ -154,9 +179,11 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
   List<EarnedValueByStepDto> findAllEarnedValueActualWork(List<Long> workpackIds, LocalDate yearMonth);
 
   @Query (
-      "MATCH (w:Deliverable{deleted:false,canceled:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
+      "MATCH (plan:Plan)<-[:BELONGS_TO]-(w:Deliverable{deleted:false,canceled:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
       "WHERE (w.category <> 'SNAPSHOT' OR w.category IS NULL) AND st.periodFromStart IS NOT NULL  " +
       "AND ($workpackIds IS NULL OR ID(w) IN $workpackIds) " +
+      "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date.truncate('month', date(plan.finish)) " +
+      "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) >= date.truncate('month', date(plan.start)) " +
       "RETURN toString(date.truncate('month', date(s.start) + Duration({months: st.periodFromStart}))) AS date " +
       ", toString(SUM(toFloat(co.plannedCost))) AS estimatedCost " +
       "ORDER BY date "
@@ -165,12 +192,14 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
 
 
   @Query (
-      "MATCH (master:Deliverable{deleted:false,canceled:false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
+      "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable{deleted:false,canceled:false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
           ",(st)-[:IS_SNAPSHOT_OF]->(stm:Step) " +
           ",(s)-[:COMPOSES]->(b:Baseline) " +
           "WHERE ID(b) IN $ids " +
           "AND ($workpackIds IS NULL OR ID(master) IN $workpackIds) " +
           "AND toFloat(st.plannedWork) > 0 " +
+          "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date.truncate('month', date(plan.finish)) " +
+          "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) >= date.truncate('month', date(plan.start)) " +
           "RETURN toString(date.truncate('month', date(s.start) + Duration({months: st.periodFromStart}))) AS date " +
           ", toString( SUM( (toFloat(co.plannedCost) / toFloat(st.plannedWork)) * toFloat(stm.actualWork))) AS earnedValue " +
           "ORDER BY date "
@@ -178,11 +207,13 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
   List<EarnedValueByStepDto> findAllEarnedValue(List<Long> ids, List<Long> workpackIds);
 
   @Query (
-      "MATCH (master:Deliverable{deleted:false,canceled:false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
+      "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable{deleted:false,canceled:false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
       ",(s)-[:COMPOSES]->(b:Baseline) " +
       "WHERE ID(b) IN $baselineIds " +
       "AND st.periodFromStart IS NOT NULL  " +
       "AND ($workpackIds IS NULL OR ID(master) IN $workpackIds) " +
+      "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date.truncate('month', date(plan.finish)) " +
+      "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) >= date.truncate('month', date(plan.start)) " +
       "RETURN toString(date.truncate('month', date(s.start) + Duration({months: st.periodFromStart}))) AS date " +
       ", toString(SUM(toFloat(co.plannedCost))) AS plannedCost " +
       "ORDER BY date "
@@ -190,10 +221,12 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
   List<EarnedValueByStepDto> findAllEarnedValuePlannedCost(List<Long> baselineIds, List<Long> workpackIds);
 
   @Query (
-      "MATCH (master:Deliverable{deleted:false,canceled:false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step) " +
+      "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable{deleted:false,canceled:false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step) " +
       ",(s)-[:COMPOSES]->(b:Baseline) " +
       "WHERE ID(b) IN $baselineIds " +
       "AND st.periodFromStart IS NOT NULL " +
+      "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date.truncate('month', date(plan.finish)) " +
+      "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) >= date.truncate('month', date(plan.start)) " +
       "AND ($workpackIds IS NULL OR ID(master) IN $workpackIds) " +
       "RETURN toString(date.truncate('month', date(s.start) + Duration({months: st.periodFromStart}))) AS date " +
       ", toString(SUM(toFloat(st.plannedWork))) AS plannedWork " +

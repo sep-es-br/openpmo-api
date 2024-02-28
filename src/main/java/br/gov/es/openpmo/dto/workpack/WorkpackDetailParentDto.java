@@ -5,6 +5,7 @@ import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
 import br.gov.es.openpmo.dto.dashboards.RiskResultDto;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.dto.plan.PlanDto;
+import br.gov.es.openpmo.dto.workpack.breakdown.structure.JournalInformationDto;
 import br.gov.es.openpmo.model.relations.IsLinkedTo;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -86,6 +87,8 @@ public abstract class WorkpackDetailParentDto {
   private MilestoneResultDto milestone;
 
   private RiskResultDto risk;
+
+  private JournalInformationDto journalInformation;
 
   public static <TYPE extends WorkpackDetailParentDto> WorkpackDetailParentDto of(
     final Workpack workpack,
@@ -316,4 +319,11 @@ public abstract class WorkpackDetailParentDto {
     this.activeBaselineName = activeBaselineName;
   }
 
+  public JournalInformationDto getJournalInformation() {
+    return journalInformation;
+  }
+
+  public void setJournalInformation(JournalInformationDto journalInformation) {
+    this.journalInformation = journalInformation;
+  }
 }

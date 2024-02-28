@@ -1,9 +1,14 @@
 package br.gov.es.openpmo.service.journals;
 
 import br.gov.es.openpmo.dto.journals.JournalResponse;
+import br.gov.es.openpmo.dto.journals.SimpleJournalResponse;
+import br.gov.es.openpmo.dto.workpack.breakdown.structure.JournalInformationDto;
+import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.journals.JournalEntry;
 import br.gov.es.openpmo.model.journals.JournalType;
 import br.gov.es.openpmo.repository.JournalRepository;
+import br.gov.es.openpmo.utils.ApplicationMessage;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -57,6 +62,19 @@ public class JournalFinder {
 
     return getJournalEntryPage(journalEntries, pageable)
       .map(journalEntry -> this.getResponse(uriComponentsBuilder, journalEntry));
+  }
+
+  public List<JournalInformationDto> findAllJournalInformationDto(List<Long> idsWorkpack) {
+    return journalRepository.findAllJournalInformationDto(idsWorkpack);
+  }
+
+  public SimpleJournalResponse getJournal(
+      final Long idJournal,
+      final UriComponentsBuilder uriComponentsBuilder
+  ) {
+    final JournalEntry journalEntry = this.journalRepository.findById(idJournal)
+                                                            .orElseThrow(() -> new NegocioException(ApplicationMessage.JOURNAL_NOT_FOUND));
+    return this.journalResponseMapper.mapSimple(journalEntry, uriComponentsBuilder);
   }
 
   private JournalResponse getResponse(

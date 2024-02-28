@@ -1,7 +1,6 @@
 package br.gov.es.openpmo.dto.dashboards.v2;
 
 import br.gov.es.openpmo.dto.MilestoneResultDto;
-import br.gov.es.openpmo.dto.baselines.ccbmemberview.ScheduleInterval;
 import br.gov.es.openpmo.dto.dashboards.PerformanceIndexDto;
 import br.gov.es.openpmo.dto.dashboards.RiskDataChart;
 import br.gov.es.openpmo.dto.dashboards.TripleConstraintDto;
@@ -26,7 +25,6 @@ public class DashboardResponse {
 
   private final PerformanceIndexDto performanceIndex;
 
-  private final ScheduleInterval scheduleInterval;
 
   private final MilestoneResultDto milestone;
 
@@ -44,8 +42,7 @@ public class DashboardResponse {
     final DatasheetResponse datasheet,
     final List<EarnedValueByStepDto> earnedValueByStep,
     final PerformanceIndexDto performanceIndexes,
-    final MilestoneResultDto milestone,
-    final ScheduleInterval scheduleInterval
+    final MilestoneResultDto milestone
   ) {
     this.risk = risk;
     this.datasheet = datasheet;
@@ -53,7 +50,6 @@ public class DashboardResponse {
     this.tripleConstraint = tripleConstraint;
     this.performanceIndex = performanceIndexes;
     this.milestone = milestone;
-    this.scheduleInterval = scheduleInterval;
   }
 
   public RiskDataChart getRisk() {
@@ -76,9 +72,6 @@ public class DashboardResponse {
     return performanceIndex;
   }
 
-  public ScheduleInterval getScheduleInterval() {
-    return scheduleInterval;
-  }
 
   @JsonIgnore
   public DatasheetTotalizers getTotalizers() {

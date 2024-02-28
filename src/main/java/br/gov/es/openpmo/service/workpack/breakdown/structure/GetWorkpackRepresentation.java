@@ -16,6 +16,7 @@ import br.gov.es.openpmo.dto.dashboards.RiskDto;
 import br.gov.es.openpmo.dto.dashboards.RiskResultDto;
 import br.gov.es.openpmo.dto.dashboards.RiskWorkpackDto;
 import br.gov.es.openpmo.dto.menu.WorkpackResultDto;
+import br.gov.es.openpmo.dto.workpack.breakdown.structure.JournalInformationDto;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.ScheduleMeasureUnit;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.WorkpackRepresentation;
 import br.gov.es.openpmo.model.office.UnitMeasure;
@@ -41,13 +42,16 @@ public class GetWorkpackRepresentation {
       final List<MilestoneDateDto> milestoneDates,
       final List<RiskWorkpackDto> risks,
       final List<MilestoneDateDto> milestoneWorkpacks,
-      final List<Workpack> deliverables
+      final List<Workpack> deliverables,
+      final List<JournalInformationDto> journals
   ) {
     final WorkpackRepresentation workpackRepresentation = new WorkpackRepresentation();
     final Long workpackId = workpackDto.getId();
     workpackRepresentation.setIdWorkpack(workpackId);
     workpackRepresentation.setWorkpackType(workpackDto.getType());
     workpackRepresentation.setWorkpackName(workpackDto.getName());
+    workpackRepresentation.setJournalInformation(
+        journals.stream().filter(j -> j.getIdWorkapck().equals(workpackDto.getId())).findFirst().orElse(null));
     if (this.hasDashboard(workpackDto)) {
       final DashboardMonthDto monthDto = dashboardCacheUtil.getDashboardMonthDto(workpackDto.getId(), "Deliverable".equals(workpackDto.getType()));
       workpackRepresentation.setDashboard(monthDto);

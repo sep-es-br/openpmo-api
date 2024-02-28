@@ -33,6 +33,8 @@ public class WorkpackRepresentation {
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private ScheduleMeasureUnit unitMeasure;
 
+  private JournalInformationDto journalInformation;
+
   public Long getIdWorkpack() {
     return idWorkpack;
   }
@@ -97,5 +99,11 @@ public class WorkpackRepresentation {
     this.unitMeasure = unitMeasure;
   }
 
+  public JournalInformationDto getJournalInformation() {
+    return journalInformation;
+  }
 
+  public void setJournalInformation(JournalInformationDto journalInformation) {
+    this.journalInformation = journalInformation;
+  }
 }
