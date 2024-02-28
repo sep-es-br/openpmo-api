@@ -49,7 +49,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       ", w.date as date, model.sortByField as sortByField " +
       "UNION ALL " +
       "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO]-(w:Workpack{deleted:false,canceled:false})-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
-      ",(w)<-[:IS_IN*]-(children:Workpack)-[:IS_INSTANCE_BY]->(modelChildren:WorkpackModel)  " +
+      ",(w)<-[:IS_IN*]-(children:Workpack{deleted:false,canceled:false})-[:IS_INSTANCE_BY]->(modelChildren:WorkpackModel)  " +
       "WHERE id(plan) = $idPlan AND (children)-[:IS_IN]->(w) " +
       "RETURN id(children) as id, id(modelChildren) as idWorkpackModel, id(plan) as idPlan,id(w) as idParent" +
       ", children.name as name, children.fullName as fullName, modelChildren.fontIcon as fontIcon, modelChildren.modelName as modelName" +
@@ -66,7 +66,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
           "UNION ALL " +
           "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO]-(w:Workpack{deleted:false,canceled:false}) " +
           ", (w)-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
-          ", (w)<-[:IS_IN*]-(children:Workpack)-[:IS_INSTANCE_BY]->(modelChildren:WorkpackModel) " +
+          ", (w)<-[:IS_IN*]-(children:Workpack{deleted:false,canceled:false})-[:IS_INSTANCE_BY]->(modelChildren:WorkpackModel) " +
           ", (modelChildren)-[:IS_SORTED_BY]->(pm:PropertyModel)<-[:IS_DRIVEN_BY]-(prop:Property)-[:FEATURES]->(children)  " +
           "WHERE id(plan) = $idPlan AND (children)-[:IS_IN]->(w) " +
           "RETURN id(children) as id, prop.value as sort "
@@ -83,7 +83,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
           "RETURN apoc.util.sha1(list) AS output " +
           "UNION ALL " +
           "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO]-(w:Workpack{deleted:false,canceled:false})-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
-          ",(w)<-[:IS_IN*]-(children:Workpack)-[:IS_INSTANCE_BY]->(modelChildren:WorkpackModel)   " +
+          ",(w)<-[:IS_IN*]-(children:Workpack{deleted:false,canceled:false})-[:IS_INSTANCE_BY]->(modelChildren:WorkpackModel)   " +
           "WHERE id(plan) = $idPlan AND (children)-[:IS_IN]->(w) " +
           "WITH id(children) as id, id(modelChildren) as idWorkpackModel, id(plan) as idPlan,id(w) as idParent" +
           ", children.name as name, children.fullName as fullName, model.fontIcon as fontIcon, model.modelName as modelName" +
@@ -122,8 +122,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
           + " [ (w)<-[f4:FEATURES]-(u:UnitSelection)-[v3:VALUES]->(u1:UnitMeasure) | [f4,u,v3,u1]], "
           + " [ (w)-[sharedWith:IS_SHARED_WITH]->(office:Office) | [sharedWith, office]], "
           + " [ (w)-[instanceBy:IS_INSTANCE_BY]->(wm) | [instanceBy, wm] ], "
-          + " [ (w)-[isLinkedTo:IS_LINKED_TO]->(wm) | [isLinkedTo, wm] ], "
-          + " [ (w)<-[b:BELONGS_TO]-(d:Dashboard)<-[ipo:IS_PART_OF]-(dm:DashboardMonth)<-[ia:IS_AT]-(nodes) | [b,d,ipo,dm,ia,nodes] ] "
+          + " [ (w)-[isLinkedTo:IS_LINKED_TO]->(wm) | [isLinkedTo, wm] ] "
           + "] "
           + "ORDER BY score DESC"
   )
