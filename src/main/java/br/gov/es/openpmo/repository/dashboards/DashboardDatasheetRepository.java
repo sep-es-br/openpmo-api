@@ -12,7 +12,7 @@ import java.util.List;
 @Repository
 public interface DashboardDatasheetRepository extends Neo4jRepository<Workpack, Long> {
 
-  @Query("MATCH p = (current:Workpack{deleted:false})<-[:IS_IN*]-(child:Workpack{deleted:false}), " +
+  @Query("MATCH p = (current:Workpack{deleted:false,canceled:false})<-[:IS_IN*]-(child:Workpack{deleted:false,canceled:false}), " +
     "(current)-[:IS_INSTANCE_BY|IS_LINKED_TO]->(n:WorkpackModel), " +
     "(child)-[:IS_INSTANCE_BY|IS_LINKED_TO]->(m:WorkpackModel)-[:IS_IN*]->(n) " +
     "WHERE id(current)=$workpackId and id(n)=$workpackModelId " +
