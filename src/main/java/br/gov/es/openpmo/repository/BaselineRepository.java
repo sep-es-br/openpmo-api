@@ -441,14 +441,15 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
     List<BaselineConsumesStep> findAllStepConsumesById(final List<Long> ids);
 
     @Query(
-        "MATCH (children:Workpack{deleted:false})-[:IS_IN*]->(parent:Workpack) " +
-            "WHERE ID(parent) = $id AND ANY(label IN labels(children) WHERE label IN ['Milestone', 'Deliverable']) " +
-            "AND (children.completed = false OR children.completed IS NULL) " +
-            "WITH DISTINCT ID(children)  AS ids " +
-            "MATCH (master:Workpack)-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
-            "WHERE ID(master) IN [ids] " +
-            "RETURN ID(master) AS idMaster, ID(master) AS id, master.name AS name, master.fullName AS fullName " +
-            ", master.date AS date, model.fontIcon AS fontIcon, labels(master) AS label "
+            "MATCH (children:Workpack{deleted:false})-[:IS_IN*]->(parent:Workpack) " +
+                    "WHERE ID(parent) = $id AND ((ANY(label IN labels(children) WHERE label IN ['Deliverable']) " +
+                    "AND (children)<-[:FEATURES]-(:Schedule)) OR ANY(label IN labels(children) WHERE label IN ['Milestone']) ) " +
+                    "AND (children.completed = false OR children.completed IS NULL) " +
+                    "WITH DISTINCT ID(children)  AS ids " +
+                    "MATCH (master:Workpack)-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
+                    "WHERE ID(master) IN [ids] " +
+                    "RETURN ID(master) AS idMaster, ID(master) AS id, master.name AS name, master.fullName AS fullName " +
+                    ", master.date AS date, model.fontIcon AS fontIcon, labels(master) AS label "
     )
     List<BaselineWorkpackDto> findAllWorkpacMasterById(final Long id);
 

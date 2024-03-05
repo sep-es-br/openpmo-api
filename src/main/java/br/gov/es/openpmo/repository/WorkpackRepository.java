@@ -634,7 +634,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
 
   @Query (
       "MATCH (project:Workpack{deleted:false})<-[:IS_IN*]-(children:Workpack{deleted:false})  " +
-      "WHERE id(project) = $id AND ANY(label IN labels(children) WHERE label IN ['Milestone', 'Deliverable']) " +
+      "WHERE id(project) = $id AND ((ANY(label IN labels(children) WHERE label IN ['Deliverable']) AND (children)<-[:FEATURES]-(:Schedule)) OR ANY(label IN labels(children) WHERE label IN ['Milestone'])) " +
       "RETURN ID(children) "
   )
   Set<Long> findAllDeliverableAndMilestoneByProject(Long id);
