@@ -2,14 +2,10 @@ package br.gov.es.openpmo.service.baselines;
 
 import br.gov.es.openpmo.configuration.properties.AppProperties;
 import br.gov.es.openpmo.dto.baselines.GetAllBaselinesResponse;
-import br.gov.es.openpmo.dto.baselines.GetAllCCBMemberBaselineResponse;
 import br.gov.es.openpmo.enumerator.BaselineViewStatus;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.filter.CustomFilter;
-import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.BaselineRepository;
-import br.gov.es.openpmo.repository.IsCCBMemberRepository;
-import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllBaselineApprovedUsingCustomFilter;
 import br.gov.es.openpmo.repository.custom.filters.FindAllBaselineRejectedUsingCustomFilter;
 import br.gov.es.openpmo.repository.custom.filters.FindAllBaselineWaitingMyEvaluationUsingCustomFilter;
@@ -32,10 +28,6 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
 
   private final BaselineRepository baselineRepository;
 
-  private final WorkpackRepository workpackRepository;
-
-  private final IsCCBMemberRepository ccbMemberRepository;
-
   private final AppProperties appProperties;
 
   private final CustomFilterService customFilterService;
@@ -52,8 +44,6 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
   @Autowired
   public GetAllBaselinesService(
     final BaselineRepository baselineRepository,
-    final WorkpackRepository workpackRepository,
-    final IsCCBMemberRepository ccbMemberRepository,
     final AppProperties appProperties,
     final CustomFilterService customFilterService,
     final FindAllBaselineApprovedUsingCustomFilter findAllBaselineApproved,
@@ -62,8 +52,6 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
     final FindAllBaselineWaitingOthersEvaluationsUsingCustomFilter findAllBaselineWaitingOthersEvaluations
   ) {
     this.baselineRepository = baselineRepository;
-    this.workpackRepository = workpackRepository;
-    this.ccbMemberRepository = ccbMemberRepository;
     this.appProperties = appProperties;
     this.customFilterService = customFilterService;
     this.findAllBaselineApproved = findAllBaselineApproved;
@@ -128,13 +116,6 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
   public List<GetAllBaselinesResponse> getAllByWorkpackId(final Long idWorkpack) {
     return this.baselineRepository.findAllByWorkpackId(idWorkpack).stream()
       .map(baseline -> getBaselinesResponse(baseline))
-      .collect(Collectors.toList());
-  }
-
-  @Override
-  public List<GetAllCCBMemberBaselineResponse> getAllByPersonId(final Long idPerson) {
-    return this.getWorkpacks(idPerson).stream()
-      .map(this::getGetAllCCBMemberBaselineResponse)
       .collect(Collectors.toList());
   }
 
@@ -341,26 +322,6 @@ public class GetAllBaselinesService implements IGetAllBaselinesService {
       this.appProperties.getSearchCutOffScore()
     );
     return params;
-  }
-
-  private GetAllCCBMemberBaselineResponse getGetAllCCBMemberBaselineResponse(final Workpack workpack) {
-    final List<GetAllBaselinesResponse> baselines = new ArrayList<>();
-    for (final Baseline baseline : this.getBaselines(workpack)) {
-      baselines.add(getBaselinesResponse(baseline));
-    }
-    return new GetAllCCBMemberBaselineResponse(
-      workpack.getId(),
-      workpack.getName(),
-      baselines
-    );
-  }
-
-  private List<Baseline> getBaselines(final Workpack workpack) {
-    return this.baselineRepository.findAllByWorkpackId(workpack.getId());
-  }
-
-  private List<Workpack> getWorkpacks(final Long idPerson) {
-    return this.ccbMemberRepository.findAllWorkpacksByPersonId(idPerson);
   }
 
 }

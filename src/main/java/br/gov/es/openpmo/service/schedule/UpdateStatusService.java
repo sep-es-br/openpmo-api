@@ -9,8 +9,6 @@ import br.gov.es.openpmo.repository.StepRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.completed.ICompleteWorkpackService;
 import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -20,8 +18,6 @@ import java.util.Optional;
 
 @Service
 public class UpdateStatusService {
-
-  private static final Logger log = LoggerFactory.getLogger(UpdateStatusService.class);
 
   private final WorkpackRepository workpackRepository;
 
@@ -64,33 +60,6 @@ public class UpdateStatusService {
     }
 
     this.dashboardService.calculate();
-  }
-
-  public void updateOnlyCompletedFlag(final List<? extends Deliverable> deliverables) {
-    final List<Workpack> analyzedDeliverables = new ArrayList<>();
-
-    for (final Deliverable deliverable : deliverables) {
-      log.info(
-        "{}: Calculando completed {} de {} | ID do Workpack = {}.",
-        Deliverable.class.getSimpleName(),
-        deliverables.indexOf(deliverable) + 1,
-        deliverables.size(),
-        deliverable.getId()
-      );
-      this.updateIfCompleted(deliverable, analyzedDeliverables);
-    }
-
-    for (final Workpack workpack : analyzedDeliverables) {
-      log.info(
-        "{}: Alterando flag completed {} de {} | ID do Workpack = {}.",
-        Deliverable.class.getSimpleName(),
-        analyzedDeliverables.indexOf(workpack) + 1,
-        analyzedDeliverables.size(),
-        workpack.getId()
-      );
-      final CompleteWorkpackRequest request = new CompleteWorkpackRequest(workpack.getCompleted(), null);
-      this.completeWorkpackService.apply(workpack.getId(), request);
-    }
   }
 
   private void updateIfCompleted(

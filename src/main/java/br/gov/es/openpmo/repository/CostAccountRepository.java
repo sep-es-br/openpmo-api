@@ -87,12 +87,6 @@ public interface CostAccountRepository extends Neo4jRepository<CostAccount, Long
       "RETURN id(c) as id, name.value as name ")
   List<EntityDto> findCostAccountByScheduleIds(List<Long> ids);
 
-
-  @Query("MATCH (s:CostAccount)-[i:IS_SNAPSHOT_OF]->(m:CostAccount) " +
-      "WHERE id(s) = $idSnapshot " +
-      "RETURN s,i,m ")
-  CostAccount findWithMasterById(Long idSnapshot);
-
   @Query(" MATCH (master:CostAccount), (snapshot:CostAccount) " +
       "WHERE ID(master) = $masterId AND ID(snapshot) = $snapshotId " +
       "SET master.category = 'MASTER' " +

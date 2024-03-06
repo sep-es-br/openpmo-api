@@ -17,11 +17,6 @@ import java.util.Set;
 public interface RiskRepository extends Neo4jRepository<Risk, Long>, CustomRepository {
 
   @Query("match (w:Workpack)<-[:IS_IN*0..]-(:Workpack)<-[:IS_FORSEEN_ON]-(r:Risk) " +
-    "where id(w)=$workpackId " +
-    "return distinct r")
-  List<Risk> findByWorkpackId(Long workpackId);
-
-  @Query("match (w:Workpack)<-[:IS_IN*0..]-(:Workpack)<-[:IS_FORSEEN_ON]-(r:Risk) " +
       "where id(w) IN $workpackId " +
       " return id(w) as idWorkpack, r as risk ")
   List<RiskWorkpackDto> findByWorkpackIds(List<Long> workpackId);

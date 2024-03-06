@@ -63,13 +63,13 @@ public class MenuService {
 
   @Autowired
   public MenuService(
-    final WorkpackService workpackService,
-    final PlanService planService,
-    final PersonService personService,
-    final OfficeService officeService,
-    final WorkpackPermissionVerifier workpackPermissionVerifier,
-    final GetSorterProperty getSorterProperty,
-    final ApplicationCacheUtil applicationCacheUtil
+          final WorkpackService workpackService,
+          final PlanService planService,
+          final PersonService personService,
+          final OfficeService officeService,
+          final WorkpackPermissionVerifier workpackPermissionVerifier,
+          final GetSorterProperty getSorterProperty,
+          final ApplicationCacheUtil applicationCacheUtil
   ) {
     this.personService = personService;
     this.workpackService = workpackService;
@@ -89,7 +89,7 @@ public class MenuService {
     final Person person = this.personService.findByIdThinElseThrow(idPerson);
 
     final List<PermissionDto> permissions = this.workpackPermissionVerifier.fetchOfficePermissions(office, person);
-    final List<Long> plansWithPermission = this.planService.findAllUserHasPermission(idOffice, idPerson);
+    final List<Long> plansWithPermission = this.planService.findAllUserHasPermission(idOffice, idPerson, request.getIdPlan());
     final List<PlanWorkpackDto> permissionWorkpack = this.workpackService
           .findAllMappedByPlanWithPermission(idOffice, idPerson);
 
@@ -102,26 +102,16 @@ public class MenuService {
       return Collections.emptySet();
     }
 
-    List<Long> plans = new ArrayList<>(0);
-    if (request.getIdPlan() != null) {
-      plans.add(request.getIdPlan());
-    }
-    if (plans.isEmpty()) {
-      plans = this.planService.findAllIdsInOfficeOrderByStartDesc(idOffice);
-    }
-
     if (admin || officePermission) {
-      return findAllPortifolio(plans);
+      return findAllPortifolio(request.getIdPlan());
     }
 
-    return findAllPortifolio(plansWithPermission, permissionWorkpack);
+    return findAllPortifolio(plansWithPermission, permissionWorkpack, request.getIdPlan());
   }
 
-  private Set<WorkpackMenuResultDto> findAllPortifolio(List<Long> plans) {
+  private Set<WorkpackMenuResultDto> findAllPortifolio(Long idPlan) {
     Set<WorkpackMenuResultDto> result = new LinkedHashSet<>(0);
-    for (Long plan : plans) {
-      result.addAll(this.getListWorkpackMenuResultDtoFull(plan));
-    }
+    result.addAll(this.getListWorkpackMenuResultDtoFull(idPlan));
     return sortMenusChildren(result);
   }
 
@@ -179,15 +169,17 @@ public class MenuService {
     final List<WorkpackMenuResultDto> listWorkpackMenus = applicationCacheUtil.getListWorkpackMenuResultDto(idPlan);
     for (WorkpackMenuResultDto planMenu : listWorkpackMenus) {
       if (planMenu.getIdParent() != null) {
-        listWorkpackMenus.stream().filter(w -> planMenu.getIdParent().equals(w.getId())).findFirst().ifPresent(
-            parent -> parent.getChildren().add(planMenu));
+        if (planMenu.getIdParent() != null) {
+          listWorkpackMenus.stream().filter(w -> planMenu.getIdParent().equals(w.getId())).findFirst().ifPresent(
+                  parent ->  parent.getChildren().add(planMenu));
+        }
       }
     }
     return listWorkpackMenus.stream().filter(w -> w.getIdParent() == null).collect(Collectors.toList());
   }
 
   private Set<WorkpackMenuResultDto> findAllPortifolio(final List<Long> plansWithPermission
-      , final List<PlanWorkpackDto> permissionWorkpack) {
+      , final List<PlanWorkpackDto> permissionWorkpack, final Long idPlan) {
     Set<WorkpackMenuResultDto> result = new LinkedHashSet<>(0);
     if (!plansWithPermission.isEmpty()) {
       for (Long plan : plansWithPermission) {
@@ -195,7 +187,7 @@ public class MenuService {
       }
     }
     List<PlanWorkpackDto> workpackDtos = permissionWorkpack.stream()
-            .filter(wm -> plansWithPermission.stream().noneMatch(id -> wm.getIdPlan().equals(id)))
+            .filter(wm -> wm.getIdPlan().equals(idPlan))
             .collect(Collectors.toList());
 
     for (PlanWorkpackDto planWorkpack : workpackDtos) {
@@ -694,14 +686,6 @@ public class MenuService {
     public ModelPosition(Long idModel, Long position) {
       this.idModel = idModel;
       this.position = position;
-    }
-
-    public Long getIdModel() {
-      return idModel;
-    }
-
-    public void setIdModel(Long idModel) {
-      this.idModel = idModel;
     }
 
     public Long getPosition() {

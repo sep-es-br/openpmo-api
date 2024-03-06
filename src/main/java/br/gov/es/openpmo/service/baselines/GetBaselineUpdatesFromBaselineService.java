@@ -98,14 +98,6 @@ public class GetBaselineUpdatesFromBaselineService implements IGetBaselineUpdate
     );
   }
 
-  private Optional<Workpack> getWorkpackMaster(final Workpack workpack) {
-    final CategoryEnum category = getCategoryOrMaster(workpack);
-
-    return category == CategoryEnum.MASTER
-      ? Optional.of(workpack)
-      : this.baselineRepository.findMasterBySnapshotId(workpack.getId());
-  }
-
   private static CategoryEnum getCategoryOrMaster(final Snapshotable<Workpack> workpack) {
     return Optional.ofNullable(workpack.getCategory()).orElse(CategoryEnum.MASTER);
   }

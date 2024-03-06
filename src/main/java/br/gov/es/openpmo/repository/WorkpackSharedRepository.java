@@ -24,32 +24,32 @@ public interface WorkpackSharedRepository extends Neo4jRepository<IsSharedWith, 
   );
 
   @Query(
-    "MATCH (office:Office)<-[:IS_ADOPTED_BY]-(planModel:PlanModel)<-[:BELONGS_TO]-(model:WorkpackModel), "
-    + "(office)<-[sharedWith:IS_SHARED_WITH]-(workpack:Workpack) "
+    "MATCH (office:Office)<-[:IS_ADOPTED_BY]-(planModel:PlanModel)<-[:BELONGS_TO]-(model:WorkpackModel), (planLink:Plan), "
+    + "(office)<-[sharedWith:IS_SHARED_WITH]-(workpack:Workpack)-[:BELONGS_TO]->(plan:Plan) "
     + "OPTIONAL MATCH (workpack)-[instanceBy:IS_INSTANCE_BY]-(instance:WorkpackModel) "
     + "OPTIONAL MATCH (instance)<-[isInInstance:IS_IN*]-(instanceChildren:WorkpackModel) "
     + "WITH office, planModel, model, sharedWith, workpack, instanceBy, instance, isInInstance, instanceChildren "
-    + "WHERE id(model) = $idWorkpackModel "
+    + "WHERE id(model) = $idWorkpackModel AND id(plan) <> $idPlan AND id(planLink) = $idPlan AND NOT (workpack)-[:BELONGS_TO{linked:true}]->(planLink) "
     + "RETURN office, planModel, sharedWith, workpack, instanceBy, instance, model, isInInstance, instanceChildren, [ "
     + "    [(workpack)-[bt:BELONGS_TO{linked:false}]->(originalPlan:Plan) | [bt, originalPlan]], "
     + "    [(workpack)-[:BELONGS_TO{linked:false}]->(:Plan)-[iab:IS_ADOPTED_BY]->(originalOffice:Office) | [iab, originalOffice]] " +
     "]"
   )
-  List<IsSharedWith> listAllWorkpacksShared(Long idWorkpackModel);
+  List<IsSharedWith> listAllWorkpacksShared(Long idWorkpackModel, Long idPlan);
 
   @Query(
-    "MATCH (workpack:Workpack) "
+    "MATCH (workpack:Workpack)-[:BELONGS_TO]->(plan:Plan), (planLink:Plan) "
     + "OPTIONAL MATCH (workpack)-[instanceBy:IS_INSTANCE_BY]-(instance:WorkpackModel) "
     + "OPTIONAL MATCH (office:Office)<-[adoptedBy:IS_ADOPTED_BY]-(planModel:PlanModel)<-[belongsTo:BELONGS_TO]-(instance) "
     + "OPTIONAL MATCH (instance)<-[isInInstance:IS_IN*]-(instanceChildren:WorkpackModel) "
     + "WITH office, planModel, workpack, adoptedBy, belongsTo, instanceBy, instance, isInInstance, instanceChildren "
-    + "WHERE workpack.public=true "
+    + "WHERE workpack.public=true AND id(plan) <> $idPlan AND id(planLink) = $idPlan AND NOT (workpack)-[:BELONGS_TO{linked:true}]->(planLink) "
     + "RETURN office, planModel, workpack, adoptedBy, belongsTo, instanceBy, instance, isInInstance, instanceChildren, [ "
     + "    [(workpack)-[bt:BELONGS_TO{linked:false}]->(originalPlan:Plan) | [bt, originalPlan]], "
     + "    [(originalPlan:Plan)-[iab:IS_ADOPTED_BY]->(originalOffice:Office) | [iab, originalOffice]] " +
     "]"
   )
-  List<Workpack> listAllWorkpacksPublic();
+  List<Workpack> listAllWorkpacksPublic(Long idPlan);
 
   @Query(
     "MATCH (workpack:Workpack) " +

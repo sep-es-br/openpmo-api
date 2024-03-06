@@ -105,8 +105,8 @@ public class PlanService {
     return this.planRepository.findAllIdsInOfficeOrderByStartDesc(idOffice);
   }
 
-  public List<Long> findAllUserHasPermission(Long idOffice,  Long idPerson) {
-    return planRepository.findAllWithPermissionByUserAndOffice(idOffice, idPerson);
+  public List<Long> findAllUserHasPermission(Long idOffice,  Long idPerson, Long idPlan) {
+    return planRepository.findAllWithPermissionByUserAndOffice(idOffice, idPerson, idPlan);
   }
 
   public List<Plan> findAllInOffice(final Long idOffice) {

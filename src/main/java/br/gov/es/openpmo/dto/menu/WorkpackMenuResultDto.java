@@ -9,6 +9,7 @@ import org.springframework.data.neo4j.annotation.QueryResult;
 public class WorkpackMenuResultDto {
     private Long id;
     private Long idWorkpackModel;
+    private Long idWorkpackModelLinked;
     private Long idPlan;
     private Long idParent;
     private String name;
@@ -24,6 +25,7 @@ public class WorkpackMenuResultDto {
     public WorkpackMenuResultDto(WorkpackResultDto w) {
         this.id = w.getId();
         this.idWorkpackModel = w.getIdWorkpackModel();
+        this.idWorkpackModelLinked = w.getLinked().equals(true) ? w.getIdWorkpackModel() : null;
         this.idPlan = w.getIdPlan();
         this.idParent = w.getIdParent();
         this.name = w.getName();
@@ -47,6 +49,14 @@ public class WorkpackMenuResultDto {
 
     public void setIdWorkpackModel(Long idWorkpackModel) {
         this.idWorkpackModel = idWorkpackModel;
+    }
+
+    public Long getIdWorkpackModelLinked() {
+        return idWorkpackModelLinked;
+    }
+
+    public void setIdWorkpackModelLinked(Long idWorkpackModelLinked) {
+        this.idWorkpackModelLinked = idWorkpackModelLinked;
     }
 
     public Long getIdParent() {

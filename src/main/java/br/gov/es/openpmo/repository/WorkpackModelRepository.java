@@ -38,6 +38,13 @@ public interface WorkpackModelRepository extends Neo4jRepository<WorkpackModel, 
     + "] ")
   Optional<WorkpackModel> findAllByIdWorkpackModel(@Param("id") Long id);
 
+  @Query("MATCH (w:WorkpackModel)-[wp:BELONGS_TO]->(pm:PlanModel) "
+          + "WHERE id(w) = $id "
+          + "RETURN w, wp, pm, "
+          + "[(w)<-[ii:IS_IN*]-(children:WorkpackModel) | [ii,children] ]"
+          )
+  Optional<WorkpackModel> findAllByIdWorkpackModelWithAllChildren(@Param("id") Long id);
+
   @Query("MATCH (wm:WorkpackModel)<-[f:FEATURES]-(pm:PropertyModel) "
           + "WHERE id(wm) = $id "
           + "RETURN wm, f, pm, "

@@ -10,6 +10,7 @@ import org.springframework.data.neo4j.annotation.QueryResult;
 public class DashboardWorkpackDetailDto {
 
     private Long idWorkpack;
+    private Long idPlan;
     private LocalDate start;
     private LocalDate end;
     private LocalDate startPlan;
@@ -34,6 +35,7 @@ public class DashboardWorkpackDetailDto {
             return;
         }
         this.idWorkpack = dto.getIdWorkpack();
+        this.idPlan = dto.getIdPlan();
         this.start = dto.getStart();
         this.end = dto.getEnd();
         this.startPlan = dto.getStartPlan();
@@ -114,6 +116,14 @@ public class DashboardWorkpackDetailDto {
 
     public void setIdWorkpack(Long idWorkpack) {
         this.idWorkpack = idWorkpack;
+    }
+
+    public Long getIdPlan() {
+        return idPlan;
+    }
+
+    public void setIdPlan(Long idPlan) {
+        this.idPlan = idPlan;
     }
 
     public LocalDate getStart() {

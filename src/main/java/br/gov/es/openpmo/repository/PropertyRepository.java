@@ -3,22 +3,11 @@ package br.gov.es.openpmo.repository;
 import br.gov.es.openpmo.model.properties.Property;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
-import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface PropertyRepository extends Neo4jRepository<Property, Long> {
-
-  @Query("MATCH (p:Property)<-[:FEATURES]-(w:Workpack) WHERE ID(w) = $idWorkpack RETURN p ")
-  List<Property> findAllByIdWorkpack(@Param("idWorkpack") Long idWorkpack);
-
-  @Query("match (ls:Property) " +
-         "where id(ls)=$idLocalitySelection " +
-         "return ls, [ " +
-         "    [(ls)-[v:VALUES]->(l:Locality) | [v,l]] " +
-         "]")
-  Optional<Property> findByIdWithProperties(Long idLocalitySelection);
 
   @Query("match (m:Property)<-[i:IS_SNAPSHOT_OF]-(s:Property)-[c:COMPOSES]->(b:Baseline)  " +
          "where id(m)=$idProperty and id(b)=$idBaseline " +
@@ -64,7 +53,6 @@ public interface PropertyRepository extends Neo4jRepository<Property, Long> {
     Long propertyId,
     Long propertyModelId
   );
-
 
   @Query(
     "MATCH (workpack:Workpack)-[:IS_INSTANCE_BY]->(model:WorkpackModel)-[isSortedBy:IS_SORTED_BY]->(sorterModel:PropertyModel) " +

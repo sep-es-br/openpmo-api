@@ -10,9 +10,6 @@ import java.util.Optional;
 
 public interface PropertyModelRepository extends Neo4jRepository<PropertyModel, Long> {
 
-  @Query("MATCH (p:PropertyModel)<-[:FEATURES]-(w:WorkpackModel) WHERE ID(w) = $idWorkpackModel RETURN p ")
-  List<PropertyModel> findAllByIdWorkpackModel(@Param("idWorkpackModel") Long idWorkpackModel);
-
   @Query("MATCH(p:Property)-[d:IS_DRIVEN_BY]->(pm:PropertyModel) WHERE ID(pm)= $id return COUNT(p)")
   Long countPropertyByIdPropertyModel(@Param("id") Long id);
 

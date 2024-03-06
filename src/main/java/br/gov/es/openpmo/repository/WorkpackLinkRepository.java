@@ -1,7 +1,6 @@
 package br.gov.es.openpmo.repository;
 
 import br.gov.es.openpmo.model.relations.IsLinkedTo;
-import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
@@ -20,23 +19,28 @@ public interface WorkpackLinkRepository extends Neo4jRepository<IsLinkedTo, Long
     @Param("idWorkpackModel") Long idWorkpackModel
   );
 
-  @Query("MATCH (workpack:Workpack) " +
-         "MATCH (plan:Plan)-[:IS_STRUCTURED_BY]->(:PlanModel)<-[:BELONGS_TO]-(workpackModel:WorkpackModel) " +
-         "MATCH (workpack)-[:IS_LINKED_TO]->(workpackModel) " +
-         "WHERE id(workpack)=$idWorkpack AND id(plan)=$idPlan " +
-         "RETURN workpackModel"
-  )
-  Optional<WorkpackModel> findWorkpackModelLinkedByWorkpackAndPlan(
-    Long idWorkpack,
-    Long idPlan
-  );
-
   @Query("match (w:Workpack), (wm:WorkpackModel) " +
     "where id(w)=$idWorkpack and id(wm)=$idWorkpackModel " +
     "create (w)-[:IS_LINKED_TO]->(wm)")
   void linkWorkpackAndWorkpackModel(
     Long idWorkpack,
     Long idWorkpackModel
+  );
+
+  @Query("match (w:Workpack), (p:Plan) " +
+          "where id(w)=$idWorkpack and id(p)=$idPlan " +
+          "create (w)-[:BELONGS_TO{linked:true}]->(p)")
+  void linkWorkpackAndPlan(
+          Long idWorkpack,
+          Long idPlan
+  );
+
+  @Query("match (w:Workpack), (p:Workpack) " +
+          "where id(w)=$idWorkpack and id(p)=$idParent " +
+          "create (w)-[:IS_IN]->(p)")
+  void linkWorkpackAndParent(
+          Long idWorkpack,
+          Long idParent
   );
 
   @Query("MATCH (plan:Plan)  " +
@@ -72,12 +76,8 @@ public interface WorkpackLinkRepository extends Neo4jRepository<IsLinkedTo, Long
     Long idWorkpack
   );
 
-  @Query("MATCH (plan:Plan)   " +
-         "WHERE id(plan)=$idPlan  " +
-         "MATCH (workpack:Workpack)-[belongsTo:BELONGS_TO]->(plan)  " +
-         "OPTIONAL MATCH (workpack)-[isIn:IS_IN]->(parent:Workpack)-[:BELONGS_TO]->(plan)  " +
-         "WITH plan, workpack, belongsTo, isIn, parent " +
-         "WHERE id(workpack)=$idWorkpack " +
+  @Query("MATCH (workpack:Workpack)-[belongsTo:BELONGS_TO{linked:true]->(plan:Plan)  " +
+         "WHERE id(workpack)=$idWorkpack AND id(plan)=$idPlan " +
          "DETACH DELETE belongsTo")
   void unlinkPlan(
     Long idPlan,
@@ -96,18 +96,5 @@ public interface WorkpackLinkRepository extends Neo4jRepository<IsLinkedTo, Long
     Long idWorkpackModel
   );
 
-  @Query(
-    "MATCH (w:Workpack) " +
-    "MATCH (wm:WorkpackModel)-[bt:BELONGS_TO]->(plm:PlanModel)<-[st:IS_STRUCTURED_BY]-(pl:Plan) " +
-    "MATCH (w)-[ii:IS_IN*]->(wp:Workpack)-[lt:IS_LINKED_TO]->(wm) " +
-    "WHERE id(w)=$idWorkpack AND id(pl)=$idPlan " +
-    "RETURN wp, lt, wm, [" +
-    "   [ (wp)-[ii2:IS_IN*]->(wpp:Workpack)-[bt2:BELONGS_TO]->(pl2:Plan) | [ii2, wpp, bt2, pl2] ] " +
-    "]"
-  )
-  Optional<IsLinkedTo> findWorkpackParentLinked(
-    Long idWorkpack,
-    Long idPlan
-  );
 
 }

@@ -156,6 +156,11 @@ public class WorkpackModelService {
       .orElseThrow(() -> new NegocioException(WORKPACKMODEL_NOT_FOUND));
   }
 
+  public WorkpackModel findByIdWithAllChildrens(final Long id) {
+    return this.workpackModelRepository.findAllByIdWorkpackModelWithAllChildren(id)
+            .orElseThrow(() -> new NegocioException(WORKPACKMODEL_NOT_FOUND));
+  }
+
   public List<PropertyModel> getPropertyModels(final Long idWorkpackModel) {
     return this.workpackModelRepository.findAllPropertyModels(idWorkpackModel).stream().collect(Collectors.toList());
   }

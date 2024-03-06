@@ -7,7 +7,6 @@ import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.relations.IsSharedWith;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
-import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.repository.WorkpackSharedRepository;
 import br.gov.es.openpmo.service.office.OfficeService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,21 +38,18 @@ public class WorkpackSharedService {
 
   private final OfficeService officeService;
 
-  private final WorkpackRepository workpackRepository;
 
   @Autowired
   public WorkpackSharedService(
     final WorkpackSharedRepository repository,
     final WorkpackService workpackService,
     final WorkpackModelService workpackModelService,
-    final OfficeService officeService,
-    final WorkpackRepository workpackRepository
+    final OfficeService officeService
   ) {
     this.repository = repository;
     this.workpackService = workpackService;
     this.workpackModelService = workpackModelService;
     this.officeService = officeService;
-    this.workpackRepository = workpackRepository;
   }
 
   private static boolean validStructure(
@@ -257,21 +253,22 @@ public class WorkpackSharedService {
     return WorkpackSharedDto.of(isSharedWith);
   }
 
-  public List<ComboDto> getSharedWorkpacks(final Long idworkpackModel) {
+  public List<ComboDto> getSharedWorkpacks(final Long idworkpackModel, final Long idPlan) {
     final WorkpackModel workpackModel = this.workpackModelService.findById(idworkpackModel);
     final List<WorkpackModel> workpackModelStructure = fetchChildren(workpackModel);
     final List<ComboDto> itens = new ArrayList<>();
-    this.addPublicWorkpack(itens, workpackModel, workpackModelStructure);
-    this.addDirectlySharedWorkpack(itens, workpackModel, workpackModelStructure);
+    this.addPublicWorkpack(itens, workpackModel, workpackModelStructure, idPlan);
+    this.addDirectlySharedWorkpack(itens, workpackModel, workpackModelStructure, idPlan);
     return itens;
   }
 
   private void addPublicWorkpack(
     final Collection<? super ComboDto> itens,
     final WorkpackModel workpackModel,
-    final Collection<WorkpackModel> workpackModelStructure
+    final Collection<WorkpackModel> workpackModelStructure,
+    final Long idPlan
   ) {
-    final List<Workpack> publicWorkpacks = this.repository.listAllWorkpacksPublic();
+    final List<Workpack> publicWorkpacks = this.repository.listAllWorkpacksPublic(idPlan);
     for(final Workpack publicWorkpack : publicWorkpacks) {
       final WorkpackModel instance = publicWorkpack.getWorkpackModelInstance();
       if(validStructure(workpackModel, workpackModelStructure, instance)) {
@@ -283,9 +280,10 @@ public class WorkpackSharedService {
   private void addDirectlySharedWorkpack(
     final Collection<? super ComboDto> itens,
     final WorkpackModel workpackModel,
-    final Collection<WorkpackModel> workpackModelStructure
+    final Collection<WorkpackModel> workpackModelStructure,
+    final Long idPlan
   ) {
-    final List<IsSharedWith> isSharedWiths = this.repository.listAllWorkpacksShared(workpackModel.getId());
+    final List<IsSharedWith> isSharedWiths = this.repository.listAllWorkpacksShared(workpackModel.getId(), idPlan);
     for(final IsSharedWith relationship : isSharedWiths) {
       final WorkpackModel instanceWorkpackRelationship = relationship.workpackInstance();
       if(validStructure(workpackModel, workpackModelStructure, instanceWorkpackRelationship)) {

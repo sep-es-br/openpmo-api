@@ -33,10 +33,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class GetWorkpackBreakdownStructure {
 
   private final GetWorkpackRepresentation getWorkpackRepresentation;
-
   private final Collator collator;
-
-
   private final ICanAccessData canAccessData;
   private final ApplicationCacheUtil cacheUtil;
   private final DashboardMilestoneRepository dashboardMilestoneRepository;
@@ -68,6 +65,7 @@ public class GetWorkpackBreakdownStructure {
   public WorkpackBreakdownStructure execute(
     final Long idWorkpack,
     final Boolean allLevels,
+    final Long idPlan,
     final String authorization
   ) {
     if (idWorkpack == null) {
@@ -76,7 +74,7 @@ public class GetWorkpackBreakdownStructure {
     if (this.hasOnlyBasicReadPermission(idWorkpack, authorization)) {
       return null;
     }
-    WorkpackResultDto workpackDto = cacheUtil.getWorkpackBreakdownStructure(idWorkpack, null,allLevels);
+    WorkpackResultDto workpackDto = cacheUtil.getWorkpackBreakdownStructure(idWorkpack, idPlan,allLevels);
     if (workpackDto != null) {
       final List<Long> idsMileston = new ArrayList<>(getIdsWorkpackByType(Collections.singleton(workpackDto), "Milestone"));
       final List<MilestoneDateDto> milestoneWorkpack = this.dashboardMilestoneRepository.findByIds(idsMileston);
@@ -86,7 +84,7 @@ public class GetWorkpackBreakdownStructure {
 
       final List<Long> ids = new ArrayList<>(getIdsWorkpack(Collections.singleton(workpackDto), false));
       final List<JournalInformationDto> journals = journalFinder.findAllJournalInformationDto(ids);
-      final List<MilestoneDateDto> milestoneDates = this.dashboardMilestoneRepository.findByParentIds(ids);
+      final List<MilestoneDateDto> milestoneDates = this.dashboardMilestoneRepository.findByParentIds(ids, idPlan);
       final List<RiskWorkpackDto> risks = this.riskRepository.findByWorkpackIds(ids);
       final List<WorkpackModelBreakdownStructure> children = this.getChildren(workpackDto, milestoneDates, risks, milestoneWorkpack, deliverables, journals);
       if (children.isEmpty()) {

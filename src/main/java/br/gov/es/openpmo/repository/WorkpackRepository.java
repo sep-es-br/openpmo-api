@@ -32,29 +32,44 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       " WHERE id(o) = $idOffice " +
       " AND id(person) = $idPerson " +
       " AND permission.idPlan = id(plan) " +
-      " RETURN id(plan) as idPlan, collect(id(workpack)) as workpacks"
+      " RETURN id(plan) as idPlan, collect(id(workpack)) as workpacks "
   )
   List<PlanWorkpackDto> findAllMappedByPlanWithPermission(
       @Param("idOffice") Long idOffice,
       @Param("idPerson") Long idPerson
   );
 
-
   @Query(
-      "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO]-(w:Workpack{deleted:false,canceled:false})-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
-      "WHERE id(plan) = $idPlan AND NOT (w)-[:IS_IN]->(:Workpack) " +
-      "RETURN DISTINCT id(w) as id, id(model) as idWorkpackModel, id(plan) as idPlan, w.idParent as idParent" +
-      ", w.name as name, w.fullName as fullName, model.fontIcon as fontIcon, model.modelName as modelName" +
-      ", model.modelNameInPlural as modelNameInPlural,labels(w) as labels, model.position as position " +
-      ", w.date as date, model.sortByField as sortByField " +
-      "UNION ALL " +
-      "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO]-(w:Workpack{deleted:false,canceled:false})-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
-      ",(w)<-[:IS_IN*]-(children:Workpack{deleted:false,canceled:false})-[:IS_INSTANCE_BY]->(modelChildren:WorkpackModel)  " +
-      "WHERE id(plan) = $idPlan AND (children)-[:IS_IN]->(w) " +
-      "RETURN id(children) as id, id(modelChildren) as idWorkpackModel, id(plan) as idPlan,id(w) as idParent" +
-      ", children.name as name, children.fullName as fullName, modelChildren.fontIcon as fontIcon, modelChildren.modelName as modelName" +
-      ", modelChildren.modelNameInPlural as modelNameInPlural, labels(children) as labels, modelChildren.position as position " +
-      ", children.date as date, modelChildren.sortByField as sortByField "
+          "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO{linked:false}]-(w:Workpack{deleted:false,canceled:false})-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
+                  "WHERE id(plan) = $idPlan AND NOT (w)-[:IS_IN]->(:Workpack) " +
+                  "RETURN DISTINCT id(w) as id, id(model) as idWorkpackModel, false as linked, id(plan) as idPlan, w.idParent as idParent " +
+                  ", w.name as name, w.fullName as fullName, model.fontIcon as fontIcon, model.modelName as modelName " +
+                  " , model.modelNameInPlural as modelNameInPlural,labels(w) as labels, model.position as position " +
+                  " , w.date as date, model.sortByField as sortByField  " +
+                  " UNION ALL " +
+                  "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO{linked:false}]-(w:Workpack{deleted:false,canceled:false})-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel)  " +
+                  ",(w)<-[:IS_IN*]-(children:Workpack{deleted:false,canceled:false})-[:IS_INSTANCE_BY]->(modelChildren:WorkpackModel), (children)-[:BELONGS_TO{linked:false}]-(plan)  " +
+                  "WHERE id(plan) = $idPlan AND (children)-[:IS_IN]->(w) " +
+                  "RETURN id(children) as id, id(modelChildren) as idWorkpackModel, false as linked, id(plan) as idPlan,id(w) as idParent " +
+                  ", children.name as name, children.fullName as fullName, modelChildren.fontIcon as fontIcon, modelChildren.modelName as modelName " +
+                  ", modelChildren.modelNameInPlural as modelNameInPlural, labels(children) as labels, modelChildren.position as position  " +
+                  ", children.date as date, modelChildren.sortByField as sortByField " +
+                  "UNION ALL " +
+                  "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO{linked:true}]-(w:Workpack{deleted:false,canceled:false})-[isLinkedTo:IS_LINKED_TO]->(model:WorkpackModel) " +
+                  ", (w)-[:IS_IN]->(parent:Workpack)-[:BELONGS_TO]-(plan) " +
+                  "WHERE id(plan) = $idPlan RETURN " +
+                  "DISTINCT id(w) as id, id(model) as idWorkpackModel, true as linked, id(plan) as idPlan, id(parent) as idParent " +
+                  ", w.name as name, w.fullName as fullName, model.fontIcon as fontIcon, model.modelName as modelName " +
+                  ", model.modelNameInPlural as modelNameInPlural,labels(w) as labels, model.position as position " +
+                  ", w.date as date, model.sortByField as sortByField " +
+                  "UNION ALL " +
+                  "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO{linked:true}]-(w:Workpack{deleted:false,canceled:false})-[isLinkedTo:IS_LINKED_TO]->(model:WorkpackModel) " +
+                  ", (w)-[:BELONGS_TO]->(plan) " +
+                  "WHERE id(plan) = $idPlan AND NOT (w)-[:IS_IN]->(:Workpack) RETURN " +
+                  "DISTINCT id(w) as id, id(model) as idWorkpackModel, true as linked, id(plan) as idPlan, w.idParent as idParent " +
+                  ", w.name as name, w.fullName as fullName, model.fontIcon as fontIcon, model.modelName as modelName " +
+                  ", model.modelNameInPlural as modelNameInPlural,labels(w) as labels, model.position as position " +
+                  ", w.date as date, model.sortByField as sortByField  "
   )
   List<WorkpackResultDto> findAllMenuCustomByIdPlan(final Long idPlan);
 
@@ -76,19 +91,29 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   @Query(
       "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO]-(w:Workpack{deleted:false,canceled:false})-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
           "WHERE id(plan) = $idPlan AND NOT (w)-[:IS_IN]->(:Workpack) " +
-          "WITH DISTINCT id(w) as id, id(model) as idWorkpackModel, id(plan) as idPlan, w.idParent as idParent" +
+          "WITH DISTINCT id(w) as id, id(model) as idWorkpackModel, false as linked, id(plan) as idPlan, w.idParent as idParent" +
           ", w.name as name, w.fullName as fullName, model.fontIcon as fontIcon, model.modelName as modelName" +
           ", model.modelNameInPlural as modelNameInPlural, model.position as position " +
-          "WITH collect([id, idWorkpackModel, idPlan, idParent, name, fullName, fontIcon, modelName, modelNameInPlural, position]) as list " +
+          "WITH collect([id, idWorkpackModel, linked, idPlan, idParent, name, fullName, fontIcon, modelName, modelNameInPlural, position]) as list " +
           "RETURN apoc.util.sha1(list) AS output " +
           "UNION ALL " +
           "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO]-(w:Workpack{deleted:false,canceled:false})-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
           ",(w)<-[:IS_IN*]-(children:Workpack{deleted:false,canceled:false})-[:IS_INSTANCE_BY]->(modelChildren:WorkpackModel)   " +
           "WHERE id(plan) = $idPlan AND (children)-[:IS_IN]->(w) " +
-          "WITH id(children) as id, id(modelChildren) as idWorkpackModel, id(plan) as idPlan,id(w) as idParent" +
+          "WITH id(children) as id, id(modelChildren) as idWorkpackModel, false as linked, id(plan) as idPlan, id(w) as idParent" +
           ", children.name as name, children.fullName as fullName, model.fontIcon as fontIcon, model.modelName as modelName" +
           ", modelChildren.modelNameInPlural as modelNameInPlural, modelChildren.position as position " +
-          "WITH collect([id, idWorkpackModel, idPlan, idParent, name, fullName, fontIcon, modelName, modelNameInPlural, position]) as list " +
+          "WITH collect([id, idWorkpackModel, linked, idPlan, idParent, name, fullName, fontIcon, modelName, modelNameInPlural, position]) as list " +
+          "RETURN apoc.util.sha1(list) AS output " +
+          "UNION ALL " +
+          "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO{linked:true}]-(w:Workpack{deleted:false,canceled:false})-[isLinkedTo:IS_LINKED_TO]->(model:WorkpackModel) " +
+          ", (w)-[:IS_IN]->(parent:Workpack)-[:BELONGS_TO]-(plan) " +
+          "WHERE id(plan) = $idPlan " +
+          "WITH id(w) as id, id(model) as idWorkpackModel, true as linked, id(plan) as idPlan, id(parent) as idParent " +
+          ", w.name as name, w.fullName as fullName, model.fontIcon as fontIcon, model.modelName as modelName " +
+          ", model.modelNameInPlural as modelNameInPlural,labels(w) as labels, model.position as position " +
+          ", w.date as date, model.sortByField as sortByField  " +
+          "WITH collect([id, idWorkpackModel, linked, idPlan, idParent, name, fullName, fontIcon, modelName, modelNameInPlural, position]) as list " +
           "RETURN apoc.util.sha1(list) AS output "
   )
   List<String> getHashCodeMenuCustomByIdPlan(Long idPlan);
@@ -99,11 +124,6 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
          "   [(w)<-[ii:IS_IN*]-(v:Workpack) | [ii,v]] " +
          "]")
   Optional<Workpack> findByIdWithChildren(Long id);
-
-  @Query("MATCH (w:Workpack)-[ii:IS_IN*]->(v:Workpack) " +
-         "WHERE id(w)=$id " +
-         "RETURN v")
-  Set<Workpack> findParentsById(Long id);
 
   @Query("MATCH (wm:WorkpackModel)<-[:IS_INSTANCE_BY | IS_LINKED_TO]-(w:Workpack{deleted:false})-[rf:BELONGS_TO]->(p:Plan), "
           + "(p)-[is:IS_STRUCTURED_BY]->(pm:PlanModel) "
@@ -150,9 +170,8 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       + " [ (w)<-[f3:FEATURES]-(o:OrganizationSelection)-[v2:VALUES]->(o1:Organization) | [f3,o,v2,o1]], "
       + " [ (w)<-[f4:FEATURES]-(u:UnitSelection)-[v3:VALUES]->(u1:UnitMeasure) | [f4,u,v3,u1]], "
       + " [ (w)-[sharedWith:IS_SHARED_WITH]->(office:Office) | [sharedWith, office]], "
-      + " [ (w)-[instanceBy:IS_INSTANCE_BY]->(wm) | [instanceBy, wm] ], "
-      + " [ (w)-[isLinkedTo:IS_LINKED_TO]->(wm) | [isLinkedTo, wm] ] "
-//      + " [ (w)<-[b:BELONGS_TO]-(d:Dashboard)<-[ipo:IS_PART_OF]-(dm:DashboardMonth)<-[ia:IS_AT]-(nodes) | [b,d,ipo,dm,ia,nodes] ] "
+      + " [ (p)<-[:BELONGS_TO{linked:false}]-(w)-[instanceBy:IS_INSTANCE_BY]->(wm) | [instanceBy, wm] ], "
+      + " [ (p)<-[:BELONGS_TO{linked:true}]-(w)-[isLinkedTo:IS_LINKED_TO]->(wm) | [isLinkedTo, wm] ] "
       + "] "
       + "ORDER BY score DESC"
   )
@@ -164,31 +183,26 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
           Double searchCutOffScore
   );
 
-  @Query("MATCH (w:Workpack{deleted:false})-[:IS_IN]->(p:Workpack{deleted:false}) " +
-          "MATCH (w)-[:IS_INSTANCE_BY]->(wm:WorkpackModel) " +
-          "MATCH (w)-[:IS_IN*]->(:Workpack{deleted:false})-[:BELONGS_TO{linked: true}]->(pl:Plan) " +
-          "MATCH (w)<-[:FEATURES]-(name:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}) " +
-          "MATCH (w)<-[:FEATURES]-(fullName:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'fullName'}) " +
-          "WITH *, " +
-          "apoc.text.levenshteinSimilarity(apoc.text.clean(name.value), apoc.text.clean($term)) AS nameScore, " +
-          "apoc.text.levenshteinSimilarity(apoc.text.clean(fullName.value), apoc.text.clean($term)) AS fullNameScore " +
-          "WITH *, CASE WHEN nameScore > fullNameScore THEN nameScore ELSE fullNameScore END AS score " +
-          "WHERE id(p)=$idWorkpackParent AND id(wm)=$idWorkpackModel AND id(pl)=$idPlan " +
-          "AND ($term IS NULL OR $term = '' OR score > $searchCutOffScore) " +
-          "WITH collect(w) AS workpackList " +
-          "UNWIND workpackList AS workpacks " +
-          "RETURN workpacks, [ " +
-          "    [ (workpacks)<-[f:FEATURES]-(p:Property)-[d:IS_DRIVEN_BY]->(pm:PropertyModel) | [f, p, d, pm] ], " +
-          "    [ (workpacks)-[iib:IS_INSTANCE_BY]->(m1:WorkpackModel) | [iib, m1] ], " +
-          "    [ (workpacks)-[:IS_INSTANCE_BY]->(:WorkpackModel)<-[f2:FEATURES]-(pm2:PropertyModel) | [f2, pm2] ], " +
-          "    [ (workpacks)-[:IS_INSTANCE_BY]->(:WorkpackModel)-[isb:IS_SORTED_BY]->(pms:PropertyModel) | [isb, pms] ], " +
-          "    [ (workpacks)-[ilt:IS_LINKED_TO]->(m2:WorkpackModel) | [ilt, m2] ], " +
-          "    [ (workpacks)-[:IS_LINKED_TO]->(:WorkpackModel)<-[f3:FEATURES]-(pm3:PropertyModel) | [f3, pm3] ], " +
-          "    [ (workpacks)-[bt:BELONGS_TO]->(pn:Plan) | [bt,pn] ], " +
-          "    [ (workpacks)<-[ii:IS_IN]->(z:Workpack) | [ii, z] ], " +
-          "    [ (workpacks)-[isw:IS_SHARED_WITH]->(o:Office) | [isw, o] ], " +
-          "    [ (workpacks)<-[b:BELONGS_TO]-(d:Dashboard)<-[ipo:IS_PART_OF]-(dm:DashboardMonth)<-[ia:IS_AT]-(nodes) | [b,d,ipo,dm,ia,nodes] ] " +
-          "]")
+  @Query("MATCH (wm:WorkpackModel)<-[ilk:IS_LINKED_TO]-(w:Workpack{deleted:false}), "
+          + "(w)-[:IS_IN]->(pw:Workpack), "
+          + "(pw)-[:IS_IN*]->(asc:Workpack)-[rf:BELONGS_TO]->(p:Plan) "
+          + "WITH *, "
+          + "apoc.text.levenshteinSimilarity(apoc.text.clean(w.name), apoc.text.clean($term)) AS nameScore, "
+          + "apoc.text.levenshteinSimilarity(apoc.text.clean(w.fullName), apoc.text.clean($term)) AS fullNameScore "
+          + "WITH *, CASE WHEN nameScore > fullNameScore THEN nameScore ELSE fullNameScore END AS score "
+          + "WHERE id(p)=$idPlan "
+          + "AND id(pw) = $idWorkpackParent "
+          + "AND id(wm) = $idWorkpackModel "
+          + "AND ($term IS NULL OR $term = '' OR score > $searchCutOffScore) "
+          + "RETURN w, wm,ilk, rf, p, [ "
+          + " [ (w)<-[f1:FEATURES]-(p1:Property)-[d1:IS_DRIVEN_BY]->(pm1:PropertyModel) | [f1, p1, d1, pm1] ], "
+          + " [ (w)<-[f2:FEATURES]-(l:LocalitySelection)-[v1:VALUES]->(l1:Locality) | [f2,l,v1,l1]], "
+          + " [ (w)<-[f3:FEATURES]-(o:OrganizationSelection)-[v2:VALUES]->(o1:Organization) | [f3,o,v2,o1]], "
+          + " [ (w)<-[f4:FEATURES]-(u:UnitSelection)-[v3:VALUES]->(u1:UnitMeasure) | [f4,u,v3,u1]], "
+          + " [ (w)-[isLinkedTo:IS_LINKED_TO]->(wm) | [isLinkedTo, wm] ] "
+          + "] "
+          + "ORDER BY score DESC"
+  )
   List<Workpack> findAllUsingParentLinked(
           Long idWorkpackModel,
           Long idWorkpackParent,
@@ -269,6 +283,13 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       + "]"
   )
   Optional<Workpack> findByIdThin(@Param("id") Long id);
+
+  @Query("MATCH (w:Workpack{deleted:false})-[ii:IS_INSTANCE_BY]->(wm:WorkpackModel) "
+          + " WHERE id(w) = $id "
+          + " RETURN w, ii, wm, "
+          + " [(w)<-[wii:IS_IN*]-(children:Workpack) | [wii,children]] "
+  )
+  Optional<Workpack> findByIdWithAllChildren(@Param("id") Long id);
 
   @Query("MATCH (w:Workpack{deleted:false})<-[:IS_IN*]-(child:Workpack{deleted:false})<-[canAccess:CAN_ACCESS_WORKPACK]-(p:Person) " +
          " WHERE id(w) = $idWorkpack " +
@@ -506,13 +527,6 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
          "RETURN count(w)>0")
   boolean existsByPlanId(@Param("id") Long id);
 
-  @Query("MATCH (w:Workpack)<-[:IS_IN*]->(v:Workpack) " +
-         "WHERE id(w)=$workpackId " +
-         "WITH [ id(w) ] + collect( id(v) ) AS list " +
-         "UNWIND list AS l " +
-         "RETURN l")
-  Set<Long> findAllInHierarchy(@Param("workpackId") Long workpackId);
-
   @Query("MATCH (w:Workpack) WHERE id(w)=$id RETURN w.canceled=true AND w.deleted=false")
   boolean isCanceled(Long id);
 
@@ -634,7 +648,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
 
   @Query (
       "MATCH (project:Workpack{deleted:false})<-[:IS_IN*]-(children:Workpack{deleted:false})  " +
-      "WHERE id(project) = $id AND ANY(label IN labels(children) WHERE label IN ['Milestone', 'Deliverable']) " +
+      "WHERE id(project) = $id AND ((ANY(label IN labels(children) WHERE label IN ['Deliverable']) AND (children)<-[:FEATURES]-(:Schedule)) OR ANY(label IN labels(children) WHERE label IN ['Milestone'])) " +
       "RETURN ID(children) "
   )
   Set<Long> findAllDeliverableAndMilestoneByProject(Long id);

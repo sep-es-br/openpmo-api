@@ -97,7 +97,7 @@ public class MenuController {
   @GetMapping("/portfolio")
   public ResponseEntity<ResponseBaseItens<WorkpackMenuResultDto>> indexPortfolio2(
       @RequestParam("id-office") final Long idOffice,
-      @RequestParam(value = "id-plan", required = false) final Long idPlan,
+      @RequestParam(value = "id-plan") final Long idPlan,
       @RequestHeader(name = "Authorization") final String authorization
   ) {
 

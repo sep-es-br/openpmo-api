@@ -80,6 +80,7 @@ public abstract class WorkpackDetailDto {
     instance.setEndManagementDate(workpack.getEndManagementDate());
     instance.setReason(workpack.getReason());
     instance.setCompleted(workpack.getCompleted());
+    instance.setIdParent(workpack.getIdParent());
     return instance;
   }
 

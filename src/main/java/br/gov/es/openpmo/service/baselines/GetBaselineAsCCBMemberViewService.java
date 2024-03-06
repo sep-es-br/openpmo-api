@@ -6,7 +6,6 @@ import br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintOutput;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.repository.BaselineRepository;
-import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.baselines.calculators.ITripleConstraintsCalculator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,8 +17,6 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_NOT_FOUND;
 @Service
 public class GetBaselineAsCCBMemberViewService implements IGetBaselineAsCCBMemberViewService {
 
-  private final WorkpackRepository workpackRepository;
-
   private final BaselineRepository repository;
 
   private final ITripleConstraintsCalculator tripleConstraintsCalculator;
@@ -28,34 +25,13 @@ public class GetBaselineAsCCBMemberViewService implements IGetBaselineAsCCBMembe
 
   @Autowired
   public GetBaselineAsCCBMemberViewService(
-    final WorkpackRepository workpackRepository,
     final BaselineRepository repository,
     final ITripleConstraintsCalculator tripleConstraintsCalculator,
     final IGetAllBaselineEvaluations getAllBaselineEvaluations
   ) {
-    this.workpackRepository = workpackRepository;
     this.repository = repository;
     this.tripleConstraintsCalculator = tripleConstraintsCalculator;
     this.getAllBaselineEvaluations = getAllBaselineEvaluations;
-  }
-
-  public BaselineDetailCCBMemberResponse getByIdOld(
-    final Long idBaseline,
-    final Long idPerson
-  ) {
-    final Baseline baseline = this.findBaselineById(idBaseline);
-    final String workpackName = baseline.getBaselinedBy().getWorkpack().getName();
-    final String workpackFullName = baseline.getBaselinedBy().getWorkpack().getFullName();
-    final TripleConstraintOutput output = this.tripleConstraintsCalculator.calculate(idBaseline);
-    final List<EvaluationItem> evaluations = this.getAllEvaluations(idBaseline, idPerson);
-
-    return BaselineDetailCCBMemberResponse.of(
-      baseline,
-      workpackName,
-      workpackFullName,
-      output,
-      evaluations
-    );
   }
 
   @Override

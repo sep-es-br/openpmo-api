@@ -133,7 +133,6 @@ public class FindWorkpackBaselineInterval {
     if (Objects.equals(workpack.getId(), toBeFound)) {
       return workpack;
     }
-    // TO DO REFATORAÇÃO - BUSCAR OS FILHOS DO PROJETO DO CACHE
     final Set<Workpack> children = workpack.getChildren();
     if (children == null) {
       return null;

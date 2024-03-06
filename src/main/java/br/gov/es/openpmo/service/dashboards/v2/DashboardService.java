@@ -43,20 +43,6 @@ public class DashboardService implements IDashboardService {
     this.dashboardCacheUtil = dashboardCacheUtil;
   }
 
-  private static YearMonth clampDate(
-    final YearMonth underTest,
-    final YearMonth minDate,
-    final YearMonth maxDate
-  ) {
-    if (underTest.isBefore(minDate)) {
-      return minDate;
-    }
-    if (underTest.isAfter(maxDate)) {
-      return maxDate;
-    }
-    return underTest;
-  }
-
   @Override
   @Transactional
   public DashboardResponse build(final DashboardParameters parameters) {
@@ -102,7 +88,7 @@ public class DashboardService implements IDashboardService {
     final Long baselineId = parameters.getBaselineId();
     final LocalDate date = YearMonth.now().isBefore(yearMonthParam) || YearMonth.now().equals(yearMonthParam) ? LocalDate.now() :  yearMonthParam.atDay(1).with(TemporalAdjusters.lastDayOfMonth());
 
-    DashboardMonthDto dashboardMonthDto = dashboardCacheUtil.getListDashboardWorkpackDetailById(workpackId, baselineId, date);
+    DashboardMonthDto dashboardMonthDto = dashboardCacheUtil.getListDashboardWorkpackDetailById(workpackId, baselineId, date, parameters.getPlanId());
     if (dashboardMonthDto == null) {
       return null;
     }
@@ -115,8 +101,6 @@ public class DashboardService implements IDashboardService {
     }
     return dashboardMonthDto;
   }
-
-
 
   private DatasheetResponse getDatasheet(final DashboardParameters parameters) {
     return Optional.of(parameters)
@@ -132,7 +116,7 @@ public class DashboardService implements IDashboardService {
     final Long workpackId = parameters.getWorkpackId();
     final LocalDate date = YearMonth.now().isBefore(yearMonthParam) ? YearMonth.now().atDay(1) :  yearMonthParam.atDay(1);
 
-    return dashboardCacheUtil.getDashboardEarnedValueAnalysis(workpackId, baselineId, date);
+    return dashboardCacheUtil.getDashboardEarnedValueAnalysis(workpackId, baselineId, date, parameters.getPlanId());
   }
 
 }

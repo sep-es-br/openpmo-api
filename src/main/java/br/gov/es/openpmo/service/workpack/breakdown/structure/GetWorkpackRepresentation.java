@@ -46,6 +46,9 @@ public class GetWorkpackRepresentation {
       final List<JournalInformationDto> journals
   ) {
     final WorkpackRepresentation workpackRepresentation = new WorkpackRepresentation();
+    if (Boolean.TRUE.equals(workpackDto.getLinked())) {
+      workpackRepresentation.setIdWorkpaModelLinked(workpackDto.getIdWorkpackModel());
+    }
     final Long workpackId = workpackDto.getId();
     workpackRepresentation.setIdWorkpack(workpackId);
     workpackRepresentation.setWorkpackType(workpackDto.getType());
@@ -53,7 +56,7 @@ public class GetWorkpackRepresentation {
     workpackRepresentation.setJournalInformation(
         journals.stream().filter(j -> j.getIdWorkapck().equals(workpackDto.getId())).findFirst().orElse(null));
     if (this.hasDashboard(workpackDto)) {
-      final DashboardMonthDto monthDto = dashboardCacheUtil.getDashboardMonthDto(workpackDto.getId(), "Deliverable".equals(workpackDto.getType()));
+      final DashboardMonthDto monthDto = dashboardCacheUtil.getDashboardMonthDto(workpackDto.getId(), "Deliverable".equals(workpackDto.getType()), workpackDto.getIdPlan());
       workpackRepresentation.setDashboard(monthDto);
       workpackRepresentation.setMilestones(this.getMilestorneResultDto(milestoneDates, workpackDto));
       workpackRepresentation.setRisks(this.getRiskResultDto(risks, workpackDto));

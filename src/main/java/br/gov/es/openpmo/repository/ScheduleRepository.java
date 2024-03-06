@@ -69,15 +69,6 @@ public interface ScheduleRepository extends Neo4jRepository<Schedule, Long> {
   )
   Long findActiveBaseline(Long idSchedule);
 
-  @Query("MATCH (m:Schedule)<-[i:IS_SNAPSHOT_OF]-(s:Schedule)-[c:COMPOSES]->(b:Baseline{active:true}) " +
-         "WHERE id(m)=$idSchedule " +
-         "RETURN s, [ " +
-         "  [ (s)<-[cs:COMPOSES]-(st:Step) | [ cs, st] ], " +
-         "  [ (s)<-[cs2:COMPOSES]-(st2:Step)-[c1:CONSUMES]->(ca:CostAccount) | [ c1, ca, st2 ] ], " +
-         "  [ (s)<-[cs3:COMPOSES]-(st3:Step)-[c2:CONSUMES]->(ca2:CostAccount)-[cas:IS_SNAPSHOT_OF]->(mca:CostAccount) | [ cs3, st3, c2, cas, mca ] ] " +
-         "]")
-  Optional<Schedule> findSnapshotByMasterId(Long idSchedule);
-
   @Query("MATCH (schedule:Schedule)<-[i:IS_SNAPSHOT_OF]-(snapshot:Schedule)-[c:COMPOSES]->(b:Baseline{active:true}) " +
       "WHERE id(schedule) IN $idSchedule " +
       "RETURN id(schedule) as id, id(snapshot) as idSnapshot, schedule.end as end, schedule.start as start " +

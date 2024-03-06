@@ -43,11 +43,12 @@ public interface PlanRepository extends Neo4jRepository<Plan, Long>, CustomRepos
   List<Long> findAllIds();
 
   @Query("MATCH (person:Person)-[permission:CAN_ACCESS_PLAN]->(plan:Plan)-[r:IS_ADOPTED_BY]->(o:Office) " +
-      "WHERE id(person) = $idPerson AND id(o) = $idOffice " +
+      "WHERE id(person) = $idPerson AND id(o) = $idOffice AND id(plan) = $idPlan " +
       "RETURN id(plan)")
   List<Long> findAllWithPermissionByUserAndOffice(
       @Param("idOffice") Long idOffice,
-      @Param("idPerson") Long idPerson
+      @Param("idPerson") Long idPerson,
+      @Param("idPlan") Long idPlan
   );
 
   @Query("MATCH (p: Plan)-[r:IS_ADOPTED_BY]->(o:Office) "

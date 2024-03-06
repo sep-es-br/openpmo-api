@@ -38,6 +38,7 @@ public class WorkpackBreakdownStructureController {
   public Response<WorkpackBreakdownStructure> getWorkpackBreakdownStructure(
     @PathVariable final Long idWorkpack,
     @RequestParam(required = false, defaultValue = "false") final Boolean allLevels,
+    @RequestParam(value = "id-plan") final Long idPlan,
     @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanReadResourceWorkpack(
@@ -47,6 +48,7 @@ public class WorkpackBreakdownStructureController {
     final WorkpackBreakdownStructure structure = this.getWorkpackBreakdownStructure.execute(
       idWorkpack,
       allLevels,
+      idPlan,
       authorization
     );
     return this.responseHandler.success(structure);

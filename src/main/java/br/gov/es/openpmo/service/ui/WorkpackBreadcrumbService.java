@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import br.gov.es.openpmo.model.office.plan.Plan;
+import br.gov.es.openpmo.service.office.plan.PlanService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,13 +18,15 @@ import br.gov.es.openpmo.utils.ApplicationCacheUtil;
 public class WorkpackBreadcrumbService {
 
   private final ApplicationCacheUtil cacheUtil;
+  private final PlanService planService;
 
 
   @Autowired
   public WorkpackBreadcrumbService(
-    final ApplicationCacheUtil cacheUtil
-  ) {
+    final ApplicationCacheUtil cacheUtil,
+    final PlanService planService) {
     this.cacheUtil = cacheUtil;
+    this.planService = planService;
   }
 
   private static List<BreadcrumbDto> reverseBreadcrumbs(final List<BreadcrumbDto> breadcrumbs) {
@@ -38,6 +42,9 @@ public class WorkpackBreadcrumbService {
         workpack.getFullName(),
         workpack.getType());
     dto.setModelName(workpack.getModelName());
+    if (Boolean.TRUE.equals(workpack.getLinked())) {
+      dto.setIdWorkpackModelLinked(workpack.getIdWorkpackModel());
+    }
     return dto;
   }
 
@@ -52,7 +59,26 @@ public class WorkpackBreadcrumbService {
     if (actual != null) {
       addBreadcrumb(actual, list, result);
     }
+    addPlanOffice(result, idPlan);
     return reverseBreadcrumbs(result);
+  }
+
+  private void addPlanOffice(List<BreadcrumbDto> result, final Long idPlan) {
+    final Plan plan = this.planService.findById(idPlan);
+    final BreadcrumbDto planBread = new BreadcrumbDto(
+            plan.getId(),
+            plan.getName(),
+            plan.getFullName(),
+            "plan"
+    );
+    result.add(planBread);
+    final BreadcrumbDto officeBread = new BreadcrumbDto(
+            plan.getOffice().getId(),
+            plan.getOffice().getName(),
+            plan.getOffice().getFullName(),
+            "office"
+    );
+    result.add(officeBread);
   }
 
   private void addBreadcrumb(WorkpackResultDto actual, List<WorkpackResultDto> list, List<BreadcrumbDto> result) {

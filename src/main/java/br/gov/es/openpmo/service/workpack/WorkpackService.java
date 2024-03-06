@@ -705,7 +705,7 @@ public class WorkpackService {
   }
 
   public Optional<Workpack> mayeFindById(final Long id) {
-    return this.workpackRepository.findByIdWorkpack(id);
+    return this.workpackRepository.findByIdThin(id);
   }
 
   public Workpack update(final Workpack workpack) {
@@ -924,6 +924,11 @@ public class WorkpackService {
       .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
   }
 
+  public Workpack findByIdWithAllChildren(final Long id) {
+    return this.workpackRepository.findByIdWithAllChildren(id)
+            .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
+  }
+
   public Optional<Workpack> maybeFindByIdWithParent(final Long id) {
     return this.workpackRepository.findByIdThin(id);
   }
@@ -953,6 +958,9 @@ public class WorkpackService {
     }
     workpack.setChildren(child);
     workpack.setProperties(propertySet);
+    detailDto.setName(workpack.getName());
+    detailDto.setFullName(workpack.getFullName());
+    detailDto.setDate(workpack.getDate());
     return detailDto;
   }
 
@@ -987,9 +995,9 @@ public class WorkpackService {
     return detailDto;
   }
 
-  public DashboardMonthDto getDashboardMonthDto(Workpack workpack) {
+  public DashboardMonthDto getDashboardMonthDto(Workpack workpack, Long idPlan) {
     if (workpack instanceof Milestone) return null;
-    return dashboardCacheUtil.getDashboardMonthDto(workpack.getId(), workpack instanceof Deliverable);
+    return dashboardCacheUtil.getDashboardMonthDto(workpack.getId(), workpack instanceof Deliverable, idPlan);
   }
 
 
@@ -1061,27 +1069,27 @@ public class WorkpackService {
     final String typeName = workpack.getClass().getTypeName();
     switch (typeName) {
       case TYPE_NAME_PORTFOLIO:
-        workpackModel = ((Portfolio) workpack).getInstance();
+        workpackModel = ((Portfolio) workpack).getInstance() != null ? ((Portfolio) workpack).getInstance() : workpack.getLinkedWorkpackModel(workpack.getIdWorkpackModel()).get();
         workpackDetailDto = PortfolioDetailParentDto.of(workpack);
         break;
       case TYPE_NAME_PROGRAM:
-        workpackModel = ((Program) workpack).getInstance();
+        workpackModel = ((Program) workpack).getInstance() != null ? ((Program) workpack).getInstance() : workpack.getLinkedWorkpackModel(workpack.getIdWorkpackModel()).get();
         workpackDetailDto = ProgramDetailParentDto.of(workpack);
         break;
       case TYPE_NAME_ORGANIZER:
-        workpackModel = ((Organizer) workpack).getInstance();
+        workpackModel = ((Organizer) workpack).getInstance() != null ? ((Organizer) workpack).getInstance() : workpack.getLinkedWorkpackModel(workpack.getIdWorkpackModel()).get();
         workpackDetailDto = OrganizerDetailParentDto.of(workpack);
         break;
       case TYPE_NAME_DELIVERABLE:
-        workpackModel = ((Deliverable) workpack).getInstance();
+        workpackModel = ((Deliverable) workpack).getInstance() != null ? ((Deliverable) workpack).getInstance() : workpack.getLinkedWorkpackModel(workpack.getIdWorkpackModel()).get();
         workpackDetailDto = DeliverableDetailParentDto.of(workpack);
         break;
       case TYPE_NAME_PROJECT:
-        workpackModel = ((Project) workpack).getInstance();
+        workpackModel = ((Project) workpack).getInstance() != null ? ((Project) workpack).getInstance() : workpack.getLinkedWorkpackModel(workpack.getIdWorkpackModel()).get();
         workpackDetailDto = ProjectDetailParentDto.of(workpack);
         break;
       case TYPE_NAME_MILESTONE:
-        workpackModel = ((Milestone) workpack).getInstance();
+        workpackModel = ((Milestone) workpack).getInstance() != null ? ((Milestone) workpack).getInstance() : workpack.getLinkedWorkpackModel(workpack.getIdWorkpackModel()).get();
         workpackDetailDto = MilestoneDetailParentDto.of(workpack);
         this.milestoneService.addStatus(
            workpack,

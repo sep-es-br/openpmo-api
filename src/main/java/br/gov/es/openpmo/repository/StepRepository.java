@@ -3,7 +3,6 @@ package br.gov.es.openpmo.repository;
 import br.gov.es.openpmo.dto.schedule.StepDto;
 import br.gov.es.openpmo.model.schedule.Step;
 import br.gov.es.openpmo.model.workpacks.Deliverable;
-import br.gov.es.openpmo.model.workpacks.Workpack;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 
@@ -83,11 +82,6 @@ public interface StepRepository extends Neo4jRepository<Step, Long> {
          "where id(step)=$stepId " +
          "return id(baseline)")
   Long findActiveBaseline(Long stepId);
-
-  @Query("match (d:Deliverable)-[:IS_IN*]->(w:Workpack) " +
-         "where id(d) in $deliverablesId " +
-         "return d,w")
-  List<Workpack> findAllDeliverablesAndAscendents(List<Long> deliverablesId);
 
   @Query("match (s:Step)-[c:CONSUMES]->(ca:CostAccount) " +
          "where id(s) = $idStep and id(ca)=$idCostAccount " +

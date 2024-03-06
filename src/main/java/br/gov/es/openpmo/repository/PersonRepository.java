@@ -3,7 +3,6 @@ package br.gov.es.openpmo.repository;
 import br.gov.es.openpmo.dto.person.detail.permissions.WorkpackPermissionDetailDto;
 import br.gov.es.openpmo.dto.person.queries.PersonByFullNameQuery;
 import br.gov.es.openpmo.dto.person.queries.PersonDetailQuery;
-import br.gov.es.openpmo.dto.person.queries.PersonPermissionDetailQuery;
 import br.gov.es.openpmo.dto.person.queries.PersonQuery;
 import br.gov.es.openpmo.enumerator.CcbMemberFilterEnum;
 import br.gov.es.openpmo.enumerator.StakeholderFilterEnum;
@@ -182,40 +181,6 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   Optional<IsStakeholderIn> findProposerById(
     Long idPerson,
     Long idWorkpack
-  );
-
-  @Query("MATCH (person:Person), (office:Office) " +
-         "WHERE id(person)=$personId AND id(office)=$officeId " +
-         "OPTIONAL MATCH (workpack:Workpack)-[]->(plan:Plan)-[]->(office) " +
-         "WITH * " +
-         "OPTIONAL MATCH (person)-[canAccessOffice:CAN_ACCESS_OFFICE]->(office) " +
-         "OPTIONAL MATCH (person)-[canAccessPlan:CAN_ACCESS_PLAN]->(plan) " +
-         "OPTIONAL MATCH (person)-[canAccessWorkpack:CAN_ACCESS_WORKPACK]->(workpack) " +
-         "OPTIONAL MATCH (person)-[isStakeholderIn:IS_STAKEHOLDER_IN]->(workpack) " +
-         "OPTIONAL MATCH (person)-[isCCBMemberFor:IS_CCB_MEMBER_FOR{active: true}]->(workpack) " +
-         "WITH " +
-         "    person, " +
-         "    office, " +
-         "    plan, " +
-         "    workpack, " +
-         "    canAccessOffice, " +
-         "    canAccessPlan, " +
-         "    canAccessWorkpack, " +
-         "    isStakeholderIn, " +
-         "    isCCBMemberFor " +
-         "RETURN " +
-         "    person, " +
-         "    office, " +
-         "    plan, " +
-         "    workpack, " +
-         "    canAccessOffice, " +
-         "    canAccessPlan, " +
-         "    canAccessWorkpack, " +
-         "    isStakeholderIn, " +
-         "    isCCBMemberFor")
-  Set<PersonPermissionDetailQuery> findPermissions(
-    Long personId,
-    Long officeId
   );
 
   @Query("MATCH (person:Person)-[isAuthenticatedBy:IS_AUTHENTICATED_BY]->(authService:AuthService) " +

@@ -23,13 +23,6 @@ public interface PlanModelRepository extends Neo4jRepository<PlanModel, Long>, C
   )
   List<PlanModel> findAllSharedWithOffice(@Param("id") Long id);
 
-  @Query("MATCH (w:WorkpackModel)-[wp:BELONGS_TO]->(pm:PlanModel) "
-         + "WHERE id(pm) = $id AND NOT (w)-[:IS_IN]->(:WorkpackModel) "
-         + " RETURN w, wp, pm , ["
-         + "  [(wm)<-[i:IS_IN*]-(wm2:WorkpackModel)-[:BELONGS_TO]->(:PlanModel) |[i,wm2] ]"
-         + "] ")
-  PlanModel findByIdWithChildren(@Param("id") Long id);
-
   @Query("MATCH (pm:PlanModel)<-[:BELONGS_TO]-(wm:WorkpackModel) " +
          "WHERE id(pm)=$idPlanModel AND NOT (wm)-[:IS_IN]->() " +
          "RETURN wm, [ " +

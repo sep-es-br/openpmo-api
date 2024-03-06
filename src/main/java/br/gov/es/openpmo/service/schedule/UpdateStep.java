@@ -123,7 +123,6 @@ public class UpdateStep {
     }
     final Step stepUpdated = this.stepRepository.save(stepUpdate);
 
-    // não fazer a atualização do schedule e da deliverable em cada iteração
     if (!updateScheduleAndDeliverable) {
       return stepUpdated;
     }

@@ -17,6 +17,8 @@ public class WorkpackRepresentation {
 
   private String workpackType;
 
+  private Long idWorkpaModelLinked;
+
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private DashboardMonthDto dashboard;
 
@@ -105,5 +107,13 @@ public class WorkpackRepresentation {
 
   public void setJournalInformation(JournalInformationDto journalInformation) {
     this.journalInformation = journalInformation;
+  }
+
+  public Long getIdWorkpaModelLinked() {
+    return idWorkpaModelLinked;
+  }
+
+  public void setIdWorkpaModelLinked(Long idWorkpaModelLinked) {
+    this.idWorkpaModelLinked = idWorkpaModelLinked;
   }
 }

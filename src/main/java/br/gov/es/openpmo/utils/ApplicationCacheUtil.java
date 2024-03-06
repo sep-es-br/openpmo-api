@@ -115,7 +115,7 @@ public class ApplicationCacheUtil {
     }
 
     public List<Long> getListIdWorkpackWithParent(Long idWorkpack) {
-        loadPlanIfChanged(idWorkpack);
+        loadPlanIfChanged(idWorkpack, null);
         List<Long> ids = new ArrayList<>(0);
         ids.add(idWorkpack);
         Set<WorkpackResultDto> list = mapPlanWorkpackResult.values().stream().flatMap(
@@ -127,14 +127,13 @@ public class ApplicationCacheUtil {
 
 
     public WorkpackResultDto getWorkpackBreakdownStructure(Long idWorkpack, Long idPlan, boolean allLevels) {
-        loadPlanIfChanged(idWorkpack);
+        loadPlanIfChanged(idWorkpack, idPlan);
         Set<WorkpackResultDto> list =
             idPlan != null
             ? this.mapPlanWorkpackResult.get(idPlan).stream().map(WorkpackResultDto::new).collect(
                 Collectors.toCollection(LinkedHashSet::new))
             : mapPlanWorkpackResult.values().stream().flatMap(Collection::stream).map(WorkpackResultDto::new).collect(
                 Collectors.toCollection(LinkedHashSet::new));
-
         if (!allLevels) {
             WorkpackResultDto workpack = list.stream().filter(w -> w.getId().equals(idWorkpack)).findFirst().orElse(null);
             if (workpack == null) return null;
@@ -164,17 +163,19 @@ public class ApplicationCacheUtil {
     }
 
 
-    private void loadPlanIfChanged(Long idWorkpack) {
-        Long idPlan = null;
-        for (Map.Entry<Long, List<WorkpackResultDto>> entry : mapPlanWorkpackResult.entrySet()) {
-            if (entry.getValue().stream().anyMatch(w -> w.getIdPlan().equals(idWorkpack))) {
-                idPlan = entry.getKey();
-                break;
+    private void loadPlanIfChanged(final Long idWorkpack, final Long idPlan) {
+        Long idPlanVerify = idPlan;
+        if (idPlanVerify == null) {
+            for (Map.Entry<Long, List<WorkpackResultDto>> entry : mapPlanWorkpackResult.entrySet()) {
+                if (entry.getValue().stream().anyMatch(w -> w.getId().equals(idWorkpack))) {
+                    idPlanVerify = entry.getKey();
+                    break;
+                }
             }
         }
-        if (idPlan != null) {
-            if (isPlanChanged(idPlan) && !loadingAll && !Boolean.TRUE.equals(this.mapPlanLoading.get(idPlan))) {
-                loadResultByPlan(idPlan);
+        if (idPlanVerify != null) {
+            if (isPlanChanged(idPlanVerify) && !loadingAll && !Boolean.TRUE.equals(this.mapPlanLoading.get(idPlanVerify))) {
+                loadResultByPlan(idPlanVerify);
             }
         }
     }
