@@ -16,12 +16,5 @@ public class CostPerformanceIndex {
     this.costVariation = costVariation;
   }
 
-  public BigDecimal getIndexValue() {
-    return this.indexValue;
-  }
-
-  public BigDecimal getCostVariation() {
-    return this.costVariation;
-  }
 
 }

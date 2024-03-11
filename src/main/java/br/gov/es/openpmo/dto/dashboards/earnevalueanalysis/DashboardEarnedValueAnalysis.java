@@ -14,12 +14,4 @@ public class DashboardEarnedValueAnalysis {
     this.earnedValueByStep = earnedValueByStep;
   }
 
-  public List<EarnedValueByStep> getEarnedValueByStep() {
-    return this.earnedValueByStep;
-  }
-
-  public void setEarnedValueByStep(final List<EarnedValueByStep> earnedValueByStep) {
-    this.earnedValueByStep = earnedValueByStep;
-  }
-
 }

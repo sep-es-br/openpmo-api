@@ -6,7 +6,6 @@ import br.gov.es.openpmo.dto.dashboards.DashboardBaselineResponse;
 import br.gov.es.openpmo.dto.dashboards.DashboardParameters;
 import br.gov.es.openpmo.dto.dashboards.v2.DashboardResponse;
 import br.gov.es.openpmo.service.authentication.TokenService;
-import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
 import br.gov.es.openpmo.service.dashboards.v2.IDashboardBaselineService;
 import br.gov.es.openpmo.service.dashboards.v2.IDashboardService;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
@@ -34,7 +33,6 @@ public class DashboardController implements IDashboardController {
     final ResponseHandler responseHandler,
     final IDashboardBaselineService baselineService,
     final IDashboardService dashboardService,
-    final IAsyncDashboardService asyncDashboardService,
     final ICanAccessService canAccessService,
     final TokenService tokenService
   ) {
