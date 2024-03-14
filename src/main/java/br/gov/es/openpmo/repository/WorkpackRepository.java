@@ -109,7 +109,17 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
           "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO{linked:true}]-(w:Workpack{deleted:false,canceled:false})-[isLinkedTo:IS_LINKED_TO]->(model:WorkpackModel) " +
           ", (w)-[:IS_IN]->(parent:Workpack)-[:BELONGS_TO]-(plan) " +
           "WHERE id(plan) = $idPlan " +
-          "WITH id(w) as id, id(model) as idWorkpackModel, true as linked, id(plan) as idPlan, id(parent) as idParent " +
+          "WITH DISTINCT id(w) as id, id(model) as idWorkpackModel, true as linked, id(plan) as idPlan, id(parent) as idParent " +
+          ", w.name as name, w.fullName as fullName, model.fontIcon as fontIcon, model.modelName as modelName " +
+          ", model.modelNameInPlural as modelNameInPlural,labels(w) as labels, model.position as position " +
+          ", w.date as date, model.sortByField as sortByField  " +
+          "WITH collect([id, idWorkpackModel, linked, idPlan, idParent, name, fullName, fontIcon, modelName, modelNameInPlural, position]) as list " +
+          "RETURN apoc.util.sha1(list) AS output " +
+          "UNION ALL " +
+          "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO{linked:true}]-(w:Workpack{deleted:false,canceled:false})-[isLinkedTo:IS_LINKED_TO]->(model:WorkpackModel) " +
+          ", (w)-[:BELONGS_TO]->(plan) " +
+          "WHERE id(plan) = $idPlan AND NOT (w)-[:IS_IN]->(:Workpack) " +
+          "WITH DISTINCT id(w) as id, id(model) as idWorkpackModel, true as linked, id(plan) as idPlan, w.idParent as idParent " +
           ", w.name as name, w.fullName as fullName, model.fontIcon as fontIcon, model.modelName as modelName " +
           ", model.modelNameInPlural as modelNameInPlural,labels(w) as labels, model.position as position " +
           ", w.date as date, model.sortByField as sortByField  " +
