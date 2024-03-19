@@ -94,15 +94,17 @@ public interface PlanRepository extends Neo4jRepository<Plan, Long>, CustomRepos
   );
 
   @Query(
-          "match (p:Plan)<-[bt:BELONGS_TO{linked:false}]-(w:Workpack{deleted:false}) " +
+          "match (p:Plan)<-[bt:BELONGS_TO]-(w:Workpack{deleted:false}) " +
                   "where id(p)=$idPlan " +
+                  "and (NOT EXISTS(bt.linked) or bt.linked = false) " +
                   "return id(w)"
   )
   List<Long> findWorkpacksBelongsToPlan(@Param("idPlan") Long idPlan);
 
   @Query(
-          "match (p:Plan)<-[bt:BELONGS_TO{linked:false}]-(w:Workpack{deleted:false})<-[c:CAN_ACCESS_WORKPACK]-(person:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
+          "match (p:Plan)<-[bt:BELONGS_TO]-(w:Workpack{deleted:false})<-[c:CAN_ACCESS_WORKPACK]-(person:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
                   "where id(p)=$idPlan " +
+                  "and (NOT EXISTS(bt.linked) OR bt.linked = false) " +
                   "AND c.permissionLevel in ['EDIT', 'READ'] " +
                   "return id(w)"
   )

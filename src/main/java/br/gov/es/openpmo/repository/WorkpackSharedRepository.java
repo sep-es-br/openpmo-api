@@ -31,8 +31,8 @@ public interface WorkpackSharedRepository extends Neo4jRepository<IsSharedWith, 
     + "WITH office, planModel, model, sharedWith, workpack, instanceBy, instance, isInInstance, instanceChildren "
     + "WHERE id(model) = $idWorkpackModel AND id(plan) <> $idPlan AND id(planLink) = $idPlan AND NOT (workpack)-[:BELONGS_TO{linked:true}]->(planLink) "
     + "RETURN office, planModel, sharedWith, workpack, instanceBy, instance, model, isInInstance, instanceChildren, [ "
-    + "    [(workpack)-[bt:BELONGS_TO{linked:false}]->(originalPlan:Plan) | [bt, originalPlan]], "
-    + "    [(workpack)-[:BELONGS_TO{linked:false}]->(:Plan)-[iab:IS_ADOPTED_BY]->(originalOffice:Office) | [iab, originalOffice]] " +
+    + "    [(workpack)-[bt:BELONGS_TO]->(originalPlan:Plan) WHERE NOT EXISTS(bt.linked) OR bt.linked = false | [bt, originalPlan]], "
+    + "    [(workpack)-[bt2:BELONGS_TO]->(:Plan)-[iab:IS_ADOPTED_BY]->(originalOffice:Office) WHERE NOT EXISTS(bt2.linked) OR bt2.linked = false | [iab, originalOffice]] " +
     "]"
   )
   List<IsSharedWith> listAllWorkpacksShared(Long idWorkpackModel, Long idPlan);
@@ -45,7 +45,7 @@ public interface WorkpackSharedRepository extends Neo4jRepository<IsSharedWith, 
     + "WITH office, planModel, workpack, adoptedBy, belongsTo, instanceBy, instance, isInInstance, instanceChildren "
     + "WHERE workpack.public=true AND id(plan) <> $idPlan AND id(planLink) = $idPlan AND NOT (workpack)-[:BELONGS_TO{linked:true}]->(planLink) "
     + "RETURN office, planModel, workpack, adoptedBy, belongsTo, instanceBy, instance, isInInstance, instanceChildren, [ "
-    + "    [(workpack)-[bt:BELONGS_TO{linked:false}]->(originalPlan:Plan) | [bt, originalPlan]], "
+    + "    [(workpack)-[bt:BELONGS_TO]->(originalPlan:Plan) WHERE NOT EXISTS(bt.linked) OR bt.linked = false | [bt, originalPlan]], "
     + "    [(originalPlan:Plan)-[iab:IS_ADOPTED_BY]->(originalOffice:Office) | [iab, originalOffice]] " +
     "]"
   )
