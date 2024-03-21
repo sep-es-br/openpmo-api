@@ -262,6 +262,11 @@ public class WorkpackService {
     return workpackRepository.findAllMappedByPlanWithPermission(idOffice, idPerson);
   }
 
+  public void setWorkpackPublicShared(final Long idWorkpack, final Boolean sharedPublicStatus, final String level) {
+    workpackRepository.setSharedPublicStatus(idWorkpack, sharedPublicStatus, level);
+  }
+
+
   private static void addSharedWith(
     final Workpack workpack,
     final WorkpackDetailDto detailDto
@@ -288,7 +293,7 @@ public class WorkpackService {
     detailDto.setSharedWith(workpackSharedWith != null && !workpackSharedWith.isEmpty());
   }
 
-  private static void validateWorkpack(final Workpack workpack) {
+   private static void validateWorkpack(final Workpack workpack) {
     final Collection<PropertyModel> models = new HashSet<>();
     switch (workpack.getClass().getTypeName()) {
       case TYPE_NAME_PORTFOLIO:
@@ -692,11 +697,6 @@ public class WorkpackService {
       }
     }
 
-  }
-
-  public void saveDefault(final Workpack workpack) {
-    this.workpackRepository.save(workpack);
-    this.cacheUtil.loadAllCache();
   }
 
   public Workpack findById(final Long id) {
@@ -1169,15 +1169,8 @@ public class WorkpackService {
     if (workpack.getChildren() != null && !(workpack.getChildren()).isEmpty()) {
       throw new NegocioException(WORKPACK_DELETE_RELATIONSHIP_ERROR);
     }
-    if (this.hasSnapshot(workpack)) {
-      this.updateWorkpackDeleteStatus(workpack);
-      return;
-    }
-    if (workpack.getProperties() != null) {
-      this.verifyForGroupedPropertiesToDelete(workpack.getProperties());
-    }
+    this.updateWorkpackDeleteStatus(workpack);
     this.journalDeleter.deleteJournalsByWorkpackId(workpack.getId());
-    this.workpackRepository.delete(workpack);
     this.cacheUtil.loadAllCache();
   }
 
@@ -1187,7 +1180,7 @@ public class WorkpackService {
 
   private void updateWorkpackDeleteStatus(final Workpack workpack) {
     workpack.setDeleted(true);
-    this.workpackRepository.save(workpack);
+    this.workpackRepository.setWorkpackDeleted(workpack.getId());
     this.cacheUtil.loadAllCache();
   }
 
@@ -1626,8 +1619,8 @@ public class WorkpackService {
       workpack,
       workpacks
     );
-    workpacks.forEach(w -> w.setCanceled(true));
-    this.workpackRepository.saveAll(workpacks);
+    final List<Long> workpackIds = workpacks.stream().map(w -> w.getId()).collect(Collectors.toList());
+    this.workpackRepository.setWorkpacksCanceled(workpackIds, true);
     this.dashboardService.calculate();
     this.cacheUtil.loadAllCache();
     return workpack;
@@ -1661,8 +1654,8 @@ public class WorkpackService {
       workpack,
       workpacks
     );
-    workpacks.forEach(w -> w.setCanceled(false));
-    this.workpackRepository.saveAll(workpacks);
+    final List<Long> workpackIds = workpacks.stream().map(w -> w.getId()).collect(Collectors.toList());
+    this.workpackRepository.setWorkpacksCanceled(workpackIds, false);
     this.dashboardService.calculate();
     this.cacheUtil.loadAllCache();
   }

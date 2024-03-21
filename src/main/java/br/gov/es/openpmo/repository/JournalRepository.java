@@ -34,26 +34,19 @@ public interface JournalRepository extends Neo4jRepository<JournalEntry, Long> {
   List<Long> findAllJournalIdsByWorkpackId(Long workpackId);
 
   @Query("MATCH (w:Workpack), (j:JournalEntry), (p:Person) " +
-         "WHERE (($scope IS NOT NULL AND $scope<>[] AND id(w) IN $scope) OR id(w)=$idWorkpack) " +
-         " AND ( " +
-         " (w)<-[:SCOPE_TO]-(j) OR (w)<-[:IS_IN*]-(:Workpack)<-[:SCOPE_TO]-(j) OR j.type='FAIL' " +
-         ") AND ( " +
-         " (($from IS NULL OR (date(datetime($from)) <= date(datetime(j.date)))) " +
-         " AND " +
-         " ($to IS NULL OR date(datetime(j.date)) <= date(datetime($to)))) " +
-         " AND " +
-         " (j.type IN $journalType OR 'ALL' IN $journalType) " +
-         ") AND ( " +
-         " (p)<-[:IS_RECORDED_BY]-(j) " +
-         ")" +
-         "RETURN j " +
-         "ORDER BY j.date DESC")
+          "WHERE id(w) IN $scope " +
+          "AND (w)<-[:SCOPE_TO]-(j) " +
+          "AND (p)<-[:IS_RECORDED_BY]-(j) " +
+          "AND ($dateFrom IS NULL OR date(datetime($dateFrom)) <= date(datetime(j.date))) " +
+          "AND ($dateTo IS NULL OR date(datetime(j.date)) <= date(datetime($dateTo))) " +
+          "AND (j.type IN $journalType OR 'ALL' IN $journalType) " +
+          "RETURN j " +
+          "ORDER BY j.date DESC")
   List<JournalEntry> findAll(
-    LocalDate from,
-    LocalDate to,
+    LocalDate dateFrom,
+    LocalDate dateTo,
     List<JournalType> journalType,
-    List<Integer> scope,
-    Long idWorkpack
+    List<Integer> scope
   );
 
   @Query("MATCH (j:JournalEntry)-[:SCOPE_TO]->(w:Workpack) " +

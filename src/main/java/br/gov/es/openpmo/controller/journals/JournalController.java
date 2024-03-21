@@ -1,8 +1,8 @@
 package br.gov.es.openpmo.controller.journals;
 
 import br.gov.es.openpmo.dto.EntityDto;
-import br.gov.es.openpmo.dto.PageResponse;
 import br.gov.es.openpmo.dto.Response;
+import br.gov.es.openpmo.dto.ResponseBasePaginated;
 import br.gov.es.openpmo.dto.journals.JournalRequest;
 import br.gov.es.openpmo.dto.journals.JournalResponse;
 import br.gov.es.openpmo.dto.journals.SimpleJournalResponse;
@@ -61,20 +61,19 @@ public class JournalController {
   }
 
   @GetMapping
-  public PageResponse<JournalResponse> getJournals(
+  public ResponseBasePaginated<JournalResponse> getJournals(
       @RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") final LocalDate from,
       @RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") final LocalDate to,
-      @RequestParam(required = false) final List<Integer> scope,
-      @RequestParam final Long idWorkpack,
+      @RequestParam final List<Integer> scope,
       @RequestParam final List<JournalType> type,
       final UriComponentsBuilder uriComponentsBuilder,
       final Pageable pageable
   ) {
 
     final Page<JournalResponse> responsePage =
-      this.journalFinder.getAll(from, to, type, scope, idWorkpack, uriComponentsBuilder, pageable);
+      this.journalFinder.getAll(from, to, type, scope, uriComponentsBuilder, pageable);
 
-    return PageResponse.of(responsePage);
+    return ResponseBasePaginated.of(responsePage);
   }
 
   @Transactional

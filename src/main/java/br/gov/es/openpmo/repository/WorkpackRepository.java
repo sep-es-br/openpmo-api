@@ -3,7 +3,6 @@ package br.gov.es.openpmo.repository;
 import br.gov.es.openpmo.dto.menu.PlanWorkpackDto;
 import br.gov.es.openpmo.dto.menu.WorkpackResultDto;
 import br.gov.es.openpmo.model.baselines.Baseline;
-import br.gov.es.openpmo.model.workpacks.Deliverable;
 import br.gov.es.openpmo.model.workpacks.Program;
 import br.gov.es.openpmo.model.workpacks.Project;
 import br.gov.es.openpmo.model.workpacks.Workpack;
@@ -13,7 +12,6 @@ import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -469,6 +467,30 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
           @Param("parentId") Long parentId
   );
 
+  @Query("MATCH (w:Workpack) " +
+          "WHERE id(w)=$idWorkpack " +
+          "SET w.public = $sharedPublicStatus, w.publicLevel = $publicLevel")
+  void setSharedPublicStatus(
+          @Param("idWorkpack") Long idWorkpack,
+          @Param("sharedPublicStatus") Boolean $sharedPublicStatus,
+          @Param("publicLevel") String $publicLevel
+  );
+
+  @Query("MATCH (w:Workpack) " +
+          "WHERE id(w)=$idWorkpack " +
+          "SET w.deleted = true")
+  void setWorkpackDeleted(
+          @Param("idWorkpack") Long idWorkpack
+  );
+
+  @Query("MATCH (w:Workpack) " +
+          "WHERE id(w)=$idsWorkpacks " +
+          "SET w.canceled = $canceled")
+  void setWorkpacksCanceled(
+          @Param("idsWorkpacks") List<Long> idsWorkpacks,
+          @Param("canceled") Boolean canceled
+  );
+
   @Query("MATCH (w:Workpack), (wm:WorkpackModel) " +
          "WHERE id(w)=$workpackId AND id(wm)=$workpackModelId " +
          "CREATE (w)-[:IS_INSTANCE_BY]->(wm)")
@@ -485,43 +507,10 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
     Long propertyId
   );
 
-  @Query("MATCH (deliverable:Deliverable{completed:false, deleted:false}) " +
-         "WHERE (deliverable.category <> 'SNAPSHOT' OR w.category IS NULL) " +
-         "RETURN deliverable")
-  Set<Deliverable> findAllDeliverables();
-
-  @Query("MATCH (project:Project)-[belongsTo:BELONGS_TO]->(plan:Plan) " +
-         "WHERE id(project)=$idProject " +
-         "AND (NOT EXISTS(belongsTo.linked) OR belongsTo.linked = false) " +
-         "MATCH (project)<-[:IS_IN*]-(deliverable:Deliverable{deleted:false})-[belongsTo:BELONGS_TO]->(plan) " +
-         "WHERE deliverable.completed=false " +
-         "AND (NOT EXISTS(belongsTo.linked) OR belongsTo.linked = false) " +
-         "RETURN count(DISTINCT deliverable) > 0")
-  boolean hasDeliverableToComplete(Long idProject);
-
-  @Query("MATCH (project:Project{completed:false, deleted:false}) " +
-         "WHERE (project.category <> 'SNAPSHOT' OR w.category IS NULL) " +
-         "RETURN project")
-  Collection<Project> findAllProjects();
-
-  @Query("MATCH (program:Program{completed:false, deleted:false}) " +
-         "WHERE (program.category <> 'SNAPSHOT' OR w.category IS NULL) " +
-         "RETURN program")
-  Collection<Program> findAllPrograms();
-
   @Query("MATCH (workpack:Workpack)<-[:FEATURES]-(:Schedule) " +
          "WHERE id(workpack)=$idWorkpack " +
          "RETURN count(DISTINCT workpack) > 0")
   boolean hasScheduleRelated(Long idWorkpack);
-
-  @Query("MATCH (program:Program)-[bt:BELONGS_TO]->(plan:Plan) " +
-         "WHERE id(program)=$idProject " +
-         "AND (NOT EXISTS(bt.linked) OR bt.linked = false) " +
-         "MATCH (program)<-[:IS_IN*]-(project:Project{deleted:false})-[bt2:BELONGS_TO]->(plan) " +
-         "WHERE project.completed=false " +
-         "AND (NOT EXISTS(bt.linked) OR bt.linked = false) " +
-         "RETURN count(DISTINCT project) > 0")
-  boolean hasRemainProjectsToComplete(Long idProgram);
 
   @Query("MATCH (d:Deliverable)-[:IS_IN*]->(p:Project) " +
          "WHERE id(d)=$idDeliverable " +
@@ -533,24 +522,10 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
          "RETURN p")
   Optional<Program> findProgram(Long idDeliverable);
 
-  @Query("MATCH (w:Workpack)<-[:IS_IN*]-(d:Deliverable{deleted:false}) " +
-         "WHERE id(w)=$workpackId " +
-         "RETURN id(d)")
-  Set<Long> getDeliverablesId(Long workpackId);
-
-  @Query("MATCH (p:Project) WHERE id(p)=$workpackId RETURN count(p)>0")
-  boolean isProject(Long workpackId);
-
-  @Query("MATCH (d:Deliverable) WHERE id(d)=$workpackId RETURN count(d)>0")
-  boolean isDeliverable(Long workpackId);
-
   @Query("MATCH (w:Workpack)-[:BELONGS_TO]->(p:Plan) " +
          "WHERE id(p)=$id " +
          "RETURN count(w)>0")
   boolean existsByPlanId(@Param("id") Long id);
-
-  @Query("MATCH (w:Workpack) WHERE id(w)=$id RETURN w.canceled=true AND w.deleted=false")
-  boolean isCanceled(Long id);
 
   @Query("MATCH (w:Workpack)<-[:IS_IN*]-(v:Workpack{deleted:false}) " +
          "WHERE id(w)=$id " +

@@ -3,6 +3,7 @@ package br.gov.es.openpmo.service.workpack;
 import br.gov.es.openpmo.dto.ComboDto;
 import br.gov.es.openpmo.dto.workpackshared.WorkpackSharedDto;
 import br.gov.es.openpmo.dto.workpackshared.WorkpackSharedParamDto;
+import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.relations.IsSharedWith;
 import br.gov.es.openpmo.model.workpacks.Workpack;
@@ -37,7 +38,6 @@ public class WorkpackSharedService {
   private final WorkpackModelService workpackModelService;
 
   private final OfficeService officeService;
-
 
   @Autowired
   public WorkpackSharedService(
@@ -124,8 +124,7 @@ public class WorkpackSharedService {
 
   private void revokePublicAccess(final Long idWorkpack) {
     final Workpack workpack = this.workpackService.findById(idWorkpack);
-    workpack.setPublicShared(false);
-    this.workpackService.saveDefault(workpack);
+    this.workpackService.setWorkpackPublicShared(workpack.getId(), false, PermissionLevelEnum.NONE.toString());
     this.deleteAllSharedRelationship(workpack.getId());
   }
 
@@ -197,7 +196,7 @@ public class WorkpackSharedService {
     final boolean workpackPublic = verifyIfItWillNeedToIncludeAllOffices(request);
     workpack.setPublicShared(workpackPublic);
     workpack.setPublicLevel(workpackPublic ? request.get(0).getLevel() : null);
-    this.workpackService.saveDefault(workpack);
+    this.workpackService.setWorkpackPublicShared(workpack.getId(), workpack.getPublicShared(), workpack.getPublicLevel().toString());
 
     final List<IsSharedWith> isSharedWiths = this.repository.findSharedWithDataByWorkpackId(idWorkpack);
 
