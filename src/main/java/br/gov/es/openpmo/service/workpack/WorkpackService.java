@@ -929,6 +929,11 @@ public class WorkpackService {
             .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
   }
 
+  public List<Long> findIdsWorkpacksChildren(final List<Long> ids) {
+    return this.workpackRepository.idsWorkpacksChildren(ids);
+  }
+
+
   public Optional<Workpack> maybeFindByIdWithParent(final Long id) {
     return this.workpackRepository.findByIdThin(id);
   }

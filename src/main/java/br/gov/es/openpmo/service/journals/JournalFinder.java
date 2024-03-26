@@ -7,6 +7,7 @@ import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.journals.JournalEntry;
 import br.gov.es.openpmo.model.journals.JournalType;
 import br.gov.es.openpmo.repository.JournalRepository;
+import br.gov.es.openpmo.service.workpack.WorkpackService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,14 +28,16 @@ public class JournalFinder {
   private final JournalRepository journalRepository;
 
   private final JournalResponseMapper journalResponseMapper;
+  private final WorkpackService workpackService;
 
   @Autowired
   public JournalFinder(
     final JournalRepository journalRepository,
-    final JournalResponseMapper journalResponseMapper
-  ) {
+    final JournalResponseMapper journalResponseMapper,
+    final WorkpackService workpackService) {
     this.journalRepository = journalRepository;
     this.journalResponseMapper = journalResponseMapper;
+    this.workpackService = workpackService;
   }
 
   private static Page<JournalEntry> getJournalEntryPage(
@@ -53,10 +56,12 @@ public class JournalFinder {
     final LocalDate from,
     final LocalDate to,
     final List<JournalType> journalType,
-    final List<Integer> scope,
+    final List<Long> scope,
     final UriComponentsBuilder uriComponentsBuilder,
     final Pageable pageable
   ) {
+    final List<Long> childrenIds = this.workpackService.findIdsWorkpacksChildren(scope);
+    scope.addAll(childrenIds);
     final List<JournalEntry> journalEntries = this.journalRepository.findAll(from, to, journalType, scope);
 
     return getJournalEntryPage(journalEntries, pageable)

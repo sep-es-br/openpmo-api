@@ -33,10 +33,9 @@ public interface JournalRepository extends Neo4jRepository<JournalEntry, Long> {
          "RETURN id(j)")
   List<Long> findAllJournalIdsByWorkpackId(Long workpackId);
 
-  @Query("MATCH (w:Workpack), (j:JournalEntry), (p:Person) " +
+  @Query("MATCH (w:Workpack), (j:JournalEntry)-[:IS_RECORDED_BY]->(p:Person) " +
           "WHERE id(w) IN $scope " +
           "AND (w)<-[:SCOPE_TO]-(j) " +
-          "AND (p)<-[:IS_RECORDED_BY]-(j) " +
           "AND ($dateFrom IS NULL OR date(datetime($dateFrom)) <= date(datetime(j.date))) " +
           "AND ($dateTo IS NULL OR date(datetime(j.date)) <= date(datetime($dateTo))) " +
           "AND (j.type IN $journalType OR 'ALL' IN $journalType) " +
@@ -46,7 +45,7 @@ public interface JournalRepository extends Neo4jRepository<JournalEntry, Long> {
     LocalDate dateFrom,
     LocalDate dateTo,
     List<JournalType> journalType,
-    List<Integer> scope
+    List<Long> scope
   );
 
   @Query("MATCH (j:JournalEntry)-[:SCOPE_TO]->(w:Workpack) " +

@@ -64,7 +64,7 @@ public class JournalController {
   public ResponseBasePaginated<JournalResponse> getJournals(
       @RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") final LocalDate from,
       @RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") final LocalDate to,
-      @RequestParam final List<Integer> scope,
+      @RequestParam final List<Long> scope,
       @RequestParam final List<JournalType> type,
       final UriComponentsBuilder uriComponentsBuilder,
       final Pageable pageable
