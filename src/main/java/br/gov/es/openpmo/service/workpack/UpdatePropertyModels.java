@@ -81,7 +81,9 @@ public class UpdatePropertyModels {
     if (!groupedProperties.isEmpty()) {
       final Collection<PropertyModel> groupedPropertiesToDelete = new HashSet<>();
       for (final PropertyModel property : groupedProperties) {
-        groupedPropertiesToDelete.addAll(((GroupModel) property).getGroupedProperties());
+        if(((GroupModel) property).getGroupedProperties() != null) {
+          groupedPropertiesToDelete.addAll(((GroupModel) property).getGroupedProperties());
+        }
       }
       this.propertyModelService.delete(groupedPropertiesToDelete);
     }
