@@ -720,7 +720,7 @@ public class WorkpackService {
       propertiesToUpdate,
       properties
     );
-    final Predicate<Long> dateHasChanged = this.verifyForPropertiesToUpdate(
+    this.verifyForPropertiesToUpdate(
       workpack,
       propertiesToUpdate,
       properties
@@ -735,7 +735,7 @@ public class WorkpackService {
       workpackUpdate.setNewDate(newDate);
       workpackUpdate.setPreviousDate(previousDate);
     }
-    final Workpack savedWorkpack = this.workpackRepository.save(workpackUpdate, 2);
+    final Workpack savedWorkpack = this.workpackRepository.save(workpackUpdate, 3);
 
     if (workpack instanceof Milestone) {
       savedWorkpack.setReasonRequired(false);
@@ -1194,7 +1194,9 @@ public class WorkpackService {
     if (!groupedProperties.isEmpty()) {
       final Set<Property> groupedPropertiesToDelete = new HashSet<>();
       for (final Property property : groupedProperties) {
-        groupedPropertiesToDelete.addAll(((Group) property).getGroupedProperties());
+        if (((Group) property).getGroupedProperties() != null) {
+          groupedPropertiesToDelete.addAll(((Group) property).getGroupedProperties());
+        }
       }
       this.propertyService.delete(groupedPropertiesToDelete);
     }
