@@ -127,7 +127,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
       "AND ($planId IS NULL OR ID(plan) = $planId) " +
       "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date.truncate('month', date(plan.finish))" +
       "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) >= date.truncate('month', date(plan.start))" +
-      "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) < date.truncate('month', date()) " +
+      "AND ($yearMonth IS NOT NULL OR date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) < date.truncate('month', date())) " +
       "AND ($workpackIds IS NULL OR ID(w) IN $workpackIds) " +
       "AND ($yearMonth IS NULL OR (st.periodFromStart IS NOT NULL AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date($yearMonth))) " +
       "RETURN ID(w) AS idWorkpack, ID(plan) as idPlan, toString(SUM(toFloat(st.actualWork))) AS actualWork, toString(SUM(toFloat(st.plannedWork))) AS foreseenWorkRefMonth "
@@ -141,7 +141,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
       "AND ($planId IS NULL OR ID(plan) = $planId) " +
       "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date.truncate('month', date(plan.finish))" +
       "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) >= date.truncate('month', date(plan.start))" +
-      "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) < date.truncate('month', date()) " +
+      "AND ($yearMonth IS NOT NULL OR date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) < date.truncate('month', date())) " +
       "AND ($workpackIds IS NULL OR ID(w) IN $workpackIds ) " +
       "AND ($yearMonth IS NULL OR (st.periodFromStart IS NOT NULL AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date($yearMonth))) " +
       "RETURN ID(w) AS idWorkpack, ID(plan) as idPlan, toString(SUM(toFloat(co.actualCost))) AS actualCost "
@@ -168,7 +168,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
       "AND ($planId IS NULL OR ID(plan) = $planId) " +
       "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date.truncate('month', date(plan.finish)) " +
       "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) >= date.truncate('month', date(plan.start)) " +
-      "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) < date.truncate('month', date()) " +
+      "AND ($yearMonth IS NOT NULL OR date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) < date.truncate('month', date())) " +
       "AND ($yearMonth IS NULL OR (st.periodFromStart IS NOT NULL AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date($yearMonth))) " +
       "RETURN toString(date.truncate('month', date(s.start) + Duration({months: st.periodFromStart}))) AS date " +
       ", toString(SUM(toFloat(co.actualCost))) AS actualCost " +
@@ -183,7 +183,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
       "AND ($planId IS NULL OR ID(plan) = $planId) " +
       "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date.truncate('month', date(plan.finish)) " +
       "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) >= date.truncate('month', date(plan.start)) " +
-      "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) < date.truncate('month', date()) " +
+      "AND ($yearMonth IS NOT NULL OR date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) < date.truncate('month', date())) " +
       "AND ($yearMonth IS NULL OR (st.periodFromStart IS NOT NULL AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date($yearMonth))) " +
       "RETURN toString(date.truncate('month', date(s.start) + Duration({months: st.periodFromStart}))) AS date " +
       ", toString(SUM(toFloat(st.actualWork))) AS actualWork " +
