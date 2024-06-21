@@ -228,10 +228,23 @@ public class PersonService {
     final List<CanAccessOffice> canAccessOffice = officeRepository.findAllCanAccessOfficeByIdPerson(personId, officeId);
     final List<PlanResultDto> listPlans = planRepository.findAllPlanResultByIdOffice(officeId);
     final List<CanAccessPlanResultDto> canAccessPlan = planRepository.findAllCanAccessPlanResultDtoByIdPerson(personId, officeId);
-    final List<WorkpackPermissionDetailDto> canAccessWorkpack = repository.findAllWorkpackPermissionDetailDtoByIdPerson(personId, officeId);
+    final List<WorkpackPermissionDetailDto> canAccessWorkpackAll = repository.findAllWorkpackPermissionDetailDtoByIdPerson(personId, officeId);
     final List<IsStakeholderIn> stakeholderIns = repository.findAllIsStakeholderInByIdPerson(personId, officeId);
     final List<IsCCBMemberFor> isCCBMemberFors = repository.findAllIsCCBMemberForByIdPerson(personId, officeId);
-
+    List<WorkpackPermissionDetailDto> canAccessWorkpack = new ArrayList<>();
+    Set<Long> idsWorkpackPermission = canAccessWorkpackAll.stream().map( w -> w.getId()).collect(Collectors.toSet());
+    if(canAccessWorkpackAll != null && !canAccessWorkpackAll.isEmpty()) {
+      idsWorkpackPermission.stream().forEach( w -> {
+        List<WorkpackPermissionDetailDto> workpackPermissions = canAccessWorkpackAll.stream().filter( wp -> wp.getId().equals(w)).collect(Collectors.toList());
+        if(!workpackPermissions.isEmpty()) {
+          if(workpackPermissions.stream().anyMatch( wp -> wp.getAccessLevel().equals(PermissionLevelEnum.EDIT))) {
+            canAccessWorkpack.add(workpackPermissions.stream().filter(wp -> wp.getAccessLevel().equals(PermissionLevelEnum.EDIT)).findFirst().get());
+          } else {
+            canAccessWorkpack.add(workpackPermissions.stream().filter(wp -> wp.getAccessLevel().equals(PermissionLevelEnum.READ)).findFirst().get());
+          }
+        }
+      });
+    }
     final Set<Long> idsWorkpack = stakeholderIns
         .stream().map(IsStakeholderIn::getIdWorkpack).filter(idWorkpack -> canAccessWorkpack
         .stream().noneMatch(w -> w.getId().equals(idWorkpack))).collect(
