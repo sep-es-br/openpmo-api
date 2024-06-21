@@ -123,13 +123,14 @@ public class UpdateStep {
     }
     final Step stepUpdated = this.stepRepository.save(stepUpdate);
 
-    if (!updateScheduleAndDeliverable) {
-      return stepUpdated;
-    }
     final Schedule schedule = this.findScheduleById(stepUpdate.getSchedule().getId());
     Optional.of(stepUpdateDto).map(StepUpdateDto::getScheduleStart).ifPresent(schedule::setStart);
     Optional.of(stepUpdateDto).map(StepUpdateDto::getScheduleEnd).ifPresent(schedule::setEnd);
+    this.scheduleRepository.save(schedule);
 
+    if (!updateScheduleAndDeliverable) {
+      return stepUpdated;
+    }
     final List<Deliverable> deliverables = this.updateStatusService.getDeliverablesByStepId(step.getId());
     this.updateStatusService.update(deliverables);
 
