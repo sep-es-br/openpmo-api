@@ -170,7 +170,6 @@ public class PasteToWorkpackService {
     final Plan plan
   ) {
     this.handlePlan(workpack, plan);
-    this.handleWorkpackModel(workpack, workpackModel);
     this.handleProperties(workpack, workpack.getProperties(), workpackModel.getProperties());
     this.handleChildren(workpack.getChildren(), workpackModel.getChildren(), plan);
   }
