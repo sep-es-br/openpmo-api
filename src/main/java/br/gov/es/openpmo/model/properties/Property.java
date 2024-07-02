@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.model.properties;
 
 import br.gov.es.openpmo.model.Entity;
+import java.util.Objects;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.baselines.Snapshotable;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
@@ -123,5 +124,19 @@ public abstract class Property<T, V> extends Entity implements HasValue<V>, Snap
   public String getPropertyModelName() {
     return Optional.ofNullable(this.getPropertyModel()).map(PropertyModel::getName).orElse("");
   }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      Property<?, ?> property = (Property<?, ?>) o;
+      return Objects.equals(getPropertyModelId(), property.getPropertyModelId());
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(getPropertyModelId());
+    }
+
 
 }
