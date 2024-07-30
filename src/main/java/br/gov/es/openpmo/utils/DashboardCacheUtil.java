@@ -12,6 +12,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 
+import br.gov.es.openpmo.dto.schedule.ScheduleDto;
+import br.gov.es.openpmo.dto.schedule.StepDto;
+import br.gov.es.openpmo.model.schedule.Schedule;
+import br.gov.es.openpmo.repository.ScheduleRepository;
+import br.gov.es.openpmo.repository.StepRepository;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -145,9 +150,14 @@ public class DashboardCacheUtil {
             x -> x.setPlannedCostRefMonth(c.getPlannedCostRefMonth())));
     }
 
-    private void addEarnedValueData(DashboardRepository dashboardRepository, List<DashboardWorkpackDetailDto> listDetail
-            , final List<Long> baselineIds, List<Long> workpackIds, LocalDate date, Long idPlan) {
-        final List<DashboardWorkpackDetailDto> earnedValue = dashboardRepository.findAllEarnedValueBaseline(baselineIds, workpackIds, date, idPlan);
+    private void addEarnedValueData(DashboardRepository dashboardRepository, List<DashboardWorkpackDetailDto> listDetail,
+                                    final List<Long> baselineIds, List<Long> workpackIds, LocalDate date, Long idPlan) {
+
+        if (workpackIds == null || workpackIds.isEmpty()) {
+            return;
+        }
+
+        final List<DashboardWorkpackDetailDto> earnedValue = dashboardRepository.findAllEarnedValueBaselineByTotalBaseline(returnSnapshotStepIds(workpackIds.get(0)), baselineIds, workpackIds, date, idPlan);
 
         earnedValue.forEach(
                 a -> listDetail.stream().filter(d -> d.getIdWorkpack().equals(a.getIdWorkpack()) && d.getIdPlan().equals(a.getIdPlan())).findFirst().ifPresent(
@@ -286,7 +296,7 @@ public class DashboardCacheUtil {
         listPlannedWork.forEach(ac -> steps.stream().filter(e -> e.getDate().equals(ac.getDate())).findFirst().ifPresent(
             x -> x.setPlannedWork(ac.getPlannedWork())));
 
-        final List<EarnedValueByStepDto> listEarnedValue = dashboardRepository.findAllEarnedValue(baselineIds, workpackIds, idPlan);
+        final List<EarnedValueByStepDto> listEarnedValue = dashboardRepository.findAllEarnedValueByTotalBaseline(returnSnapshotStepIds(idWorkpack), baselineIds, workpackIds, idPlan);
         listEarnedValue.forEach(ac -> steps.stream().filter(e -> e.getDate().equals(ac.getDate())).findFirst().ifPresent(
             x -> x.setEarnedValue(ac.getEarnedValue())));
 
@@ -338,6 +348,24 @@ public class DashboardCacheUtil {
             earnedValue = step.getEarnedValue();
 
         }
+    }
+
+    /**
+     * Return all step ids from snapshot
+     * @param wpID workpack id
+     * @return <code>Set</code> of step ids
+     */
+    private Set<Long> returnSnapshotStepIds(Long wpID) {
+        final ScheduleRepository scheduleRepository = applicationContext.getBean(ScheduleRepository.class);
+        final StepRepository stepRepository = applicationContext.getBean(StepRepository.class);
+
+        final List<Schedule> schedules = scheduleRepository.findAllByWorkpack(wpID);
+        final Set<Long> idsSchedule = schedules.stream().map(Schedule::getId).collect(Collectors.toSet());
+        final List<ScheduleDto> snapshots = scheduleRepository.findSnapshotByMasterIds(new ArrayList<>(idsSchedule));
+        final Set<Long> idsSnapshots = snapshots.stream().map(ScheduleDto::getIdSnapshot).collect(Collectors.toSet());
+        final List<StepDto> stepSnapshot = stepRepository.findAllStepsnapshotByScheduleSnapshotIds(new ArrayList<>(idsSnapshots));
+
+        return stepSnapshot.stream().map(StepDto::getId).collect(Collectors.toSet());
     }
 
 
