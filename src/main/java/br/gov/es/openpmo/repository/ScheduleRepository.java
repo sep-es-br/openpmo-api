@@ -18,6 +18,18 @@ public interface ScheduleRepository extends Neo4jRepository<Schedule, Long> {
          + "]")
   List<Schedule> findAllByWorkpack(@Param("idWorkpack") Long idWorkpack);
 
+  @Query("MATCH (s:Schedule)-[f:FEATURES]->(w:Workpack) WHERE id(w) in $workpackIds "
+          + "RETURN s, f, w, [ "
+          + "  [(s)<-[c:COMPOSES]-(st:Step) | [c, st] ],"
+          + "  [(s)<-[c1:COMPOSES]-(st1:Step)-[cs1:CONSUMES]->(ca:CostAccount) | [c1, st1, cs1, ca] ]"
+          + "]")
+  List<Schedule> findAllByWorkpacks(@Param("workpackIds") List<Long> workpackIds);
+
+  @Query("MATCH (wp:Workpack)<-[:IS_IN*0..]-(d:Deliverable) " +
+          "WHERE id(wp) = $idWorkpack " +
+          "RETURN id(d)")
+  List<Long> findAllDeliverable(@Param("idWorkpack") Long idWorkpack);
+
   @Query("MATCH (s:Schedule)-[f:FEATURES]->(w:Workpack) WHERE id(s) = $id "
          + "RETURN s, f, w, [ "
          + "  [(s)<-[c:COMPOSES]-(st:Step) | [c, st] ],"

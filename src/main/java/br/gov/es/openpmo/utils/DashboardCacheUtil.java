@@ -61,7 +61,7 @@ public class DashboardCacheUtil {
 
             addActualData(dashboardRepository, listDetail, null, null, null);
 
-            addEarnedValueData(dashboardRepository, listDetail, balineIds, null, null, null);
+            addEarnedValueData(dashboardRepository, listDetail, balineIds, null, null, null, null);
 
             listDetail.addAll(getMilestones(dashboardRepository, balineIds, null, null));
 
@@ -151,13 +151,9 @@ public class DashboardCacheUtil {
     }
 
     private void addEarnedValueData(DashboardRepository dashboardRepository, List<DashboardWorkpackDetailDto> listDetail,
-                                    final List<Long> baselineIds, List<Long> workpackIds, LocalDate date, Long idPlan) {
+                                    final List<Long> baselineIds, List<Long> workpackIds, LocalDate date, Long idPlan, Long idWorkpack) {
 
-        if (workpackIds == null || workpackIds.isEmpty()) {
-            return;
-        }
-
-        final List<DashboardWorkpackDetailDto> earnedValue = dashboardRepository.findAllEarnedValueBaselineByTotalBaseline(returnSnapshotStepIds(workpackIds.get(0)), baselineIds, workpackIds, date, idPlan);
+        final List<DashboardWorkpackDetailDto> earnedValue = dashboardRepository.findAllEarnedValueBaselineByTotalBaseline(returnSnapshotStepIds(idWorkpack), baselineIds, workpackIds, date, idPlan);
 
         earnedValue.forEach(
                 a -> listDetail.stream().filter(d -> d.getIdWorkpack().equals(a.getIdWorkpack()) && d.getIdPlan().equals(a.getIdPlan())).findFirst().ifPresent(
@@ -247,7 +243,7 @@ public class DashboardCacheUtil {
 
         addActualData(dashboardRepository, listDetail, workpackIds, date, idPlan);
 
-        addEarnedValueData(dashboardRepository, listDetail, baselineIds, workpackIds, date, idPlan);
+        addEarnedValueData(dashboardRepository, listDetail, baselineIds, workpackIds, date, idPlan, idWorkpack);
 
         listDetail.addAll(getMilestones(dashboardRepository, baselineIds, workpackIds, idPlan));
 
@@ -352,14 +348,16 @@ public class DashboardCacheUtil {
 
     /**
      * Return all step ids from snapshot
-     * @param wpID workpack id
+     * @param idWorkpack <code>List</code> of workpack ids
      * @return <code>Set</code> of step ids
      */
-    private Set<Long> returnSnapshotStepIds(Long wpID) {
+    private Set<Long> returnSnapshotStepIds(Long idWorkpack) {
         final ScheduleRepository scheduleRepository = applicationContext.getBean(ScheduleRepository.class);
         final StepRepository stepRepository = applicationContext.getBean(StepRepository.class);
 
-        final List<Schedule> schedules = scheduleRepository.findAllByWorkpack(wpID);
+        List<Long> deliverableWorkpackIds = scheduleRepository.findAllDeliverable(idWorkpack);
+
+        final List<Schedule> schedules = scheduleRepository.findAllByWorkpacks(deliverableWorkpackIds);
         final Set<Long> idsSchedule = schedules.stream().map(Schedule::getId).collect(Collectors.toSet());
         final List<ScheduleDto> snapshots = scheduleRepository.findSnapshotByMasterIds(new ArrayList<>(idsSchedule));
         final Set<Long> idsSnapshots = snapshots.stream().map(ScheduleDto::getIdSnapshot).collect(Collectors.toSet());
