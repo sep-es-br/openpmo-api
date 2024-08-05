@@ -364,7 +364,6 @@ public class DashboardCacheUtil {
         final List<StepDto> stepSnapshot = stepRepository.findAllStepsnapshotByScheduleSnapshotIds(new ArrayList<>(idsSnapshots));
 
         return stepSnapshot.stream().map(StepDto::getId).collect(Collectors.toSet());
-        // teste
     }
 
 
