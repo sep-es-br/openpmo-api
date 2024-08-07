@@ -16,7 +16,7 @@ import java.util.Set;
 public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
 
   @Query(
-      "MATCH (plan:Plan)<-[:BELONGS_TO]-(w:Deliverable{deleted:false,canceled:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step) " +
+      "MATCH (plan:Plan)<-[:BELONGS_TO]-(w:Deliverable)<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step) " +
       "WHERE (w.category <> 'SNAPSHOT' OR w.category IS NULL) " +
       "AND ($planId IS NULL OR ID(plan) = $planId) " +
       "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date.truncate('month', date(plan.finish))" +
@@ -27,7 +27,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
   List<DashboardWorkpackDetailDto> findAllScheduleAndStep(List<Long> workpackIds, Long planId);
 
   @Query(
-      "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable{deleted:false,canceled:false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step) " +
+      "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable)<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step) " +
       ",(st)-[:COMPOSES]->(b:Baseline) " +
       "WHERE ID(b) IN $ids " +
       "AND ($planId IS NULL OR ID(plan) = $planId) " +
@@ -50,7 +50,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
   List<DashboardWorkpackDetailDto> findAllCost(List<Long> workpackIds, Long planId);
 
   @Query(
-      "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable{deleted:false,canceled:false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
+      "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable)<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
           ",(s)-[:COMPOSES]->(b:Baseline) " +
           "WHERE ID(b) IN $ids " +
           "AND ($planId IS NULL OR ID(plan) = $planId) " +
@@ -62,7 +62,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
   List<DashboardWorkpackDetailDto> findAllCostBaseline(List<Long> ids, List<Long> workpackIds, Long planId);
 
   @Query(
-      "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable{deleted:false,canceled:false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
+      "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable)<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
           ",(s)-[:COMPOSES]->(b:Baseline) " +
           "WHERE ID(b) IN $ids " +
           "AND ($planId IS NULL OR ID(plan) = $planId) " +
@@ -76,7 +76,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
   List<DashboardWorkpackDetailDto> findAllCostBaseline(List<Long> ids, List<Long> workpackIds, LocalDate yearMonth, Long planId);
 
   @Query(
-          "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable{deleted:false,canceled:false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
+          "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable)<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
                   ",(st)-[:IS_SNAPSHOT_OF]->(stm:Step) " +
                   ",(s)-[:COMPOSES]->(b:Baseline) " +
                   "WHERE ID(b) IN $ids " +
@@ -145,7 +145,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
 
 
   @Query(
-      "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Milestone{deleted:false,canceled:false})<-[:IS_SNAPSHOT_OF]-(m:Milestone{deleted:false})-[:COMPOSES]->(b:Baseline) " +
+      "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Milestone)<-[:IS_SNAPSHOT_OF]-(m:Milestone{deleted:false})-[:COMPOSES]->(b:Baseline) " +
       "WHERE ID(b) IN $ids AND m.date IS NOT NULL " +
       "AND ($planId IS NULL OR ID(plan) = $planId) " +
       "AND ($workpackIds IS NULL OR ID(master) IN $workpackIds) " +
@@ -240,7 +240,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
 
 
   @Query (
-      "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable{deleted:false,canceled:false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
+      "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable)<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
           ",(st)-[:IS_SNAPSHOT_OF]->(stm:Step) " +
           ",(s)-[:COMPOSES]->(b:Baseline) " +
           "WHERE ID(b) IN $ids " +
@@ -289,7 +289,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
   List<EarnedValueByStepDto> findAllEarnedValueByTotalBaseline(Set<Long> snapshotStepIds, List<Long> baselineIds, List<Long> workpackIds, Long idPlan);
 
   @Query (
-      "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable{deleted:false,canceled:false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
+      "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable)<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
       ",(s)-[:COMPOSES]->(b:Baseline) " +
       "WHERE ID(b) IN $baselineIds " +
       "AND ($planId IS NULL OR ID(plan) = $planId) " +
@@ -304,7 +304,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
   List<EarnedValueByStepDto> findAllEarnedValuePlannedCost(List<Long> baselineIds, List<Long> workpackIds, Long planId);
 
   @Query (
-      "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable{deleted:false,canceled:false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step) " +
+      "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable)<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step) " +
       ",(s)-[:COMPOSES]->(b:Baseline) " +
       "WHERE ID(b) IN $baselineIds " +
       "AND ($planId IS NULL OR ID(plan) = $planId) " +
