@@ -14,6 +14,7 @@ import br.gov.es.openpmo.model.schedule.Step;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
 import br.gov.es.openpmo.model.workpacks.Deliverable;
 import br.gov.es.openpmo.model.workpacks.Workpack;
+import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.CostAccountRepository;
 import br.gov.es.openpmo.repository.ScheduleRepository;
 import br.gov.es.openpmo.repository.StepRepository;
@@ -66,6 +67,8 @@ public class ScheduleService {
 
   private final GetUnitMeasureScaleByWorkpack getUnitMeasureScaleByWorkpack;
 
+  private final BaselineRepository baselineRepository;
+
   @Autowired
   public ScheduleService(
     final StepRepository stepRepository,
@@ -75,7 +78,8 @@ public class ScheduleService {
     final CostAccountRepository costAccountRepository,
     final UpdateStatusService updateStatusService,
     final GetCostAccountGroupedByDistributedParts getCostAccountGroupedByDistributedParts,
-    final GetUnitMeasureScaleByWorkpack getUnitMeasureScaleByWorkpack
+    final GetUnitMeasureScaleByWorkpack getUnitMeasureScaleByWorkpack,
+    final BaselineRepository baselineRepository
   ) {
     this.stepRepository = stepRepository;
     this.scheduleRepository = scheduleRepository;
@@ -85,6 +89,7 @@ public class ScheduleService {
     this.updateStatusService = updateStatusService;
     this.getCostAccountGroupedByDistributedParts = getCostAccountGroupedByDistributedParts;
     this.getUnitMeasureScaleByWorkpack = getUnitMeasureScaleByWorkpack;
+    this.baselineRepository = baselineRepository;
   }
 
   private static void setScheduleDtoWorkpack(
@@ -720,6 +725,10 @@ public class ScheduleService {
   public Schedule findById(final Long id) {
     return this.scheduleRepository.findByIdSchedule(id)
       .orElseThrow(() -> new NegocioException(SCHEDULE_NOT_FOUND));
+  }
+
+  public Boolean getCurrentBaseline(final Long workpackId) {
+    return this.baselineRepository.workpackHasSnapshotOrProjectWithBaseline(workpackId);
   }
 
 }

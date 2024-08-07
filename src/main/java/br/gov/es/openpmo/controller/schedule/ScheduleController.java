@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.controller.schedule;
 
+import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.schedule.ScheduleDto;
@@ -90,6 +91,14 @@ public class ScheduleController {
     );
     this.scheduleService.delete(id);
     return ResponseEntity.ok().build();
+  }
+
+  @GetMapping("/baseline/{workpackId}")
+  public ResponseEntity<ResponseBase<Boolean>> getCurrentBaseline(@PathVariable Long workpackId, @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResourceWorkpack(workpackId, authorization);
+    final Boolean response = this.scheduleService.getCurrentBaseline(workpackId);
+    return ResponseEntity.ok(ResponseBase.of(response));
   }
 
 }
