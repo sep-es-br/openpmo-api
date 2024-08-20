@@ -93,6 +93,7 @@ public class ScheduleController {
     return ResponseEntity.ok().build();
   }
 
+  @GetMapping("/baseline/{workpackId}")
   public ResponseEntity<ResponseBase<Boolean>> getCurrentBaseline(@PathVariable long workpackId, @Authorization final String authorization) {
 
     this.canAccessService.ensureCanReadResourceWorkpack(workpackId, authorization);
