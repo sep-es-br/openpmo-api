@@ -52,6 +52,10 @@ public class CostDetailItem {
     if(this.currentValue == null || this.proposedValue == null) {
       return;
     }
+    if(BigDecimal.ZERO.compareTo(this.currentValue) == 0) {
+      this.variation = new BigDecimal(-100);
+      return;
+    }
     this.variation = this.currentValue
       .subtract(this.proposedValue)
       .divide(this.currentValue, 6, RoundingMode.HALF_UP)
