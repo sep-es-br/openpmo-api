@@ -105,4 +105,18 @@ public interface ScheduleRepository extends Neo4jRepository<Schedule, Long> {
       Long snapshotId
   );
 
+  @Query("MATCH (w:Workpack)<-[:FEATURES]-(sh:Schedule)<-[:COMPOSES]-(st:Step)-[consumesCa:CONSUMES]->(ca:CostAccount)-[:APPLIES_TO]->(d:Deliverable) "
+          //+ "WHERE id(w) = 1103551 "
+          + "WITH date(sh.start) AS startDate, st.periodFromStart AS period, w, sh, st, ca, d, date().month AS currentMonth "
+          + "OPTIONAL MATCH (d)<-[:IS_SNAPSHOT_OF]-(d2:Deliverable)-[:COMPOSES]->(b:Baseline) "
+          + "WITH startDate, period, w, sh, st, ca, d, d2, b, currentMonth, "
+          + "startDate.month AS startMonth, "
+          + "period + startDate.month AS targetMonth "
+          + "WITH startDate, startMonth, period, w, sh, st, ca, d, d2, b, currentMonth, targetMonth % 12 AS finalMonth "
+          + "WHERE finalMonth < currentMonth AND b IS NOT NULL AND b.active = true "
+          + "SET st.plannedCost = st.actualCost "
+          + "RETURN w, sh, st, ca, d, d2, b, finalMonth "
+          + "ORDER BY finalMonth ASC")
+  void updatePlannedCostsFromActualValues();
+
 }
