@@ -158,8 +158,8 @@ public class PersonService {
     this.isInContactBookOfService.save(isInContactBookOf);
   }
 
-  public Person saveZeroDepth(final Person person) {
-    return this.repository.save(person, 0);
+  public Person updatePerson(final Person person) {
+    return this.repository.updatePerson(person.getId(), person.getName(), person.getFullName());
   }
 
   public Person savePerson(
@@ -327,9 +327,8 @@ public class PersonService {
     final Person personToUpdate = this.repository.findById(personUpdateDto.getId())
       .orElseThrow(() -> new NegocioException(ApplicationMessage.PERSON_NOT_FOUND));
 
-    this.repository.save(personToUpdate, 0);
     personToUpdate.setName(personUpdateDto.getName());
-
+    this.repository.updateNamePerson(personToUpdate.getId(), personToUpdate.getName());
     this.updateContactBook(personUpdateDto, personToUpdate);
 
     if (personUpdateDto.getUnify()) {
@@ -419,8 +418,7 @@ public class PersonService {
     final Person person = this.repository.findById(idPerson)
       .orElseThrow(() -> new NegocioException(ApplicationMessage.PERSON_NOT_FOUND));
 
-    person.setName(name);
-    this.repository.save(person, 0);
+    this.repository.updateNamePerson(person.getId(), name);
   }
 
   public Optional<Person> findByKey(final String key) {
@@ -463,12 +461,11 @@ public class PersonService {
     final PersonUpdateDto personUpdateDto,
     final Person person
   ) {
-    final Optional<IsInContactBookOf> personContactData = this.repository
-      .findContactBookBy(personUpdateDto.getId(), personUpdateDto.getIdOffice());
+    final Optional<IsInContactBookOf> personContactData = this.repository.findContactBookBy(personUpdateDto.getId(), personUpdateDto.getIdOffice());
 
     if (personContactData.isPresent()) {
       personContactData.get().update(personUpdateDto);
-      this.isInContactBookOfService.save(personContactData.get());
+      this.isInContactBookOfService.update(personContactData.get());
       return;
     }
 
@@ -492,9 +489,11 @@ public class PersonService {
     final Set<IsInContactBookOf> allContactInformationByPersonId = this.repository.findAllContactInformationByPersonId(
       personUpdateDto.getId());
 
-    allContactInformationByPersonId.forEach(contact -> contact.update(personUpdateDto));
+    allContactInformationByPersonId.forEach(contact -> {
+      contact.update(personUpdateDto);
+      this.isInContactBookOfService.update(contact);
+    });
 
-    this.isInContactBookOfService.saveAll(allContactInformationByPersonId);
   }
 
   private PersonGetByIdDto getPersonGetByIdDto(
@@ -518,6 +517,6 @@ public class PersonService {
     person.setIdPlan(request.getIdPlan());
     person.setIdWorkpack(request.getIdWorkpack());
     person.setIdWorkpackModelLinked(request.getIdWorkpackModelLinked());
-    this.repository.save(person, 0);
+    this.repository.updateLocalWork(person.getId(), person.getIdOffice(), person.getIdPlan(), person.getIdWorkpack(), person.getIdWorkpackModelLinked());
   }
 }

@@ -36,4 +36,25 @@ public interface IsInContactBookOfRepository extends Neo4jRepository<IsInContact
     @Param("officeId") Long officeId
   );
 
+  @Query("MATCH (p:Person) where id(p) = $personId " +
+          "MATCH (o:Office) where id(o) = $officeId " +
+          "CREATE (p)-[r:IS_IN_CONTACT_BOOK_OF { " +
+          "  email: $email, " +
+          "  address: $address, " +
+          "  phoneNumber: $phoneNumber " +
+          "}]->(o) " +
+          "RETURN r")
+  IsInContactBookOf createIsInContactBookOf(Long personId, Long officeId,
+                                       String email, String address,
+                                       String phoneNumber);
+
+  @Query("MATCH (p:Person)-[r:IS_IN_CONTACT_BOOK_OF]->(o:Office) WHERE " +
+          "id(p) = $personId and id(o) = $officeId " +
+          "SET r.email = $email, " +
+          "    r.address = $address, " +
+          "    r.phoneNumber = $phoneNumber " +
+          "RETURN r")
+  IsInContactBookOf updateIsInContactBookOf(Long personId, Long officeId,
+                                      String email, String address,
+                                      String phoneNumber);
 }

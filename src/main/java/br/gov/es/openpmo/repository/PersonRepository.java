@@ -105,7 +105,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
 
   @Query("MATCH (person:Person)-[isInContactBookOf:IS_IN_CONTACT_BOOK_OF]->(office:Office) " +
          "WHERE id(person)=$idPerson AND id(office)=$idOffice " +
-         "RETURN isInContactBookOf")
+         "RETURN person, office, isInContactBookOf")
   Optional<IsInContactBookOf> findContactBookBy(
     Long idPerson,
     Long idOffice
@@ -249,4 +249,35 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   )
   List<IsCCBMemberFor> findAllIsCCBMemberForByIdPerson(Long personId, Long idOffice);
 
+  @Query (
+          "MATCH (p:Person) WHERE id(p) = $personId " +
+          "SET p.name = $name, " +
+          "p.fullName = $fullName " +
+          "RETURN p "
+  )
+  Person updatePerson(Long personId, String name, String fullName);
+
+  @Query (
+          "MATCH (p:Person) WHERE id(p) = $personId " +
+                  "SET p.name = $name " +
+                  "RETURN p "
+  )
+  Person updateNamePerson(Long personId, String name);
+
+  @Query (
+          "MATCH (p:Person) WHERE id(p) = $personId " +
+                  "SET p.idOffice = $idOffice, " +
+                  "p.idPlan = $idPlan, " +
+                  "p.idWorkpack = $idWorkpack, " +
+                  "p.idWorkpackModelLinked = $idWorkpackModelLinked " +
+                  "RETURN p "
+  )
+  Person updateLocalWork(Long personId, Long idOffice, Long idPlan, Long idWorkpack, Long idWorkpackModelLinked);
+
+  @Query (
+          "MATCH (p:Person) WHERE id(p) = $personId " +
+                  "SET p.administrator = $administrator " +
+                  "RETURN p "
+  )
+  Person setAdministratorStatus(Long personId, boolean administrator);
 }

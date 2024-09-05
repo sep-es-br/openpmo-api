@@ -213,20 +213,13 @@ public class StakeholderService {
     final Workpack workpack = this.serviceWorkpack.findByIdDefault(request.getIdWorkpack());
     final List<RoleDto> roles = request.getRoles();
     if (roles != null && !roles.isEmpty()) {
-      final Collection<IsStakeholderIn> isStakeholderIns = new ArrayList<>();
       for (RoleDto role : roles) {
-        final IsStakeholderIn isStakeholderIn = this.buildIsStakeholderIn(
-          target,
-          null,
-          workpack,
-          role.getRole(),
-          role.getFrom(),
-          role.getTo(),
-          role.isActive()
-        );
-        isStakeholderIns.add(isStakeholderIn);
+        this.repository.createIsStakeholderIn(target.getId(), workpack.getId(),
+                role.getRole(),
+                role.getFrom(),
+                role.getTo(),
+                role.isActive());
       }
-      this.repository.saveAll(isStakeholderIns);
     }
     final List<PermissionDto> permissions = request.getPermissions();
     if (permissions != null && !permissions.isEmpty()) {
@@ -234,7 +227,6 @@ public class StakeholderService {
         request,
         target
       );
-      final Collection<CanAccessWorkpack> canAccessWorkpacks = new ArrayList<>();
       for (PermissionDto permission : permissions) {
         final CanAccessWorkpack canAccessWorkpack = this.buildCanAccessWorkpack(
           target,
@@ -243,9 +235,13 @@ public class StakeholderService {
           permission.getId(),
           request.getIdPlan()
         );
-        canAccessWorkpacks.add(canAccessWorkpack);
+        this.workpackPermissionRepository.createCanAccessWorkpack(canAccessWorkpack.getPerson().getId(),
+                canAccessWorkpack.getIdWorkpack(),
+                canAccessWorkpack.getOrganization(),
+                canAccessWorkpack.getIdPlan(),
+                canAccessWorkpack.getRole(),
+                canAccessWorkpack.getPermissionLevel());
       }
-      this.workpackPermissionRepository.saveAll(canAccessWorkpacks);
       final Person author = this.getPersonByAuthorization(authorization);
       this.journalCreator.workpackPermission(
         workpack,
@@ -377,12 +373,20 @@ public class StakeholderService {
         personId,
         workpackId
       );
+    if(maybeContactInformation.isPresent()) {
+      this.updateContactRelationshipWithOffice(
+              person,
+              request,
+              maybeContactInformation.get()
+      );
+    } else {
+      this.createContactRelationshipWithOffice(
+              person,
+              request,
+              new IsInContactBookOf()
+      );
+    }
 
-    this.createContactRelationshipWithOffice(
-      person,
-      request,
-      maybeContactInformation.orElse(new IsInContactBookOf())
-    );
   }
 
   private void createContactRelationshipWithOffice(
@@ -403,6 +407,26 @@ public class StakeholderService {
     isInContactBookOf.setOffice(officeByWorkpack);
 
     this.isInContactBookOfService.save(isInContactBookOf);
+  }
+
+  private void updateContactRelationshipWithOffice(
+          final Person person,
+          final StakeholderParamDto request,
+          final IsInContactBookOf isInContactBookOf
+  ) {
+
+    final PersonStakeholderParamDto dto = request.getPerson();
+    isInContactBookOf.setAddress(dto.getAddress());
+    isInContactBookOf.setEmail(dto.getContactEmail());
+    isInContactBookOf.setPhoneNumber(dto.getPhoneNumber());
+    isInContactBookOf.setPerson(person);
+
+    final Office officeByWorkpack = this.officeService.findOfficeByPlan(request.getIdPlan())
+            .orElseThrow(() -> new NegocioException(OFFICE_NOT_FOUND));
+
+    isInContactBookOf.setOffice(officeByWorkpack);
+
+    this.isInContactBookOfService.update(isInContactBookOf);
   }
 
   @Transactional
@@ -433,15 +457,13 @@ public class StakeholderService {
       request.getRoles().forEach(role -> {
         if (stakeholderIns.stream().noneMatch(
           rb -> rb.getRole() != null && rb.getRole().equals(role.getRole()))) {
-          this.repository.save(this.buildIsStakeholderIn(
-            target,
-            null,
-            workpack,
-            role.getRole(),
-            role.getFrom(),
-            role.getTo(),
-            role.isActive()
-          ));
+          this.repository.createIsStakeholderIn(target.getId(),
+                  workpack.getId(),
+                  role.getRole(),
+                  role.getFrom(),
+                  role.getTo(),
+                  role.isActive()
+                  );
         } else {
           final IsStakeholderIn isStakeholderIn = stakeholderIns.stream().filter(
             s -> s.getId().equals(role.getId())).findFirst().orElse(null);
@@ -449,7 +471,14 @@ public class StakeholderService {
             isStakeholderIn.setTo(role.getTo());
             isStakeholderIn.setFrom(role.getFrom());
             isStakeholderIn.setActive(role.isActive());
-            this.repository.save(isStakeholderIn);
+            this.repository.updateIsStakeholderIn(isStakeholderIn.getActor().getId(),
+                    isStakeholderIn.getIdWorkpack(),
+                    isStakeholderIn.getId(),
+                    isStakeholderIn.getRole(),
+                    isStakeholderIn.getFrom(),
+                    isStakeholderIn.getTo(),
+                    isStakeholderIn.isActive()
+                    );
           }
         }
       });
@@ -468,20 +497,22 @@ public class StakeholderService {
           canAccessWorkpacks,
           permission
         )) {
-          this.saveIsInContactBook(
-            request,
-            target
+          CanAccessWorkpack newCanAccess = this.buildCanAccessWorkpack(
+                  target,
+                  workpack,
+                  permission,
+                  permission.getId(),
+                  request.getIdPlan()
           );
-          this.workpackPermissionRepository.save(
-            this.buildCanAccessWorkpack(
-              target,
-              workpack,
-              permission,
-              permission.getId(),
-              request.getIdPlan()
-            ));
+          this.workpackPermissionRepository.createCanAccessWorkpack(
+                  newCanAccess.getPerson().getId(),
+                  newCanAccess.getIdWorkpack(),
+                  newCanAccess.getOrganization(),
+                  newCanAccess.getIdPlan(),
+                  newCanAccess.getRole(),
+                  newCanAccess.getPermissionLevel()
+            );
         } else {
-
           final CanAccessWorkpack canAccessWorkpack = canAccessWorkpacks.stream()
             .filter(ca -> this.hasSameRole(
               permission,
@@ -492,12 +523,10 @@ public class StakeholderService {
 
           if (canAccessWorkpack != null) {
             canAccessWorkpack.setPermissionLevel(permission.getLevel());
-
-            this.saveIsInContactBook(
-              request,
-              target
-            );
-            this.workpackPermissionRepository.save(canAccessWorkpack, 0);
+            this.workpackPermissionRepository.updateCanAccessWorkpack(canAccessWorkpack.getPerson().getId(),
+                    canAccessWorkpack.getIdWorkpack(),
+                    canAccessWorkpack.getId(),
+                    canAccessWorkpack.getPermissionLevel());
           }
         }
       });
@@ -544,16 +573,23 @@ public class StakeholderService {
     final Organization organization = this.serviceOrganization.findById(request.getIdOrganization());
     final Workpack workpack = this.serviceWorkpack.findByIdDefault(request.getIdWorkpack());
     if (request.getRoles() != null) {
-      request.getRoles().forEach(role -> this.repository.save(
-        this.buildIsStakeholderIn(
-          null,
-          organization,
-          workpack,
-          role.getRole(),
-          role.getFrom(),
-          role.getTo(),
-          role.isActive()
-        )));
+      request.getRoles().forEach(role -> {
+        IsStakeholderIn newStakeholderIn =   this.buildIsStakeholderIn(
+                  null,
+                  organization,
+                  workpack,
+                  role.getRole(),
+                  role.getFrom(),
+                  role.getTo(),
+                  role.isActive()
+          );
+        this.repository.createIsStakeholderIn(newStakeholderIn.getActor().getId(),
+                newStakeholderIn.getIdWorkpack(),
+                newStakeholderIn.getRole(),
+                newStakeholderIn.getFrom(),
+                newStakeholderIn.getTo(),
+                newStakeholderIn.isActive());
+      });
     }
   }
 
@@ -574,16 +610,22 @@ public class StakeholderService {
     if (request.getRoles() != null && !(request.getRoles()).isEmpty()) {
       request.getRoles().forEach(role -> {
         if (rolesBd.stream().noneMatch(rb -> rb.getRole() != null && rb.getRole().equals(role.getRole()))) {
-          this.repository.save(
-            this.buildIsStakeholderIn(
-              null,
-              organization,
-              workpack,
-              role.getRole(),
-              role.getFrom(),
-              role.getTo(),
-              role.isActive()
-            ));
+          IsStakeholderIn newIsStakeholderIn = this.buildIsStakeholderIn(
+                  null,
+                  organization,
+                  workpack,
+                  role.getRole(),
+                  role.getFrom(),
+                  role.getTo(),
+                  role.isActive()
+          );
+          this.repository.createIsStakeholderIn(newIsStakeholderIn.getActor().getId(),
+                  newIsStakeholderIn.getIdWorkpack(),
+                  newIsStakeholderIn.getRole(),
+                  newIsStakeholderIn.getFrom(),
+                  newIsStakeholderIn.getTo(),
+                  newIsStakeholderIn.isActive()
+            );
         } else {
           final IsStakeholderIn stakeholderIn = rolesBd.stream().filter(s -> role.getId() != null && s.getId().equals(
             role.getId())).findFirst().orElse(null);
@@ -591,7 +633,14 @@ public class StakeholderService {
             stakeholderIn.setTo(role.getTo());
             stakeholderIn.setFrom(role.getFrom());
             stakeholderIn.setActive(role.isActive());
-            this.repository.save(stakeholderIn);
+            this.repository.updateIsStakeholderIn(stakeholderIn.getActor().getId(),
+                    stakeholderIn.getIdWorkpack(),
+                    stakeholderIn.getId(),
+                    stakeholderIn.getRole(),
+                    stakeholderIn.getFrom(),
+                    stakeholderIn.getTo(),
+                    stakeholderIn.isActive()
+                    );
           }
         }
       });

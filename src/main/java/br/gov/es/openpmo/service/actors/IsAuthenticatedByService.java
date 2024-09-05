@@ -32,7 +32,12 @@ public class IsAuthenticatedByService {
   }
 
   public IsAuthenticatedBy save(final IsAuthenticatedBy isAuthenticatedBy) {
-    return this.repository.save(isAuthenticatedBy);
+    return repository.createIsAuthenticatedBy(isAuthenticatedBy.getIdPerson(),
+            isAuthenticatedBy.getAuthService().getId(),
+            isAuthenticatedBy.getKey(),
+            isAuthenticatedBy.getName(),
+            isAuthenticatedBy.getEmail(),
+            isAuthenticatedBy.getGuid());
   }
 
   public Optional<IsAuthenticatedBy> findAuthenticatedBy(final Long idPerson) {

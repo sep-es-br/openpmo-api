@@ -52,7 +52,12 @@ public class UpdateCCBMemberRelationshipService implements IUpdateCCBMemberRelat
     this.repository.deleteAllByPersonIdAndWorkpackId(person.getId(), workpack.getId());
 
     for(final MemberAs memberAs : request.getMemberAs()) {
-      this.repository.save(new IsCCBMemberFor(memberAs, person, workpack), 0);
+      IsCCBMemberFor isCCBMemberFor = new IsCCBMemberFor(memberAs, person, workpack);
+      this.repository.createIsCCBMemberFor(isCCBMemberFor.getIdPerson(),
+              isCCBMemberFor.getWorkpackId(),
+              isCCBMemberFor.getRole(),
+              isCCBMemberFor.getWorkLocation(),
+              isCCBMemberFor.getActive());
     }
   }
 
@@ -87,7 +92,11 @@ public class UpdateCCBMemberRelationshipService implements IUpdateCCBMemberRelat
     isInContactBookOf.setPhoneNumber(personDto.getPhoneNumber());
     isInContactBookOf.setEmail(personDto.getContactEmail());
     isInContactBookOf.setAddress(personDto.getAddress());
-    this.isInContactBookOfRepository.save(isInContactBookOf, 0);
+    this.isInContactBookOfRepository.updateIsInContactBookOf(isInContactBookOf.getPersonId(),
+            isInContactBookOf.getOfficeId(),
+            isInContactBookOf.getEmail(),
+            isInContactBookOf.getAddress(),
+            isInContactBookOf.getPhoneNumber());
   }
 
 }

@@ -128,12 +128,13 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
   private void rejectBaseline(final Baseline baseline) {
     if(baseline.getStatus() == Status.REJECTED) return;
     baseline.reject();
-    this.saveBaseline(baseline);
+    this.repository.setStatusBaseline(baseline.getId(), baseline.getStatus().name());
   }
 
   private void saveBaseline(final Baseline baseline) {
     this.repository.save(baseline, 0);
   }
+
 
   private void updateBaselineStatus(
     final Baseline baseline,
@@ -188,7 +189,12 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
   }
 
   private void saveEvaluation(final IsEvaluatedBy evaluation) {
-    this.evaluatedByRepository.save(evaluation, 0);
+    this.evaluatedByRepository.createIsEvaluatedBy(evaluation.getIdPerson(),
+            evaluation.getBaseline().getId(),
+            evaluation.getDecision().name(),
+            evaluation.getInRoleWorkLocation(),
+            evaluation.getWhen(),
+            evaluation.getComment());
   }
 
   private Baseline findBaselineById(final Long idBaseline) {

@@ -160,7 +160,7 @@ public class IsFavoritedByService {
     isFavoritedBy.setPerson(person);
     isFavoritedBy.setWorkpack(workpack);
     isFavoritedBy.setIdPlan(request.getIdPlan());
-    this.isFavoritedByRepository.save(isFavoritedBy);
+    this.isFavoritedByRepository.createIsFavoriteBy(isFavoritedBy.getPerson().getId(), isFavoritedBy.getWorkpack().getId(), isFavoritedBy.getIdPlan());
   }
 
 }

@@ -38,7 +38,7 @@ public class AdministratorService {
 
     person.setAdministrator(administrator);
 
-    this.personRepository.save(person, 0);
+    this.personRepository.setAdministratorStatus(person.getId(), person.getAdministrator());
 
     return new AdministratorDto(person, this.serverName);
   }
