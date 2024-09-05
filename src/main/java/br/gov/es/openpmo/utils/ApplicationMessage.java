@@ -162,6 +162,7 @@ public class ApplicationMessage {
   public static final String REPORT_GENERATE_UNKNOWN_TYPE_ERROR = "report-design.generate.unknown-type.error";
   public static final String REPORT_GENERATE_SCOPE_PARAMETER_INVALID = "report-design.generate.scope.parameter.invalid";
   public static final String ALREADY_EXISTS_PERMISSION = "already.exists.permission";
+  public static final String WORKPACK_HAS_LINK_WITH_THIS_OFFICE = "link.already.exists";
 
   private ApplicationMessage() {
   }

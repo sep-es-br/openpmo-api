@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.DUPLICATED_VALUE;
 import static br.gov.es.openpmo.utils.ApplicationMessage.REGISTRO_NOT_FOUND;
+import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_HAS_LINK_WITH_THIS_OFFICE;
 import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
 
@@ -125,21 +126,18 @@ public class WorkpackSharedService {
   private void revokePublicAccess(final Long idWorkpack) {
     final Workpack workpack = this.workpackService.findById(idWorkpack);
     this.workpackService.setWorkpackPublicShared(workpack.getId(), false, PermissionLevelEnum.NONE.toString());
-    this.deleteAllSharedRelationship(workpack.getId());
-  }
-
-  private void deleteAllSharedRelationship(final Long idWorkpack) {
-    this.deleteSharedRelationship(idWorkpack, null);
   }
 
   private void deleteSharedRelationship(
     final Long idWorkpack,
-    final Long idOffice
+    final Long idOffice,
+    final Long idSharedWith
   ) {
-    this.repository.deleteExternalPermission(idWorkpack, idOffice);
-    this.repository.deleteExternalParent(idWorkpack, idOffice);
-    this.repository.deleteExternalLinkedRelationship(idWorkpack, idOffice);
-    this.repository.deleteSharedRelationship(idWorkpack, idOffice);
+    boolean hasAnyLink = this.repository.findAnyLink(idWorkpack, idOffice);
+    if(hasAnyLink) {
+      throw new NegocioException(WORKPACK_HAS_LINK_WITH_THIS_OFFICE);
+    }
+    this.repository.deleteSharedWith(idSharedWith);
   }
 
   private void addItem(
@@ -167,7 +165,7 @@ public class WorkpackSharedService {
     }
     final IsSharedWith isSharedWith = this.findById(idSharedWith);
     final Long idOffice = isSharedWith.getOfficeId();
-    this.deleteSharedRelationship(idWorkpack, idOffice);
+    this.deleteSharedRelationship(idWorkpack, idOffice, idSharedWith);
   }
 
   private void createSharedRelationship(
@@ -178,13 +176,13 @@ public class WorkpackSharedService {
     newRelationship.setWorkpack(workpack);
     newRelationship.setOffice(this.officeService.findById(item.idOffice()));
     newRelationship.setPermissionLevel(item.getLevel());
-    this.repository.save(newRelationship);
+    this.repository.createIsSharedWith(newRelationship.getWorkpack().getId(), newRelationship.getOffice().getId(), newRelationship.getPermissionLevel());
   }
 
   private void updateSharedPermissionLevel(final WorkpackSharedParamDto item) {
     final IsSharedWith isSharedWith = this.findById(item.getId());
     isSharedWith.setPermissionLevel(item.getLevel());
-    this.repository.save(isSharedWith);
+    this.repository.updatePermissionLevel(isSharedWith.getId(), isSharedWith.getPermissionLevel());
   }
 
   public void store(
@@ -196,7 +194,7 @@ public class WorkpackSharedService {
     final boolean workpackPublic = verifyIfItWillNeedToIncludeAllOffices(request);
     workpack.setPublicShared(workpackPublic);
     workpack.setPublicLevel(workpackPublic ? request.get(0).getLevel() : null);
-    this.workpackService.setWorkpackPublicShared(workpack.getId(), workpack.getPublicShared(), workpack.getPublicLevel().toString());
+    this.workpackService.setWorkpackPublicShared(workpack.getId(), workpack.getPublicShared(), workpack.getPublicLevel() != null ? workpack.getPublicLevel().toString() : null);
 
     final List<IsSharedWith> isSharedWiths = this.repository.findSharedWithDataByWorkpackId(idWorkpack);
 
