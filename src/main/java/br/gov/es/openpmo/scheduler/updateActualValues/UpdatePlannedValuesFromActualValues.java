@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.scheduler.updateActualValues;
 
+import br.gov.es.openpmo.exception.NotUpdatedPlannedValuesException;
 import br.gov.es.openpmo.repository.ScheduleRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,11 @@ public class UpdatePlannedValuesFromActualValues {
 
     @Transactional
     public void updateValuesInSchedule() {
-//        LOGGER.info("Updating planned values from actual values...");
-//        scheduleRepository.updatePlannedCostsFromActualValues();
+        LOGGER.info("Updating planned values from actual values...");
+        try {
+            this.scheduleRepository.updatePlannedCostsFromActualValues();
+        } catch (Exception e) {
+            throw new NotUpdatedPlannedValuesException("Error updating planned values from actual values");
+        }
     }
 }
