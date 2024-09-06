@@ -35,6 +35,7 @@ import br.gov.es.openpmo.repository.PersonRepository;
 import br.gov.es.openpmo.repository.PlanRepository;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 
+import br.gov.es.openpmo.utils.NameFormatter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -392,7 +393,7 @@ public class PersonService {
 
   public Person create(final PersonCreateRequest request) {
     final Person person = new Person();
-    person.setName(request.getName());
+    person.setName(NameFormatter.format(request.getFullName()));
     person.setFullName(request.getFullName());
     person.setAdministrator(request.getAdministrator());
     this.repository.save(person);
