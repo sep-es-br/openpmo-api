@@ -12,6 +12,7 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -83,4 +84,105 @@ public interface JournalRepository extends Neo4jRepository<JournalEntry, Long> {
          "RETURN p")
   Optional<Plan> findPlanByJournalId(Long journalId);
 
+  @Query("MATCH (w:Workpack) where id(w) = $workpackId " +
+          "MATCH (a:Person) where id(a) = $authorId " +
+          "MATCH (t:Person) where id(t) = $targetId " +
+          "CREATE (je:JournalEntry { " +
+          "  date: $date, " +
+          "  type: $type, " +
+          "  action: $action, " +
+          "  nameItem: $nameItem, " +
+          "  description: $description, " +
+          "  level: $level " +
+          "}) " +
+          "CREATE (je)-[:SCOPE_TO]->(w) " +
+          "CREATE (je)-[:IS_RECORDED_BY]->(a) " +
+          "CREATE (je)-[:IS_RECORDED_FOR]->(t) " +
+          "RETURN je")
+  JournalEntry createJournalEntryWorkpackPermission(
+          String type,
+          String action,
+          String level,
+          String nameItem,
+          String description,
+          Long workpackId,
+          Long authorId,
+          Long targetId,
+          LocalDateTime date
+          );
+
+  @Query("MATCH (w:Workpack) where id(w) = $workpackId " +
+          "MATCH (a:Person) where id(a) = $authorId " +
+          "CREATE (je:JournalEntry { " +
+          "  date: $date, " +
+          "  type: $type, " +
+          "  action: $action, " +
+          "  nameItem: $nameItem, " +
+          "  description: $description " +
+          "}) " +
+          "CREATE (je)-[:SCOPE_TO]->(w) " +
+          "CREATE (je)-[:IS_RECORDED_BY]->(a) " +
+          "RETURN je")
+  JournalEntry createJournalEntryBaselineEvaluate(
+          String type,
+          String action,
+          String nameItem,
+          String description,
+          Long workpackId,
+          Long authorId,
+          LocalDateTime date
+  );
+  @Query("MATCH (o:Office) where id(o) = $officeId " +
+          "MATCH (a:Person) where id(a) = $authorId " +
+          "MATCH (t:Person) where id(t) = $targetId " +
+          "CREATE (je:JournalEntry { " +
+          "  date: $date, " +
+          "  type: $type, " +
+          "  action: $action, " +
+          "  nameItem: $nameItem, " +
+          "  description: $description, " +
+          "  level: $level " +
+          "}) " +
+          "CREATE (je)-[:SCOPE_TO]->(o) " +
+          "CREATE (je)-[:IS_RECORDED_BY]->(a) " +
+          "CREATE (je)-[:IS_RECORDED_FOR]->(t) " +
+          "RETURN je")
+  JournalEntry createJournalEntryOfficePermission(
+          String type,
+          String action,
+          String level,
+          String nameItem,
+          String description,
+          Long officeId,
+          Long authorId,
+          Long targetId,
+          LocalDateTime date
+  );
+
+  @Query("MATCH (plan:Plan) where id(plan) = $planId " +
+          "MATCH (a:Person) where id(a) = $authorId " +
+          "MATCH (t:Person) where id(t) = $targetId " +
+          "CREATE (je:JournalEntry { " +
+          "  date: $date, " +
+          "  type: $type, " +
+          "  action: $action, " +
+          "  nameItem: $nameItem, " +
+          "  description: $description, " +
+          "  level: $level " +
+          "}) " +
+          "CREATE (je)-[:SCOPE_TO]->(plan) " +
+          "CREATE (je)-[:IS_RECORDED_BY]->(a) " +
+          "CREATE (je)-[:IS_RECORDED_FOR]->(t) " +
+          "RETURN je")
+  JournalEntry createJournalEntryPlanPermission(
+          String type,
+          String action,
+          String level,
+          String nameItem,
+          String description,
+          Long planId,
+          Long authorId,
+          Long targetId,
+          LocalDateTime date
+  );
 }

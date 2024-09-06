@@ -540,4 +540,10 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
         "RETURN DISTINCT ID(workpack) AS id, measure.name AS name ")
     List<EntityDto> findUnitMeasureNameOfDeliverableWorkpack(List<Long> ids);
 
+    @Query(
+            "MATCH (b:Baseline) WHERE id(b) = $baselineId " +
+                    "SET b.status = $status " +
+                    "RETURN b "
+    )
+    void setStatusBaseline(Long baselineId, String status);
 }

@@ -20,7 +20,19 @@ public class IsInContactBookOfService {
   }
 
   public IsInContactBookOf save(final IsInContactBookOf isInContactBookOf) {
-    return this.repository.save(isInContactBookOf, 0);
+    return repository.createIsInContactBookOf(isInContactBookOf.getPersonId(),
+            isInContactBookOf.getOfficeId(),
+            isInContactBookOf.getEmail(),
+            isInContactBookOf.getAddress(),
+            isInContactBookOf.getPhoneNumber());
+  }
+
+  public IsInContactBookOf update(final IsInContactBookOf isInContactBookOf) {
+    return repository.updateIsInContactBookOf(isInContactBookOf.getPersonId(),
+            isInContactBookOf.getOfficeId(),
+            isInContactBookOf.getEmail(),
+            isInContactBookOf.getAddress(),
+            isInContactBookOf.getPhoneNumber());
   }
 
   public Optional<IsInContactBookOf> findContactInformationUsingPersonIdAndWorkpackId(

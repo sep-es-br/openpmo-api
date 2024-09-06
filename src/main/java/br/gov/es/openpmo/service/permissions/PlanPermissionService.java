@@ -274,14 +274,19 @@ public class PlanPermissionService {
       request.getPermissions().forEach(permission -> {
         if (permission.getId() == null) {
           this.save(this.buildCanAccessPlan(target, plan, permission, null), target);
-
           return;
         }
         final Optional<CanAccessPlan> optionalCanAccessPlan = this.repository.findById(permission.getId());
         if (!optionalCanAccessPlan.isPresent()) {
           throw new RegistroNaoEncontradoException(PLAN_PERMISSION_NOT_FOUND);
         }
-        this.save(this.buildCanAccessPlan(target, plan, permission, optionalCanAccessPlan.get().getId()), target);
+        CanAccessPlan planPermission = this.buildCanAccessPlan(target, plan, permission, optionalCanAccessPlan.get().getId());
+        this.repository.updateCanAccessPlan(planPermission.getPerson().getId(),
+                planPermission.getPlan().getId(),
+                planPermission.getId(),
+                planPermission.getOrganization(),
+                planPermission.getRole(),
+                planPermission.getPermissionLevel());
       });
       this.journalCreator.planPermission(
         plan,
@@ -319,8 +324,11 @@ public class PlanPermissionService {
       isInContactBookOf.setOffice(office);
       this.isInContactBookOfService.save(isInContactBookOf);
     }
-
-    return this.repository.save(planPermission, 0);
+    return this.repository.createCanAccessPlan(planPermission.getPerson().getId(),
+            planPermission.getPlan().getId(),
+            planPermission.getOrganization(),
+            planPermission.getRole(),
+            planPermission.getPermissionLevel());
   }
 
   private CanAccessPlan buildCanAccessPlan(

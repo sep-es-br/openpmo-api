@@ -321,18 +321,30 @@ public class OfficePermissionService {
           pbd -> permission.getRole() != null && permission.getRole().equals(
             pbd.getRole())).findFirst();
         if (optionalCanAccessOffice.isPresent()) {
-          this.save(this.buildCanAccessOffice(
-            target,
-            office,
-            permission,
-            optionalCanAccessOffice.get().getId()
-          ));
+          CanAccessOffice officePermission = this.buildCanAccessOffice(
+                  target,
+                  office,
+                  permission,
+                  optionalCanAccessOffice.get().getId()
+          );
+          this.repository.updateCanAccessOffice(officePermission.getPerson().getId(),
+                  officePermission.getOffice().getId(),
+                  officePermission.getId(),
+                  officePermission.getOrganization(),
+                  officePermission.getRole(),
+                  officePermission.getPermissionLevel());
           return;
         }
         if (permission.getId() != null) {
           final CanAccessOffice canAccessOffice = this.repository.findById(permission.getId()).orElseThrow(
             () -> new RegistroNaoEncontradoException(OFFICE_PERMISSION_NOT_FOUND));
-          this.save(this.buildCanAccessOffice(target, office, permission, canAccessOffice.getId()));
+          CanAccessOffice officePermission = this.buildCanAccessOffice(target, office, permission, canAccessOffice.getId());
+          this.repository.updateCanAccessOffice(officePermission.getPerson().getId(),
+                  officePermission.getOffice().getId(),
+                  officePermission.getId(),
+                  officePermission.getOrganization(),
+                  officePermission.getRole(),
+                  officePermission.getPermissionLevel());
         }
       });
       this.journalCreator.officePermission(
@@ -370,7 +382,11 @@ public class OfficePermissionService {
       this.isInContactBookOfService.save(isInContactBookOf);
     }
 
-    return this.repository.save(officePermission, 0);
+    return this.repository.createCanAccessOffice(officePermission.getPerson().getId(),
+            officePermission.getOffice().getId(),
+            officePermission.getOrganization(),
+            officePermission.getRole(),
+            officePermission.getPermissionLevel());
   }
 
   private CanAccessOffice buildCanAccessOffice(
