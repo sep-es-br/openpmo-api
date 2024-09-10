@@ -43,13 +43,9 @@ public interface WorkpackLinkRepository extends Neo4jRepository<IsLinkedTo, Long
           Long idParent
   );
 
-  @Query("MATCH (plan:Plan)  " +
-         "WHERE id(plan)=$idPlan " +
-         "MATCH (workpack:Workpack)-[belongsTo:BELONGS_TO]->(plan) " +
-         "MATCH (workpack)-[linkedTo:IS_LINKED_TO]->(model:WorkpackModel) " +
-         "OPTIONAL MATCH (workpack)-[isIn:IS_IN]->(parent:Workpack)-[:BELONGS_TO]->(plan) " +
-         "WITH plan, workpack, belongsTo, isIn, parent, linkedTo, model " +
-         "WHERE id(workpack)=$idWorkpack AND id(model)=$idWorkpackModel " +
+  @Query("MATCH (plan)<-[:BELONGS_TO {linked: true}]-(workpack:Workpack)-[:IS_LINKED_TO]->(model:WorkpackModel) " +
+          "WHERE id(plan) = $idPlan AND id(workpack) = $idWorkpack AND id(model) = $idWorkpackModel " +
+          "MATCH (workpack)-[isIn:IS_IN]->(parent:Workpack)-[:BELONGS_TO]->(plan) " +
          "DETACH DELETE isIn"
   )
   void unlinkParentRelation(
@@ -58,25 +54,7 @@ public interface WorkpackLinkRepository extends Neo4jRepository<IsLinkedTo, Long
     Long idWorkpack
   );
 
-  @Query("MATCH (plan:Plan)  " +
-         "WHERE id(plan)=$idPlan " +
-         "MATCH (workpack:Workpack)-[belongsTo:BELONGS_TO]->(plan) " +
-         "MATCH (workpack)-[linkedTo:IS_LINKED_TO]->(model:WorkpackModel) " +
-         "MATCH (workpack)<-[isIn:IS_IN*]-(children:Workpack) " +
-         "OPTIONAL MATCH (p:Person)-[linkedWorkpackPermission:CAN_ACCESS_WORKPACK{idPlan:id(plan)}]->(workpack) " +
-         "OPTIONAL MATCH (p2:Person)-[childrenWorkpackPermission:CAN_ACCESS_WORKPACK{idPlan:id(plan)}]->(children) " +
-         "WITH plan, workpack, belongsTo, linkedTo, model, p, linkedWorkpackPermission, p2, childrenWorkpackPermission, " +
-         "children, isIn " +
-         "WHERE id(workpack)=$idWorkpack AND id(model)=$idWorkpackModel " +
-         "DETACH DELETE linkedWorkpackPermission, childrenWorkpackPermission "
-  )
-  void unlinkPermissions(
-    Long idPlan,
-    Long idWorkpackModel,
-    Long idWorkpack
-  );
-
-  @Query("MATCH (workpack:Workpack)-[belongsTo:BELONGS_TO{linked:true]->(plan:Plan)  " +
+  @Query("MATCH (workpack:Workpack)-[belongsTo:BELONGS_TO{linked:true}]->(plan:Plan)  " +
          "WHERE id(workpack)=$idWorkpack AND id(plan)=$idPlan " +
          "DETACH DELETE belongsTo")
   void unlinkPlan(
@@ -96,5 +74,21 @@ public interface WorkpackLinkRepository extends Neo4jRepository<IsLinkedTo, Long
     Long idWorkpackModel
   );
 
+  @Query("MATCH (plan)<-[:BELONGS_TO {linked: true}]-(workpack:Workpack)-[:IS_LINKED_TO]->(model:WorkpackModel) " +
+          "WHERE id(plan) = $idPlan AND id(workpack) = $idWorkpack AND id(model) = $idWorkpackModel " +
+          "MATCH (p:Person)-[linkedWorkpackPermission:CAN_ACCESS_WORKPACK{idPlan:id(plan)}]->(workpack) " +
+          "DETACH DELETE linkedWorkpackPermission "
+  )
+  void unlinkPermissions(
+          Long idPlan,
+          Long idWorkpackModel,
+          Long idWorkpack
+  );
 
+  @Query("MATCH (plan)<-[:BELONGS_TO {linked: true}]-(workpack:Workpack)-[:IS_LINKED_TO]->(model:WorkpackModel) " +
+          "WHERE id(plan) = $idPlan AND id(workpack) = $idWorkpack AND id(model) = $idWorkpackModel " +
+          "MATCH (workpack)<-[:IS_IN*]-(children:Workpack) " +
+          "MATCH (p2:Person)-[childrenWorkpackPermission:CAN_ACCESS_WORKPACK {idPlan: id(plan)}]->(children) " +
+          "DETACH DELETE  childrenWorkpackPermission")
+  void unlinkChildrenPermissions(Long idPlan, Long idWorkpackModel, Long idWorkpack);
 }

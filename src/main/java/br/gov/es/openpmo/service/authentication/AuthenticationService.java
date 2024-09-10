@@ -24,9 +24,7 @@ import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class AuthenticationService {
@@ -108,16 +106,18 @@ public class AuthenticationService {
     user.setName(apelido);
     user.setFullName(apelido);
     user.setAdministrator(this.administrators.contains(email));
+    Person personCreated = this.personService.save(user);
 
     final IsAuthenticatedBy isAuthenticatedBy = new IsAuthenticatedBy();
-    isAuthenticatedBy.setPerson(user);
+    isAuthenticatedBy.setPerson(personCreated);
     isAuthenticatedBy.setKey(key);
     isAuthenticatedBy.setEmail(email);
     isAuthenticatedBy.setName(this.isAuthenticatedByService.defaultAuthServerName());
     isAuthenticatedBy.setAuthService(this.isAuthenticatedByService.findDefaultAuthenticationServer());
 
-    this.isAuthenticatedByService.save(isAuthenticatedBy);
-    return this.personService.save(user);
+    IsAuthenticatedBy isAuthenticatedByCreated = this.isAuthenticatedByService.save(isAuthenticatedBy);
+    personCreated.getAuthentications().add(isAuthenticatedByCreated);
+    return personCreated;
   }
 
   public void signOut(

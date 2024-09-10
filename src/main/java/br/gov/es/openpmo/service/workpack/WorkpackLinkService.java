@@ -312,6 +312,7 @@ public class WorkpackLinkService {
   ) {
     final Workpack workpack = this.workpackService.findByIdWithAllChildren(idWorkpack);
     final WorkpackModel workpackModelLinked = this.workpackModelService.findByIdWithAllChildrens(idWorkpackModel);
+    this.repository.unlinkChildrenPermissions(idPlan, idWorkpackModel, idWorkpack);
     this.repository.unlinkPermissions(idPlan, idWorkpackModel, idWorkpack);
     this.repository.unlinkParentRelation(idPlan, idWorkpackModel, idWorkpack);
     this.repository.unlinkPlan(idPlan, idWorkpack);
