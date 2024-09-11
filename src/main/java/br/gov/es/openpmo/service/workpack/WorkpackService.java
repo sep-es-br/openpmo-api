@@ -545,7 +545,9 @@ public class WorkpackService {
         workpackLinked
       );
       if (!StringUtils.hasText(term) && Objects.nonNull(idWorkpackModel) && !workpacks.isEmpty()) {
-        this.sortByWorkpackModel(workpacks, workpacks.get(0).getWorkpackModelInstance());
+        WorkpackModel workpackModelInstance = workpacks.get(0).getWorkpackModelInstance() != null ? workpacks.get(0).getWorkpackModelInstance() :
+                workpacks.get(0).getLinkedWorkpackModel(idWorkpackModel).orElse(null);
+        this.sortByWorkpackModel(workpacks,  workpackModelInstance);
       }
       return workpacks;
     }
@@ -1006,8 +1008,8 @@ public class WorkpackService {
   }
 
 
-  public WorkpackDetailParentDto getWorkpackDetailParentDto(final Workpack workpack) {
-    final WorkpackDetailParentDto detailDto = this.convertWorkpackDetailParentDto(workpack);
+  public WorkpackDetailParentDto getWorkpackDetailParentDto(final Workpack workpack, final Long idWorkpackModel) {
+    final WorkpackDetailParentDto detailDto = this.convertWorkpackDetailParentDto(workpack, idWorkpackModel);
     if (detailDto != null) {
       final PlanDto plan = this.findNotLinkedBelongsTo(workpack);
       detailDto.setPlan(plan);
@@ -1068,33 +1070,33 @@ public class WorkpackService {
     return null;
   }
 
-  private WorkpackDetailParentDto convertWorkpackDetailParentDto(final Workpack workpack) {
+  private WorkpackDetailParentDto convertWorkpackDetailParentDto(final Workpack workpack, final Long idWorkpackModel) {
     WorkpackModel workpackModel = null;
     WorkpackDetailParentDto workpackDetailDto = null;
     final String typeName = workpack.getClass().getTypeName();
     switch (typeName) {
       case TYPE_NAME_PORTFOLIO:
-        workpackModel = ((Portfolio) workpack).getInstance() != null ? ((Portfolio) workpack).getInstance() : workpack.getLinkedWorkpackModel(workpack.getIdWorkpackModel()).get();
+        workpackModel = ((Portfolio) workpack).getInstance() != null ? ((Portfolio) workpack).getInstance() : workpack.getLinkedWorkpackModel(idWorkpackModel).get();
         workpackDetailDto = PortfolioDetailParentDto.of(workpack);
         break;
       case TYPE_NAME_PROGRAM:
-        workpackModel = ((Program) workpack).getInstance() != null ? ((Program) workpack).getInstance() : workpack.getLinkedWorkpackModel(workpack.getIdWorkpackModel()).get();
+        workpackModel = ((Program) workpack).getInstance() != null ? ((Program) workpack).getInstance() : workpack.getLinkedWorkpackModel(idWorkpackModel).get();
         workpackDetailDto = ProgramDetailParentDto.of(workpack);
         break;
       case TYPE_NAME_ORGANIZER:
-        workpackModel = ((Organizer) workpack).getInstance() != null ? ((Organizer) workpack).getInstance() : workpack.getLinkedWorkpackModel(workpack.getIdWorkpackModel()).get();
+        workpackModel = ((Organizer) workpack).getInstance() != null ? ((Organizer) workpack).getInstance() : workpack.getLinkedWorkpackModel(idWorkpackModel).get();
         workpackDetailDto = OrganizerDetailParentDto.of(workpack);
         break;
       case TYPE_NAME_DELIVERABLE:
-        workpackModel = ((Deliverable) workpack).getInstance() != null ? ((Deliverable) workpack).getInstance() : workpack.getLinkedWorkpackModel(workpack.getIdWorkpackModel()).get();
+        workpackModel = ((Deliverable) workpack).getInstance() != null ? ((Deliverable) workpack).getInstance() : workpack.getLinkedWorkpackModel(idWorkpackModel).get();
         workpackDetailDto = DeliverableDetailParentDto.of(workpack);
         break;
       case TYPE_NAME_PROJECT:
-        workpackModel = ((Project) workpack).getInstance() != null ? ((Project) workpack).getInstance() : workpack.getLinkedWorkpackModel(workpack.getIdWorkpackModel()).get();
+        workpackModel = ((Project) workpack).getInstance() != null ? ((Project) workpack).getInstance() : workpack.getLinkedWorkpackModel(idWorkpackModel).get();
         workpackDetailDto = ProjectDetailParentDto.of(workpack);
         break;
       case TYPE_NAME_MILESTONE:
-        workpackModel = ((Milestone) workpack).getInstance() != null ? ((Milestone) workpack).getInstance() : workpack.getLinkedWorkpackModel(workpack.getIdWorkpackModel()).get();
+        workpackModel = ((Milestone) workpack).getInstance() != null ? ((Milestone) workpack).getInstance() : workpack.getLinkedWorkpackModel(idWorkpackModel).get();
         workpackDetailDto = MilestoneDetailParentDto.of(workpack);
         this.milestoneService.addStatus(
            workpack,

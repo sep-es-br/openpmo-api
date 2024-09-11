@@ -416,7 +416,7 @@ public class WorkpackController {
   private WorkpackDetailParentDto mapToWorkpackDetailParentDto(final Workpack workpack, final Long idWorkpackModel
       , List<MilestoneDateDto> milestoneDates, List<RiskWorkpackDto> risks
       , final List<JournalInformationDto> journals, final Long idPlan) {
-    final WorkpackDetailParentDto itemDetail = this.workpackService.getWorkpackDetailParentDto(workpack);
+    final WorkpackDetailParentDto itemDetail = this.workpackService.getWorkpackDetailParentDto(workpack, idWorkpackModel);
     itemDetail.applyLinkedStatus(workpack, idWorkpackModel);
     DashboardMonthDto monthDto = workpackService.getDashboardMonthDto(workpack, idPlan);
     itemDetail.setDashboard(monthDto);
