@@ -209,6 +209,7 @@ public class WorkpackLinkService {
     final WorkpackDetailDto workpackDetailDto = this.workpackService.getWorkpackDetailDto(workpack);
     workpackDetailDto.setIdParent(workpack.getIdParent());
     workpackDetailDto.setIdWorkpackModel(workpack.getIdWorkpackModel());
+    workpackDetailDto.setPlanOrigin(workpackDetailDto.getPlan());
     if (idPlan != null) {
       final Plan plan = this.planService.findById(idPlan);
       workpackDetailDto.setPlan(PlanDto.of(plan));

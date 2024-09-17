@@ -36,6 +36,8 @@ public abstract class WorkpackDetailDto {
 
   private PlanDto plan;
 
+  private PlanDto planOrigin;
+
   private WorkpackModelDetailDto model;
 
   private Boolean hasChildren;
@@ -122,6 +124,14 @@ public abstract class WorkpackDetailDto {
 
   public void setPlan(final PlanDto plan) {
     this.plan = plan;
+  }
+
+  public PlanDto getPlanOrigin() {
+    return planOrigin;
+  }
+
+  public void setPlanOrigin(PlanDto planOrigin) {
+    this.planOrigin = planOrigin;
   }
 
   public WorkpackModelDetailDto getModel() {
