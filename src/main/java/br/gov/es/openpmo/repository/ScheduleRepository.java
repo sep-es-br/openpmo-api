@@ -18,6 +18,18 @@ public interface ScheduleRepository extends Neo4jRepository<Schedule, Long> {
          + "]")
   List<Schedule> findAllByWorkpack(@Param("idWorkpack") Long idWorkpack);
 
+  @Query("MATCH (s:Schedule)-[f:FEATURES]->(w:Workpack) WHERE id(w) in $workpackIds "
+          + "RETURN s, f, w, [ "
+          + "  [(s)<-[c:COMPOSES]-(st:Step) | [c, st] ],"
+          + "  [(s)<-[c1:COMPOSES]-(st1:Step)-[cs1:CONSUMES]->(ca:CostAccount) | [c1, st1, cs1, ca] ]"
+          + "]")
+  List<Schedule> findAllByWorkpacks(@Param("workpackIds") List<Long> workpackIds);
+
+  @Query("MATCH (wp:Workpack)<-[:IS_IN*0..]-(d:Deliverable) " +
+          "WHERE id(wp) = $idWorkpack " +
+          "RETURN id(d)")
+  List<Long> findAllDeliverable(@Param("idWorkpack") Long idWorkpack);
+
   @Query("MATCH (s:Schedule)-[f:FEATURES]->(w:Workpack) WHERE id(s) = $id "
          + "RETURN s, f, w, [ "
          + "  [(s)<-[c:COMPOSES]-(st:Step) | [c, st] ],"
@@ -92,5 +104,19 @@ public interface ScheduleRepository extends Neo4jRepository<Schedule, Long> {
       Long baselineId,
       Long snapshotId
   );
+
+  @Query("MATCH (w:Workpack)<-[:FEATURES]-(sh:Schedule)<-[:COMPOSES]-(st:Step)-[con:CONSUMES]->(ca:CostAccount)-[:APPLIES_TO]->(d:Deliverable) "
+          + "WITH date(sh.start) AS startDate, st.periodFromStart AS period, w, sh, st, con, ca, d, date().month AS currentMonth "
+          + "OPTIONAL MATCH (d)<-[:IS_SNAPSHOT_OF]-(d2:Deliverable)-[:COMPOSES]->(b:Baseline) "
+          + "WITH startDate, period, w, sh, st, con, ca, d, d2, b, currentMonth, "
+          + "startDate.month AS startMonth, "
+          + "period + startDate.month AS targetMonth "
+          + "WITH startDate, startMonth, period, w, sh, st, con, ca, d, d2, b, currentMonth, targetMonth % 12 AS finalMonth "
+          + "WHERE finalMonth < currentMonth AND b IS NOT NULL AND b.active = true "
+          + "SET con.plannedCost = con.actualCost, "
+          + "st.plannedWork = st.actualWork "
+          + "RETURN w, sh, st, con, ca, d, d2, b, finalMonth "
+          + "ORDER BY finalMonth ASC")
+  void updatePlannedCostsFromActualValues();
 
 }

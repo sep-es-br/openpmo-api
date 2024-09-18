@@ -46,6 +46,7 @@ import br.gov.es.openpmo.service.permissions.PlanPermissionService;
 import br.gov.es.openpmo.service.permissions.RoleService;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
+import br.gov.es.openpmo.utils.NameFormatter;
 import br.gov.es.openpmo.utils.TextSimilarityScore;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -279,6 +280,9 @@ public class StakeholderService {
     }
 
     final Person person = this.buildPerson(new Person(), request);
+
+    person.setName(NameFormatter.format(person.getFullName()));
+
     if (this.personService.existsPersonByFullName(person.getFullName(), workpackId)) {
       throw new NegocioException(ApplicationMessage.PERSON_ALREADY_EXISTS);
     }
