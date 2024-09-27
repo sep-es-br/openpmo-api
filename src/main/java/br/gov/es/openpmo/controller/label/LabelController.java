@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Api
@@ -40,7 +41,7 @@ public class LabelController {
 
         try {
             final Boolean response = this.labelService.getLabel(workpackId);
-            return List.of(
+            return Arrays.asList(
                     ResponseEntity.ok(ResponseBase.of(response ? "reprogrammed" : "foreseen")),
                     ResponseEntity.ok(ResponseBase.of(response ? "abbreviatedReprogrammed" : "abbreviatedForeseen"))
             );
