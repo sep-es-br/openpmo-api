@@ -4,6 +4,8 @@ import br.gov.es.openpmo.enumerator.CategoryEnum;
 import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.baselines.Snapshotable;
+import br.gov.es.openpmo.model.budget.PlanoOrcamentario;
+import br.gov.es.openpmo.model.budget.UnidadeOrcamentaria;
 import br.gov.es.openpmo.model.properties.Property;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.relations.IsCostAccountSnapshotOf;
@@ -39,6 +41,12 @@ public class CostAccount extends Entity implements Snapshotable<CostAccount> {
   private CostAccountModel instance;
 
   private CategoryEnum category;
+
+  @Relationship(type = "CONTROLS", direction = INCOMING)
+  private UnidadeOrcamentaria unidadeOrcamentaria;
+
+  @Relationship(type = "ASSIGNED", direction = INCOMING)
+  private PlanoOrcamentario planoOrcamentario;
 
   public CostAccount() {
   }
@@ -124,4 +132,19 @@ public class CostAccount extends Entity implements Snapshotable<CostAccount> {
     return propertyModels;
   }
 
+  public UnidadeOrcamentaria getUnidadeOrcamentaria() {
+    return unidadeOrcamentaria;
+  }
+
+  public void setUnidadeOrcamentaria(UnidadeOrcamentaria unidadeOrcamentaria) {
+    this.unidadeOrcamentaria = unidadeOrcamentaria;
+  }
+
+  public PlanoOrcamentario getPlanoOrcamentario() {
+    return planoOrcamentario;
+  }
+
+  public void setPlanoOrcamentario(PlanoOrcamentario planoOrcamentario) {
+    this.planoOrcamentario = planoOrcamentario;
+  }
 }

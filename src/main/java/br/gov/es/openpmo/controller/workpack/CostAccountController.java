@@ -11,9 +11,13 @@ import br.gov.es.openpmo.dto.costaccount.CostDto;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.workpack.CostAccountService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,9 +28,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
 import javax.validation.Valid;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
+import java.util.Objects;
 
 @Api
 @RestController
@@ -36,6 +44,18 @@ public class CostAccountController {
 
   private final CostAccountService costAccountService;
   private final ICanAccessService canAccessService;
+
+  @Value("${pentaho.api.uo.url}")
+  private String uoUrl;
+
+  @Value("${pentaho.api.po.url}")
+  private String poUrl;
+
+  @Value("${pentahoBI.userId}")
+  private String pentahoUserId;
+
+  @Value("${pentahoBI.password}")
+  private String pentahoPassword;
 
   @Autowired
   public CostAccountController(
@@ -111,6 +131,47 @@ public class CostAccountController {
     final CostAccount costAccount = this.costAccountService.findById(id);
     this.costAccountService.delete(costAccount);
     return ResponseEntity.ok().build();
+  }
+
+  @GetMapping("/budgetUnit")
+  public ResponseEntity<Object> getUO() {
+    RestTemplate restTemplate = new RestTemplate();
+    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+
+    return createRequestWithAuth(restTemplate, uoUrl);
+  }
+
+  @GetMapping("/budgetPlan")
+  public ResponseEntity<Object> getPO(@RequestParam("codUo") String codUo) {
+    RestTemplate restTemplate = new RestTemplate();
+    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+
+    String url = poUrl + codUo;
+
+    return createRequestWithAuth(restTemplate, url);
+  }
+
+  private ResponseEntity<Object> createRequestWithAuth(RestTemplate restTemplate, String url) {
+    String plainCreds = pentahoUserId + ":" + pentahoPassword;
+    byte[] plainCredsBytes = plainCreds.getBytes();
+    byte[] base64CredsBytes = Base64.getEncoder().encode(plainCredsBytes);
+    String base64Creds = new String(base64CredsBytes);
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.add("Authorization", "Basic " + base64Creds);
+
+    HttpEntity<String> request = new HttpEntity<>(headers);
+
+    try {
+      ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+
+      ObjectMapper objectMapper = new ObjectMapper();
+      JsonNode jsonNode = objectMapper.readTree(response.getBody());
+
+      return ResponseEntity.ok(jsonNode);
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
   }
 
 }
