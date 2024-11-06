@@ -22,19 +22,13 @@ public class UnidadeOrcamentaria extends Entity {
 
     private String fullName;
 
-    @Relationship(type = "CONTROLS")
+    @Relationship(type = "CONTROLS", direction = Relationship.OUTGOING)
     private Set<PlanoOrcamentario> planoOrcamentario;
 
     @Relationship(type = "CONTROLS")
     private Set<CostAccount> costAccount;
 
     public UnidadeOrcamentaria() {}
-
-    public UnidadeOrcamentaria(Integer code, String name, String fullName) {
-        this.code = code;
-        this.name = name;
-        this.fullName = fullName;
-    }
 
     @Override
     public Long getId() {

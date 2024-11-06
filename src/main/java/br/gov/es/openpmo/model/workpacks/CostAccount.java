@@ -17,15 +17,13 @@ import org.springframework.data.annotation.Transient;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.neo4j.ogm.annotation.Relationship.INCOMING;
-
 @NodeEntity
 public class CostAccount extends Entity implements Snapshotable<CostAccount> {
 
   @Relationship(type = "IS_SNAPSHOT_OF")
   private IsCostAccountSnapshotOf master;
 
-  @Relationship(type = "IS_SNAPSHOT_OF", direction = INCOMING)
+  @Relationship(type = "IS_SNAPSHOT_OF", direction = Relationship.INCOMING)
   private Set<IsCostAccountSnapshotOf> snapshots;
 
   @Relationship(type = "COMPOSES")
@@ -42,10 +40,10 @@ public class CostAccount extends Entity implements Snapshotable<CostAccount> {
 
   private CategoryEnum category;
 
-  @Relationship(type = "CONTROLS", direction = INCOMING)
+  @Relationship(type = "CONTROLS", direction = Relationship.INCOMING)
   private UnidadeOrcamentaria unidadeOrcamentaria;
 
-  @Relationship(type = "ASSIGNED", direction = INCOMING)
+  @Relationship(type = "ASSIGNED", direction = Relationship.INCOMING)
   private PlanoOrcamentario planoOrcamentario;
 
   public CostAccount() {

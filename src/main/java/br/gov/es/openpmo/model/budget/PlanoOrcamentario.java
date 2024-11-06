@@ -24,17 +24,11 @@ public class PlanoOrcamentario extends Entity {
 
     @Relationship(type = "CONTROLS", direction = Relationship.INCOMING)
     private Set<UnidadeOrcamentaria> unidadeOrcamentaria;
-        @Relationship(type = "ASSIGNED")
+
+    @Relationship(type = "ASSIGNED")
     private Set<CostAccount> costAccount;
 
     public PlanoOrcamentario() {}
-
-    public PlanoOrcamentario(Long id, Integer code, String name, String fullName) {
-        this.id = id;
-        this.code = code;
-        this.name = name;
-        this.fullName = fullName;
-    }
 
     @Override
     public Long getId() {

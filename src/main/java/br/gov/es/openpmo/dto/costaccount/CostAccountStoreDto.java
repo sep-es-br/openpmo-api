@@ -32,9 +32,9 @@ public class CostAccountStoreDto {
       .orElse(Collections.emptyList());
   }
 
-  UnidadeOrcamentaria selectedUo;
+  UnidadeOrcamentaria unidadeOrcamentaria;
 
-  PlanoOrcamentario selectedPlano;
+  PlanoOrcamentario planoOrcamentario;
 
   public Long getIdWorkpack() {
     return this.idWorkpack;
@@ -60,19 +60,19 @@ public class CostAccountStoreDto {
     this.idCostAccountModel = idCostAccountModel;
   }
 
-  public UnidadeOrcamentaria getSelectedUo() {
-    return selectedUo;
+  public UnidadeOrcamentaria getUnidadeOrcamentaria() {
+    return unidadeOrcamentaria;
   }
 
-  public void setSelectedUo(UnidadeOrcamentaria selectedUo) {
-    this.selectedUo = selectedUo;
+  public void setUnidadeOrcamentaria(UnidadeOrcamentaria unidadeOrcamentaria) {
+    this.unidadeOrcamentaria = unidadeOrcamentaria;
   }
 
-  public PlanoOrcamentario getSelectedPlano() {
-    return selectedPlano;
+  public PlanoOrcamentario getPlanoOrcamentario() {
+    return planoOrcamentario;
   }
 
-  public void setSelectedPlano(PlanoOrcamentario selectedPlano) {
-    this.selectedPlano = selectedPlano;
+  public void setPlanoOrcamentario(PlanoOrcamentario planoOrcamentario) {
+    this.planoOrcamentario = planoOrcamentario;
   }
 }
