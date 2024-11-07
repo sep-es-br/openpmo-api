@@ -193,8 +193,16 @@ public class CostAccountService {
   }
 
   public CostAccount findById(final Long id) {
-    return this.costAccountRepository.findByIdWithPropertyModel(id)
+    CostAccount costAccount = this.costAccountRepository.findByIdWithPropertyModel(id)
       .orElseThrow(() -> new NegocioException(COST_ACCOUNT_NOT_FOUND));
+
+    Optional<UnidadeOrcamentaria> uoOpt = unidadeOrcamentariaRepository.findByIdCostAccount(id);
+    uoOpt.ifPresent(costAccount::setUnidadeOrcamentaria);
+
+    Optional<PlanoOrcamentario> poOpt = planoOrcamentarioRepository.findByIdCostAccout(id);
+    poOpt.ifPresent(costAccount::setPlanoOrcamentario);
+
+    return costAccount;
   }
 
   public CostAccountDto findByIdAsDto(final Long id) {
@@ -215,18 +223,6 @@ public class CostAccountService {
     }
     if (costAccount.getWorkpack() != null) {
       costAccountDto.setIdWorkpack(costAccount.getWorkpack().getId());
-    }
-
-    Optional<UnidadeOrcamentaria> uo = this.unidadeOrcamentariaRepository.findByIdCostAccount(id);
-    if (uo.isPresent()) {
-      UnidadeOrcamentaria unidadeOrcamentaria = uo.get();
-      costAccountDto.setUnidadeOrcamentaria(unidadeOrcamentaria);
-    }
-
-    Optional<PlanoOrcamentario> po = this.planoOrcamentarioRepository.findByIdCostAccout(id);
-    if (po.isPresent()) {
-      PlanoOrcamentario planoOrcamentario = po.get();
-      costAccountDto.setPlanoOrcamentario(planoOrcamentario);
     }
 
     return costAccountDto;
@@ -477,6 +473,9 @@ public class CostAccountService {
                 .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
       }
 
+      unidadeOrcamentaria = store.getUnidadeOrcamentaria();
+      planoOrcamentario = store.getPlanoOrcamentario();
+
     } else {
       idCostAccount = ((CostAccountUpdateDto) cost).getId();
       final CostAccountUpdateDto update = (CostAccountUpdateDto) cost;
@@ -488,35 +487,35 @@ public class CostAccountService {
         update.setProperties(null);
       }
 
-      // Busca ou cria a UnidadeOrcamentaria sem duplicar
-      unidadeOrcamentaria = this.unidadeOrcamentariaRepository.findByCodeAndIdCostAccount(update.getUnidadeOrcamentaria().getCode(), update.getId())
-              .orElse(update.getUnidadeOrcamentaria());
-
-      // Busca ou cria o PlanoOrcamentario sem duplicar
-      planoOrcamentario = this.planoOrcamentarioRepository.findByCodeAndIdCostAccount(update.getPlanoOrcamentario().getCode(), update.getId())
-              .orElse(update.getPlanoOrcamentario());
+      unidadeOrcamentaria = update.getUnidadeOrcamentaria();
+      planoOrcamentario = update.getPlanoOrcamentario();
     }
 
     CostAccount costAccount;
     if (idCostAccount == null) {
       costAccount = this.modelMapper.map(cost, CostAccount.class);
       costAccount.setWorkpack(workpack);
+      costAccount.setUnidadeOrcamentaria(unidadeOrcamentaria);
+      costAccount.setPlanoOrcamentario(planoOrcamentario);
     } else {
       costAccount = this.findById(idCostAccount);
+
+      if (costAccount.getUnidadeOrcamentaria() != null) {
+        unidadeOrcamentariaRepository.deleteById(costAccount.getUnidadeOrcamentaria().getId());
+      }
+
+      if (costAccount.getPlanoOrcamentario() != null) {
+        planoOrcamentarioRepository.deleteById(costAccount.getPlanoOrcamentario().getId());
+      }
     }
 
-    costAccount.setUnidadeOrcamentaria(unidadeOrcamentaria);
     costAccount.setPlanoOrcamentario(planoOrcamentario);
+    costAccount.setUnidadeOrcamentaria(unidadeOrcamentaria);
 
-    // Evita duplicação de planoOrcamentario em unidadeOrcamentaria
-    if (unidadeOrcamentaria != null && planoOrcamentario != null) {
-      if (unidadeOrcamentaria.getPlanoOrcamentario() == null) {
-        unidadeOrcamentaria.setPlanoOrcamentario(new HashSet<>());
-      }
-      if (!unidadeOrcamentaria.getPlanoOrcamentario().contains(planoOrcamentario)) {
-        unidadeOrcamentaria.getPlanoOrcamentario().add(planoOrcamentario);
-      }
+    if (unidadeOrcamentaria.getPlanoOrcamentario() == null) {
+      unidadeOrcamentaria.setPlanoOrcamentario(new HashSet<>());
     }
+    unidadeOrcamentaria.getPlanoOrcamentario().add(planoOrcamentario);
 
     costAccount.setProperties(properties);
 
