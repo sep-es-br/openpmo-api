@@ -13,4 +13,12 @@ public interface PlanoOrcamentarioRepository extends Neo4jRepository<PlanoOrcame
             "where id(c) = $id " +
             "return po")
     Optional<PlanoOrcamentario> findByIdCostAccout(@Param("id") Long id);
+
+    Optional<PlanoOrcamentario> findByCode(Integer code);
+
+    @Query("match (po:PlanoOrcamentario)-[:CONTROLS]->(c:CostAccount) "
+            + "where po.code = $code "
+            + "and id(c) = $costAccountId "
+            + "return po")
+    Optional<PlanoOrcamentario> findByCodeAndIdCostAccount(Integer code, Long costAccountId);
 }

@@ -13,4 +13,10 @@ public interface UnidadeOrcamentariaRepository extends Neo4jRepository<UnidadeOr
             "where id(c) = $id " +
             "return uo")
     Optional<UnidadeOrcamentaria> findByIdCostAccount(@Param("id") Long id);
+
+    @Query("match (uo:UnidadeOrcamentaria)-[:CONTROLS]->(c:CostAccount) "
+            + "where uo.code = $code "
+            + "and id(c) = $costAccountId "
+            + "return uo")
+    Optional<UnidadeOrcamentaria> findByCodeAndIdCostAccount(Integer code, Long costAccountId);
 }

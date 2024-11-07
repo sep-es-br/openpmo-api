@@ -104,4 +104,29 @@ public interface CostAccountRepository extends Neo4jRepository<CostAccount, Long
       Long snapshotId
   );
 
+  @Query("match (c:CostAccount)-[i:APPLIES_TO]->(w:Workpack), "
+          + "(c)<-[a:ASSIGNED]-(po:PlanoOrcamentario), "
+          + "(c)<-[ctrl:CONTROLS]-(uo:UnidadeOrcamentaria) "
+          + "where id(c) = $costAccountId "
+          + "set uo.code = $codeUo, "
+          + "uo.name = $nameUo, "
+          + "po.code = $codePo, "
+          + "po.name = $namePo "
+          + "return c, i, a, po, ctrl, uo")
+  void updateUOandPO(
+    Long costAccountId,
+    Integer codeUo,
+    String nameUo,
+    Integer codePo,
+    String namePo
+  );
+
+  @Query("match (c:CostAccount)-[i:APPLIES_TO]->(w:Workpack), "
+          + "(c)<-[a:ASSIGNED]-(po:PlanoOrcamentario), "
+          + "(c)<-[ctrl:CONTROLS]-(uo:UnidadeOrcamentaria) "
+          + "where id(c) = $costAccountId "
+          + "return uo is not null "
+          + "and po is not null")
+  boolean hasUOandPO(Long costAccountId);
+
 }

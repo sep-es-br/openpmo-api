@@ -455,38 +455,48 @@ public class CostAccountService {
   }
 
   public CostAccount getCostAccount(final Object cost) {
+
     Set<Property> properties = null;
     Long idCostAccount = null;
     Long idCostAccountModel = null;
     Workpack workpack = null;
     UnidadeOrcamentaria unidadeOrcamentaria = null;
     PlanoOrcamentario planoOrcamentario = null;
+
     if (cost instanceof CostAccountStoreDto) {
+
       final CostAccountStoreDto store = (CostAccountStoreDto) cost;
       final List<? extends PropertyDto> propertyDtos = store.getProperties();
+
       if (propertyDtos != null && !propertyDtos.isEmpty()) {
         properties = this.workpackService.getProperties(store.getProperties());
         idCostAccountModel = store.getIdCostAccountModel();
         store.setProperties(null);
-        workpack = this.workpackRepository.findById(store.getIdWorkpack(), 0)
-          .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
 
-        unidadeOrcamentaria = store.getUnidadeOrcamentaria();
-        planoOrcamentario = store.getPlanoOrcamentario();
+        workpack = this.workpackRepository.findById(store.getIdWorkpack(), 0)
+                .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
       }
+
     } else {
       idCostAccount = ((CostAccountUpdateDto) cost).getId();
       final CostAccountUpdateDto update = (CostAccountUpdateDto) cost;
       final List<? extends PropertyDto> propertyDtos = update.getProperties();
+
       if (propertyDtos != null && !propertyDtos.isEmpty()) {
         properties = this.workpackService.getProperties(update.getProperties());
         idCostAccountModel = update.getIdCostAccountModel();
         update.setProperties(null);
       }
 
-      unidadeOrcamentaria = update.getUnidadeOrcamentaria();
-      planoOrcamentario = update.getPlanoOrcamentario();
+      // Busca ou cria a UnidadeOrcamentaria sem duplicar
+      unidadeOrcamentaria = this.unidadeOrcamentariaRepository.findByCodeAndIdCostAccount(update.getUnidadeOrcamentaria().getCode(), update.getId())
+              .orElse(update.getUnidadeOrcamentaria());
+
+      // Busca ou cria o PlanoOrcamentario sem duplicar
+      planoOrcamentario = this.planoOrcamentarioRepository.findByCodeAndIdCostAccount(update.getPlanoOrcamentario().getCode(), update.getId())
+              .orElse(update.getPlanoOrcamentario());
     }
+
     CostAccount costAccount;
     if (idCostAccount == null) {
       costAccount = this.modelMapper.map(cost, CostAccount.class);
@@ -494,30 +504,37 @@ public class CostAccountService {
     } else {
       costAccount = this.findById(idCostAccount);
     }
+
     costAccount.setUnidadeOrcamentaria(unidadeOrcamentaria);
     costAccount.setPlanoOrcamentario(planoOrcamentario);
+
+    // Evita duplicação de planoOrcamentario em unidadeOrcamentaria
+    if (unidadeOrcamentaria != null && planoOrcamentario != null) {
+      if (unidadeOrcamentaria.getPlanoOrcamentario() == null) {
+        unidadeOrcamentaria.setPlanoOrcamentario(new HashSet<>());
+      }
+      if (!unidadeOrcamentaria.getPlanoOrcamentario().contains(planoOrcamentario)) {
+        unidadeOrcamentaria.getPlanoOrcamentario().add(planoOrcamentario);
+      }
+    }
+
     costAccount.setProperties(properties);
 
     final CostAccountModel costAccountModel = this.costAccountModelRepository.findById(idCostAccountModel, 0)
-      .orElseThrow(() -> new RegistroNaoEncontradoException(ApplicationMessage.COST_ACCOUNT_MODEL_NOT_FOUND));
+            .orElseThrow(() -> new RegistroNaoEncontradoException(ApplicationMessage.COST_ACCOUNT_MODEL_NOT_FOUND));
     costAccount.setInstance(costAccountModel);
 
-    UnidadeOrcamentaria uo = costAccount.getUnidadeOrcamentaria();
-    PlanoOrcamentario po = costAccount.getPlanoOrcamentario();
-
-    if (uo.getPlanoOrcamentario() == null) {
-      uo.setPlanoOrcamentario(new HashSet<>());
-    }
-    uo.getPlanoOrcamentario().add(po);
-
     costAccount = this.save(costAccount);
+
     if (properties != null && !properties.isEmpty()) {
       for (Property property : properties) {
         property.setCostAccount(costAccount);
       }
       this.propertyRepository.saveAll(properties);
     }
+
     return costAccount;
   }
+
 
 }
