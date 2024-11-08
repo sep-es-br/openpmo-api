@@ -137,12 +137,7 @@ public class CostAccountController {
 
   @GetMapping("/budgetUnit")
   public ResponseEntity<Object> getUO() {
-    RestTemplate restTemplate;
-    try {
-      restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
-    } catch (Exception e) {
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao configurar o RestTemplate para a URL " + uoUrl);
-    }
+    RestTemplate restTemplate = new RestTemplate();
     restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
     return restTemplateUtils.createRequestWithAuth(restTemplate, uoUrl, pentahoUserId, pentahoPassword);
@@ -150,12 +145,7 @@ public class CostAccountController {
 
   @GetMapping("/budgetPlan")
   public ResponseEntity<Object> getPO(@RequestParam("codUo") String codUo) {
-    RestTemplate restTemplate;
-    try {
-      restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
-    } catch (Exception e) {
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao configurar o RestTemplate para a URL " + poUrl);
-    }
+    RestTemplate restTemplate = new RestTemplate();
     restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
     String url = poUrl + codUo;

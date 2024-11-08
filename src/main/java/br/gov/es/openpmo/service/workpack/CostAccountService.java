@@ -456,8 +456,8 @@ public class CostAccountService {
     Long idCostAccount = null;
     Long idCostAccountModel = null;
     Workpack workpack = null;
-    UnidadeOrcamentaria unidadeOrcamentaria = null;
-    PlanoOrcamentario planoOrcamentario = null;
+    UnidadeOrcamentaria unidadeOrcamentaria;
+    PlanoOrcamentario planoOrcamentario;
 
     if (cost instanceof CostAccountStoreDto) {
 
@@ -512,10 +512,12 @@ public class CostAccountService {
     costAccount.setPlanoOrcamentario(planoOrcamentario);
     costAccount.setUnidadeOrcamentaria(unidadeOrcamentaria);
 
-    if (unidadeOrcamentaria.getPlanoOrcamentario() == null) {
-      unidadeOrcamentaria.setPlanoOrcamentario(new HashSet<>());
+    if (unidadeOrcamentaria != null) {
+      if (unidadeOrcamentaria.getPlanoOrcamentario() == null) {
+        unidadeOrcamentaria.setPlanoOrcamentario(new HashSet<>());
+      }
+      unidadeOrcamentaria.getPlanoOrcamentario().add(planoOrcamentario);
     }
-    unidadeOrcamentaria.getPlanoOrcamentario().add(planoOrcamentario);
 
     costAccount.setProperties(properties);
 
