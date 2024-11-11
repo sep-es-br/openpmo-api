@@ -42,20 +42,20 @@ public class CostAccountController {
   private final CostAccountService costAccountService;
   private final ICanAccessService canAccessService;
 
-//  @Value("${pentaho.api.uo.url}")
-  private final String uoUrl = "https://bi.sep.local/pentaho/plugin/cda/api/doQuery?path=/public/dashboard/plano_orcamentario/api_uo_all.cda&dataAccessId=api_uo_all";
+  @Value("${pentaho.api.uo.url}")
+  private String uoUrl;
 
-//  @Value("${pentaho.api.po.url}")
-  private final String poUrl = "https://bi.sep.local/pentaho/plugin/cda/api/doQuery?path=/public/dashboard/plano_orcamentario/api_po_uo.cda&dataAccessId=api_po_uo&parampCodUo=";
+  @Value("${pentaho.api.po.url}")
+  private String poUrl;
 
-//  @Value("${pentaho.api.po_liquidado.url}")
-//  private String poLiquidadoUrl;
+  @Value("${pentaho.api.po_liquidado.url}")
+  private String poLiquidadoUrl;
 
-//  @Value("${pentahoBI.userId}")
-  private final String pentahoUserId = "anonimo.bi";
+  @Value("${pentahoBI.userId}")
+  private String pentahoUserId;
 
-//  @Value("${pentahoBI.password}")
-  private final String pentahoPassword = "Da$hb0ard";
+  @Value("${pentahoBI.password}")
+  private String pentahoPassword;
 
   private final RestTemplateUtils restTemplateUtils = new RestTemplateUtils();
 
