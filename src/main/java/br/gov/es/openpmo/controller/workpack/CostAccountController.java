@@ -136,7 +136,8 @@ public class CostAccountController {
   }
 
   @GetMapping("/budgetUnit")
-  public ResponseEntity<Object> getUO() {
+  public ResponseEntity<Object> getUO(@Authorization final String authorization) {
+    this.canAccessService.ensureIsAdministrator(authorization);
     RestTemplate restTemplate;
     try {
       restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
@@ -149,7 +150,8 @@ public class CostAccountController {
   }
 
   @GetMapping("/budgetPlan")
-  public ResponseEntity<Object> getPO(@RequestParam("codUo") String codUo) {
+  public ResponseEntity<Object> getPO(@RequestParam("codUo") String codUo, @Authorization final String authorization) {
+    this.canAccessService.ensureIsAdministrator(authorization);
     RestTemplate restTemplate;
     try {
       restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
