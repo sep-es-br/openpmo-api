@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.dto.schedule;
 
 import br.gov.es.openpmo.dto.EntityDto;
+import br.gov.es.openpmo.dto.costaccount.CostAccountEntityDto;
 import br.gov.es.openpmo.model.relations.Consumes;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -17,7 +18,7 @@ public class ConsumesDto {
   private BigDecimal actualCost;
   private BigDecimal baselinePlannedCost;
   private BigDecimal plannedCost;
-  private EntityDto costAccount;
+  private CostAccountEntityDto costAccount;
 
   @JsonIgnore
   private Long stepSnapshotId;
@@ -33,7 +34,7 @@ public class ConsumesDto {
     this.actualCost = consumes.getActualCost();
     this.plannedCost = consumes.getPlannedCost();
     if (consumes.getCostAccount() != null) {
-      this.costAccount = new EntityDto(consumes.getCostAccount().getId());
+      this.costAccount = new CostAccountEntityDto(consumes.getCostAccount().getId());
     }
   }
 
@@ -61,11 +62,11 @@ public class ConsumesDto {
     this.plannedCost = plannedCost;
   }
 
-  public EntityDto getCostAccount() {
+  public CostAccountEntityDto getCostAccount() {
     return this.costAccount;
   }
 
-  public void setCostAccount(final EntityDto costAccount) {
+  public void setCostAccount(final CostAccountEntityDto costAccount) {
     this.costAccount = costAccount;
   }
 
@@ -96,7 +97,7 @@ public class ConsumesDto {
   @JsonIgnore
   public Long getIdCostAccount() {
     return Optional.ofNullable(this.costAccount)
-      .map(EntityDto::getId)
+      .map(CostAccountEntityDto::getId)
       .orElse(null);
   }
 

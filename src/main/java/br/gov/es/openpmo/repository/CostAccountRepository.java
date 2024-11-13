@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.repository;
 
 import br.gov.es.openpmo.dto.EntityDto;
+import br.gov.es.openpmo.dto.costaccount.CostAccountEntityDto;
 import br.gov.es.openpmo.dto.schedule.ConsumesDto;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
@@ -82,10 +83,16 @@ public interface CostAccountRepository extends Neo4jRepository<CostAccount, Long
   )
   List<ConsumesDto> findAllConsumesByStepIds(List<Long> snapshotStepIds);
 
-  @Query("MATCH (s:Schedule)<-[c1:COMPOSES]-(st1:Step)-[cs1:CONSUMES]->(c:CostAccount)<-[:FEATURES]-(name:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}) " +
-      "WHERE id(s) IN $ids " +
-      "RETURN id(c) as id, name.value as name ")
-  List<EntityDto> findCostAccountByScheduleIds(List<Long> ids);
+  @Query("MATCH (s:Schedule)<-[c1:COMPOSES]-(st1:Step)-[cs1:CONSUMES]->(c:CostAccount)<-[:FEATURES]-(name:Property)-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'name'}), "
+          + "(c)<-[:ASSIGNED]-(po:PlanoOrcamentario)<-[:CONTROLS]-(uo:UnidadeOrcamentaria) "
+          + "WHERE id(s) IN $ids "
+          + "RETURN id(c) AS id, "
+          + "name.value AS name, "
+          + "uo.code as codUo, "
+          + "uo.name as unidadeOrcamentaria, "
+          + "po.code as codPo, "
+          + "po.fullName as planoOrcamentario")
+  List<CostAccountEntityDto> findCostAccountByScheduleIds(List<Long> ids);
 
   @Query(" MATCH (master:CostAccount), (snapshot:CostAccount) " +
       "WHERE ID(master) = $masterId AND ID(snapshot) = $snapshotId " +

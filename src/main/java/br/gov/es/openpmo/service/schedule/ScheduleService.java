@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.service.schedule;
 
 import br.gov.es.openpmo.dto.EntityDto;
+import br.gov.es.openpmo.dto.costaccount.CostAccountEntityDto;
 import br.gov.es.openpmo.dto.schedule.ConsumesDto;
 import br.gov.es.openpmo.dto.schedule.DistributionStrategy;
 import br.gov.es.openpmo.dto.schedule.GroupStepDto;
@@ -344,7 +345,7 @@ public class ScheduleService {
     final List<StepDto> stepSnapshot = this.stepRepository.findAllStepsnapshotByScheduleSnapshotIds(new ArrayList<>(idsSnapshots));
     final Set<Long> idsStepSnapshot = stepSnapshot.stream().map(StepDto::getId).collect(Collectors.toSet());
     final List<ConsumesDto> consumesSnapshot = costAccountRepository.findAllConsumesByStepIds(new ArrayList<>(idsStepSnapshot));
-    final List<EntityDto> constAccounts = costAccountRepository.findCostAccountByScheduleIds(new ArrayList<>(ids));
+    final List<CostAccountEntityDto> constAccounts = costAccountRepository.findCostAccountByScheduleIds(new ArrayList<>(ids));
     final List<ScheduleDto> list = new ArrayList<>();
 
     for (final Schedule schedule : schedules) {
@@ -379,7 +380,7 @@ public class ScheduleService {
 
 
   private List<GroupStepDto> getGroupStep(Schedule schedule, List<StepDto> listStepSnapshot
-      , final List<ConsumesDto> listConsumesSnapshot, final List<EntityDto> constAccounts) {
+      , final List<ConsumesDto> listConsumesSnapshot, final List<CostAccountEntityDto> constAccounts) {
     List<GroupStepDto> groupList = new ArrayList<>(0);
     Map<Integer, List<StepDto>> mapGroup = this.getMapGroups(schedule, listStepSnapshot, listConsumesSnapshot, constAccounts);
     if (!mapGroup.isEmpty()) {
@@ -393,7 +394,7 @@ public class ScheduleService {
   }
 
   private Map<Integer, List<StepDto>> getMapGroups(Schedule schedule, List<StepDto> listStepSnapshot
-      , final List<ConsumesDto> listConsumesSnapshot, final List<EntityDto> constAccounts) {
+      , final List<ConsumesDto> listConsumesSnapshot, final List<CostAccountEntityDto> constAccounts) {
     Map<Integer, List<StepDto>> mapGroup = new HashMap<>(0);
     if (CollectionUtils.isNotEmpty(schedule.getSteps())) {
       schedule.getSteps().forEach(s -> {
@@ -413,7 +414,7 @@ public class ScheduleService {
   }
 
   private StepDto getStepDto(final Step step, StepDto snapshot
-      , final List<ConsumesDto> listConsumesSnapshot, final List<EntityDto> constAccounts) {
+      , final List<ConsumesDto> listConsumesSnapshot, final List<CostAccountEntityDto> constAccounts) {
     StepDto stepDto = new StepDto(step);
     stepDto.setConsumes(this.getConsumes(step, listConsumesSnapshot, constAccounts));
     if (snapshot != null) {
@@ -426,7 +427,7 @@ public class ScheduleService {
   }
 
   private Set<ConsumesDto> getConsumes(final Step step
-      , List<ConsumesDto> listConsumesSnapshot, final List<EntityDto> constAccounts) {
+      , List<ConsumesDto> listConsumesSnapshot, final List<CostAccountEntityDto> constAccounts) {
     Set<ConsumesDto> consumes = new LinkedHashSet<>(0);
     if (CollectionUtils.isNotEmpty(step.getConsumes())) {
       step.getConsumes().forEach(c -> {
@@ -434,6 +435,22 @@ public class ScheduleService {
 
         constAccounts.stream().filter(e -> e.getId().equals(c.getCostAccount().getId())).findFirst().ifPresent(
             entityDto -> dto.getCostAccount().setName(entityDto.getName()));
+
+        constAccounts.stream().filter(e -> e.getId().equals(c.getCostAccount().getId())).findFirst().ifPresent(
+                costAccountEntityDto -> dto.getCostAccount().setCodUo(costAccountEntityDto.getCodUo())
+        );
+
+        constAccounts.stream().filter(e -> e.getId().equals(c.getCostAccount().getId())).findFirst().ifPresent(
+                costAccountEntityDto -> dto.getCostAccount().setUnidadeOrcamentaria(costAccountEntityDto.getUnidadeOrcamentaria())
+        );
+
+        constAccounts.stream().filter(e -> e.getId().equals(c.getCostAccount().getId())).findFirst().ifPresent(
+                costAccountEntityDto -> dto.getCostAccount().setCodPo(costAccountEntityDto.getCodPo())
+        );
+
+        constAccounts.stream().filter(e -> e.getId().equals(c.getCostAccount().getId())).findFirst().ifPresent(
+                costAccountEntityDto -> dto.getCostAccount().setPlanoOrcamentario(costAccountEntityDto.getPlanoOrcamentario())
+        );
 
         listConsumesSnapshot.stream().filter(
             s -> s.getCostAccountMasterId() != null && s.getCostAccountMasterId().equals(
@@ -582,9 +599,17 @@ public class ScheduleService {
       consumesDto.setActualCost(relation.getActualCost());
       consumesDto.setPlannedCost(relation.getPlannedCost());
       final Long id = relation.getCostAccount().getId();
-      final EntityDto costAccount = new EntityDto(
+      final Integer codUo = relation.getCostAccount().getUnidadeOrcamentaria().getCode();
+      final String unidadeOrcamentaria = relation.getCostAccount().getUnidadeOrcamentaria().getName();
+      final Integer codPo = relation.getCostAccount().getPlanoOrcamentario().getCode();
+      final String planoOrcamentario = relation.getCostAccount().getPlanoOrcamentario().getFullName();
+      final CostAccountEntityDto costAccount = new CostAccountEntityDto(
         id,
-        this.costAccountRepository.findCostAccountNameById(id)
+        this.costAccountRepository.findCostAccountNameById(id),
+        codUo,
+        unidadeOrcamentaria,
+        codPo,
+        planoOrcamentario
       );
       consumesDto.setCostAccount(costAccount);
       stepDto.getConsumes().add(consumesDto);

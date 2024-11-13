@@ -163,4 +163,18 @@ public class CostAccountController {
     return restTemplateUtils.createRequestWithAuth(restTemplate, url, pentahoUserId, pentahoPassword);
   }
 
+  @GetMapping("/liquidated")
+  public ResponseEntity<Object> getPOLiquidated(@RequestParam("codPo") String codPo) {
+    RestTemplate restTemplate;
+    try {
+      restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao configurar o RestTemplate para a URL " + poLiquidadoUrl);
+    }
+    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+
+    String url = poLiquidadoUrl + codPo;
+
+    return restTemplateUtils.createRequestWithAuth(restTemplate, url, pentahoUserId, pentahoPassword);
+  }
 }
