@@ -8,12 +8,17 @@ import br.gov.es.openpmo.dto.schedule.ScheduleParamDto;
 import br.gov.es.openpmo.model.schedule.Schedule;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.schedule.ScheduleService;
+import br.gov.es.openpmo.utils.RestTemplateUtils;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import javax.validation.Valid;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Api
@@ -25,6 +30,17 @@ public class ScheduleController {
   private final ScheduleService scheduleService;
 
   private final ICanAccessService canAccessService;
+
+  @Value("${pentaho.api.po_liquidado.url}")
+  private String poLiquidatedUrl;
+
+  @Value("${pentahoBI.userId}")
+  private String pentahoUserId;
+
+  @Value("${pentahoBI.password}")
+  private String pentahoPassword;
+
+  private final RestTemplateUtils restTemplateUtils = new RestTemplateUtils();
 
   @Autowired
   public ScheduleController(
@@ -99,5 +115,26 @@ public class ScheduleController {
     this.canAccessService.ensureCanReadResourceWorkpack(workpackId, authorization);
     final Boolean response = this.scheduleService.getCurrentBaseline(workpackId);
     return ResponseEntity.ok(ResponseBase.of(response));
+  }
+
+  /**
+   * Método controlador responsável pela consulta dos valores liquidados do PO
+   *
+   * @param codPo codigo do PO para consulta dos valores liquidados
+   * @return o JSON Object da consulta
+   */
+  @GetMapping("/po/liquidated/{codPo}")
+  public ResponseEntity<Object> getPoLiquidated(@PathVariable("codPo") String codPo) {
+    RestTemplate restTemplate;
+    try {
+      restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
+    } catch (Exception e) {
+      return ResponseEntity.badRequest().build();
+    }
+    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+
+    String url = poLiquidatedUrl + codPo;
+
+    return restTemplateUtils.createRequestWithAuth(restTemplate, url, pentahoUserId, pentahoPassword);
   }
 }

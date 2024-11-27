@@ -48,9 +48,6 @@ public class CostAccountController {
   @Value("${pentaho.api.po.url}")
   private String poUrl;
 
-  @Value("${pentaho.api.po_liquidado.url}")
-  private String poLiquidadoUrl;
-
   @Value("${pentahoBI.userId}")
   private String pentahoUserId;
 
@@ -159,21 +156,6 @@ public class CostAccountController {
     restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
     String url = poUrl + codUo;
-
-    return restTemplateUtils.createRequestWithAuth(restTemplate, url, pentahoUserId, pentahoPassword);
-  }
-
-  @GetMapping("/liquidated")
-  public ResponseEntity<Object> getPOLiquidated(@RequestParam("codPo") String codPo) {
-    RestTemplate restTemplate;
-    try {
-      restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
-    } catch (Exception e) {
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao configurar o RestTemplate para a URL " + poLiquidadoUrl);
-    }
-    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
-
-    String url = poLiquidadoUrl + codPo;
 
     return restTemplateUtils.createRequestWithAuth(restTemplate, url, pentahoUserId, pentahoPassword);
   }
