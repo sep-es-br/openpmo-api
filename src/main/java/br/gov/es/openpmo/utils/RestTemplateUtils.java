@@ -8,7 +8,8 @@ import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
-import org.slf4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.http.*;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
@@ -18,11 +19,7 @@ import java.util.Base64;
 
 public class RestTemplateUtils {
 
-    private final Logger logger;
-
-    public RestTemplateUtils(Logger logger) {
-        this.logger = logger;
-    }
+    private static final Logger logger = LogManager.getLogger(RestTemplateUtils.class);
 
     /**
      * Cria e configura um {@link RestTemplate} que ignora a verificação de certificados SSL.
