@@ -136,9 +136,13 @@ public class CostAccountController {
     return ResponseEntity.ok().build();
   }
 
-  @GetMapping("/budgetUnit")
-  public ResponseEntity<Object> getUO() {
+  @GetMapping("/budgetUnit/{idCostAccount}")
+  public ResponseEntity<Object> getUO(@PathVariable("idCostAccount") Long idCostAccount,
+                                      @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(idCostAccount, authorization);
     RestTemplate restTemplate;
+
     try {
       restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
     } catch (Exception e) {
@@ -151,8 +155,13 @@ public class CostAccountController {
   }
 
   @GetMapping("/budgetPlan")
-  public ResponseEntity<Object> getPO(@RequestParam("codUo") String codUo) {
+  public ResponseEntity<Object> getPO(@RequestParam("codUo") String codUo,
+                                      @RequestParam("costAccountId") Long idCostAccount,
+                                      @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(idCostAccount, authorization);
     RestTemplate restTemplate;
+
     try {
       restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
     } catch (Exception e) {
