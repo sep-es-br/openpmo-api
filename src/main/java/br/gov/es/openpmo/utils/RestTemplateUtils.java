@@ -15,6 +15,9 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 import javax.net.ssl.SSLContext;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
 public class RestTemplateUtils {
@@ -27,11 +30,17 @@ public class RestTemplateUtils {
      * @return um {@link RestTemplate} configurado para ignorar a verificação de certificados.
      * @throws Exception se ocorrer um erro ao criar ou configurar o contexto SSL.
      */
-    public RestTemplate createRestTemplateWithNoSSL() throws Exception {
-        SSLContext sslContext = SSLContextBuilder
-                .create()
-                .loadTrustMaterial(new TrustSelfSignedStrategy())
-                .build();
+    public RestTemplate createRestTemplateWithNoSSL() {
+        SSLContext sslContext = null;
+        try {
+            sslContext = SSLContextBuilder
+                    .create()
+                    .loadTrustMaterial(new TrustSelfSignedStrategy())
+                    .build();
+        } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException e) {
+            logger.error("Erro ao realizar requisição ao Pentaho: {}", e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
 
         SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
 
