@@ -13,6 +13,8 @@ import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.workpack.CostAccountService;
 import br.gov.es.openpmo.utils.RestTemplateUtils;
 import io.swagger.annotations.Api;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -55,6 +57,8 @@ public class CostAccountController {
   private String pentahoPassword;
 
   private final RestTemplateUtils restTemplateUtils = new RestTemplateUtils();
+
+  private final Logger logger = LogManager.getLogger(CostAccountController.class);
 
   @Autowired
   public CostAccountController(
@@ -134,16 +138,16 @@ public class CostAccountController {
 
   @GetMapping("/budgetUnit")
   public ResponseEntity<Object> getUO() {
-//    RestTemplate restTemplate;
-//    try {
-//      restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
-//    } catch (Exception e) {
-//      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao configurar o RestTemplate para a URL " + uoUrl);
-//    }
-//    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
-//
-//    return restTemplateUtils.createRequestWithAuth(restTemplate, uoUrl, pentahoUserId, pentahoPassword);
-    return null;
+    RestTemplate restTemplate;
+    try {
+      restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
+    } catch (Exception e) {
+      logger.error("Erro ao realizar requisição ao Pentaho: {}", e.getMessage(), e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao configurar o RestTemplate para a URL " + uoUrl);
+    }
+    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+
+    return restTemplateUtils.createRequestWithAuth(restTemplate, uoUrl, pentahoUserId, pentahoPassword);
   }
 
   @GetMapping("/budgetPlan")
