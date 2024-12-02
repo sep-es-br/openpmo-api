@@ -8,6 +8,7 @@ import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
+import org.slf4j.Logger;
 import org.springframework.http.*;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
@@ -16,6 +17,12 @@ import javax.net.ssl.SSLContext;
 import java.util.Base64;
 
 public class RestTemplateUtils {
+
+    private final Logger logger;
+
+    public RestTemplateUtils(Logger logger) {
+        this.logger = logger;
+    }
 
     /**
      * Cria e configura um {@link RestTemplate} que ignora a verificação de certificados SSL.
@@ -61,13 +68,14 @@ public class RestTemplateUtils {
         HttpEntity<String> request = new HttpEntity<>(headers);
 
         try {
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+//            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+//
+//            ObjectMapper objectMapper = new ObjectMapper();
+//            JsonNode jsonNode = objectMapper.readTree(response.getBody());
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode jsonNode = objectMapper.readTree(response.getBody());
-
-            return ResponseEntity.ok(jsonNode);
+            return ResponseEntity.ok("teste");
         } catch (Exception e) {
+            logger.error("Erro ao realizar requisição ao Pentaho: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
