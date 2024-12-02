@@ -141,14 +141,14 @@ public class CostAccountController {
                                       @Authorization final String authorization) {
 
     this.canAccessService.ensureCanReadResource(idCostAccount, authorization);
-    RestTemplate restTemplate;
+    RestTemplate restTemplate = new RestTemplate();
 
-    try {
-      restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
-    } catch (Exception e) {
-      logger.error("Erro ao realizar requisição ao Pentaho: {}", e.getMessage(), e);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao configurar o RestTemplate para a URL " + uoUrl);
-    }
+//    try {
+//      restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
+//    } catch (Exception e) {
+//      logger.error("Erro ao realizar requisição ao Pentaho: {}", e.getMessage(), e);
+//      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao configurar o RestTemplate para a URL " + uoUrl);
+//    }
     restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
     return restTemplateUtils.createRequestWithAuth(restTemplate, uoUrl, pentahoUserId, pentahoPassword);
@@ -160,13 +160,13 @@ public class CostAccountController {
                                       @Authorization final String authorization) {
 
     this.canAccessService.ensureCanReadResource(idCostAccount, authorization);
-    RestTemplate restTemplate;
+    RestTemplate restTemplate = new RestTemplate();
 
-    try {
-      restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
-    } catch (Exception e) {
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao configurar o RestTemplate para a URL " + poUrl);
-    }
+//    try {
+//      restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
+//    } catch (Exception e) {
+//      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao configurar o RestTemplate para a URL " + poUrl);
+//    }
     restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
     String url = poUrl + codUo;
