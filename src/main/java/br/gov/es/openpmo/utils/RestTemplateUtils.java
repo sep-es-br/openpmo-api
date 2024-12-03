@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.utils;
 
+import br.gov.es.openpmo.exception.GlobalException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
@@ -8,6 +9,8 @@ import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.http.*;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
@@ -16,6 +19,8 @@ import javax.net.ssl.SSLContext;
 import java.util.Base64;
 
 public class RestTemplateUtils {
+
+    private static final Logger logger = LogManager.getLogger(RestTemplateUtils.class);
 
     /**
      * Cria e configura um {@link RestTemplate} que ignora a verificação de certificados SSL.
@@ -68,7 +73,8 @@ public class RestTemplateUtils {
 
             return ResponseEntity.ok(jsonNode);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            logger.error("Erro na requisição com autenticação", e);
+            throw new GlobalException("Falha na requisição com autenticação para a URL " + url, e);
         }
     }
 }
