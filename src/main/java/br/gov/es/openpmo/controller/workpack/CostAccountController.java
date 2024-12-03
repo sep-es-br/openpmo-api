@@ -136,26 +136,53 @@ public class CostAccountController {
     return ResponseEntity.ok().build();
   }
 
+  /**
+   * Método responsável pela requisição ao Pentaho
+   * @param idCostAccount
+   * @param authorization
+   * @return Lista com todas as UOs
+   */
   @GetMapping("/pentaho/budgetUnit/{idCostAccount}")
   public ResponseEntity<Object> getUO(@PathVariable("idCostAccount") Long idCostAccount,
                                       @Authorization final String authorization) {
 
     this.canAccessService.ensureCanReadResource(idCostAccount, authorization);
-    RestTemplate restTemplate = new RestTemplate();
-//    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+
+    RestTemplate restTemplate;
+    try {
+      restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
+    } catch (Exception e) {
+      logger.error("Erro ao realizar requisição ao Pentaho: {}", e.getMessage(), e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao configurar o RestTemplate para a URL " + uoUrl)
+    }
+    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
     return restTemplateUtils.createRequestWithAuth(restTemplate, uoUrl, pentahoUserId, pentahoPassword);
   }
 
+  /**
+   * Método responsável pela requisição ao Pentaho
+   * @param codUo
+   * @param idCostAccount
+   * @param authorization
+   * @return Lista de POs dado uma UO
+   */
   @GetMapping("/pentaho/budgetPlan")
   public ResponseEntity<Object> getPO(@RequestParam("codUo") String codUo,
                                       @RequestParam("costAccountId") Long idCostAccount,
                                       @Authorization final String authorization) {
 
     this.canAccessService.ensureCanReadResource(idCostAccount, authorization);
-    RestTemplate restTemplate = new RestTemplate();
 
-//    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+    RestTemplate restTemplate;
+    try {
+      restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
+    } catch (Exception e) {
+      logger.error("Erro ao realizar requisição ao Pentaho: {}", e.getMessage(), e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao configurar o RestTemplate para a URL " + poUrl);
+    }
+
+    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
     String url = poUrl + codUo;
 
