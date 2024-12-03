@@ -8,7 +8,6 @@ import br.gov.es.openpmo.dto.costaccount.CostAccountDto;
 import br.gov.es.openpmo.dto.costaccount.CostAccountStoreDto;
 import br.gov.es.openpmo.dto.costaccount.CostAccountUpdateDto;
 import br.gov.es.openpmo.dto.costaccount.CostDto;
-import br.gov.es.openpmo.exception.GlobalException;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.workpack.CostAccountService;
@@ -137,24 +136,25 @@ public class CostAccountController {
     return ResponseEntity.ok().build();
   }
 
-  @GetMapping("/pentaho/budgetUnit")
-  public ResponseEntity<Object> getUO() {
+  @GetMapping("/pentaho/budgetUnit/{idCostAccount}")
+  public ResponseEntity<Object> getUO(@PathVariable("idCostAccount") Long idCostAccount,
+                                      @Authorization final String authorization) {
 
-    try {
-      RestTemplate restTemplate = new RestTemplate();
-      restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+    this.canAccessService.ensureCanReadResource(idCostAccount, authorization);
+    RestTemplate restTemplate = new RestTemplate();
+    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
-      return restTemplateUtils.createRequestWithAuth(restTemplate, uoUrl, pentahoUserId, pentahoPassword);
-    } catch (Exception e) {
-      logger.error("Erro ao obter UO", e);
-      throw new GlobalException("Falha ao obter UO: " + e.getMessage(), e);
-    }
+    return restTemplateUtils.createRequestWithAuth(restTemplate, uoUrl, pentahoUserId, pentahoPassword);
   }
 
   @GetMapping("/pentaho/budgetPlan")
-  public ResponseEntity<Object> getPO(@RequestParam("codUo") String codUo) {
+  public ResponseEntity<Object> getPO(@RequestParam("codUo") String codUo,
+                                      @RequestParam("costAccountId") Long idCostAccount,
+                                      @Authorization final String authorization) {
 
+    this.canAccessService.ensureCanReadResource(idCostAccount, authorization);
     RestTemplate restTemplate = new RestTemplate();
+
     restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
     String url = poUrl + codUo;
