@@ -153,7 +153,7 @@ public class CostAccountController {
       restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
     } catch (Exception e) {
       logger.error("Erro ao realizar requisição ao Pentaho: {}", e.getMessage(), e);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao configurar o RestTemplate para a URL " + uoUrl)
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao configurar o RestTemplate para a URL " + uoUrl);
     }
     restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
