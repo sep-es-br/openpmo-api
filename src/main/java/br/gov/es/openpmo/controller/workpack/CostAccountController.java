@@ -8,6 +8,7 @@ import br.gov.es.openpmo.dto.costaccount.CostAccountDto;
 import br.gov.es.openpmo.dto.costaccount.CostAccountStoreDto;
 import br.gov.es.openpmo.dto.costaccount.CostAccountUpdateDto;
 import br.gov.es.openpmo.dto.costaccount.CostDto;
+import br.gov.es.openpmo.exception.GlobalException;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.workpack.CostAccountService;
@@ -139,10 +140,15 @@ public class CostAccountController {
   @GetMapping("/pentaho/budgetUnit")
   public ResponseEntity<Object> getUO() {
 
-    RestTemplate restTemplate = new RestTemplate();
-    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+    try {
+      RestTemplate restTemplate = new RestTemplate();
+      restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
-    return restTemplateUtils.createRequestWithAuth(restTemplate, uoUrl, pentahoUserId, pentahoPassword);
+      return restTemplateUtils.createRequestWithAuth(restTemplate, uoUrl, pentahoUserId, pentahoPassword);
+    } catch (Exception e) {
+      logger.error("Erro ao obter UO", e);
+      throw new GlobalException("Falha ao obter UO: " + e.getMessage(), e);
+    }
   }
 
   @GetMapping("/pentaho/budgetPlan")
