@@ -123,7 +123,7 @@ public class ScheduleController {
    * @param codPo codigo do PO para consulta dos valores liquidados
    * @return o JSON Object da consulta
    */
-  @GetMapping("/po/liquidated/{codPo}")
+  @GetMapping("/pentaho/po/liquidated/{codPo}")
   public ResponseEntity<Object> getPoLiquidated(@PathVariable("codPo") String codPo) {
     RestTemplate restTemplate;
     try {

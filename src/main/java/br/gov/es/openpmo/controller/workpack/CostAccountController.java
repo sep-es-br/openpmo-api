@@ -136,37 +136,19 @@ public class CostAccountController {
     return ResponseEntity.ok().build();
   }
 
-  @GetMapping("/budgetUnit/{idCostAccount}")
-  public ResponseEntity<Object> getUO(@PathVariable("idCostAccount") Long idCostAccount,
-                                      @Authorization final String authorization) {
+  @GetMapping("/pentaho/budgetUnit")
+  public ResponseEntity<Object> getUO() {
 
-    this.canAccessService.ensureCanReadResource(idCostAccount, authorization);
     RestTemplate restTemplate = new RestTemplate();
-
-//    try {
-//      restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
-//    } catch (Exception e) {
-//      logger.error("Erro ao realizar requisição ao Pentaho: {}", e.getMessage(), e);
-//      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao configurar o RestTemplate para a URL " + uoUrl);
-//    }
     restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
     return restTemplateUtils.createRequestWithAuth(restTemplate, uoUrl, pentahoUserId, pentahoPassword);
   }
 
-  @GetMapping("/budgetPlan")
-  public ResponseEntity<Object> getPO(@RequestParam("codUo") String codUo,
-                                      @RequestParam("costAccountId") Long idCostAccount,
-                                      @Authorization final String authorization) {
+  @GetMapping("/pentaho/budgetPlan")
+  public ResponseEntity<Object> getPO(@RequestParam("codUo") String codUo) {
 
-    this.canAccessService.ensureCanReadResource(idCostAccount, authorization);
     RestTemplate restTemplate = new RestTemplate();
-
-//    try {
-//      restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
-//    } catch (Exception e) {
-//      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao configurar o RestTemplate para a URL " + poUrl);
-//    }
     restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
     String url = poUrl + codUo;
