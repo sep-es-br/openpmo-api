@@ -142,7 +142,7 @@ public class CostAccountController {
 
     this.canAccessService.ensureCanReadResource(idCostAccount, authorization);
     RestTemplate restTemplate = new RestTemplate();
-    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+//    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
     return restTemplateUtils.createRequestWithAuth(restTemplate, uoUrl, pentahoUserId, pentahoPassword);
   }
@@ -155,7 +155,7 @@ public class CostAccountController {
     this.canAccessService.ensureCanReadResource(idCostAccount, authorization);
     RestTemplate restTemplate = new RestTemplate();
 
-    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+//    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
     String url = poUrl + codUo;
 
