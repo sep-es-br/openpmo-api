@@ -12,6 +12,8 @@ import br.gov.es.openpmo.model.workpacks.CostAccount;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.workpack.CostAccountService;
 import br.gov.es.openpmo.utils.RestTemplateUtils;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import io.swagger.annotations.Api;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,6 +36,7 @@ import org.springframework.web.client.RestTemplate;
 import javax.validation.Valid;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Api
 @RestController
@@ -157,7 +160,20 @@ public class CostAccountController {
     }
     restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
-    return restTemplateUtils.createRequestWithAuth(restTemplate, uoUrl, pentahoUserId, pentahoPassword);
+    try {
+      CompletableFuture<JsonNode> futureResponse = restTemplateUtils.createRequestWithAuth(
+              restTemplate,
+              uoUrl,
+              pentahoUserId,
+              pentahoPassword
+      );
+      JsonNode response = futureResponse.join();
+
+      return ResponseEntity.ok(response);
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+    }
+
   }
 
   /**
@@ -186,6 +202,16 @@ public class CostAccountController {
 
     String url = poUrl + codUo;
 
-    return restTemplateUtils.createRequestWithAuth(restTemplate, url, pentahoUserId, pentahoPassword);
+    try {
+      CompletableFuture<JsonNode> futureResponse = restTemplateUtils.createRequestWithAuth(restTemplate,
+              url,
+              pentahoUserId,
+              pentahoPassword
+      );
+      JsonNode response = futureResponse.join();
+      return ResponseEntity.ok(response);
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+    }
   }
 }

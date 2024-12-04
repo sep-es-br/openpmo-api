@@ -9,9 +9,11 @@ import br.gov.es.openpmo.model.schedule.Schedule;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.schedule.ScheduleService;
 import br.gov.es.openpmo.utils.RestTemplateUtils;
+import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,7 @@ import org.springframework.web.client.RestTemplate;
 import javax.validation.Valid;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Api
 @RestController
@@ -135,6 +138,18 @@ public class ScheduleController {
 
     String url = poLiquidatedUrl + codPo;
 
-    return restTemplateUtils.createRequestWithAuth(restTemplate, url, pentahoUserId, pentahoPassword);
+    try {
+      CompletableFuture<JsonNode> futureResponse = restTemplateUtils.createRequestWithAuth(
+              restTemplate,
+              url,
+              pentahoUserId,
+              pentahoPassword
+      );
+      JsonNode response = futureResponse.join();
+
+      return ResponseEntity.ok(response);
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+    }
   }
 }

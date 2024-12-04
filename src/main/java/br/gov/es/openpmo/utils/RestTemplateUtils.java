@@ -13,10 +13,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.http.*;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.client.RestTemplate;
 
 import javax.net.ssl.SSLContext;
 import java.util.Base64;
+import java.util.concurrent.CompletableFuture;
 
 public class RestTemplateUtils {
 
@@ -54,7 +56,8 @@ public class RestTemplateUtils {
      * @param password a Senha da credencial
      * @return resultSet da requisição
      */
-    public ResponseEntity<Object> createRequestWithAuth(RestTemplate restTemplate, String url, String user, String password) {
+    @Async
+    public CompletableFuture<JsonNode> createRequestWithAuth(RestTemplate restTemplate, String url, String user, String password) {
         String plainCreds = user + ":" + password;
         byte[] plainCredsBytes = plainCreds.getBytes();
         byte[] base64CredsBytes = Base64.getEncoder().encode(plainCredsBytes);
@@ -71,7 +74,7 @@ public class RestTemplateUtils {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(response.getBody());
 
-            return ResponseEntity.ok(jsonNode);
+            return CompletableFuture.completedFuture(jsonNode);
         } catch (Exception e) {
             logger.error("Erro na requisição com autenticação", e);
             throw new GlobalException("Falha na requisição com autenticação para a URL " + url, e);
