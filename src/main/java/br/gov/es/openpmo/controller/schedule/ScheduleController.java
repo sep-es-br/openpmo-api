@@ -126,8 +126,9 @@ public class ScheduleController {
    * @param codPo codigo do PO para consulta dos valores liquidados
    * @return o JSON Object da consulta
    */
-  @GetMapping("/pentaho/po/liquidated/{codPo}")
-  public ResponseEntity<Object> getPoLiquidated(@PathVariable("codPo") String codPo) {
+  @GetMapping("/pentaho/po/liquidated/{codPo}/{codUo}")
+  public ResponseEntity<Object> getPoLiquidated(@PathVariable("codPo") String codPo,
+                                                @PathVariable("codUo") String codUo) {
     RestTemplate restTemplate;
     try {
       restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
@@ -136,7 +137,7 @@ public class ScheduleController {
     }
     restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
-    String url = poLiquidatedUrl + codPo;
+    String url = poLiquidatedUrl + codPo + "&parampCodUo=" + codUo;
 
     try {
       CompletableFuture<JsonNode> futureResponse = restTemplateUtils.createRequestWithAuth(
