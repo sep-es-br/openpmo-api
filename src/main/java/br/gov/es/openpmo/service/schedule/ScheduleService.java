@@ -599,10 +599,10 @@ public class ScheduleService {
       consumesDto.setActualCost(relation.getActualCost());
       consumesDto.setPlannedCost(relation.getPlannedCost());
       final Long id = relation.getCostAccount().getId();
-      final Integer codUo = relation.getCostAccount().getUnidadeOrcamentaria().getCode();
-      final String unidadeOrcamentaria = relation.getCostAccount().getUnidadeOrcamentaria().getName();
-      final Integer codPo = relation.getCostAccount().getPlanoOrcamentario().getCode();
-      final String planoOrcamentario = relation.getCostAccount().getPlanoOrcamentario().getFullName();
+      final Integer codUo = relation.getCostAccount().getUnidadeOrcamentaria() != null ? relation.getCostAccount().getUnidadeOrcamentaria().getCode(): null;
+      final String unidadeOrcamentaria = relation.getCostAccount().getUnidadeOrcamentaria() != null ? relation.getCostAccount().getUnidadeOrcamentaria().getName(): null;
+      final Integer codPo = relation.getCostAccount().getPlanoOrcamentario() != null ? relation.getCostAccount().getPlanoOrcamentario().getCode(): null;
+      final String planoOrcamentario = relation.getCostAccount().getPlanoOrcamentario() != null ? relation.getCostAccount().getPlanoOrcamentario().getFullName() : null;
       final CostAccountEntityDto costAccount = new CostAccountEntityDto(
         id,
         this.costAccountRepository.findCostAccountNameById(id),

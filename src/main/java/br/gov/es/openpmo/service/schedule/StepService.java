@@ -265,10 +265,10 @@ public class StepService {
       consumesDto.setActualCost(consumes.getActualCost());
       consumesDto.setPlannedCost(consumes.getPlannedCost());
       final Long id = consumes.getCostAccount().getId();
-      final Integer codUo = consumes.getCostAccount().getUnidadeOrcamentaria().getCode();
-      final String unidadeOrcamentaria = consumes.getCostAccount().getUnidadeOrcamentaria().getName();
-      final Integer codPo = consumes.getCostAccount().getPlanoOrcamentario().getCode();
-      final String planoOrcamentario = consumes.getCostAccount().getPlanoOrcamentario().getFullName();
+      final Integer codUo = consumes.getCostAccount().getUnidadeOrcamentaria() != null ? consumes.getCostAccount().getUnidadeOrcamentaria().getCode() : null;
+      final String unidadeOrcamentaria = consumes.getCostAccount().getUnidadeOrcamentaria() != null ? consumes.getCostAccount().getUnidadeOrcamentaria().getName() : null;
+      final Integer codPo = consumes.getCostAccount().getPlanoOrcamentario() != null ? consumes.getCostAccount().getPlanoOrcamentario().getCode() : null;
+      final String planoOrcamentario = consumes.getCostAccount().getPlanoOrcamentario() != null ? consumes.getCostAccount().getPlanoOrcamentario().getName() : null;
       final CostAccountEntityDto costAccount = new CostAccountEntityDto(
         id,
         this.costAccountRepository.findCostAccountNameById(id),
