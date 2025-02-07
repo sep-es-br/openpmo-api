@@ -28,7 +28,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
 
   @Query(
           "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable{canceled: false, deleted:false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step) " +
-                  ",(st)-[:COMPOSES]->(b:Baseline)<-[:IS_BASELINED_BY]-(pj:Project)<-[:IS_IN*]-(master) " +
+                  ",(st)-[:COMPOSES]->(b:Baseline{status: 'APPROVED'})<-[:IS_BASELINED_BY]-(pj:Project)<-[:IS_IN*]-(master) " +
                   "WHERE ID(b) IN $ids " +
                   "AND ($planId IS NULL OR ID(plan) = $planId) " +
                   "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date.truncate('month', date(plan.finish))" +
@@ -51,7 +51,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
 
   @Query(
           "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable{canceled: false, deleted:false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
-                  ",(s)-[:COMPOSES]->(b:Baseline)<-[:IS_BASELINED_BY]-(pj:Project)<-[:IS_IN*]-(master) " +
+                  ",(s)-[:COMPOSES]->(b:Baseline{status: 'APPROVED'})<-[:IS_BASELINED_BY]-(pj:Project)<-[:IS_IN*]-(master) " +
                   "WHERE ID(b) IN $ids " +
                   "AND ($planId IS NULL OR ID(plan) = $planId) " +
                   "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date.truncate('month', date(plan.finish)) " +
@@ -63,7 +63,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
 
   @Query(
           "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable{canceled: false, deleted:false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
-                  ",(s)-[:COMPOSES]->(b:Baseline)<-[:IS_BASELINED_BY]-(pj:Project)<-[:IS_IN*]-(master) " +
+                  ",(s)-[:COMPOSES]->(b:Baseline{status: 'APPROVED'})<-[:IS_BASELINED_BY]-(pj:Project)<-[:IS_IN*]-(master) " +
                   "WHERE ID(b) IN $ids " +
                   "AND ($planId IS NULL OR ID(plan) = $planId) " +
                   "AND ($workpackIds IS NULL OR ID(master) IN $workpackIds) " +
@@ -78,7 +78,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
   @Query(
           "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable)<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
                   ",(st)-[:IS_SNAPSHOT_OF]->(stm:Step) " +
-                  ",(s)-[:COMPOSES]->(b:Baseline) " +
+                  ",(s)-[:COMPOSES]->(b:Baseline{status: 'APPROVED'}) " +
                   "WHERE ID(b) IN $ids " +
                   "AND ($workpackIds IS NULL OR ID(master) IN $workpackIds) " +
                   "AND ($planId IS NULL OR ID(plan) = $planId) " +
@@ -100,7 +100,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
           + "CALL { "
           + "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable {deleted: false, canceled: false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable {deleted: false, canceled:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount), "
           + "(st)-[:IS_SNAPSHOT_OF]->(stm:Step), "
-          + "(s)-[:COMPOSES]->(b:Baseline)<-[:IS_BASELINED_BY]-(pj:Project)<-[:IS_IN*]-(master) "
+          + "(s)-[:COMPOSES]->(b:Baseline{status: 'APPROVED'})<-[:IS_BASELINED_BY]-(pj:Project)<-[:IS_IN*]-(master) "
           + "WHERE ID(b) IN $baselineIds "
           + "AND ($idPlan IS NULL OR ID(plan) = $idPlan) "
           + "AND ($workpackIds IS NULL OR ID(master) IN $workpackIds) "
@@ -111,7 +111,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
           + "} "
           + "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable{deleted:false,canceled:false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false, canceled:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount), "
           + "(st)-[:IS_SNAPSHOT_OF]->(stm:Step), "
-          + "(s)-[:COMPOSES]->(b:Baseline)<-[:IS_BASELINED_BY]-(pj:Project)<-[:IS_IN*]-(master) "
+          + "(s)-[:COMPOSES]->(b:Baseline{status: 'APPROVED'})<-[:IS_BASELINED_BY]-(pj:Project)<-[:IS_IN*]-(master) "
           + "WHERE ID(b) IN $baselineIds "
           + "AND ($workpackIds IS NULL OR ID(master) IN $workpackIds) "
           + "AND ($idPlan IS NULL OR ID(plan) = $idPlan) "
@@ -126,7 +126,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
   List<DashboardWorkpackDetailDto> findAllEarnedValueBaselineByTotalBaseline(Set<Long> snapshotIds, List<Long> baselineIds, List<Long> workpackIds, LocalDate yearMonth, Long idPlan);
 
   @Query(
-          "MATCH (w:Workpack{deleted:false,canceled:false})-[:IS_BASELINED_BY]->(b:Baseline) WHERE b.status IN ['APPROVED', 'PROPOSED'] " +
+          "MATCH (w:Workpack{deleted:false,canceled:false})-[:IS_BASELINED_BY]->(b:Baseline{status: 'APPROVED'}) WHERE b.status IN ['APPROVED', 'PROPOSED'] " +
                   "RETURN ID(w) AS idWorkpack, ID(b) AS idBaseline, b.active AS active, b.proposalDate AS proposalDate, b.status AS status"
   )
   List<DashboardBaseline> findAllBaseline();
@@ -145,7 +145,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
 
 
   @Query(
-          "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Milestone)<-[:IS_SNAPSHOT_OF]-(m:Milestone{deleted:false})-[:COMPOSES]->(b:Baseline) " +
+          "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Milestone)<-[:IS_SNAPSHOT_OF]-(m:Milestone{deleted:false})-[:COMPOSES]->(b:Baseline{status: 'APPROVED'}) " +
                   "WHERE ID(b) IN $ids AND m.date IS NOT NULL " +
                   "AND ($planId IS NULL OR ID(plan) = $planId) " +
                   "AND ($workpackIds IS NULL OR ID(master) IN $workpackIds) " +
@@ -242,7 +242,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
   @Query (
           "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable)<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
                   ",(st)-[:IS_SNAPSHOT_OF]->(stm:Step) " +
-                  ",(s)-[:COMPOSES]->(b:Baseline) " +
+                  ",(s)-[:COMPOSES]->(b:Baseline{status: 'APPROVED'}) " +
                   "WHERE ID(b) IN $ids " +
                   "AND ($planId IS NULL OR ID(plan) = $planId) " +
                   "AND ($workpackIds IS NULL OR ID(master) IN $workpackIds) " +
@@ -264,7 +264,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
           + "CALL { "
           + "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable {deleted: false, canceled: false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable {deleted: false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount), "
           + "(st)-[:IS_SNAPSHOT_OF]->(stm:Step), "
-          + "(s)-[:COMPOSES]->(b:Baseline) "
+          + "(s)-[:COMPOSES]->(b:Baseline{status: 'APPROVED'}) "
           + "WHERE ID(b) IN $baselineIds "
           + "AND ($idPlan IS NULL OR ID(plan) = $idPlan) "
           + "AND ($workpackIds IS NULL OR ID(master) IN $workpackIds) "
@@ -275,7 +275,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
           + "} "
           + "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable {deleted: false, canceled: false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable {deleted: false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount), "
           + "(st)-[:IS_SNAPSHOT_OF]->(stm:Step), "
-          + "(s)-[:COMPOSES]->(b:Baseline) "
+          + "(s)-[:COMPOSES]->(b:Baseline{status: 'APPROVED'}) "
           + "WHERE ID(b) IN $baselineIds "
           + "AND ($idPlan IS NULL OR ID(plan) = $idPlan) "
           + "AND ($workpackIds IS NULL OR ID(master) IN $workpackIds) "
@@ -290,7 +290,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
 
   @Query (
           "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable{canceled: false, deleted:false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false, canceled:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
-                  ",(s)-[:COMPOSES]->(b:Baseline)<-[:IS_BASELINED_BY]-(pj:Project)<-[:IS_IN*]-(master) " +
+                  ",(s)-[:COMPOSES]->(b:Baseline{status: 'APPROVED'})<-[:IS_BASELINED_BY]-(pj:Project)<-[:IS_IN*]-(master) " +
                   "WHERE ID(b) IN $baselineIds " +
                   "AND ($planId IS NULL OR ID(plan) = $planId) " +
                   "AND st.periodFromStart IS NOT NULL  " +
@@ -305,7 +305,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
 
   @Query (
           "MATCH (plan:Plan)<-[:BELONGS_TO]-(master:Deliverable{canceled: false, deleted:false})<-[:IS_SNAPSHOT_OF]-(w:Deliverable{deleted:false, canceled:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step) " +
-                  ",(s)-[:COMPOSES]->(b:Baseline)<-[:IS_BASELINED_BY]-(pj:Project)<-[:IS_IN*]-(master) " +
+                  ",(s)-[:COMPOSES]->(b:Baseline{status: 'APPROVED'})<-[:IS_BASELINED_BY]-(pj:Project)<-[:IS_IN*]-(master) " +
                   "WHERE ID(b) IN $baselineIds " +
                   "AND ($planId IS NULL OR ID(plan) = $planId) " +
                   "AND st.periodFromStart IS NOT NULL " +
