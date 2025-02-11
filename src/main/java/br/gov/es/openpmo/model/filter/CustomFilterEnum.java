@@ -3,6 +3,7 @@ package br.gov.es.openpmo.model.filter;
 import br.gov.es.openpmo.dto.stakeholder.StakeholderAndPermissionQuery;
 import br.gov.es.openpmo.model.actors.Organization;
 import br.gov.es.openpmo.model.baselines.Baseline;
+import br.gov.es.openpmo.model.indicators.Indicator;
 import br.gov.es.openpmo.model.issue.Issue;
 import br.gov.es.openpmo.model.office.Domain;
 import br.gov.es.openpmo.model.office.Locality;
@@ -32,7 +33,9 @@ public enum CustomFilterEnum {
   STAKEHOLDER("IsStakeholderIn", StakeholderAndPermissionQuery.class),
   ISSUE("Issue", Issue.class),
   PROCESS("Process", Process.class),
-  BASELINE("Baseline", Baseline.class);
+  BASELINE("Baseline", Baseline.class),
+  INDICATOR("Indicator", Indicator.class);
+
 
   private final String nodeName;
 
