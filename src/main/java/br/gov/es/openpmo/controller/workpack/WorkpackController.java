@@ -27,6 +27,7 @@ import br.gov.es.openpmo.model.risk.Risk;
 import br.gov.es.openpmo.model.workpacks.Milestone;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.RiskRepository;
+import br.gov.es.openpmo.repository.completed.CompletedRepository;
 import br.gov.es.openpmo.repository.dashboards.DashboardMilestoneRepository;
 import br.gov.es.openpmo.service.actors.IsFavoritedByService;
 import br.gov.es.openpmo.service.authentication.TokenService;
@@ -99,6 +100,8 @@ public class WorkpackController {
 
   private final RiskRepository riskRepository;
 
+  private final CompletedRepository completedRepository;
+
   @Autowired
   public WorkpackController(
     final ResponseHandler responseHandler,
@@ -114,7 +117,8 @@ public class WorkpackController {
     final WorkpackHasChildren workpackHasChildren,
     final IsFavoritedByService isFavoritedByService,
     final DashboardMilestoneRepository dashboardMilestoneRepository,
-    final RiskRepository riskRepository
+    final RiskRepository riskRepository,
+    final CompletedRepository completedRepository
   ) {
     this.responseHandler = responseHandler;
     this.workpackService = workpackService;
@@ -130,6 +134,7 @@ public class WorkpackController {
     this.isFavoritedByService = isFavoritedByService;
     this.dashboardMilestoneRepository = dashboardMilestoneRepository;
     this.riskRepository = riskRepository;
+    this.completedRepository = completedRepository;
   }
 
   @GetMapping
@@ -228,6 +233,11 @@ public class WorkpackController {
     }
 
     final Workpack workpack = maybeWorkpack.get();
+
+    if (this.completedRepository.allSonsAreCompleted(idWorkpack)) {
+      workpack.setCompleted(true);
+      workpackService.update(workpack);
+    }
 
     final WorkpackDetailDto workpackDetailDto = this.workpackService.getWorkpackDetailDto(workpack, idPlan);
 

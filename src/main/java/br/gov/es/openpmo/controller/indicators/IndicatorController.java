@@ -93,4 +93,24 @@ public class IndicatorController {
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/period/{idWorkpack}")
+    public ResponseEntity<ResponseBase<List<Integer>>> findUniqueYearsByProjectId(
+            @PathVariable Long idWorkpack
+    ) {
+        final List<Integer> periodList = this.service.findUniqueYearsByProjectId(idWorkpack);
+        final ResponseBase<List<Integer>> response = ResponseBase.of(periodList);
+        
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/office/{idOffice}")
+    public ResponseEntity<ResponseBase<List<String>>> findAllOrganizationFromOffice(
+            @PathVariable Long idOffice
+    ) {
+        final List<String> orgazinationList = this.service.findAllOrganizationFromOffice(idOffice);
+        final ResponseBase<List<String>> response = ResponseBase.of(orgazinationList);
+
+        return ResponseEntity.ok(response);
+    }
 }

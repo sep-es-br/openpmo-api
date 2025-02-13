@@ -1,7 +1,10 @@
 package br.gov.es.openpmo.dto.indicators;
 
+import br.gov.es.openpmo.dto.indicators.period.PeriodGoalDto;
+
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 public class IndicatorUpdateDto {
 
@@ -35,6 +38,12 @@ public class IndicatorUpdateDto {
     @NotEmpty
     private final String periodicity;
 
+    @NotNull
+    private final List<PeriodGoalDto> expectedGoals;
+
+    @NotNull
+    private final List<PeriodGoalDto> achievedGoals;
+
     public IndicatorUpdateDto(
         final Long id,
         final Long idWorkpack,
@@ -43,7 +52,9 @@ public class IndicatorUpdateDto {
         final String source,
         final String measure,
         final String finalGoal,
-        final String periodicity
+        final String periodicity,
+        final List<PeriodGoalDto> expectedGoals,
+        final List<PeriodGoalDto> achievedGoals
     ) {
         this.id = id;
         this.idWorkpack = idWorkpack;
@@ -53,6 +64,8 @@ public class IndicatorUpdateDto {
         this.measure = measure;
         this.finalGoal = finalGoal;
         this.periodicity = periodicity;
+        this.expectedGoals = expectedGoals;
+        this.achievedGoals = achievedGoals;
     }
 
     public Long getId() {
@@ -85,5 +98,13 @@ public class IndicatorUpdateDto {
 
     public String getPeriodicity() {
         return periodicity;
+    }
+
+    public List<PeriodGoalDto> getExpectedGoals() {
+        return expectedGoals;
+    }
+
+    public List<PeriodGoalDto> getAchievedGoals() {
+        return achievedGoals;
     }
 }

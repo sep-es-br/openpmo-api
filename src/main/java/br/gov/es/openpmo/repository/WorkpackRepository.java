@@ -292,7 +292,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       + " [(w)<-[wfg1:FEATURES]-(wg1:Group)-[wgps1:GROUPS]->(lg:LocalitySelection)-[vg1:VALUES]->(lg1:Locality) | [wfg1,wg1, wgps1, lg, vg1, lg1] ], "
       + " [(w)<-[wfg2:FEATURES]-(wg2:Group)-[wgps2:GROUPS]->(og:OrganizationSelection)-[vg2:VALUES]->(og2:Organization) | [wfg2, wg2, wgps2, og, vg2, og2] ], "
       + " [(w)<-[wfg3:FEATURES]-(wg3:Group)-[wgps3:GROUPS]->(ug:UnitSelection)-[vg3:VALUES]->(ug3:UnitMeasure) | [wfg3, wg3, wgps3, ug, vg3, ug3] ], "
-      + " [(w)<-[wi2:IS_IN]-(w2:Workpack) | [wi2,w2]] "
+      + " [(w)<-[wi2:IS_IN]-(w2:Workpack{deleted: false}) | [wi2,w2]] "
       + "]"
   )
   Optional<Workpack> findByIdThin(@Param("id") Long id);

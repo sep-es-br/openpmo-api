@@ -7,8 +7,10 @@ import br.gov.es.openpmo.dto.indicators.IndicatorDetailDto;
 import br.gov.es.openpmo.dto.indicators.IndicatorUpdateDto;
 import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.model.indicators.Indicator;
+import br.gov.es.openpmo.model.indicators.PeriodGoal;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.IndicatorRepository;
+import br.gov.es.openpmo.repository.PeriodGoalRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllIndicatorsUsingCustomFilter;
 import br.gov.es.openpmo.service.filters.CustomFilterService;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.Valid;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,18 +40,22 @@ public class IndicatorService {
 
     private final FindAllIndicatorsUsingCustomFilter findAllIndicators;
 
+    private final PeriodGoalRepository periodGoalRepository;
+
     public IndicatorService(
         final IndicatorRepository repository,
         final WorkpackService workpackService,
         final CustomFilterService customFilterService,
         final AppProperties appProperties,
-        final FindAllIndicatorsUsingCustomFilter findAllIndicators
+        final FindAllIndicatorsUsingCustomFilter findAllIndicators,
+        final PeriodGoalRepository periodGoalRepository
     ) {
         this.repository = repository;
         this.workpackService = workpackService;
         this.customFilterService = customFilterService;
         this.appProperties = appProperties;
         this.findAllIndicators = findAllIndicators;
+        this.periodGoalRepository = periodGoalRepository;
     }
 
     public Indicator create(
@@ -71,7 +78,9 @@ public class IndicatorService {
             final Long idPerson
     ) {
         final Indicator indicator = this.findById(request.getId());
+
         indicator.update(request);
+
         this.repository.save(
                 indicator,
                 0
@@ -139,7 +148,18 @@ public class IndicatorService {
     }
 
     public IndicatorDetailDto findByIdAsIndicatorDetail(final Long id) {
-        return IndicatorDetailDto.of(this.findById(id));
+        Indicator indicator = this.findById(id);
+
+        List<PeriodGoal> achievedGoals = this.repository.findAchievedGoalsByIndicatorId(id)
+                .orElse(Collections.emptyList());
+        List<PeriodGoal> expectedGoals = this.repository.findExpectedGoalsByIndicatorId(id)
+                .orElse(Collections.emptyList());
+
+        IndicatorDetailDto dto = IndicatorDetailDto.of(indicator);
+        dto.setAchievedGoals(achievedGoals);
+        dto.setExpectedGoals(expectedGoals);
+
+        return dto;
     }
 
     public Indicator findById(final Long id) {
@@ -149,6 +169,21 @@ public class IndicatorService {
 
     @Transactional
     public void deleteById(final Long id) {
-        this.repository.deleteById(id);
+
+        Indicator indicator = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException(INDICATOR_NOT_FOUND));
+
+        indicator.getExpectedGoals().forEach(periodGoalRepository::delete);
+        indicator.getAchievedGoals().forEach(periodGoalRepository::delete);
+
+        this.repository.delete(indicator);
+    }
+
+    public List<Integer> findUniqueYearsByProjectId(final Long idWorkpack) {
+        return this.repository.findUniqueYearsByProjectId(idWorkpack);
+    }
+
+    public List<String> findAllOrganizationFromOffice(final Long idOffice) {
+        return this.repository.findAllOrganizationFromOffice(idOffice);
     }
 }

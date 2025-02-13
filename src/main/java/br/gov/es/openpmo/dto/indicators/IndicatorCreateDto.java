@@ -1,7 +1,11 @@
 package br.gov.es.openpmo.dto.indicators;
 
+import br.gov.es.openpmo.dto.indicators.period.PeriodGoalDto;
+import br.gov.es.openpmo.model.indicators.PeriodGoal;
+
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 public class IndicatorCreateDto {
 
@@ -32,6 +36,16 @@ public class IndicatorCreateDto {
     @NotEmpty
     private String periodicity;
 
+    @NotNull
+    private List<PeriodGoalDto> expectedGoals;
+
+    @NotNull
+    private List<PeriodGoalDto> achievedGoals;
+
+    @NotNull
+    @NotEmpty
+    private String lastUpdate;
+
     public IndicatorCreateDto() {
     }
 
@@ -42,7 +56,10 @@ public class IndicatorCreateDto {
         final String source,
         final String measure,
         final String finalGoal,
-        final String periodicity
+        final String periodicity,
+        final List<PeriodGoalDto> expectedGoals,
+        final List<PeriodGoalDto> achievedGoals,
+        final String lastUpdate
     ) {
         this.idWorkpack = idWorkpack;
         this.name = name;
@@ -51,6 +68,9 @@ public class IndicatorCreateDto {
         this.measure = measure;
         this.finalGoal = finalGoal;
         this.periodicity = periodicity;
+        this.expectedGoals = expectedGoals;
+        this.achievedGoals = achievedGoals;
+        this.lastUpdate = lastUpdate;
     }
 
     public Long getIdWorkpack() {
@@ -107,5 +127,29 @@ public class IndicatorCreateDto {
 
     public void setPeriodicity(String periodicity) {
         this.periodicity = periodicity;
+    }
+
+    public List<PeriodGoalDto> getExpectedGoals() {
+        return expectedGoals;
+    }
+
+    public void setExpectedGoals(List<PeriodGoalDto> expectedGoals) {
+        this.expectedGoals = expectedGoals;
+    }
+
+    public List<PeriodGoalDto> getAchievedGoals() {
+        return achievedGoals;
+    }
+
+    public void setAchievedGoals(List<PeriodGoalDto> achievedGoals) {
+        this.achievedGoals = achievedGoals;
+    }
+
+    public String getLastUpdate() {
+        return lastUpdate;
+    }
+
+    public void setLastUpdate(String lastUpdate) {
+        this.lastUpdate = lastUpdate;
     }
 }
