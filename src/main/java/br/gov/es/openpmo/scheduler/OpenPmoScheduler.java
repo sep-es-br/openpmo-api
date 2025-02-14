@@ -35,9 +35,9 @@ public class OpenPmoScheduler {
     this.cacheCleaner.clearAllCache();
   }
 
-  @Scheduled(cron = "${app.scheduler.everyday-every-1mounth}")
-  public void updateActualValues() {
-    this.updateActualValues.updateValuesInSchedule();
-  }
+//  @Scheduled(cron = "${app.scheduler.everyday-every-1mounth}")
+//  public void updateActualValues() {
+//    this.updateActualValues.updateValuesInSchedule();
+//  }
 
 }
