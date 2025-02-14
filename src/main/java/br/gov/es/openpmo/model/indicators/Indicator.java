@@ -44,9 +44,7 @@ public class Indicator extends Entity {
         final String finalGoal,
         final String periodicity,
         final String lastUpdate,
-        final Workpack workpack,
-        final List<PeriodGoal> expectedGoals,
-        final List<PeriodGoal> achievedGoals
+        final Workpack workpack
     ) {
         this.name = name;
         this.description = description;
@@ -56,8 +54,6 @@ public class Indicator extends Entity {
         this.periodicity = periodicity;
         this.lastUpdate = lastUpdate;
         this.workpack = workpack;
-        this.expectedGoals = expectedGoals;
-        this.achievedGoals = achievedGoals;
     }
 
     public static Indicator of(
@@ -72,13 +68,7 @@ public class Indicator extends Entity {
                 request.getFinalGoal(),
                 request.getPeriodicity(),
                 request.getLastUpdate(),
-                workpack,
-                request.getExpectedGoals().stream()
-                        .map(goal -> new PeriodGoal(goal.getPeriod(), goal.getValue()))
-                        .collect(Collectors.toList()),
-                request.getAchievedGoals().stream()
-                        .map(goal -> new PeriodGoal(goal.getPeriod(), goal.getValue()))
-                        .collect(Collectors.toList())
+                workpack
 
         );
 
@@ -184,20 +174,12 @@ public class Indicator extends Entity {
         return expectedGoals;
     }
 
-    public void setExpectedGoals(List<PeriodGoal> expectedGoals) {
-        this.expectedGoals = expectedGoals;
-    }
-
     public void addExpectedGoals(PeriodGoal goal) {
         this.expectedGoals.add(goal);
     }
 
     public List<PeriodGoal> getAchievedGoals() {
         return achievedGoals;
-    }
-
-    public void setAchievedGoals(List<PeriodGoal> achievedGoals) {
-        this.achievedGoals = achievedGoals;
     }
 
     public void addAchievedGoals(PeriodGoal goal) {

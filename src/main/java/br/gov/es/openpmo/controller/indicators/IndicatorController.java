@@ -86,8 +86,10 @@ public class IndicatorController {
 
     @PostMapping
     public ResponseEntity<ResponseBase<EntityDto>> create(
-            @Valid @RequestBody final IndicatorCreateDto request) {
+            @Valid @RequestBody final IndicatorCreateDto request,
+            @Authorization final String authorization) {
 
+        this.canAccessService.ensureCanEditResource(request.getIdWorkpack(), authorization);
         final Indicator indicator = this.service.create(request);
         final ResponseBase<EntityDto> response = ResponseBase.of(new EntityDto(indicator.getId()));
 
@@ -110,6 +112,16 @@ public class IndicatorController {
     ) {
         final List<String> orgazinationList = this.service.findAllOrganizationFromOffice(idOffice);
         final ResponseBase<List<String>> response = ResponseBase.of(orgazinationList);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/unitMeasure/{idOffice}")
+    public ResponseEntity<ResponseBase<List<String>>> findAllUnitMeasureFromOffice(
+            @PathVariable Long idOffice
+    ) {
+        final List<String> unitMeasures = this.service.findAllUnitMeasureFromOffice(idOffice);
+        final ResponseBase<List<String>> response = ResponseBase.of(unitMeasures);
 
         return ResponseEntity.ok(response);
     }
