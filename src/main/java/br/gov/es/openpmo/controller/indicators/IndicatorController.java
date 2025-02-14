@@ -52,12 +52,13 @@ public class IndicatorController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{idIndicator}")
+    @GetMapping("/{idWorkpack}/{idIndicator}")
     public ResponseEntity<ResponseBase<IndicatorDetailDto>> findById(
+        @PathVariable final Long idWorkpack,
         @PathVariable final Long idIndicator,
         @Authorization final String authorization
     ) {
-        this.canAccessService.ensureCanReadResourceWorkpack(idIndicator, authorization);
+        this.canAccessService.ensureCanReadResourceWorkpack(idWorkpack, authorization);
         final IndicatorDetailDto indicator = this.service.findByIdAsIndicatorDetail(idIndicator);
         final ResponseBase<IndicatorDetailDto> response = ResponseBase.of(indicator);
         return ResponseEntity.ok(response);
