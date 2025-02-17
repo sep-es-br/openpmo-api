@@ -36,6 +36,14 @@ public class IndicatorUpdateDto {
 
     @NotNull
     @NotEmpty
+    private final String startDate;
+
+    @NotNull
+    @NotEmpty
+    private final String endDate;
+
+    @NotNull
+    @NotEmpty
     private final String periodicity;
 
     @NotNull
@@ -52,6 +60,8 @@ public class IndicatorUpdateDto {
         final String source,
         final String measure,
         final String finalGoal,
+        final String startDate,
+        final String endDate,
         final String periodicity,
         final List<PeriodGoalDto> expectedGoals,
         final List<PeriodGoalDto> achievedGoals
@@ -63,6 +73,8 @@ public class IndicatorUpdateDto {
         this.source = source;
         this.measure = measure;
         this.finalGoal = finalGoal;
+        this.startDate = startDate;
+        this.endDate = endDate;
         this.periodicity = periodicity;
         this.expectedGoals = expectedGoals;
         this.achievedGoals = achievedGoals;
@@ -94,6 +106,14 @@ public class IndicatorUpdateDto {
 
     public String getFinalGoal() {
         return finalGoal;
+    }
+
+    public String getStartDate() {
+        return startDate;
+    }
+
+    public String getEndDate() {
+        return endDate;
     }
 
     public String getPeriodicity() {

@@ -21,6 +21,8 @@ public class Indicator extends Entity {
     private String source;
     private String measure;
     private String finalGoal;
+    private String startDate;
+    private String endDate;
     private String periodicity;
     private String lastUpdate;
 
@@ -42,6 +44,8 @@ public class Indicator extends Entity {
         final String source,
         final String measure,
         final String finalGoal,
+        final String startDate,
+        final String endDate,
         final String periodicity,
         final String lastUpdate,
         final Workpack workpack
@@ -51,6 +55,8 @@ public class Indicator extends Entity {
         this.source = source;
         this.measure = measure;
         this.finalGoal = finalGoal;
+        this.startDate = startDate;
+        this.endDate = endDate;
         this.periodicity = periodicity;
         this.lastUpdate = lastUpdate;
         this.workpack = workpack;
@@ -66,6 +72,8 @@ public class Indicator extends Entity {
                 request.getSource(),
                 request.getMeasure(),
                 request.getFinalGoal(),
+                request.getStartDate(),
+                request.getEndDate(),
                 request.getPeriodicity(),
                 request.getLastUpdate(),
                 workpack
@@ -129,6 +137,22 @@ public class Indicator extends Entity {
         this.finalGoal = finalGoal;
     }
 
+    public String getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(String startDate) {
+        this.startDate = startDate;
+    }
+
+    public String getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(String endDate) {
+        this.endDate = endDate;
+    }
+
     public String getPeriodicity() {
         return periodicity;
     }
@@ -159,6 +183,8 @@ public class Indicator extends Entity {
         ObjectUtils.updateIfPresent(request::getSource, this::setSource);
         ObjectUtils.updateIfPresent(request::getMeasure, this::setMeasure);
         ObjectUtils.updateIfPresent(request::getFinalGoal, this::setFinalGoal);
+        ObjectUtils.updateIfPresent(request::getStartDate, this::setStartDate);
+        ObjectUtils.updateIfPresent(request::getEndDate, this::setEndDate);
         ObjectUtils.updateIfPresent(request::getPeriodicity, this::setPeriodicity);
 
         this.expectedGoals.clear();
