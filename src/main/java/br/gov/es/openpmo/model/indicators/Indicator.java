@@ -211,4 +211,12 @@ public class Indicator extends Entity {
     public void addAchievedGoals(PeriodGoal goal) {
         this.achievedGoals.add(goal);
     }
+
+    public void setExpectedGoals(List<PeriodGoal> expectedGoals) {
+        this.expectedGoals = expectedGoals;
+    }
+
+    public void setAchievedGoals(List<PeriodGoal> achievedGoals) {
+        this.achievedGoals = achievedGoals;
+    }
 }
