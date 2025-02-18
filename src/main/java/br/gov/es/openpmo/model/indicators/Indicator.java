@@ -2,7 +2,6 @@ package br.gov.es.openpmo.model.indicators;
 
 import br.gov.es.openpmo.dto.indicators.IndicatorCreateDto;
 import br.gov.es.openpmo.dto.indicators.IndicatorUpdateDto;
-import br.gov.es.openpmo.dto.indicators.period.PeriodGoalDto;
 import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.utils.ObjectUtils;
@@ -11,7 +10,6 @@ import org.neo4j.ogm.annotation.Relationship;
 import org.springframework.data.annotation.Transient;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @NodeEntity
 public class Indicator extends Entity {
@@ -26,10 +24,10 @@ public class Indicator extends Entity {
     private String periodicity;
     private String lastUpdate;
 
-    @Relationship(type = "HAS_EXPECTED_GOAL")
+    @Relationship(type = "HAS_EXPECTED_GOAL", direction = Relationship.OUTGOING)
     private List<PeriodGoal> expectedGoals = new ArrayList<>();
 
-    @Relationship(type = "HAS_ACHIEVED_GOAL")
+    @Relationship(type = "HAS_ACHIEVED_GOAL", direction = Relationship.OUTGOING)
     private List<PeriodGoal> achievedGoals = new ArrayList<>();
 
     @Relationship("RELATED_TO")
@@ -59,6 +57,8 @@ public class Indicator extends Entity {
         this.endDate = endDate;
         this.periodicity = periodicity;
         this.lastUpdate = lastUpdate;
+        this.expectedGoals = expectedGoals;
+        this.achievedGoals = achievedGoals;
         this.workpack = workpack;
     }
 
@@ -187,11 +187,9 @@ public class Indicator extends Entity {
         ObjectUtils.updateIfPresent(request::getEndDate, this::setEndDate);
         ObjectUtils.updateIfPresent(request::getPeriodicity, this::setPeriodicity);
 
-        this.expectedGoals.clear();
         request.getExpectedGoals().forEach(goal ->
                 this.addExpectedGoals(new PeriodGoal(goal.getPeriod(), goal.getValue())));
 
-        this.achievedGoals.clear();
         request.getAchievedGoals().forEach(goal ->
                 this.addAchievedGoals(new PeriodGoal(goal.getPeriod(), goal.getValue())));
     }

@@ -2,17 +2,17 @@ package br.gov.es.openpmo.model.indicators;
 
 import br.gov.es.openpmo.model.Entity;
 import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Property;
 import org.neo4j.ogm.annotation.Relationship;
 
 @NodeEntity
 public class PeriodGoal extends Entity {
 
-    @Property
     private String period;
 
-    @Property
     private Double value;
+
+    @Relationship(value = "BELONGS_TO")
+    private Indicator indicator;
 
     public PeriodGoal() {
 
@@ -37,5 +37,13 @@ public class PeriodGoal extends Entity {
 
     public void setValue(Double value) {
         this.value = value;
+    }
+
+    public Indicator getIndicator() {
+        return indicator;
+    }
+
+    public void setIndicator(Indicator indicator) {
+        this.indicator = indicator;
     }
 }

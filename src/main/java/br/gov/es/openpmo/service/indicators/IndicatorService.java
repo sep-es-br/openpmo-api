@@ -81,10 +81,8 @@ public class IndicatorService {
 
         indicator.update(request);
 
-        this.repository.save(
-                indicator,
-                0
-        );
+        this.repository.save(indicator);
+
         return IndicatorDetailDto.of(indicator);
     }
 
