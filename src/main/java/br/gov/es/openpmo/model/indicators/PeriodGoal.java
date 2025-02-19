@@ -11,6 +11,8 @@ public class PeriodGoal extends Entity {
 
     private Double value;
 
+    private String lastUpdate;
+
     @Relationship(value = "BELONGS_TO")
     private Indicator indicator;
 
@@ -18,9 +20,10 @@ public class PeriodGoal extends Entity {
 
     }
 
-    public PeriodGoal(String period, Double value) {
+    public PeriodGoal(String period, Double value, String lastUpdate) {
         this.period = period;
         this.value = value;
+        this.lastUpdate = lastUpdate;
     }
 
     public String getPeriod() {
@@ -45,5 +48,13 @@ public class PeriodGoal extends Entity {
 
     public void setIndicator(Indicator indicator) {
         this.indicator = indicator;
+    }
+
+    public String getLastUpdate() {
+        return lastUpdate;
+    }
+
+    public void setLastUpdate(String lastUpdate) {
+        this.lastUpdate = lastUpdate;
     }
 }

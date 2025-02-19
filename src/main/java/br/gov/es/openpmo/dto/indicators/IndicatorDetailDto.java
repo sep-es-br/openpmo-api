@@ -50,10 +50,6 @@ public class IndicatorDetailDto {
     private String periodicity;
 
     @NotNull
-    @NotEmpty
-    private String lastUpdate;
-
-    @NotNull
     private List<PeriodGoal> expectedGoals;
 
     @NotNull
@@ -70,7 +66,6 @@ public class IndicatorDetailDto {
         final String startDate,
         final String endDate,
         final String periodicity,
-        final String lastUpdate,
         final List<PeriodGoal> expectedGoals,
         final List<PeriodGoal> achievedGoals
     ) {
@@ -84,7 +79,6 @@ public class IndicatorDetailDto {
         this.startDate = startDate;
         this.endDate = endDate;
         this.periodicity = periodicity;
-        this.lastUpdate = lastUpdate;
         this.expectedGoals = expectedGoals;
         this.achievedGoals = achievedGoals;
     }
@@ -101,12 +95,11 @@ public class IndicatorDetailDto {
             indicator.getStartDate(),
             indicator.getEndDate(),
             indicator.getPeriodicity(),
-            indicator.getLastUpdate(),
             indicator.getExpectedGoals().stream()
-                    .map(goal -> new PeriodGoal(goal.getPeriod(), goal.getValue()))
+                    .map(goal -> new PeriodGoal(goal.getPeriod(), goal.getValue(), goal.getLastUpdate()))
                     .collect(Collectors.toList()),
             indicator.getAchievedGoals().stream()
-                    .map(goal -> new PeriodGoal(goal.getPeriod(), goal.getValue()))
+                    .map(goal -> new PeriodGoal(goal.getPeriod(), goal.getValue(), goal.getLastUpdate()))
                     .collect(Collectors.toList())
         );
     }
@@ -181,14 +174,6 @@ public class IndicatorDetailDto {
 
     public void setPeriodicity(String periodicity) {
         this.periodicity = periodicity;
-    }
-
-    public String getLastUpdate() {
-        return lastUpdate;
-    }
-
-    public void setLastUpdate(String lastUpdate) {
-        this.lastUpdate = lastUpdate;
     }
 
     public List<PeriodGoal> getExpectedGoals() {

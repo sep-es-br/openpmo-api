@@ -22,7 +22,6 @@ public class Indicator extends Entity {
     private String startDate;
     private String endDate;
     private String periodicity;
-    private String lastUpdate;
 
     @Relationship(type = "HAS_EXPECTED_GOAL", direction = Relationship.OUTGOING)
     private List<PeriodGoal> expectedGoals = new ArrayList<>();
@@ -45,7 +44,6 @@ public class Indicator extends Entity {
         final String startDate,
         final String endDate,
         final String periodicity,
-        final String lastUpdate,
         final Workpack workpack
     ) {
         this.name = name;
@@ -56,9 +54,6 @@ public class Indicator extends Entity {
         this.startDate = startDate;
         this.endDate = endDate;
         this.periodicity = periodicity;
-        this.lastUpdate = lastUpdate;
-        this.expectedGoals = expectedGoals;
-        this.achievedGoals = achievedGoals;
         this.workpack = workpack;
     }
 
@@ -75,16 +70,15 @@ public class Indicator extends Entity {
                 request.getStartDate(),
                 request.getEndDate(),
                 request.getPeriodicity(),
-                request.getLastUpdate(),
                 workpack
 
         );
 
         request.getExpectedGoals().forEach(goal ->
-                indicator.addExpectedGoals(new PeriodGoal(goal.getPeriod(), goal.getValue())));
+                indicator.addExpectedGoals(new PeriodGoal(goal.getPeriod(), goal.getValue(), goal.getLastUpdate())));
 
         request.getAchievedGoals().forEach(goal ->
-                indicator.addAchievedGoals(new PeriodGoal(goal.getPeriod(), goal.getValue())));
+                indicator.addAchievedGoals(new PeriodGoal(goal.getPeriod(), goal.getValue(), goal.getLastUpdate())));
 
         return indicator;
     }
@@ -161,14 +155,6 @@ public class Indicator extends Entity {
         this.periodicity = periodicity;
     }
 
-    public String getLastUpdate() {
-        return lastUpdate;
-    }
-
-    public void setLastUpdate(String lastUpdate) {
-        this.lastUpdate = lastUpdate;
-    }
-
     public Workpack getWorkpack() {
         return workpack;
     }
@@ -188,10 +174,10 @@ public class Indicator extends Entity {
         ObjectUtils.updateIfPresent(request::getPeriodicity, this::setPeriodicity);
 
         request.getExpectedGoals().forEach(goal ->
-                this.addExpectedGoals(new PeriodGoal(goal.getPeriod(), goal.getValue())));
+                this.addExpectedGoals(new PeriodGoal(goal.getPeriod(), goal.getValue(), goal.getLastUpdate())));
 
         request.getAchievedGoals().forEach(goal ->
-                this.addAchievedGoals(new PeriodGoal(goal.getPeriod(), goal.getValue())));
+                this.addAchievedGoals(new PeriodGoal(goal.getPeriod(), goal.getValue(), goal.getLastUpdate())));
     }
 
     public List<PeriodGoal> getExpectedGoals() {

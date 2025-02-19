@@ -50,10 +50,6 @@ public class IndicatorCreateDto {
     @NotNull
     private List<PeriodGoalDto> achievedGoals;
 
-    @NotNull
-    @NotEmpty
-    private String lastUpdate;
-
     public IndicatorCreateDto() {
     }
 
@@ -68,8 +64,7 @@ public class IndicatorCreateDto {
         final String endDate,
         final String periodicity,
         final List<PeriodGoalDto> expectedGoals,
-        final List<PeriodGoalDto> achievedGoals,
-        final String lastUpdate
+        final List<PeriodGoalDto> achievedGoals
     ) {
         this.idWorkpack = idWorkpack;
         this.name = name;
@@ -82,7 +77,6 @@ public class IndicatorCreateDto {
         this.periodicity = periodicity;
         this.expectedGoals = expectedGoals;
         this.achievedGoals = achievedGoals;
-        this.lastUpdate = lastUpdate;
     }
 
     public Long getIdWorkpack() {
@@ -171,13 +165,5 @@ public class IndicatorCreateDto {
 
     public void setAchievedGoals(List<PeriodGoalDto> achievedGoals) {
         this.achievedGoals = achievedGoals;
-    }
-
-    public String getLastUpdate() {
-        return lastUpdate;
-    }
-
-    public void setLastUpdate(String lastUpdate) {
-        this.lastUpdate = lastUpdate;
     }
 }
