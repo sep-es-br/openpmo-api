@@ -77,6 +77,7 @@ public class ApplicationMessage {
   public static final String CITIZEN_NOT_FOUND = "citizen.not.found";
   public static final String CITIZEN_EMAIL_NOT_FOUND = "citizen.email.not.found";
   public static final String RISK_NOT_FOUND = "risk.not.found";
+  public static final String INDICATOR_NOT_FOUND = "indicator.not.found";
   public static final String RISK_RESPONSE_ID_NULL = "id.risk-response.not.null";
   public static final String RISK_RESPONSE_NOT_FOUND = "risk-response.not.found";
   public static final String HAPPEN_FROM_AFTER_HAPPEN_TO = "likelyToHappenFrom.after.likelyToHappenTo";
