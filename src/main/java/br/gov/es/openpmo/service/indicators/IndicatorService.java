@@ -81,6 +81,8 @@ public class IndicatorService {
 
         indicator.update(request);
 
+        periodGoalRepository.deleteAllPeriodFromIndicatorId(indicator.getId());
+
         this.repository.save(indicator);
 
         return IndicatorDetailDto.of(indicator);
