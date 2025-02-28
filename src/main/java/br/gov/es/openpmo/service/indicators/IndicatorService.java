@@ -74,8 +74,7 @@ public class IndicatorService {
     }
 
     public IndicatorDetailDto update(
-            final @Valid IndicatorUpdateDto request,
-            final Long idPerson
+            final @Valid IndicatorUpdateDto request
     ) {
         final Indicator indicator = this.findById(request.getId());
 

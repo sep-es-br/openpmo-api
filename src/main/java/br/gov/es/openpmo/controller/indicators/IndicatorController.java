@@ -78,9 +78,8 @@ public class IndicatorController {
     public ResponseEntity<ResponseBase<IndicatorDetailDto>> update(
             @Valid @RequestBody final IndicatorUpdateDto request,
             @Authorization final String authorization) {
-        this.canAccessService.ensureCanEditResource(request.getId(), authorization);
-        final Long idPerson = this.tokenService.getUserId(authorization);
-        final IndicatorDetailDto indicator = this.service.update(request, idPerson);
+
+        final IndicatorDetailDto indicator = this.service.update(request);
         final ResponseBase<IndicatorDetailDto> response = ResponseBase.of(indicator);
         return ResponseEntity.ok(response);
     }
