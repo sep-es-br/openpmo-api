@@ -234,10 +234,10 @@ public class WorkpackController {
 
     final Workpack workpack = maybeWorkpack.get();
 
-    if (this.completedRepository.allSonsAreCompleted(idWorkpack)) {
-      workpack.setCompleted(true);
-      workpackService.update(workpack);
-    }
+//    if (this.completedRepository.allSonsAreCompleted(idWorkpack)) {
+//      workpack.setCompleted(true);
+//      workpackService.update(workpack);
+//    }
 
     final WorkpackDetailDto workpackDetailDto = this.workpackService.getWorkpackDetailDto(workpack, idPlan);
 
