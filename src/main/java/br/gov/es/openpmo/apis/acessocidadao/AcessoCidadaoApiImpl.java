@@ -334,7 +334,7 @@ public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
     final OperationalOrganizationResponse organizationResponse
   ) {
     return this.getList(
-      "/api/conjunto/" + organizationResponse.getGuid() + "/agentesPublicos",
+      "/api/conjunto/" + organizationResponse.getGuid() + "/agentesPublicos?incluirFilhos=true&operacional=true",
       (json, list) -> json.forEach(element -> {
         if(element instanceof JSONObject) {
           final JSONObject obj = (JSONObject) element;
