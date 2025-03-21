@@ -388,7 +388,6 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
         "WITH DISTINCT id(children)  AS ids " +
         "MATCH (snapshot:Workpack)-[:IS_SNAPSHOT_OF]->(master:Workpack)-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
         "WHERE ID(snapshot) IN [ids] " +
-        "AND (master.completed = false OR master.completed IS NULL) " +
         "RETURN ID(master) AS idMaster, ID(snapshot) AS id, snapshot.name AS name, snapshot.fullName AS fullName " +
         ", snapshot.date AS date, model.fontIcon AS fontIcon, labels(snapshot) AS label"
     )
