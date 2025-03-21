@@ -53,9 +53,7 @@ public interface StepRepository extends Neo4jRepository<Step, Long> {
          "WITH step, " +
          "   toFloat(step.plannedWork) AS estimedWork, " +
          "   toFloat(step.actualWork) AS actualWork " +
-         "WHERE actualWork < estimedWork " +
-         "WITH step, estimedWork " +
-         "RETURN count(DISTINCT step) > 0")
+         "RETURN sum(actualWork) < sum(estimedWork) ")
   boolean hasWorkToCompleteComparingWithMaster(Long idDeliverable);
 
   @Query("MATCH (deliverable:Deliverable)<-[:FEATURES]-(:Schedule)<-[:COMPOSES]-(step:Step) " +
@@ -63,9 +61,7 @@ public interface StepRepository extends Neo4jRepository<Step, Long> {
          "WITH step, snapshot, baseline, " +
          "    toFloat(step.actualWork) AS actualWork, " +
          "    toFloat(snapshot.plannedWork) AS plannedWork  " +
-         "WHERE id(deliverable)=$idDeliverable AND actualWork < plannedWork " +
-         "WITH step, actualWork, plannedWork, snapshot, baseline " +
-         "RETURN count(DISTINCT step) > 0")
+         "RETURN id(deliverable)=$idDeliverable AND sum(actualWork) < sum(plannedWork) ")
   boolean hasWorkToCompleteComparingWithActiveBaseline(Long idDeliverable);
 
   @Query("match (s:Step)-[:COMPOSES]->(:Schedule)-[:FEATURES]->(d:Deliverable) " +

@@ -414,7 +414,6 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
             "MATCH (children:Workpack{deleted:false})-[:IS_IN*]->(parent:Workpack) " +
                     "WHERE ID(parent) = $id AND ((ANY(label IN labels(children) WHERE label IN ['Deliverable']) " +
                     "AND (children)<-[:FEATURES]-(:Schedule)) OR ANY(label IN labels(children) WHERE label IN ['Milestone']) ) " +
-                    "AND (children.completed = false OR children.completed IS NULL) " +
                     "WITH DISTINCT ID(children)  AS ids " +
                     "MATCH (master:Workpack)-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
                     "WHERE ID(master) IN [ids] " +
