@@ -129,6 +129,9 @@ public class PasteToWorkpackService {
     final Long idParentTo,
     final Long idWorkpackModelTo
   ) {
+    if (!idWorkpackModelFrom.equals(idWorkpackModelTo)) {
+      throw new NegocioException(ApplicationMessage.WORKPACK_PASTE_ERROR);
+    }
     this.validatePlan(idWorkpack, idPlanFrom);
     this.validateModel(idWorkpack, idWorkpackModelFrom);
 
@@ -148,9 +151,12 @@ public class PasteToWorkpackService {
     this.handlePasteWorkpack(workpack, workpackModel, plan);
   }
 
-  public void calculateDashboard(final Long workpackId) {
-    this.workpackRepository.findAllInHierarchy(workpackId)
-      .forEach(worpackId -> this.dashboardService.calculate(worpackId, true));
+  public void saveIdParent(Long idWorkpack, Long idParentTo) {
+    this.workpackRepository.setNewIdParentPasted(idWorkpack, idParentTo);
+  }
+
+  public void calculateDashboard() {
+    this.dashboardService.calculate();
   }
 
   private Plan getPlan(final Long idPlan) {
@@ -164,7 +170,6 @@ public class PasteToWorkpackService {
     final Plan plan
   ) {
     this.handlePlan(workpack, plan);
-    this.handleWorkpackModel(workpack, workpackModel);
     this.handleProperties(workpack, workpack.getProperties(), workpackModel.getProperties());
     this.handleChildren(workpack.getChildren(), workpackModel.getChildren(), plan);
   }

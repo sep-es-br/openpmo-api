@@ -61,12 +61,4 @@ public class SorterProperty<T> {
     return this.direction;
   }
 
-  public Property<?, T> getSorterProperty() {
-    return this.sorterProperty;
-  }
-
-  public boolean isHasDefaultFilterSelected() {
-    return this.hasDefaultFilterSelected;
-  }
-
 }

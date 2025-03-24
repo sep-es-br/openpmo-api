@@ -149,7 +149,7 @@ public class IssueService {
     final IssueCreateDto request,
     final Long idPerson
   ) {
-    final Workpack workpack = this.workpackService.findById(request.getIdWorkpack());
+    final Workpack workpack = this.workpackService.findByIdDefault(request.getIdWorkpack());
     final Issue issue = Issue.of(
       request,
       workpack

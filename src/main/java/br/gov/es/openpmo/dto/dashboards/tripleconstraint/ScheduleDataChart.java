@@ -3,7 +3,6 @@ package br.gov.es.openpmo.dto.dashboards.tripleconstraint;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.YearMonth;
 import java.time.temporal.Temporal;
 import java.util.Comparator;
 import java.util.Objects;
@@ -12,7 +11,6 @@ import java.util.stream.Stream;
 
 import static br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintUtils.ONE_MONTH;
 import static br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintUtils.daysBetween;
-import static br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintUtils.roundOneDecimal;
 
 public class ScheduleDataChart {
 
@@ -68,33 +66,6 @@ public class ScheduleDataChart {
     this.calculateValue(this.plannedStartDate, this.plannedEndDate, this::setPlannedValue);
     this.calculateValue(this.foreseenStartDate, this.foreseenEndDate, this::setForeseenValue);
     this.calculateValue(this.actualStartDate, this.actualEndDate, this::setActualValue);
-  }
-
-  public static ScheduleDataChart ofIntervals(
-    final DateIntervalQuery plannedInterval,
-    final DateIntervalQuery foreseenInterval,
-    final YearMonth referenceDate
-  ) {
-    final LocalDate mesAno = getMesAno(referenceDate);
-    return new ScheduleDataChart(
-      plannedInterval.getInitialDate(),
-      plannedInterval.getEndDate(),
-      foreseenInterval.getInitialDate(),
-      foreseenInterval.getEndDate(),
-      mesAno
-    );
-  }
-
-  public static LocalDate getMesAno(final YearMonth yearMonth) {
-    final LocalDate now = LocalDate.now();
-    if(yearMonth == null) {
-      return now;
-    }
-    final LocalDate endOfMonth = yearMonth.atEndOfMonth();
-    if(now.isBefore(endOfMonth)) {
-      return now;
-    }
-    return endOfMonth;
   }
 
   private void calculateValue(
@@ -159,25 +130,10 @@ public class ScheduleDataChart {
     this.foreseenValue = foreseenValue;
   }
 
-  public BigDecimal getActualValue() {
-    if(this.actualValue == null) {
-      return null;
-    }
-
-    return this.actualValue.compareTo(BigDecimal.ZERO) > 0
-      ? this.actualValue
-      : BigDecimal.ZERO;
-  }
 
   private void setActualValue(final BigDecimal actualValue) {
     this.actualValue = actualValue;
   }
 
-  public void round() {
-    this.actualValue = roundOneDecimal(this.actualValue);
-    this.foreseenValue = roundOneDecimal(this.foreseenValue);
-    this.plannedValue = roundOneDecimal(this.plannedValue);
-    this.variation = roundOneDecimal(this.variation);
-  }
 
 }

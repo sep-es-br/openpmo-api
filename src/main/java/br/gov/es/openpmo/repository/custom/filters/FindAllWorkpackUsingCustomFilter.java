@@ -38,19 +38,14 @@ public class FindAllWorkpackUsingCustomFilter extends FindAllUsingCustomFilterBu
           final CustomFilter filter,
           final StringBuilder query
   ) {
-    query.append("MATCH (node:Workpack{deleted:false})-[rf:BELONGS_TO]->(p:Plan), " +
-            "(p)-[is:IS_STRUCTURED_BY]->(pm:PlanModel)<-[bt:BELONGS_TO]-(wm:WorkpackModel), " +
-            "(wm)<-[:FEATURES]-(propertyModel:PropertyModel), " +
-            "(node)<-[:FEATURES]-(property:Property)-[:IS_DRIVEN_BY]->(propertyModel) " +
-            "MATCH (node)<-[:FEATURES]-(name:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'name'}) " +
-            "MATCH (node)<-[:FEATURES]-(fullName:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'fullName'}) " +
+    query.append("MATCH (wm:WorkpackModel)<-[:IS_INSTANCE_BY | IS_LINKED_TO]-(node:Workpack{deleted:false})-[rf:BELONGS_TO]->(p:Plan), " +
+            "(p)-[is:IS_STRUCTURED_BY]->(pm:PlanModel), (wm)<-[:FEATURES]-(propertyModel:PropertyModel) " +
+            "OPTIONAL MATCH (node)<-[:FEATURES]-(property:Property)-[:IS_DRIVEN_BY]->(propertyModel) " +
             "OPTIONAL MATCH (propertyModel)-[:GROUPS]->(groupedProperty:PropertyModel) " +
-            "OPTIONAL MATCH (node)-[ii:IS_INSTANCE_BY]->(wm) " +
-            "OPTIONAL MATCH (node)-[lt:IS_LINKED_TO]->(wm) " +
             "OPTIONAL MATCH (node)<-[:FEATURES]-(:Property)-[:VALUES]->(values) " +
             "WITH *, " +
-            "apoc.text.levenshteinSimilarity(apoc.text.clean(name.value), apoc.text.clean($term)) as nameScore, " +
-            "apoc.text.levenshteinSimilarity(apoc.text.clean(fullName.value), apoc.text.clean($term)) as fullNameScore " +
+            "apoc.text.levenshteinSimilarity(apoc.text.clean(node.name), apoc.text.clean($term)) as nameScore, " +
+            "apoc.text.levenshteinSimilarity(apoc.text.clean(node.fullName), apoc.text.clean($term)) as fullNameScore " +
             "WITH *, CASE WHEN nameScore > fullNameScore THEN nameScore ELSE fullNameScore END AS score, " +
             "collect( property ) as properties, " +
             "collect( id(values) ) as selectedValues ");
@@ -71,35 +66,11 @@ public class FindAllWorkpackUsingCustomFilter extends FindAllUsingCustomFilterBu
 
   @Override
   public void buildReturnClause(final StringBuilder query) {
-    query
-      .append(" OPTIONAL MATCH (node)<-[wi:IS_IN]-(w2:Workpack)")
-      .append(" OPTIONAL MATCH (node)-[wi2:IS_IN]->(w3:Workpack)")
-      .append(" OPTIONAL MATCH (node)<-[wa:APPLIES_TO]-(ca:CostAccount)")
-      .append(" OPTIONAL MATCH (node)<-[wfg:FEATURES]-(wg:Group)")
-      .append(" OPTIONAL MATCH (wg)-[wgps:GROUPS]->(wgp:Property)-[gpd:IS_DRIVEN_BY]->(pm:PropertyModel)")
-      .append(" OPTIONAL MATCH (ca)<-[f1:FEATURES]-(p2:Property)-[d1:IS_DRIVEN_BY]->(pmc:PropertyModel)")
-      .append(" OPTIONAL MATCH (wm)<-[wmi:IS_IN]-(wm2:WorkpackModel)")
-      .append(" OPTIONAL MATCH (wm)-[wmi2:IS_IN]->(wm3:WorkpackModel)")
-      .append(" OPTIONAL MATCH (wm)<-[f2:FEATURES]-(pm2:PropertyModel)")
-      .append(" OPTIONAL MATCH (wm)-[fg:FEATURES]->(gp:GroupModel)")
-      .append(" OPTIONAL MATCH (node)-[isLinkedTo:IS_LINKED_TO]->(workpackModel:WorkpackModel)")
-      .append(" OPTIONAL MATCH (wp)-[parentSharedWith]->(officeParent:Office)")
-      .append(" OPTIONAL MATCH (gp)-[gps:GROUPS]->(gpm:PropertyModel)")
-
-      .append(" RETURN node, rf, p, ii, pm, wm, bt, [ ")
-      .append("  [[wi, w2] ], ")
-      .append("  [[wi2, w3] ], ")
-      .append("  [[wa, ca] ], ")
-      .append("  [[wfg, wg] ], ")
-      .append("  [[wgps, wgp, gpd, pm] ], ")
-      .append("  [[ca, f1, p2, d1, pmc ] ], ")
-      .append("  [[wmi,wm2] ], ")
-      .append("  [[wmi2,wm3] ], ")
-      .append("  [[f2, pm2] ], ")
-      .append("  [[fg, gp] ], ")
-      .append("  [[isLinkedTo, workpackModel] ], ")
-      .append("  [[parentSharedWith, officeParent]], ")
-      .append("  [[gps, gpm] ] ")
+    query.append("RETURN node, rf, p, wm, [ ")
+        .append(" [ (node)-[sharedWith:IS_SHARED_WITH]->(office:Office) | [sharedWith, office]], ")
+        .append(" [ (node)-[instanceBy:IS_INSTANCE_BY]->(wm) | [instanceBy, wm] ], ")
+        .append(" [ (node)-[isLinkedTo:IS_LINKED_TO]->(wm) | [isLinkedTo, wm] ], ")
+        .append(" [ (node)<-[b:BELONGS_TO]-(d:Dashboard)<-[ipo:IS_PART_OF]-(dm:DashboardMonth)<-[ia:IS_AT]-(nodes) | [b,d,ipo,dm,ia,nodes] ] ")
       .append("] ");
   }
 

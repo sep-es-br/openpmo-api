@@ -17,6 +17,7 @@ public class CanAccessData implements ICanAccessData {
   private final IGetPersonFromAuthorization getPersonFromAuthorization;
   private final PermissionRepository permissionRepository;
 
+
   public CanAccessData(
     final IGetPersonFromAuthorization getPersonFromAuthorization,
     final PermissionRepository permissionRepository
@@ -55,47 +56,43 @@ public class CanAccessData implements ICanAccessData {
     final Long id,
     final String authorizationHeader
   ) {
-    final PersonDataResponse personData = this.getPerson(authorizationHeader);
-    final boolean isAdministrator = isAdministrator(personData);
-
     final List<Long> ids = Collections.singletonList(id);
-    final Boolean self = isSelfId(personData, ids);
-
-    if (isAdministrator) {
-      return CanAccessDataResponse.administrator(personData.getKey(), self);
-    }
-
-    final boolean editManagement = hasPermission(
-      ids,
-      personData.getKey(),
-      this.permissionRepository::hasEditManagementPermission
-    );
-
-    final boolean edit = hasPermission(ids, personData.getKey(), this.permissionRepository::hasEditPermission);
-    if (edit) {
-      return CanAccessDataResponse.edit(personData.getKey(), editManagement, self);
-    }
-    final boolean read = hasPermission(ids, personData.getKey(), this.permissionRepository::hasReadPermission);
-    if (read) {
-      return CanAccessDataResponse.read(personData.getKey(), editManagement, self);
-    }
-
-    return new CanAccessDataResponse(
-      false,
-      false,
-      hasPermission(ids, personData.getKey(), this.permissionRepository::hasBasicReadPermission),
-      false,
-      self,
-      personData.getKey(),
-      new CanAccessManagementDataResponse(
-        editManagement,
-        true
-      )
-    );
+    return this.execute(ids, authorizationHeader);
   }
 
   @Override
-  public ICanAccessDataResponse execute(
+  public CanAccessDataResponse executeWorkpack(Long idWorkpack, String authorizationHeader) {
+    final PersonDataResponse personData = this.getPerson(authorizationHeader);
+    final boolean isAdministrator = isAdministrator(personData);
+    if (isAdministrator) {
+      return CanAccessDataResponse.administrator(personData.getKey(), false);
+    }
+    boolean hasPermisionOfficeOrPlan = this.permissionRepository.hasPermisionOfficeOrPlan(idWorkpack, personData.getKey());
+    if (hasPermisionOfficeOrPlan) {
+      return CanAccessDataResponse.read(personData.getKey(), false, false);
+    }
+
+    final boolean hasPermission = this.permissionRepository.hasPermissionWorkpack(idWorkpack, personData.getKey());
+    if (hasPermission) {
+      return CanAccessDataResponse.read(personData.getKey(), false, false);
+    }
+    return new CanAccessDataResponse(
+        false,
+        false,
+        false,
+        false,
+        false,
+        personData.getKey(),
+        new CanAccessManagementDataResponse(
+            false,
+            false
+        )
+    );
+  }
+
+
+  @Override
+  public CanAccessDataResponse execute(
     final List<Long> ids,
     final String authorizationHeader
   ) {
@@ -114,13 +111,17 @@ public class CanAccessData implements ICanAccessData {
       this.permissionRepository::hasEditManagementPermission
     );
 
+    if (editManagement) {
+      return CanAccessDataResponse.edit(personData.getKey(), true, self);
+    }
+
     final boolean edit = hasPermission(ids, personData.getKey(), this.permissionRepository::hasEditPermission);
     if (edit) {
-      return CanAccessDataResponse.edit(personData.getKey(), editManagement, self);
+      return CanAccessDataResponse.edit(personData.getKey(), false, self);
     }
     final boolean read = hasPermission(ids, personData.getKey(), this.permissionRepository::hasReadPermission);
     if (read) {
-      return CanAccessDataResponse.read(personData.getKey(), editManagement, self);
+      return CanAccessDataResponse.read(personData.getKey(), false, self);
     }
 
     return new CanAccessDataResponse(
@@ -131,7 +132,7 @@ public class CanAccessData implements ICanAccessData {
       self,
       personData.getKey(),
       new CanAccessManagementDataResponse(
-        editManagement,
+        false,
         true
       )
     );

@@ -1,10 +1,11 @@
 package br.gov.es.openpmo.dto.workpack;
 
+import br.gov.es.openpmo.dto.MilestoneResultDto;
 import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
-import br.gov.es.openpmo.dto.dashboards.MilestoneDto;
-import br.gov.es.openpmo.dto.dashboards.RiskDto;
+import br.gov.es.openpmo.dto.dashboards.RiskResultDto;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.dto.plan.PlanDto;
+import br.gov.es.openpmo.dto.workpack.breakdown.structure.JournalInformationDto;
 import br.gov.es.openpmo.model.relations.IsLinkedTo;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -17,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.swagger.annotations.ApiModel;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -43,6 +45,8 @@ public abstract class WorkpackDetailParentDto {
   private String name;
 
   private String fullName;
+
+  private LocalDateTime date;
 
   private String fontIcon;
 
@@ -80,9 +84,11 @@ public abstract class WorkpackDetailParentDto {
 
   private DashboardMonthDto dashboard;
 
-  private List<MilestoneDto> milestones;
+  private MilestoneResultDto milestone;
 
-  private List<RiskDto> risks;
+  private RiskResultDto risk;
+
+  private JournalInformationDto journalInformation;
 
   public static <TYPE extends WorkpackDetailParentDto> WorkpackDetailParentDto of(
     final Workpack workpack,
@@ -188,6 +194,14 @@ public abstract class WorkpackDetailParentDto {
     this.id = id;
   }
 
+  public LocalDateTime getDate() {
+    return date;
+  }
+
+  public void setDate(LocalDateTime date) {
+    this.date = date;
+  }
+
   public PlanDto getPlan() {
     return this.plan;
   }
@@ -281,20 +295,20 @@ public abstract class WorkpackDetailParentDto {
     this.dashboard = dashboard;
   }
 
-  public List<MilestoneDto> getMilestones() {
-    return milestones;
+  public MilestoneResultDto getMilestone() {
+    return milestone;
   }
 
-  public void setMilestones(List<MilestoneDto> milestones) {
-    this.milestones = milestones;
+  public void setMilestone(MilestoneResultDto milestone) {
+    this.milestone = milestone;
   }
 
-  public List<RiskDto> getRisks() {
-    return risks;
+  public RiskResultDto getRisk() {
+    return risk;
   }
 
-  public void setRisks(List<RiskDto> risks) {
-    this.risks = risks;
+  public void setRisk(RiskResultDto risk) {
+    this.risk = risk;
   }
 
   public String getActiveBaselineName() {
@@ -305,4 +319,11 @@ public abstract class WorkpackDetailParentDto {
     this.activeBaselineName = activeBaselineName;
   }
 
+  public JournalInformationDto getJournalInformation() {
+    return journalInformation;
+  }
+
+  public void setJournalInformation(JournalInformationDto journalInformation) {
+    this.journalInformation = journalInformation;
+  }
 }

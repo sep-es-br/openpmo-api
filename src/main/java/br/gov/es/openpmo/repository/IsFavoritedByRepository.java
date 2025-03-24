@@ -23,4 +23,12 @@ public interface IsFavoritedByRepository extends Neo4jRepository<IsFavoritedBy, 
     Long planId
   );
 
+  @Query("MATCH (p:Person) where id(p) = $personId " +
+          "MATCH (w:Workpack) where id(w) = $workpackId " +
+          "CREATE (w)-[r:IS_FAVORITED_BY { " +
+          "idPlan: $planId " +
+          "}]->(p) " +
+          "RETURN r")
+  IsFavoritedBy createIsFavoriteBy(Long personId, Long workpackId,
+                                            Long planId);
 }

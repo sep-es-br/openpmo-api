@@ -122,7 +122,6 @@ public class WorkpackModelController {
     @RequestHeader("Authorization") final String authorization
   ) {
 
-//    this.canAccessService.ensureCanReadResource(id, authorization);
     final WorkpackModel workpackModel = this.workpackModelService.findById(id);
 
     if (workpackModel.getProperties() != null && !(workpackModel.getProperties()).isEmpty()) {

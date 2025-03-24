@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.repository;
 
+import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.model.relations.CanAccessWorkpack;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
@@ -19,6 +20,15 @@ public interface WorkpackPermissionRepository extends Neo4jRepository<CanAccessW
   List<CanAccessWorkpack> findByIdWorkpackAndIdPerson(
     @Param("idWorkpack") Long idWorkpack,
     @Param("idPerson") Long idPerson
+  );
+
+  @Query("MATCH (person:Person)-[canAccess:CAN_ACCESS_WORKPACK]->(workpack:Workpack) " +
+      " WHERE canAccess.idPlan = $idPlan " +
+      " AND id(person) = $idPerson " +
+      " RETURN person, canAccess, workpack")
+  List<CanAccessWorkpack> findByIdPlanAndIdPerson(
+      @Param("idPlan") Long idPlan,
+      @Param("idPerson") Long idPerson
   );
 
   @Query("MATCH (person:Person)-[canAccess:CAN_ACCESS_WORKPACK]->(workpack:Workpack) " +
@@ -47,5 +57,27 @@ public interface WorkpackPermissionRepository extends Neo4jRepository<CanAccessW
     "RETURN person, permission, workpack")
   Set<CanAccessWorkpack> findAllPermissionsOfPerson(@Param("idPerson") Long idPerson);
 
+  @Query("MATCH (p:Person) where id(p) = $personId " +
+          "MATCH (w:Workpack) where id(w) = $workpackId " +
+          "CREATE (p)-[r:CAN_ACCESS_WORKPACK { " +
+          "  organization: $organization, " +
+          "  idPlan: $idPlan, " +
+          "  permitedRole: $role, " +
+          "  permissionLevel: $permissionLevel " +
+          "}]->(w) " +
+          "RETURN r")
+  CanAccessWorkpack createCanAccessWorkpack(Long personId, Long workpackId,
+                                       String organization, Long idPlan,
+                                       String role,
+                                       PermissionLevelEnum permissionLevel);
+
+  @Query("MATCH (p:Person)-[r:CAN_ACCESS_WORKPACK]->(w:Workpack) " +
+          "WHERE id(p) = $actorId AND id(w) = $workpackId AND id(r) = $relationId " +
+          "SET r.permissionLevel = $permissionLevel " +
+          "RETURN r ")
+  CanAccessWorkpack updateCanAccessWorkpack(Long actorId,
+                                            Long workpackId,
+                                            Long relationId,
+                                            PermissionLevelEnum permissionLevel);
 
 }

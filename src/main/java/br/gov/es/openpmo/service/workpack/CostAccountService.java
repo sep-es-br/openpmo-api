@@ -17,9 +17,10 @@ import br.gov.es.openpmo.dto.workpack.TextAreaDto;
 import br.gov.es.openpmo.dto.workpack.TextDto;
 import br.gov.es.openpmo.dto.workpack.ToggleDto;
 import br.gov.es.openpmo.dto.workpack.UnitSelectionDto;
-import br.gov.es.openpmo.dto.workpack.WorkpackName;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.exception.RegistroNaoEncontradoException;
+import br.gov.es.openpmo.model.budget.PlanoOrcamentario;
+import br.gov.es.openpmo.model.budget.UnidadeOrcamentaria;
 import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.model.properties.Currency;
 import br.gov.es.openpmo.model.properties.Date;
@@ -37,14 +38,10 @@ import br.gov.es.openpmo.model.relations.Consumes;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.CostAccountModel;
-import br.gov.es.openpmo.repository.ConsumesRepository;
-import br.gov.es.openpmo.repository.CostAccountModelRepository;
-import br.gov.es.openpmo.repository.CostAccountRepository;
-import br.gov.es.openpmo.repository.CustomFilterRepository;
-import br.gov.es.openpmo.repository.PropertyRepository;
-import br.gov.es.openpmo.repository.WorkpackRepository;
+import br.gov.es.openpmo.repository.*;
 import br.gov.es.openpmo.repository.custom.filters.FindAllCostAccountUsingCustomFilter;
 import br.gov.es.openpmo.service.reports.models.GetPropertyModelDtoFromEntity;
+import br.gov.es.openpmo.utils.ApplicationCacheUtil;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import br.gov.es.openpmo.utils.TextSimilarityScore;
 import org.apache.commons.lang3.StringUtils;
@@ -108,6 +105,12 @@ public class CostAccountService {
 
   private final PropertyRepository propertyRepository;
 
+  private final ApplicationCacheUtil applicationCacheUtil;
+
+  private final UnidadeOrcamentariaRepository unidadeOrcamentariaRepository;
+
+  private final PlanoOrcamentarioRepository planoOrcamentarioRepository;
+
   @Autowired
   public CostAccountService(
     final CostAccountRepository costAccountRepository,
@@ -122,7 +125,10 @@ public class CostAccountService {
     final WorkpackService workpackService,
     final ModelMapper modelMapper,
     final CostAccountModelRepository costAccountModelRepository,
-    final PropertyRepository propertyRepository
+    final ApplicationCacheUtil applicationCacheUtil,
+    final PropertyRepository propertyRepository,
+    final UnidadeOrcamentariaRepository unidadeOrcamentariaRepository,
+    final PlanoOrcamentarioRepository planoOrcamentarioRepository
   ) {
     this.costAccountRepository = costAccountRepository;
     this.consumesRepository = consumesRepository;
@@ -136,7 +142,10 @@ public class CostAccountService {
     this.workpackService = workpackService;
     this.modelMapper = modelMapper;
     this.costAccountModelRepository = costAccountModelRepository;
+    this.applicationCacheUtil = applicationCacheUtil;
     this.propertyRepository = propertyRepository;
+    this.unidadeOrcamentariaRepository = unidadeOrcamentariaRepository;
+    this.planoOrcamentarioRepository = planoOrcamentarioRepository;
   }
 
   public List<CostAccountDto> findAllByIdWorkpack(
@@ -184,8 +193,16 @@ public class CostAccountService {
   }
 
   public CostAccount findById(final Long id) {
-    return this.costAccountRepository.findByIdWithPropertyModel(id)
+    CostAccount costAccount = this.costAccountRepository.findByIdWithPropertyModel(id)
       .orElseThrow(() -> new NegocioException(COST_ACCOUNT_NOT_FOUND));
+
+    Optional<UnidadeOrcamentaria> uoOpt = unidadeOrcamentariaRepository.findByIdCostAccount(id);
+    uoOpt.ifPresent(costAccount::setUnidadeOrcamentaria);
+
+    Optional<PlanoOrcamentario> poOpt = planoOrcamentarioRepository.findByIdCostAccout(id);
+    poOpt.ifPresent(costAccount::setPlanoOrcamentario);
+
+    return costAccount;
   }
 
   public CostAccountDto findByIdAsDto(final Long id) {
@@ -207,6 +224,7 @@ public class CostAccountService {
     if (costAccount.getWorkpack() != null) {
       costAccountDto.setIdWorkpack(costAccount.getWorkpack().getId());
     }
+
     return costAccountDto;
   }
 
@@ -251,9 +269,8 @@ public class CostAccountService {
   }
 
   private List<CostAccount> findAllByIdWorkpack(final Long idWorkpack) {
-    final Workpack workpack = this.costAccountRepository.findWorkpackWithCosts(idWorkpack)
-      .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
-    return this.fetchCostAccountFromWorkpack(workpack);
+    List<Long> idsWorkpakWithParents = applicationCacheUtil.getListIdWorkpackWithParent(idWorkpack);
+    return this.costAccountRepository.findAllByWorkpackId(idsWorkpakWithParents);
   }
 
   private List<? extends PropertyDto> getPropertiesDto(
@@ -407,11 +424,10 @@ public class CostAccountService {
     final CostAccountDto dto,
     final Long workpackId
   ) {
-    final Optional<WorkpackName> maybeWorkpackName = this.maybeGetWorkpackNameData(workpackId);
-    if (maybeWorkpackName.isPresent()) {
-      final WorkpackName workpackName = maybeWorkpackName.get();
-      dto.setWorkpackModelName(workpackName.getName());
-      dto.setWorkpackModelFullName(workpackName.getFullName());
+    final Optional<Workpack> workpack = this.workpackRepository.findById(workpackId, 0);
+    if (workpack.isPresent()) {
+      dto.setWorkpackModelName(workpack.get().getName());
+      dto.setWorkpackModelFullName(workpack.get().getFullName());
     }
   }
 
@@ -434,54 +450,92 @@ public class CostAccountService {
     return costs;
   }
 
-  private Optional<WorkpackName> maybeGetWorkpackNameData(final Long workpackId) {
-    return this.workpackRepository.findWorkpackNameAndFullname(workpackId);
-  }
-
   public CostAccount getCostAccount(final Object cost) {
+
     Set<Property> properties = null;
     Long idCostAccount = null;
     Long idCostAccountModel = null;
     Workpack workpack = null;
+    UnidadeOrcamentaria unidadeOrcamentaria;
+    PlanoOrcamentario planoOrcamentario;
+
     if (cost instanceof CostAccountStoreDto) {
+
       final CostAccountStoreDto store = (CostAccountStoreDto) cost;
       final List<? extends PropertyDto> propertyDtos = store.getProperties();
+
       if (propertyDtos != null && !propertyDtos.isEmpty()) {
         properties = this.workpackService.getProperties(store.getProperties());
         idCostAccountModel = store.getIdCostAccountModel();
         store.setProperties(null);
+
         workpack = this.workpackRepository.findById(store.getIdWorkpack(), 0)
-          .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
+                .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
       }
+
+      unidadeOrcamentaria = store.getUnidadeOrcamentaria();
+      planoOrcamentario = store.getPlanoOrcamentario();
+
     } else {
       idCostAccount = ((CostAccountUpdateDto) cost).getId();
       final CostAccountUpdateDto update = (CostAccountUpdateDto) cost;
       final List<? extends PropertyDto> propertyDtos = update.getProperties();
+
       if (propertyDtos != null && !propertyDtos.isEmpty()) {
         properties = this.workpackService.getProperties(update.getProperties());
         idCostAccountModel = update.getIdCostAccountModel();
         update.setProperties(null);
       }
+
+      unidadeOrcamentaria = update.getUnidadeOrcamentaria();
+      planoOrcamentario = update.getPlanoOrcamentario();
     }
+
     CostAccount costAccount;
     if (idCostAccount == null) {
       costAccount = this.modelMapper.map(cost, CostAccount.class);
       costAccount.setWorkpack(workpack);
+      costAccount.setUnidadeOrcamentaria(unidadeOrcamentaria);
+      costAccount.setPlanoOrcamentario(planoOrcamentario);
     } else {
       costAccount = this.findById(idCostAccount);
+
+      if (costAccount.getUnidadeOrcamentaria() != null) {
+        unidadeOrcamentariaRepository.deleteById(costAccount.getUnidadeOrcamentaria().getId());
+      }
+
+      if (costAccount.getPlanoOrcamentario() != null) {
+        planoOrcamentarioRepository.deleteById(costAccount.getPlanoOrcamentario().getId());
+      }
     }
+
+    costAccount.setPlanoOrcamentario(planoOrcamentario);
+    costAccount.setUnidadeOrcamentaria(unidadeOrcamentaria);
+
+    if (unidadeOrcamentaria != null) {
+      if (unidadeOrcamentaria.getPlanoOrcamentario() == null) {
+        unidadeOrcamentaria.setPlanoOrcamentario(new HashSet<>());
+      }
+      unidadeOrcamentaria.getPlanoOrcamentario().add(planoOrcamentario);
+    }
+
     costAccount.setProperties(properties);
+
     final CostAccountModel costAccountModel = this.costAccountModelRepository.findById(idCostAccountModel, 0)
-      .orElseThrow(() -> new RegistroNaoEncontradoException(ApplicationMessage.COST_ACCOUNT_MODEL_NOT_FOUND));
+            .orElseThrow(() -> new RegistroNaoEncontradoException(ApplicationMessage.COST_ACCOUNT_MODEL_NOT_FOUND));
     costAccount.setInstance(costAccountModel);
+
     costAccount = this.save(costAccount);
+
     if (properties != null && !properties.isEmpty()) {
       for (Property property : properties) {
         property.setCostAccount(costAccount);
       }
       this.propertyRepository.saveAll(properties);
     }
+
     return costAccount;
   }
+
 
 }

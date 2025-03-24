@@ -1,10 +1,11 @@
 package br.gov.es.openpmo.controller.journals;
 
 import br.gov.es.openpmo.dto.EntityDto;
-import br.gov.es.openpmo.dto.PageResponse;
 import br.gov.es.openpmo.dto.Response;
+import br.gov.es.openpmo.dto.ResponseBasePaginated;
 import br.gov.es.openpmo.dto.journals.JournalRequest;
 import br.gov.es.openpmo.dto.journals.JournalResponse;
+import br.gov.es.openpmo.dto.journals.SimpleJournalResponse;
 import br.gov.es.openpmo.model.journals.JournalType;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.journals.JournalCreator;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -59,20 +61,19 @@ public class JournalController {
   }
 
   @GetMapping
-  public PageResponse<JournalResponse> getJournals(
+  public ResponseBasePaginated<JournalResponse> getJournals(
       @RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") final LocalDate from,
       @RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM/yyyy") final LocalDate to,
-      @RequestParam(required = false) final List<Integer> scope,
-      @RequestParam final Long idWorkpack,
+      @RequestParam final List<Long> scope,
       @RequestParam final List<JournalType> type,
       final UriComponentsBuilder uriComponentsBuilder,
       final Pageable pageable
   ) {
 
     final Page<JournalResponse> responsePage =
-      this.journalFinder.getAll(from, to, type, scope, idWorkpack, uriComponentsBuilder, pageable);
+      this.journalFinder.getAll(from, to, type, scope, uriComponentsBuilder, pageable);
 
-    return PageResponse.of(responsePage);
+    return ResponseBasePaginated.of(responsePage);
   }
 
   @Transactional
@@ -85,6 +86,15 @@ public class JournalController {
     final Long idPerson = this.tokenService.getUserId(authorization);
     final EntityDto information = this.journalCreator.newInformation(journalRequest, idPerson);
     return this.responseHandler.success(information);
+  }
+
+  @GetMapping("{id-journal}")
+  public Response<SimpleJournalResponse> getJournal(
+      @PathVariable("id-journal") final Long idJournal,
+      final UriComponentsBuilder uriComponentsBuilder
+  ) {
+    final SimpleJournalResponse journal = this.journalFinder.getJournal(idJournal, uriComponentsBuilder);
+    return this.responseHandler.success(journal);
   }
 
 }

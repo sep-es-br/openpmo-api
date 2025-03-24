@@ -2,7 +2,6 @@ package br.gov.es.openpmo.service.actors;
 
 import br.gov.es.openpmo.dto.person.favorite.WorkpackFavoritedDetail;
 import br.gov.es.openpmo.dto.person.favorite.WorkpackFavoritedRequest;
-import br.gov.es.openpmo.dto.workpack.WorkpackNameResponse;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.relations.IsFavoritedBy;
@@ -13,7 +12,6 @@ import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.permissions.canaccess.CanAccessData;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
-import br.gov.es.openpmo.service.workpack.GetWorkpackName;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.stereotype.Component;
 
@@ -28,8 +26,6 @@ public class IsFavoritedByService {
 
   private final TokenService tokenService;
 
-  private final GetWorkpackName getWorkpackName;
-
   private final WorkpackRepository workpackRepository;
 
   private final CanAccessData canAccessData;
@@ -42,7 +38,6 @@ public class IsFavoritedByService {
 
   public IsFavoritedByService(
     final TokenService tokenService,
-    final GetWorkpackName getWorkpackName,
     final WorkpackRepository workpackRepository,
     final CanAccessData canAccessData,
     final PersonRepository personRepository,
@@ -50,7 +45,6 @@ public class IsFavoritedByService {
     final ICanAccessService canAccessService
   ) {
     this.tokenService = tokenService;
-    this.getWorkpackName = getWorkpackName;
     this.workpackRepository = workpackRepository;
     this.canAccessData = canAccessData;
     this.personRepository = personRepository;
@@ -76,11 +70,10 @@ public class IsFavoritedByService {
   ) {
     final Long id = workpack.getId();
     final String icon = workpack.getIcon();
-    final WorkpackNameResponse workpackNameResponse = this.getWorkpackName.execute(id);
     return new WorkpackFavoritedDetail(
       id,
-      workpackNameResponse.getName(),
-      workpackNameResponse.getFullName(),
+      workpack.getName(),
+      workpack.getFullName(),
       icon,
       this.canAccessData.execute(id, authorization).canReadResource()
     );
@@ -134,7 +127,7 @@ public class IsFavoritedByService {
       this.unfavorite(maybeFavorite.get());
       return;
     }
-    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
+    this.canAccessService.ensureCanReadResourceWorkpack(idWorkpack, authorization);
     this.favorite(request, person, workpack);
   }
 
@@ -167,7 +160,7 @@ public class IsFavoritedByService {
     isFavoritedBy.setPerson(person);
     isFavoritedBy.setWorkpack(workpack);
     isFavoritedBy.setIdPlan(request.getIdPlan());
-    this.isFavoritedByRepository.save(isFavoritedBy);
+    this.isFavoritedByRepository.createIsFavoriteBy(isFavoritedBy.getPerson().getId(), isFavoritedBy.getWorkpack().getId(), isFavoritedBy.getIdPlan());
   }
 
 }

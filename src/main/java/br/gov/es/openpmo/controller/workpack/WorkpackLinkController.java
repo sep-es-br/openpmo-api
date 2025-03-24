@@ -53,8 +53,9 @@ public class WorkpackLinkController {
 
   @GetMapping("/can-be-linked")
   public ResponseEntity<ResponseBaseItens<ComboDto>> getAllWorkpackCanBeLinked(
+          @RequestParam("id-plan") final Long idPlan,
       @RequestParam("id-workpack-model") final Long idworkpackModel) {
-    final List<ComboDto> response = this.workpackSharedService.getSharedWorkpacks(idworkpackModel);
+    final List<ComboDto> response = this.workpackSharedService.getSharedWorkpacks(idworkpackModel, idPlan);
     return ResponseEntity.ok(ResponseBaseItens.of(response));
   }
 
@@ -92,7 +93,7 @@ public class WorkpackLinkController {
       @RequestParam("id-plan") final Long idPlan,
       @RequestHeader(name = "Authorization") final String authorization) {
 
-    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
+    this.canAccessService.ensureCanReadResourceWorkpack(idWorkpack, authorization);
 
     final Long idUser = this.tokenService.getUserId(authorization);
 
@@ -100,13 +101,6 @@ public class WorkpackLinkController {
         idWorkpack,
         idWorpackModelLinked,
         idPlan);
-
-    if (response != null) {
-      response.setPermissions(this.workpackPermissionVerifier.fetchPermissions(
-        idUser,
-        idPlan,
-        response.getId()));
-    }
 
     return ResponseEntity.ok(
         new ResponseBaseWorkpackDetail()

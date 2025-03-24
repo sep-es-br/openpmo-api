@@ -1,20 +1,17 @@
 package br.gov.es.openpmo.service.workpack;
 
-import br.gov.es.openpmo.dto.workpack.MilestoneDateQueryResult;
 import br.gov.es.openpmo.dto.workpack.MilestoneDetailDto;
 import br.gov.es.openpmo.dto.workpack.MilestoneDetailParentDto;
 import br.gov.es.openpmo.enumerator.MilestoneStatus;
-import br.gov.es.openpmo.model.properties.Date;
+import br.gov.es.openpmo.model.workpacks.Milestone;
+import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.MilestoneRepository;
-import br.gov.es.openpmo.repository.dashboards.DashboardMilestoneRepository;
-import br.gov.es.openpmo.service.dashboards.v2.DashboardMilestoneService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 import java.util.Optional;
 
 @Service
@@ -22,134 +19,78 @@ public class MilestoneService {
 
   private final MilestoneRepository milestoneRepository;
 
-  private final DashboardMilestoneRepository dashboardRepository;
-
-  private final DashboardMilestoneService dashboardService;
-
   @Autowired
   public MilestoneService(
-    final MilestoneRepository milestoneRepository,
-    final DashboardMilestoneRepository dashboardRepository,
-    final DashboardMilestoneService dashboardService
+    final MilestoneRepository milestoneRepository
   ) {
     this.milestoneRepository = milestoneRepository;
-    this.dashboardRepository = dashboardRepository;
-    this.dashboardService = dashboardService;
   }
 
   public void addStatus(
-    final Long milestoneId,
+    final Workpack workpack,
     final MilestoneDetailDto milestoneDetailDto
   ) {
-    final Long parentId = this.dashboardRepository.findParentIdByMilestoneId(milestoneId);
-    final Long workpackId = this.dashboardRepository.findWorkpackIdByMilestoneId(milestoneId);
-    final Long baselineId = this.dashboardRepository.findBaselineIdByMilestoneId(milestoneId);
+    final Optional<LocalDateTime> baselineDateMilestone = this.milestoneRepository.fetchMilestoneBaselineDate(workpack.getId());
+    final LocalDate snapshotDate = baselineDateMilestone.map(LocalDateTime::toLocalDate).orElse(null);
+    final LocalDate milestoneDate = workpack.getDate().toLocalDate();
 
-    final boolean late = this.dashboardService.isLate(
-      milestoneId,
-      parentId,
-      workpackId,
-      baselineId
-    );
-    if (late) {
-      milestoneDetailDto.setMilestoneStatus(MilestoneStatus.LATE);
-      return;
-    }
+    final LocalDate refDate = LocalDate.now();
 
-    final boolean onTime = this.dashboardService.isOnTime(
-      milestoneId,
-      parentId,
-      workpackId,
-      baselineId
-    );
-    if (onTime) {
-      milestoneDetailDto.setMilestoneStatus(MilestoneStatus.ON_TIME);
-      return;
-    }
-
-    final boolean concluded = this.dashboardService.isConcluded(
-      milestoneId,
-      parentId,
-      workpackId,
-      baselineId
-    );
-    if (concluded) {
-      milestoneDetailDto.setMilestoneStatus(MilestoneStatus.CONCLUDED);
-      return;
-    }
-
-    final boolean lateConcluded = this.dashboardService.isLateConcluded(
-      milestoneId,
-      workpackId,
-      baselineId
-    );
-    if (lateConcluded) {
-      milestoneDetailDto.setMilestoneStatus(MilestoneStatus.LATE_CONCLUDED);
+    if (Boolean.TRUE.equals(workpack.getCompleted())) {
+      if (!baselineDateMilestone.isPresent()) {
+        milestoneDetailDto.setMilestoneStatus(MilestoneStatus.CONCLUDED);
+      } else {
+        if (milestoneDate.isEqual(snapshotDate) || milestoneDate.isBefore(snapshotDate)) {
+          milestoneDetailDto.setMilestoneStatus(MilestoneStatus.CONCLUDED);
+        } else {
+          milestoneDetailDto.setMilestoneStatus(MilestoneStatus.LATE_CONCLUDED);
+        }
+      }
+    } else {
+      if (milestoneDate.isEqual(refDate) || milestoneDate.isAfter(refDate)) {
+        milestoneDetailDto.setMilestoneStatus(MilestoneStatus.ON_TIME);
+      } else {
+        milestoneDetailDto.setMilestoneStatus(MilestoneStatus.LATE);
+      }
     }
   }
 
   public void addStatus(
-    final Long milestoneId,
+    final Workpack workpack,
     final MilestoneDetailParentDto milestoneDetailDto
   ) {
-    final Long parentId = this.dashboardRepository.findParentIdByMilestoneId(milestoneId);
-    final Long workpackId = this.dashboardRepository.findWorkpackIdByMilestoneId(milestoneId);
-    final Long baselineId = this.dashboardRepository.findBaselineIdByMilestoneId(milestoneId);
 
-    final boolean late = this.dashboardService.isLate(
-      milestoneId,
-      parentId,
-      workpackId,
-      baselineId
-    );
-    if (late) {
-      milestoneDetailDto.setMilestoneStatus(MilestoneStatus.LATE);
-      return;
-    }
+    final Optional<LocalDateTime> baselineDateMilestone = this.milestoneRepository.fetchMilestoneBaselineDate(workpack.getId());
+    final LocalDate snapshotDate = baselineDateMilestone.map(LocalDateTime::toLocalDate).orElse(null);
+    final LocalDate milestoneDate = workpack.getDate().toLocalDate();
+    final LocalDate refDate = LocalDate.now();
 
-    final boolean onTime = this.dashboardService.isOnTime(
-      milestoneId,
-      parentId,
-      workpackId,
-      baselineId
-    );
-    if (onTime) {
-      milestoneDetailDto.setMilestoneStatus(MilestoneStatus.ON_TIME);
-      return;
-    }
-
-    final boolean concluded = this.dashboardService.isConcluded(
-      milestoneId,
-      parentId,
-      workpackId,
-      baselineId
-    );
-    if (concluded) {
-      milestoneDetailDto.setMilestoneStatus(MilestoneStatus.CONCLUDED);
-      return;
-    }
-
-    final boolean lateConcluded = this.dashboardService.isLateConcluded(
-      milestoneId,
-      workpackId,
-      baselineId
-    );
-    if (lateConcluded) {
-      milestoneDetailDto.setMilestoneStatus(MilestoneStatus.LATE_CONCLUDED);
+    if (Boolean.TRUE.equals(workpack.getCompleted())) {
+      if (snapshotDate == null) {
+        milestoneDetailDto.setMilestoneStatus(MilestoneStatus.CONCLUDED);
+      } else {
+        if (milestoneDate.isEqual(snapshotDate) || milestoneDate.isBefore(snapshotDate)) {
+          milestoneDetailDto.setMilestoneStatus(MilestoneStatus.CONCLUDED);
+        } else {
+          milestoneDetailDto.setMilestoneStatus(MilestoneStatus.LATE_CONCLUDED);
+        }
+      }
+    } else {
+      if (milestoneDate.isEqual(refDate) || milestoneDate.isAfter(refDate)) {
+        milestoneDetailDto.setMilestoneStatus(MilestoneStatus.ON_TIME);
+      } else {
+        milestoneDetailDto.setMilestoneStatus(MilestoneStatus.LATE);
+      }
     }
   }
 
   public void addDate(
-    final Long milestoneId,
+    final Milestone workpack,
     final MilestoneDetailDto milestoneDetailDto
   ) {
-    this.milestoneRepository.fetchMilestoneDate(milestoneId)
-      .map(Date::getValue)
-      .map(LocalDateTime::toLocalDate)
-      .ifPresent(milestoneDetailDto::setMilestoneDate);
+    milestoneDetailDto.setMilestoneDate(workpack.getDate().toLocalDate());
 
-    this.milestoneRepository.fetchMilestoneBaselineDate(milestoneId)
-      .map(Date::getValue)
+    this.milestoneRepository.fetchMilestoneBaselineDate(workpack.getId())
       .map(LocalDateTime::toLocalDate)
       .ifPresent(milestoneDetailDto::setBaselineDate);
 
@@ -157,7 +98,7 @@ public class MilestoneService {
     final LocalDate baselineDate = milestoneDetailDto.getBaselineDate();
 
     LocalDateTime milestoneOrToday;
-    final boolean concluded = milestoneRepository.isConcluded(milestoneId);
+    final boolean concluded = Boolean.TRUE.equals(workpack.getCompleted());
     if (!concluded && LocalDate.now().isAfter(milestoneDate)) {
       milestoneOrToday = LocalDate.now().atStartOfDay();
     } else {
@@ -172,87 +113,7 @@ public class MilestoneService {
       final long days = between.toDays();
       milestoneDetailDto.setDelayInDays(days);
     }
-
-    final MilestoneDateQueryResult queryResult = this.milestoneRepository.getMilestoneDateQueryResult(milestoneId);
-
-    Optional.ofNullable(queryResult)
-      .map(MilestoneDateQueryResult::getExpirationDate)
-      .map(ZonedDateTime::toLocalDate)
-      .ifPresent(milestoneDetailDto::setExpirationDate);
-  }
-
-  public void addDate(
-    final Long milestoneId,
-    final MilestoneDetailParentDto milestoneDetailDto
-  ) {
-    this.milestoneRepository.fetchMilestoneDate(milestoneId)
-      .map(Date::getValue)
-      .map(LocalDateTime::toLocalDate)
-      .ifPresent(milestoneDetailDto::setMilestoneDate);
-  }
-
-  public LocalDate getMilestoneDate(final Long milestoneId) {
-    return this.milestoneRepository.fetchMilestoneDate(milestoneId)
-      .map(Date::getValue)
-      .map(LocalDateTime::toLocalDate)
-      .orElse(null);
-  }
-
-  public LocalDate getExpirationDate(final Long milestoneId) {
-    final MilestoneDateQueryResult queryResult = this.milestoneRepository.getMilestoneDateQueryResult(milestoneId);
-    return Optional.ofNullable(queryResult)
-      .map(MilestoneDateQueryResult::getExpirationDate)
-      .map(ZonedDateTime::toLocalDate)
-      .orElse(null);
-  }
-
-  public LocalDate getBaselineDate(final Long milestoneId) {
-    return this.milestoneRepository.fetchMilestoneBaselineDate(milestoneId)
-      .map(Date::getValue)
-      .map(LocalDateTime::toLocalDate)
-      .orElse(null);
-  }
-
-  public MilestoneStatus getStatus(final Long milestoneId) {
-    final Long parentId = this.dashboardRepository.findParentIdByMilestoneId(milestoneId);
-    final Long workpackId = this.dashboardRepository.findWorkpackIdByMilestoneId(milestoneId);
-    final Long baselineId = this.dashboardRepository.findBaselineIdByMilestoneId(milestoneId);
-    final boolean late = this.dashboardService.isLate(
-      milestoneId,
-      parentId,
-      workpackId,
-      baselineId
-    );
-    if (late) {
-      return MilestoneStatus.LATE;
-    }
-    final boolean onTime = this.dashboardService.isOnTime(
-      milestoneId,
-      parentId,
-      workpackId,
-      baselineId
-    );
-    if (onTime) {
-      return MilestoneStatus.ON_TIME;
-    }
-    final boolean concluded = this.dashboardService.isConcluded(
-      milestoneId,
-      parentId,
-      workpackId,
-      baselineId
-    );
-    if (concluded) {
-      return MilestoneStatus.CONCLUDED;
-    }
-    final boolean lateConcluded = this.dashboardService.isLateConcluded(
-      milestoneId,
-      workpackId,
-      baselineId
-    );
-    if (lateConcluded) {
-      return MilestoneStatus.LATE_CONCLUDED;
-    }
-    return null;
+    milestoneDetailDto.setExpirationDate(workpack.getDate().toLocalDate());
   }
 
 }

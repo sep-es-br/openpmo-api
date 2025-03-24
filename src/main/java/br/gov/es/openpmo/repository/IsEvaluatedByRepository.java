@@ -6,6 +6,7 @@ import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Set;
 
@@ -40,5 +41,11 @@ public interface IsEvaluatedByRepository extends Neo4jRepository<IsEvaluatedBy, 
          "WITH count(DISTINCT evaluator) AS evaluators, count(DISTINCT member) AS members " +
          "RETURN evaluators = members")
   boolean wasEvaluatedByAllMembers(Long idBaseline);
+
+  @Query("MATCH (p:Person), (b:Baseline) " +
+          "WHERE id(p) = $personId AND id(b) = $baselineId " +
+          "CREATE (b)-[r:IS_EVALUATED_BY {decision: $decision, inRoleWorkLocation: $inRoleWorkLocation, when: $when, comment: $comment}]->(p) " +
+          "RETURN r")
+  IsEvaluatedBy createIsEvaluatedBy(Long personId, Long baselineId, String decision, String inRoleWorkLocation, LocalDateTime when, String comment);
 
 }

@@ -40,7 +40,7 @@ public class BaselineScheduleDetail {
       .divide(ONE_MONTH, 1, RoundingMode.HALF_UP);
   }
 
-  void addScheduleItem(final ScheduleDetailItem item) {
+  public void addScheduleItem(final ScheduleDetailItem item) {
     this.scheduleDetails.add(item);
     this.updateValues();
   }

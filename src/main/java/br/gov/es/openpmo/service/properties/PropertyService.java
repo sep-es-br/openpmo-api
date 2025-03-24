@@ -7,8 +7,6 @@ import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 @Service
@@ -19,10 +17,6 @@ public class PropertyService {
   @Autowired
   public PropertyService(final PropertyRepository propertyRepository) {
     this.propertyRepository = propertyRepository;
-  }
-
-  public List<Property> findAllByIdWorkpack(final Long idWorkpack) {
-    return new ArrayList<>(this.propertyRepository.findAllByIdWorkpack(idWorkpack));
   }
 
   public Property findById(final Long id) {

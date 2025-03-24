@@ -1,10 +1,7 @@
 package br.gov.es.openpmo.model.workpacks;
 
-import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
-import br.gov.es.openpmo.model.properties.Date;
-import br.gov.es.openpmo.model.properties.Property;
-import br.gov.es.openpmo.model.relations.IsPropertySnapshotOf;
+import br.gov.es.openpmo.model.relations.IsWorkpackSnapshotOf;
 import br.gov.es.openpmo.model.workpacks.models.MilestoneModel;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
@@ -22,8 +19,7 @@ public class Milestone extends Workpack {
   @Relationship("IS_INSTANCE_BY")
   private MilestoneModel instance;
 
-  @Transient
-  private Date date;
+  private LocalDateTime date;
 
   @Transient
   private LocalDate milestoneDate;
@@ -50,20 +46,12 @@ public class Milestone extends Workpack {
   }
 
   @Transient
-  public Date getDate() {
-    if (this.date != null) {
-      return this.date;
-    }
-    final Set<Property> properties = this.getProperties();
-    if (properties != null) {
-      for (Property property : properties) {
-        if (property instanceof Date) {
-          this.date = (Date) property;
-          return this.date;
-        }
-      }
-    }
-    throw new NegocioException("Milestone deve conter uma data!");
+  public LocalDateTime getDate() {
+    return this.date;
+  }
+
+  public void setDate(LocalDateTime date) {
+    this.date = date;
   }
 
   @Transient
@@ -80,16 +68,13 @@ public class Milestone extends Workpack {
     if (this.snapshotDate != null) {
       return this.snapshotDate;
     }
-    final Set<IsPropertySnapshotOf> snapshots = this.getDate().getSnapshots();
+    final Set<IsWorkpackSnapshotOf> snapshots = this.getSnapshots();
     if (snapshots == null) {
       return null;
     }
-    for (IsPropertySnapshotOf snapshot : snapshots) {
-      Property property = snapshot.getSnapshot();
-      if (property instanceof Date) {
-        this.snapshotDate = ((Date) property).toLocalDate();
-        return this.snapshotDate;
-      }
+    for (IsWorkpackSnapshotOf snapshot : snapshots) {
+      this.snapshotDate = snapshot.getDate().toLocalDate();
+      return this.snapshotDate;
     }
     return null;
   }
@@ -99,28 +84,23 @@ public class Milestone extends Workpack {
     if (this.snapshotDate != null) {
       return this.snapshotDate;
     }
-    final Set<IsPropertySnapshotOf> snapshots = this.getDate().getSnapshots();
+    final Set<IsWorkpackSnapshotOf> snapshots = this.getSnapshots();
     if (snapshots == null) {
       return null;
     }
     LocalDate snapshotDateActive = null;
     LocalDate snapshotDateProposed = null;
     LocalDateTime baselineProposalDate = null;
-    for (IsPropertySnapshotOf snapshot : snapshots) {
-      Property property = snapshot.getSnapshot();
-      Baseline baseline = property.getBaseline();
+    for (IsWorkpackSnapshotOf snapshot : snapshots) {
+//      Property property = snapshot.getSnapshot();
+      Baseline baseline = snapshot.getSnapshot().getBaseline();
       if (baseline.isActive()) {
-        snapshotDateActive = ((Date) property).toLocalDate();
+        snapshotDateActive = snapshot.getDate().toLocalDate();
         break;
       }
       if (baseline.getStatus() == PROPOSED) {
-        if (baselineProposalDate == null) {
-          baselineProposalDate = baseline.getProposalDate();
-          snapshotDateProposed = ((Date) property).toLocalDate();
-        } else if (baseline.getProposalDate().isAfter(baselineProposalDate)) {
-          baselineProposalDate = baseline.getProposalDate();
-          snapshotDateProposed = ((Date) property).toLocalDate();
-        }
+        baselineProposalDate = baseline.getProposalDate();
+        snapshotDateProposed = snapshot.getDate().toLocalDate();
       }
     }
     if (snapshotDateActive != null) {

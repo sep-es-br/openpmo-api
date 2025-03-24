@@ -25,7 +25,6 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
@@ -264,7 +263,8 @@ public class GenerateReportComponent {
 
   public GeneratedReport execute(final ReportRequest request, final String authorization) {
 
-    this.validateScope(request, authorization);
+    final List<Long> scopeWithPermissions = this.validateScope(request, authorization);
+
     this.validateParameters(request.getParams());
 
     final JasperUtils jasperUtils = new JasperUtils();
@@ -285,7 +285,7 @@ public class GenerateReportComponent {
     )) {
       final JasperReport jasperReportMain = JasperUtils.getJasperReportFromJasperFile(path.toFile());
 
-      final Map<String, Object> params = this.getParams(request);
+      final Map<String, Object> params = this.getParams(request, scopeWithPermissions);
 
       this.subReportsAsParams(reportDesign, params);
 
@@ -304,8 +304,8 @@ public class GenerateReportComponent {
     }
   }
 
-  private void validateScope(final ReportRequest request, final String authorization) {
-    this.reportScopeValidator.execute(new ArrayList<>(request.getScope()), request.getIdPlan(), authorization);
+  private List<Long> validateScope(final ReportRequest request, final String authorization) {
+    return this.reportScopeValidator.execute(new ArrayList<>(request.getScope()), request.getIdPlan(), authorization);
   }
 
   private ReportDesign findByIdWithRelationships(final Long idReportDesign) {
@@ -338,7 +338,7 @@ public class GenerateReportComponent {
 
   }
 
-  private Map<String, Object> getParams(final ReportRequest request) {
+  private Map<String, Object> getParams(final ReportRequest request, final List<Long> scopeWithPermission) {
     final Map<String, Object> parametros = new HashMap<>();
     final List<ReportParamsRequest> params = request.getParams();
     if (params != null) {
@@ -347,7 +347,7 @@ public class GenerateReportComponent {
         this.getValue(param)
       ));
     }
-    final String scope = request.getScope().stream()
+    final String scope = scopeWithPermission.stream()
       .map(Object::toString)
       .collect(Collectors.joining(","));
     parametros.put("scope", scope);

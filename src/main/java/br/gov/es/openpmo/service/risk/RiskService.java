@@ -127,7 +127,7 @@ public class RiskService {
     if (request.getIdWorkpack() == null) {
       throw new IllegalStateException(ID_WORKPACK_NOT_NULL);
     }
-    final Workpack workpack = this.workpackService.findById(request.getIdWorkpack());
+    final Workpack workpack = this.workpackService.findByIdDefault(request.getIdWorkpack());
     final Risk risk = Risk.of(
       request,
       workpack

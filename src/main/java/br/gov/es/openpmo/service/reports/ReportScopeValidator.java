@@ -1,13 +1,9 @@
 package br.gov.es.openpmo.service.reports;
 
-import br.gov.es.openpmo.dto.reports.ReportScope;
-import br.gov.es.openpmo.dto.reports.Scope;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 @Component
@@ -19,37 +15,12 @@ public class ReportScopeValidator {
     this.getReportScope = getReportScope;
   }
 
-  public void execute(final Iterable<Long> rawScope, final Long idPlan, final String authorization) {
-    final ReportScope scope = this.getReportScope.execute(idPlan, authorization);
-    final List<Long> flatScope = this.flatScope(scope);
-
-    for (final Long scopeId : rawScope) {
-      if (!flatScope.contains(scopeId)) {
-        throw new NegocioException(ApplicationMessage.REPORT_GENERATE_SCOPE_PARAMETER_INVALID);
-      }
+  public List<Long> execute(final List<Long> rawScope, final Long idPlan, final String authorization) {
+    final List<Long> scopeWithPermission = this.getReportScope.execute(rawScope, idPlan, authorization);
+    if (scopeWithPermission == null || scopeWithPermission.isEmpty()) {
+      throw new NegocioException(ApplicationMessage.REPORT_GENERATE_SCOPE_PARAMETER_INVALID);
     }
-  }
-
-  private List<Long> flatScope(final Scope scope) {
-    final List<Long> flatScope = new ArrayList<>();
-    if (scope.getHasPermission()) {
-      flatScope.add(scope.getId());
-    }
-    final List<Long> flatScopeChildren = this.flatScope(scope.getChildren());
-    flatScope.addAll(flatScopeChildren);
-    return flatScope;
-  }
-
-  private List<Long> flatScope(final Collection<? extends Scope> children) {
-    if (children.isEmpty()) return new ArrayList<>();
-    final List<Long> flatScope = new ArrayList<>();
-    for (final Scope child : children) {
-      if (child.getHasPermission()) {
-        flatScope.add(child.getId());
-      }
-      flatScope.addAll(this.flatScope(child.getChildren()));
-    }
-    return flatScope;
+    return scopeWithPermission;
   }
 
 }

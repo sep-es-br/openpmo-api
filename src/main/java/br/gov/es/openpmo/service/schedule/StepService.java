@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.service.schedule;
 
 import br.gov.es.openpmo.dto.EntityDto;
+import br.gov.es.openpmo.dto.costaccount.CostAccountEntityDto;
 import br.gov.es.openpmo.dto.schedule.ConsumesDto;
 import br.gov.es.openpmo.dto.schedule.ConsumesParamDto;
 import br.gov.es.openpmo.dto.schedule.DistributionStrategy;
@@ -264,9 +265,17 @@ public class StepService {
       consumesDto.setActualCost(consumes.getActualCost());
       consumesDto.setPlannedCost(consumes.getPlannedCost());
       final Long id = consumes.getCostAccount().getId();
-      final EntityDto costAccount = new EntityDto(
+      final Integer codUo = consumes.getCostAccount().getUnidadeOrcamentaria() != null ? consumes.getCostAccount().getUnidadeOrcamentaria().getCode() : null;
+      final String unidadeOrcamentaria = consumes.getCostAccount().getUnidadeOrcamentaria() != null ? consumes.getCostAccount().getUnidadeOrcamentaria().getName() : null;
+      final Integer codPo = consumes.getCostAccount().getPlanoOrcamentario() != null ? consumes.getCostAccount().getPlanoOrcamentario().getCode() : null;
+      final String planoOrcamentario = consumes.getCostAccount().getPlanoOrcamentario() != null ? consumes.getCostAccount().getPlanoOrcamentario().getName() : null;
+      final CostAccountEntityDto costAccount = new CostAccountEntityDto(
         id,
-        this.costAccountRepository.findCostAccountNameById(id)
+        this.costAccountRepository.findCostAccountNameById(id),
+        codUo,
+        unidadeOrcamentaria,
+        codPo,
+        planoOrcamentario
       );
       consumesDto.setCostAccount(costAccount);
 

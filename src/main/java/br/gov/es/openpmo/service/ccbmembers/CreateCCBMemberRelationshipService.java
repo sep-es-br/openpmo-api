@@ -61,7 +61,12 @@ public class CreateCCBMemberRelationshipService implements ICreateCCBMemberRelat
     final Workpack workpack,
     final MemberAs memberAs
   ) {
-    this.repository.save(new IsCCBMemberFor(memberAs, person, workpack), 0);
+    IsCCBMemberFor isCCBMemberFor = new IsCCBMemberFor(memberAs, person, workpack);
+    this.repository.createIsCCBMemberFor(isCCBMemberFor.getIdPerson(),
+            isCCBMemberFor.getWorkpackId(),
+            isCCBMemberFor.getRole(),
+            isCCBMemberFor.getWorkLocation(),
+            isCCBMemberFor.getActive());
   }
 
   private Person createOrUpdatePersonAndRelationships(final CCBMemberRequest request) {
@@ -94,7 +99,7 @@ public class CreateCCBMemberRelationshipService implements ICreateCCBMemberRelat
       this.createIsInContactBookOf(personDto, idOffice, person);
     }
 
-    return this.saveOldPerson(person);
+    return this.updatePerson(person);
   }
 
   private Optional<IsInContactBookOf> findIsInContactBookOf(
@@ -112,11 +117,15 @@ public class CreateCCBMemberRelationshipService implements ICreateCCBMemberRelat
     isInContactBookOf.setPhoneNumber(personDto.getPhoneNumber());
     isInContactBookOf.setEmail(personDto.getContactEmail());
     isInContactBookOf.setAddress(personDto.getAddress());
-    this.saveIsInContactBookOf(isInContactBookOf);
+    this.isInContactBookOfRepository.updateIsInContactBookOf(isInContactBookOf.getPersonId(),
+            isInContactBookOf.getOfficeId(),
+            isInContactBookOf.getEmail(),
+            isInContactBookOf.getAddress(),
+            isInContactBookOf.getPhoneNumber());
   }
 
-  private Person saveOldPerson(final Person person) {
-    return this.personService.saveZeroDepth(person);
+  private Person updatePerson(final Person person) {
+    return this.personService.updatePerson(person);
   }
 
   private void createIsInContactBookOf(
@@ -129,7 +138,11 @@ public class CreateCCBMemberRelationshipService implements ICreateCCBMemberRelat
   }
 
   private void saveIsInContactBookOf(final IsInContactBookOf isInContactBookOf) {
-    this.isInContactBookOfRepository.save(isInContactBookOf, 0);
+    this.isInContactBookOfRepository.createIsInContactBookOf(isInContactBookOf.getPersonId(),
+            isInContactBookOf.getOfficeId(),
+            isInContactBookOf.getEmail(),
+            isInContactBookOf.getAddress(),
+            isInContactBookOf.getPhoneNumber());
   }
 
   private Office findOfficeById(final Long idOffice) {

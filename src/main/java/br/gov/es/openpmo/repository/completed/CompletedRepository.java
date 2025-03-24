@@ -30,11 +30,6 @@ public interface CompletedRepository extends Neo4jRepository<Workpack, Long> {
          "RETURN ALL(son IN allSons WHERE son.completed IS NOT NULL AND son.completed=true)")
   boolean allSonsAreCompleted(Long parentId);
 
-  @Query("MATCH (w:Workpack)-[:IS_INSTANCE_BY]->(m:WorkpackModel) " +
-         "WHERE id(w)=$workpackId " +
-         "RETURN m.scheduleSessionActive=true")
-  boolean isScheduleSessionActive(Long workpackId);
-
   @Query("MATCH (w:Workpack) WHERE id(w)=$workpackId SET w.endManagementDate=$endManagementDate")
   void setEndManagementDate(
     Long workpackId,

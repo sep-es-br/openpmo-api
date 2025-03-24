@@ -116,11 +116,6 @@ public class DomainService {
       .orElseThrow(() -> new NegocioException(DOMAIN_NOT_FOUND));
   }
 
-  public Domain findByIdWithLocalities(final Long id) {
-    return this.domainRepository.findByIdWithLocalities(id)
-      .orElseThrow(() -> new NegocioException(DOMAIN_NOT_FOUND));
-  }
-
   public void delete(final Domain domain) {
     if(domain.getLocalities() != null && !(domain.getLocalities()).isEmpty()) {
       throw new NegocioException(DOMAIN_DELETE_RELATIONSHIP_ERROR);

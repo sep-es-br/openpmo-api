@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.swagger.annotations.ApiModel;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -31,7 +32,11 @@ public abstract class WorkpackDetailDto {
 
   private Long idParent;
 
+  private Long idWorkpackModel;
+
   private PlanDto plan;
+
+  private PlanDto planOrigin;
 
   private WorkpackModelDetailDto model;
 
@@ -61,6 +66,12 @@ public abstract class WorkpackDetailDto {
 
   private SimpleDashboard dashboard;
 
+  private String name;
+
+  private String fullName;
+
+  private LocalDateTime date;
+
   public static <TYPE extends WorkpackDetailDto> WorkpackDetailDto of(
     final Workpack workpack,
     final Supplier<TYPE> instanceSupplier
@@ -71,6 +82,7 @@ public abstract class WorkpackDetailDto {
     instance.setEndManagementDate(workpack.getEndManagementDate());
     instance.setReason(workpack.getReason());
     instance.setCompleted(workpack.getCompleted());
+    instance.setIdParent(workpack.getIdParent());
     return instance;
   }
 
@@ -94,6 +106,14 @@ public abstract class WorkpackDetailDto {
     return this.modelLinked;
   }
 
+  public LocalDateTime getDate() {
+    return date;
+  }
+
+  public void setDate(LocalDateTime date) {
+    this.date = date;
+  }
+
   public void setModelLinked(final WorkpackModelLinkedDto modelLinked) {
     this.modelLinked = modelLinked;
   }
@@ -104,6 +124,14 @@ public abstract class WorkpackDetailDto {
 
   public void setPlan(final PlanDto plan) {
     this.plan = plan;
+  }
+
+  public PlanDto getPlanOrigin() {
+    return planOrigin;
+  }
+
+  public void setPlanOrigin(PlanDto planOrigin) {
+    this.planOrigin = planOrigin;
   }
 
   public WorkpackModelDetailDto getModel() {
@@ -203,6 +231,22 @@ public abstract class WorkpackDetailDto {
     return this.hasScheduleSectionActive;
   }
 
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public String getFullName() {
+    return fullName;
+  }
+
+  public void setFullName(String fullName) {
+    this.fullName = fullName;
+  }
+
   public void setHasScheduleSectionActive(final Boolean hasScheduleSectionActive) {
     this.hasScheduleSectionActive = hasScheduleSectionActive;
   }
@@ -213,5 +257,13 @@ public abstract class WorkpackDetailDto {
 
   public void setIdParent(Long idParent) {
     this.idParent = idParent;
+  }
+
+  public Long getIdWorkpackModel() {
+    return idWorkpackModel;
+  }
+
+  public void setIdWorkpackModel(Long idWorkpackModel) {
+    this.idWorkpackModel = idWorkpackModel;
   }
 }

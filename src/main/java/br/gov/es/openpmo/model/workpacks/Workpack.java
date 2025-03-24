@@ -11,9 +11,7 @@ import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.properties.Property;
 import br.gov.es.openpmo.model.properties.Text;
-import br.gov.es.openpmo.model.properties.TextArea;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
-import br.gov.es.openpmo.model.properties.models.TextAreaModel;
 import br.gov.es.openpmo.model.properties.models.TextModel;
 import br.gov.es.openpmo.model.relations.BelongsTo;
 import br.gov.es.openpmo.model.relations.CanAccessWorkpack;
@@ -40,6 +38,7 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.util.ObjectUtils;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -139,7 +138,13 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
 
   private String reason;
 
+  private String name;
+
+  private String fullName;
+
   private CategoryEnum category;
+
+  private LocalDateTime date;
 
   @Transient
   @JsonIgnore
@@ -148,10 +153,6 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
   @Transient
   @JsonIgnore
   private Long idWorkpackModel;
-
-  @Transient
-  @JsonIgnore
-  private String wpName;
 
   @Transient
   @JsonIgnore
@@ -164,11 +165,6 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
   @Transient
   @JsonIgnore
   private LocalDate previousDate;
-
-  @Transient
-  @org.neo4j.ogm.annotation.Property(name="isParent")
-  @JsonIgnore
-  private Boolean isParent;
 
   public Workpack() {
   }
@@ -202,19 +198,6 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
     }
   }
 
-  public Optional<Property> getPropertyName() {
-    if (Objects.isNull(this.properties)) return Optional.empty();
-    return this.properties.stream()
-      .filter(property -> property.getPropertyModelName().equals("name"))
-      .findFirst();
-  }
-
-  public Optional<Property> getPropertyFullName() {
-    if (Objects.isNull(this.properties)) return Optional.empty();
-    return this.properties.stream()
-      .filter(property -> property.getPropertyModelName().equals("fullName"))
-      .findFirst();
-  }
 
   @Transient
   private String getClassName(final WorkpackModel workpackModel) {
@@ -226,13 +209,6 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
     return ((Project) this).getInstance();
   }
 
-  @Transient
-  public String getName() {
-    final WorkpackModel workpackModel = this.getWorkpackModelInstance();
-    return Optional.ofNullable(workpackModel)
-      .map(WorkpackModel::getModelName)
-      .orElse(null);
-  }
 
   @Transient
   public String getWorkpackName() {
@@ -254,28 +230,6 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
     return null;
   }
 
-@Transient
-  public String getWorkpackFullName() {
-    if (this.properties == null) {
-      return null;
-    }
-    for (Property property : this.properties) {
-      if (property instanceof TextArea) {
-        final TextArea text = (TextArea) property;
-        final TextAreaModel driver = text.getDriver();
-        if (driver == null) {
-          continue;
-        }
-        if (Objects.equals(driver.getName(), "fullName")) {
-          return text.getValue();
-        }
-      }
-    }
-    return null;
-  }
-
-
-  
   public boolean isDeleted() {
     return this.deleted;
   }
@@ -370,6 +324,14 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
 
   public void setSchedule(final Schedule schedule) {
     this.schedule = schedule;
+  }
+
+  public LocalDateTime getDate() {
+    return date;
+  }
+
+  public void setDate(LocalDateTime date) {
+    this.date = date;
   }
 
   public Set<IsFavoritedBy> getIsFavoritedBy() {
@@ -699,6 +661,22 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
     throw new UnsupportedOperationException();
   }
 
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public String getFullName() {
+    return fullName;
+  }
+
+  public void setFullName(String fullName) {
+    this.fullName = fullName;
+  }
+
   @Transient
   public Comparable getOrder() {
     if (this.properties == null || this.properties.isEmpty()) {
@@ -782,74 +760,16 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
       .isPresent();
   }
 
-    /**
-     * @return Boolean return the publicShared
-     */
-    public Boolean isPublicShared() {
-        return publicShared;
-    }
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    if (!super.equals(o)) return false;
+    return super.getId().equals(((Workpack) o).getId());
+  }
 
-    /**
-     * @return boolean return the isCancelable
-     */
-    public boolean isIsCancelable() {
-        return isCancelable;
-    }
-
-    /**
-     * @param isCancelable the isCancelable to set
-     */
-    public void setIsCancelable(boolean isCancelable) {
-        this.isCancelable = isCancelable;
-    }
-
-    /**
-     * @return boolean return the isCanceled
-     */
-    public boolean isIsCanceled() {
-        return isCanceled;
-    }
-
-    /**
-     * @param isCanceled the isCanceled to set
-     */
-    public void setIsCanceled(boolean isCanceled) {
-        this.isCanceled = isCanceled;
-    }
-
-    /**
-     * @return Boolean return the completed
-     */
-    public Boolean isCompleted() {
-        return completed;
-    }
-
-    /**
-     * @return Boolean return the isParent
-     */
-    public Boolean isIsParent() {
-        return isParent;
-    }
-
-    /**
-     * @param isParent the isParent to set
-     */
-    public void setIsParent(Boolean isParent) {
-        this.isParent = isParent;
-    }
-
-    /**
-     * @return String return the wpName
-     */
-    public String getWpName() {
-        return wpName;
-    }
-
-    /**
-     * @param wpName the wpName to set
-     */
-    public void setWpName(String wpName) {
-        this.wpName = wpName;
-    }
-
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), name);
+  }
 }

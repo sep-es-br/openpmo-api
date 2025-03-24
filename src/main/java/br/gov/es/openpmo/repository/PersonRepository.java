@@ -1,14 +1,15 @@
 package br.gov.es.openpmo.repository;
 
+import br.gov.es.openpmo.dto.person.detail.permissions.WorkpackPermissionDetailDto;
 import br.gov.es.openpmo.dto.person.queries.PersonByFullNameQuery;
 import br.gov.es.openpmo.dto.person.queries.PersonDetailQuery;
-import br.gov.es.openpmo.dto.person.queries.PersonPermissionDetailQuery;
 import br.gov.es.openpmo.dto.person.queries.PersonQuery;
 import br.gov.es.openpmo.enumerator.CcbMemberFilterEnum;
 import br.gov.es.openpmo.enumerator.StakeholderFilterEnum;
 import br.gov.es.openpmo.enumerator.UserFilterEnum;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.office.Office;
+import br.gov.es.openpmo.model.relations.IsCCBMemberFor;
 import br.gov.es.openpmo.model.relations.IsInContactBookOf;
 import br.gov.es.openpmo.model.relations.IsStakeholderIn;
 import br.gov.es.openpmo.model.workpacks.Workpack;
@@ -23,6 +24,9 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface PersonRepository extends Neo4jRepository<Person, Long> {
+
+  @Query("MATCH (p:Person) WHERE id(p)=$id RETURN p")
+  Optional<Person> findByIdThin(Long id);
 
   @Query(
     "MATCH (person:Person)-[isAuthenticatedBy:IS_AUTHENTICATED_BY]->(authService:AuthService) " +
@@ -101,18 +105,18 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
 
   @Query("MATCH (person:Person)-[isInContactBookOf:IS_IN_CONTACT_BOOK_OF]->(office:Office) " +
          "WHERE id(person)=$idPerson AND id(office)=$idOffice " +
-         "RETURN isInContactBookOf")
+         "RETURN person, office, isInContactBookOf")
   Optional<IsInContactBookOf> findContactBookBy(
     Long idPerson,
     Long idOffice
   );
 
-  @Query("MATCH (p:Person) WHERE id(p)=$idPerson " +
-         "MATCH (o:Office)<-[]-(pl:Plan) WHERE id(o)=$idOffice " +
+  @Query("MATCH (p:Person), (o:Office)<-[]-(pl:Plan)<-[]-(w:Workpack) " +
+         "WHERE id(p)=$idPerson AND id(o)=$idOffice " +
          "OPTIONAL MATCH (p)-[cao:CAN_ACCESS_OFFICE]->(o) " +
          "OPTIONAL MATCH (p)-[cap:CAN_ACCESS_PLAN]->(pl) " +
-         "OPTIONAL MATCH (p)-[caw:CAN_ACCESS_WORKPACK]->(w)-[]->(pl) " +
-         "WITH cao, cap, caw " +
+         "OPTIONAL MATCH (p)-[caw:CAN_ACCESS_WORKPACK]->(w) " +
+         "WITH p, o, pl, w, cao, cap, caw " +
          "DETACH DELETE cao, cap, caw")
   void deleteAllPermissionsBy(
     Long idPerson,
@@ -179,40 +183,6 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
     Long idWorkpack
   );
 
-  @Query("MATCH (person:Person) WHERE id(person)=$personId " +
-         "MATCH (office:Office) WHERE id(office)=$officeId " +
-         "OPTIONAL MATCH (workpack:Workpack)-[]->(plan:Plan)-[]->(office) " +
-         "WITH * " +
-         "OPTIONAL MATCH (person)-[canAccessOffice:CAN_ACCESS_OFFICE]->(office) " +
-         "OPTIONAL MATCH (person)-[canAccessPlan:CAN_ACCESS_PLAN]->(plan) " +
-         "OPTIONAL MATCH (person)-[canAccessWorkpack:CAN_ACCESS_WORKPACK]->(workpack) " +
-         "OPTIONAL MATCH (person)-[isStakeholderIn:IS_STAKEHOLDER_IN]->(workpack) " +
-         "OPTIONAL MATCH (person)-[isCCBMemberFor:IS_CCB_MEMBER_FOR{active: true}]->(workpack) " +
-         "WITH " +
-         "    person, " +
-         "    office, " +
-         "    plan, " +
-         "    workpack, " +
-         "    canAccessOffice, " +
-         "    canAccessPlan, " +
-         "    canAccessWorkpack, " +
-         "    isStakeholderIn, " +
-         "    isCCBMemberFor " +
-         "RETURN " +
-         "    person, " +
-         "    office, " +
-         "    plan, " +
-         "    workpack, " +
-         "    canAccessOffice, " +
-         "    canAccessPlan, " +
-         "    canAccessWorkpack, " +
-         "    isStakeholderIn, " +
-         "    isCCBMemberFor")
-  Set<PersonPermissionDetailQuery> findPermissions(
-    Long personId,
-    Long officeId
-  );
-
   @Query("MATCH (person:Person)-[isAuthenticatedBy:IS_AUTHENTICATED_BY]->(authService:AuthService) " +
          "OPTIONAL MATCH (person)-[isInContactBookOf:IS_IN_CONTACT_BOOK_OF]->(office:Office) " +
          "OPTIONAL MATCH (person)<-[isPortraitOf:IS_A_PORTRAIT_OF]-(avatar:File) " +
@@ -244,4 +214,70 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
     "RETURN count(person)>0")
   boolean existsByKey(@Param("key") String key);
 
+  @Query (
+      "MATCH (person:Person)-[canAccessWorkpack:CAN_ACCESS_WORKPACK]->(workpack:Workpack)-[:IS_INSTANCE_BY]->(model:WorkpackModel) " +
+      ", (workpack)-[belongsTo:BELONGS_TO]->(plan:Plan)-[:IS_ADOPTED_BY]->(office:Office) " +
+      "WHERE id(person)=$personId AND ID(office) = $idOffice AND canAccessWorkpack.permissionLevel <> 'NONE' " +
+      "RETURN ID(workpack) AS id, workpack.name AS name, canAccessWorkpack.permissionLevel AS accessLevel " +
+      ", model.fontIcon AS icon, ID(plan) AS idPlan "
+  )
+  List<WorkpackPermissionDetailDto> findAllWorkpackPermissionDetailDtoByIdPerson(Long personId, Long idOffice);
+
+  @Query (
+      "MATCH (workpack:Workpack)-[:IS_INSTANCE_BY]->(model:WorkpackModel) " +
+          ", (workpack)-[belongsTo:BELONGS_TO]->(plan:Plan) " +
+          "WHERE id(workpack) IN $workpackIds " +
+          "RETURN ID(workpack) AS id, workpack.name AS name, 'NONE' AS accessLevel " +
+          ", model.fontIcon AS icon, ID(plan) AS idPlan "
+  )
+  List<WorkpackPermissionDetailDto> findAllWorkpackPermissionDetailDtoByIdWorkpack(List<Long> workpackIds);
+
+
+  @Query (
+      "MATCH (person:Person)-[isStakeholderIn:IS_STAKEHOLDER_IN{active: true}]->(workpack:Workpack) " +
+          ", (workpack)-[belongsTo:BELONGS_TO]->(plan:Plan)-[:IS_ADOPTED_BY]->(office:Office) " +
+          "WHERE id(person)=$personId AND ID(office) = $idOffice " +
+          "RETURN person, isStakeholderIn, workpack "
+  )
+  List<IsStakeholderIn> findAllIsStakeholderInByIdPerson(Long personId, Long idOffice);
+
+  @Query (
+      "MATCH (person:Person)-[isCCBMemberFor:IS_CCB_MEMBER_FOR{active: true}]->(workpack:Workpack) " +
+          ", (workpack)-[belongsTo:BELONGS_TO]->(plan:Plan)-[:IS_ADOPTED_BY]->(office:Office) " +
+          "WHERE id(person)=$personId AND ID(office) = $idOffice " +
+          "RETURN person, isCCBMemberFor, workpack "
+  )
+  List<IsCCBMemberFor> findAllIsCCBMemberForByIdPerson(Long personId, Long idOffice);
+
+  @Query (
+          "MATCH (p:Person) WHERE id(p) = $personId " +
+          "SET p.name = $name, " +
+          "p.fullName = $fullName " +
+          "RETURN p "
+  )
+  Person updatePerson(Long personId, String name, String fullName);
+
+  @Query (
+          "MATCH (p:Person) WHERE id(p) = $personId " +
+                  "SET p.name = $name " +
+                  "RETURN p "
+  )
+  Person updateNamePerson(Long personId, String name);
+
+  @Query (
+          "MATCH (p:Person) WHERE id(p) = $personId " +
+                  "SET p.idOffice = $idOffice, " +
+                  "p.idPlan = $idPlan, " +
+                  "p.idWorkpack = $idWorkpack, " +
+                  "p.idWorkpackModelLinked = $idWorkpackModelLinked " +
+                  "RETURN p "
+  )
+  Person updateLocalWork(Long personId, Long idOffice, Long idPlan, Long idWorkpack, Long idWorkpackModelLinked);
+
+  @Query (
+          "MATCH (p:Person) WHERE id(p) = $personId " +
+                  "SET p.administrator = $administrator " +
+                  "RETURN p "
+  )
+  Person setAdministratorStatus(Long personId, boolean administrator);
 }

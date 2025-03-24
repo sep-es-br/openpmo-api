@@ -1,7 +1,6 @@
 package br.gov.es.openpmo.dto.menu;
 
 import br.gov.es.openpmo.dto.permission.PermissionDto;
-import br.gov.es.openpmo.model.properties.Property;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.service.properties.SorterProperty;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -56,12 +55,8 @@ public class WorkpackMenuDto {
     return new WorkpackMenuDto(
       workpack.getId(),
       idPlan,
-      workpack.getPropertyName().map(Property::getValue)
-        .map(String.class::cast)
-        .orElse(null),
-      workpack.getPropertyFullName().map(Property::getValue)
-        .map(String.class::cast)
-        .orElse(null),
+      workpack.getName(),
+      workpack.getFullName(),
       null,
       workpack.getIcon(),
       null,

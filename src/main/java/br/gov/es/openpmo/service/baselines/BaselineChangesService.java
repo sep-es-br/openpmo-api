@@ -232,7 +232,8 @@ public class BaselineChangesService implements IBaselineChangesService {
     final Workpack workpack,
     final boolean isSnapshot
   ) {
-    return workpack.getProperties()
+
+    return workpack.getProperties() != null && workpack.getProperties()
       .stream()
       .anyMatch(property -> this.hasPropertyChanges(baseline, property, isSnapshot));
   }

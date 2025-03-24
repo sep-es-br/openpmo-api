@@ -1,14 +1,12 @@
 package br.gov.es.openpmo.service.baselines;
 
 import br.gov.es.openpmo.dto.baselines.UpdateResponse;
-import br.gov.es.openpmo.dto.workpack.WorkpackName;
 import br.gov.es.openpmo.enumerator.BaselineStatus;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.BaselineRepository;
-import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import br.gov.es.openpmo.utils.MutableBoolean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +22,6 @@ public class GetAnotherTimeBaselineUpdatesService implements IGetAnotherTimeBase
 
   private final BaselineRepository baselineRepository;
 
-  private final WorkpackRepository workpackRepository;
-
   private final IBaselineChangesService baselineChangesService;
 
   private final IBaselineComposeService baselineComposeService;
@@ -35,13 +31,11 @@ public class GetAnotherTimeBaselineUpdatesService implements IGetAnotherTimeBase
   @Autowired
   public GetAnotherTimeBaselineUpdatesService(
     final BaselineRepository baselineRepository,
-    final WorkpackRepository workpackRepository,
     final IBaselineChangesService baselineChangesService,
     final IBaselineComposeService baselineComposeService,
     final IBaselineStructuralChangesService baselineStructuralChangesService
   ) {
     this.baselineRepository = baselineRepository;
-    this.workpackRepository = workpackRepository;
     this.baselineChangesService = baselineChangesService;
     this.baselineComposeService = baselineComposeService;
     this.baselineStructuralChangesService = baselineStructuralChangesService;
@@ -83,24 +77,14 @@ public class GetAnotherTimeBaselineUpdatesService implements IGetAnotherTimeBase
     return Optional.ofNullable(workpackModel).map(WorkpackModel::getFontIcon).orElse("");
   }
 
-  private String getDescription(final Workpack workpack) {
-    return Optional.ofNullable(workpack).map(this::getWorkpackName).orElse("");
-  }
-
   private UpdateResponse getDeletedResponse(final Workpack workpack) {
     return new UpdateResponse(
       workpack.getId(),
       getIcon(workpack),
-      this.getDescription(workpack),
+      workpack.getName(),
       BaselineStatus.DELETED,
       null
     );
-  }
-
-  private String getWorkpackName(final Workpack workpack) {
-    return this.workpackRepository.findWorkpackNameAndFullname(workpack.getId())
-      .map(WorkpackName::getName)
-      .orElse(null);
   }
 
   private void addUpdatesRecursively(
@@ -209,7 +193,7 @@ public class GetAnotherTimeBaselineUpdatesService implements IGetAnotherTimeBase
     return new UpdateResponse(
       workpack.getId(),
       getIcon(workpack),
-      this.getDescription(workpack),
+      workpack.getName(),
       BaselineStatus.CHANGED,
       null
     );
@@ -244,7 +228,7 @@ public class GetAnotherTimeBaselineUpdatesService implements IGetAnotherTimeBase
     return new UpdateResponse(
       workpack.getId(),
       getIcon(workpack),
-      this.getDescription(workpack),
+      workpack.getName(),
       BaselineStatus.NEW,
       null
     );

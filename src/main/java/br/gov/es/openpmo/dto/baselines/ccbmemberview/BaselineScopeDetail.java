@@ -46,7 +46,7 @@ public class BaselineScopeDetail {
     this.scopeDetails.addAll(itens);
   }
 
-  void addDetail(final ScopeDetailItem item) {
+  public void addDetail(final ScopeDetailItem item) {
     this.scopeDetails.add(item);
     this.calculateVariation();
   }

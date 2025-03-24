@@ -46,6 +46,11 @@ public class BaselineCostDetail {
       return;
     }
 
+    if (this.currentValue.compareTo(BigDecimal.ZERO) == 0) {
+      this.variation = difference.compareTo(BigDecimal.ZERO) > 0 ? BigDecimal.valueOf(100) : BigDecimal.valueOf(-100);
+      return;
+    }
+
     this.variation = difference
       .divide(this.currentValue, 6, RoundingMode.HALF_UP)
       .multiply(ONE_HUNDRED);

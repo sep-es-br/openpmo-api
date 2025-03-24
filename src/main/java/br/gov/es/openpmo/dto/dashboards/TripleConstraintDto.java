@@ -1,7 +1,5 @@
 package br.gov.es.openpmo.dto.dashboards;
 
-import br.gov.es.openpmo.model.dashboards.TripleConstraint;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -30,30 +28,32 @@ public class TripleConstraintDto {
   private BigDecimal scopeActualVariationPercent;
   private BigDecimal scopePlannedValue;
   private BigDecimal scopeForeseenValue;
+  private BigDecimal scopeForeseenWorkRefMonth;
 
-  public static TripleConstraintDto of(TripleConstraint tripleConstraint) {
+  public static TripleConstraintDto of(DashboardDto dashboardDto) {
     final TripleConstraintDto dto = new TripleConstraintDto();
-    dto.setCostVariation(tripleConstraint.getCostVariation());
-    dto.setCostPlannedValue(tripleConstraint.getCostPlannedValue());
-    dto.setCostForeseenValue(tripleConstraint.getCostForeseenValue());
-    dto.setCostActualValue(tripleConstraint.getCostActualValue());
-    dto.setSchedulePlannedStartDate(tripleConstraint.getSchedulePlannedStartDate());
-    dto.setSchedulePlannedEndDate(tripleConstraint.getSchedulePlannedEndDate());
-    dto.setScheduleForeseenStartDate(tripleConstraint.getScheduleForeseenStartDate());
-    dto.setScheduleForeseenEndDate(tripleConstraint.getScheduleForeseenEndDate());
-    dto.setScheduleActualStartDate(tripleConstraint.getScheduleActualStartDate());
-    dto.setScheduleActualEndDate(tripleConstraint.getScheduleActualEndDate());
-    dto.setScheduleVariation(tripleConstraint.getScheduleVariation());
-    dto.setSchedulePlannedValue(tripleConstraint.getSchedulePlannedValue());
-    dto.setScheduleForeseenValue(tripleConstraint.getScheduleForeseenValue());
-    dto.setScheduleActualValue(tripleConstraint.getScheduleActualValue());
-    dto.setScopeActualValue(tripleConstraint.getScopeActualValue());
-    dto.setScopeVariation(tripleConstraint.getScopeVariation());
-    dto.setScopePlannedVariationPercent(tripleConstraint.getScopePlannedVariationPercent());
-    dto.setScopeForeseenVariationPercent(tripleConstraint.getScopeForeseenVariationPercent());
-    dto.setScopeActualVariationPercent(tripleConstraint.getScopeActualVariationPercent());
-    dto.setScopePlannedValue(tripleConstraint.getScopePlannedValue());
-    dto.setScopeForeseenValue(tripleConstraint.getScopeForeseenValue());
+    dto.setCostVariation(dashboardDto.getCostVariation());
+    dto.setCostPlannedValue(dashboardDto.getPlannedCost());
+    dto.setCostForeseenValue(dashboardDto.getForeseenCost());
+    dto.setCostActualValue(dashboardDto.getActualCost());
+    dto.setSchedulePlannedStartDate(dashboardDto.getBaselineStart());
+    dto.setSchedulePlannedEndDate(dashboardDto.getBaselineEnd());
+    dto.setScheduleForeseenStartDate(dashboardDto.getStart());
+    dto.setScheduleForeseenEndDate(dashboardDto.getEnd());
+    dto.setScheduleActualStartDate(dashboardDto.getScheduleActualStartDate());
+    dto.setScheduleActualEndDate(dashboardDto.getScheduleActualEndDate());
+    dto.setScheduleVariation(dashboardDto.getScheduleVariation());
+    dto.setSchedulePlannedValue(dashboardDto.getSchedulePlannedValue());
+    dto.setScheduleForeseenValue(dashboardDto.getScheduleForeseenValue());
+    dto.setScheduleActualValue(dashboardDto.getScheduleActualValue());
+    dto.setScopePlannedValue(dashboardDto.getPlannedWork());
+    dto.setScopeActualValue(dashboardDto.getActualWork());
+    dto.setScopeForeseenValue(dashboardDto.getForeseenWork());
+    dto.setScopePlannedVariationPercent(dashboardDto.getScopePlannedVariationPercent());
+    dto.setScopeForeseenVariationPercent(dashboardDto.getScopeForeseenVariationPercent());
+    dto.setScopeVariation(dashboardDto.getScopeVariation());
+    dto.setScopeActualVariationPercent(dashboardDto.getScopeActualVariationPercent());
+    dto.setScopeForeseenWorkRefMonth(dashboardDto.getForeseenWorkRefMonth());
     return dto;
   }
 
@@ -223,5 +223,13 @@ public class TripleConstraintDto {
 
   public void setScopeActualValue(BigDecimal scopeActualValue) {
     this.scopeActualValue = scopeActualValue;
+  }
+
+  public BigDecimal getScopeForeseenWorkRefMonth() {
+    return scopeForeseenWorkRefMonth;
+  }
+
+  public void setScopeForeseenWorkRefMonth(BigDecimal scopeForeseenWorkRefMonth) {
+    this.scopeForeseenWorkRefMonth = scopeForeseenWorkRefMonth;
   }
 }

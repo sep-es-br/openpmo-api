@@ -2,18 +2,15 @@ package br.gov.es.openpmo.service.workpack;
 
 import br.gov.es.openpmo.dto.workpack.ChangeMilestoneDateRequest;
 import br.gov.es.openpmo.exception.NegocioException;
-import br.gov.es.openpmo.model.baselines.Baseline;
-import br.gov.es.openpmo.model.properties.Date;
 import br.gov.es.openpmo.model.workpacks.Milestone;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.MilestoneRepository;
-import br.gov.es.openpmo.repository.PropertyRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Component
@@ -23,16 +20,13 @@ public class ChangeMilestoneData {
 
   private final MilestoneRepository milestoneRepository;
 
-  private final PropertyRepository propertyRepository;
 
   public ChangeMilestoneData(
     WorkpackRepository workpackRepository,
-    MilestoneRepository milestoneRepository,
-    PropertyRepository propertyRepository
+    MilestoneRepository milestoneRepository
   ) {
     this.workpackRepository = workpackRepository;
     this.milestoneRepository = milestoneRepository;
-    this.propertyRepository = propertyRepository;
   }
 
   public Milestone execute(
@@ -41,49 +35,24 @@ public class ChangeMilestoneData {
   ) {
     final LocalDate newDate = getDate(request);
     final Milestone milestone = getMilestone(idMilestone);
-    final boolean concluded = milestoneRepository.isConcluded(idMilestone);
-    if (!concluded) {
-      milestone.setReasonRequired(true);
-    }
-    final boolean isOnActualBaseline = milestoneRepository.isOnActualBaseline(idMilestone);
-    if (isOnActualBaseline) {
-      milestone.setReasonRequired(true);
-    }
-    final Date milestoneDate = getMilestoneDate(idMilestone);
-    final LocalDate previousDate = milestoneDate.getValue().toLocalDate();
+    milestone.setReasonRequired(false);
+
+    final LocalDateTime milestoneDate = milestone.getDate();
+    final LocalDate previousDate = milestoneDate.toLocalDate();
     if (!previousDate.isEqual(newDate)) {
-      final Date baselineDate = getBaselineDate(idMilestone);
-      if (baselineDate != null && !previousDate.isEqual(newDate)) {
+      final LocalDateTime baselineDate = getBaselineDate(idMilestone);
+      if (baselineDate != null && !newDate.isEqual(baselineDate.toLocalDate())) {
         milestone.setReasonRequired(true);
       }
     }
-    final List<Baseline> maybeBaseline = this.milestoneRepository.fetchBaselineById(idMilestone);
-    if (maybeBaseline.isEmpty()) {
-      milestone.setReasonRequired(false);
-    }
     milestone.setNewDate(newDate);
     milestone.setPreviousDate(previousDate);
-    updateMilestoneDate(
-      milestoneDate,
-      newDate
-    );
+    milestone.setDate(newDate.atStartOfDay());
+    workpackRepository.save(milestone);
     return milestone;
   }
 
-  private void updateMilestoneDate(
-    Date milestoneDate,
-    LocalDate date
-  ) {
-    milestoneDate.setValue(date.atStartOfDay());
-    propertyRepository.save(milestoneDate);
-  }
-
-  private Date getMilestoneDate(Long idMilestone) {
-    return milestoneRepository.fetchMilestoneDate(idMilestone)
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.DATE_NOT_FOUND));
-  }
-
-  private Date getBaselineDate(Long idMilestone) {
+  private LocalDateTime getBaselineDate(Long idMilestone) {
     return milestoneRepository.fetchMilestoneBaselineDate(idMilestone)
       .orElse(null);
   }

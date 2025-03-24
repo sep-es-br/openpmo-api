@@ -89,8 +89,9 @@ public class StepController {
   }
 
   @Transactional
-  @PutMapping("/batch")
+  @PutMapping("/batch/{idSchedule}")
   public ResponseEntity<ResponseBaseItens<Long>> batchUpdate(
+    @PathVariable final Long idSchedule,
     @RequestBody final List<? extends @Valid StepUpdateDto> stepUpdates,
     @Authorization final String authorization
   ) {
@@ -103,7 +104,7 @@ public class StepController {
       authorization
     );
 
-    final List<Long> ids = this.batchUpdateStep.execute(stepUpdates);
+    final List<Long> ids = this.batchUpdateStep.execute(stepUpdates, idSchedule);
 
     return ResponseEntity.ok(ResponseBaseItens.of(ids));
   }
@@ -119,7 +120,7 @@ public class StepController {
     );
     final List<Deliverable> deliverables = this.status.getDeliverablesByScheduleId(stepStoreParamDto.getIdSchedule());
     this.stepService.save(stepStoreParamDto);
-    this.status.update(deliverables, true);
+    this.status.update(deliverables);
     return ResponseEntity.ok().build();
   }
 
@@ -134,7 +135,7 @@ public class StepController {
     );
     final List<Deliverable> deliverables = this.status.getDeliverablesByStepId(id);
     this.stepService.delete(id);
-    this.status.update(deliverables, true);
+    this.status.update(deliverables);
     return ResponseEntity.ok().build();
   }
 

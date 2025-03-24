@@ -5,10 +5,17 @@ import br.gov.es.openpmo.model.risk.Importance;
 import br.gov.es.openpmo.model.risk.NatureOfRisk;
 import br.gov.es.openpmo.model.risk.StatusOfRisk;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import jdk.vm.ci.meta.Local;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.io.IOException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public class RiskCreateDto {
 
@@ -30,7 +37,7 @@ public class RiskCreateDto {
   private LocalDate likelyToHappenFrom;
   @JsonFormat(pattern = "yyyy-MM-dd")
   private LocalDate likelyToHappenTo;
-  @JsonFormat(pattern = "yyyy-MM-dd")
+  @JsonDeserialize(using = CustomLocalDateDeserializer.class)
   private LocalDate happenedIn;
 
   public RiskCreateDto() {
@@ -56,6 +63,14 @@ public class RiskCreateDto {
     this.likelyToHappenFrom = likelyToHappenFrom;
     this.likelyToHappenTo = likelyToHappenTo;
     this.happenedIn = happenedIn;
+  }
+
+  public static class CustomLocalDateDeserializer extends JsonDeserializer<LocalDate> {
+    @Override
+    public LocalDate deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
+      String date = jsonParser.getText();
+      return LocalDate.parse(date, DateTimeFormatter.ISO_DATE_TIME);
+    }
   }
 
   public Long getIdWorkpack() {

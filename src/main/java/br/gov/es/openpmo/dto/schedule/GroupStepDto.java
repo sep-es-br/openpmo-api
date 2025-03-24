@@ -1,19 +1,25 @@
 package br.gov.es.openpmo.dto.schedule;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class GroupStepDto {
 
   private Integer year;
 
   private List<StepDto> steps = new ArrayList<>(0);
+
+  public GroupStepDto() {
+  }
+
+  public GroupStepDto(Integer year, List<StepDto> steps) {
+    this.year = year;
+    if (steps != null) {
+      this.steps = steps;
+    }
+  }
 
   public Integer getYear() {
     return this.year;

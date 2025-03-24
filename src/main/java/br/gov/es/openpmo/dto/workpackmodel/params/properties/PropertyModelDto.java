@@ -38,6 +38,7 @@ public class PropertyModelDto {
   private String name;
   @NotBlank
   private String label;
+  private String helpText;
 
   private boolean active;
   private boolean fullLine;
@@ -55,6 +56,7 @@ public class PropertyModelDto {
     instance.setSortIndex(propertyModel.getSortIndex());
     instance.setFullLine(propertyModel.isFullLine());
     instance.setRequired(propertyModel.isRequired());
+    instance.setHelpText(propertyModel.getHelpText());
     return instance;
   }
 
@@ -114,4 +116,11 @@ public class PropertyModelDto {
     this.required = required;
   }
 
+  public String getHelpText() {
+    return helpText;
+  }
+
+  public void setHelpText(String helpText) {
+    this.helpText = helpText;
+  }
 }

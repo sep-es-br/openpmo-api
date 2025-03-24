@@ -5,10 +5,7 @@ import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.model.filter.SortByDirectionEnum;
 import br.gov.es.openpmo.model.properties.Property;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
-import br.gov.es.openpmo.model.workpacks.Workpack;
-import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.CustomFilterRepository;
-import br.gov.es.openpmo.repository.WorkpackModelRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +17,6 @@ import java.util.stream.Collectors;
 import static br.gov.es.openpmo.service.workpack.GetPropertyValue.getValueProperty;
 import static br.gov.es.openpmo.service.workpack.PropertyComparator.compare;
 import static br.gov.es.openpmo.utils.ApplicationMessage.CUSTOM_FILTER_NOT_FOUND;
-import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACKMODEL_NOT_FOUND;
 
 @Component
 public class CostAccountSorter {
@@ -87,7 +83,6 @@ public class CostAccountSorter {
       this.idFilter = idFilter;
       this.costAccounts = costAccounts;
     }
-
 
     public Long getIdFilter() {
       return this.idFilter;

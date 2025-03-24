@@ -1,117 +1,84 @@
 package br.gov.es.openpmo.service.reports;
 
-import br.gov.es.openpmo.dto.reports.ReportScope;
-import br.gov.es.openpmo.dto.reports.ReportScopeItem;
-import br.gov.es.openpmo.dto.reports.Scope;
-import br.gov.es.openpmo.exception.RegistroNaoEncontradoException;
-import br.gov.es.openpmo.model.office.plan.Plan;
-import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.PlanRepository;
-import br.gov.es.openpmo.service.permissions.canaccess.CanAccessData;
-import br.gov.es.openpmo.service.permissions.canaccess.CanAccessDataResponse;
-import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessDataResponse;
-import br.gov.es.openpmo.utils.ApplicationMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import br.gov.es.openpmo.repository.WorkpackRepository;
+import br.gov.es.openpmo.repository.permissions.PermissionRepository;
+import br.gov.es.openpmo.service.actors.IGetPersonFromAuthorization;
 import org.springframework.stereotype.Component;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Component
 public class GetReportScope {
-
-  private static final Logger log = LoggerFactory.getLogger(GetReportScope.class);
-
   private final PlanRepository planRepository;
-
-  private final CanAccessData canAccessData;
+  private final PermissionRepository permissionRepository;
+  private final IGetPersonFromAuthorization getPersonFromAuthorization;
+  private final WorkpackRepository workpackRepository;
 
   public GetReportScope(
-    final PlanRepository planRepository,
-    final CanAccessData canAccessData
-  ) {
+          final PlanRepository planRepository,
+          final PermissionRepository permissionRepository,
+          IGetPersonFromAuthorization getPersonFromAuthorization, WorkpackRepository workpackRepository) {
     this.planRepository = planRepository;
-    this.canAccessData = canAccessData;
+    this.permissionRepository = permissionRepository;
+    this.getPersonFromAuthorization = getPersonFromAuthorization;
+    this.workpackRepository = workpackRepository;
   }
 
-  private static boolean analyzePermission(final ICanAccessDataResponse canAccess) {
-    return canAccess.canEditResource() || canAccess.getRead();
-  }
-
-  public ReportScope execute(final Long idPlan, final String authorization) {
-    log.info("Consultando escopo do relatório para o idPlan={}", idPlan);
-    final Plan plan = this.getPlanStructure(idPlan);
-
-    final Function<Long, CanAccessDataResponse> fetchPermissionFunction = this.fetchPermission(authorization);
-
-    log.debug("Criando ReportScope a partir do idPlan={}", idPlan);
-    final ReportScope scope = ReportScope.of(plan,  false);
-
-    final Set<Workpack> workpacks = plan.getWorkpacks();
-
-    log.debug("Navegando na estrutura dos {} workpacks filho(s) diretos de idPlan={}", workpacks.size(), plan.getId());
-    final Instant instant0 = Instant.now();
-    final Collection<ReportScopeItem> children = this.addScope(workpacks);
-    final Instant instantFinal = Instant.now();
-
-    log.info("Tempo: {}", ChronoUnit.MILLIS.between(instant0, instantFinal));
-    scope.addChildren(children);
-
-    applyPermissionsToScope(scope, fetchPermissionFunction.andThen(GetReportScope::analyzePermission));
-    return scope;
-  }
-
-  private void applyPermissionsToScope(Scope scope, Function<Long, Boolean> fetchPermissionFunction) {
-    if (fetchPermissionFunction.apply(scope.getId())) {
-      scope.enablePermission();
-      return;
-    }
-    scope.disablePermission();
-    scope.getChildren().forEach(child -> applyPermissionsToScope(child, fetchPermissionFunction));
-  }
-
-  private Function<Long, CanAccessDataResponse> fetchPermission(final String authorization) {
-    return id -> this.canAccessData.execute(id, authorization);
-  }
-
-  private Collection<ReportScopeItem> addScope(
-    final Collection<? extends Workpack> workpacks
-  ) {
-    log.debug("Iniciando processamento de {} workpack(s)", workpacks.size());
-    final Collection<ReportScopeItem> items = new LinkedList<>();
-    for (final Workpack workpack : workpacks) {
-
-      log.debug("Criando ReportScopeItem a partir do workpackId={}", workpack.getId());
-      final ReportScopeItem item = ReportScopeItem.of(workpack, false);
-      items.add(item);
-
-      if (!workpack.hasChildren()) {
-        log.debug(
-          "Workpack workpackId={} não possui filhos, iniciando processamento do próximo Workpack",
-          workpack.getId()
-        );
-        continue;
+  public List<Long> execute(final List<Long> scope, final Long idPlan, final String authorization) {
+    final List<Long> scopeResponse = new ArrayList<>();
+    final IGetPersonFromAuthorization.PersonDataResponse personData = this.getPersonFromAuthorization.execute(authorization);
+    final boolean isAdministrator = personData.getPerson().getAdministrator();
+    boolean hasPermissionOfficeOrPlan = this.permissionRepository.hasPermissionOfficeOrPlanByIdPlan(idPlan, personData.getKey());
+    if (isAdministrator || hasPermissionOfficeOrPlan) {
+      if (scope.size() == 1 && scope.get(0).equals(idPlan)) {
+        final List<Long> workpacksIds = this.planRepository.findWorkpacksBelongsToPlan(idPlan);
+        if (workpacksIds != null && !workpacksIds.isEmpty()) {
+          scopeResponse.addAll(workpacksIds);
+        }
+        return scopeResponse;
       }
-
-      final Set<Workpack> children = workpack.getChildren();
-      log.debug("Iniciando processamento de {} filho(s) do workpackId={}", children.size(), workpack.getId());
-
-      item.addChildren(this.addScope(children));
-
+      scopeResponse.addAll(scope);
+      final List<Long> workpacksChildren = this.workpackRepository.idsWorkpacksChildren(scope);
+      if (workpacksChildren != null && !workpacksChildren.isEmpty()) {
+        scopeResponse.addAll(workpacksChildren);
+      }
+      return scopeResponse;
+    }
+    if (scope.size() == 1 && scope.get(0).equals(idPlan)) {
+      final List<Long> workpacksWithPermission = this.planRepository.findWorkpacksBelongsToPlanWithPermission(idPlan, personData.getKey());
+      if (workpacksWithPermission != null && !workpacksWithPermission.isEmpty()) {
+        scopeResponse.addAll(workpacksWithPermission);
+      }
+      final List<Long> workpacksChildren = this.workpackRepository.idsWorkpacksChildren(workpacksWithPermission);
+      if (workpacksChildren != null && !workpacksChildren.isEmpty()) {
+        scopeResponse.addAll(workpacksChildren);
+      }
+      return scopeResponse;
     }
 
-    return items.stream()
-      .sorted(Comparator.comparing(ReportScopeItem::getName, Comparator.nullsLast(Comparator.naturalOrder())))
-      .collect(Collectors.toList());
-  }
-
-  private Plan getPlanStructure(final Long idPlan) {
-    return this.planRepository.findFirstLevelStructurePlanById(idPlan)
-      .orElseThrow(() -> new RegistroNaoEncontradoException(ApplicationMessage.PLAN_NOT_FOUND));
+    for (final Long scopeId : scope) {
+      final List<Long> workpacksIds = new ArrayList<>();
+      workpacksIds.add(scopeId);
+      boolean hasPermissionWorkpackSelfOrParents = this.permissionRepository.hasPermissionWorkpackSelfOrParents(scopeId, personData.getKey());
+      if (hasPermissionWorkpackSelfOrParents) {
+        scopeResponse.add(scopeId);
+        final List<Long> workpacksChildren = this.workpackRepository.idsWorkpacksChildren(workpacksIds);
+        if (workpacksChildren != null && !workpacksChildren.isEmpty()) {
+          scopeResponse.addAll(workpacksChildren);
+        }
+      } else {
+        final List<Long> workpacksChildrenWithPermission = this.permissionRepository.idsWorkpacksChildrenWithPermission(workpacksIds, personData.getKey());
+        if (workpacksChildrenWithPermission != null && !workpacksChildrenWithPermission.isEmpty()) {
+          scopeResponse.addAll(workpacksChildrenWithPermission);
+          final List<Long> workpacksChildren = this.workpackRepository.idsWorkpacksChildren(workpacksChildrenWithPermission);
+          if (workpacksChildren != null && !workpacksChildren.isEmpty()) {
+            scopeResponse.addAll(workpacksChildren);
+          }
+        }
+      }
+    }
+    return scopeResponse;
   }
 
 }

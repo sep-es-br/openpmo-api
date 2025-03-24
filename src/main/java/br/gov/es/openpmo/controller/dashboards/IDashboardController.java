@@ -4,10 +4,8 @@ import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.Response;
 import br.gov.es.openpmo.dto.dashboards.DashboardBaselineResponse;
 import br.gov.es.openpmo.dto.dashboards.v2.DashboardResponse;
-import br.gov.es.openpmo.dto.dashboards.v2.Interval;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -18,11 +16,6 @@ public interface IDashboardController {
 
   @GetMapping("/baselines")
   Response<List<DashboardBaselineResponse>> getBaselines(
-      @RequestParam("id-workpack") final Long workpackId,
-      @Authorization final String authorization);
-
-  @GetMapping("/schedule-interval")
-  Response<Interval> getInterval(
       @RequestParam("id-workpack") final Long workpackId,
       @Authorization final String authorization);
 
@@ -38,15 +31,5 @@ public interface IDashboardController {
       @RequestParam(name = "date-reference", required = false) @DateTimeFormat(pattern = "MM/yyyy") YearMonth yearMonth,
       UriComponentsBuilder uriComponentsBuilder,
       @Authorization final String authorization);
-
-  @GetMapping("/calculate")
-  Response<Void> calculate(
-      @RequestParam("id-workpack") final Long workpackId,
-      @RequestParam(value = "calculate-interval", required = false) Boolean calculateInterval,
-      @Authorization final String authorization
-  );
-
-  @PostMapping("/purge")
-  Response<Void> purge(@Authorization final String authorization);
 
 }

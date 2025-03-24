@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.repository;
 
+import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.model.relations.IsSharedWith;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
@@ -24,36 +25,32 @@ public interface WorkpackSharedRepository extends Neo4jRepository<IsSharedWith, 
   );
 
   @Query(
-    "MATCH (office:Office)<-[:IS_ADOPTED_BY]-(planModel:PlanModel)<-[:BELONGS_TO]-(model:WorkpackModel), "
-    + "(office)<-[sharedWith:IS_SHARED_WITH]-(workpack:Workpack) "
+    "MATCH (office:Office)<-[:IS_ADOPTED_BY]-(planModel:PlanModel)<-[:BELONGS_TO]-(model:WorkpackModel), (planLink:Plan), "
+    + "(office)<-[sharedWith:IS_SHARED_WITH]-(workpack:Workpack)-[:BELONGS_TO]->(plan:Plan) "
     + "OPTIONAL MATCH (workpack)-[instanceBy:IS_INSTANCE_BY]-(instance:WorkpackModel) "
     + "OPTIONAL MATCH (instance)<-[isInInstance:IS_IN*]-(instanceChildren:WorkpackModel) "
     + "WITH office, planModel, model, sharedWith, workpack, instanceBy, instance, isInInstance, instanceChildren "
-    + "WHERE id(model) = $idWorkpackModel "
-    + " OPTIONAL MATCH (workpack)-[bt:BELONGS_TO{linked:false}]->(originalPlan:Plan) "
-    + " OPTIONAL MATCH (workpack)-[:BELONGS_TO{linked:false}]->(:Plan)-[iab:IS_ADOPTED_BY]->(originalOffice:Office) "
+    + "WHERE id(model) = $idWorkpackModel AND id(plan) <> $idPlan AND id(planLink) = $idPlan AND NOT (workpack)-[:BELONGS_TO{linked:true}]->(planLink) "
     + "RETURN office, planModel, sharedWith, workpack, instanceBy, instance, model, isInInstance, instanceChildren, [ "
-    + "    [ [bt, originalPlan]], "
-    + "    [ [iab, originalOffice]] " +
+    + "    [(workpack)-[bt:BELONGS_TO]->(originalPlan:Plan) WHERE NOT EXISTS(bt.linked) OR bt.linked = false | [bt, originalPlan]], "
+    + "    [(workpack)-[bt2:BELONGS_TO]->(:Plan)-[iab:IS_ADOPTED_BY]->(originalOffice:Office) WHERE NOT EXISTS(bt2.linked) OR bt2.linked = false | [iab, originalOffice]] " +
     "]"
   )
-  List<IsSharedWith> listAllWorkpacksShared(Long idWorkpackModel);
+  List<IsSharedWith> listAllWorkpacksShared(Long idWorkpackModel, Long idPlan);
 
   @Query(
-    "MATCH (workpack:Workpack) "
+    "MATCH (workpack:Workpack)-[:BELONGS_TO]->(plan:Plan), (planLink:Plan) "
     + "OPTIONAL MATCH (workpack)-[instanceBy:IS_INSTANCE_BY]-(instance:WorkpackModel) "
     + "OPTIONAL MATCH (office:Office)<-[adoptedBy:IS_ADOPTED_BY]-(planModel:PlanModel)<-[belongsTo:BELONGS_TO]-(instance) "
     + "OPTIONAL MATCH (instance)<-[isInInstance:IS_IN*]-(instanceChildren:WorkpackModel) "
     + "WITH office, planModel, workpack, adoptedBy, belongsTo, instanceBy, instance, isInInstance, instanceChildren "
-    + "WHERE workpack.public=true "
-    + " OPTIONAL MATCH (workpack)-[bt:BELONGS_TO{linked:false}]->(originalPlan:Plan) "
-    + " OPTIONAL MATCH (originalPlan:Plan)-[iab:IS_ADOPTED_BY]->(originalOffice:Office) "
+    + "WHERE workpack.public=true AND id(plan) <> $idPlan AND id(planLink) = $idPlan AND NOT (workpack)-[:BELONGS_TO{linked:true}]->(planLink) "
     + "RETURN office, planModel, workpack, adoptedBy, belongsTo, instanceBy, instance, isInInstance, instanceChildren, [ "
-    + "    [ [bt, originalPlan]], "
-    + "    [ [iab, originalOffice]] " +
+    + "    [(workpack)-[bt:BELONGS_TO]->(originalPlan:Plan) WHERE NOT EXISTS(bt.linked) OR bt.linked = false | [bt, originalPlan]], "
+    + "    [(originalPlan:Plan)-[iab:IS_ADOPTED_BY]->(originalOffice:Office) | [iab, originalOffice]] " +
     "]"
   )
-  List<Workpack> listAllWorkpacksPublic();
+  List<Workpack> listAllWorkpacksPublic(Long idPlan);
 
   @Query(
     "MATCH (workpack:Workpack) " +
@@ -110,68 +107,22 @@ public interface WorkpackSharedRepository extends Neo4jRepository<IsSharedWith, 
     Long idWorkpackModelLinked
   );
 
-  @Query(
-    "MATCH (workpack:Workpack)   " +
-    "MATCH (workpack)-[shared:IS_SHARED_WITH]->(office:Office) " +
-    "MATCH (office)<-[planAdoptedBy:IS_ADOPTED_BY]-(planModel:PlanModel) " +
-    "OPTIONAL MATCH (workpack)-[isLinkedTo:IS_LINKED_TO]->(linkedModel:WorkpackModel), " +
-    "(linkedModel)-[modelBelongsTo:BELONGS_TO]->(planModel) " +
-    "WITH workpack, shared, office, planAdoptedBy, planModel, isLinkedTo, linkedModel, modelBelongsTo   " +
-    "WHERE id(workpack)=$idWorkpack AND (id(office)=$idOffice OR $idOffice IS NULL)  " +
-    "DETACH DELETE isLinkedTo"
-  )
-  void deleteExternalLinkedRelationship(
-    Long idWorkpack,
-    Long idOffice
-  );
 
-  @Query(
-    "MATCH (workpack:Workpack)   " +
-    "OPTIONAL MATCH (workpack)-[shared:IS_SHARED_WITH]->(office:Office)  " +
-    "OPTIONAL MATCH (plan:Plan)-[isAdoptedBy:IS_ADOPTED_BY]->(office)  " +
-    "OPTIONAL MATCH (workpack)-[belongsTo:BELONGS_TO{linked:true}]->(plan)   " +
-    "WITH workpack, shared, office, plan, belongsTo, isAdoptedBy   " +
-    "WHERE id(workpack)=$idWorkpack AND (id(office)=$idOffice OR $idOffice IS NULL)  " +
-    "DETACH DELETE shared, belongsTo "
-  )
-  void deleteSharedRelationship(
-    Long idWorkpack,
-    Long idOffice
-  );
+  @Query("MATCH (:Workpack)-[r:IS_SHARED_WITH]->(:Office) WHERE id(r) = $relationId " +
+          "SET r.permissionLevel = $permissionLevel")
+  void updatePermissionLevel(Long relationId, PermissionLevelEnum permissionLevel);
 
-  @Query(
-    "MATCH (workpack:Workpack)  " +
-    "MATCH (:Workpack)-[:BELONGS_TO{linked:true}]->(plan:Plan)  " +
-    "OPTIONAL MATCH (children:Workpack)-[isIn:IS_IN]->(workpack)  " +
-    "OPTIONAL MATCH (workpack)-[belongsTo:BELONGS_TO]->(plan)  " +
-    "OPTIONAL MATCH (children)-[childrenBelongsTo:BELONGS_TO]->(plan)  " +
-    "OPTIONAL MATCH (office:Office)<-[adoptedBy:IS_ADOPTED_BY]-(plan)  " +
-    "OPTIONAL MATCH (person:Person)-[permission:CAN_ACCESS_WORKPACK{idPlan:id(plan)}]->(workpack)  " +
-    "OPTIONAL MATCH (person2:Person)-[childrenPermission:CAN_ACCESS_WORKPACK{idPlan:id(plan)}]->(children)  " +
-    "WITH workpack, children, isIn, plan, belongsTo, childrenBelongsTo,  " +
-    "office, adoptedBy, person, permission, childrenPermission, person2  " +
-    "WHERE id(workpack)=$idWorkpack AND (id(office)=$idOffice OR $idOffice  IS NULL) " +
-    "DETACH DELETE permission, childrenPermission"
-  )
-  void deleteExternalPermission(
-    Long idWorkpack,
-    Long idOffice
-  );
+  @Query("MATCH (w:Workpack), (o:Office) " +
+          "WHERE id(w) = $workpackId AND id(o) = $officeId " +
+          "CREATE (w)-[r:IS_SHARED_WITH {permissionLevel: $permissionLevel}]->(o) " +
+          "RETURN r")
+  IsSharedWith createIsSharedWith(Long workpackId, Long officeId, PermissionLevelEnum permissionLevel);
 
-  @Query(
-    "MATCH (workpack:Workpack) " +
-    "MATCH (workpack)-[belongsTo:BELONGS_TO{linked:true}]->(plan:Plan) " +
-    "OPTIONAL MATCH (office:Office)<-[adoptedBy:IS_ADOPTED_BY]-(plan) " +
-    "WITH workpack, belongsTo, plan, office, adoptedBy " +
-    "WHERE id(workpack)=$idWorkpack AND (id(office)=$idOffice OR $idOffice IS NULL) " +
-    "OPTIONAL MATCH (workpack)-[isIn:IS_IN]->(parent:Workpack) " +
-    "WITH workpack, belongsTo, plan, isIn, parent, office, adoptedBy " +
-    "WHERE (parent)-[:BELONGS_TO]-(plan) " +
-    "DETACH DELETE isIn"
-  )
-  void deleteExternalParent(
-    Long idWorkpack,
-    Long idOffice
-  );
+  @Query("MATCH (w:Workpack)-[bb:BELONGS_TO {linked: true}]->(p:Plan)-[:IS_ADOPTED_BY]->(o:Office) where id(w) = $idWorkpack and id(o) = $idOffice return count(bb)> 0")
+  boolean findAnyLink(Long idWorkpack, Long idOffice);
 
+  @Query("MATCH (w:Workpack)-[share:IS_SHARED_WITH]->(o:Office) " +
+          "WHERE id(share) = $idSharedWith " +
+          "DETACH DELETE share")
+  void deleteSharedWith(Long idSharedWith);
 }

@@ -1,7 +1,6 @@
 package br.gov.es.openpmo.service.baselines;
 
 import br.gov.es.openpmo.dto.baselines.UpdateResponse;
-import br.gov.es.openpmo.dto.workpack.WorkpackName;
 import br.gov.es.openpmo.enumerator.BaselineStatus;
 import br.gov.es.openpmo.enumerator.CategoryEnum;
 import br.gov.es.openpmo.exception.NegocioException;
@@ -78,12 +77,6 @@ public class GetBaselineUpdatesFromBaselineService implements IGetBaselineUpdate
       .noneMatch(update -> update.getIdWorkpack().equals(workpack.getWorkpackMasterId()));
   }
 
-  private String getDescription(final Workpack workpack) {
-    return this.getWorkpackMaster(workpack)
-      .map(this::getMasterName)
-      .orElse(null);
-  }
-
   private void addIfWorkpackIsDeleted(
     final Workpack snapshot,
     final Collection<UpdateResponse> updates
@@ -99,28 +92,14 @@ public class GetBaselineUpdatesFromBaselineService implements IGetBaselineUpdate
     return new UpdateResponse(
       workpack.getId(),
       this.getIcon(workpack),
-      this.getDescription(workpack),
+      workpack.getName(),
       BaselineStatus.DELETED,
       null
     );
   }
 
-  private Optional<Workpack> getWorkpackMaster(final Workpack workpack) {
-    final CategoryEnum category = getCategoryOrMaster(workpack);
-
-    return category == CategoryEnum.MASTER
-      ? Optional.of(workpack)
-      : this.baselineRepository.findMasterBySnapshotId(workpack.getId());
-  }
-
   private static CategoryEnum getCategoryOrMaster(final Snapshotable<Workpack> workpack) {
     return Optional.ofNullable(workpack.getCategory()).orElse(CategoryEnum.MASTER);
-  }
-
-  private String getMasterName(final Workpack workpack) {
-    return this.workpackRepository.findWorkpackNameAndFullname(workpack.getId())
-      .map(WorkpackName::getName)
-      .orElse(null);
   }
 
   private Optional<WorkpackModel> getWorkpackModel(final Workpack workpack) {
@@ -229,7 +208,7 @@ public class GetBaselineUpdatesFromBaselineService implements IGetBaselineUpdate
     return new UpdateResponse(
       workpack.getId(),
       this.getIcon(workpack),
-      this.getDescription(workpack),
+      workpack.getName(),
       BaselineStatus.NEW,
       null
     );
@@ -260,7 +239,7 @@ public class GetBaselineUpdatesFromBaselineService implements IGetBaselineUpdate
     return new UpdateResponse(
       snapshot.getId(),
       this.getIcon(snapshot),
-      this.getDescription(snapshot),
+      snapshot.getName(),
       BaselineStatus.CHANGED,
       null
     );

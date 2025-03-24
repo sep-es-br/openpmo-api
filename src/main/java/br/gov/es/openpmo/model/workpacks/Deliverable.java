@@ -10,6 +10,10 @@ public class Deliverable extends Workpack {
   @Relationship("IS_INSTANCE_BY")
   private DeliverableModel instance;
 
+
+  //TODO  TRAZER DO MODEL
+  //private Long unitMeasure;
+
   public DeliverableModel getInstance() {
     return this.instance;
   }

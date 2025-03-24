@@ -10,12 +10,9 @@ import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.workpack.GetPropertyValue;
 import br.gov.es.openpmo.service.workpack.PropertyComparator;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACKMODEL_NOT_FOUND;
 
@@ -60,7 +57,7 @@ public class GetDashboardMenu {
     for (Workpack workpack : workpacks) {
       final DashboardMenuResponse response = new DashboardMenuResponse();
       response.setId(workpack.getId());
-      response.setName(workpack.getWorkpackName());
+      response.setName(workpack.getName());
       if (workpack.isLinkedTo(workpackModel)) {
         response.setLinked(true);
         response.setIdWorkpackModel(workpackModel.getId());
@@ -104,7 +101,7 @@ public class GetDashboardMenu {
       for (Workpack workpack : value) {
         final DashboardMenuResponse response = new DashboardMenuResponse();
         response.setId(workpack.getId());
-        response.setName(workpack.getWorkpackName());
+        response.setName(workpack.getName());
         for (WorkpackModel workpackModel : workpackModels) {
           if (workpack.isLinkedTo(workpackModel)) {
             response.setLinked(true);
@@ -131,10 +128,29 @@ public class GetDashboardMenu {
     final WorkpackModel workpackModel
   ) {
     final PropertyModel sortBy = workpackModel.getSortBy();
-    responses.sort((first, second) -> PropertyComparator.compare(
-      GetPropertyValue.getValueProperty(first, sortBy),
-      GetPropertyValue.getValueProperty(second, sortBy)
-    ));
+    if (sortBy != null) {
+      responses.sort((first, second) -> PropertyComparator.compare(
+              GetPropertyValue.getValueProperty(first, sortBy),
+              GetPropertyValue.getValueProperty(second, sortBy)
+      ));
+    } else {
+      if (!StringUtils.isEmpty(workpackModel.getSortByField())) {
+        switch (workpackModel.getSortByField()) {
+          case "name":
+            responses.sort(Comparator.comparing(Workpack::getName, Comparator.nullsLast(Comparator.naturalOrder())));
+            break;
+          case "fullName":
+            responses.sort(Comparator.comparing(Workpack::getFullName, Comparator.nullsLast(Comparator.naturalOrder())));
+            break;
+          case "date":
+            responses.sort(Comparator.comparing(Workpack::getDate, Comparator.nullsLast(Comparator.naturalOrder())));
+            break;
+          default:
+            break;
+        }
+      }
+    }
+
   }
 
 }

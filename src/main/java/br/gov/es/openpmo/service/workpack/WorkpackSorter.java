@@ -13,8 +13,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.service.workpack.GetPropertyValue.getValueProperty;
@@ -27,6 +29,8 @@ public class WorkpackSorter {
 
   private final WorkpackModelRepository workpackModelRepository;
   private final CustomFilterRepository customFilterRepository;
+
+  private static Pattern pattern = Pattern.compile("-?\\d+(\\.\\d+)?");
 
   @Autowired
   public WorkpackSorter(
@@ -52,9 +56,34 @@ public class WorkpackSorter {
 
     final CustomFilter customFilter = this.findCustomFilterById(request.getIdFilter());
 
-    return request.getWorkpacks().stream()
-      .sorted((w1, w2) -> compareUsing(w1, w2, customFilter))
-      .collect(Collectors.toList());
+    if (isNumeric(customFilter.getSortBy())) {
+      return request.getWorkpacks().stream()
+                    .sorted((w1, w2) -> compareUsing(w1, w2, customFilter))
+                    .collect(Collectors.toList());
+    }
+    switch (customFilter.getSortBy()) {
+      case "name":
+        return request.getWorkpacks().stream()
+                      .sorted(Comparator.comparing(Workpack::getName, Comparator.nullsLast(Comparator.naturalOrder())))
+                      .collect(Collectors.toList());
+      case "fullName":
+        return request.getWorkpacks().stream()
+                      .sorted(Comparator.comparing(Workpack::getFullName, Comparator.nullsLast(Comparator.naturalOrder())))
+                      .collect(Collectors.toList());
+      case "date":
+        return request.getWorkpacks().stream()
+                      .sorted(Comparator.comparing(Workpack::getDate, Comparator.nullsLast(Comparator.naturalOrder())))
+                      .collect(Collectors.toList());
+      default:
+        return request.getWorkpacks();
+    }
+  }
+
+  private static boolean isNumeric(String strNum) {
+    if (strNum == null) {
+      return false;
+    }
+    return pattern.matcher(strNum).matches();
   }
 
 

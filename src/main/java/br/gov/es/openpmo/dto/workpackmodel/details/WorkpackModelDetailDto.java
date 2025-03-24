@@ -91,6 +91,8 @@ public abstract class WorkpackModelDetailDto {
 
   private Boolean dashboardSessionActive;
 
+  private String sortByField;
+
   protected WorkpackModelDetailDto() {
   }
 
@@ -340,5 +342,11 @@ public abstract class WorkpackModelDetailDto {
     this.dashboardSessionActive = dashboardSessionActive;
   }
 
+  public String getSortByField() {
+    return sortByField;
+  }
 
+  public void setSortByField(String sortByField) {
+    this.sortByField = sortByField;
+  }
 }

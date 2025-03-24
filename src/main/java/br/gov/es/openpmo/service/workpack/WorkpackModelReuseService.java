@@ -58,7 +58,7 @@ public class WorkpackModelReuseService {
     final Long idWorkpackModel,
     final Long idPlanModel
   ) {
-    final Set<WorkpackModel> models = this.repository.findAllByIdPlanModelWithChildren(idPlanModel);
+    final Set<WorkpackModel> models = this.repository.findAllByIdPlanModelWithChildrenThin(idPlanModel);
     return this.createHierarchy(idWorkpackModel, models);
   }
 

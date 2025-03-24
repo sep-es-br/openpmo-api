@@ -163,4 +163,10 @@ public class Schedule extends Entity implements Snapshotable<Schedule> {
   public Long getIdWorkpack() {
     return this.workpack.getId();
   }
+
+  @Transient
+  public Long getIdMaster() {
+    if (master == null || master.getMaster() == null) return null;
+    return master.getMaster().getId();
+  }
 }

@@ -3,6 +3,8 @@ package br.gov.es.openpmo.dto.costaccount;
 import br.gov.es.openpmo.dto.workpack.PropertyDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.PropertyModelDto;
 import br.gov.es.openpmo.model.Entity;
+import br.gov.es.openpmo.model.budget.PlanoOrcamentario;
+import br.gov.es.openpmo.model.budget.UnidadeOrcamentaria;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
 import br.gov.es.openpmo.utils.PropertyModelInstanceType;
 
@@ -21,6 +23,8 @@ public class CostAccountDto {
   private String workpackModelFullName;
   private Long idCostAccountModel;
   private CostDto costAccountAllocation;
+  private UnidadeOrcamentaria unidadeOrcamentaria;
+  private PlanoOrcamentario planoOrcamentario;
 
   public static CostAccountDto of(final CostAccount costAccount) {
     final CostAccountDto instance = new CostAccountDto();
@@ -29,6 +33,8 @@ public class CostAccountDto {
     instance.setProperties(getPropertiesFrom(costAccount));
     instance.setModels(getModelsFrom(costAccount));
     instance.setIdCostAccountModel(getIdCostAccountModel(costAccount));
+    instance.setUnidadeOrcamentaria(costAccount.getUnidadeOrcamentaria());
+    instance.setPlanoOrcamentario(costAccount.getPlanoOrcamentario());
     return instance;
   }
 
@@ -125,5 +131,21 @@ public class CostAccountDto {
 
   public void setIdCostAccountModel(Long idCostAccountModel) {
     this.idCostAccountModel = idCostAccountModel;
+  }
+
+  public UnidadeOrcamentaria getUnidadeOrcamentaria() {
+    return unidadeOrcamentaria;
+  }
+
+  public void setUnidadeOrcamentaria(UnidadeOrcamentaria unidadeOrcamentaria) {
+    this.unidadeOrcamentaria = unidadeOrcamentaria;
+  }
+
+  public PlanoOrcamentario getPlanoOrcamentario() {
+    return planoOrcamentario;
+  }
+
+  public void setPlanoOrcamentario(PlanoOrcamentario planoOrcamentario) {
+    this.planoOrcamentario = planoOrcamentario;
   }
 }

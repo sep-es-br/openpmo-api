@@ -19,9 +19,9 @@ import br.gov.es.openpmo.repository.PlanRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllPlanUsingCustomFilter;
 import br.gov.es.openpmo.service.actors.PersonService;
+import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
 import br.gov.es.openpmo.service.office.OfficeService;
 import br.gov.es.openpmo.service.permissions.OfficePermissionService;
-import br.gov.es.openpmo.service.ui.BreadcrumbPlanHelper;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +34,7 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.CUSTOM_FILTER_NOT_FOUND
 import static br.gov.es.openpmo.utils.ApplicationMessage.PLAN_NOT_FOUND;
 
 @Service
-public class PlanService implements BreadcrumbPlanHelper {
+public class PlanService {
 
   private final PlanRepository planRepository;
   private final PersonService personService;
@@ -45,6 +45,7 @@ public class PlanService implements BreadcrumbPlanHelper {
   private final FindAllPlanUsingCustomFilter findAllPlan;
   private final WorkpackRepository workpackRepository;
   private final AppProperties appProperties;
+  private final IAsyncDashboardService dashboardService;
 
   @Autowired
   public PlanService(
@@ -56,6 +57,7 @@ public class PlanService implements BreadcrumbPlanHelper {
     final CustomFilterRepository customFilterRepository,
     final FindAllPlanUsingCustomFilter findAllPlan,
     final WorkpackRepository workpackRepository,
+    final IAsyncDashboardService dashboardService,
     final AppProperties appProperties
   ) {
     this.planRepository = planRepository;
@@ -66,6 +68,7 @@ public class PlanService implements BreadcrumbPlanHelper {
     this.customFilterRepository = customFilterRepository;
     this.findAllPlan = findAllPlan;
     this.workpackRepository = workpackRepository;
+    this.dashboardService = dashboardService;
     this.appProperties = appProperties;
   }
 
@@ -98,6 +101,14 @@ public class PlanService implements BreadcrumbPlanHelper {
     return this.findAllPlan.execute(filter, params);
   }
 
+  public List<Long> findAllIdsInOfficeOrderByStartDesc(final Long idOffice) {
+    return this.planRepository.findAllIdsInOfficeOrderByStartDesc(idOffice);
+  }
+
+  public List<Long> findAllUserHasPermission(Long idOffice,  Long idPerson, Long idPlan) {
+    return planRepository.findAllWithPermissionByUserAndOffice(idOffice, idPerson, idPlan);
+  }
+
   public List<Plan> findAllInOffice(final Long idOffice) {
     final List<Plan> plans = this.planRepository.findAllInOffice(idOffice);
     plans.sort(Comparator.comparing(Plan::getStart).reversed());
@@ -109,7 +120,9 @@ public class PlanService implements BreadcrumbPlanHelper {
   }
 
   public Plan save(final Plan plan) {
-    return this.planRepository.save(plan);
+    Plan saved = this.planRepository.save(plan);
+    this.dashboardService.calculate();
+    return saved;
   }
 
   public void delete(final Plan plan) {

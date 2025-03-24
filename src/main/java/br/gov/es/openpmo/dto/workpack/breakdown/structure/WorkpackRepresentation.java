@@ -1,12 +1,13 @@
 package br.gov.es.openpmo.dto.workpack.breakdown.structure;
 
+import br.gov.es.openpmo.dto.MilestoneResultDto;
 import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
 import br.gov.es.openpmo.dto.dashboards.MilestoneDto;
-import br.gov.es.openpmo.dto.dashboards.RiskDto;
+import br.gov.es.openpmo.dto.dashboards.RiskResultDto;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
-import java.util.List;
 
 public class WorkpackRepresentation {
 
@@ -16,21 +17,25 @@ public class WorkpackRepresentation {
 
   private String workpackType;
 
+  private Long idWorkpaModelLinked;
+
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private DashboardMonthDto dashboard;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<RiskDto> risks;
+  private RiskResultDto risks;
 
   @JsonUnwrapped
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private MilestoneDto milestone;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private List<MilestoneDto> milestones;
+  private MilestoneResultDto milestones;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private ScheduleMeasureUnit unitMeasure;
+
+  private JournalInformationDto journalInformation;
 
   public Long getIdWorkpack() {
     return idWorkpack;
@@ -56,14 +61,6 @@ public class WorkpackRepresentation {
     this.dashboard = dashboard;
   }
 
-  public List<RiskDto> getRisks() {
-    return risks;
-  }
-
-  public void setRisks(List<RiskDto> risks) {
-    this.risks = risks;
-  }
-
   public MilestoneDto getMilestone() {
     return milestone;
   }
@@ -72,11 +69,19 @@ public class WorkpackRepresentation {
     this.milestone = milestone;
   }
 
-  public List<MilestoneDto> getMilestones() {
+  public RiskResultDto getRisks() {
+    return risks;
+  }
+
+  public void setRisks(RiskResultDto risks) {
+    this.risks = risks;
+  }
+
+  public MilestoneResultDto getMilestones() {
     return milestones;
   }
 
-  public void setMilestones(List<MilestoneDto> milestones) {
+  public void setMilestones(MilestoneResultDto milestones) {
     this.milestones = milestones;
   }
 
@@ -94,5 +99,21 @@ public class WorkpackRepresentation {
 
   public void setUnitMeasure(ScheduleMeasureUnit unitMeasure) {
     this.unitMeasure = unitMeasure;
+  }
+
+  public JournalInformationDto getJournalInformation() {
+    return journalInformation;
+  }
+
+  public void setJournalInformation(JournalInformationDto journalInformation) {
+    this.journalInformation = journalInformation;
+  }
+
+  public Long getIdWorkpaModelLinked() {
+    return idWorkpaModelLinked;
+  }
+
+  public void setIdWorkpaModelLinked(Long idWorkpaModelLinked) {
+    this.idWorkpaModelLinked = idWorkpaModelLinked;
   }
 }

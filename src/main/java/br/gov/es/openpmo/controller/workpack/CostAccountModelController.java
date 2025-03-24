@@ -48,19 +48,17 @@ public class CostAccountModelController {
 
   @GetMapping
   public ResponseEntity<ResponseBase<GetCostAccountModelResponse>> getCostAccountModelByIdPlanModel(
-    @RequestParam("id-plan-model") final Long idPlanModel,
-    @RequestHeader("Authorization") final String authorization
+    @RequestParam("id-plan-model") final Long idPlanModel
   ) {
-    final GetCostAccountModelResponse response = this.getCostAccountModelByIdPlanModel.execute(idPlanModel, authorization);
+    final GetCostAccountModelResponse response = this.getCostAccountModelByIdPlanModel.execute(idPlanModel);
     return ResponseEntity.ok(ResponseBase.of(response));
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<ResponseBase<GetCostAccountModelResponse>> getCostAccountModel(
-    @PathVariable final Long id,
-    @RequestHeader("Authorization") final String authorization
+    @PathVariable final Long id
   ) {
-    final GetCostAccountModelResponse response = this.getCostAccountModel.execute(id, authorization);
+    final GetCostAccountModelResponse response = this.getCostAccountModel.execute(id);
     return ResponseEntity.ok(ResponseBase.of(response));
   }
 

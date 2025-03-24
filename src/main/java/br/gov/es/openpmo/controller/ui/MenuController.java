@@ -7,6 +7,7 @@ import br.gov.es.openpmo.dto.menu.PlanModelMenuResponse;
 import br.gov.es.openpmo.dto.menu.PortfolioMenuRequest;
 import br.gov.es.openpmo.dto.menu.PortfolioParentsResponse;
 import br.gov.es.openpmo.dto.menu.WorkpackMenuDto;
+import br.gov.es.openpmo.dto.menu.WorkpackMenuResultDto;
 import br.gov.es.openpmo.dto.menu.WorkpackModelParentsResponse;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.properties.GetSorterProperty;
@@ -74,7 +75,7 @@ public class MenuController {
     return ResponseEntity.ok(ResponseBaseItens.of(offices));
   }
 
-  @GetMapping("/portfolio")
+  @GetMapping("/portfolio-old")
   public ResponseEntity<ResponseBaseItens<WorkpackMenuDto>> indexPortfolio(
     @RequestParam("id-office") final Long idOffice,
     @RequestParam(value = "id-plan", required = false) final Long idPlan,
@@ -84,6 +85,25 @@ public class MenuController {
     final Long idUser = this.tokenService.getUserId(authorization);
     final Set<WorkpackMenuDto> portfolios = this.menuService
       .findAllPortfolio(new PortfolioMenuRequest(idOffice, idPlan, idUser));
+    GetSorterProperty.clear();
+
+    if (portfolios.isEmpty()) {
+      return ResponseEntity.noContent().build();
+    }
+
+    return ResponseEntity.ok(ResponseBaseItens.of(portfolios));
+  }
+
+  @GetMapping("/portfolio")
+  public ResponseEntity<ResponseBaseItens<WorkpackMenuResultDto>> indexPortfolio2(
+      @RequestParam("id-office") final Long idOffice,
+      @RequestParam(value = "id-plan") final Long idPlan,
+      @RequestHeader(name = "Authorization") final String authorization
+  ) {
+
+    final Long idUser = this.tokenService.getUserId(authorization);
+    final Set<WorkpackMenuResultDto> portfolios = this.menuService
+        .findAllPortfolioCached(new PortfolioMenuRequest(idOffice, idPlan, idUser));
     GetSorterProperty.clear();
 
     if (portfolios.isEmpty()) {

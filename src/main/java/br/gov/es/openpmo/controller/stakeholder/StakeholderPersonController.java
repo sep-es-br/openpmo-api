@@ -50,7 +50,7 @@ public class StakeholderPersonController {
     @RequestParam(name = "idPerson", required = false) final Long personId,
     @Authorization final String authorization
   ) {
-    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
+    this.canAccessService.ensureCanReadResourceWorkpack(idWorkpack, authorization);
     final Long idPerson = this.tokenService.getUserId(authorization);
     final StakeholderPersonDto personDto = this.stakeholderService.findPerson(idWorkpack, personId, idPerson);
     return personDto == null ?

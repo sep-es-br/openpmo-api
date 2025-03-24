@@ -1,156 +1,202 @@
 package br.gov.es.openpmo.service.baselines.calculators;
 
+import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_NOT_FOUND;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import br.gov.es.openpmo.dto.EntityDto;
+import br.gov.es.openpmo.dto.baselines.TripleConstraintDto;
+import br.gov.es.openpmo.dto.baselines.ccbmemberview.BaselineCostDetail;
+import br.gov.es.openpmo.dto.baselines.ccbmemberview.BaselineScheduleDetail;
+import br.gov.es.openpmo.dto.baselines.ccbmemberview.BaselineScopeDetail;
 import br.gov.es.openpmo.dto.baselines.ccbmemberview.CostDetailItem;
-import br.gov.es.openpmo.dto.baselines.ccbmemberview.ProposedAndCurrentValue;
 import br.gov.es.openpmo.dto.baselines.ccbmemberview.ScheduleDetailItem;
 import br.gov.es.openpmo.dto.baselines.ccbmemberview.ScheduleInterval;
 import br.gov.es.openpmo.dto.baselines.ccbmemberview.ScopeDetailItem;
 import br.gov.es.openpmo.dto.baselines.ccbmemberview.StepCollectedData;
 import br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintOutput;
-import br.gov.es.openpmo.dto.workpack.WorkpackName;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
-import br.gov.es.openpmo.model.relations.Consumes;
-import br.gov.es.openpmo.model.schedule.Schedule;
-import br.gov.es.openpmo.model.schedule.Step;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.BaselineRepository;
-import br.gov.es.openpmo.repository.ConsumesRepository;
-import br.gov.es.openpmo.repository.ScheduleRepository;
-import br.gov.es.openpmo.repository.WorkpackRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import java.math.BigDecimal;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
-
-import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_NOT_FOUND;
 
 @Component
 public class TripleConstraintsCalculator implements ITripleConstraintsCalculator {
 
+  private static final String DELIVERABLE = "Deliverable";
+  private static final String MILESTONE = "Milestone";
 
   private final BaselineRepository repository;
-  private final ConsumesRepository consumesRepository;
-  private final WorkpackRepository workpackRepository;
-  private final ScheduleRepository scheduleRepository;
-  private final IStepDataCollector stepDataCollector;
 
   @Autowired
   public TripleConstraintsCalculator(
-    final BaselineRepository repository,
-    final ConsumesRepository consumesRepository,
-    final WorkpackRepository workpackRepository,
-    final ScheduleRepository scheduleRepository,
-    final IStepDataCollector stepDataCollector
+    final BaselineRepository repository
   ) {
     this.repository = repository;
-    this.consumesRepository = consumesRepository;
-    this.workpackRepository = workpackRepository;
-    this.scheduleRepository = scheduleRepository;
-    this.stepDataCollector = stepDataCollector;
-  }
-
-  private static ScopeDetailItem buildScopeItem(
-    final Workpack master,
-    final String name,
-    final StepCollectedData stepCollectedData,
-    final String unitName,
-    final boolean hasPreviousBaseline
-  ) {
-    return new ScopeDetailItem(
-      master.getIcon(),
-      name,
-      unitName,
-      stepCollectedData,
-      hasPreviousBaseline
-    );
-  }
-
-  private static CostDetailItem buildCostItem(
-    final Workpack master,
-    final ProposedAndCurrentValue proposedAndCurrentValue,
-    final String name
-  ) {
-    return new CostDetailItem(
-      master.getIcon(),
-      name,
-      proposedAndCurrentValue.getCurrentValue(),
-      proposedAndCurrentValue.getProposedValue()
-    );
-  }
-
-  private static void addStepDataToCollector(
-    final StepCollectedData stepCollectedData,
-    final Collection<? extends Consumes> consumesProposed,
-    final Collection<? extends Consumes> consumesCurrent
-  ) {
-    stepCollectedData.work.addCurrentValue(getTotalPlannedWorkOfStep(consumesCurrent));
-    stepCollectedData.work.addProposedValue(getTotalPlannedWorkOfStep(consumesProposed));
-
-    stepCollectedData.cost.addCurrentValue(getTotalCostOfStep(consumesCurrent));
-    stepCollectedData.cost.addProposedValue(getTotalCostOfStep(consumesProposed));
-  }
-
-  private static BigDecimal getTotalPlannedWorkOfStep(final Collection<? extends Consumes> consumesProposed) {
-
-    if(consumesProposed.isEmpty()) {
-      return null;
-    }
-
-    BigDecimal acc = BigDecimal.ZERO;
-    for (Consumes consumes : consumesProposed) {
-      Step step = consumes.getStep();
-      BigDecimal plannedWork = step.getPlannedWork();
-      if (plannedWork != null) {
-        acc = acc.add(plannedWork);
-      }
-    }
-    return acc;
-  }
-
-  private static BigDecimal getTotalCostOfStep(final Collection<? extends Consumes> consumes) {
-    if(consumes.isEmpty()) {
-      return null;
-    }
-    BigDecimal acc = BigDecimal.ZERO;
-    for (Consumes consume : consumes) {
-      BigDecimal plannedCost = consume.getPlannedCost();
-      if (plannedCost != null) {
-        acc = acc.add(plannedCost);
-      }
-    }
-    return acc;
   }
 
   @Override
   public TripleConstraintOutput calculate(final Long idBaseline) {
     final Workpack master = this.findProjectMasterOfBaseline(idBaseline);
 
-    final boolean isCancelationBaseline = this.isCancelationBaseline(idBaseline);
+    boolean isCancelationBaseline = this.isCancelationBaseline(idBaseline);
 
     final Long idBaselineReference = this.findPreviousBaseline(idBaseline, master)
-      .map(Baseline::getId)
-      .orElse(null);
+                                         .map(Baseline::getId)
+                                         .orElse(null);
+    final boolean hasPreviousBaseline = idBaselineReference != null;
 
-    final Set<Workpack> masterDeliverables = this.findDeliverablesChildrensId(master);
+    List<TripleConstraintDto> proposed = isCancelationBaseline ? getTripleConstraintDtoMaster(idBaseline) : getTripleConstraintDto(idBaseline);
+    List<TripleConstraintDto> current = null;
+    if (hasPreviousBaseline) {
+      current = getTripleConstraintDto(idBaselineReference);
+    }
+    List<Long> ids = new ArrayList<>(0);
+    List<EntityDto> unityMeasure = new ArrayList<>(0);
+    if (CollectionUtils.isNotEmpty(proposed)) {
+      ids.addAll(proposed.stream().filter(p -> DELIVERABLE.equals(p.getType())).map(
+          TripleConstraintDto::getIdWorkpack).collect(Collectors.toList()));
+    }
+    if (!ids.isEmpty()) {
+      unityMeasure.addAll(repository.findUnitMeasureNameOfDeliverableWorkpack(ids));
+    }
 
-    return this.buildCostDetail(
-      masterDeliverables,
-      idBaseline,
-      idBaselineReference,
-      isCancelationBaseline
-    );
+    return this.buildCostDetail(unityMeasure, proposed, current, hasPreviousBaseline);
+  }
+
+  private TripleConstraintOutput buildCostDetail(final List<EntityDto> unityMeasure
+      , final List<TripleConstraintDto> proposed, final List<TripleConstraintDto> current, final boolean hasPreviousBaseline) {
+    BaselineCostDetail costDetail = getBaselineCostDetail(proposed, current);
+    BaselineScheduleDetail scheduleDetail = getBaselineScheduleDetail(proposed, current);
+    BaselineScopeDetail scopeDetail = getBaselineScopeDetail(unityMeasure, proposed, current, hasPreviousBaseline);
+    return new TripleConstraintOutput(costDetail, scheduleDetail, scopeDetail);
+  }
+
+  private BaselineScopeDetail getBaselineScopeDetail(final List<EntityDto> unitiesMeasure
+      , final List<TripleConstraintDto> proposed, final  List<TripleConstraintDto> current, final boolean hasPreviousBaseline) {
+    BaselineScopeDetail detail = new BaselineScopeDetail();
+    proposed.forEach(p -> {
+      StepCollectedData data = new StepCollectedData();
+      if (DELIVERABLE.equals(p.getType())) {
+        EntityDto unitMeasure = unitiesMeasure.stream().filter(u -> u.getId().equals(p.getIdWorkpack())).findFirst().orElse(null);
+        String unityName = unitMeasure != null ? unitMeasure.getName() : "";
+        data.cost.addProposedValue(p.getSumPlannedCost());
+        data.work.addProposedValue(p.getSumPlannedWork());
+        if (CollectionUtils.isNotEmpty(current)) {
+          TripleConstraintDto currentDto = current.stream().filter(c -> c.getIdWorkpack().equals(p.getIdWorkpack())).findFirst().orElse(null);
+          if (currentDto != null) {
+            data.cost.addCurrentValue(currentDto.getSumPlannedCost());
+            data.work.addCurrentValue(currentDto.getSumPlannedWork());
+          }
+        }
+        detail.addDetail(new ScopeDetailItem(p.getFontIcon(), p.getName(), unityName, data, hasPreviousBaseline));
+      }
+
+    });
+    return detail;
+  }
+
+  private BaselineScheduleDetail getBaselineScheduleDetail(List<TripleConstraintDto> proposed, List<TripleConstraintDto> current) {
+    BaselineScheduleDetail detail = new BaselineScheduleDetail();
+    proposed.forEach(p -> {
+      if (DELIVERABLE.equals(p.getType())) {
+        ScheduleInterval proposedIntervalDate = new ScheduleInterval(p.getStart(), p.getEnd());
+        ScheduleInterval currentIntervalDate = null;
+
+        if (CollectionUtils.isNotEmpty(current)) {
+          TripleConstraintDto currentDto = current.stream().filter(c -> c.getIdWorkpack().equals(p.getIdWorkpack())).findFirst().orElse(null);
+          if (currentDto != null) {
+            currentIntervalDate = new ScheduleInterval(currentDto.getStart(), currentDto.getEnd());
+          }
+        }
+        ScheduleDetailItem item = new ScheduleDetailItem(p.getFontIcon(), p.getName(), proposedIntervalDate, currentIntervalDate);
+        detail.addScheduleItem(item);
+      }
+      if (MILESTONE.equals(p.getType())) {
+        ScheduleInterval proposedIntervalDate = new ScheduleInterval(p.getDate().toLocalDate(), p.getDate().toLocalDate());
+        ScheduleInterval currentIntervalDate = null;
+        if (CollectionUtils.isNotEmpty(current)) {
+          TripleConstraintDto currentDto = current.stream().filter(c -> c.getIdWorkpack().equals(p.getIdWorkpack())).findFirst().orElse(null);
+          if (currentDto != null) {
+            currentIntervalDate = new ScheduleInterval(currentDto.getDate().toLocalDate(), currentDto.getDate().toLocalDate());
+          }
+        }
+        ScheduleDetailItem item = new ScheduleDetailItem(p.getFontIcon(), p.getName(), proposedIntervalDate, currentIntervalDate);
+        detail.addScheduleItem(item);
+
+      }
+    });
+    return detail;
+  }
+
+  private BaselineCostDetail getBaselineCostDetail(final List<TripleConstraintDto> proposed, final List<TripleConstraintDto> current) {
+    BaselineCostDetail detail = new BaselineCostDetail();
+    if (CollectionUtils.isNotEmpty(proposed)) {
+      proposed.stream().filter(pr -> DELIVERABLE.equals(pr.getType())).forEach(p -> {
+        BigDecimal proposedCost = p.getSumPlannedCost();
+        BigDecimal currentCost = null;
+        if (CollectionUtils.isNotEmpty(current)) {
+          TripleConstraintDto currentDto = current.stream().filter(c -> c.getIdWorkpack().equals(p.getIdWorkpack())).findFirst().orElse(null);
+          if (currentDto != null) {
+            currentCost = currentDto.getSumPlannedCost();
+          }
+        }
+        detail.addDetail(new CostDetailItem(p.getFontIcon(), p.getName(), currentCost, proposedCost));
+      });
+    }
+    return detail;
+  }
+
+  private List<TripleConstraintDto> getTripleConstraintDto(final Long idBaseline) {
+    if (idBaseline == null) return new ArrayList<>(0);
+    final List<TripleConstraintDto> list = repository.findAllTripleConstraintSnapshot(idBaseline);
+
+    final List<TripleConstraintDto> listScheduleAndPlannedWork = repository.findAllTripleConstraintSnapshotScheduleAndPlannedWork(idBaseline);
+    listScheduleAndPlannedWork.forEach(
+        work -> list.stream().filter(tri -> tri.getIdWorkpack().equals(work.getIdWorkpack())).findFirst().ifPresent(
+            t -> {
+              t.setEnd(work.getEnd());
+              t.setStart(work.getStart());
+              t.setSumPlannedWork(work.getSumPlannedWork());
+            }));
+
+    final List<TripleConstraintDto> listCost = repository.findAllTripleConstraintSnapshotScheduleAndPlannedCost(idBaseline);
+    listCost.forEach(
+        cost -> list.stream().filter(tri -> tri.getIdWorkpack().equals(cost.getIdWorkpack())).findFirst().ifPresent(
+            t -> t.setSumPlannedCost(cost.getSumPlannedCost())));
+    return list;
+  }
+
+  private List<TripleConstraintDto> getTripleConstraintDtoMaster(final Long idBaseline) {
+    if (idBaseline == null) return new ArrayList<>(0);
+    final List<TripleConstraintDto> list = repository.findAllTripleConstraint(idBaseline);
+
+    final List<TripleConstraintDto> listScheduleAndPlannedWork = repository.findAllTripleConstraintScheduleAndPlannedWork(idBaseline);
+    listScheduleAndPlannedWork.forEach(
+        work -> list.stream().filter(tri -> tri.getIdWorkpack().equals(work.getIdWorkpack())).findFirst().ifPresent(
+            t -> {
+              t.setEnd(work.getEnd());
+              t.setStart(work.getStart());
+              t.setSumPlannedWork(work.getSumPlannedWork());
+            }));
+
+    final List<TripleConstraintDto> listCost = repository.findAllTripleConstraintScheduleAndPlannedCost(idBaseline);
+    listCost.forEach(
+        cost -> list.stream().filter(tri -> tri.getIdWorkpack().equals(cost.getIdWorkpack())).findFirst().ifPresent(
+            t -> t.setSumPlannedCost(cost.getSumPlannedCost())));
+    return list;
   }
 
   private boolean isCancelationBaseline(final Long idBaseline) {
     return this.repository.isCancelBaseline(idBaseline);
-  }
-
-  private Set<Workpack> findDeliverablesChildrensId(final Workpack master) {
-    return this.repository.findDeliverableWorkpacksOfProjectMaster(master.getId());
   }
 
   private Optional<Baseline> findPreviousBaseline(
@@ -161,208 +207,8 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
   }
 
   private Workpack findProjectMasterOfBaseline(final Long idBaseline) {
-    return this.repository.findWorkpackByBaselineId(idBaseline)
+    return this.repository.findWorkpackByBaselineIdThin(idBaseline)
       .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
-  }
-
-  private TripleConstraintOutput buildCostDetail(
-    final Iterable<? extends Workpack> masterDeliverables,
-    final Long idBaseline,
-    final Long idBaselineReference,
-    final boolean isCancelationBaseline
-  ) {
-    final TripleConstraintOutput output = new TripleConstraintOutput();
-
-    for(final Workpack master : masterDeliverables) {
-      final Optional<Schedule> maybeSchedule = this.scheduleRepository.findScheduleByWorkpackId(master.getId());
-
-      if(!maybeSchedule.isPresent()) continue;
-
-      if(isCancelationBaseline) {
-        this.addItemOfWorkpack(
-          master,
-          idBaselineReference,
-          maybeSchedule.get(),
-          output
-        );
-      }
-      else {
-        this.addItemOfBaseline(
-          idBaseline,
-          idBaselineReference,
-          master,
-          maybeSchedule.get(),
-          output
-        );
-      }
-
-    }
-
-    return output;
-  }
-
-  private void addItemOfWorkpack(
-    final Workpack master,
-    final Long idBaselineReference,
-    final Schedule schedule,
-    final TripleConstraintOutput tripleConstraint
-  ) {
-    if(master.isDeleted()) return;
-
-    final String name = this.findWorkpackName(master);
-
-    final StepCollectedData stepCollectedData = this.collectStepDataOfMaster(
-      idBaselineReference,
-      schedule.getSteps()
-    );
-
-    if(stepCollectedData.isNull()) return;
-
-    final ScheduleInterval proposedInterval = ScheduleInterval.ofSchedule(schedule);
-    final ScheduleInterval currentInterval = this.findSnapshotOfScheduleAsScheduleInterval(
-      idBaselineReference,
-      schedule
-    );
-
-    tripleConstraint.addScheduleDetail(new ScheduleDetailItem(
-      master.getIcon(),
-      name,
-      proposedInterval,
-      currentInterval
-    ));
-    this.addCostAndScopeItem(master, tripleConstraint, name, stepCollectedData, idBaselineReference != null);
-  }
-
-  private void addCostAndScopeItem(
-    final Workpack master,
-    final TripleConstraintOutput tripleConstraint,
-    final String name,
-    final StepCollectedData stepCollectedData,
-    final boolean hasPreviousBaseline
-  ) {
-    final CostDetailItem costItem = buildCostItem(master, stepCollectedData.cost, name);
-    tripleConstraint.addCostDetail(costItem);
-
-    final String unitName = this.findUnitMeasureOfWorkpack(master);
-    final ScopeDetailItem scopeItem = buildScopeItem(
-      master,
-      name,
-      stepCollectedData,
-      unitName,
-      hasPreviousBaseline
-    );
-    tripleConstraint.addScopeDetail(scopeItem);
-  }
-
-  private String findUnitMeasureOfWorkpack(final Workpack master) {
-    return this.workpackRepository.findUnitMeasureNameOfDeliverableWorkpack(master.getId())
-      .orElse(null);
-  }
-
-  private String findWorkpackName(final Workpack deliverable) {
-    return this.workpackRepository.findWorkpackNameAndFullname(deliverable.getId())
-      .map(WorkpackName::getName)
-      .orElse("");
-  }
-
-  private ScheduleInterval findSnapshotOfScheduleAsScheduleInterval(
-    final Long idBaseline,
-    final Schedule master
-  ) {
-    return this.scheduleRepository.findSnapshotByMasterIdAndBaselineId(master.getId(), idBaseline)
-      .map(ScheduleInterval::ofSchedule)
-      .orElse(null);
-  }
-
-  private StepCollectedData collectStepDataOfMaster(
-    final Long idBaselineReference,
-    final Iterable<? extends Step> steps
-  ) {
-
-    final StepCollectedData stepCollectedData = new StepCollectedData();
-
-    for(final Step stepMaster : steps) {
-
-      final Set<Consumes> consumesProposed = stepMaster.getConsumes();
-
-      final Set<Consumes> consumesCurrent = this.findConsumesSnapshotByStepMasterAndBaselineId(
-        idBaselineReference,
-        stepMaster
-      );
-      addStepDataToCollector(stepCollectedData, consumesProposed, consumesCurrent);
-    }
-    return stepCollectedData;
-  }
-
-  private Set<Consumes> findConsumesSnapshotByStepMasterAndBaselineId(
-    final Long idBaseline,
-    final Step stepMaster
-  ) {
-    return this.consumesRepository.findAllSnapshotConsumesOfStepMaster(
-      idBaseline,
-      stepMaster.getId()
-    );
-  }
-
-  private void addItemOfBaseline(
-    final Long idBaseline,
-    final Long idBaselineReference,
-    final Workpack master,
-    final Schedule masterSchedule,
-    final TripleConstraintOutput tripleConstraint
-  ) {
-    final String name = this.findWorkpackName(master);
-
-    final StepCollectedData stepCollectedData = this.stepDataCollector.collect(
-      idBaseline,
-      idBaselineReference,
-      masterSchedule.getId()
-    );
-
-    if(stepCollectedData.isNull()) return;
-
-    final ScheduleDetailItem scheduleItem = this.buildScheduleItemOfBaseline(
-      idBaseline,
-      idBaselineReference,
-      master,
-      name,
-      masterSchedule
-    );
-
-    tripleConstraint.addScheduleDetail(scheduleItem);
-
-    this.addCostAndScopeItem(
-      master,
-      tripleConstraint,
-      name,
-      stepCollectedData,
-      idBaselineReference != null
-    );
-  }
-
-  private ScheduleDetailItem buildScheduleItemOfBaseline(
-    final Long idBaseline,
-    final Long idBaselineReference,
-    final Workpack master,
-    final String name,
-    final Schedule masterSchedule
-  ) {
-    final ScheduleInterval proposedInterval = this.findSnapshotOfScheduleAsScheduleInterval(
-      idBaseline,
-      masterSchedule
-    );
-
-    final ScheduleInterval currentInterval = this.findSnapshotOfScheduleAsScheduleInterval(
-      idBaselineReference,
-      masterSchedule
-    );
-
-    return new ScheduleDetailItem(
-      master.getIcon(),
-      name,
-      proposedInterval,
-      currentInterval
-    );
   }
 
 }

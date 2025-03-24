@@ -11,9 +11,16 @@ import br.gov.es.openpmo.dto.costaccount.CostDto;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.workpack.CostAccountService;
+import br.gov.es.openpmo.utils.RestTemplateUtils;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import io.swagger.annotations.Api;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,9 +31,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
 import javax.validation.Valid;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Api
 @RestController
@@ -36,6 +46,22 @@ public class CostAccountController {
 
   private final CostAccountService costAccountService;
   private final ICanAccessService canAccessService;
+
+  @Value("${pentaho.api.uo.url}")
+  private String uoUrl;
+
+  @Value("${pentaho.api.po.url}")
+  private String poUrl;
+
+  @Value("${pentahoBI.userId}")
+  private String pentahoUserId;
+
+  @Value("${pentahoBI.password}")
+  private String pentahoPassword;
+
+  private final RestTemplateUtils restTemplateUtils = new RestTemplateUtils();
+
+  private final Logger logger = LogManager.getLogger(CostAccountController.class);
 
   @Autowired
   public CostAccountController(
@@ -53,7 +79,7 @@ public class CostAccountController {
     @RequestParam(required = false) final String term,
     @Authorization final String authorization
   ) {
-    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
+    this.canAccessService.ensureCanReadResourceWorkpack(idWorkpack, authorization);
     final List<CostAccountDto> costs = this.costAccountService.findAllByIdWorkpack(idWorkpack, idFilter, term);
     if (costs.isEmpty()) {
       return ResponseEntity.noContent().build();
@@ -67,7 +93,7 @@ public class CostAccountController {
     @RequestParam("id-workpack") final Long idWorkpack,
     @Authorization final String authorization
   ) {
-    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
+    this.canAccessService.ensureCanReadResourceWorkpack(idWorkpack, authorization);
     final CostDto costDto = this.costAccountService.getCost(id, idWorkpack);
     if (costDto == null) {
       return ResponseEntity.noContent().build();
@@ -113,4 +139,79 @@ public class CostAccountController {
     return ResponseEntity.ok().build();
   }
 
+  /**
+   * Método responsável pela requisição ao Pentaho
+   * @param idCostAccount
+   * @param authorization
+   * @return Lista com todas as UOs
+   */
+  @GetMapping("/pentaho/budgetUnit/{idCostAccount}")
+  public ResponseEntity<Object> getUO(@PathVariable("idCostAccount") Long idCostAccount,
+                                      @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(idCostAccount, authorization);
+
+    RestTemplate restTemplate;
+    try {
+      restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
+    } catch (Exception e) {
+      logger.error("Erro ao realizar requisição ao Pentaho: {}", e.getMessage(), e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao configurar o RestTemplate para a URL " + uoUrl);
+    }
+    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+
+    try {
+      CompletableFuture<JsonNode> futureResponse = restTemplateUtils.createRequestWithAuth(
+              restTemplate,
+              uoUrl,
+              pentahoUserId,
+              pentahoPassword
+      );
+      JsonNode response = futureResponse.join();
+
+      return ResponseEntity.ok(response);
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+    }
+
+  }
+
+  /**
+   * Método responsável pela requisição ao Pentaho
+   * @param codUo
+   * @param idCostAccount
+   * @param authorization
+   * @return Lista de POs dado uma UO
+   */
+  @GetMapping("/pentaho/budgetPlan")
+  public ResponseEntity<Object> getPO(@RequestParam("codUo") String codUo,
+                                      @RequestParam("costAccountId") Long idCostAccount,
+                                      @Authorization final String authorization) {
+
+    this.canAccessService.ensureCanReadResource(idCostAccount, authorization);
+
+    RestTemplate restTemplate;
+    try {
+      restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
+    } catch (Exception e) {
+      logger.error("Erro ao realizar requisição ao Pentaho: {}", e.getMessage(), e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao configurar o RestTemplate para a URL " + poUrl);
+    }
+
+    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+
+    String url = poUrl + codUo;
+
+    try {
+      CompletableFuture<JsonNode> futureResponse = restTemplateUtils.createRequestWithAuth(restTemplate,
+              url,
+              pentahoUserId,
+              pentahoPassword
+      );
+      JsonNode response = futureResponse.join();
+      return ResponseEntity.ok(response);
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+    }
+  }
 }

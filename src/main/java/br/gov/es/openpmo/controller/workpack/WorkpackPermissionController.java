@@ -42,7 +42,7 @@ public class WorkpackPermissionController {
     @PathVariable(value = "id-workpack") final Long idWorkpack,
     @RequestParam(value = "id-plan", required = false) final Long idPlan
   ) {
-    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
+    this.canAccessService.ensureCanReadResourceWorkpack(idWorkpack, authorization);
     final Long idUser = this.tokenService.getUserId(authorization);
 
     final WorkpackPermissionResponse response = this.getWorkpackPermissions.execute(idUser, idWorkpack, idPlan);

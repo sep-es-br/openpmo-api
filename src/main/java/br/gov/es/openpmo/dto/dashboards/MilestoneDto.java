@@ -3,6 +3,7 @@ package br.gov.es.openpmo.dto.dashboards;
 import br.gov.es.openpmo.model.workpacks.Milestone;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,6 +14,8 @@ public class MilestoneDto {
   private Boolean completed;
   private LocalDate milestoneDate;
   private LocalDate snapshotDate;
+  private LocalDateTime date;
+
 
   public static MilestoneDto of(Milestone milestone) {
     final MilestoneDto milestoneDto = new MilestoneDto();
@@ -86,5 +89,13 @@ public class MilestoneDto {
 
   public void setCompleted(Boolean completed) {
     this.completed = completed;
+  }
+
+  public LocalDateTime getDate() {
+    return date;
+  }
+
+  public void setDate(LocalDateTime date) {
+    this.date = date;
   }
 }

@@ -1,6 +1,8 @@
 package br.gov.es.openpmo.service.workpack;
 
 import br.gov.es.openpmo.configuration.properties.AppProperties;
+import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
+import br.gov.es.openpmo.dto.menu.PlanWorkpackDto;
 import br.gov.es.openpmo.dto.plan.PlanDto;
 import br.gov.es.openpmo.dto.workpack.CurrencyDto;
 import br.gov.es.openpmo.dto.workpack.DateDto;
@@ -30,8 +32,6 @@ import br.gov.es.openpmo.dto.workpack.ToggleDto;
 import br.gov.es.openpmo.dto.workpack.UnitSelectionDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackDetailDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackDetailParentDto;
-import br.gov.es.openpmo.dto.workpack.WorkpackName;
-import br.gov.es.openpmo.dto.workpack.WorkpackNameResponse;
 import br.gov.es.openpmo.dto.workpack.WorkpackParamDto;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.Entity;
@@ -97,8 +97,10 @@ import br.gov.es.openpmo.service.office.UnitMeasureService;
 import br.gov.es.openpmo.service.office.plan.PlanService;
 import br.gov.es.openpmo.service.properties.PropertyModelService;
 import br.gov.es.openpmo.service.properties.PropertyService;
-import br.gov.es.openpmo.service.ui.BreadcrumbWorkpackHelper;
+import br.gov.es.openpmo.utils.ApplicationCacheUtil;
 import br.gov.es.openpmo.utils.ApplicationMessage;
+import br.gov.es.openpmo.utils.DashboardCacheUtil;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -111,6 +113,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -150,7 +153,7 @@ import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_
 import static java.lang.Boolean.TRUE;
 
 @Service
-public class WorkpackService implements BreadcrumbWorkpackHelper {
+public class WorkpackService {
 
   private static final String TYPE_NAME_PORTFOLIO = "br.gov.es.openpmo.model.workpacks.Portfolio";
 
@@ -202,9 +205,9 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
 
   private final AppProperties appProperties;
 
-  private final GetWorkpackName getWorkpackName;
-
   private final PropertyRepository propertyRepository;
+  private final  ApplicationCacheUtil cacheUtil;
+  private final DashboardCacheUtil dashboardCacheUtil;
 
   @Autowired
   public WorkpackService(
@@ -227,7 +230,8 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final HasScheduleSessionActive hasScheduleSessionActive,
     final MilestoneRepository milestoneRepository,
     final AppProperties appProperties,
-    final GetWorkpackName getWorkpackName,
+    final  ApplicationCacheUtil cacheUtil,
+    final DashboardCacheUtil dashboardCacheUtil,
     final PropertyRepository propertyRepository
   ) {
     this.workpackModelService = workpackModelService;
@@ -249,9 +253,19 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     this.hasScheduleSessionActive = hasScheduleSessionActive;
     this.milestoneRepository = milestoneRepository;
     this.appProperties = appProperties;
-    this.getWorkpackName = getWorkpackName;
     this.propertyRepository = propertyRepository;
+    this.dashboardCacheUtil = dashboardCacheUtil;
+    this.cacheUtil = cacheUtil;
   }
+
+  public List<PlanWorkpackDto> findAllMappedByPlanWithPermission(Long idOffice, Long idPerson) {
+    return workpackRepository.findAllMappedByPlanWithPermission(idOffice, idPerson);
+  }
+
+  public void setWorkpackPublicShared(final Long idWorkpack, final Boolean sharedPublicStatus, final String level) {
+    workpackRepository.setSharedPublicStatus(idWorkpack, sharedPublicStatus, level);
+  }
+
 
   private static void addSharedWith(
     final Workpack workpack,
@@ -279,7 +293,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     detailDto.setSharedWith(workpackSharedWith != null && !workpackSharedWith.isEmpty());
   }
 
-  private static void validateWorkpack(final Workpack workpack) {
+   private static void validateWorkpack(final Workpack workpack) {
     final Collection<PropertyModel> models = new HashSet<>();
     switch (workpack.getClass().getTypeName()) {
       case TYPE_NAME_PORTFOLIO:
@@ -531,7 +545,9 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
         workpackLinked
       );
       if (!StringUtils.hasText(term) && Objects.nonNull(idWorkpackModel) && !workpacks.isEmpty()) {
-        this.sortByWorkpackModel(workpacks, workpacks.get(0).getWorkpackModelInstance());
+        WorkpackModel workpackModelInstance = workpacks.get(0).getWorkpackModelInstance() != null ? workpacks.get(0).getWorkpackModelInstance() :
+                workpacks.get(0).getLinkedWorkpackModel(idWorkpackModel).orElse(null);
+        this.sortByWorkpackModel(workpacks,  workpackModelInstance);
       }
       return workpacks;
     }
@@ -643,6 +659,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
       term,
       searchCutOffScore
     );
+
     if (!workpacks.isEmpty() && !StringUtils.hasText(term) && Objects.nonNull(idWorkpackModel)) {
       this.sortByWorkpackModel(workpacks, workpacks.get(0).getWorkpackModelInstance());
     }
@@ -650,22 +667,38 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
   }
 
   private void sortByWorkpackModel(final List<Workpack> workpacks, WorkpackModel workpackModel) {
-    if (workpackModel != null && workpackModel.getSortBy() != null) {
-      workpacks.sort((first, second) -> PropertyComparator.compare(
-        getValueProperty(
-          first,
-          workpackModel.getSortBy()
-        ),
-        getValueProperty(
-          second,
-          workpackModel.getSortBy()
-        )
-      ));
+    if (workpackModel != null) {
+      WorkpackModel model = workpackModelService.findById(workpackModel.getId());
+      if (model.getSortBy() != null) {
+        workpacks.sort((first, second) -> PropertyComparator.compare(
+            getValueProperty(
+                first,
+                model.getSortBy()
+            ),
+            getValueProperty(
+                second,
+                model.getSortBy()
+            )
+        ));
+        return;
+      }
+      if (!StringUtils.isEmpty(model.getSortByField())) {
+        switch (model.getSortByField()) {
+          case "name":
+            workpacks.sort(Comparator.comparing(Workpack::getName, Comparator.nullsLast(Comparator.naturalOrder())));
+            break;
+          case "fullName":
+            workpacks.sort(Comparator.comparing(Workpack::getFullName, Comparator.nullsLast(Comparator.naturalOrder())));
+            break;
+          case "date":
+            workpacks.sort(Comparator.comparing(Workpack::getDate, Comparator.nullsLast(Comparator.naturalOrder())));
+            break;
+          default:
+            break;
+        }
+      }
     }
-  }
 
-  public void saveDefault(final Workpack workpack) {
-    this.workpackRepository.save(workpack);
   }
 
   public Workpack findById(final Long id) {
@@ -673,42 +706,59 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
       .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
   }
 
-  public Optional<Workpack> maybeFindById(final Long id) {
-    return this.workpackRepository.findByIdWorkpack(id);
+  public Optional<Workpack> mayeFindById(final Long id) {
+    return this.workpackRepository.findByIdThin(id);
   }
 
   public Workpack update(final Workpack workpack) {
     final Long workpackId = workpack.getId();
     final Workpack workpackUpdate = this.findById(workpackId);
+    if (workpackUpdate.getProperties() == null){
+      workpackUpdate.setProperties(new HashSet<>(0));
+    }
     final Set<Property> propertiesToUpdate = workpackUpdate.getProperties();
     final Set<Property> properties = workpack.getProperties();
     this.verifyForPropertiesToDelete(
       propertiesToUpdate,
       properties
     );
-    final Predicate<Long> dateHasChanged = this.verifyForPropertiesToUpdate(
+    this.verifyForPropertiesToUpdate(
       workpack,
-      () -> workpackUpdate.setProperties(new HashSet<>()),
       propertiesToUpdate,
       properties
     );
     validateWorkpack(workpackUpdate);
-    final Workpack savedWorkpack = this.workpackRepository.save(workpackUpdate, 2);
+    workpackUpdate.setName(workpack.getName());
+    workpackUpdate.setFullName(workpack.getFullName());
     if (workpack instanceof Milestone) {
-      final boolean concluded = this.milestoneRepository.isConcluded(workpackId);
-      final boolean onActualBaseline = this.milestoneRepository.isOnActualBaseline(workpackId);
-      savedWorkpack.setReasonRequired(!concluded && onActualBaseline && dateHasChanged.test(workpackId));
-    } else {
-      savedWorkpack.setReasonRequired(false);
+      final LocalDate newDate = workpack.getDate().toLocalDate();
+      final LocalDate previousDate = workpackUpdate.getDate().toLocalDate();
+      workpackUpdate.setDate(workpack.getDate());
+      workpackUpdate.setNewDate(newDate);
+      workpackUpdate.setPreviousDate(previousDate);
     }
-    savedWorkpack.setNewDate(workpack.getNewDate());
-    savedWorkpack.setPreviousDate(workpack.getPreviousDate());
+    final Workpack savedWorkpack = this.workpackRepository.save(workpackUpdate, 3);
+
+    if (workpack instanceof Milestone) {
+      savedWorkpack.setReasonRequired(false);
+      if (!savedWorkpack.getPreviousDate().isEqual(savedWorkpack.getNewDate())) {
+        final LocalDateTime baselineDate = getBaselineDate(workpack.getId());
+        if (baselineDate != null && !savedWorkpack.getNewDate().isEqual(baselineDate.toLocalDate())) {
+          savedWorkpack.setReasonRequired(true);
+        }
+      }
+    }
+    this.cacheUtil.loadAllCache();
     return savedWorkpack;
+  }
+
+  private LocalDateTime getBaselineDate(Long idMilestone) {
+    return milestoneRepository.fetchMilestoneBaselineDate(idMilestone)
+            .orElse(null);
   }
 
   private Predicate<Long> verifyForPropertiesToUpdate(
     final Workpack workpack,
-    final Runnable createPropertyList,
     final Collection<Property> propertiesToUpdate,
     final Collection<? extends Property> properties
   ) {
@@ -718,9 +768,6 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     Predicate<Long> hasAnyDateChanged = alwaysFalse -> false;
     for (final Property property : properties) {
       if (property.getId() == null) {
-        if (propertiesToUpdate == null) {
-          createPropertyList.run();
-        }
         Objects.requireNonNull(
           propertiesToUpdate,
           "Propriedades para atualizar são nulas!"
@@ -855,6 +902,9 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
       case TYPE_MODEL_NAME_GROUP:
         final Group groupToUpdate = (Group) propertyToUpdate;
         final Group group = (Group) property;
+        if (groupToUpdate.getGroupedProperties() == null) {
+          groupToUpdate.setGroupedProperties(new HashSet<>());
+        }
         final Set<Property> groupedPropertiesToUpdate = groupToUpdate.getGroupedProperties();
         final Set<Property> groupedProperties = group.getGroupedProperties();
         this.verifyForPropertiesToDelete(
@@ -863,7 +913,6 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
         );
         this.verifyForPropertiesToUpdate(
           null,
-          () -> groupToUpdate.setGroupedProperties(new HashSet<>()),
           groupedPropertiesToUpdate,
           groupedProperties
         );
@@ -877,13 +926,18 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
       .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
   }
 
-  public Workpack findByIdWithParent(final Long id) {
-    return this.workpackRepository.findByIdWithParent(id)
-      .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
+  public Workpack findByIdWithAllChildren(final Long id) {
+    return this.workpackRepository.findByIdWithAllChildren(id)
+            .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
   }
 
+  public List<Long> findIdsWorkpacksChildren(final List<Long> ids) {
+    return this.workpackRepository.idsWorkpacksChildren(ids);
+  }
+
+
   public Optional<Workpack> maybeFindByIdWithParent(final Long id) {
-    return this.workpackRepository.findByIdWithParent(id);
+    return this.workpackRepository.findByIdThin(id);
   }
 
   public WorkpackDetailDto getWorkpackDetailDto(final Workpack workpack) {
@@ -898,7 +952,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
       propertySet = new HashSet<>(workpack.getProperties());
       workpack.setProperties(null);
     }
-    final WorkpackDetailDto detailDto = this.convertWorkpackDetailDto(workpack);
+    final WorkpackDetailDto detailDto = this.convertWorkpackDetailDto(workpack, true);
     if (detailDto != null) {
       final PlanDto plan = this.findNotLinkedBelongsTo(workpack);
       detailDto.setPlan(plan);
@@ -911,20 +965,51 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     }
     workpack.setChildren(child);
     workpack.setProperties(propertySet);
+    detailDto.setName(workpack.getName());
+    detailDto.setFullName(workpack.getFullName());
+    detailDto.setDate(workpack.getDate());
     return detailDto;
   }
 
-  public WorkpackDetailParentDto getWorkpackDetailParentDto(final Workpack workpack) {
+  public WorkpackDetailDto getWorkpackDetailDtoThin(final Workpack workpack) {
     Set<Workpack> child = null;
     Set<Property> propertySet = null;
+    List<? extends PropertyDto> properties = null;
     if (workpack.getChildren() != null) {
       child = new HashSet<>(workpack.getChildren());
     }
     if (workpack.getProperties() != null && !(workpack.getProperties()).isEmpty()) {
+      properties = this.getPropertiesDto(workpack.getProperties());
       propertySet = new HashSet<>(workpack.getProperties());
       workpack.setProperties(null);
     }
-    final WorkpackDetailParentDto detailDto = this.convertWorkpackDetailParentDto(workpack);
+    final WorkpackDetailDto detailDto = this.convertWorkpackDetailDto(workpack, false);
+    if (detailDto != null) {
+      final PlanDto plan = this.findNotLinkedBelongsTo(workpack);
+      detailDto.setPlan(plan);
+      detailDto.setHasChildren(child != null && !child.isEmpty());
+      detailDto.setProperties(properties);
+      addSharedWith(
+          workpack,
+          detailDto
+      );
+    }
+    workpack.setChildren(child);
+    workpack.setProperties(propertySet);
+    detailDto.setName(workpack.getName());
+    detailDto.setFullName(workpack.getFullName());
+    detailDto.setDate(workpack.getDate());
+    return detailDto;
+  }
+
+  public DashboardMonthDto getDashboardMonthDto(Workpack workpack, Long idPlan) {
+    if (workpack instanceof Milestone) return null;
+    return dashboardCacheUtil.getDashboardMonthDto(workpack.getId(), workpack instanceof Deliverable, idPlan);
+  }
+
+
+  public WorkpackDetailParentDto getWorkpackDetailParentDto(final Workpack workpack, final Long idWorkpackModel) {
+    final WorkpackDetailParentDto detailDto = this.convertWorkpackDetailParentDto(workpack, idWorkpackModel);
     if (detailDto != null) {
       final PlanDto plan = this.findNotLinkedBelongsTo(workpack);
       detailDto.setPlan(plan);
@@ -933,16 +1018,10 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
         detailDto
       );
     }
-    workpack.setChildren(child);
-    workpack.setProperties(propertySet);
     return detailDto;
   }
 
-  public Optional<WorkpackName> findWorkpackNameAndFullname(final Long idWorkpack) {
-    return this.workpackRepository.findWorkpackNameAndFullname(idWorkpack);
-  }
-
-  private WorkpackDetailDto convertWorkpackDetailDto(final Workpack workpack) {
+  private WorkpackDetailDto convertWorkpackDetailDto(final Workpack workpack, boolean model) {
     WorkpackModel workpackModel = null;
     WorkpackDetailDto workpackDetailDto = null;
     final String typeName = workpack.getClass().getTypeName();
@@ -971,11 +1050,11 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
         workpackModel = ((Milestone) workpack).getInstance();
         workpackDetailDto = MilestoneDetailDto.of(workpack);
         this.milestoneService.addDate(
-          workpack.getId(),
+            (Milestone) workpack,
           (MilestoneDetailDto) workpackDetailDto
         );
         this.milestoneService.addStatus(
-          workpack.getId(),
+          workpack,
           (MilestoneDetailDto) workpackDetailDto
         );
         break;
@@ -983,7 +1062,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     if (workpackDetailDto != null) {
       workpackDetailDto.setCanceled(workpack.isCanceled());
       workpackDetailDto.setHasScheduleSectionActive(this.hasScheduleSectionActive(workpack));
-      if (workpackModel != null) {
+      if (workpackModel != null && model) {
         workpackDetailDto.setModel(this.workpackModelService.getWorkpackModelDetailWithoutChildren(workpackModel));
       }
       return workpackDetailDto;
@@ -991,40 +1070,36 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     return null;
   }
 
-  private WorkpackDetailParentDto convertWorkpackDetailParentDto(final Workpack workpack) {
+  private WorkpackDetailParentDto convertWorkpackDetailParentDto(final Workpack workpack, final Long idWorkpackModel) {
     WorkpackModel workpackModel = null;
     WorkpackDetailParentDto workpackDetailDto = null;
     final String typeName = workpack.getClass().getTypeName();
     switch (typeName) {
       case TYPE_NAME_PORTFOLIO:
-        workpackModel = ((Portfolio) workpack).getInstance();
+        workpackModel = ((Portfolio) workpack).getInstance() != null ? ((Portfolio) workpack).getInstance() : workpack.getLinkedWorkpackModel(idWorkpackModel).get();
         workpackDetailDto = PortfolioDetailParentDto.of(workpack);
         break;
       case TYPE_NAME_PROGRAM:
-        workpackModel = ((Program) workpack).getInstance();
+        workpackModel = ((Program) workpack).getInstance() != null ? ((Program) workpack).getInstance() : workpack.getLinkedWorkpackModel(idWorkpackModel).get();
         workpackDetailDto = ProgramDetailParentDto.of(workpack);
         break;
       case TYPE_NAME_ORGANIZER:
-        workpackModel = ((Organizer) workpack).getInstance();
+        workpackModel = ((Organizer) workpack).getInstance() != null ? ((Organizer) workpack).getInstance() : workpack.getLinkedWorkpackModel(idWorkpackModel).get();
         workpackDetailDto = OrganizerDetailParentDto.of(workpack);
         break;
       case TYPE_NAME_DELIVERABLE:
-        workpackModel = ((Deliverable) workpack).getInstance();
+        workpackModel = ((Deliverable) workpack).getInstance() != null ? ((Deliverable) workpack).getInstance() : workpack.getLinkedWorkpackModel(idWorkpackModel).get();
         workpackDetailDto = DeliverableDetailParentDto.of(workpack);
         break;
       case TYPE_NAME_PROJECT:
-        workpackModel = ((Project) workpack).getInstance();
+        workpackModel = ((Project) workpack).getInstance() != null ? ((Project) workpack).getInstance() : workpack.getLinkedWorkpackModel(idWorkpackModel).get();
         workpackDetailDto = ProjectDetailParentDto.of(workpack);
         break;
       case TYPE_NAME_MILESTONE:
-        workpackModel = ((Milestone) workpack).getInstance();
+        workpackModel = ((Milestone) workpack).getInstance() != null ? ((Milestone) workpack).getInstance() : workpack.getLinkedWorkpackModel(idWorkpackModel).get();
         workpackDetailDto = MilestoneDetailParentDto.of(workpack);
-        this.milestoneService.addDate(
-          workpack.getId(),
-          (MilestoneDetailParentDto) workpackDetailDto
-        );
         this.milestoneService.addStatus(
-          workpack.getId(),
+           workpack,
           (MilestoneDetailParentDto) workpackDetailDto
         );
         break;
@@ -1041,9 +1116,9 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
         workpackDetailDto.setIdWorkpackModel(workpackModel.getId());
         workpackDetailDto.setFontIcon(workpackModel.getFontIcon());
       }
-      final WorkpackNameResponse response = this.getWorkpackName.execute(workpack.getId());
-      workpackDetailDto.setName(response.getName());
-      workpackDetailDto.setFullName(response.getFullName());
+      workpackDetailDto.setName(workpack.getName());
+      workpackDetailDto.setFullName(workpack.getFullName());
+      workpackDetailDto.setDate(workpack.getDate());
       return workpackDetailDto;
     }
     return null;
@@ -1101,13 +1176,9 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     if (workpack.getChildren() != null && !(workpack.getChildren()).isEmpty()) {
       throw new NegocioException(WORKPACK_DELETE_RELATIONSHIP_ERROR);
     }
-    if (this.hasSnapshot(workpack)) {
-      this.updateWorkpackDeleteStatus(workpack);
-      return;
-    }
-    this.verifyForGroupedPropertiesToDelete(workpack.getProperties());
+    this.updateWorkpackDeleteStatus(workpack);
     this.journalDeleter.deleteJournalsByWorkpackId(workpack.getId());
-    this.workpackRepository.delete(workpack);
+    this.cacheUtil.loadAllCache();
   }
 
   private boolean hasSnapshot(final Workpack workpack) {
@@ -1116,7 +1187,8 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
 
   private void updateWorkpackDeleteStatus(final Workpack workpack) {
     workpack.setDeleted(true);
-    this.workpackRepository.save(workpack);
+    this.workpackRepository.setWorkpackDeleted(workpack.getId());
+    this.cacheUtil.loadAllCache();
   }
 
   private void verifyForGroupedPropertiesToDelete(final Collection<? extends Property> propertiesToDelete) {
@@ -1124,7 +1196,9 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     if (!groupedProperties.isEmpty()) {
       final Set<Property> groupedPropertiesToDelete = new HashSet<>();
       for (final Property property : groupedProperties) {
-        groupedPropertiesToDelete.addAll(((Group) property).getGroupedProperties());
+        if (((Group) property).getGroupedProperties() != null) {
+          groupedPropertiesToDelete.addAll(((Group) property).getGroupedProperties());
+        }
       }
       this.propertyService.delete(groupedPropertiesToDelete);
     }
@@ -1132,6 +1206,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
 
   public Workpack getWorkpack(final WorkpackParamDto workpackParamDto) {
     Workpack workpack = null;
+
     Set<Property> properties = null;
     if (workpackParamDto.getProperties() != null && !workpackParamDto.getProperties().isEmpty()) {
       properties = this.getProperties(workpackParamDto.getProperties());
@@ -1195,15 +1270,14 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     if (propertyDtos != null && !propertyDtos.isEmpty()) {
       properties = this.getProperties(propertyDtos);
     }
-    WorkpackModel workpackModel = this.workpackModelService.findById(workpackParamDto.getIdWorkpackModel());
-    Iterable<PropertyModel> propertyModels = workpackModel.getProperties();
+    Iterable<PropertyModel> propertyModels = this.workpackModelService.getPropertyModels(workpackParamDto.getIdWorkpackModel());
     for (PropertyModel propertyModel : propertyModels) {
       validateProperty(propertyModel, properties);
     }
     workpackParamDto.setProperties(null);
     Workpack workpack = workpackParamDto.getWorkpack(modelMapper);
     workpack = this.workpackRepository.save(workpack);
-    this.workpackRepository.createIsInstanceByRelationship(workpack.getId(), workpackModel.getId());
+    this.workpackRepository.createIsInstanceByRelationship(workpack.getId(), workpackParamDto.getIdWorkpackModel());
     if (properties != null && !properties.isEmpty()) {
       final Iterable<Property> savedProperties = this.propertyRepository.saveAll(properties);
       for (Property property : savedProperties) {
@@ -1230,6 +1304,7 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
       }
       this.workpackRepository.createIsInRelationship(workpack.getId(), idParent);
     }
+    this.cacheUtil.loadAllCache();
     return workpack;
   }
 
@@ -1237,8 +1312,9 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     final Workpack workpack,
     final Long idPlan
   ) {
-    final WorkpackDetailDto workpackDetailDto = this.getWorkpackDetailDto(workpack);
-    
+    final WorkpackDetailDto workpackDetailDto = this.getWorkpackDetailDtoThin(workpack);
+    workpackDetailDto.setIdParent(workpack.getIdParent());
+    workpackDetailDto.setIdWorkpackModel(workpack.getIdWorkpackModel());
     if (idPlan != null) {
       final Plan plan = this.planService.findById(idPlan);
       workpackDetailDto.setPlan(PlanDto.of(plan));
@@ -1246,8 +1322,6 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
         .map(Entity::getId)
         .ifPresent(workpackDetailDto::setIdParent);
     }
-    
-
     return workpackDetailDto;
   }
 
@@ -1554,11 +1628,10 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
       workpack,
       workpacks
     );
-    workpacks.forEach(w -> w.setCanceled(true));
-    this.workpackRepository.saveAll(workpacks);
-    final Set<Workpack> parents = new HashSet<>();
-    workpacks.stream().map(Entity::getId).map(this.workpackRepository::findParentsById).forEach(parents::addAll);
-    parents.stream().map(Entity::getId).forEach(worpackId -> this.dashboardService.calculate(worpackId, true));
+    final List<Long> workpackIds = workpacks.stream().map(w -> w.getId()).collect(Collectors.toList());
+    this.workpackRepository.setWorkpacksCanceled(workpackIds, true);
+    this.dashboardService.calculate();
+    this.cacheUtil.loadAllCache();
     return workpack;
   }
 
@@ -1590,12 +1663,10 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
       workpack,
       workpacks
     );
-    workpacks.forEach(w -> w.setCanceled(false));
-    this.workpackRepository.saveAll(workpacks);
-    final Set<Workpack> parents = new HashSet<>();
-    workpacks.stream().map(Entity::getId).map(this.workpackRepository::findParentsById).forEach(parents::addAll);
-    parents.stream().map(Entity::getId)
-      .forEach(worpackId -> this.dashboardService.calculate(worpackId, true));
+    final List<Long> workpackIds = workpacks.stream().map(w -> w.getId()).collect(Collectors.toList());
+    this.workpackRepository.setWorkpacksCanceled(workpackIds, false);
+    this.dashboardService.calculate();
+    this.cacheUtil.loadAllCache();
   }
 
   public WorkpackModel findWorkpackModelLinked(
@@ -1613,16 +1684,8 @@ public class WorkpackService implements BreadcrumbWorkpackHelper {
     return this.workpackRepository.findAllByPlanWithProperties(idPlan);
   }
 
-  public Set<Workpack> findAllByIdPlan4Menu(final Long idPlan, final Long idUsr) {
-    return this.workpackRepository.findAllByPlanWithMenuProperties(idPlan, idUsr);
-  }
-
-
-  public void calculateDashboard(final Workpack workpack, final Boolean calculateInterval) {
-    final Long id = workpack.getId();
-    final Set<Workpack> parents = this.workpackRepository.findParentsById(id);
-    parents.stream().map(Entity::getId)
-      .forEach(worpackId -> this.dashboardService.calculate(worpackId, calculateInterval));
+  public void calculateDashboard() {
+    this.dashboardService.calculate();
   }
 
 }

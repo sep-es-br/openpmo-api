@@ -24,4 +24,17 @@ public interface IsAuthenticatedByRepository extends Neo4jRepository<IsAuthentic
     @Param("authenticationServiceName") String authenticationServiceName
   );
 
+  @Query("MATCH (p:Person) where id(p) = $personId " +
+          "MATCH (a:AuthService) where id(a) = $authServiceId " +
+          "CREATE (p)-[r:IS_AUTHENTICATED_BY { " +
+          "  key: $key, " +
+          "  name: $name, " +
+          "  email: $email, " +
+          "  guid: $guid " +
+          "}]->(a) " +
+          "RETURN r")
+  IsAuthenticatedBy createIsAuthenticatedBy(Long personId, Long authServiceId,
+                                       String key, String name,
+                                       String email, String guid);
+
 }

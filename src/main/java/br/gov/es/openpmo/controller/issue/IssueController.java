@@ -93,7 +93,7 @@ public class IssueController {
     @RequestParam(required = false) final String term,
     @RequestHeader("Authorization") final String authorization
   ) {
-    this.canAccessService.ensureCanReadResource(
+    this.canAccessService.ensureCanReadResourceWorkpack(
       idWorkpack,
       authorization
     );

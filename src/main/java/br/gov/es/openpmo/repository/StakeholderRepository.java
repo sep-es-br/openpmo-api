@@ -7,6 +7,7 @@ import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
@@ -58,5 +59,33 @@ public interface StakeholderRepository extends Neo4jRepository<IsStakeholderIn, 
          "WHERE id(workpack)=$idWorkpack " +
          "RETURN person, inheritedStakeholder")
   Set<Person> findStakeholdersAndAscendingByWorkpackId(Long idWorkpack);
+
+  @Query("MATCH (a:Actor) where id(a) = $actorId " +
+          "MATCH (w:Workpack) where id(w)= $workpackId " +
+          "           CREATE (a)-[r:IS_STAKEHOLDER_IN { " +
+          "             role: $role, " +
+          "             active: $active " +
+          "           }]->(w) " +
+          "           WITH r " +
+          "           WHERE $from IS NOT NULL " +
+          "           SET r.from = $from " +
+          "           WITH r " +
+          "           WHERE $to IS NOT NULL " +
+          "           SET r.to = $to " +
+          "           RETURN r")
+  IsStakeholderIn createIsStakeholderIn(Long actorId, Long workpackId,
+                                        String role, LocalDate from, LocalDate to,
+                                        boolean active);
+
+  @Query("MATCH (a:Actor)-[r:IS_STAKEHOLDER_IN]->(w:Workpack) " +
+          "WHERE id(a) = $actorId AND id(w) = $workpackId AND id(r) = $relationId " +
+          "SET r.from = $from, " +
+          "r.to = $to, " +
+          "r.role = $role, " +
+          "r.active = $active " +
+          "RETURN r")
+  IsStakeholderIn updateIsStakeholderIn(Long actorId, Long workpackId, Long relationId,
+                                        String role, LocalDate from, LocalDate to,
+                                        boolean active);
 
 }

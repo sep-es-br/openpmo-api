@@ -80,7 +80,7 @@ public class MilestoneController {
         idPerson
       );
     }
-    this.workpackService.calculateDashboard(milestone, true);
+    this.workpackService.calculateDashboard();
     return ResponseEntity.ok(ResponseBase.success());
   }
 

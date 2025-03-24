@@ -81,9 +81,8 @@ public class OfficeService {
   }
 
 	public List<Office> findByNameOrFullName(String name) {
-		List<Office> offices = this.officeRepository.findAllOfficeByNameOrFullName(name,
-				appProperties.getSearchCutOffScore());
-		return offices;
+		return this.officeRepository.findAllOfficeByNameOrFullName(name,
+                appProperties.getSearchCutOffScore());
 	}
 
   public List<Office> findAll() {
@@ -99,6 +98,10 @@ public class OfficeService {
 
   public Office findById(final Long id) {
     return this.officeRepository.findById(id).orElseThrow(() -> new NegocioException(OFFICE_NOT_FOUND));
+  }
+
+  public Office findByIdThin(final Long id) {
+    return this.officeRepository.findByIdThin(id).orElseThrow(() -> new NegocioException(OFFICE_NOT_FOUND));
   }
 
   public Optional<Office> maybeFindById(final Long id) {
@@ -170,13 +173,6 @@ public class OfficeService {
 
   public Optional<Office> findOfficeByPlan(final Long id) {
     return this.officeRepository.findOfficeByPlanId(id);
-  }
-
-  public Optional<Office> findOfficeByWorkpack(
-    final Long idWorkpack,
-    final Long idPlan
-  ) {
-    return this.officeRepository.findOfficeByWorkpackId(idWorkpack, idPlan);
   }
 
   public Set<Office> findAllByIds(final Iterable<Long> ids) {

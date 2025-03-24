@@ -1,5 +1,7 @@
 package br.gov.es.openpmo.repository;
 
+import br.gov.es.openpmo.dto.person.detail.permissions.CanAccessPlanResultDto;
+import br.gov.es.openpmo.dto.person.detail.permissions.PlanResultDto;
 import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.relations.BelongsTo;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
@@ -11,6 +13,43 @@ import java.util.List;
 import java.util.Optional;
 
 public interface PlanRepository extends Neo4jRepository<Plan, Long>, CustomRepository {
+
+
+
+  @Query("MATCH (p:Plan)-[r:IS_ADOPTED_BY]->(o:Office) "
+      + "WHERE id(o) = $idOffice "
+      + "RETURN id(p) AS id, p.name AS name, ID(o) AS idOffice ")
+  List<PlanResultDto> findAllPlanResultByIdOffice(Long idOffice);
+
+  @Query("MATCH (person:Person)-[permission:CAN_ACCESS_PLAN]->(plan:Plan)-[r:IS_ADOPTED_BY]->(o:Office) " +
+      "WHERE ID(person) = $idPerson AND ID(o) = $idOffice AND permission.permissionLevel <> 'NONE' " +
+      "RETURN ID(plan) AS idPlan, ID(person) AS idPerson, permission.permissionLevel AS permissionLevel " +
+      ", permission.role AS role, ID(o) AS idOffice ")
+  List<CanAccessPlanResultDto> findAllCanAccessPlanResultDtoByIdPerson(Long idPerson, Long idOffice);
+
+  @Query("MATCH (plan:Plan) " +
+      "WHERE id(plan) = $id " +
+      "RETURN plan, [ " +
+      "[ (n)-[r_i1:`IS_STRUCTURED_BY`]->(p1:`PlanModel`) | [ r_i1, p1 ] ]," +
+      "[ (n)-[r_i1:`IS_ADOPTED_BY`]->(o1:`Office`) | [ r_i1, o1 ] ] " +
+      "]"
+  )
+  Optional<Plan> findById(Long id);
+
+  @Query("MATCH (p: Plan)-[r:IS_ADOPTED_BY]->(o:Office) WHERE id(o)= $id RETURN id(p) ORDER BY p.start DESC")
+  List<Long> findAllIdsInOfficeOrderByStartDesc(@Param("id") Long id);
+
+  @Query("MATCH (p: Plan) RETURN id(p) ")
+  List<Long> findAllIds();
+
+  @Query("MATCH (person:Person)-[permission:CAN_ACCESS_PLAN]->(plan:Plan)-[r:IS_ADOPTED_BY]->(o:Office) " +
+      "WHERE id(person) = $idPerson AND id(o) = $idOffice AND id(plan) = $idPlan " +
+      "RETURN id(plan)")
+  List<Long> findAllWithPermissionByUserAndOffice(
+      @Param("idOffice") Long idOffice,
+      @Param("idPerson") Long idPerson,
+      @Param("idPlan") Long idPlan
+  );
 
   @Query("MATCH (p: Plan)-[r:IS_ADOPTED_BY]->(o:Office) "
          + ", (p)-[sb:IS_STRUCTURED_BY]->(pm:PlanModel) "
@@ -55,27 +94,23 @@ public interface PlanRepository extends Neo4jRepository<Plan, Long>, CustomRepos
   );
 
   @Query(
-    "match (p:Plan) " +
-    "where id(p)=$idPlan " +
-    "optional match (p)<-[bt:BELONGS_TO{linked:false}]-(w:Workpack{deleted:false}) " +
-    "where NOT (w)-[:IS_IN]->(:Workpack) " +
-    " OPTIONAL MATCH (w)<-[isIn:IS_IN*]-(children:Workpack{deleted:false}) " +
-    " OPTIONAL MATCH (w)-[iib:IS_INSTANCE_BY]->(wm) " +
-    " OPTIONAL MATCH (w)<-[isIn:IS_IN*]-(children)-[iib2:IS_INSTANCE_BY]->(wm2) " +
-    " OPTIONAL MATCH (w)<-[wf1:FEATURES]-(wName:Property)-[ii1:IS_DRIVEN_BY]->(pm1:PropertyModel{name: 'name'}) " +
-    " OPTIONAL MATCH (w)<-[wf2:FEATURES]-(wFullName:Property)-[ii2:IS_DRIVEN_BY]->(pm2:PropertyModel{name: 'fullName'}) " +
-    " OPTIONAL MATCH (w)<-[isIn:IS_IN*]-(children)<-[cf1:FEATURES]-(cName:Property)-[ii3:IS_DRIVEN_BY]->(pm3:PropertyModel{name: 'name'}) " +
-    " OPTIONAL MATCH (w)<-[isIn:IS_IN*]-(children)<-[cf2:FEATURES]-(cFullName:Property)-[ii4:IS_DRIVEN_BY]->(pm4:PropertyModel{name: 'fullName'}) " +
-    "return p, bt, w, [ " +
-    "    [  [ isIn, children] ], " +
-    "    [  [iib, wm] ], " +
-    "    [  [iib2, wm2] ], " +
-    "    [  [wf1, wName, ii1, pm1] ], " +
-    "    [  [wf2, wFullName, ii2, pm2] ], " +
-    "    [  [cf1, cName, ii3, pm3] ], " +
-    "    [  [cf2, cFullName, ii4, pm4] ] " +
-    "] "
+          "match (p:Plan)<-[bt:BELONGS_TO]-(w:Workpack{deleted:false}) " +
+                  "where id(p)=$idPlan " +
+                  "and (NOT EXISTS(bt.linked) or bt.linked = false) " +
+                  "return id(w)"
   )
-  Optional<Plan> findFirstLevelStructurePlanById(@Param("idPlan") Long idPlan);
+  List<Long> findWorkpacksBelongsToPlan(@Param("idPlan") Long idPlan);
+
+  @Query(
+          "match (p:Plan)<-[bt:BELONGS_TO]-(w:Workpack{deleted:false})<-[c:CAN_ACCESS_WORKPACK]-(person:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
+                  "where id(p)=$idPlan " +
+                  "and (NOT EXISTS(bt.linked) OR bt.linked = false) " +
+                  "AND c.permissionLevel in ['EDIT', 'READ'] " +
+                  "return id(w)"
+  )
+  List<Long> findWorkpacksBelongsToPlanWithPermission(
+          @Param("idPlan") Long idPlan,
+          @Param("sub") String sub
+  );
 
 }

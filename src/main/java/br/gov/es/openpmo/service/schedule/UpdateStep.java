@@ -61,7 +61,7 @@ public class UpdateStep {
     this.modelMapper = modelMapper;
   }
 
-  public Step execute(final StepUpdateDto stepUpdateDto, Boolean calculateInterval) {
+  public Step execute(final StepUpdateDto stepUpdateDto, Boolean updateScheduleAndDeliverable) {
     final Step step = this.getStepForUpdate(stepUpdateDto);
     final Step stepUpdate = this.findById(step.getId());
 
@@ -121,15 +121,18 @@ public class UpdateStep {
         }
       }
     }
+    final Step stepUpdated = this.stepRepository.save(stepUpdate);
 
     final Schedule schedule = this.findScheduleById(stepUpdate.getSchedule().getId());
     Optional.of(stepUpdateDto).map(StepUpdateDto::getScheduleStart).ifPresent(schedule::setStart);
     Optional.of(stepUpdateDto).map(StepUpdateDto::getScheduleEnd).ifPresent(schedule::setEnd);
+    this.scheduleRepository.save(schedule);
 
-    final Step stepUpdated = this.stepRepository.save(stepUpdate);
-
+    if (!updateScheduleAndDeliverable) {
+      return stepUpdated;
+    }
     final List<Deliverable> deliverables = this.updateStatusService.getDeliverablesByStepId(step.getId());
-    this.updateStatusService.update(deliverables, calculateInterval);
+    this.updateStatusService.update(deliverables);
 
     return stepUpdated;
   }

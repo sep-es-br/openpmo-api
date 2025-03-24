@@ -39,11 +39,13 @@ public class PermissionDto {
   }
 
   public static PermissionDto of(final CanAccessPlan canAccessPlan) {
-    return new PermissionDto(
-      canAccessPlan.getId(),
-      canAccessPlan.getRole(),
-      canAccessPlan.getPermissionLevel()
+    PermissionDto dto = new PermissionDto(
+        canAccessPlan.getId(),
+        canAccessPlan.getRole(),
+        canAccessPlan.getPermissionLevel()
     );
+    dto.setIdPlan(canAccessPlan.getIdPlan());
+    return dto;
   }
 
   public static PermissionDto of(final Workpack workpack) {
@@ -63,6 +65,12 @@ public class PermissionDto {
   public static PermissionDto read() {
     final PermissionDto permissionDto = new PermissionDto();
     permissionDto.setLevel(PermissionLevelEnum.READ);
+    return permissionDto;
+  }
+
+  public static PermissionDto basicRead() {
+    final PermissionDto permissionDto = new PermissionDto();
+    permissionDto.setLevel(PermissionLevelEnum.BASIC_READ);
     return permissionDto;
   }
 

@@ -82,4 +82,13 @@ public interface IsCCBMemberRepository extends Neo4jRepository<IsCCBMemberFor, L
     Long idOffice
   );
 
+  @Query("MATCH (p:Person) where id(p) = $personId " +
+          "MATCH (w:Workpack) where id(w) = $workpackId " +
+          "CREATE (p)-[r:IS_CCB_MEMBER_FOR {inRole: $role, workLocation: $workLocation, active: $active}]->(w) " +
+          "RETURN r")
+  IsCCBMemberFor createIsCCBMemberFor(@Param("personId") Long personId,
+                                    @Param("workpackId") Long workpackId,
+                                    @Param("role") String role,
+                                    @Param("workLocation") String workLocation,
+                                    @Param("active") Boolean active);
 }

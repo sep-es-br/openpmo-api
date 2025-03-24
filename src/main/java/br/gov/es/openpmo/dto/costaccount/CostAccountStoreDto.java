@@ -1,6 +1,8 @@
 package br.gov.es.openpmo.dto.costaccount;
 
 import br.gov.es.openpmo.dto.workpack.PropertyDto;
+import br.gov.es.openpmo.model.budget.PlanoOrcamentario;
+import br.gov.es.openpmo.model.budget.UnidadeOrcamentaria;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 
 import javax.validation.constraints.NotNull;
@@ -30,6 +32,10 @@ public class CostAccountStoreDto {
       .orElse(Collections.emptyList());
   }
 
+  UnidadeOrcamentaria unidadeOrcamentaria;
+
+  PlanoOrcamentario planoOrcamentario;
+
   public Long getIdWorkpack() {
     return this.idWorkpack;
   }
@@ -52,5 +58,21 @@ public class CostAccountStoreDto {
 
   public void setIdCostAccountModel(Long idCostAccountModel) {
     this.idCostAccountModel = idCostAccountModel;
+  }
+
+  public UnidadeOrcamentaria getUnidadeOrcamentaria() {
+    return unidadeOrcamentaria;
+  }
+
+  public void setUnidadeOrcamentaria(UnidadeOrcamentaria unidadeOrcamentaria) {
+    this.unidadeOrcamentaria = unidadeOrcamentaria;
+  }
+
+  public PlanoOrcamentario getPlanoOrcamentario() {
+    return planoOrcamentario;
+  }
+
+  public void setPlanoOrcamentario(PlanoOrcamentario planoOrcamentario) {
+    this.planoOrcamentario = planoOrcamentario;
   }
 }

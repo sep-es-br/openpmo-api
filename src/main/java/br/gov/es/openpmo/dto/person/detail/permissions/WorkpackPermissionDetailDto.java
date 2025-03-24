@@ -4,10 +4,17 @@ import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 
 import java.util.List;
 
+import org.springframework.data.neo4j.annotation.QueryResult;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+@QueryResult
 public class WorkpackPermissionDetailDto {
 
   private Long id;
   private String name;
+  @JsonIgnore
+  private Long idPlan;
   private List<String> roles;
   private String icon;
   private PermissionLevelEnum accessLevel;
@@ -30,6 +37,15 @@ public class WorkpackPermissionDetailDto {
 
   public void setName(final String name) {
     this.name = name;
+  }
+
+
+  public Long getIdPlan() {
+    return idPlan;
+  }
+
+  public void setIdPlan(Long idPlan) {
+    this.idPlan = idPlan;
   }
 
   public List<String> getRoles() {

@@ -41,20 +41,6 @@ public class TripleConstraintDataChart {
     this.scope = scope;
   }
 
-  public void sumCostData(final CostDataChart cost) {
-    if (this.cost == null) {
-      this.cost = new CostDataChart();
-    }
-    this.cost.sumCostData(cost);
-  }
-
-  public void sumScopeData(final ScopeDataChart scopeData) {
-    if (this.scope == null) {
-      this.scope = new ScopeDataChart();
-    }
-    this.scope.sumScopeData(scopeData);
-  }
-
   public Long getIdBaseline() {
     return this.idBaseline;
   }
@@ -63,12 +49,5 @@ public class TripleConstraintDataChart {
     this.idBaseline = idBaseline;
   }
 
-  public LocalDate getMesAno() {
-    return this.mesAno;
-  }
-
-  public void setMesAno(final LocalDate mesAno) {
-    this.mesAno = mesAno;
-  }
 
 }

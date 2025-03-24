@@ -24,17 +24,6 @@ public interface CustomFilterRepository extends Neo4jRepository<CustomFilter, Lo
   );
 
   @Query("MATCH (person:Person)-[has1:HAS]->(customFilter:CustomFilter {favorite: true} ) " +
-         "MATCH (customFilter)-[:FOR]->(workpackModel:WorkpackModel)<-[:IS_INSTANCE_BY]-(workpack:Workpack) " +
-         "OPTIONAL MATCH (customFilter)<-[has2:HAS]-(rules:Rules) " +
-         "WITH * " +
-         "WHERE ID(person)=$idPerson and id(workpack)=$idWorkpack " +
-         "RETURN person, has1, customFilter, has2, rules")
-  Optional<CustomFilter> findDefaultByTypeAndWorkpackId(
-    @Param("idPerson") Long idPerson,
-    @Param("idWorkpack") Long idWorkpack
-  );
-
-  @Query("MATCH (person:Person)-[has1:HAS]->(customFilter:CustomFilter {favorite: true} ) " +
     "MATCH (customFilter)-[for:FOR]->(workpackModel:WorkpackModel)<-[isInstanceBy:IS_INSTANCE_BY]-(workpack:Workpack) " +
     "OPTIONAL MATCH (customFilter)<-[has2:HAS]-(rules:Rules) " +
     "WITH * " +
@@ -54,18 +43,12 @@ public interface CustomFilterRepository extends Neo4jRepository<CustomFilter, Lo
     @Param("idPerson") Long idPerson
   );
 
-  @Query("MATCH (customFilter:CustomFilter) WHERE ID(customFilter)=$idFilter "
-    + " OPTIONAL MATCH (rules:Rules)-[has:HAS]->(customFilter) " 
-    + " OPTIONAL MATCH (customFilter)-[for:FOR]->(workpackModel:WorkpackModel) " 
-    + " OPTIONAL MATCH (customFilter)-[:FOR]->(:WorkpackModel)<-[feat:FEATURES]-(propertyModel:PropertyModel) " 
-    + " OPTIONAL MATCH (customFilter)-[:FOR]->(:WorkpackModel)<-[featGroup:FEATURES]-(groupModel:GroupModel) " 
-    + " OPTIONAL MATCH (customFilter)-[:FOR]->(:WorkpackModel)<-[:FEATURES]-(:GroupModel)-[groups:GROUPS]->(groupedProperty:PropertyModel) " 
-    + " RETURN customFilter, [" +
-         "  [ [rules, has] ]," +
-         "  [ [for, workpackModel] ]," +
-         "  [ [feat, propertyModel] ]," +
-         "  [ [featGroup, groupModel] ]," +
-         "  [ [groups, groupedProperty] ]" +
+  @Query("MATCH (customFilter:CustomFilter) WHERE ID(customFilter)=$idFilter RETURN customFilter, [" +
+         "  [ (rules:Rules)-[has:HAS]->(customFilter) | [rules, has] ]," +
+         "  [ (customFilter)-[for:FOR]->(workpackModel:WorkpackModel) | [for, workpackModel] ]," +
+         "  [ (customFilter)-[:FOR]->(:WorkpackModel)<-[feat:FEATURES]-(propertyModel:PropertyModel) | [feat, propertyModel] ]," +
+         "  [ (customFilter)-[:FOR]->(:WorkpackModel)<-[featGroup:FEATURES]-(groupModel:GroupModel) | [featGroup, groupModel] ]," +
+         "  [ (customFilter)-[:FOR]->(:WorkpackModel)<-[:FEATURES]-(:GroupModel)-[groups:GROUPS]->(groupedProperty:PropertyModel) | [groups, groupedProperty] ]" +
          "]")
   Optional<CustomFilter> findByIdWithRelationships(@Param("idFilter") Long idFilter);
 

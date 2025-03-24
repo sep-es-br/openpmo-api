@@ -4,13 +4,15 @@ import java.util.List;
 
 import javax.validation.Valid;
 
-import br.gov.es.openpmo.dto.domain.LocalityStoreDto;
-
 public interface ICanAccessService {
 
         void ensureCanReadResource(
                         Long id,
                         String authorization);
+
+        void ensureCanReadResourceWorkpack(
+            Long idWorkpack,
+            String authorization);
 
         void ensureCanAccessManagementOrReadResource(
                         Long idOffice,

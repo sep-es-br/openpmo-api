@@ -29,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -78,7 +79,7 @@ public class JournalCreator {
     final Long workpackId = this.getWorkpackIdByBaseline(baseline);
     final JournalAction journalAction = JournalActionMapper.mapBaselineStatus(baseline.getStatus());
 
-    this.create(
+    this.createBaselineJournalEntry(
       JournalType.BASELINE,
       journalAction,
       baseline.getName(),
@@ -112,6 +113,18 @@ public class JournalCreator {
       workpackId,
       personId
     );
+  }
+
+  public JournalEntry createBaselineJournalEntry(
+          final JournalType type,
+          final JournalAction action,
+          final String nameItem,
+          final String description,
+          final Long workpackId,
+          final Long personId
+  ) {
+    return this.journalRepository.createJournalEntryBaselineEvaluate(
+            type.name(), action.name(), nameItem, description, workpackId, personId, LocalDateTime.now());
   }
 
   private Long findWorkpackIdByBaselineId(final Baseline baseline) {
@@ -194,6 +207,20 @@ public class JournalCreator {
     );
   }
 
+  private JournalEntry saveJournalWorkpackPermission(final JournalEntry journalEntry) {
+    return this.journalRepository.createJournalEntryWorkpackPermission(
+            journalEntry.getType().name(),
+            journalEntry.getAction().name(),
+            journalEntry.getLevel().name(),
+            journalEntry.getNameItem(),
+            journalEntry.getDescription(),
+            journalEntry.getWorkpackId(),
+            journalEntry.getAuthor().getId(),
+            journalEntry.getTarget().getId(),
+            journalEntry.getDate()
+    );
+  }
+
   public void officePermission(
     final Office office,
     final Person target,
@@ -201,7 +228,7 @@ public class JournalCreator {
     final PermissionLevelEnum level,
     final JournalAction journalAction
   ) {
-    this.create(
+    this.createJournalOfficePermission(
       JournalType.OFFICE_PERMISSION,
       journalAction,
       level,
@@ -210,6 +237,43 @@ public class JournalCreator {
       office,
       target,
       author
+    );
+  }
+
+  public JournalEntry createJournalOfficePermission(
+          final JournalType type,
+          final JournalAction action,
+          final PermissionLevelEnum level,
+          final String nameItem,
+          final String description,
+          final Office office,
+          final Person target,
+          final Person author
+  ) {
+    final JournalEntry journalEntry = JournalEntry.of(
+            type,
+            action,
+            level,
+            nameItem,
+            description,
+            office,
+            target,
+            author
+    );
+    return this.saveJournalOfficePermission(journalEntry);
+  }
+
+  private JournalEntry saveJournalOfficePermission(final JournalEntry journalEntry) {
+    return this.journalRepository.createJournalEntryOfficePermission(
+            journalEntry.getType().name(),
+            journalEntry.getAction().name(),
+            journalEntry.getLevel().name(),
+            journalEntry.getNameItem(),
+            journalEntry.getDescription(),
+            journalEntry.getOffice().getId(),
+            journalEntry.getAuthor().getId(),
+            journalEntry.getTarget().getId(),
+            journalEntry.getDate()
     );
   }
 
@@ -422,7 +486,7 @@ public class JournalCreator {
     final PermissionLevelEnum level,
     final JournalAction journalAction
   ) {
-    this.create(
+    this.createJournalPlanPermission(
       JournalType.PLAN_PERMISSION,
       journalAction,
       level,
@@ -433,6 +497,44 @@ public class JournalCreator {
       author
     );
   }
+
+  public JournalEntry createJournalPlanPermission(
+          final JournalType type,
+          final JournalAction action,
+          final PermissionLevelEnum level,
+          final String nameItem,
+          final String description,
+          final Plan plan,
+          final Person target,
+          final Person author
+  ) {
+    final JournalEntry journalEntry = JournalEntry.of(
+            type,
+            action,
+            level,
+            nameItem,
+            description,
+            plan,
+            target,
+            author
+    );
+    return this.saveJournalPlanPermission(journalEntry);
+  }
+
+  private JournalEntry saveJournalPlanPermission(final JournalEntry journalEntry) {
+    return this.journalRepository.createJournalEntryPlanPermission(
+            journalEntry.getType().name(),
+            journalEntry.getAction().name(),
+            journalEntry.getLevel().name(),
+            journalEntry.getNameItem(),
+            journalEntry.getDescription(),
+            journalEntry.getPlan().getId(),
+            journalEntry.getAuthor().getId(),
+            journalEntry.getTarget().getId(),
+            journalEntry.getDate()
+    );
+  }
+
 
   private JournalEntry create(
     final JournalType type,
@@ -464,7 +566,7 @@ public class JournalCreator {
     final PermissionLevelEnum level,
     final JournalAction journalAction
   ) {
-    this.create(
+    this.createJournalWorkpackPermission(
       JournalType.WORKPACK_PERMISSION,
       journalAction,
       level,
@@ -476,7 +578,7 @@ public class JournalCreator {
     );
   }
 
-  private JournalEntry create(
+  private JournalEntry createJournalWorkpackPermission(
     final JournalType type,
     final JournalAction action,
     final PermissionLevelEnum level,
@@ -496,7 +598,7 @@ public class JournalCreator {
       target,
       author
     );
-    return this.saveJournal(journalEntry);
+    return this.saveJournalWorkpackPermission(journalEntry);
   }
 
   public JournalEntry create(

@@ -75,6 +75,7 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
   }
 
   private Set<DatasheetStakeholderQueryResult> getStakeholders(final Long workpackId) {
+    final  List<DatasheetStakeholderQueryResult> stakeholders = this.repository.stakeholders(workpackId);
     return new LinkedHashSet<>(this.repository.stakeholders(workpackId));
   }
 

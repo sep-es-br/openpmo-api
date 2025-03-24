@@ -42,7 +42,7 @@ public class StakeholderController {
       @RequestParam(required = false) final String term,
       @RequestParam(required = false) final Long idFilter
   ) {
-    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
+    this.canAccessService.ensureCanReadResourceWorkpack(idWorkpack, authorization);
     final List<StakeholderDto> isStakeHolderIn = this.stakeholderService.findAll(idWorkpack, term, idFilter);
     return ResponseEntity.ok(ResponseBase.of(isStakeHolderIn));
   }
@@ -51,7 +51,7 @@ public class StakeholderController {
   public ResponseEntity<ResponseBase<Set<StakeholderCardViewDto>>> findAllPersonStakeholderByIdWorkpack(
       @RequestParam("id-workpack") final Long idWorkpack,
       @Authorization final String authorization) {
-    this.canAccessService.ensureCanReadResource(idWorkpack, authorization);
+    this.canAccessService.ensureCanReadResourceWorkpack(idWorkpack, authorization);
     final Set<StakeholderCardViewDto> stakeholders = this.stakeholderService
         .findAllPersonStakeholderByWorkpackId(idWorkpack);
     final ResponseBase<Set<StakeholderCardViewDto>> response = ResponseBase.of(stakeholders);

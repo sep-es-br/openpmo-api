@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.repository;
 
+import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.model.relations.CanAccessOffice;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
 import org.springframework.data.neo4j.annotation.Query;
@@ -63,4 +64,20 @@ public interface OfficePermissionRepository extends Neo4jRepository<CanAccessOff
     "RETURN count(canAccessOffice)>0")
   boolean existsByIdWorkpackAndIdPerson(Long idOffice, Long idPerson);
 
+  @Query("MATCH (p:Person) WHERE id(p) = $personId " +
+          "MATCH (o:Office) WHERE id(o) = $officeId " +
+          "CREATE (p)-[r:CAN_ACCESS_OFFICE {organization: $organization, permitedRole: $role, permissionLevel: $permissionLevel}]->(o) " +
+          "RETURN r")
+  CanAccessOffice createCanAccessOffice(@Param("personId") Long personId,
+                                                    @Param("officeId") Long officeId,
+                                                    @Param("organization") String organization,
+                                                    @Param("role") String role,
+                                                    @Param("permissionLevel") PermissionLevelEnum permissionLevel);
+
+  @Query("MATCH (p:Person)-[r:CAN_ACCESS_OFFICE]-(o:Office) WHERE id(p) = $personId AND id(o) = $officeId AND id(r) = $relationId " +
+          "SET r.organization = $organization, " +
+          "r.permitedRole = $role, " +
+          "r.permissionLevel = $permissionLevel " +
+          "RETURN r")
+  CanAccessOffice updateCanAccessOffice(Long personId, Long officeId, Long relationId, String organization, String role, PermissionLevelEnum permissionLevel);
 }

@@ -54,17 +54,13 @@ public class FindAllDomainUsingCustomFilter extends FindAllUsingCustomFilterBuil
 
   @Override
   public void buildReturnClause(final StringBuilder query) {
-      query
-        .append(" OPTIONAL MATCH (").append(this.nodeName).append(")-[apl:APPLIES_TO]->(o:Office)")
-        .append(" OPTIONAL MATCH (").append(this.nodeName).append(")-[isRootOf:IS_ROOT_OF]->(root:Locality)")
-        .append(" OPTIONAL MATCH (l)<-[btlc:IS_IN]-(lc:Locality)")
-        .append(" OPTIONAL MATCH (l)-[btlp:IS_IN]->(lp:Locality)")
-        .append(" RETURN ")
-        .append(this.nodeName).append(", bt, l, [")
-        .append("[apl, o], ")
-        .append("[isRootOf, root], ")
-        .append("[btlc, lc] ] ")
-        .append("[btlp, lp] ] ");
+    query.append("RETURN ").append(this.nodeName).append(", bt, l, [")
+      .append("[ (").append(this.nodeName).append(")-[apl:APPLIES_TO]->(o:Office) | [apl, o] ], ")
+      .append("[ (").append(this.nodeName).append(
+        ")-[isRootOf:IS_ROOT_OF]->(root:Locality) | [isRootOf, root] ], ")
+      .append("[ (l)<-[btl:IS_IN]-(lc:Locality) | [btl, lc] ], ")
+      .append("[ (l)-[btl:IS_IN]->(lc:Locality) | [btl, lc] ] ")
+      .append("]");
   }
 
   @Override

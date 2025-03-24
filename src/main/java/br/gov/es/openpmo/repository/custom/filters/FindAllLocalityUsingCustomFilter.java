@@ -45,9 +45,13 @@ public class FindAllLocalityUsingCustomFilter extends FindAllUsingCustomFilterBu
 
   @Override
   public void buildReturnClause(final StringBuilder query) {
-    query.append(" OPTIONAL MATCH (").append(this.nodeName).append(")<-[isIn:IS_IN]-(children:Locality)-[:BELONGS_TO]->(domain)")
-      .append("RETURN ")
-      .append(this.nodeName).append(", [ [isIn, children] ] ");
+    query.append("RETURN ")
+      .append(this.nodeName)
+      .append(", [")
+      .append("[(")
+      .append(this.nodeName)
+      .append(")<-[isIn:IS_IN]-(children:Locality)-[:BELONGS_TO]->(domain) | [isIn, children] ] ")
+      .append("]");
   }
 
   @Override
