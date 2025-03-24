@@ -236,8 +236,8 @@ public class SubmitBaselineService implements ISubmitBaselineService {
                                .filter(w -> w.getId().equals(update.getIdWorkpack()))
                                .findFirst().orElse(null);
     Workpack snapshot = snapshotReferences.stream()
-                                          .filter(w -> w.getWorkpackMasterId().equals(update.getIdWorkpack()))
-                                          .findFirst().orElse(null);
+                                .filter(w -> w.getWorkpackMasterId() != null && w.getWorkpackMasterId().equals(update.getIdWorkpack()))
+                                .findFirst().orElse(null);
     BaselineScheduleSubmitDto scheduleSnapshot = schdulesReferences.stream()
                                                  .filter(s -> s.getIdWorkpack().equals(update.getIdWorkpack()))
                                                  .findFirst().orElse(null);
