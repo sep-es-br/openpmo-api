@@ -17,13 +17,18 @@ public class PeriodGoalDto {
     @NotEmpty
     private String lastUpdate;
 
+    @NotNull
+    @NotEmpty
+    private String justification;
+
     public PeriodGoalDto() {
     }
 
-    public PeriodGoalDto(String period, Double value, String lastUpdate) {
+    public PeriodGoalDto(String period, Double value, String lastUpdate, String justification) {
         this.period = period;
         this.value = value;
         this.lastUpdate = lastUpdate;
+        this.justification = justification;
     }
 
     public String getPeriod() {
@@ -48,5 +53,13 @@ public class PeriodGoalDto {
 
     public void setLastUpdate(String lastUpdate) {
         this.lastUpdate = lastUpdate;
+    }
+
+    public String getJustification() {
+        return justification;
+    }
+
+    public void setJustification(String justification) {
+        this.justification = justification;
     }
 }
