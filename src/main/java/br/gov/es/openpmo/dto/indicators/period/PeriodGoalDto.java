@@ -11,7 +11,11 @@ public class PeriodGoalDto {
 
     @NotNull
     @NotEmpty
-    private Double value;
+    private Double expectedValue;
+
+    @NotNull
+    @NotEmpty
+    private Double achievedValue;
 
     @NotNull
     @NotEmpty
@@ -24,9 +28,10 @@ public class PeriodGoalDto {
     public PeriodGoalDto() {
     }
 
-    public PeriodGoalDto(String period, Double value, String lastUpdate, String justification) {
+    public PeriodGoalDto(String period, Double expectedValue , Double achievedValue, String lastUpdate, String justification) {
         this.period = period;
-        this.value = value;
+        this.expectedValue = expectedValue;
+        this.achievedValue = achievedValue;
         this.lastUpdate = lastUpdate;
         this.justification = justification;
     }
@@ -39,12 +44,20 @@ public class PeriodGoalDto {
         this.period = period;
     }
 
-    public Double getValue() {
-        return value;
+    public Double getExpectedValue() {
+        return expectedValue;
     }
 
-    public void setValue(Double value) {
-        this.value = value;
+    public void setExpectedValue(Double expectedValue) {
+        this.expectedValue = expectedValue;
+    }
+
+    public Double getAchievedValue() {
+        return achievedValue;
+    }
+
+    public void setAchievedValue(Double achievedValue) {
+        this.achievedValue = achievedValue;
     }
 
     public String getLastUpdate() {
