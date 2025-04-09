@@ -1,12 +1,15 @@
 package br.gov.es.openpmo.repository;
 
 import br.gov.es.openpmo.dto.schedule.ScheduleDto;
+import br.gov.es.openpmo.dto.schedule.Schedule_Dto;
+import br.gov.es.openpmo.dto.schedule.StepAggregateDto;
 import br.gov.es.openpmo.model.schedule.Schedule;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface ScheduleRepository extends Neo4jRepository<Schedule, Long> {
@@ -88,6 +91,15 @@ public interface ScheduleRepository extends Neo4jRepository<Schedule, Long> {
   )
   List<ScheduleDto> findSnapshotByMasterIds(List<Long> idSchedule);
 
+  @Query("MATCH (w:Workpack) " +
+       "WHERE id(w) = $idWorkpack " +
+       "OPTIONAL MATCH (w)<-[:FEATURES]-(schedule:Schedule) " +
+       "OPTIONAL MATCH (schedule)<-[i:IS_SNAPSHOT_OF]-(snapshot:Schedule)-[c:COMPOSES]->(b:Baseline{active:true}) " +
+       "RETURN id(schedule) as id, id(snapshot) as idSnapshot,  schedule.end as end, schedule.start as start " +
+       ", snapshot.end as baselineEnd, snapshot.start as baselineStart, id(w) as idWorkpack "
+       )
+       ScheduleDto findScheduleBaseInfoByWorkpackId(Long idWorkpack);
+
   @Query("MATCH (master:Schedule), (snapshot:Schedule) " +
       "WHERE ID(master) = $masterId AND ID(snapshot) = $snapshotId " +
       "SET master.category = 'MASTER' " +
@@ -118,5 +130,55 @@ public interface ScheduleRepository extends Neo4jRepository<Schedule, Long> {
           + "RETURN w, sh, st, con, ca, d, d2, b, finalMonth "
           + "ORDER BY finalMonth ASC")
   void updatePlannedCostsFromActualValues();
+
+
+
+  @Query("CALL { "
+     + "MATCH (md:Deliverable) "
+     + "WHERE id(md) = $idWorkpack "
+     + "OPTIONAL MATCH (md)<-[:FEATURES]-(msc:Schedule) "
+     + "OPTIONAL MATCH (msc)<-[:COMPOSES]-(mst:Step) "
+     + "WHERE msc IS NOT NULL AND mst IS NOT NULL AND mst.periodFromStart IS NOT NULL AND msc.start IS NOT NULL "
+     + "WITH id(msc) as mscId, "
+     + "     (toInteger((mst.periodFromStart + toInteger(split(msc.start,'-')[1]))/12.1) + toInteger(split(msc.start,'-')[0])) * 100 + "
+     + "     ((mst.periodFromStart + toInteger(split(msc.start,'-')[1])) - (toInteger((mst.periodFromStart + toInteger(split(msc.start,'-')[1]))/12.1)*12)) as stepDate, "
+     + "     id(mst) as mstId, "
+     + "     null as sstId, "
+     + "     null as sscId, "
+     + "     toFloat(mst.actualWork) as aWork, "
+     + "     toFloat(mst.plannedWork) as mpWork, "
+     + "     toFloat(0) as spWork "
+     + "RETURN stepDate, mscId, mstId, sstId, sscId, aWork, mpWork, spWork "
+     + "UNION ALL "
+     + "MATCH (md:Deliverable) "
+     + "WHERE id(md) = $idWorkpack "
+     + "OPTIONAL MATCH (md)<-[:IS_SNAPSHOT_OF]-(sd:Deliverable)-[:COMPOSES]-(bl:Baseline {active:TRUE}) "
+     + "OPTIONAL MATCH (sd)<-[:FEATURES]-(ssc:Schedule) "
+     + "OPTIONAL MATCH (ssc)<-[:COMPOSES]-(sst:Step) "
+     + "WHERE ssc IS NOT NULL AND sst IS NOT NULL AND sst.periodFromStart IS NOT NULL AND ssc.start IS NOT NULL "
+     + "WITH null as mscId, "
+     + "     (toInteger((sst.periodFromStart + toInteger(split(ssc.start,'-')[1]))/12.1) + toInteger(split(ssc.start,'-')[0])) * 100 + "
+     + "     ((sst.periodFromStart + toInteger(split(ssc.start,'-')[1])) - (toInteger((sst.periodFromStart + toInteger(split(ssc.start,'-')[1]))/12.1)*12)) as stepDate, "
+     + "     null as mstId, "
+     + "     id(sst) as sstId, "
+     + "     id(ssc) as sscId, "
+     + "     toFloat(0) as aWork, "
+     + "     toFloat(0) as mpWork, "
+     + "     toFloat(sst.plannedWork) as spWork "
+     + "RETURN stepDate, mscId, mstId, sstId, sscId, aWork, mpWork, spWork \n"
+     + "} \n"
+     + "WITH stepDate, mscId, mstId, sstId, sscId, aWork, mpWork, spWork \n"
+     + "RETURN \n"
+     + "stepDate as stepDate, \n"
+     + "max(mscId) as masterScheduleId, \n"
+     + "max(mstId) as masterStepId, \n"
+     + "max(sstId) as snapshotStepId, \n"
+     + "max(sscId) as snapshotScheduleId, \n"
+     + "max(aWork) as masterActualWork, \n"
+     + "max(mpWork) as masterPlannedWork, \n"
+     + "max(spWork) as snapshotPlannedWork \n"
+     + "ORDER BY stepDate ASC\n")
+     List<StepAggregateDto>findCombinedStepData(@Param("idWorkpack") Long idWorkpack);
+
 
 }

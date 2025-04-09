@@ -89,9 +89,9 @@ public interface StepRepository extends Neo4jRepository<Step, Long> {
 
   @Query(
       "MATCH (m:Schedule)<-[i:IS_SNAPSHOT_OF]-(s:Schedule)-[c:COMPOSES]->(b:Baseline{active:true}) " +
-          ", (s)<-[cs:COMPOSES]-(snapshot:Step)-[i2:IS_SNAPSHOT_OF]->(step:Step) " +
+          "OPTIONAL MATCH (s)<-[cs:COMPOSES]-(snapshot:Step)" + //-[i2:IS_SNAPSHOT_OF]->(step:Step) 
           "WHERE id(s) IN $idSnapshot " +
-          "RETURN id(snapshot) as id, id(step) as stepMasterId, id(s) as idSchedule, snapshot.actualWork as actualWork " +
+          "RETURN id(snapshot) as id, id(s) as idSchedule, snapshot.actualWork as actualWork " + //id(step) as stepMasterId,
           ", snapshot.periodFromStart as periodFromStartNumber " +
           ", snapshot.plannedWork as plannedWork, s.end as scheduleEnd, s.start as scheduleStart "
   )
