@@ -23,7 +23,7 @@ public class ConsumesCostDto {
   private Long stepId;
 
   @JsonIgnore
-  private Long costAccountId;
+  private Integer stepDate;
 
   public ConsumesCostDto() {
   }
@@ -77,12 +77,12 @@ public class ConsumesCostDto {
     this.stepId = stepId;
   }
 
-  public Long getCostAccountId() {
-    return costAccountId;
+  public Integer getStepDate() {
+    return stepDate;
   }
 
-  public void setCostAccountId(Long costAccountId) {
-    this.costAccountId = costAccountId;
+  public void setStepDate(Integer stepDate) {
+    this.stepDate = stepDate;
   }
 
   @JsonIgnore

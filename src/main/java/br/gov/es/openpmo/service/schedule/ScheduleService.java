@@ -353,10 +353,19 @@ public class ScheduleService {
 
     currentSchedule.getSteps().forEach(step -> {
       if (step.getMasterStepId() != null) {
-        step.setConsumeCostMaster(this.costAccountRepository.findCostConsumptionsByStepId(step.getMasterStepId()));
+        List<ConsumesCostDto> masterCosts = this.costAccountRepository.findCostConsumptionsByStepId(step.getMasterStepId());
+        masterCosts.forEach(cost -> {
+          cost.setStepDate(step.getStepDate());
+        });
+        step.setConsumeCostMaster(masterCosts);
       }
+    
       if (step.getSnapshotStepId() != null) {
-        step.setConsumeCostBaseLine(this.costAccountRepository.findCostConsumptionsByStepId(step.getSnapshotStepId()));
+        List<ConsumesCostDto> baselineCosts = this.costAccountRepository.findCostConsumptionsByStepId(step.getSnapshotStepId());
+        baselineCosts.forEach(cost -> {
+          cost.setStepDate(step.getStepDate());
+        });
+        step.setConsumeCostBaseLine(baselineCosts);
       }
     });
 
@@ -412,7 +421,7 @@ public class ScheduleService {
 
   private Set<ConsumesDto> convertConsumes(StepAggregateDto aggregate) {
     Set<ConsumesDto> consumes = new LinkedHashSet<>();
-
+  
     if (aggregate.getConsumeCostMaster() != null) {
       for (ConsumesCostDto masterCost : aggregate.getConsumeCostMaster()) {
         ConsumesDto consume = new ConsumesDto();
@@ -420,33 +429,35 @@ public class ScheduleService {
         consume.setActualCost(masterCost.getActualCost());
         consume.setPlannedCost(masterCost.getPlannedCost());
         consume.setCostAccount(masterCost.getCostAccount());
-        consume.setCostAccountMasterId(masterCost.getCostAccountId());
+        consume.setStepDate(masterCost.getStepDate()); 
         consumes.add(consume);
       }
     }
-
+  
     if (aggregate.getConsumeCostBaseLine() != null) {
       for (ConsumesCostDto baselineCost : aggregate.getConsumeCostBaseLine()) {
-        consumes.stream()
-            .filter(c -> c.getCostAccountMasterId() != null &&
-                c.getCostAccountMasterId().equals(baselineCost.getCostAccountId()))
-            .findFirst()
-            .ifPresentOrElse(
-                consume -> consume.setBaselinePlannedCost(baselineCost.getPlannedCost()),
-
-                () -> {
-                  ConsumesDto newConsume = new ConsumesDto();
-                  newConsume.setId(baselineCost.getId());
-                  newConsume.setBaselinePlannedCost(baselineCost.getPlannedCost());
-                  newConsume.setCostAccount(baselineCost.getCostAccount());
-                  newConsume.setStepSnapshotId(baselineCost.getStepId());
-                  consumes.add(newConsume);
-                });
+        Optional<ConsumesDto> existing = consumes.stream()
+          .filter(c -> c.getStepDate() != null &&
+                       c.getStepDate().equals(baselineCost.getStepDate()))
+          .findFirst();
+  
+        if (existing.isPresent()) {
+          existing.get().setBaselinePlannedCost(baselineCost.getPlannedCost());
+        } else {
+          ConsumesDto newConsume = new ConsumesDto();
+          newConsume.setId(baselineCost.getId());
+          newConsume.setBaselinePlannedCost(baselineCost.getPlannedCost());
+          newConsume.setCostAccount(baselineCost.getCostAccount());
+          newConsume.setStepSnapshotId(baselineCost.getStepId());
+          newConsume.setStepDate(baselineCost.getStepDate());
+          consumes.add(newConsume);
+        }
       }
     }
-
+  
     return consumes;
   }
+  
 
   private BigDecimal toBigDecimal(Float value) {
     return value != null ? BigDecimal.valueOf(value) : null;

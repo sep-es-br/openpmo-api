@@ -26,6 +26,9 @@ public class ConsumesDto {
   @JsonIgnore
   private Long costAccountMasterId;
 
+  @JsonIgnore
+  private Integer stepDate;
+
   public ConsumesDto() {
   }
 
@@ -99,6 +102,14 @@ public class ConsumesDto {
     return Optional.ofNullable(this.costAccount)
       .map(CostAccountEntityDto::getId)
       .orElse(null);
+  }
+
+  public Integer getStepDate() {
+    return stepDate;
+  }
+
+  public void setStepDate(Integer stepDate) {
+    this.stepDate = stepDate;
   }
 
 }
