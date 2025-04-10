@@ -1,7 +1,6 @@
 package br.gov.es.openpmo.repository;
 
 import br.gov.es.openpmo.dto.schedule.ScheduleDto;
-import br.gov.es.openpmo.dto.schedule.Schedule_Dto;
 import br.gov.es.openpmo.dto.schedule.StepAggregateDto;
 import br.gov.es.openpmo.model.schedule.Schedule;
 import org.springframework.data.neo4j.annotation.Query;
