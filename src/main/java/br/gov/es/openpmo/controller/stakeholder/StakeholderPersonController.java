@@ -47,12 +47,13 @@ public class StakeholderPersonController {
   @GetMapping
   public ResponseEntity<ResponseBase<StakeholderPersonDto>> index(
     @RequestParam(name = "id-workpack") final Long idWorkpack,
+    @RequestParam(name = "id-plan") final Long idPlan,
     @RequestParam(name = "idPerson", required = false) final Long personId,
     @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanReadResourceWorkpack(idWorkpack, authorization);
     final Long idPerson = this.tokenService.getUserId(authorization);
-    final StakeholderPersonDto personDto = this.stakeholderService.findPerson(idWorkpack, personId, idPerson);
+    final StakeholderPersonDto personDto = this.stakeholderService.findPerson(idWorkpack, personId, idPerson, idPlan);
     return personDto == null ?
       ResponseEntity.noContent().build() :
       ResponseEntity.ok(ResponseBase.of(personDto));

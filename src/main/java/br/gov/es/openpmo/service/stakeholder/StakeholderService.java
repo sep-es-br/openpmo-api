@@ -375,7 +375,8 @@ public class StakeholderService {
     final Optional<IsInContactBookOf> maybeContactInformation =
       this.isInContactBookOfService.findContactInformationUsingPersonIdAndWorkpackId(
         personId,
-        workpackId
+        workpackId,
+        request.getIdPlan()
       );
     if(maybeContactInformation.isPresent()) {
       this.updateContactRelationshipWithOffice(
@@ -704,7 +705,8 @@ public class StakeholderService {
   public StakeholderPersonDto findPerson(
     final Long workpackId,
     final Long personId,
-    final Long idPerson
+    final Long idPerson,
+    final Long idPlan
   ) {
     final Workpack workpack = this.serviceWorkpack.findByIdDefault(workpackId);
     final Optional<Person> maybePerson = this.personService.maybeFindPersonById(personId);
@@ -717,7 +719,8 @@ public class StakeholderService {
       workpack.getId(),
       person,
       stakeholderPersonDto,
-      idPerson
+      idPerson,
+      idPlan
     );
     this.fillRoles(
       stakeholderPersonDto,
@@ -736,7 +739,8 @@ public class StakeholderService {
     final Long workpackId,
     final Person person,
     final StakeholderPersonDto stakeholderPersonDto,
-    final Long idPerson
+    final Long idPerson,
+    final Long idPlan
   ) {
     final Optional<IsAuthenticatedBy> maybeAuthentication = person.getAuthentications().stream()
       .filter(p -> p.getAuthService().getServer().equals(this.authenticationServer))
@@ -745,7 +749,8 @@ public class StakeholderService {
     final Optional<IsInContactBookOf> maybeContactInformation =
       this.isInContactBookOfService.findContactInformationUsingPersonIdAndWorkpackId(
         person.getId(),
-        workpackId
+        workpackId,
+        idPlan
       );
 
     final PersonDto personDto = PersonDto.from(
