@@ -35,15 +35,10 @@ public interface IndicatorRepository extends Neo4jRepository<Indicator, Long>, C
             "RETURN indicator, isReportedFor, workpack")
     Optional<Indicator> findIndicatorDetailById(Long indicatorId);
 
-    @Query("MATCH (period:PeriodGoal)<-[:HAS_ACHIEVED_GOAL]-(indicator:Indicator) " +
+    @Query("MATCH (period:PeriodGoal)-[:IS_DEFINED_FOR]->(indicator:Indicator) " +
             "WHERE id(indicator) = $indicatorId " +
-            "RETURN collect(period) AS achievedGoals")
-    Optional<List<PeriodGoal>> findAchievedGoalsByIndicatorId(Long indicatorId);
-
-    @Query("MATCH (period:PeriodGoal)<-[:HAS_EXPECTED_GOAL]-(indicator:Indicator) " +
-            "WHERE id(indicator) = $indicatorId " +
-            "RETURN collect(period) as expectedGoals")
-    Optional<List<PeriodGoal>> findExpectedGoalsByIndicatorId(Long indicatorId);
+            "RETURN collect(period) AS periodGoals")
+    Optional<List<PeriodGoal>> findPeriodGoalsByIndicatorId(Long indicatorId);
 
     @Query("MATCH (project:Workpack {deleted: false})<-[:IS_IN*]-(children:Workpack {deleted: false}) " +
             "WHERE id(project) = $idWorkpack " +

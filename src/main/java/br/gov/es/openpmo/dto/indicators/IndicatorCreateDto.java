@@ -1,7 +1,6 @@
 package br.gov.es.openpmo.dto.indicators;
 
 import br.gov.es.openpmo.dto.indicators.period.PeriodGoalDto;
-import br.gov.es.openpmo.model.indicators.PeriodGoal;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -30,10 +29,6 @@ public class IndicatorCreateDto {
 
     @NotNull
     @NotEmpty
-    private String finalGoal;
-
-    @NotNull
-    @NotEmpty
     private String startDate;
 
     @NotNull
@@ -45,10 +40,8 @@ public class IndicatorCreateDto {
     private String periodicity;
 
     @NotNull
-    private List<PeriodGoalDto> expectedGoals;
+    private List<PeriodGoalDto> periodGoals;
 
-    @NotNull
-    private List<PeriodGoalDto> achievedGoals;
 
     public IndicatorCreateDto() {
     }
@@ -59,24 +52,20 @@ public class IndicatorCreateDto {
         final String description,
         final String source,
         final String measure,
-        final String finalGoal,
         final String startDate,
         final String endDate,
         final String periodicity,
-        final List<PeriodGoalDto> expectedGoals,
-        final List<PeriodGoalDto> achievedGoals
+        final List<PeriodGoalDto> periodGoals
     ) {
         this.idWorkpack = idWorkpack;
         this.name = name;
         this.description = description;
         this.source = source;
         this.measure = measure;
-        this.finalGoal = finalGoal;
         this.startDate = startDate;
         this.endDate = endDate;
         this.periodicity = periodicity;
-        this.expectedGoals = expectedGoals;
-        this.achievedGoals = achievedGoals;
+        this.periodGoals = periodGoals;
     }
 
     public Long getIdWorkpack() {
@@ -119,14 +108,6 @@ public class IndicatorCreateDto {
         this.measure = measure;
     }
 
-    public String getFinalGoal() {
-        return finalGoal;
-    }
-
-    public void setFinalGoal(String finalGoal) {
-        this.finalGoal = finalGoal;
-    }
-
     public String getStartDate() {
         return startDate;
     }
@@ -151,19 +132,15 @@ public class IndicatorCreateDto {
         this.periodicity = periodicity;
     }
 
-    public List<PeriodGoalDto> getExpectedGoals() {
-        return expectedGoals;
+    public List<PeriodGoalDto> getPeriodGoals() {
+        return periodGoals;
     }
 
-    public void setExpectedGoals(List<PeriodGoalDto> expectedGoals) {
-        this.expectedGoals = expectedGoals;
+    public void setPeriodGoalDto(List<PeriodGoalDto> periodGoals) {
+        this.periodGoals = periodGoals;
     }
 
-    public List<PeriodGoalDto> getAchievedGoals() {
-        return achievedGoals;
-    }
+    
 
-    public void setAchievedGoals(List<PeriodGoalDto> achievedGoals) {
-        this.achievedGoals = achievedGoals;
-    }
+
 }

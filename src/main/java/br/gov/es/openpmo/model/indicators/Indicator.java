@@ -18,16 +18,12 @@ public class Indicator extends Entity {
     private String description;
     private String source;
     private String measure;
-    private String finalGoal;
     private String startDate;
     private String endDate;
     private String periodicity;
 
-    @Relationship(type = "HAS_EXPECTED_GOAL", direction = Relationship.OUTGOING)
-    private List<PeriodGoal> expectedGoals = new ArrayList<>();
-
-    @Relationship(type = "HAS_ACHIEVED_GOAL", direction = Relationship.OUTGOING)
-    private List<PeriodGoal> achievedGoals = new ArrayList<>();
+    @Relationship(type = "IS_DEFINED_FOR", direction = Relationship.INCOMING)
+    private List<PeriodGoal> periodGoals = new ArrayList<>();
 
     @Relationship("RELATED_TO")
     private Workpack workpack;
@@ -40,7 +36,6 @@ public class Indicator extends Entity {
         final String description,
         final String source,
         final String measure,
-        final String finalGoal,
         final String startDate,
         final String endDate,
         final String periodicity,
@@ -50,7 +45,6 @@ public class Indicator extends Entity {
         this.description = description;
         this.source = source;
         this.measure = measure;
-        this.finalGoal = finalGoal;
         this.startDate = startDate;
         this.endDate = endDate;
         this.periodicity = periodicity;
@@ -66,7 +60,6 @@ public class Indicator extends Entity {
                 request.getDescription(),
                 request.getSource(),
                 request.getMeasure(),
-                request.getFinalGoal(),
                 request.getStartDate(),
                 request.getEndDate(),
                 request.getPeriodicity(),
@@ -74,11 +67,10 @@ public class Indicator extends Entity {
 
         );
 
-        request.getExpectedGoals().forEach(goal ->
-                indicator.addExpectedGoals(new PeriodGoal(goal.getPeriod(), goal.getValue(), goal.getLastUpdate())));
+        request.getPeriodGoals().forEach(goal ->
+                indicator.addPeriodGoals(new PeriodGoal(goal.getPeriod(), goal.getExpectedValue(), goal.getAchievedValue(), goal.getLastUpdate(), goal.getJustification())));
 
-        request.getAchievedGoals().forEach(goal ->
-                indicator.addAchievedGoals(new PeriodGoal(goal.getPeriod(), goal.getValue(), goal.getLastUpdate())));
+
 
         return indicator;
     }
@@ -123,14 +115,6 @@ public class Indicator extends Entity {
         this.measure = measure;
     }
 
-    public String getFinalGoal() {
-        return finalGoal;
-    }
-
-    public void setFinalGoal(String finalGoal) {
-        this.finalGoal = finalGoal;
-    }
-
     public String getStartDate() {
         return startDate;
     }
@@ -168,39 +152,25 @@ public class Indicator extends Entity {
         ObjectUtils.updateIfPresent(request::getDescription, this::setDescription);
         ObjectUtils.updateIfPresent(request::getSource, this::setSource);
         ObjectUtils.updateIfPresent(request::getMeasure, this::setMeasure);
-        ObjectUtils.updateIfPresent(request::getFinalGoal, this::setFinalGoal);
         ObjectUtils.updateIfPresent(request::getStartDate, this::setStartDate);
         ObjectUtils.updateIfPresent(request::getEndDate, this::setEndDate);
         ObjectUtils.updateIfPresent(request::getPeriodicity, this::setPeriodicity);
 
-        request.getExpectedGoals().forEach(goal ->
-                this.addExpectedGoals(new PeriodGoal(goal.getPeriod(), goal.getValue(), goal.getLastUpdate())));
-
-        request.getAchievedGoals().forEach(goal ->
-                this.addAchievedGoals(new PeriodGoal(goal.getPeriod(), goal.getValue(), goal.getLastUpdate())));
+        request.getPeriodGoals().forEach(goal ->
+                this.addPeriodGoals(new PeriodGoal(goal.getPeriod(), goal.getExpectedValue(), goal.getAchievedValue(), goal.getLastUpdate(), goal.getJustification())));
     }
 
-    public List<PeriodGoal> getExpectedGoals() {
-        return expectedGoals;
+    public void addPeriodGoals(PeriodGoal goal) {
+        this.periodGoals.add(goal);
     }
 
-    public void addExpectedGoals(PeriodGoal goal) {
-        this.expectedGoals.add(goal);
+    public List<PeriodGoal> getPeriodGoals() {
+        return periodGoals;
     }
 
-    public List<PeriodGoal> getAchievedGoals() {
-        return achievedGoals;
+    public void setPeriodGoals(List<PeriodGoal> periodGoals) {
+        this.periodGoals = periodGoals;
     }
 
-    public void addAchievedGoals(PeriodGoal goal) {
-        this.achievedGoals.add(goal);
-    }
-
-    public void setExpectedGoals(List<PeriodGoal> expectedGoals) {
-        this.expectedGoals = expectedGoals;
-    }
-
-    public void setAchievedGoals(List<PeriodGoal> achievedGoals) {
-        this.achievedGoals = achievedGoals;
-    }
+    
 }

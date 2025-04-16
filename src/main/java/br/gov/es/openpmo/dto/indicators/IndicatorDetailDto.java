@@ -35,10 +35,6 @@ public class IndicatorDetailDto {
 
     @NotNull
     @NotEmpty
-    private String finalGoal;
-
-    @NotNull
-    @NotEmpty
     private String startDate;
 
     @NotNull
@@ -50,10 +46,7 @@ public class IndicatorDetailDto {
     private String periodicity;
 
     @NotNull
-    private List<PeriodGoal> expectedGoals;
-
-    @NotNull
-    private List<PeriodGoal> achievedGoals;
+    private List<PeriodGoal> periodGoals;
 
     public IndicatorDetailDto(
         final Long id,
@@ -62,12 +55,10 @@ public class IndicatorDetailDto {
         final String description,
         final String source,
         final String measure,
-        final String finalGoal,
         final String startDate,
         final String endDate,
         final String periodicity,
-        final List<PeriodGoal> expectedGoals,
-        final List<PeriodGoal> achievedGoals
+        final List<PeriodGoal> periodGoals
     ) {
         this.id = id;
         this.idWorkpack = idWorkpack;
@@ -75,12 +66,10 @@ public class IndicatorDetailDto {
         this.description = description;
         this.source = source;
         this.measure = measure;
-        this.finalGoal = finalGoal;
         this.startDate = startDate;
         this.endDate = endDate;
         this.periodicity = periodicity;
-        this.expectedGoals = expectedGoals;
-        this.achievedGoals = achievedGoals;
+        this.periodGoals = periodGoals;
     }
 
     public static IndicatorDetailDto of(final Indicator indicator) {
@@ -91,15 +80,11 @@ public class IndicatorDetailDto {
             indicator.getDescription(),
             indicator.getSource(),
             indicator.getMeasure(),
-            indicator.getFinalGoal(),
             indicator.getStartDate(),
             indicator.getEndDate(),
             indicator.getPeriodicity(),
-            indicator.getExpectedGoals().stream()
-                    .map(goal -> new PeriodGoal(goal.getPeriod(), goal.getValue(), goal.getLastUpdate()))
-                    .collect(Collectors.toList()),
-            indicator.getAchievedGoals().stream()
-                    .map(goal -> new PeriodGoal(goal.getPeriod(), goal.getValue(), goal.getLastUpdate()))
+            indicator.getPeriodGoals().stream()
+                    .map(goal -> new PeriodGoal(goal.getPeriod(), goal.getExpectedValue(), goal.getAchievedValue(), goal.getLastUpdate(), goal.getJustification()))
                     .collect(Collectors.toList())
         );
     }
@@ -144,14 +129,6 @@ public class IndicatorDetailDto {
         this.measure = measure;
     }
 
-    public String getFinalGoal() {
-        return finalGoal;
-    }
-
-    public void setFinalGoal(String finalGoal) {
-        this.finalGoal = finalGoal;
-    }
-
     public String getStartDate() {
         return startDate;
     }
@@ -176,19 +153,13 @@ public class IndicatorDetailDto {
         this.periodicity = periodicity;
     }
 
-    public List<PeriodGoal> getExpectedGoals() {
-        return expectedGoals;
+    public List<PeriodGoal> getPeriodGoals() {
+        return periodGoals;
     }
 
-    public List<PeriodGoal> getAchievedGoals() {
-        return achievedGoals;
+    public void setPeriodGoals(List<PeriodGoal> periodGoals) {
+        this.periodGoals = periodGoals;
     }
 
-    public void setAchievedGoals(List<PeriodGoal> achievedGoals) {
-        this.achievedGoals = achievedGoals;
-    }
-
-    public void setExpectedGoals(List<PeriodGoal> expectedGoals) {
-        this.expectedGoals = expectedGoals;
-    }
+    
 }

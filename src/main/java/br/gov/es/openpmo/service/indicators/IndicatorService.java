@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.Valid;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -149,14 +150,13 @@ public class IndicatorService {
     public IndicatorDetailDto findByIdAsIndicatorDetail(final Long id) {
         Indicator indicator = this.findById(id);
 
-        List<PeriodGoal> achievedGoals = this.repository.findAchievedGoalsByIndicatorId(id)
+        List<PeriodGoal> periodGoals = this.repository.findPeriodGoalsByIndicatorId(id)
                 .orElse(Collections.emptyList());
-        List<PeriodGoal> expectedGoals = this.repository.findExpectedGoalsByIndicatorId(id)
-                .orElse(Collections.emptyList());
+        
+        periodGoals.sort(Comparator.comparing(PeriodGoal::getPeriod));
 
         IndicatorDetailDto dto = IndicatorDetailDto.of(indicator);
-        dto.setAchievedGoals(achievedGoals);
-        dto.setExpectedGoals(expectedGoals);
+        dto.setPeriodGoals(periodGoals);
 
         return dto;
     }
@@ -172,8 +172,7 @@ public class IndicatorService {
         Indicator indicator = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException(INDICATOR_NOT_FOUND));
 
-        indicator.getExpectedGoals().forEach(periodGoalRepository::delete);
-        indicator.getAchievedGoals().forEach(periodGoalRepository::delete);
+        indicator.getPeriodGoals().forEach(periodGoalRepository::delete);
 
         this.repository.delete(indicator);
     }

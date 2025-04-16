@@ -9,21 +9,27 @@ public class PeriodGoal extends Entity {
 
     private String period;
 
-    private Double value;
+    private Double expectedValue;
+
+    private Double achievedValue;
 
     private String lastUpdate;
 
-    @Relationship(value = "BELONGS_TO")
+    private String justification;
+
+    @Relationship(value = "IS_DEFINED_FOR", direction = Relationship.OUTGOING)
     private Indicator indicator;
 
     public PeriodGoal() {
 
     }
 
-    public PeriodGoal(String period, Double value, String lastUpdate) {
+    public PeriodGoal(String period, Double expectedValue, Double achievedValue, String lastUpdate, String justification) {
         this.period = period;
-        this.value = value;
+        this.expectedValue = expectedValue;
+        this.achievedValue = achievedValue;
         this.lastUpdate = lastUpdate;
+        this.justification = justification;
     }
 
     public String getPeriod() {
@@ -34,12 +40,20 @@ public class PeriodGoal extends Entity {
         this.period = period;
     }
 
-    public Double getValue() {
-        return value;
+    public Double getExpectedValue() {
+        return expectedValue;
     }
 
-    public void setValue(Double value) {
-        this.value = value;
+    public void setExpectedValue(Double expectedValue) {
+        this.expectedValue = expectedValue;
+    }
+
+    public Double getAchievedValue() {
+        return achievedValue;
+    }
+
+    public void setAchievedValue(Double achievedValue) {
+        this.achievedValue = achievedValue;
     }
 
     public Indicator getIndicator() {
@@ -57,4 +71,14 @@ public class PeriodGoal extends Entity {
     public void setLastUpdate(String lastUpdate) {
         this.lastUpdate = lastUpdate;
     }
+
+    public String getJustification() {
+        return justification;
+    }
+
+    public void setJustification(String justification) {
+        this.justification = justification;
+    }
+
+    
 }

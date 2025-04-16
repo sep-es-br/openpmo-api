@@ -32,10 +32,6 @@ public class IndicatorUpdateDto {
 
     @NotNull
     @NotEmpty
-    private final String finalGoal;
-
-    @NotNull
-    @NotEmpty
     private final String startDate;
 
     @NotNull
@@ -47,10 +43,7 @@ public class IndicatorUpdateDto {
     private final String periodicity;
 
     @NotNull
-    private final List<PeriodGoalDto> expectedGoals;
-
-    @NotNull
-    private final List<PeriodGoalDto> achievedGoals;
+    private final List<PeriodGoalDto> periodGoals;
 
     public IndicatorUpdateDto(
         final Long id,
@@ -59,12 +52,10 @@ public class IndicatorUpdateDto {
         final String description,
         final String source,
         final String measure,
-        final String finalGoal,
         final String startDate,
         final String endDate,
         final String periodicity,
-        final List<PeriodGoalDto> expectedGoals,
-        final List<PeriodGoalDto> achievedGoals
+        final List<PeriodGoalDto> periodGoals
     ) {
         this.id = id;
         this.idWorkpack = idWorkpack;
@@ -72,12 +63,10 @@ public class IndicatorUpdateDto {
         this.description = description;
         this.source = source;
         this.measure = measure;
-        this.finalGoal = finalGoal;
         this.startDate = startDate;
         this.endDate = endDate;
         this.periodicity = periodicity;
-        this.expectedGoals = expectedGoals;
-        this.achievedGoals = achievedGoals;
+        this.periodGoals = periodGoals;
     }
 
     public Long getId() {
@@ -104,10 +93,6 @@ public class IndicatorUpdateDto {
         return measure;
     }
 
-    public String getFinalGoal() {
-        return finalGoal;
-    }
-
     public String getStartDate() {
         return startDate;
     }
@@ -120,11 +105,8 @@ public class IndicatorUpdateDto {
         return periodicity;
     }
 
-    public List<PeriodGoalDto> getExpectedGoals() {
-        return expectedGoals;
+    public List<PeriodGoalDto> getPeriodGoals() {
+        return periodGoals;
     }
 
-    public List<PeriodGoalDto> getAchievedGoals() {
-        return achievedGoals;
-    }
 }
