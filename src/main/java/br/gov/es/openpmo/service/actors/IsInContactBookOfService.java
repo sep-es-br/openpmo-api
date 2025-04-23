@@ -37,9 +37,10 @@ public class IsInContactBookOfService {
 
   public Optional<IsInContactBookOf> findContactInformationUsingPersonIdAndWorkpackId(
     final Long personId,
-    final Long workpackId
+    final Long workpackId,
+    final Long planId
   ) {
-    return this.repository.findIsInContactBookOfUsingPersonIdAndWorkpackId(personId, workpackId);
+    return this.repository.findIsInContactBookOfUsingPersonIdAndWorkpackId(personId, workpackId, planId);
   }
 
   @Cacheable("contactInformationByPersonAndOffice")

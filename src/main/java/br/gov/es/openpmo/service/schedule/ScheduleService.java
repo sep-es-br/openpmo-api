@@ -2,11 +2,13 @@ package br.gov.es.openpmo.service.schedule;
 
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.costaccount.CostAccountEntityDto;
+import br.gov.es.openpmo.dto.schedule.ConsumesCostDto;
 import br.gov.es.openpmo.dto.schedule.ConsumesDto;
 import br.gov.es.openpmo.dto.schedule.DistributionStrategy;
 import br.gov.es.openpmo.dto.schedule.GroupStepDto;
 import br.gov.es.openpmo.dto.schedule.ScheduleDto;
 import br.gov.es.openpmo.dto.schedule.ScheduleParamDto;
+import br.gov.es.openpmo.dto.schedule.StepAggregateDto;
 import br.gov.es.openpmo.dto.schedule.StepDto;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.relations.Consumes;
@@ -30,9 +32,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.Year;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -42,6 +46,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.SCHEDULE_ALREADY_EXISTS;
@@ -338,128 +344,155 @@ public class ScheduleService {
   }
 
   public List<ScheduleDto> findAll(final Long idWorkpack) {
-    final List<Schedule> schedules = this.scheduleRepository.findAllByWorkpack(idWorkpack);
-    final Set<Long> ids = schedules.stream().map(Schedule::getId).collect(Collectors.toSet());
-    final List<ScheduleDto> snapshots = this.scheduleRepository.findSnapshotByMasterIds(new ArrayList<>(ids));
-    final Set<Long> idsSnapshots = snapshots.stream().map(ScheduleDto::getIdSnapshot).collect(Collectors.toSet());
-    final List<StepDto> stepSnapshot = this.stepRepository.findAllStepsnapshotByScheduleSnapshotIds(new ArrayList<>(idsSnapshots));
-    final Set<Long> idsStepSnapshot = stepSnapshot.stream().map(StepDto::getId).collect(Collectors.toSet());
-    final List<ConsumesDto> consumesSnapshot = costAccountRepository.findAllConsumesByStepIds(new ArrayList<>(idsStepSnapshot));
-    final List<CostAccountEntityDto> constAccounts = costAccountRepository.findCostAccountByScheduleIds(new ArrayList<>(ids));
-    final List<ScheduleDto> list = new ArrayList<>();
 
-    for (final Schedule schedule : schedules) {
-      ScheduleDto snapShot = snapshots.stream().filter(s -> schedule.getId().equals(s.getId())).findFirst().orElse(null);
-      ScheduleDto scheduleDto = new ScheduleDto(schedule);
-      List<StepDto> listStepSnapshot = new ArrayList<>(0);
-      if (snapShot != null) {
-        scheduleDto.setBaselineStart(snapShot.getBaselineStart());
-        scheduleDto.setBaselineEnd(snapShot.getBaselineEnd());
-        listStepSnapshot.addAll(
-            stepSnapshot.stream().filter(s -> snapShot.getIdSnapshot().equals(s.getIdSchedule())).collect(
-                Collectors.toList()));
+    ScheduleDto currentSchedule = this.scheduleRepository.findScheduleBaseInfoByWorkpackId(idWorkpack);
+
+    if (currentSchedule == null || currentSchedule.getId() == null) {
+      return Collections.emptyList();
+    }
+
+    List<StepAggregateDto> steps = this.scheduleRepository.findCombinedStepData(idWorkpack);
+
+    currentSchedule.setSteps(steps);
+
+    currentSchedule.getSteps().forEach(step -> {
+      if (step.getMasterStepId() != null) {
+        List<ConsumesCostDto> masterCosts = this.costAccountRepository.findCostConsumptionsByStepId(step.getMasterStepId());
+        masterCosts.forEach(cost -> {
+          cost.setStepDate(step.getStepDate());
+        });
+        step.setConsumeCostMaster(masterCosts);
       }
-      scheduleDto.setGroupStep(this.getGroupStep(schedule, listStepSnapshot, consumesSnapshot, constAccounts));
-      setValuesBaseline(scheduleDto, listStepSnapshot, consumesSnapshot);
-      list.add(scheduleDto);
-    }
+    
+      if (step.getSnapshotStepId() != null) {
+        List<ConsumesCostDto> baselineCosts = this.costAccountRepository.findCostConsumptionsByStepId(step.getSnapshotStepId());
+        baselineCosts.forEach(cost -> {
+          cost.setStepDate(step.getStepDate());
+        });
+        step.setConsumeCostBaseLine(baselineCosts);
+      }
+    });
 
-    return list;
+    currentSchedule.setGroupStep(groupStepsByYear(steps));
+
+    calculateBaselineValues(currentSchedule);
+
+    return Collections.singletonList(currentSchedule);
+
   }
 
-  private void setValuesBaseline(final ScheduleDto scheduleDto, final List<StepDto> listStepSnapshot
-      , final List<ConsumesDto> consumesSnapshot) {
-    final BigDecimal plannedWork = listStepSnapshot.stream().map(StepDto::getPlannedWork).filter(
-        Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
-    final BigDecimal plannedCost = consumesSnapshot.stream().map(ConsumesDto::getPlannedCost).filter(
-        Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
-    scheduleDto.setBaselinePlaned(plannedWork);
-    scheduleDto.setBaselineCost(plannedCost);
-  }
+  private List<GroupStepDto> groupStepsByYear(List<StepAggregateDto> steps) {
+    Map<Integer, List<StepDto>> stepsByYear = new HashMap<>();
 
-
-
-  private List<GroupStepDto> getGroupStep(Schedule schedule, List<StepDto> listStepSnapshot
-      , final List<ConsumesDto> listConsumesSnapshot, final List<CostAccountEntityDto> constAccounts) {
-    List<GroupStepDto> groupList = new ArrayList<>(0);
-    Map<Integer, List<StepDto>> mapGroup = this.getMapGroups(schedule, listStepSnapshot, listConsumesSnapshot, constAccounts);
-    if (!mapGroup.isEmpty()) {
-      mapGroup.forEach((year, steps) -> {
-        GroupStepDto group = new GroupStepDto(year, steps);
-        groupList.add(group);
-      });
-    }
-    groupList.forEach(g -> g.getSteps().sort(Comparator.comparing(StepDto::getPeriodFromStart)));
-    return groupList.stream().sorted(Comparator.comparing(GroupStepDto::getYear)).collect(Collectors.toList());
-  }
-
-  private Map<Integer, List<StepDto>> getMapGroups(Schedule schedule, List<StepDto> listStepSnapshot
-      , final List<ConsumesDto> listConsumesSnapshot, final List<CostAccountEntityDto> constAccounts) {
-    Map<Integer, List<StepDto>> mapGroup = new HashMap<>(0);
-    if (CollectionUtils.isNotEmpty(schedule.getSteps())) {
-      schedule.getSteps().forEach(s -> {
-        mapGroup.computeIfAbsent(s.getYear(),  k -> new ArrayList<>());
-
-        StepDto snapshot = listStepSnapshot.stream().filter(
-            st -> st.getStepMasterId() != null && st.getStepMasterId().equals(s.getId())).findFirst().orElse(null);
-
-        List<ConsumesDto> consumes = listConsumesSnapshot.stream().filter(
-            c -> snapshot != null && c.getStepSnapshotId() != null && c.getStepSnapshotId().equals(
-                snapshot.getId())).collect(Collectors.toList());
-
-        mapGroup.get(s.getYear()).add(this.getStepDto(s, snapshot, consumes, constAccounts));
-      });
-    }
-    return mapGroup;
-  }
-
-  private StepDto getStepDto(final Step step, StepDto snapshot
-      , final List<ConsumesDto> listConsumesSnapshot, final List<CostAccountEntityDto> constAccounts) {
-    StepDto stepDto = new StepDto(step);
-    stepDto.setConsumes(this.getConsumes(step, listConsumesSnapshot, constAccounts));
-    if (snapshot != null) {
-      stepDto.setBaselinePlannedWork(snapshot.getPlannedWork());
-      if (snapshot.getPeriodFromStartNumber() != null) {
-        stepDto.setBaselinePeriodFromStart(snapshot.getScheduleStart().plusMonths(snapshot.getPeriodFromStartNumber()));
+    for (StepAggregateDto aggregate : steps) {
+      Integer year = extractYearFromStepDate(aggregate.getStepDate());
+      if (year != null) {
+        StepDto stepDto = convertToStepDto(aggregate);
+        stepsByYear.computeIfAbsent(year, k -> new ArrayList<>()).add(stepDto);
       }
     }
+
+    return stepsByYear.entrySet().stream()
+        .map(entry -> new GroupStepDto(entry.getKey(), entry.getValue()))
+        .sorted(Comparator.comparing(GroupStepDto::getYear))
+        .collect(Collectors.toList());
+  }
+
+  private StepDto convertToStepDto(StepAggregateDto aggregate) {
+    StepDto stepDto = new StepDto();
+
+    stepDto.setId(aggregate.getMasterStepId());
+    stepDto.setStepMasterId(aggregate.getMasterStepId());
+    stepDto.setIdSchedule(aggregate.getMasterScheduleId());
+
+    stepDto.setActualWork(toBigDecimal(aggregate.getMasterActualWork()));
+    stepDto.setPlannedWork(toBigDecimal(aggregate.getMasterPlannedWork()));
+    stepDto.setBaselinePlannedWork(toBigDecimal(aggregate.getSnapshotPlannedWork()));
+
+    if (aggregate.getStepDate() != null) {
+      String dateStr = String.valueOf(aggregate.getStepDate());
+      LocalDate date = LocalDate.of(
+          Integer.parseInt(dateStr.substring(0, 4)),
+          Integer.parseInt(dateStr.substring(4, 6)),
+          1);
+      stepDto.setPeriodFromStart(date);
+    }
+
+    stepDto.setConsumes(convertConsumes(aggregate));
+
     return stepDto;
   }
 
-  private Set<ConsumesDto> getConsumes(final Step step
-      , List<ConsumesDto> listConsumesSnapshot, final List<CostAccountEntityDto> constAccounts) {
-    Set<ConsumesDto> consumes = new LinkedHashSet<>(0);
-    if (CollectionUtils.isNotEmpty(step.getConsumes())) {
-      step.getConsumes().forEach(c -> {
-        ConsumesDto dto = new ConsumesDto(c);
-
-        constAccounts.stream().filter(e -> e.getId().equals(c.getCostAccount().getId())).findFirst().ifPresent(
-            entityDto -> dto.getCostAccount().setName(entityDto.getName()));
-
-        constAccounts.stream().filter(e -> e.getId().equals(c.getCostAccount().getId())).findFirst().ifPresent(
-                costAccountEntityDto -> dto.getCostAccount().setCodUo(costAccountEntityDto.getCodUo())
-        );
-
-        constAccounts.stream().filter(e -> e.getId().equals(c.getCostAccount().getId())).findFirst().ifPresent(
-                costAccountEntityDto -> dto.getCostAccount().setUnidadeOrcamentaria(costAccountEntityDto.getUnidadeOrcamentaria())
-        );
-
-        constAccounts.stream().filter(e -> e.getId().equals(c.getCostAccount().getId())).findFirst().ifPresent(
-                costAccountEntityDto -> dto.getCostAccount().setCodPo(costAccountEntityDto.getCodPo())
-        );
-
-        constAccounts.stream().filter(e -> e.getId().equals(c.getCostAccount().getId())).findFirst().ifPresent(
-                costAccountEntityDto -> dto.getCostAccount().setPlanoOrcamentario(costAccountEntityDto.getPlanoOrcamentario())
-        );
-
-        listConsumesSnapshot.stream().filter(
-            s -> s.getCostAccountMasterId() != null && s.getCostAccountMasterId().equals(
-                c.getIdCostAccount())).findFirst().ifPresent(c2 -> dto.setBaselinePlannedCost(c2.getPlannedCost()));
-
-        consumes.add(dto);
-      });
+  private Set<ConsumesDto> convertConsumes(StepAggregateDto aggregate) {
+    Set<ConsumesDto> consumes = new LinkedHashSet<>();
+  
+    if (aggregate.getConsumeCostMaster() != null) {
+      for (ConsumesCostDto masterCost : aggregate.getConsumeCostMaster()) {
+        ConsumesDto consume = new ConsumesDto();
+        consume.setId(masterCost.getId());
+        consume.setActualCost(masterCost.getActualCost());
+        consume.setPlannedCost(masterCost.getPlannedCost());
+        consume.setCostAccount(masterCost.getCostAccount());
+        consume.setStepDate(masterCost.getStepDate()); 
+        consumes.add(consume);
+      }
     }
+  
+    if (aggregate.getConsumeCostBaseLine() != null) {
+      for (ConsumesCostDto baselineCost : aggregate.getConsumeCostBaseLine()) {
+        Optional<ConsumesDto> existing = consumes.stream()
+          .filter(c -> c.getStepDate() != null &&
+                       c.getStepDate().equals(baselineCost.getStepDate()))
+          .findFirst();
+  
+        if (existing.isPresent()) {
+          existing.get().setBaselinePlannedCost(baselineCost.getPlannedCost());
+        } else {
+          ConsumesDto newConsume = new ConsumesDto();
+          newConsume.setId(baselineCost.getId());
+          newConsume.setBaselinePlannedCost(baselineCost.getPlannedCost());
+          newConsume.setCostAccount(baselineCost.getCostAccount());
+          newConsume.setStepSnapshotId(baselineCost.getStepId());
+          newConsume.setStepDate(baselineCost.getStepDate());
+          consumes.add(newConsume);
+        }
+      }
+    }
+  
     return consumes;
+  }
+  
+
+  private BigDecimal toBigDecimal(Float value) {
+    return value != null ? BigDecimal.valueOf(value) : null;
+  }
+
+  private Integer extractYearFromStepDate(Integer stepDate) {
+    if (stepDate == null)
+      return null;
+    return stepDate / 100; 
+  }
+
+  private void calculateBaselineValues(ScheduleDto scheduleDto) {
+    if (scheduleDto.getGroupStep() == null)
+      return;
+
+    BigDecimal baselinePlannedWork = scheduleDto.getGroupStep().stream()
+        .flatMap(group -> group.getSteps().stream())
+        .map(StepDto::getBaselinePlannedWork)
+        .filter(Objects::nonNull)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    BigDecimal baselinePlannedCost = scheduleDto.getGroupStep().stream()
+        .flatMap(group -> group.getSteps().stream())
+        .filter(step -> step.getConsumes() != null)
+        .flatMap(step -> step.getConsumes().stream())
+        .map(ConsumesDto::getBaselinePlannedCost)
+        .filter(Objects::nonNull)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    scheduleDto.setBaselinePlaned(baselinePlannedWork);
+    scheduleDto.setBaselineCost(baselinePlannedCost);
   }
 
   public ScheduleDto mapsToScheduleDto(final Schedule schedule) {

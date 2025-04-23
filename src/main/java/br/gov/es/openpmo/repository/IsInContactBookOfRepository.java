@@ -13,10 +13,12 @@ public interface IsInContactBookOfRepository extends Neo4jRepository<IsInContact
          "(office)<-[isAdoptedBy:IS_ADOPTED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO]-(workpack:Workpack) " +
          "WHERE id(person)=$personId " +
          "AND id(workpack)=$workpackId " +
+         "AND id(plan)=$planId " +
          "RETURN person, isInContactBookOf, office ")
   Optional<IsInContactBookOf> findIsInContactBookOfUsingPersonIdAndWorkpackId(
     Long personId,
-    Long workpackId
+    Long workpackId,
+    Long planId
   );
 
   @Query("MATCH (person:Person)-[isInContactBookOf:IS_IN_CONTACT_BOOK_OF]->(office:Office) " +

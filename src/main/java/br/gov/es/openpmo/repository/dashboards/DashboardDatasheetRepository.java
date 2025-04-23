@@ -12,11 +12,33 @@ import java.util.List;
 @Repository
 public interface DashboardDatasheetRepository extends Neo4jRepository<Workpack, Long> {
 
-  @Query("MATCH p = (current:Workpack{deleted:false,canceled:false})<-[:IS_IN*]-(child:Workpack{deleted:false,canceled:false}), " +
-    "(current)-[:IS_INSTANCE_BY|IS_LINKED_TO]->(n:WorkpackModel), " +
-    "(child)-[:IS_INSTANCE_BY|IS_LINKED_TO]->(m:WorkpackModel)-[:IS_IN*]->(n) " +
-    "WHERE id(current)=$workpackId and id(n)=$workpackModelId " +
-    "return id(m) as idWorkpackModel, count(distinct child) AS quantity, m.modelName AS singularName, m.modelNameInPlural AS pluralName, m.fontIcon AS icon, length(p) as level")
+  @Query("MATCH p = (current:Workpack{deleted:false,canceled:false})<-[:IS_IN*]-(child:Workpack{deleted:false,canceled:false}) " +
+    "WHERE id(current)=$workpackId " +
+    "MATCH(current)-[:IS_INSTANCE_BY|IS_LINKED_TO]->(n:WorkpackModel) " +
+    "WHERE id(n)=$workpackModelId " +
+    "MATCH (child)-[:IS_INSTANCE_BY|IS_LINKED_TO]->(m:WorkpackModel)-[:IS_IN*]->(n) " +
+    "MATCH (child)-[:BELONGS_TO]->(pl:Plan) " +
+    "OPTIONAL MATCH (child)<-[:IS_SNAPSHOT_OF]-(b_mc:Milestone)-[:COMPOSES]->(bl:Baseline {active: TRUE}) " +
+    "WITH id(m) AS idWorkpackModel, " +
+    "child, " +
+    "m.modelName AS singularName, " +
+    "m.modelNameInPlural AS pluralName, " +
+    "m.fontIcon AS icon, " +
+    "p, " +
+    "b_mc IS NOT NULL AS baselined, " +
+    "left(b_mc.date, 10) AS baselineDate, " +
+    "left(child.date, 10) AS actualDate, " +
+    "pl " +
+    "WHERE (NOT ('Milestone' IN labels(child))) OR ( " +
+    "(baselined AND baselineDate >= pl.start AND baselineDate <= pl.finish) OR " +
+    "(NOT baselined AND actualDate >= pl.start AND actualDate <= pl.finish) " +
+    ") " +
+    "RETURN idWorkpackModel, " +
+    "count(DISTINCT child) AS quantity, " +
+    "singularName, " +
+    "pluralName, " +
+    "icon, " +
+    "length(p) AS level ")
   List<WorkpackByModelQueryResult> workpackByModel(Long workpackId, Long workpackModelId);
 
   @Query("MATCH (a:Actor)-[s:IS_STAKEHOLDER_IN{active: true }]->(w:Workpack{deleted: false , canceled: false })\n" +

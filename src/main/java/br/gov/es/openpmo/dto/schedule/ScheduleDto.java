@@ -27,6 +27,9 @@ public class ScheduleDto {
   private Long idWorkpack;
 
   @JsonIgnore
+  private List<StepAggregateDto> steps;
+
+  @JsonIgnore
   private Long idSnapshot;
 
   public ScheduleDto() {
@@ -200,5 +203,13 @@ public class ScheduleDto {
 
   public void setIdSnapshot(Long idSnapshot) {
     this.idSnapshot = idSnapshot;
+  }
+
+  public List<StepAggregateDto> getSteps() {
+    return steps;
+  }
+
+  public void setSteps(List<StepAggregateDto> steps) {
+    this.steps = steps;
   }
 }

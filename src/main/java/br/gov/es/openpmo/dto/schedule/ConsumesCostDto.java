@@ -12,27 +12,23 @@ import java.util.Optional;
 import org.springframework.data.neo4j.annotation.QueryResult;
 
 @QueryResult
-public class ConsumesDto {
+public class ConsumesCostDto {
 
   private Long id;
   private BigDecimal actualCost;
-  private BigDecimal baselinePlannedCost;
   private BigDecimal plannedCost;
   private CostAccountEntityDto costAccount;
 
   @JsonIgnore
-  private Long stepSnapshotId;
-
-  @JsonIgnore
-  private Long costAccountMasterId;
+  private Long stepId;
 
   @JsonIgnore
   private Integer stepDate;
 
-  public ConsumesDto() {
+  public ConsumesCostDto() {
   }
 
-  public ConsumesDto(Consumes consumes) {
+  public ConsumesCostDto(Consumes consumes) {
     this.id = consumes.getId();
     this.actualCost = consumes.getActualCost();
     this.plannedCost = consumes.getPlannedCost();
@@ -73,35 +69,12 @@ public class ConsumesDto {
     this.costAccount = costAccount;
   }
 
-  public BigDecimal getBaselinePlannedCost() {
-    return this.baselinePlannedCost;
-  }
+  public Long getStepId() {
+    return stepId;
+}
 
-  public void setBaselinePlannedCost(final BigDecimal baselinePlannedCost) {
-    this.baselinePlannedCost = baselinePlannedCost;
-  }
-
-  public Long getStepSnapshotId() {
-    return stepSnapshotId;
-  }
-
-  public void setStepSnapshotId(Long stepSnapshotId) {
-    this.stepSnapshotId = stepSnapshotId;
-  }
-
-  public Long getCostAccountMasterId() {
-    return costAccountMasterId;
-  }
-
-  public void setCostAccountMasterId(Long costAccountMasterId) {
-    this.costAccountMasterId = costAccountMasterId;
-  }
-
-  @JsonIgnore
-  public Long getIdCostAccount() {
-    return Optional.ofNullable(this.costAccount)
-      .map(CostAccountEntityDto::getId)
-      .orElse(null);
+  public void setStepId(Long stepId) {
+    this.stepId = stepId;
   }
 
   public Integer getStepDate() {
@@ -110,6 +83,13 @@ public class ConsumesDto {
 
   public void setStepDate(Integer stepDate) {
     this.stepDate = stepDate;
+  }
+
+  @JsonIgnore
+  public Long getIdCostAccount() {
+    return Optional.ofNullable(this.costAccount)
+      .map(CostAccountEntityDto::getId)
+      .orElse(null);
   }
 
 }
