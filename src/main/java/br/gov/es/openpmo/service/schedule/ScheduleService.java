@@ -347,6 +347,10 @@ public class ScheduleService {
 
     ScheduleDto currentSchedule = this.scheduleRepository.findScheduleBaseInfoByWorkpackId(idWorkpack);
 
+    if (currentSchedule == null || currentSchedule.getId() == null) {
+      return Collections.emptyList();
+    }
+
     List<StepAggregateDto> steps = this.scheduleRepository.findCombinedStepData(idWorkpack);
 
     currentSchedule.setSteps(steps);
