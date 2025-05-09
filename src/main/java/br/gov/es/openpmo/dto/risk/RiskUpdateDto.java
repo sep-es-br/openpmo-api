@@ -8,6 +8,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 import java.time.LocalDate;
 
 public class RiskUpdateDto {
@@ -18,9 +20,11 @@ public class RiskUpdateDto {
   private final Long idWorkpack;
   @NotNull
   @NotEmpty
+  @Size(max = 50, message = "O nome deve ter no máximo 50 caracteres")
   private final String name;
   @NotNull
   @NotEmpty
+  @Size(max = 600, message = "A descrição deve ter no máximo 600 caracteres")
   private final String description;
   @NotNull
   private final Importance importance;

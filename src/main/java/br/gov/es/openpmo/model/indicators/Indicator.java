@@ -11,9 +11,12 @@ import org.springframework.data.annotation.Transient;
 
 import java.util.*;
 
+import javax.validation.constraints.Size;
+
 @NodeEntity
 public class Indicator extends Entity {
 
+    @Size(max = 50, message = "O nome deve ter no máximo 50 caracteres")
     private String name;
     private String description;
     private String source;

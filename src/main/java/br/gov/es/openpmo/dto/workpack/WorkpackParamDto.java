@@ -8,6 +8,8 @@ import io.swagger.annotations.ApiModel;
 import org.modelmapper.ModelMapper;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -27,8 +29,10 @@ public abstract class WorkpackParamDto {
 
   private Long idParent;
 
+  @Size(max = 50, message = "O nome deve ter no máximo 50 caracteres")
   private String name;
 
+  @Size(max = 600, message = "O nome completo deve ter no máximo 600 caracteres")
   private String fullName;
 
   @NotNull

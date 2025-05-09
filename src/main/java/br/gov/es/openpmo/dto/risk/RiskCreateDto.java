@@ -13,6 +13,8 @@ import jdk.vm.ci.meta.Local;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -23,9 +25,11 @@ public class RiskCreateDto {
   private Long idWorkpack;
   @NotNull
   @NotEmpty
+  @Size(max = 50, message = "O nome deve ter no máximo 50 caracteres")
   private String name;
   @NotNull
   @NotEmpty
+  @Size(max = 600, message = "A descrição deve ter no máximo 600 caracteres")
   private String description;
   @NotNull
   private Importance importance;
