@@ -417,7 +417,7 @@ public class OfficePermissionService {
       .map(PersonDto::getId)
       .orElse(null);
     if (this.repository.existsByIdWorkpackAndIdPerson(idOffice, idPerson)) {
-      // throw new NegocioException(ApplicationMessage.ALREADY_EXISTS_PERMISSION);
+      throw new NegocioException(ApplicationMessage.ALREADY_EXISTS_PERMISSION);
     }
     final Person author = this.getPersonByAuthorization(authorization);
     final Person target = this.returnPersonOrCreateIfNotExists(
