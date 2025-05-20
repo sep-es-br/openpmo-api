@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 public class ProcessUpdateDto {
 
@@ -11,8 +12,10 @@ public class ProcessUpdateDto {
   private final Long id;
   @NotNull
   @NotEmpty
+  @Size(max = 50, message = "O nome deve ter no máximo 50 caracteres")
   private final String name;
 
+  @Size(max = 600, message = "A anotação deve ter no máximo 600 caracteres")
   private final String note;
 
   @JsonCreator

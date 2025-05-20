@@ -4,6 +4,8 @@ import br.gov.es.openpmo.dto.indicators.period.PeriodGoalDto;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 import java.util.List;
 
 public class IndicatorCreateDto {
@@ -13,10 +15,12 @@ public class IndicatorCreateDto {
 
     @NotNull
     @NotEmpty
+    @Size(max = 50, message = "O nome deve ter no máximo 50 caracteres")
     private String name;
 
     @NotNull
     @NotEmpty
+    @Size(max = 600, message = "A descrição deve ter no máximo 600 caracteres")
     private String description;
 
     @NotNull
