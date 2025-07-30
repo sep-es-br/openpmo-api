@@ -110,7 +110,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     if(alreadyRejected) return;
 
     this.updateBaselineStatus(baseline, idPerson);
-    this.journalCreator.baseline(baseline, idPerson);
+    this.journalCreator.baselineForAllApprovedPersons(baseline);
 
     if (baseline.getStatus() != Status.APPROVED || baseline.isCancelation()) {
       return;

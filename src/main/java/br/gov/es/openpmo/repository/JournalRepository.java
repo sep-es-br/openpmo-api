@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.repository;
 
+import br.gov.es.openpmo.dto.person.ApprovedPersonDto;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.JournalInformationDto;
 import br.gov.es.openpmo.model.actors.File;
 import br.gov.es.openpmo.model.actors.Person;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -132,6 +134,16 @@ public interface JournalRepository extends Neo4jRepository<JournalEntry, Long> {
           Long authorId,
           LocalDateTime date
   );
+
+  @Query("MATCH (workpack:Workpack)-[:IS_BASELINED_BY]->(baseline:Baseline) " +
+        "MATCH (p:Person)<-[rel:IS_EVALUATED_BY]-(baseline) " +
+        "WHERE id(workpack) = $workpackId " +
+        "AND id(baseline) = $baseLineId " +
+        "AND rel.decision = 'APPROVED' " +
+        "RETURN id(p) AS personId, rel.when AS evaluationDate")
+  List<Map<String, Object>> getApprovedPersons(Long workpackId, Long baseLineId);
+
+
   @Query("MATCH (o:Office) where id(o) = $officeId " +
           "MATCH (a:Person) where id(a) = $authorId " +
           "MATCH (t:Person) where id(t) = $targetId " +
