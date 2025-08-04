@@ -3,6 +3,8 @@ package br.gov.es.openpmo.controller.ccbmembers;
 import br.gov.es.openpmo.dto.Response;
 import br.gov.es.openpmo.dto.ccbmembers.CCBMemberRequest;
 import br.gov.es.openpmo.dto.ccbmembers.CCBMemberResponse;
+import br.gov.es.openpmo.service.baselines.BaselineChangesService;
+import br.gov.es.openpmo.service.baselines.EvaluateBaselineService;
 import br.gov.es.openpmo.service.ccbmembers.ICreateCCBMemberRelationshipService;
 import br.gov.es.openpmo.service.ccbmembers.IDeleteCCBMemberService;
 import br.gov.es.openpmo.service.ccbmembers.IGetAllCCBMemberService;
@@ -36,6 +38,8 @@ public class CCBMemberController implements ICCBMemberController {
 
   private final ICanAccessService canAccessService;
 
+  private final EvaluateBaselineService evaluateBaselineService;
+
   @Autowired
   public CCBMemberController(
       final IGetAllCCBMemberService getAllService,
@@ -44,7 +48,8 @@ public class CCBMemberController implements ICCBMemberController {
       final IGetByIdCCBMemberService getByIdCCBMemberService,
       final IDeleteCCBMemberService deleteCCBMemberService,
       final ResponseHandler controllerHelper,
-      final ICanAccessService canAccessService) {
+      final ICanAccessService canAccessService,
+      final EvaluateBaselineService evaluateBaselineService) {
     this.getAllService = getAllService;
     this.createRelationshipService = createRelationshipService;
     this.updateCCBMemberRelationshipService = updateCCBMemberRelationshipService;
@@ -52,6 +57,7 @@ public class CCBMemberController implements ICCBMemberController {
     this.deleteCCBMemberService = deleteCCBMemberService;
     this.controllerHelper = controllerHelper;
     this.canAccessService = canAccessService;
+    this.evaluateBaselineService = evaluateBaselineService;
   }
 
   @Override
@@ -101,6 +107,7 @@ public class CCBMemberController implements ICCBMemberController {
 
     this.canAccessService.ensureCanEditResource(idWorkpack, authorization);
     this.deleteCCBMemberService.delete(idPerson, idWorkpack);
+    this.evaluateBaselineService.handlePostMemberDeletion(idWorkpack);
     return this.controllerHelper.success();
   }
 

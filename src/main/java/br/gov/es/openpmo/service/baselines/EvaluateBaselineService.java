@@ -45,6 +45,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
 
   private final JournalCreator journalCreator;
 
+
   @Autowired
   public EvaluateBaselineService(
     final BaselineRepository repository,
@@ -212,6 +213,32 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
       final Baseline activeBaseline = maybeActiveBaseline.get();
       activeBaseline.setActive(false);
       this.saveBaseline(activeBaseline);
+    }
+  }
+
+  public void handlePostMemberDeletion(Long idWorkpack) {
+    final Long idBaseline = this.repository.findProposedBaselineByWorkpack(idWorkpack)
+            .orElse(null);
+
+    if (idBaseline == null) {
+        return; 
+    }
+
+    final Baseline baseline = this.findBaselineById(idBaseline);
+    throwExceptionIfBaselineIsNotProposedOrReject(baseline);
+
+    final boolean hasEvaluationsRemain = !this.evaluatedByRepository.wasEvaluatedByAllMembers(idBaseline);
+
+    if (!hasEvaluationsRemain) {
+        final boolean alreadyRejected = this.isAlreadyRejected(idBaseline);
+        if (!alreadyRejected) {
+            this.updateBaselineStatus(baseline, null);
+            this.journalCreator.baselineForAllApprovedPersons(baseline);
+
+            if (baseline.getStatus() == Status.APPROVED && !baseline.isCancelation()) {
+                this.dashboardService.calculate();
+            }
+        }
     }
   }
 
