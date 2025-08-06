@@ -544,4 +544,9 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
                     "RETURN b "
     )
     void setStatusBaseline(Long baselineId, String status);
+
+    @Query("MATCH (workpack:Workpack)-[:IS_BASELINED_BY]->(baseline:Baseline) " +
+       "WHERE id(workpack) = $workpackId AND baseline.status = 'PROPOSED' " +
+       "RETURN id(baseline)")
+    Optional<Long> findProposedBaselineByWorkpack(Long workpackId);
 }

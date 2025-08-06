@@ -2,6 +2,7 @@ package br.gov.es.openpmo.service.journals;
 
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.journals.JournalRequest;
+import br.gov.es.openpmo.dto.person.ApprovedPersonDto;
 import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Person;
@@ -30,7 +31,11 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class JournalCreator {
@@ -89,6 +94,22 @@ public class JournalCreator {
     );
   }
 
+  public void baselineForAllApprovedPersons(
+    final Baseline baseline
+  ) {
+    final Long workpackId = this.getWorkpackIdByBaseline(baseline);
+    final JournalAction journalAction = JournalActionMapper.mapBaselineStatus(baseline.getStatus());
+
+    this.createBaselineJournalEntriesForApprovedPersons(
+        JournalType.BASELINE,
+        journalAction,
+        baseline.getName(),
+        baseline.getDescription(),
+        workpackId,
+        baseline.getId()
+      );
+    }
+
   private Long getWorkpackIdByBaseline(final Baseline baseline) {
     return Optional.ofNullable(baseline.getIdWorkpack())
       .orElseGet(() -> this.findWorkpackIdByBaselineId(baseline));
@@ -126,6 +147,39 @@ public class JournalCreator {
     return this.journalRepository.createJournalEntryBaselineEvaluate(
             type.name(), action.name(), nameItem, description, workpackId, personId, LocalDateTime.now());
   }
+
+  public void createBaselineJournalEntriesForApprovedPersons(
+        final JournalType type,
+        final JournalAction action,
+        final String nameItem,
+        final String description,
+        final Long workpackId,
+        final Long baselineId
+) {
+    List<Map<String, Object>> rawResults = journalRepository.getApprovedPersons(workpackId, baselineId);
+
+    List<ApprovedPersonDto> approvedPersons = rawResults.stream()
+    .map(record -> {
+        Long personId = ((Number) record.get("personId")).longValue();
+        String evaluationDate = (String) record.get("evaluationDate");
+        return new ApprovedPersonDto(personId, evaluationDate);
+    })
+    .collect(Collectors.toList());
+
+    for (ApprovedPersonDto person : approvedPersons) {
+      DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+      LocalDateTime evaluationDate = LocalDateTime.parse(person.getEvaluationDate(), formatter);
+      journalRepository.createJournalEntryBaselineEvaluate(
+          type.name(),
+          action.name(),
+          nameItem,
+          description,
+          workpackId,
+          person.getPersonId(),
+          evaluationDate
+      );
+    }
+}
 
   private Long findWorkpackIdByBaselineId(final Baseline baseline) {
     return this.baselineRepository.findWorkpackIdByBaselineId(baseline.getId())
