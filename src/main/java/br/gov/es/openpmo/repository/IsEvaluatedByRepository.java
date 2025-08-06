@@ -39,7 +39,7 @@ public interface IsEvaluatedByRepository extends Neo4jRepository<IsEvaluatedBy, 
          "OPTIONAL MATCH (member:Person)-[isCCBMemberFor:IS_CCB_MEMBER_FOR{active:true}]->(workpack) " +
          "OPTIONAL MATCH (evaluator:Person)<-[:IS_EVALUATED_BY]-(baseline) " +
          "WITH count(DISTINCT evaluator) AS evaluators, count(DISTINCT member) AS members " +
-         "RETURN evaluators = members")
+         "RETURN evaluators > 0 AND members > 0 AND evaluators = members")
   boolean wasEvaluatedByAllMembers(Long idBaseline);
 
   @Query("MATCH (p:Person), (b:Baseline) " +
