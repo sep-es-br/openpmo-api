@@ -12,6 +12,7 @@ import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.IsCCBMemberRepository;
 import br.gov.es.openpmo.repository.IsEvaluatedByRepository;
+import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
 import br.gov.es.openpmo.service.journals.JournalCreator;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
@@ -19,8 +20,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.model.baselines.Status.PROPOSED;
 import static br.gov.es.openpmo.model.relations.IsEvaluatedBy.fromMemberEvaluation;
@@ -37,6 +40,8 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
 
   private final WorkpackService workpackService;
 
+  private final WorkpackRepository workpackRepository;
+
   private final IsCCBMemberRepository ccbMemberRepository;
 
   private final IsEvaluatedByRepository evaluatedByRepository;
@@ -50,13 +55,16 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
   public EvaluateBaselineService(
     final BaselineRepository repository,
     final WorkpackService workpackService,
+    final WorkpackRepository workpackRepository,
     final IsCCBMemberRepository ccbMemberRepository,
     final IsEvaluatedByRepository evaluatedByRepository,
     final IAsyncDashboardService dashboardService,
     final JournalCreator journalCreator
+    
   ) {
     this.repository = repository;
     this.workpackService = workpackService;
+    this.workpackRepository = workpackRepository;
     this.ccbMemberRepository = ccbMemberRepository;
     this.evaluatedByRepository = evaluatedByRepository;
     this.dashboardService = dashboardService;
@@ -143,6 +151,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
   ) {
     this.inactivateBaselineIfHasPrevious(baseline);
     this.approveBaseline(baseline, idPerson);
+
   }
 
   private void saveEvaluation(
@@ -164,8 +173,29 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
   ) {
     baseline.approve();
     this.saveBaseline(baseline);
+    this.cancelWorkpacksFromSnapshots(baseline, idPerson);
     if(baseline.isCancelation()) {
       this.cancelWorkpackByBaseline(baseline, idPerson);
+    }
+  }
+
+  private void cancelWorkpacksFromSnapshots(final Baseline baseline, final Long idPerson) {
+    List<Workpack> canceledSnapshots = this.repository.findSnapshotsByBaselineIdAndCanceledTrue(baseline.getId());
+
+    List<Long> masterIds = canceledSnapshots.stream()
+    .map(snap -> this.repository.findMasterBySnapshotId(snap.getId()))
+    .filter(Optional::isPresent)
+    .map(opt -> opt.get().getId())
+    .collect(Collectors.toList());
+
+    if (!masterIds.isEmpty()) {
+      workpackRepository.setWorkpacksCanceled(masterIds, true);
+
+      masterIds.forEach(id -> {
+          Optional<Workpack> masterOpt = workpackRepository.findById(id);
+          workpackRepository.updateSituationValue(id, "Cancelada");
+          masterOpt.ifPresent(master -> journalCreator.edition(master, JournalAction.CANCELLED, idPerson));
+      });
     }
   }
 

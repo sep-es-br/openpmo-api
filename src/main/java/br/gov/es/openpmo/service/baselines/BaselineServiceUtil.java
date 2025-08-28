@@ -64,6 +64,17 @@ public class BaselineServiceUtil {
                 principal.setClassification(BaselineStatus.NEW);
                 continue;
             }
+
+            if (Boolean.TRUE.equals(workpackRepository.isSituationToCancel(principal.getId()))) {
+                principal.setClassification(BaselineStatus.TO_CANCEL);
+                continue;
+            }
+            
+            if (Boolean.TRUE.equals(workpackRepository.isSituationCanceled(principal.getId()))) {
+                principal.setClassification(BaselineStatus.CANCELLED);
+                continue;
+            }
+
             if (isChanged(principal, compare)) {
                 principal.setClassification(BaselineStatus.CHANGED);
             }
@@ -71,14 +82,23 @@ public class BaselineServiceUtil {
         final List<BaselineWorkpackDto> workpackBaselineDeleted = listCompare.stream().filter(
             w -> listParam.stream().noneMatch(p -> p.getIdMaster().equals(w.getIdMaster()))).collect(Collectors.toList());
         if (CollectionUtils.isNotEmpty(workpackBaselineDeleted)) {
-            workpackBaselineDeleted.forEach(d -> d.setClassification(BaselineStatus.DELETED));
+            workpackBaselineDeleted.forEach(d -> {
+                if (Boolean.TRUE.equals(workpackRepository.isSituationCanceled(d.getIdMaster()))) {
+                    d.setClassification(BaselineStatus.TO_CANCEL);
+                } else {
+                    d.setClassification(BaselineStatus.DELETED);
+                }
+            });
             list.addAll(workpackBaselineDeleted);
         }
         return list;
     }
 
-    public void createSnapshot(Workpack workpack, Baseline baseline, BaselineScheduleSubmitDto schedule) {
+    public void createSnapshot(Workpack workpack, Baseline baseline, BaselineScheduleSubmitDto schedule, boolean toCancel) {
         Workpack snapshot = getSnapshotOf(workpack);
+        if (toCancel) {
+            snapshot.setCanceled(true);
+        }
         snapshot = workpackRepository.save(snapshot);
         workpackRepository.createSnapshotRelationshipWithMaster(workpack.getId(), snapshot.getId());
         workpackRepository.createSnapshotRelationshipWithBaseline(baseline.getId(), snapshot.getId());

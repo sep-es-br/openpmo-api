@@ -652,4 +652,26 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       "WHERE id(w)=$workpackId " +
       "RETURN ID(children) ")
   Set<Long> findAllChildren(@Param("workpackId") Long workpackId);
+  
+  @Query("MATCH (w:Workpack)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel {name: 'Situação'}) " +
+       "WHERE id(w) = $id " +
+       "SET p.value = $value")
+  void updateSituationValue(Long id, String value);
+
+  @Query("MATCH (w:Workpack)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel {name:'Situação'}) " +
+       "WHERE id(w) = $id " +
+       "RETURN p.value = 'Concluída'")
+  boolean isSituationConcluded(Long id);
+
+  @Query("MATCH (w:Workpack)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel {name:'Situação'}) " +
+       "WHERE id(w) = $id " +
+       "RETURN p.value = 'A cancelar'")
+  Boolean isSituationToCancel(Long id);
+
+  @Query("MATCH (snapshot:Workpack)-[:IS_SNAPSHOT_OF]->(master:Workpack) " +
+       "MATCH (master)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel {name:'Situação'}) " +
+       "WHERE id(snapshot) = $id and snapshot.canceled = true " +
+       "RETURN p.value = 'Cancelada'")
+  Boolean isSituationCanceled(Long id);
 }
+

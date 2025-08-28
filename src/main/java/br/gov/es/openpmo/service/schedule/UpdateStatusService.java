@@ -74,8 +74,14 @@ public class UpdateStatusService {
     if (!hasWorkToComplete) {
       deliverable.setCompleted(true);
       analyzedDeliverables.add(deliverable);
+      this.workpackRepository.updateSituationValue(deliverable.getId(), "Concluída");
       return;
     }
+    final boolean isSituationConcluded = this.workpackRepository.isSituationConcluded(deliverable.getId());
+    if(isSituationConcluded){
+      this.workpackRepository.updateSituationValue(deliverable.getId(), "Em execução");
+    }
+
     deliverable.setCompleted(false);
     analyzedDeliverables.add(deliverable);
 
