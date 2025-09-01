@@ -8,16 +8,14 @@ import br.gov.es.openpmo.dto.dashboards.RiskResultDto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
-
 public class WorkpackRepresentation {
-
   private Long idWorkpack;
 
   private String workpackName;
 
   private String workpackType;
 
-  private Long idWorkpaModelLinked;
+  private Long idWorkpackModelLinked;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private DashboardMonthDto dashboard;
@@ -36,6 +34,11 @@ public class WorkpackRepresentation {
   private ScheduleMeasureUnit unitMeasure;
 
   private JournalInformationDto journalInformation;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private Boolean hasActiveBaseline;
+
+  /* Getters and Setters */
 
   public Long getIdWorkpack() {
     return idWorkpack;
@@ -109,11 +112,19 @@ public class WorkpackRepresentation {
     this.journalInformation = journalInformation;
   }
 
-  public Long getIdWorkpaModelLinked() {
-    return idWorkpaModelLinked;
+  public Long getIdWorkpackModelLinked() {
+    return idWorkpackModelLinked;
   }
 
-  public void setIdWorkpaModelLinked(Long idWorkpaModelLinked) {
-    this.idWorkpaModelLinked = idWorkpaModelLinked;
+  public void setIdWorkpackModelLinked(Long idWorkpackModelLinked) {
+    this.idWorkpackModelLinked = idWorkpackModelLinked;
+  }
+
+  public Boolean getHasActiveBaseline() {
+    return hasActiveBaseline;
+  }
+
+  public void setHasActiveBaseline(Boolean hasActiveBaseline) {
+    this.hasActiveBaseline = hasActiveBaseline;
   }
 }

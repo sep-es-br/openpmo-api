@@ -26,15 +26,18 @@ import br.gov.es.openpmo.model.risk.Importance;
 import br.gov.es.openpmo.model.risk.Risk;
 import br.gov.es.openpmo.model.workpacks.Deliverable;
 import br.gov.es.openpmo.model.workpacks.Workpack;
+import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.utils.DashboardCacheUtil;
 
 @Component
 public class GetWorkpackRepresentation {
-
   private final DashboardCacheUtil dashboardCacheUtil;
 
-  public GetWorkpackRepresentation(DashboardCacheUtil dashboardCacheUtil) {
+  private final BaselineRepository baselineRepository;
+
+  public GetWorkpackRepresentation(DashboardCacheUtil dashboardCacheUtil, BaselineRepository baselineRepository) {
     this.dashboardCacheUtil = dashboardCacheUtil;
+    this.baselineRepository = baselineRepository;
   }
 
   public WorkpackRepresentation execute(
@@ -47,7 +50,7 @@ public class GetWorkpackRepresentation {
   ) {
     final WorkpackRepresentation workpackRepresentation = new WorkpackRepresentation();
     if (Boolean.TRUE.equals(workpackDto.getLinked())) {
-      workpackRepresentation.setIdWorkpaModelLinked(workpackDto.getIdWorkpackModel());
+      workpackRepresentation.setIdWorkpackModelLinked(workpackDto.getIdWorkpackModel());
     }
     final Long workpackId = workpackDto.getId();
     workpackRepresentation.setIdWorkpack(workpackId);
@@ -75,6 +78,10 @@ public class GetWorkpackRepresentation {
         workpackRepresentation.setUnitMeasure(unitMeasure);
       }
     }
+    if ("Project".equals(workpackDto.getType())) {
+      workpackRepresentation.setHasActiveBaseline(this.baselineRepository.existsActiveBaseline(workpackId));
+    }
+
     return workpackRepresentation;
   }
 
