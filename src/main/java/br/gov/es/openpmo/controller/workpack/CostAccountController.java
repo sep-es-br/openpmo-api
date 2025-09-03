@@ -53,6 +53,9 @@ public class CostAccountController {
   @Value("${pentaho.api.po.url}")
   private String poUrl;
 
+  @Value("${pentaho.api.contratos.url}")
+  private String instrumentsUrl;
+
   @Value("${pentahoBI.userId}")
   private String pentahoUserId;
 
@@ -201,6 +204,46 @@ public class CostAccountController {
     restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
 
     String url = poUrl + codUo;
+
+    try {
+      CompletableFuture<JsonNode> futureResponse = restTemplateUtils.createRequestWithAuth(restTemplate,
+              url,
+              pentahoUserId,
+              pentahoPassword
+      );
+      JsonNode response = futureResponse.join();
+      return ResponseEntity.ok(response);
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+    }
+  }
+  
+  
+
+  /**
+   * Método responsável pela requisição ao Pentaho
+   * @param codUo
+   * @param idCostAccount
+   * @param authorization
+   * @return Lista de POs dado uma UO
+   */
+  @GetMapping("/pentaho/instrumentsList")
+  public ResponseEntity<Object> getInstruments(@RequestParam("codUo") String codUo,
+                                      @RequestParam("startYear") Long startYear,
+                                      @RequestParam("endYear") Long endYear,
+                                      @Authorization final String authorization) {
+
+    RestTemplate restTemplate;
+    try {
+      restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
+    } catch (Exception e) {
+      logger.error("Erro ao realizar requisição ao Pentaho: {}", e.getMessage(), e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao configurar o RestTemplate para a URL " + poUrl);
+    }
+
+    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+
+    String url = String.format(instrumentsUrl, codUo, startYear, endYear);
 
     try {
       CompletableFuture<JsonNode> futureResponse = restTemplateUtils.createRequestWithAuth(restTemplate,
