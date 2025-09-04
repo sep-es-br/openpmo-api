@@ -47,6 +47,10 @@ public class UpdateStatusService {
     return this.stepRepository.findDeliverablesByScheduleId(scheduleId);
   }
 
+  public boolean checkHasWorkToComplete(final Long idDeliverable) {
+    return this.hasWorkToComplete(idDeliverable);
+  }
+
   public void update(final Collection<? extends Deliverable> deliverables) {
     final Collection<Workpack> analyzedDeliverables = new ArrayList<>();
 
