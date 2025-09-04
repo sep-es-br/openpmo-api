@@ -673,5 +673,10 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
        "WHERE id(snapshot) = $id and snapshot.canceled = true " +
        "RETURN p.value = 'Cancelada'")
   Boolean isSituationCanceled(Long id);
+
+  @Query("MATCH (w:Workpack)<-[:FEATURES]-(p:Property) " +
+       "WHERE id(p) = $id " +
+       "RETURN id(w)")
+  Long findWorkpackIdByPropertyId(Long id);
 }
 

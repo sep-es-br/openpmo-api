@@ -47,7 +47,8 @@ public class UpdateStatusService {
     return this.stepRepository.findDeliverablesByScheduleId(scheduleId);
   }
 
-  public boolean checkHasWorkToComplete(final Long idDeliverable) {
+  public boolean checkHasWorkToComplete(final Long idProperty) {
+    Long idDeliverable = this.workpackRepository.findWorkpackIdByPropertyId(idProperty);
     return this.hasWorkToComplete(idDeliverable);
   }
 

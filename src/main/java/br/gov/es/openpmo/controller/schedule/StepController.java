@@ -163,11 +163,12 @@ public class StepController {
       @PathVariable final Long id,
       @Authorization final String authorization
   ) {
-      this.canAccessService.ensureCanReadResource(id, authorization);
 
-      boolean complete = status.checkHasWorkToComplete(id);
+    this.canAccessService.ensureCanReadResource(id, authorization);
 
-      return ResponseEntity.ok(ResponseBase.of(complete));
+    boolean complete = !status.checkHasWorkToComplete(id);
+
+    return ResponseEntity.ok(ResponseBase.of(complete));
   }
 
 }
