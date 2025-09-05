@@ -4,6 +4,7 @@ import br.gov.es.openpmo.dto.MilestoneResultDto;
 import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
 import br.gov.es.openpmo.dto.dashboards.MilestoneDto;
 import br.gov.es.openpmo.dto.dashboards.RiskResultDto;
+import br.gov.es.openpmo.enumerator.BaselineStatus;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
@@ -37,6 +38,12 @@ public class WorkpackRepresentation {
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private Boolean hasActiveBaseline;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private BaselineStatus milestoneStatus;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private BaselineStatus deliverableStatus;
 
   /* Getters and Setters */
 
@@ -126,5 +133,21 @@ public class WorkpackRepresentation {
 
   public void setHasActiveBaseline(Boolean hasActiveBaseline) {
     this.hasActiveBaseline = hasActiveBaseline;
+  }
+
+  public BaselineStatus getMilestoneStatus() {
+    return milestoneStatus;
+  }
+
+  public void setMilestoneStatus(BaselineStatus milestoneStatus) {
+    this.milestoneStatus = milestoneStatus;
+  }
+
+  public BaselineStatus getDeliverableStatus() {
+    return deliverableStatus;
+  }
+
+  public void setDeliverableStatus(BaselineStatus deliveryStatus) {
+    this.deliverableStatus = deliveryStatus;
   }
 }

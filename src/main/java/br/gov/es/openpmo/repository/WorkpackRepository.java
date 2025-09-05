@@ -652,4 +652,25 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       "WHERE id(w)=$workpackId " +
       "RETURN ID(children) ")
   Set<Long> findAllChildren(@Param("workpackId") Long workpackId);
+
+  @Query(
+    "MATCH (organizer:Organizer)-[:IS_IN*]->(project:Project) " +
+    "WHERE id(organizer) = $idOrganizer " +
+    "RETURN ID(project)"
+  )
+  Long findProjectIdByOrganizerId(Long idOrganizer);
+
+  @Query(
+    "MATCH (milestone:Milestone)-[:IS_IN*]->(project:Project) " +
+    "WHERE id(milestone) = $idMilestone " +
+    "RETURN ID(project)"
+  )
+  Long findProjectIdByMilestoneId(Long idMilestone);
+
+  @Query(
+    "MATCH (deliverable:Deliverable)-[:IS_IN*]->(project:Project) " +
+    "WHERE id(deliverable) = $idDeliverable " +
+    "RETURN ID(project)"
+  )
+  Long findProjectIdByDeliverableId(Long idDeliverable);
 }

@@ -74,7 +74,7 @@ public class GetWorkpackBreakdownStructure {
     if (this.hasOnlyBasicReadPermission(idWorkpack, authorization)) {
       return null;
     }
-    WorkpackResultDto workpackDto = cacheUtil.getWorkpackBreakdownStructure(idWorkpack, idPlan,allLevels);
+    WorkpackResultDto workpackDto = cacheUtil.getWorkpackBreakdownStructure(idWorkpack, idPlan, allLevels);
     if (workpackDto != null) {
       final List<Long> idsMileston = new ArrayList<>(getIdsWorkpackByType(Collections.singleton(workpackDto), "Milestone"));
       final List<MilestoneDateDto> milestoneWorkpack = this.dashboardMilestoneRepository.findByIds(idsMileston);
