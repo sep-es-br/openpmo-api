@@ -3,6 +3,7 @@ package br.gov.es.openpmo.dto.costaccount;
 import br.gov.es.openpmo.dto.workpack.PropertyDto;
 import br.gov.es.openpmo.model.budget.PlanoOrcamentario;
 import br.gov.es.openpmo.model.budget.UnidadeOrcamentaria;
+import br.gov.es.openpmo.model.workpacks.Instrument;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 
 import javax.validation.constraints.NotNull;
@@ -19,6 +20,12 @@ public class CostAccountStoreDto {
 
   @NotNull(message = ApplicationMessage.ID_COST_ACCOUNT_MODEL_NOT_NULL)
   private Long idCostAccountModel;
+  
+  private UnidadeOrcamentaria unidadeOrcamentaria;
+
+  private PlanoOrcamentario planoOrcamentario;
+  
+  private List<Instrument> instruments;
 
   public CostAccountStoreDto(
     final Long idWorkpack,
@@ -31,10 +38,6 @@ public class CostAccountStoreDto {
       .map(Collections::unmodifiableList)
       .orElse(Collections.emptyList());
   }
-
-  UnidadeOrcamentaria unidadeOrcamentaria;
-
-  PlanoOrcamentario planoOrcamentario;
 
   public Long getIdWorkpack() {
     return this.idWorkpack;
@@ -75,4 +78,14 @@ public class CostAccountStoreDto {
   public void setPlanoOrcamentario(PlanoOrcamentario planoOrcamentario) {
     this.planoOrcamentario = planoOrcamentario;
   }
+
+    public List<Instrument> getInstruments() {
+        return instruments;
+    }
+
+    public void setInstruments(List<Instrument> instruments) {
+        this.instruments = instruments;
+    }
+  
+  
 }

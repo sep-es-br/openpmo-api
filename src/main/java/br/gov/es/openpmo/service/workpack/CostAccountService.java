@@ -36,6 +36,7 @@ import br.gov.es.openpmo.model.properties.Toggle;
 import br.gov.es.openpmo.model.properties.UnitSelection;
 import br.gov.es.openpmo.model.relations.Consumes;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
+import br.gov.es.openpmo.model.workpacks.Instrument;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.CostAccountModel;
 import br.gov.es.openpmo.repository.*;
@@ -110,6 +111,8 @@ public class CostAccountService {
   private final UnidadeOrcamentariaRepository unidadeOrcamentariaRepository;
 
   private final PlanoOrcamentarioRepository planoOrcamentarioRepository;
+  
+  private final InstrumentService instrumentService;
 
   @Autowired
   public CostAccountService(
@@ -128,7 +131,8 @@ public class CostAccountService {
     final ApplicationCacheUtil applicationCacheUtil,
     final PropertyRepository propertyRepository,
     final UnidadeOrcamentariaRepository unidadeOrcamentariaRepository,
-    final PlanoOrcamentarioRepository planoOrcamentarioRepository
+    final PlanoOrcamentarioRepository planoOrcamentarioRepository,
+    final InstrumentService instrumentService
   ) {
     this.costAccountRepository = costAccountRepository;
     this.consumesRepository = consumesRepository;
@@ -146,6 +150,7 @@ public class CostAccountService {
     this.propertyRepository = propertyRepository;
     this.unidadeOrcamentariaRepository = unidadeOrcamentariaRepository;
     this.planoOrcamentarioRepository = planoOrcamentarioRepository;
+    this.instrumentService = instrumentService;
   }
 
   public List<CostAccountDto> findAllByIdWorkpack(
@@ -458,6 +463,7 @@ public class CostAccountService {
     Workpack workpack = null;
     UnidadeOrcamentaria unidadeOrcamentaria;
     PlanoOrcamentario planoOrcamentario;
+    List<Instrument> instruments;
 
     if (cost instanceof CostAccountStoreDto) {
 
@@ -475,6 +481,7 @@ public class CostAccountService {
 
       unidadeOrcamentaria = store.getUnidadeOrcamentaria();
       planoOrcamentario = store.getPlanoOrcamentario();
+      instruments = store.getInstruments();
 
     } else {
       idCostAccount = ((CostAccountUpdateDto) cost).getId();
@@ -489,14 +496,14 @@ public class CostAccountService {
 
       unidadeOrcamentaria = update.getUnidadeOrcamentaria();
       planoOrcamentario = update.getPlanoOrcamentario();
+      instruments = update.getInstruments();
+      
     }
 
     CostAccount costAccount;
     if (idCostAccount == null) {
       costAccount = this.modelMapper.map(cost, CostAccount.class);
       costAccount.setWorkpack(workpack);
-      costAccount.setUnidadeOrcamentaria(unidadeOrcamentaria);
-      costAccount.setPlanoOrcamentario(planoOrcamentario);
     } else {
       costAccount = this.findById(idCostAccount);
 
@@ -507,10 +514,12 @@ public class CostAccountService {
       if (costAccount.getPlanoOrcamentario() != null) {
         planoOrcamentarioRepository.deleteById(costAccount.getPlanoOrcamentario().getId());
       }
+      
     }
 
     costAccount.setPlanoOrcamentario(planoOrcamentario);
     costAccount.setUnidadeOrcamentaria(unidadeOrcamentaria);
+    costAccount.setInstruments(instrumentService.findOrCreateAll(instruments));
 
     if (unidadeOrcamentaria != null) {
       if (unidadeOrcamentaria.getPlanoOrcamentario() == null) {

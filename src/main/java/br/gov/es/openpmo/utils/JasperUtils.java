@@ -97,7 +97,13 @@ public class JasperUtils {
           exporterXlsx.setConfiguration(xlsReportConfiguration);
 
           final SimpleOutputStreamExporterOutput simpleOutputStreamExporterOutput = new SimpleOutputStreamExporterOutput(out);
+          
+          final SimpleXlsxReportConfiguration conf = new SimpleXlsxReportConfiguration();
+          conf.setDetectCellType(true);          
+          
+          
           exporterXlsx.setExporterOutput(simpleOutputStreamExporterOutput);
+          exporterXlsx.setConfiguration(conf);
           exporterXlsx.exportReport();
           report = out.toByteArray();
           break;

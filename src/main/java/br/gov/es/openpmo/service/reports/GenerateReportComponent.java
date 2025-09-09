@@ -36,6 +36,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.*;
+import net.sf.jasperreports.engine.JRParameter;
 
 @Component
 public class GenerateReportComponent {
@@ -351,6 +352,10 @@ public class GenerateReportComponent {
       .map(Object::toString)
       .collect(Collectors.joining(","));
     parametros.put("scope", scope);
+    
+    Locale localeBR = new Locale("pt", "BR");
+    
+    parametros.put(JRParameter.REPORT_LOCALE, localeBR);
     return parametros;
   }
 

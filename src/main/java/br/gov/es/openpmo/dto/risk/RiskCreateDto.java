@@ -9,7 +9,6 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import jdk.vm.ci.meta.Local;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
