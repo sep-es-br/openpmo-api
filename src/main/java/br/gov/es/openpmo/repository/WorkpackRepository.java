@@ -663,10 +663,17 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
        "RETURN p.value = 'Concluída'")
   boolean isSituationConcluded(Long id);
 
-  @Query("MATCH (w:Workpack)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel {name:'Situação'}) " +
+  @Query("MATCH (w:Workpack) " +
        "WHERE id(w) = $id " +
+       "WITH CASE " +
+       "        WHEN w.category = 'SNAPSHOT' " +
+       "        THEN head([(w)-[:IS_SNAPSHOT_OF]->(master:Workpack) | master]) " +
+       "        ELSE w " +
+       "     END AS masterW " +
+       "MATCH (masterW)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel {name:'Situação'}) " +
        "RETURN p.value = 'A cancelar'")
   Boolean isSituationToCancel(Long id);
+
 
   @Query("MATCH (snapshot:Workpack)-[:IS_SNAPSHOT_OF]->(master:Workpack) " +
        "MATCH (master)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel {name:'Situação'}) " +
