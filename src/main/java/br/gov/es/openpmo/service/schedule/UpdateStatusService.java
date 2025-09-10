@@ -47,6 +47,11 @@ public class UpdateStatusService {
     return this.stepRepository.findDeliverablesByScheduleId(scheduleId);
   }
 
+  public boolean checkHasWorkToComplete(final Long idProperty) {
+    Long idDeliverable = this.workpackRepository.findWorkpackIdByPropertyId(idProperty);
+    return this.hasWorkToComplete(idDeliverable);
+  }
+
   public void update(final Collection<? extends Deliverable> deliverables) {
     final Collection<Workpack> analyzedDeliverables = new ArrayList<>();
 
@@ -74,8 +79,14 @@ public class UpdateStatusService {
     if (!hasWorkToComplete) {
       deliverable.setCompleted(true);
       analyzedDeliverables.add(deliverable);
+      this.workpackRepository.updateSituationValue(deliverable.getId(), "Concluída");
       return;
     }
+    final boolean isSituationConcluded = this.workpackRepository.isSituationConcluded(deliverable.getId());
+    if(isSituationConcluded){
+      this.workpackRepository.updateSituationValue(deliverable.getId(), "Em execução");
+    }
+
     deliverable.setCompleted(false);
     analyzedDeliverables.add(deliverable);
 

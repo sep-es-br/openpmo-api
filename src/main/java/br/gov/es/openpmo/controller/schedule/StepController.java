@@ -158,4 +158,17 @@ public class StepController {
     return ResponseEntity.ok(ResponseBase.success());
   }
 
+  @GetMapping("/check-complete/{id}")
+  public ResponseEntity<ResponseBase<Boolean>> checkIfComplete(
+      @PathVariable final Long id,
+      @Authorization final String authorization
+  ) {
+
+    this.canAccessService.ensureCanReadResource(id, authorization);
+
+    boolean complete = !status.checkHasWorkToComplete(id);
+
+    return ResponseEntity.ok(ResponseBase.of(complete));
+  }
+
 }
