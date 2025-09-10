@@ -658,7 +658,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
     "WHERE id(organizer) = $idOrganizer " +
     "RETURN ID(project)"
   )
-  Long findProjectIdByOrganizerId(Long idOrganizer);
+  Optional<Long> findProjectIdByOrganizerId(Long idOrganizer);
 
   @Query(
     "MATCH (milestone:Milestone)-[:IS_IN*]->(project:Project) " +

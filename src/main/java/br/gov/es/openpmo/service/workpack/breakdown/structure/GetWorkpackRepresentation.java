@@ -2,6 +2,7 @@ package br.gov.es.openpmo.service.workpack.breakdown.structure;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -89,12 +90,22 @@ public class GetWorkpackRepresentation {
     }
 
     Long projectId = (long) 1;
+    boolean shouldConsiderOrganizer = false;
     String currentWorkpackType = workpackDto.getType();
 
     if ("Project".equals(currentWorkpackType)) {
       projectId = workpackId;
     } else if ("Organizer".equals(currentWorkpackType)) {
-      projectId = this.workpackRepository.findProjectIdByOrganizerId(workpackId);
+      Optional<Long> optionalProjectId = this.workpackRepository.findProjectIdByOrganizerId(workpackId);
+
+      if (optionalProjectId.isPresent()) {
+        // Se achou id de um projeto, é porque o Organizer em questão é "inferior" ao Projeto (na hierarquia de entidades)
+        projectId = optionalProjectId.get();
+        shouldConsiderOrganizer = true;
+      } else {
+        // Se não achou id de um projeto, é porque o Organizer é "superior" ao Projeto (como um Programa, Área Temática, ou Portfolio)
+        shouldConsiderOrganizer = false;
+      }
     } else if ("Milestone".equals(currentWorkpackType)) {
       projectId = this.workpackRepository.findProjectIdByMilestoneId(workpackId);
     } else if ("Deliverable".equals(currentWorkpackType)) {
@@ -102,7 +113,13 @@ public class GetWorkpackRepresentation {
     }
 
     Optional<Baseline> activeBaseline = this.baselineRepository.findActiveBaseline(projectId);
-    workpackRepresentation.setHasActiveBaseline(activeBaseline.isPresent());
+
+    if (
+      (currentWorkpackType == "Organizer" && shouldConsiderOrganizer) ||
+      currentWorkpackType != "Organizer"
+    ) {
+      workpackRepresentation.setHasActiveBaseline(activeBaseline.isPresent());
+    }
 
     if ("Milestone".equals(currentWorkpackType) || "Deliverable".equals(currentWorkpackType)) {
       BaselineStatus currentWorkpackClassification;
