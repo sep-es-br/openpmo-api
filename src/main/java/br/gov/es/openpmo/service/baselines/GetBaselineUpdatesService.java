@@ -44,13 +44,13 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
   @Override
   public List<UpdateResponse> getUpdates(final Long idWorkpack) {
     final Workpack workpack = this.findProjectWorkpackById(idWorkpack);
-    final List<BaselineWorkpackDto> workpacskMaster = this.baselineRepository.findAllWorkpacMasterById(workpack.getId());
+    final List<BaselineWorkpackDto> workpacksMaster = this.baselineRepository.findAllWorkpacksMasterById(workpack.getId());
     final Baseline baseline = this.baselineRepository.findActiveBaseline(idWorkpack).orElse(null);
     if (baseline == null) {
-      workpacskMaster.forEach(w -> w.setClassification(BaselineStatus.NEW));
-      return getBaselineDetailResponse(workpacskMaster);
+      workpacksMaster.forEach(w -> w.setClassification(BaselineStatus.NEW));
+      return getBaselineDetailResponse(workpacksMaster);
     }
-    addScheduleAndConsumesMaster(workpacskMaster);
+    addScheduleAndConsumesMaster(workpacksMaster);
 
     final List<BaselineResultDto> bases = this.baselineRepository.findAllInWorkpackByIdWorkpack(idWorkpack);
 
@@ -61,7 +61,7 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
       final List<BaselineWorkpackDto> workpackBaselineCompare = this.baselineRepository.findAllWorkpacBaselineById(baseLineParam.getIdBaseline());
       addScheduleAndConsumesSnapshot(workpackBaselineCompare);
 
-      final List<BaselineWorkpackDto> result = this.baselineServiceUtil.compare(workpacskMaster, workpackBaselineCompare);
+      final List<BaselineWorkpackDto> result = this.baselineServiceUtil.compare(workpacksMaster, workpackBaselineCompare);
       result.removeIf(r -> r.getClassification() == null);
       list.addAll(getBaselineDetailResponse(result));
     }

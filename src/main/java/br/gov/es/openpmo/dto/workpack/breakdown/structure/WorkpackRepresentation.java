@@ -4,20 +4,19 @@ import br.gov.es.openpmo.dto.MilestoneResultDto;
 import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
 import br.gov.es.openpmo.dto.dashboards.MilestoneDto;
 import br.gov.es.openpmo.dto.dashboards.RiskResultDto;
+import br.gov.es.openpmo.enumerator.BaselineStatus;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
-
 public class WorkpackRepresentation {
-
   private Long idWorkpack;
 
   private String workpackName;
 
   private String workpackType;
 
-  private Long idWorkpaModelLinked;
+  private Long idWorkpackModelLinked;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private DashboardMonthDto dashboard;
@@ -36,6 +35,17 @@ public class WorkpackRepresentation {
   private ScheduleMeasureUnit unitMeasure;
 
   private JournalInformationDto journalInformation;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private Boolean hasActiveBaseline;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private BaselineStatus milestoneStatus;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private BaselineStatus deliverableStatus;
+
+  /* Getters and Setters */
 
   public Long getIdWorkpack() {
     return idWorkpack;
@@ -109,11 +119,35 @@ public class WorkpackRepresentation {
     this.journalInformation = journalInformation;
   }
 
-  public Long getIdWorkpaModelLinked() {
-    return idWorkpaModelLinked;
+  public Long getIdWorkpackModelLinked() {
+    return idWorkpackModelLinked;
   }
 
-  public void setIdWorkpaModelLinked(Long idWorkpaModelLinked) {
-    this.idWorkpaModelLinked = idWorkpaModelLinked;
+  public void setIdWorkpackModelLinked(Long idWorkpackModelLinked) {
+    this.idWorkpackModelLinked = idWorkpackModelLinked;
+  }
+
+  public Boolean getHasActiveBaseline() {
+    return hasActiveBaseline;
+  }
+
+  public void setHasActiveBaseline(Boolean hasActiveBaseline) {
+    this.hasActiveBaseline = hasActiveBaseline;
+  }
+
+  public BaselineStatus getMilestoneStatus() {
+    return milestoneStatus;
+  }
+
+  public void setMilestoneStatus(BaselineStatus milestoneStatus) {
+    this.milestoneStatus = milestoneStatus;
+  }
+
+  public BaselineStatus getDeliverableStatus() {
+    return deliverableStatus;
+  }
+
+  public void setDeliverableStatus(BaselineStatus deliveryStatus) {
+    this.deliverableStatus = deliveryStatus;
   }
 }
