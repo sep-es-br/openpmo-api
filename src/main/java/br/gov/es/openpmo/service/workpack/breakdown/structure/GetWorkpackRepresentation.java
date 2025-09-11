@@ -115,8 +115,8 @@ public class GetWorkpackRepresentation {
     Optional<Baseline> activeBaseline = this.baselineRepository.findActiveBaseline(projectId);
 
     if (
-      (currentWorkpackType == "Organizer" && shouldConsiderOrganizer) ||
-      currentWorkpackType != "Organizer"
+      (currentWorkpackType.equals("Organizer") && shouldConsiderOrganizer) ||
+      !currentWorkpackType.equals("Organizer")
     ) {
       workpackRepresentation.setHasActiveBaseline(activeBaseline.isPresent());
     }
