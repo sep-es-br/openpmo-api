@@ -1,5 +1,7 @@
 package br.gov.es.openpmo.dto.costaccount;
 
+import br.gov.es.openpmo.dto.budget.PlanoOrcamentarioDto;
+import br.gov.es.openpmo.dto.budget.UnidadeOrcamentariaDto;
 import br.gov.es.openpmo.dto.workpack.PropertyDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.PropertyModelDto;
 import br.gov.es.openpmo.model.Entity;
@@ -12,6 +14,7 @@ import br.gov.es.openpmo.utils.PropertyModelInstanceType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class CostAccountDto {
@@ -24,8 +27,8 @@ public class CostAccountDto {
   private String workpackModelFullName;
   private Long idCostAccountModel;
   private CostDto costAccountAllocation;
-  private UnidadeOrcamentaria unidadeOrcamentaria;
-  private PlanoOrcamentario planoOrcamentario;
+  private UnidadeOrcamentariaDto unidadeOrcamentaria;
+  private PlanoOrcamentarioDto planoOrcamentario;
   private List<Instrument> instruments;
 
   public static CostAccountDto of(final CostAccount costAccount) {
@@ -35,8 +38,8 @@ public class CostAccountDto {
     instance.setProperties(getPropertiesFrom(costAccount));
     instance.setModels(getModelsFrom(costAccount));
     instance.setIdCostAccountModel(getIdCostAccountModel(costAccount));
-    instance.setUnidadeOrcamentaria(costAccount.getUnidadeOrcamentaria());
-    instance.setPlanoOrcamentario(costAccount.getPlanoOrcamentario());
+    instance.setUnidadeOrcamentaria(UnidadeOrcamentariaDto.of(costAccount.getUnidadeOrcamentaria(), null , Set.of(instance)));
+    instance.setPlanoOrcamentario(PlanoOrcamentarioDto.of(costAccount.getPlanoOrcamentario()));
     instance.setInstruments(costAccount.getInstruments());
     return instance;
   }
@@ -146,19 +149,19 @@ public class CostAccountDto {
     this.idCostAccountModel = idCostAccountModel;
   }
 
-  public UnidadeOrcamentaria getUnidadeOrcamentaria() {
+  public UnidadeOrcamentariaDto getUnidadeOrcamentaria() {
     return unidadeOrcamentaria;
   }
 
-  public void setUnidadeOrcamentaria(UnidadeOrcamentaria unidadeOrcamentaria) {
+  public void setUnidadeOrcamentaria(UnidadeOrcamentariaDto unidadeOrcamentaria) {
     this.unidadeOrcamentaria = unidadeOrcamentaria;
   }
 
-  public PlanoOrcamentario getPlanoOrcamentario() {
+  public PlanoOrcamentarioDto getPlanoOrcamentario() {
     return planoOrcamentario;
   }
 
-  public void setPlanoOrcamentario(PlanoOrcamentario planoOrcamentario) {
+  public void setPlanoOrcamentario(PlanoOrcamentarioDto planoOrcamentario) {
     this.planoOrcamentario = planoOrcamentario;
   }
 }

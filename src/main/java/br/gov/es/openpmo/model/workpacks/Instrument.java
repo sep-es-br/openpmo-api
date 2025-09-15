@@ -5,8 +5,11 @@
 package br.gov.es.openpmo.model.workpacks;
 
 import br.gov.es.openpmo.model.Entity;
+import br.gov.es.openpmo.model.budget.PlanoOrcamentario;
+import br.gov.es.openpmo.model.budget.UnidadeOrcamentaria;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Property;
+import org.springframework.data.annotation.Transient;
 
 /**
  *
@@ -25,6 +28,12 @@ public class Instrument extends Entity{
     private String recipientCode;
     private String recipientName;
     private Float value;
+    
+    @Transient
+    private UnidadeOrcamentaria unidadeOrcamentaria;
+    
+    @Transient
+    private PlanoOrcamentario planoOrcamentario;
 
     public String getType() {
         return type;
