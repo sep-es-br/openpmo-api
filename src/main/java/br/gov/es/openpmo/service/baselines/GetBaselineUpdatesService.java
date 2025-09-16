@@ -9,8 +9,10 @@ import br.gov.es.openpmo.enumerator.BaselineStatus;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.workpacks.Workpack;
+import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
+import br.gov.es.openpmo.service.workpack.WorkpackModelService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,22 +25,25 @@ import java.util.stream.Collectors;
 
 @Service
 public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
-
   private final BaselineRepository baselineRepository;
 
   private final WorkpackRepository workpackRepository;
 
   private final BaselineServiceUtil baselineServiceUtil;
 
+  private final WorkpackModelService workpackModelService;
+
   @Autowired
   public GetBaselineUpdatesService(
     final BaselineRepository baselineRepository,
     final WorkpackRepository workpackRepository,
-    final BaselineServiceUtil baselineServiceUtil
+    final BaselineServiceUtil baselineServiceUtil,
+    final WorkpackModelService workpackModelService
   ) {
     this.baselineRepository = baselineRepository;
     this.workpackRepository = workpackRepository;
     this.baselineServiceUtil = baselineServiceUtil;
+    this.workpackModelService = workpackModelService;
   }
 
   @Override
@@ -46,17 +51,19 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
     final Workpack workpack = this.findProjectWorkpackById(idWorkpack);
     final List<BaselineWorkpackDto> workpacksMaster = this.baselineRepository.findAllWorkpacksMasterById(workpack.getId());
     final Baseline baseline = this.baselineRepository.findActiveBaseline(idWorkpack).orElse(null);
+    addScheduleAndConsumesMaster(workpacksMaster);
+
     if (baseline == null) {
       workpacksMaster.forEach(w -> w.setClassification(BaselineStatus.NEW));
       return getBaselineDetailResponse(workpacksMaster);
     }
-    addScheduleAndConsumesMaster(workpacksMaster);
 
     final List<BaselineResultDto> bases = this.baselineRepository.findAllInWorkpackByIdWorkpack(idWorkpack);
 
     BaselineResultDto baseLineParam = bases.stream().filter(b -> b.getIdBaseline().equals(baseline.getId())).findFirst().orElse(null);
 
     List<UpdateResponse> list = new ArrayList<>(0);
+
     if (baseLineParam != null) {
       final List<BaselineWorkpackDto> workpackBaselineCompare = this.baselineRepository.findAllWorkpacBaselineById(baseLineParam.getIdBaseline());
       addScheduleAndConsumesSnapshot(workpackBaselineCompare);
@@ -65,38 +72,58 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
       result.removeIf(r -> r.getClassification() == null);
       list.addAll(getBaselineDetailResponse(result));
     }
+
     return list;
   }
 
   private void addScheduleAndConsumesSnapshot(final List<BaselineWorkpackDto> workpacks) {
     Set<Long> deliverablesId = workpacks.stream().filter(d -> "Deliverable".equals(d.getType())).map(
-        BaselineWorkpackDto::getId).collect(Collectors.toSet());
+      BaselineWorkpackDto::getId).collect(Collectors.toSet());
     List<BaselineConsumesStep> stepConsumes = baselineRepository.findAllStepConsumesById(new ArrayList<>(deliverablesId));
     List<BaselineScheduleStep> scheduleSteps = baselineRepository.findAllBaselineScheduleStepById(new ArrayList<>(deliverablesId));
+
     for (BaselineWorkpackDto workpack : workpacks) {
       workpack.setConsumes(
-          stepConsumes.stream().filter(c -> c.getIdWorkpack().equals(workpack.getId())).collect(Collectors.toList()));
+        stepConsumes.stream().filter(c -> c.getIdWorkpack().equals(workpack.getId())).collect(Collectors.toList()));
       workpack.setSchedule(
-          scheduleSteps.stream().filter(s -> s.getIdWorkpack().equals(workpack.getId())).collect(Collectors.toList()));
+        scheduleSteps.stream().filter(s -> s.getIdWorkpack().equals(workpack.getId())).collect(Collectors.toList()));
     }
   }
 
   private void addScheduleAndConsumesMaster(final List<BaselineWorkpackDto> workpacks) {
     Set<Long> deliverablesId = workpacks.stream().filter(d -> "Deliverable".equals(d.getType())).map(
-        BaselineWorkpackDto::getId).collect(Collectors.toSet());
+      BaselineWorkpackDto::getId).collect(Collectors.toSet());
     List<BaselineConsumesStep> stepConsumes = baselineRepository.findAllStepConsumesMasterById(new ArrayList<>(deliverablesId));
     List<BaselineScheduleStep> scheduleSteps = baselineRepository.findAllScheduleStepMasterById(new ArrayList<>(deliverablesId));
     for (BaselineWorkpackDto workpack : workpacks) {
       workpack.setConsumes(
-          stepConsumes.stream().filter(c -> c.getIdWorkpack().equals(workpack.getId())).collect(Collectors.toList()));
+        stepConsumes.stream().filter(c -> c.getIdWorkpack().equals(workpack.getId())).collect(Collectors.toList()));
       workpack.setSchedule(
-          scheduleSteps.stream().filter(s -> s.getIdWorkpack().equals(workpack.getId())).collect(Collectors.toList()));
+        scheduleSteps.stream().filter(s -> s.getIdWorkpack().equals(workpack.getId())).collect(Collectors.toList()));
     }
   }
 
   private List<UpdateResponse> getBaselineDetailResponse(List<BaselineWorkpackDto> workpacks) {
     final List<UpdateResponse> list = new ArrayList<>(0);
-    workpacks.forEach(w -> list.add(new UpdateResponse(w.getId(), w.getFontIcon(), w.getName(), w.getClassification(), true)));
+    workpacks.forEach(w -> {
+      UpdateResponse newUR = new UpdateResponse(w.getId(), w.getFontIcon(), w.getName(), w.getClassification(), true);
+      newUR.setWorkpackType(w.getType());
+
+      if (w.getType().equals("Deliverable")) {
+        try {
+          WorkpackModel deliveryModel = this.workpackModelService.findById(w.getId());
+          newUR.setDeliveryModelHasActiveSchedule(deliveryModel != null && deliveryModel.getScheduleSessionActive());
+        } catch (Exception e) {
+          newUR.setDeliveryModelHasActiveSchedule(false);
+        }
+
+        newUR.setDeliveryHasActiveSchedule(w.getSchedule().size() > 0);
+        newUR.setDeliverySchedulePlannedCost(w.getSchedulePlannedCost());
+      }
+
+      list.add(newUR);
+    });
+
     return list;
   }
 
@@ -105,5 +132,4 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
       .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND))
       .ifIsNotProjectThrowsException();
   }
-
 }
