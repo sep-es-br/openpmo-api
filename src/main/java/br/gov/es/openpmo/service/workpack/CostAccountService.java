@@ -653,7 +653,7 @@ public class CostAccountService {
           if(
                 ( 
                     codPo.equals("-1") &&
-                    costAccountRepository.findByInstrument(sigefesCode).isEmpty()
+                    !costAccountRepository.findByInstrument(sigefesCode).isPresent()
                 ) || 
                 !instrumentList.stream().anyMatch(i -> i.getSigefesCode().equals(sigefesCode))
             ) 
