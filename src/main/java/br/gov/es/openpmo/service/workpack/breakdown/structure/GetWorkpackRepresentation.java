@@ -2,7 +2,6 @@ package br.gov.es.openpmo.service.workpack.breakdown.structure;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -137,7 +136,7 @@ public class GetWorkpackRepresentation {
         if (filteredUpdate != null) {
           currentWorkpackClassification = filteredUpdate.getClassification();
         } else {
-          currentWorkpackClassification = BaselineStatus.NEW;
+          currentWorkpackClassification = null;
         }
       } else {
         // Não possui Linha de Base ativa, portanto é um workpack novo
