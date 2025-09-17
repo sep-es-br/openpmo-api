@@ -57,7 +57,7 @@ public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, C
 
   @Query("MATCH (n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO|IS_STRUCTURED_BY|IS_FORSEEN_ON|APPLIES_TO|FEATURES|MITIGATES|IS_TRIGGER_BY|ADDRESSES|IS_REPORTED_FOR|IS_BELONGS_TO|SCOPE_TO|IS_LINKED_TO|COMPOSES|IS_BASELINED_BY*0..]->(m)<-[r:CAN_ACCESS_WORKPACK|CAN_ACCESS_PLAN|CAN_ACCESS_OFFICE]-(p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
           "WHERE id(n) IN $ids " +
-          "AND r.permissionLevel IN ['READ', 'EDIT'] " +
+          "AND r.permissionLevel IN ['READ', 'UPDATE', 'EDIT'] " +
           "with n limit 1 " +
           "with count(n)>0 as hasEditPermission " +
           "RETURN hasEditPermission")
