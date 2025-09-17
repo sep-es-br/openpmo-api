@@ -561,7 +561,7 @@ public class CostAccountService {
     costAccount.setUnidadeOrcamentaria(unidadeOrcamentaria);
     costAccount.setInstruments(instrumentService.findOrCreateAll(instruments));
 
-    if (unidadeOrcamentaria != null) {
+    if (unidadeOrcamentaria != null && planoOrcamentario != null) {
       if (unidadeOrcamentaria.getPlanoOrcamentario() == null) {
         unidadeOrcamentaria.setPlanoOrcamentario(new HashSet<>());
       }
