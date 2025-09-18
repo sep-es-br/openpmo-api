@@ -83,6 +83,11 @@ public class StepController {
   ) {
     this.canAccessService.ensureCanEditResource(stepUpdateDto.getId(), authorization);
 
+    boolean canSave = status.canSaveStep(stepUpdateDto.getId());
+    if (!canSave) {
+      return ResponseEntity.ok(ResponseBase.of(new EntityDto(stepUpdateDto.getId())));    
+    }
+
     final Step step = this.updateStep.execute(stepUpdateDto, false);
 
     return ResponseEntity.ok(ResponseBase.of(new EntityDto(step.getId())));

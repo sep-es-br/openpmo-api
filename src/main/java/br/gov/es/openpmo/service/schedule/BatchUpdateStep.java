@@ -24,9 +24,13 @@ public class BatchUpdateStep {
     final List<Long> updatedSteps = new ArrayList<>();
 
     for (final StepUpdateDto step : steps) {
+      boolean canSave = updateStatusService.canSaveStep(step.getId());
+      if (!canSave) {
+          continue;
+      }
       final Step updatedStep = this.updateStep(step);
       updatedSteps.add(updatedStep.getId());
-    }
+  }
 
     final List<Deliverable> deliverables = this.updateStatusService.getDeliverablesByScheduleId(idSchedule);
     this.updateStatusService.update(deliverables);

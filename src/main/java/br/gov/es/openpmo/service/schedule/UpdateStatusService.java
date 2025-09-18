@@ -127,4 +127,8 @@ public class UpdateStatusService {
     return this.stepRepository.hasWorkToCompleteComparingWithMaster(idDeliverable);
   }
 
+  public boolean canSaveStep(final Long stepId) {
+    return this.stepRepository.canSaveStep(stepId);
+  }
+
 }
