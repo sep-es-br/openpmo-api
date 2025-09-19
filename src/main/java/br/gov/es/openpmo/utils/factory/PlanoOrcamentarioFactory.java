@@ -56,7 +56,7 @@ public class PlanoOrcamentarioFactory extends BaseFactory<PlanoOrcamentario, Pla
         
         PlanoOrcamentarioDto dto = new PlanoOrcamentarioDto();
         dto.setId(model.getId());
-        dto.setCode(String.format("%06d", model.getCode()));
+        dto.setCode(Optional.ofNullable(model.getCode()).map(code -> String.format("%06d", code)).orElse(null));
         dto.setName(model.getName());
         dto.setFullName(model.getFullName());
         
