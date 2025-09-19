@@ -66,7 +66,7 @@ public class UpdateStep {
     final Step stepUpdate = this.findById(step.getId());
     boolean canSave = updateStatusService.canSaveStep(step.getId());
 
-    if (!canSave) {
+    if (canSave) {
       stepUpdate.setActualWork(
           Optional.ofNullable(step.getActualWork())
               .orElse(BigDecimal.ZERO)
