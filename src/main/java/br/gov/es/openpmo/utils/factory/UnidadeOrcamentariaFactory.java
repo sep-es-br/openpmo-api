@@ -60,7 +60,7 @@ public class UnidadeOrcamentariaFactory extends BaseFactory<UnidadeOrcamentaria,
         
         UnidadeOrcamentariaDto dto = new UnidadeOrcamentariaDto();
         dto.setId(model.getId());
-        dto.setCode(String.format("%05d", model.getCode()));
+        dto.setCode(Optional.ofNullable(model.getCode()).map(code -> String.format("%05d", model.getCode())).orElse(null));
         dto.setName(model.getName());
         dto.setFullName(model.getFullName());
         
