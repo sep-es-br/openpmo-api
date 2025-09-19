@@ -706,5 +706,13 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
     "RETURN ID(project)"
   )
   Long findProjectIdByDeliverableId(Long idDeliverable);
+
+  @Query(
+    "MATCH (children:Workpack{deleted:false})-[:IS_IN*]->(parent:Workpack) " +
+    "WHERE ID(parent) = $idParent AND (ANY(label IN labels(children) WHERE label IN ['Deliverable']) " +
+    "AND NOT (children)<-[:FEATURES]-(:Schedule)) " +
+    "RETURN children"
+  )
+  List<Workpack> findDeliveriesWithoutScheduleByParentId(Long idParent);
 }
 
