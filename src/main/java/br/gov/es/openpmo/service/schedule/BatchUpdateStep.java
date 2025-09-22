@@ -26,7 +26,7 @@ public class BatchUpdateStep {
     for (final StepUpdateDto step : steps) {
       final Step updatedStep = this.updateStep(step);
       updatedSteps.add(updatedStep.getId());
-    }
+  }
 
     final List<Deliverable> deliverables = this.updateStatusService.getDeliverablesByScheduleId(idSchedule);
     this.updateStatusService.update(deliverables);

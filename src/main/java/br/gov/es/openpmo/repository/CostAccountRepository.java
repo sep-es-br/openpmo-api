@@ -158,5 +158,16 @@ public interface CostAccountRepository extends Neo4jRepository<CostAccount, Long
           + "return uo is not null "
           + "and po is not null")
   boolean hasUOandPO(Long costAccountId);
+  
+  @Query("match (instrument:Instrument{sigefesCode: $sigefesCode})-[:FUNDS]->(ca:CostAccount) "
+          + "return ca "
+          + "limit 1")
+  Optional<CostAccount> findByInstrument(String sigefesCode);
+  
+  @Query(
+    "match (:UnidadeOrcamentaria{code: $codUo})-[:CONTROLS]->(ca:CostAccount)<-[:ASSIGNED]-(:PlanoOrcamentario{code: $codPo}) " + 
+    "return ca " + 
+    "limit 1")
+  Optional<CostAccount> findByUoPoCode(int codUo, int codPo);
 
 }

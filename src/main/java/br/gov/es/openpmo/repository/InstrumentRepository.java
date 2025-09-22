@@ -17,10 +17,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface InstrumentRepository extends Neo4jRepository<Instrument, Long> {
     
-//    @Query("MATCH (instrument:Instrument)\n" +
-//            "WHERE instrument.SIGEFESCode = $sigefesCode\n" +
-//            "RETURN instrument\n" +
-//            "LIMIT 1")
     public Optional<Instrument> findBySigefesCode( String sigefesCode);
     
 }

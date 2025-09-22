@@ -2,7 +2,6 @@ package br.gov.es.openpmo.service.workpack.breakdown.structure;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -118,7 +117,7 @@ public class GetWorkpackRepresentation {
       (currentWorkpackType.equals("Organizer") && shouldConsiderOrganizer) ||
       !currentWorkpackType.equals("Organizer")
     ) {
-      workpackRepresentation.setHasActiveBaseline(activeBaseline.isPresent());
+      workpackRepresentation.setProjectHasActiveBaseline(activeBaseline.isPresent());
     }
 
     if ("Milestone".equals(currentWorkpackType) || "Deliverable".equals(currentWorkpackType)) {
@@ -136,8 +135,22 @@ public class GetWorkpackRepresentation {
 
         if (filteredUpdate != null) {
           currentWorkpackClassification = filteredUpdate.getClassification();
+        } else if ("Deliverable".equals(currentWorkpackType)) {
+          List<Workpack> deliveriesWithoutSchedule = this.workpackRepository.findDeliveriesWithoutScheduleByParentId(projectId);
+          Workpack filteredDelivery = deliveriesWithoutSchedule
+            .stream()
+            .filter(w -> w.getId().equals(workpackId))
+            .findFirst()
+            .orElse(null);
+
+          if (filteredDelivery != null) {
+            currentWorkpackClassification = BaselineStatus.NEW;
+            workpackRepresentation.setDeliveryHasSchedule(false);
+          } else {
+            currentWorkpackClassification = null;
+          }
         } else {
-          currentWorkpackClassification = BaselineStatus.NEW;
+          currentWorkpackClassification = null;
         }
       } else {
         // Não possui Linha de Base ativa, portanto é um workpack novo

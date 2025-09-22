@@ -64,11 +64,14 @@ public class UpdateStep {
   public Step execute(final StepUpdateDto stepUpdateDto, Boolean updateScheduleAndDeliverable) {
     final Step step = this.getStepForUpdate(stepUpdateDto);
     final Step stepUpdate = this.findById(step.getId());
+    boolean canSave = updateStatusService.canSaveStep(step.getId());
 
-    stepUpdate.setActualWork(
-      Optional.ofNullable(step.getActualWork())
-        .orElse(BigDecimal.ZERO)
-    );
+    if (canSave) {
+      stepUpdate.setActualWork(
+          Optional.ofNullable(step.getActualWork())
+              .orElse(BigDecimal.ZERO)
+      );
+  }
     stepUpdate.setPlannedWork(
       Optional.ofNullable(step.getPlannedWork())
         .orElse(BigDecimal.ZERO)
@@ -115,7 +118,9 @@ public class UpdateStep {
             .filter(c -> Objects.nonNull(c.getId()) && c.getId().equals(consumes.getId())).findFirst()
             .orElse(null);
           if (Objects.nonNull(consumesUpdate)) {
-            consumesUpdate.setActualCost(consumes.getActualCost());
+            if (canSave) {
+              consumesUpdate.setActualCost(consumes.getActualCost());
+            }
             consumesUpdate.setPlannedCost(consumes.getPlannedCost());
           }
         }
