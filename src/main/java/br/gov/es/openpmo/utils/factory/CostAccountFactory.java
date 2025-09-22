@@ -29,18 +29,15 @@ import org.springframework.web.context.annotation.RequestScope;
 @RequestScope
 public class CostAccountFactory extends BaseFactory<CostAccount, CostAccountDto> {
     
-    private final PropertyFactory propertyFactory;
     private final UnidadeOrcamentariaFactory unidadeOrcamentariaFactory;
     private final PlanoOrcamentarioFactory planoOrcamentarioFactory;
     
     @Autowired
     public CostAccountFactory(
-            PropertyFactory propertyFactory,
             UnidadeOrcamentariaFactory unidadeOrcamentariaFactory,
             PlanoOrcamentarioFactory planoOrcamentarioFactory
     ) {
         super(CostAccount.class, CostAccountDto.class);
-        this.propertyFactory = propertyFactory;
         this.unidadeOrcamentariaFactory = unidadeOrcamentariaFactory;
         this.planoOrcamentarioFactory = planoOrcamentarioFactory;
     }
@@ -101,8 +98,18 @@ public class CostAccountFactory extends BaseFactory<CostAccount, CostAccountDto>
 
     private List<PropertyDto> getPropertiesFrom(final CostAccount costAccount) {
       return Optional.of(costAccount.getProperties())
-        .map(ca -> ca.stream().map(propertyFactory::fromModel).collect(Collectors.toList()))
+        .map(ca -> ca.stream().map(PropertyDto::of).collect(Collectors.toList()))
         .orElse(new ArrayList<>());
+    }
+
+    @Override
+    protected CostAccount newModel() {
+        return new CostAccount();
+    }
+
+    @Override
+    protected CostAccountDto newDto() {
+        return new CostAccountDto();
     }
     
 }

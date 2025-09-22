@@ -70,6 +70,16 @@ public class PlanoOrcamentarioFactory extends BaseFactory<PlanoOrcamentario, Pla
     protected Long getDtoId(PlanoOrcamentarioDto dto) {
         return dto.getId();
     }
+
+    @Override
+    protected PlanoOrcamentario newModel() {
+        return new PlanoOrcamentario();
+    }
+
+    @Override
+    protected PlanoOrcamentarioDto newDto() {
+        return new PlanoOrcamentarioDto();
+    }
     
     
 }

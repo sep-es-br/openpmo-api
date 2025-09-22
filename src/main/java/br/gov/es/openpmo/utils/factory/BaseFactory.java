@@ -28,6 +28,9 @@ public abstract class BaseFactory<T, U> {
     protected abstract Long getModelId(T model);
     protected abstract U createDto(T model);
     protected abstract Long getDtoId(U dto);
+    protected abstract T newModel();
+    protected abstract U newDto();
+    
     
     protected BaseFactory(Class<T> modelClass, Class<U> dtoClass) {
         this.modelClass = modelClass;
@@ -41,7 +44,12 @@ public abstract class BaseFactory<T, U> {
     
     public T fromDto(U dto){
         if (dto == null) return null;
-        T model = this.cacheModel.computeIfAbsent(getDtoId(dto), (id) -> this.createModel(dto));
+        
+        T model = this.cacheModel.putIfAbsent(getDtoId(dto), newModel());
+        
+        if(model == null) {
+            model = createModel(dto);
+        }
         
         return model;
     }
@@ -60,7 +68,10 @@ public abstract class BaseFactory<T, U> {
         
         if(model == null) return null;
         
-        U dto = this.cacheDto.computeIfAbsent(getModelId(model), (id) -> createDto(model));
+        U dto = this.cacheDto.putIfAbsent(getModelId(model), newDto());
+        
+        if(dto == null) 
+            dto = createDto(model); 
         
         
         return dto;
@@ -86,26 +97,6 @@ public abstract class BaseFactory<T, U> {
     private <X, Y> List<X> mapList(List<Y> source, Function<Y, X> mapper){
         if(source == null) return null;
         return source.stream().map(mapper).collect(Collectors.toList());
-    }
-    
-    private T newModel() {
-        try {
-            return this.modelClass.getDeclaredConstructor().newInstance();
-        } catch (NoSuchMethodException ex){
-            throw new RuntimeException("Classe model " + this.modelClass.getSimpleName() + " não possui construtor sem argumentos");
-        } catch (Exception ex) {
-            throw new RuntimeException(ex.getLocalizedMessage(), ex);
-        }
-    }
-    
-    private U newDto() {
-        try {
-            return this.dtoClass.getDeclaredConstructor().newInstance();
-        } catch (NoSuchMethodException ex){
-            throw new RuntimeException("Classe dto " + this.dtoClass.getSimpleName() + " não possui construtor sem argumentos");
-        } catch (Exception ex) {
-            throw new RuntimeException(ex.getLocalizedMessage(), ex);
-        }
     }
     
 }

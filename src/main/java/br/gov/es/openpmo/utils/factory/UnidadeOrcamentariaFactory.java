@@ -76,5 +76,15 @@ public class UnidadeOrcamentariaFactory extends BaseFactory<UnidadeOrcamentaria,
     protected Long getDtoId(UnidadeOrcamentariaDto dto) {
         return dto.getId();
     }
+
+    @Override
+    protected UnidadeOrcamentaria newModel() {
+        return new UnidadeOrcamentaria();
+    }
+
+    @Override
+    protected UnidadeOrcamentariaDto newDto() {
+        return new UnidadeOrcamentariaDto();
+    }
     
 }
