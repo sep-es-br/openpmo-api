@@ -37,13 +37,16 @@ public class WorkpackRepresentation {
   private JournalInformationDto journalInformation;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private Boolean hasActiveBaseline;
+  private Boolean projectHasActiveBaseline;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private BaselineStatus milestoneStatus;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private BaselineStatus deliverableStatus;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private Boolean deliveryHasSchedule;
 
   /* Getters and Setters */
 
@@ -127,12 +130,12 @@ public class WorkpackRepresentation {
     this.idWorkpackModelLinked = idWorkpackModelLinked;
   }
 
-  public Boolean getHasActiveBaseline() {
-    return hasActiveBaseline;
+  public Boolean getProjectHasActiveBaseline() {
+    return projectHasActiveBaseline;
   }
 
-  public void setHasActiveBaseline(Boolean hasActiveBaseline) {
-    this.hasActiveBaseline = hasActiveBaseline;
+  public void setProjectHasActiveBaseline(Boolean projectHasActiveBaseline) {
+    this.projectHasActiveBaseline = projectHasActiveBaseline;
   }
 
   public BaselineStatus getMilestoneStatus() {
@@ -149,5 +152,13 @@ public class WorkpackRepresentation {
 
   public void setDeliverableStatus(BaselineStatus deliveryStatus) {
     this.deliverableStatus = deliveryStatus;
+  }
+
+  public Boolean getDeliveryHasSchedule() {
+    return deliveryHasSchedule;
+  }
+
+  public void setDeliveryHasSchedule(Boolean deliveryHasSchedule) {
+    this.deliveryHasSchedule = deliveryHasSchedule;
   }
 }

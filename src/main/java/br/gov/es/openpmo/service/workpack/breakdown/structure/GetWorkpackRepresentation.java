@@ -117,7 +117,7 @@ public class GetWorkpackRepresentation {
       (currentWorkpackType.equals("Organizer") && shouldConsiderOrganizer) ||
       !currentWorkpackType.equals("Organizer")
     ) {
-      workpackRepresentation.setHasActiveBaseline(activeBaseline.isPresent());
+      workpackRepresentation.setProjectHasActiveBaseline(activeBaseline.isPresent());
     }
 
     if ("Milestone".equals(currentWorkpackType) || "Deliverable".equals(currentWorkpackType)) {
@@ -135,6 +135,20 @@ public class GetWorkpackRepresentation {
 
         if (filteredUpdate != null) {
           currentWorkpackClassification = filteredUpdate.getClassification();
+        } else if ("Deliverable".equals(currentWorkpackType)) {
+          List<Workpack> deliveriesWithoutSchedule = this.workpackRepository.findDeliveriesWithoutScheduleByParentId(projectId);
+          Workpack filteredDelivery = deliveriesWithoutSchedule
+            .stream()
+            .filter(w -> w.getId().equals(workpackId))
+            .findFirst()
+            .orElse(null);
+
+          if (filteredDelivery != null) {
+            currentWorkpackClassification = BaselineStatus.NEW;
+            workpackRepresentation.setDeliveryHasSchedule(false);
+          } else {
+            currentWorkpackClassification = null;
+          }
         } else {
           currentWorkpackClassification = null;
         }
