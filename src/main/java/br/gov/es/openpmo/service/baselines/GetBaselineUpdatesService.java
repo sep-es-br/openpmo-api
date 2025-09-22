@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -111,14 +112,19 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
 
       if (w.getType().equals("Deliverable")) {
         try {
-          WorkpackModel deliveryModel = this.workpackModelService.findById(w.getId());
-          newUR.setDeliveryModelHasActiveSchedule(deliveryModel != null && deliveryModel.getScheduleSessionActive());
+          Optional<WorkpackModel> deliveryModel = this.workpackModelService.getWorkpackModelByWorkpackId(w.getId());
+          newUR.setDeliveryModelHasActiveSchedule(deliveryModel.isPresent() && deliveryModel.get().getScheduleSessionActive());
         } catch (Exception e) {
           newUR.setDeliveryModelHasActiveSchedule(false);
         }
 
-        newUR.setDeliveryHasActiveSchedule(w.getSchedule().size() > 0);
-        newUR.setDeliverySchedulePlannedCost(w.getSchedulePlannedCost());
+        if (w.getSchedule().size() == 0) {
+          // Entrega não possui cronograma
+          newUR.setClassification(BaselineStatus.NO_SCHEDULE);
+        } else if (!this.workpackModelService.deliveryHasValidScope(w.getId())) {
+          // Entrega não possui cronograma com escopo válido
+          newUR.setClassification(BaselineStatus.UNDEFINED_SCOPE);
+        }
       }
 
       list.add(newUR);

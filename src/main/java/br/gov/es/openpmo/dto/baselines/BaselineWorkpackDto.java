@@ -173,11 +173,4 @@ public class BaselineWorkpackDto {
 
     return consumePrincipal.compareTo(consumeCompare) != 0;
   }
-
-  public BigDecimal getSchedulePlannedCost() {
-    BigDecimal totalPlannedCost = new BigDecimal(0);
-    this.getSchedule().forEach(step -> totalPlannedCost.add(step.getPlannedWork()));
-
-    return totalPlannedCost;
-  }
 }

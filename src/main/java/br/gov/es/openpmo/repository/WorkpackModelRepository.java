@@ -177,4 +177,22 @@ public interface WorkpackModelRepository extends Neo4jRepository<WorkpackModel, 
     " [(model)<-[i:IS_IN*]->(family:WorkpackModel) | [i,family]] " +
     "]")
   Optional<WorkpackModel> findAllByIdWithParents(Long idWorkpackModel, Long idParentModel);
+  
+  @Query(
+    "MATCH (w:Workpack)-[:IS_INSTANCE_BY]->(wm:WorkpackModel) " +
+    "WHERE ID(w) = $idWorkpack " +
+    "RETURN wm"
+  )
+  Optional<WorkpackModel> findByWorkpackId(Long idWorkpack);
+
+  @Query(
+    "MATCH (deliverable:Deliverable)<-[:FEATURES]-(:Schedule)<-[:COMPOSES]-(step:Step) " +
+    "WHERE ID(deliverable)=$idDeliverable " +
+    "WITH sum(toFloat(step.plannedWork)) AS plannedWork " +
+    "RETURN CASE " +
+    "   WHEN plannedWork > 0 THEN true " +
+    "   ELSE false " +
+    "   END"
+  )
+  boolean deliveryHasValidScope(Long idDeliverable);
 }
