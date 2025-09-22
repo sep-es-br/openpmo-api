@@ -599,6 +599,20 @@ public class CostAccountService {
               .flatMap(costAccountRepository::findById);
   }
   
+  /**
+   * 
+   * @param codUo
+   * @return 
+   */
+  
+  public List<CostAccount> findByUoCode(int codUo) {
+      return costAccountRepository.findByUoCode(codUo).stream()
+              .map(CostAccount::getId)
+              .map(costAccountRepository::findById)
+              .map(Optional::get)
+              .collect(Collectors.toList());
+  }
+  
   public JsonNode listInstrumentsFromPentaho(
         String codUo,
         String codPo,
@@ -625,37 +639,22 @@ public class CostAccountService {
       ArrayNode resultSet = (ArrayNode) response.get(RESULTSET_FIELD);
       ArrayNode filteredResultSet = JsonNodeFactory.instance.arrayNode();
       
-      Optional<CostAccount> optCa;
-      List<Instrument> instrumentList = Arrays.asList();
+      List<CostAccount> CaList = this.findByUoCode(java.lang.Integer.parseInt(codUo));
+      List<String> UsedInstrumentsCode = CaList.stream()
+              .flatMap(ca -> ca.getInstruments().stream())
+              .map(Instrument::getSigefesCode)
+              .collect(Collectors.toList());
       
-      if(!codPo.equals("-1")){
-          optCa = this.findByUoPoCode(java.lang.Integer.parseInt(codUo), java.lang.Integer.parseInt(codPo));
-          
-          if(optCa.isEmpty()) return response;
-          
-          CostAccount costAccount = optCa.get();
-          instrumentList = Optional.ofNullable(costAccount.getInstruments()).orElse(Arrays.asList());
-
-          if(instrumentList.isEmpty()) {
-              ((ObjectNode) response).set(RESULTSET_FIELD, JsonNodeFactory.instance.arrayNode());
-              return response;
-          }
-          
-      }
-      
-      
+      if(UsedInstrumentsCode.isEmpty()) return response;
+       
       for(JsonNode registro : resultSet) {
           
           ArrayNode registroArray = (ArrayNode) registro;
           
           String sigefesCode = registroArray.get(2).asText();
           
-          if(
-                ( 
-                    codPo.equals("-1") &&
-                    !costAccountRepository.findByInstrument(sigefesCode).isPresent()
-                ) || 
-                !instrumentList.stream().anyMatch(i -> i.getSigefesCode().equals(sigefesCode))
+          if( 
+            !UsedInstrumentsCode.contains(sigefesCode)
             ) 
             filteredResultSet.add(registro);
           

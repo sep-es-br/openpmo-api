@@ -169,5 +169,10 @@ public interface CostAccountRepository extends Neo4jRepository<CostAccount, Long
     "return ca " + 
     "limit 1")
   Optional<CostAccount> findByUoPoCode(int codUo, int codPo);
+  
+  @Query(
+    "match (:UnidadeOrcamentaria{code: $codUo})-[:CONTROLS]->(ca:CostAccount) " + 
+    "return ca ")
+  List<CostAccount> findByUoCode(int codUo);
 
 }
