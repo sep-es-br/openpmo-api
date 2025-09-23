@@ -565,7 +565,8 @@ public class CostAccountService {
       if (unidadeOrcamentaria.getPlanoOrcamentario() == null) {
         unidadeOrcamentaria.setPlanoOrcamentario(new HashSet<>());
       }
-      unidadeOrcamentaria.getPlanoOrcamentario().add(planoOrcamentario);
+      if(planoOrcamentario != null)
+        unidadeOrcamentaria.getPlanoOrcamentario().add(planoOrcamentario);
     }
 
     costAccount.setProperties(properties);
