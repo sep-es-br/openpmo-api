@@ -47,6 +47,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -454,4 +455,11 @@ public class WorkpackModelService {
     return this.getPropertyModelFromDto.execute(properties);
   }
 
+  public Optional<WorkpackModel> getWorkpackModelByWorkpackId(Long workpackId) {
+    return this.workpackModelRepository.findByWorkpackId(workpackId);
+  }
+
+  public boolean deliveryHasValidScope(Long deliveryId) {
+    return this.workpackModelRepository.deliveryHasValidScope(deliveryId);
+  }
 }
