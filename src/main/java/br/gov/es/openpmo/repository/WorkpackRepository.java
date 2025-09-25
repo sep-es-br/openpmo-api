@@ -13,6 +13,7 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -686,33 +687,62 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
        "RETURN id(w)")
   Long findWorkpackIdByPropertyId(Long id);
 
-  @Query(
-    "MATCH (organizer:Organizer)-[:IS_IN*]->(project:Project) " +
-    "WHERE id(organizer) = $idOrganizer " +
-    "RETURN ID(project)"
-  )
-  Optional<Long> findProjectIdByOrganizerId(Long idOrganizer);
+  // @Query(
+  //   "MATCH (organizer:Organizer)-[:IS_IN*]->(project:Project) " +
+  //   "WHERE id(organizer) = $idOrganizer " +
+  //   "RETURN ID(project)"
+  // )
+  // Optional<Long> findProjectIdByOrganizerId(Long idOrganizer);
+
+  // @Query(
+  //   "MATCH (milestone:Milestone)-[:IS_IN*]->(project:Project) " +
+  //   "WHERE id(milestone) = $idMilestone " +
+  //   "RETURN ID(project)"
+  // )
+  // Long findProjectIdByMilestoneId(Long idMilestone);
+
+  // @Query(
+  //   "MATCH (deliverable:Deliverable)-[:IS_IN*]->(project:Project) " +
+  //   "WHERE id(deliverable) = $idDeliverable " +
+  //   "RETURN ID(project)"
+  // )
+  // Long findProjectIdByDeliverableId(Long idDeliverable);
+
+  // @Query(
+  //   "MATCH (children:Workpack{deleted:false})-[:IS_IN*]->(parent:Workpack) " +
+  //   "WHERE ID(parent) = $idParent AND (ANY(label IN labels(children) WHERE label IN ['Deliverable']) " +
+  //   "AND NOT (children)<-[:FEATURES]-(:Schedule)) " +
+  //   "RETURN children"
+  // )
+  // List<Workpack> findDeliveriesWithoutScheduleByParentId(Long idParent);
 
   @Query(
-    "MATCH (milestone:Milestone)-[:IS_IN*]->(project:Project) " +
-    "WHERE id(milestone) = $idMilestone " +
-    "RETURN ID(project)"
+    "MATCH (w:Workpack) " +
+    "WHERE ID(w) = $idWorkpack " +
+    "OPTIONAL MATCH (w)<-[:IS_IN*0..]-(e:Workpack) " +
+    "OPTIONAL MATCH (e)<-[:FEATURES]-(sc:Schedule) " +
+    "OPTIONAL MATCH (sc)<-[:COMPOSES]-(st:Step) " +
+    "WITH DISTINCT e " +
+    ", CASE WHEN NOT (e.deleted OR e.canceled) AND sc IS NULL AND 'Deliverable' IN labels(e) THEN 1 ELSE 0 end AS noCron " +
+    ", CASE WHEN NOT (e.deleted OR e.canceled) AND SUM(toFloat(st.plannedWork)) <= 0 AND 'Deliverable' IN labels(e) THEN 1 ELSE 0 end AS noScope " +
+    ", CASE WHEN NOT e.deleted AND EXISTS ((e)<-[:FEATURES]-(:Property {value:'A cancelar'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Situação'}) ) AND 'Deliverable' IN labels(e) THEN 1 ELSE 0 end AS toCancel " +
+    ", CASE WHEN e.deleted AND EXISTS ((e)<-[:IS_SNAPSHOT_OF]-(:Workpack)-[:COMPOSES]->(:Baseline {active:TRUE})) AND ('Deliverable' IN labels(e) OR 'Milestone' IN labels(e)) THEN 1 ELSE 0 end AS deleted " +
+    ", CASE WHEN NOT (e.deleted or e.canceled) AND NOT EXISTS ((e)<-[:IS_SNAPSHOT_OF]-(:Workpack)-[:COMPOSES]->(:Baseline)) AND ('Deliverable' IN labels(e) OR 'Milestone' IN labels(e)) THEN 1 ELSE 0 end AS isNew " +
+    " " +
+    // "RETURN  " +
+    // "  CASE WHEN SUM(noCron) > 0 THEN true ELSE false end AS noSchedule " +
+    // ", CASE WHEN SUM(noScope) > 0 THEN true ELSE false end AS noScope " +
+    // ", CASE WHEN SUM(toCancel) > 0 THEN true ELSE false end AS toCancel " +
+    // ", CASE WHEN SUM(deleted) > 0 THEN true ELSE false end AS deletedWithBaseline " +
+    // ", CASE WHEN SUM(isNew) > 0 THEN true ELSE false end AS isNew "
+    " RETURN { " +
+      "noSchedule: CASE WHEN SUM(noCron) > 0 THEN true ELSE false end, " +
+      "noScope: CASE WHEN SUM(noScope) > 0 THEN true ELSE false end, " +
+      "toCancel: CASE WHEN SUM(toCancel) > 0 THEN true ELSE false end, " +
+      "deletedWithBaseline: CASE WHEN SUM(deleted) > 0 THEN true ELSE false end, " +
+      "isNew: CASE WHEN SUM(isNew) > 0 THEN true ELSE false end " +
+    " } AS result"
   )
-  Long findProjectIdByMilestoneId(Long idMilestone);
-
-  @Query(
-    "MATCH (deliverable:Deliverable)-[:IS_IN*]->(project:Project) " +
-    "WHERE id(deliverable) = $idDeliverable " +
-    "RETURN ID(project)"
-  )
-  Long findProjectIdByDeliverableId(Long idDeliverable);
-
-  @Query(
-    "MATCH (children:Workpack{deleted:false})-[:IS_IN*]->(parent:Workpack) " +
-    "WHERE ID(parent) = $idParent AND (ANY(label IN labels(children) WHERE label IN ['Deliverable']) " +
-    "AND NOT (children)<-[:FEATURES]-(:Schedule)) " +
-    "RETURN children"
-  )
-  List<Workpack> findDeliveriesWithoutScheduleByParentId(Long idParent);
+  Map<String, Object> getWorkpackClassifications(@Param("idWorkpack") Long idWorkpack);
 }
 

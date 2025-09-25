@@ -2,6 +2,7 @@ package br.gov.es.openpmo.service.workpack.breakdown.structure;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -88,101 +89,107 @@ public class GetWorkpackRepresentation {
       workpackRepresentation.setRisks(this.getRiskResultDto(risks, workpackDto));
     }
 
-    Long projectId = (long) 1;
-    boolean shouldConsiderOrganizer = false;
-    String currentWorkpackType = workpackDto.getType();
+    Map<String, Object> newClassifications = this.workpackRepository.getWorkpackClassifications(workpackId);
+    // workpackRepresentation.setClassifications(newClassifications);
+    // Define no workpackRepresentation todos os status que forem true
 
-    if ("Project".equals(currentWorkpackType)) {
-      projectId = workpackId;
-    } else if ("Organizer".equals(currentWorkpackType)) {
-      Optional<Long> optionalProjectId = this.workpackRepository.findProjectIdByOrganizerId(workpackId);
+    // Em seguida chama a mesma função para todos os workpacks filhos, e define o status pra cada um deles
 
-      if (optionalProjectId.isPresent()) {
-        // Se achou id de um projeto, é porque o Organizer em questão é "inferior" ao Projeto (na hierarquia de entidades)
-        projectId = optionalProjectId.get();
-        shouldConsiderOrganizer = true;
-      } else {
-        // Se não achou id de um projeto, é porque o Organizer é "superior" ao Projeto (como um Programa, Área Temática, ou Portfolio)
-        shouldConsiderOrganizer = false;
-      }
-    } else if ("Milestone".equals(currentWorkpackType)) {
-      projectId = this.workpackRepository.findProjectIdByMilestoneId(workpackId);
-    } else if ("Deliverable".equals(currentWorkpackType)) {
-      projectId = this.workpackRepository.findProjectIdByDeliverableId(workpackId);
-    }
+    // Long projectId = (long) 1;
+    // boolean shouldConsiderOrganizer = false;
+    // String currentWorkpackType = workpackDto.getType();
 
-    Optional<Baseline> activeBaseline = this.baselineRepository.findActiveBaseline(projectId);
+    // if ("Project".equals(currentWorkpackType)) {
+    //   projectId = workpackId;
+    // } else if ("Organizer".equals(currentWorkpackType)) {
+    //   Optional<Long> optionalProjectId = this.workpackRepository.findProjectIdByOrganizerId(workpackId);
 
-    if (
-      (currentWorkpackType.equals("Organizer") && shouldConsiderOrganizer) ||
-      !currentWorkpackType.equals("Organizer")
-    ) {
-      workpackRepresentation.setProjectHasActiveBaseline(activeBaseline.isPresent());
-    }
+    //   if (optionalProjectId.isPresent()) {
+    //     // Se achou id de um projeto, é porque o Organizer em questão é "inferior" ao Projeto (na hierarquia de entidades)
+    //     projectId = optionalProjectId.get();
+    //     shouldConsiderOrganizer = true;
+    //   } else {
+    //     // Se não achou id de um projeto, é porque o Organizer é "superior" ao Projeto (como um Programa, Área Temática, ou Portfolio)
+    //     shouldConsiderOrganizer = false;
+    //   }
+    // } else if ("Milestone".equals(currentWorkpackType)) {
+    //   projectId = this.workpackRepository.findProjectIdByMilestoneId(workpackId);
+    // } else if ("Deliverable".equals(currentWorkpackType)) {
+    //   projectId = this.workpackRepository.findProjectIdByDeliverableId(workpackId);
+    // }
 
-    if ("Milestone".equals(currentWorkpackType) || "Deliverable".equals(currentWorkpackType)) {
-      BaselineStatus currentWorkpackClassification;
+    // Optional<Baseline> activeBaseline = this.baselineRepository.findActiveBaseline(projectId);
 
-      if (activeBaseline.isPresent()) {
-        // Possui Linha de Base ativa
+    // if (
+    //   (currentWorkpackType.equals("Organizer") && shouldConsiderOrganizer) ||
+    //   !currentWorkpackType.equals("Organizer")
+    // ) {
+    //   workpackRepresentation.setProjectHasActiveBaseline(activeBaseline.isPresent());
+    // }
 
-        List<UpdateResponse> updates = this.baselineUpdatesService.getUpdates(projectId);
-        UpdateResponse filteredUpdate = updates
-          .stream()
-          .filter(u -> u.getIdWorkpack().equals(workpackId))
-          .findFirst()
-          .orElse(null);
+    // if ("Milestone".equals(currentWorkpackType) || "Deliverable".equals(currentWorkpackType)) {
+    //   BaselineStatus currentWorkpackClassification;
 
-        if (filteredUpdate != null) {
-          currentWorkpackClassification = filteredUpdate.getClassification();
-        } else if ("Deliverable".equals(currentWorkpackType)) {
-          List<Workpack> deliveriesWithoutSchedule = this.workpackRepository.findDeliveriesWithoutScheduleByParentId(projectId);
-          Workpack filteredDelivery = deliveriesWithoutSchedule
-            .stream()
-            .filter(w -> w.getId().equals(workpackId))
-            .findFirst()
-            .orElse(null);
+    //   if (activeBaseline.isPresent()) {
+    //     // Possui Linha de Base ativa
 
-          if (filteredDelivery != null) {
-            currentWorkpackClassification = BaselineStatus.NEW;
-            workpackRepresentation.setDeliveryHasSchedule(false);
-          } else {
-            currentWorkpackClassification = null;
-          }
-        } else {
-          currentWorkpackClassification = null;
-        }
-      } else {
-        // Não possui Linha de Base ativa, portanto é um workpack novo
-        currentWorkpackClassification = BaselineStatus.NEW;
-      }
+    //     List<UpdateResponse> updates = this.baselineUpdatesService.getUpdates(projectId);
+    //     UpdateResponse filteredUpdate = updates
+    //       .stream()
+    //       .filter(u -> u.getIdWorkpack().equals(workpackId))
+    //       .findFirst()
+    //       .orElse(null);
 
-      if ("Milestone".equals(currentWorkpackType)) {
-        workpackRepresentation.setMilestoneStatus(currentWorkpackClassification);
+    //     if (filteredUpdate != null) {
+    //       currentWorkpackClassification = filteredUpdate.getClassification();
+    //     } else if ("Deliverable".equals(currentWorkpackType)) {
+    //       List<Workpack> deliveriesWithoutSchedule = this.workpackRepository.findDeliveriesWithoutScheduleByParentId(projectId);
+    //       Workpack filteredDelivery = deliveriesWithoutSchedule
+    //         .stream()
+    //         .filter(w -> w.getId().equals(workpackId))
+    //         .findFirst()
+    //         .orElse(null);
 
-        MilestoneDateDto milestone = milestoneWorkpacks
-          .stream()
-          .filter(m -> m.getIdWorkpack().equals(workpackDto.getId()))
-          .findFirst()
-          .orElse(null);
-        if (milestone != null) {
-          MilestoneDto milestoneDto = MilestoneDto.setMiletoneOfMilestoneDate(milestone);
-          workpackRepresentation.setMilestone(milestoneDto);
-        }
-      } else if ("Deliverable".equals(currentWorkpackType)) {
-        workpackRepresentation.setDeliverableStatus(currentWorkpackClassification);
+    //       if (filteredDelivery != null) {
+    //         currentWorkpackClassification = BaselineStatus.NEW;
+    //         workpackRepresentation.setDeliveryHasSchedule(false);
+    //       } else {
+    //         currentWorkpackClassification = null;
+    //       }
+    //     } else {
+    //       currentWorkpackClassification = null;
+    //     }
+    //   } else {
+    //     // Não possui Linha de Base ativa, portanto é um workpack novo
+    //     currentWorkpackClassification = BaselineStatus.NEW;
+    //   }
 
-        Workpack deliverable = deliverables
-          .stream()
-          .filter(w -> w.getId().equals(workpackDto.getId()))
-          .findFirst()
-          .orElse(null);
-        if (deliverable != null) {
-          final ScheduleMeasureUnit unitMeasure = this.buildUnitMeasure((Deliverable) deliverable);
-          workpackRepresentation.setUnitMeasure(unitMeasure);
-        }
-      }
-    }
+    //   if ("Milestone".equals(currentWorkpackType)) {
+    //     workpackRepresentation.setMilestoneStatus(currentWorkpackClassification);
+
+    //     MilestoneDateDto milestone = milestoneWorkpacks
+    //       .stream()
+    //       .filter(m -> m.getIdWorkpack().equals(workpackDto.getId()))
+    //       .findFirst()
+    //       .orElse(null);
+    //     if (milestone != null) {
+    //       MilestoneDto milestoneDto = MilestoneDto.setMiletoneOfMilestoneDate(milestone);
+    //       workpackRepresentation.setMilestone(milestoneDto);
+    //     }
+    //   } else if ("Deliverable".equals(currentWorkpackType)) {
+    //     workpackRepresentation.setDeliverableStatus(currentWorkpackClassification);
+
+    //     Workpack deliverable = deliverables
+    //       .stream()
+    //       .filter(w -> w.getId().equals(workpackDto.getId()))
+    //       .findFirst()
+    //       .orElse(null);
+    //     if (deliverable != null) {
+    //       final ScheduleMeasureUnit unitMeasure = this.buildUnitMeasure((Deliverable) deliverable);
+    //       workpackRepresentation.setUnitMeasure(unitMeasure);
+    //     }
+    //   }
+    // }
 
     return workpackRepresentation;
   }

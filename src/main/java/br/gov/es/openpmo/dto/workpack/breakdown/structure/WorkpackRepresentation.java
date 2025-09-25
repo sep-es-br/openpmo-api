@@ -4,7 +4,6 @@ import br.gov.es.openpmo.dto.MilestoneResultDto;
 import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
 import br.gov.es.openpmo.dto.dashboards.MilestoneDto;
 import br.gov.es.openpmo.dto.dashboards.RiskResultDto;
-import br.gov.es.openpmo.enumerator.BaselineStatus;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
@@ -35,18 +34,6 @@ public class WorkpackRepresentation {
   private ScheduleMeasureUnit unitMeasure;
 
   private JournalInformationDto journalInformation;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private Boolean projectHasActiveBaseline;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private BaselineStatus milestoneStatus;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private BaselineStatus deliverableStatus;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private Boolean deliveryHasSchedule;
 
   /* Getters and Setters */
 
@@ -128,37 +115,5 @@ public class WorkpackRepresentation {
 
   public void setIdWorkpackModelLinked(Long idWorkpackModelLinked) {
     this.idWorkpackModelLinked = idWorkpackModelLinked;
-  }
-
-  public Boolean getProjectHasActiveBaseline() {
-    return projectHasActiveBaseline;
-  }
-
-  public void setProjectHasActiveBaseline(Boolean projectHasActiveBaseline) {
-    this.projectHasActiveBaseline = projectHasActiveBaseline;
-  }
-
-  public BaselineStatus getMilestoneStatus() {
-    return milestoneStatus;
-  }
-
-  public void setMilestoneStatus(BaselineStatus milestoneStatus) {
-    this.milestoneStatus = milestoneStatus;
-  }
-
-  public BaselineStatus getDeliverableStatus() {
-    return deliverableStatus;
-  }
-
-  public void setDeliverableStatus(BaselineStatus deliveryStatus) {
-    this.deliverableStatus = deliveryStatus;
-  }
-
-  public Boolean getDeliveryHasSchedule() {
-    return deliveryHasSchedule;
-  }
-
-  public void setDeliveryHasSchedule(Boolean deliveryHasSchedule) {
-    this.deliveryHasSchedule = deliveryHasSchedule;
   }
 }
