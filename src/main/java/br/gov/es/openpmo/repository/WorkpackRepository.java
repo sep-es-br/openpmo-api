@@ -2,6 +2,7 @@ package br.gov.es.openpmo.repository;
 
 import br.gov.es.openpmo.dto.menu.PlanWorkpackDto;
 import br.gov.es.openpmo.dto.menu.WorkpackResultDto;
+import br.gov.es.openpmo.dto.workpack.breakdown.structure.WorkpackBreakdownClassificationDto;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.workpacks.Program;
 import br.gov.es.openpmo.model.workpacks.Project;
@@ -13,7 +14,6 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -729,20 +729,20 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
     ", CASE WHEN e.deleted AND EXISTS ((e)<-[:IS_SNAPSHOT_OF]-(:Workpack)-[:COMPOSES]->(:Baseline {active:TRUE})) AND ('Deliverable' IN labels(e) OR 'Milestone' IN labels(e)) THEN 1 ELSE 0 end AS deleted " +
     ", CASE WHEN NOT (e.deleted or e.canceled) AND NOT EXISTS ((e)<-[:IS_SNAPSHOT_OF]-(:Workpack)-[:COMPOSES]->(:Baseline)) AND ('Deliverable' IN labels(e) OR 'Milestone' IN labels(e)) THEN 1 ELSE 0 end AS isNew " +
     " " +
-    // "RETURN  " +
-    // "  CASE WHEN SUM(noCron) > 0 THEN true ELSE false end AS noSchedule " +
-    // ", CASE WHEN SUM(noScope) > 0 THEN true ELSE false end AS noScope " +
-    // ", CASE WHEN SUM(toCancel) > 0 THEN true ELSE false end AS toCancel " +
-    // ", CASE WHEN SUM(deleted) > 0 THEN true ELSE false end AS deletedWithBaseline " +
-    // ", CASE WHEN SUM(isNew) > 0 THEN true ELSE false end AS isNew "
-    " RETURN { " +
-      "noSchedule: CASE WHEN SUM(noCron) > 0 THEN true ELSE false end, " +
-      "noScope: CASE WHEN SUM(noScope) > 0 THEN true ELSE false end, " +
-      "toCancel: CASE WHEN SUM(toCancel) > 0 THEN true ELSE false end, " +
-      "deletedWithBaseline: CASE WHEN SUM(deleted) > 0 THEN true ELSE false end, " +
-      "isNew: CASE WHEN SUM(isNew) > 0 THEN true ELSE false end " +
-    " } AS result"
+    "RETURN " +
+    "  CASE WHEN SUM(noCron) > 0 THEN true ELSE false end AS noSchedule " +
+    ", CASE WHEN SUM(noScope) > 0 THEN true ELSE false end AS noScope " +
+    ", CASE WHEN SUM(toCancel) > 0 THEN true ELSE false end AS toCancel " +
+    ", CASE WHEN SUM(deleted) > 0 THEN true ELSE false end AS deletedWithBaseline " +
+    ", CASE WHEN SUM(isNew) > 0 THEN true ELSE false end AS isNew "
   )
-  Map<String, Object> getWorkpackClassifications(@Param("idWorkpack") Long idWorkpack);
+  WorkpackBreakdownClassificationDto getWorkpackClassifications(@Param("idWorkpack") Long idWorkpack);
+
+  @Query(
+    "MATCH (o:Organizer) " +
+    "WHERE ID(o) = $idOrganizer " +
+    "RETURN EXISTS ((o)-[:IS_IN*]->(:Project)) "
+  )
+  Boolean getOrganizerIsInAProject(@Param("idOrganizer") Long idOrganizer);
 }
 

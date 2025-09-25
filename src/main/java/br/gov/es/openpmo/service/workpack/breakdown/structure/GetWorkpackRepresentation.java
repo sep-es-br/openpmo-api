@@ -2,16 +2,12 @@ package br.gov.es.openpmo.service.workpack.breakdown.structure;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
 
 import br.gov.es.openpmo.dto.MilestoneResultDto;
-import br.gov.es.openpmo.dto.baselines.UpdateResponse;
 import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
 import br.gov.es.openpmo.dto.dashboards.MilestoneDateDto;
 import br.gov.es.openpmo.dto.dashboards.MilestoneDto;
@@ -20,16 +16,10 @@ import br.gov.es.openpmo.dto.dashboards.RiskResultDto;
 import br.gov.es.openpmo.dto.dashboards.RiskWorkpackDto;
 import br.gov.es.openpmo.dto.menu.WorkpackResultDto;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.JournalInformationDto;
-import br.gov.es.openpmo.dto.workpack.breakdown.structure.ScheduleMeasureUnit;
+import br.gov.es.openpmo.dto.workpack.breakdown.structure.WorkpackBreakdownClassificationDto;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.WorkpackRepresentation;
-import br.gov.es.openpmo.enumerator.BaselineStatus;
-import br.gov.es.openpmo.model.baselines.Baseline;
-import br.gov.es.openpmo.model.office.UnitMeasure;
-import br.gov.es.openpmo.model.properties.Property;
-import br.gov.es.openpmo.model.properties.UnitSelection;
 import br.gov.es.openpmo.model.risk.Importance;
 import br.gov.es.openpmo.model.risk.Risk;
-import br.gov.es.openpmo.model.workpacks.Deliverable;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
@@ -40,11 +30,7 @@ import br.gov.es.openpmo.utils.DashboardCacheUtil;
 public class GetWorkpackRepresentation {
   private final DashboardCacheUtil dashboardCacheUtil;
 
-  private final BaselineRepository baselineRepository;
-
   private final WorkpackRepository workpackRepository;
-
-  private final GetBaselineUpdatesService baselineUpdatesService;
 
   public GetWorkpackRepresentation(
     DashboardCacheUtil dashboardCacheUtil,
@@ -53,8 +39,6 @@ public class GetWorkpackRepresentation {
     WorkpackRepository workpackRepository
   ) {
     this.dashboardCacheUtil = dashboardCacheUtil;
-    this.baselineRepository = baselineRepository;
-    this.baselineUpdatesService = baselineUpdatesService;
     this.workpackRepository = workpackRepository;
   }
 
@@ -72,8 +56,10 @@ public class GetWorkpackRepresentation {
       workpackRepresentation.setIdWorkpackModelLinked(workpackDto.getIdWorkpackModel());
     }
     final Long workpackId = workpackDto.getId();
+    String workpackType = workpackDto.getType();
+
     workpackRepresentation.setIdWorkpack(workpackId);
-    workpackRepresentation.setWorkpackType(workpackDto.getType());
+    workpackRepresentation.setWorkpackType(workpackType);
     workpackRepresentation.setWorkpackName(workpackDto.getName());
     workpackRepresentation.setJournalInformation(
         journals.stream().filter(j -> j.getIdWorkapck().equals(workpackDto.getId())).findFirst().orElse(null));
@@ -81,7 +67,7 @@ public class GetWorkpackRepresentation {
     if (this.hasDashboard(workpackDto)) {
       final DashboardMonthDto monthDto = dashboardCacheUtil.getDashboardMonthDto(
         workpackDto.getId(),
-        "Deliverable".equals(workpackDto.getType()),
+        "Deliverable".equals(workpackType),
         workpackDto.getIdPlan()
       );
       workpackRepresentation.setDashboard(monthDto);
@@ -89,107 +75,18 @@ public class GetWorkpackRepresentation {
       workpackRepresentation.setRisks(this.getRiskResultDto(risks, workpackDto));
     }
 
-    Map<String, Object> newClassifications = this.workpackRepository.getWorkpackClassifications(workpackId);
-    // workpackRepresentation.setClassifications(newClassifications);
-    // Define no workpackRepresentation todos os status que forem true
-
-    // Em seguida chama a mesma função para todos os workpacks filhos, e define o status pra cada um deles
-
-    // Long projectId = (long) 1;
-    // boolean shouldConsiderOrganizer = false;
-    // String currentWorkpackType = workpackDto.getType();
-
-    // if ("Project".equals(currentWorkpackType)) {
-    //   projectId = workpackId;
-    // } else if ("Organizer".equals(currentWorkpackType)) {
-    //   Optional<Long> optionalProjectId = this.workpackRepository.findProjectIdByOrganizerId(workpackId);
-
-    //   if (optionalProjectId.isPresent()) {
-    //     // Se achou id de um projeto, é porque o Organizer em questão é "inferior" ao Projeto (na hierarquia de entidades)
-    //     projectId = optionalProjectId.get();
-    //     shouldConsiderOrganizer = true;
-    //   } else {
-    //     // Se não achou id de um projeto, é porque o Organizer é "superior" ao Projeto (como um Programa, Área Temática, ou Portfolio)
-    //     shouldConsiderOrganizer = false;
-    //   }
-    // } else if ("Milestone".equals(currentWorkpackType)) {
-    //   projectId = this.workpackRepository.findProjectIdByMilestoneId(workpackId);
-    // } else if ("Deliverable".equals(currentWorkpackType)) {
-    //   projectId = this.workpackRepository.findProjectIdByDeliverableId(workpackId);
-    // }
-
-    // Optional<Baseline> activeBaseline = this.baselineRepository.findActiveBaseline(projectId);
-
-    // if (
-    //   (currentWorkpackType.equals("Organizer") && shouldConsiderOrganizer) ||
-    //   !currentWorkpackType.equals("Organizer")
-    // ) {
-    //   workpackRepresentation.setProjectHasActiveBaseline(activeBaseline.isPresent());
-    // }
-
-    // if ("Milestone".equals(currentWorkpackType) || "Deliverable".equals(currentWorkpackType)) {
-    //   BaselineStatus currentWorkpackClassification;
-
-    //   if (activeBaseline.isPresent()) {
-    //     // Possui Linha de Base ativa
-
-    //     List<UpdateResponse> updates = this.baselineUpdatesService.getUpdates(projectId);
-    //     UpdateResponse filteredUpdate = updates
-    //       .stream()
-    //       .filter(u -> u.getIdWorkpack().equals(workpackId))
-    //       .findFirst()
-    //       .orElse(null);
-
-    //     if (filteredUpdate != null) {
-    //       currentWorkpackClassification = filteredUpdate.getClassification();
-    //     } else if ("Deliverable".equals(currentWorkpackType)) {
-    //       List<Workpack> deliveriesWithoutSchedule = this.workpackRepository.findDeliveriesWithoutScheduleByParentId(projectId);
-    //       Workpack filteredDelivery = deliveriesWithoutSchedule
-    //         .stream()
-    //         .filter(w -> w.getId().equals(workpackId))
-    //         .findFirst()
-    //         .orElse(null);
-
-    //       if (filteredDelivery != null) {
-    //         currentWorkpackClassification = BaselineStatus.NEW;
-    //         workpackRepresentation.setDeliveryHasSchedule(false);
-    //       } else {
-    //         currentWorkpackClassification = null;
-    //       }
-    //     } else {
-    //       currentWorkpackClassification = null;
-    //     }
-    //   } else {
-    //     // Não possui Linha de Base ativa, portanto é um workpack novo
-    //     currentWorkpackClassification = BaselineStatus.NEW;
-    //   }
-
-    //   if ("Milestone".equals(currentWorkpackType)) {
-    //     workpackRepresentation.setMilestoneStatus(currentWorkpackClassification);
-
-    //     MilestoneDateDto milestone = milestoneWorkpacks
-    //       .stream()
-    //       .filter(m -> m.getIdWorkpack().equals(workpackDto.getId()))
-    //       .findFirst()
-    //       .orElse(null);
-    //     if (milestone != null) {
-    //       MilestoneDto milestoneDto = MilestoneDto.setMiletoneOfMilestoneDate(milestone);
-    //       workpackRepresentation.setMilestone(milestoneDto);
-    //     }
-    //   } else if ("Deliverable".equals(currentWorkpackType)) {
-    //     workpackRepresentation.setDeliverableStatus(currentWorkpackClassification);
-
-    //     Workpack deliverable = deliverables
-    //       .stream()
-    //       .filter(w -> w.getId().equals(workpackDto.getId()))
-    //       .findFirst()
-    //       .orElse(null);
-    //     if (deliverable != null) {
-    //       final ScheduleMeasureUnit unitMeasure = this.buildUnitMeasure((Deliverable) deliverable);
-    //       workpackRepresentation.setUnitMeasure(unitMeasure);
-    //     }
-    //   }
-    // }
+    if (
+      "Project".equals(workpackType) ||
+      "Deliverable".equals(workpackType) ||
+      "Milestone".equals(workpackType) ||
+      (
+        "Organizer".equals(workpackType) &&
+        this.workpackRepository.getOrganizerIsInAProject(workpackId)
+      )
+    ) {
+      WorkpackBreakdownClassificationDto newClassifications = this.workpackRepository.getWorkpackClassifications(workpackId);
+      workpackRepresentation.setClassifications(newClassifications);
+    }
 
     return workpackRepresentation;
   }
@@ -252,16 +149,16 @@ public class GetWorkpackRepresentation {
     );
   }
 
-  private ScheduleMeasureUnit buildUnitMeasure(final Deliverable workpack) {
-    final Set<Property> properties = workpack.getProperties();
-    for (Property property : properties) {
-      if (property instanceof UnitSelection) {
-        final UnitMeasure value = ((UnitSelection) property).getValue();
-        if (value != null) {
-          return ScheduleMeasureUnit.of(value);
-        }
-      }
-    }
-    return null;
-  }
+  // private ScheduleMeasureUnit buildUnitMeasure(final Deliverable workpack) {
+  //   final Set<Property> properties = workpack.getProperties();
+  //   for (Property property : properties) {
+  //     if (property instanceof UnitSelection) {
+  //       final UnitMeasure value = ((UnitSelection) property).getValue();
+  //       if (value != null) {
+  //         return ScheduleMeasureUnit.of(value);
+  //       }
+  //     }
+  //   }
+  //   return null;
+  // }
 }
