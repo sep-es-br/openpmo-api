@@ -39,13 +39,14 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
   List<DashboardWorkpackDetailDto> findAllScheduleAndStepBaseline(List<Long> ids, List<Long> workpackIds, Long planId);
 
   @Query(
-          "MATCH (plan:Plan)<-[:BELONGS_TO]-(w:Deliverable{deleted:false,canceled:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount) " +
-                  "WHERE (w.category <> 'SNAPSHOT' OR w.category IS NULL) " +
-                  "AND ($planId IS NULL OR ID(plan) = $planId) " +
-                  "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date.truncate('month', date(plan.finish))" +
-                  "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) >= date.truncate('month', date(plan.start))" +
-                  "AND ($workpackIds IS NULL OR ID(w) IN $workpackIds) " +
-                  "RETURN ID(w) AS idWorkpack, ID(plan) as idPlan, toString(SUM(toFloat(co.plannedCost))) AS foreseenCost "
+        "MATCH (plan:Plan)<-[:BELONGS_TO]-(w:Deliverable{deleted:false,canceled:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]->(ca:CostAccount), " +
+        "(w)<-[:IS_SNAPSHOT_OF]-()-[]-(:Baseline{active: true}) " +              
+        "WHERE (w.category <> 'SNAPSHOT' OR w.category IS NULL) " +
+        "AND ($planId IS NULL OR ID(plan) = $planId) " +
+        "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date.truncate('month', date(plan.finish))" +
+        "AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) >= date.truncate('month', date(plan.start))" +
+        "AND ($workpackIds IS NULL OR ID(w) IN $workpackIds) " +
+        "RETURN ID(w) AS idWorkpack, ID(plan) as idPlan, toString(SUM(toFloat(co.plannedCost))) AS foreseenCost "
   )
   List<DashboardWorkpackDetailDto> findAllCost(List<Long> workpackIds, Long planId);
 
