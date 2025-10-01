@@ -4,7 +4,6 @@ import br.gov.es.openpmo.dto.MilestoneResultDto;
 import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
 import br.gov.es.openpmo.dto.dashboards.MilestoneDto;
 import br.gov.es.openpmo.dto.dashboards.RiskResultDto;
-import br.gov.es.openpmo.enumerator.BaselineStatus;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
@@ -37,23 +36,13 @@ public class WorkpackRepresentation {
   private JournalInformationDto journalInformation;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private Boolean projectHasActiveBaseline;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private BaselineStatus milestoneStatus;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private BaselineStatus deliverableStatus;
-
-  @JsonInclude(JsonInclude.Include.NON_NULL)
-  private Boolean deliveryHasSchedule;
+  private WorkpackBreakdownClassificationDto classifications;
 
   /* Getters and Setters */
 
   public Long getIdWorkpack() {
     return idWorkpack;
   }
-
   public void setIdWorkpack(Long idWorkpack) {
     this.idWorkpack = idWorkpack;
   }
@@ -61,7 +50,6 @@ public class WorkpackRepresentation {
   public String getWorkpackName() {
     return workpackName;
   }
-
   public void setWorkpackName(String workpackName) {
     this.workpackName = workpackName;
   }
@@ -69,7 +57,6 @@ public class WorkpackRepresentation {
   public DashboardMonthDto getDashboard() {
     return dashboard;
   }
-
   public void setDashboard(DashboardMonthDto dashboard) {
     this.dashboard = dashboard;
   }
@@ -77,7 +64,6 @@ public class WorkpackRepresentation {
   public MilestoneDto getMilestone() {
     return milestone;
   }
-
   public void setMilestone(MilestoneDto milestone) {
     this.milestone = milestone;
   }
@@ -85,7 +71,6 @@ public class WorkpackRepresentation {
   public RiskResultDto getRisks() {
     return risks;
   }
-
   public void setRisks(RiskResultDto risks) {
     this.risks = risks;
   }
@@ -93,7 +78,6 @@ public class WorkpackRepresentation {
   public MilestoneResultDto getMilestones() {
     return milestones;
   }
-
   public void setMilestones(MilestoneResultDto milestones) {
     this.milestones = milestones;
   }
@@ -101,7 +85,6 @@ public class WorkpackRepresentation {
   public String getWorkpackType() {
     return workpackType;
   }
-
   public void setWorkpackType(String workpackType) {
     this.workpackType = workpackType;
   }
@@ -109,7 +92,6 @@ public class WorkpackRepresentation {
   public ScheduleMeasureUnit getUnitMeasure() {
     return unitMeasure;
   }
-
   public void setUnitMeasure(ScheduleMeasureUnit unitMeasure) {
     this.unitMeasure = unitMeasure;
   }
@@ -117,7 +99,6 @@ public class WorkpackRepresentation {
   public JournalInformationDto getJournalInformation() {
     return journalInformation;
   }
-
   public void setJournalInformation(JournalInformationDto journalInformation) {
     this.journalInformation = journalInformation;
   }
@@ -125,40 +106,14 @@ public class WorkpackRepresentation {
   public Long getIdWorkpackModelLinked() {
     return idWorkpackModelLinked;
   }
-
   public void setIdWorkpackModelLinked(Long idWorkpackModelLinked) {
     this.idWorkpackModelLinked = idWorkpackModelLinked;
   }
 
-  public Boolean getProjectHasActiveBaseline() {
-    return projectHasActiveBaseline;
+  public WorkpackBreakdownClassificationDto getClassifications() {
+    return classifications;
   }
-
-  public void setProjectHasActiveBaseline(Boolean projectHasActiveBaseline) {
-    this.projectHasActiveBaseline = projectHasActiveBaseline;
-  }
-
-  public BaselineStatus getMilestoneStatus() {
-    return milestoneStatus;
-  }
-
-  public void setMilestoneStatus(BaselineStatus milestoneStatus) {
-    this.milestoneStatus = milestoneStatus;
-  }
-
-  public BaselineStatus getDeliverableStatus() {
-    return deliverableStatus;
-  }
-
-  public void setDeliverableStatus(BaselineStatus deliveryStatus) {
-    this.deliverableStatus = deliveryStatus;
-  }
-
-  public Boolean getDeliveryHasSchedule() {
-    return deliveryHasSchedule;
-  }
-
-  public void setDeliveryHasSchedule(Boolean deliveryHasSchedule) {
-    this.deliveryHasSchedule = deliveryHasSchedule;
+  public void setClassifications(WorkpackBreakdownClassificationDto classifications) {
+    this.classifications = classifications;
   }
 }
