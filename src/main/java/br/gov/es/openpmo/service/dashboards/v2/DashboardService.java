@@ -8,6 +8,9 @@ import br.gov.es.openpmo.dto.dashboards.RiskDataChart;
 import br.gov.es.openpmo.dto.dashboards.datasheet.DatasheetResponse;
 import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.EarnedValueByStepDto;
 import br.gov.es.openpmo.dto.dashboards.v2.DashboardResponse;
+import br.gov.es.openpmo.model.workpacks.Deliverable;
+import br.gov.es.openpmo.model.workpacks.Workpack;
+import br.gov.es.openpmo.service.workpack.WorkpackService;
 import br.gov.es.openpmo.utils.DashboardCacheUtil;
 
 import org.springframework.stereotype.Service;
@@ -28,6 +31,10 @@ public class DashboardService implements IDashboardService {
   private final IDashboardRiskService riskService;
 
   private final IDashboardDatasheetService datasheetService;
+  
+  private final IDashboardBaselineService baselineSrv;
+  
+  private final WorkpackService wpSrv;
 
   private final DashboardCacheUtil dashboardCacheUtil;
 
@@ -35,11 +42,15 @@ public class DashboardService implements IDashboardService {
     final IDashboardMilestoneService milestoneService,
     final IDashboardRiskService riskService,
     final IDashboardDatasheetService datasheetService,
+    final IDashboardBaselineService baselineSrv,
+    final WorkpackService wpSrv,
     final DashboardCacheUtil dashboardCacheUtil
   ) {
     this.milestoneService = milestoneService;
     this.riskService = riskService;
     this.datasheetService = datasheetService;
+    this.baselineSrv = baselineSrv;
+    this.wpSrv = wpSrv;
     this.dashboardCacheUtil = dashboardCacheUtil;
   }
 
@@ -118,5 +129,18 @@ public class DashboardService implements IDashboardService {
 
     return dashboardCacheUtil.getDashboardEarnedValueAnalysis(workpackId, baselineId, date, parameters.getPlanId());
   }
+
+    @Override
+    public boolean isItemBeingBuild(Long workpackId) {
+        
+        Workpack wp = this.wpSrv.findById(workpackId);
+        
+        if(!(wp instanceof Deliverable)) return false;
+        
+        return !this.baselineSrv.findActiveBaseline(workpackId, "Deliverable").isPresent();
+        
+    }
+  
+  
 
 }

@@ -7,6 +7,7 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface DashboardBaselineRepository extends Neo4jRepository<Baseline, Long> {
@@ -29,5 +30,14 @@ public interface DashboardBaselineRepository extends Neo4jRepository<Baseline, L
          "        all(x in collection where x <= datetime(b.proposalDate)) " +
          "    ) as defaultBaseline")
   List<DashboardBaselineResponse> findAllByWorkpackId(Long workpackId);
-
+  
+  @Query(
+        "MATCH (wp:Workpack)-[]-()-[]-(bl:Baseline{status: 'APPROVED'})\n" +
+        "WHERE\n" +
+        "    id(wp) = $workpackId and\n" +
+        "    ($workpackType IS NULL or $workpackType IN labels(wp))\n" +
+        "return bl"
+  )
+  Optional<Baseline> getActiveBaselineByWorkpack(Long workpackId, String workpackType);
+  
 }

@@ -6,5 +6,7 @@ import br.gov.es.openpmo.dto.dashboards.v2.DashboardResponse;
 public interface IDashboardService {
 
   DashboardResponse build(DashboardParameters parameters);
+  
+  boolean isItemBeingBuild(Long workpackId);
 
 }

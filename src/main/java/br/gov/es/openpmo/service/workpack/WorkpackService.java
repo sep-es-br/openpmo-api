@@ -336,7 +336,7 @@ public class WorkpackService {
     models.forEach(m -> validateProperty(m, workpack.getProperties()));
 
   }
-
+   
   private static void validateProperty(
     final PropertyModel propertyModel,
     final Collection<? extends Property> properties

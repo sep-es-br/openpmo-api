@@ -11,6 +11,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Map;
+import org.springframework.web.bind.annotation.PathVariable;
 
 public interface IDashboardController {
 
@@ -31,5 +33,10 @@ public interface IDashboardController {
       @RequestParam(name = "date-reference", required = false) @DateTimeFormat(pattern = "MM/yyyy") YearMonth yearMonth,
       UriComponentsBuilder uriComponentsBuilder,
       @Authorization final String authorization);
+  
+  @GetMapping("{workpackId}/isBeingBuild")
+  Map<String, Boolean> isItemInBeingBuild(
+          @PathVariable("workpackId") Long workpackId
+  );
 
 }
