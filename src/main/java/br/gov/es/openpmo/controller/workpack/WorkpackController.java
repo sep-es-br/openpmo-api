@@ -13,6 +13,7 @@ import br.gov.es.openpmo.dto.dashboards.RiskResultDto;
 import br.gov.es.openpmo.dto.dashboards.RiskWorkpackDto;
 import br.gov.es.openpmo.dto.dashboards.RiskDto;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
+import br.gov.es.openpmo.dto.permission.WorkpackPermissionResponse;
 import br.gov.es.openpmo.dto.workpack.EndDeliverableManagementRequest;
 import br.gov.es.openpmo.dto.workpack.ResponseBaseWorkpack;
 import br.gov.es.openpmo.dto.workpack.ResponseBaseWorkpackDetail;
@@ -21,6 +22,7 @@ import br.gov.es.openpmo.dto.workpack.WorkpackDetailParentDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackHasChildrenResponse;
 import br.gov.es.openpmo.dto.workpack.WorkpackParamDto;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.JournalInformationDto;
+import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.journals.JournalAction;
 import br.gov.es.openpmo.model.risk.Risk;
@@ -37,6 +39,7 @@ import br.gov.es.openpmo.service.journals.JournalCreator;
 import br.gov.es.openpmo.service.journals.JournalFinder;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessData;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
+import br.gov.es.openpmo.service.workpack.GetWorkpackPermissions;
 import br.gov.es.openpmo.service.workpack.WorkpackHasChildren;
 import br.gov.es.openpmo.service.workpack.WorkpackPermissionVerifier;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
@@ -100,6 +103,8 @@ public class WorkpackController {
 
   private final RiskRepository riskRepository;
 
+  private final GetWorkpackPermissions getWorkpackPermissions;
+
   private final CompletedRepository completedRepository;
 
   @Autowired
@@ -118,7 +123,8 @@ public class WorkpackController {
     final IsFavoritedByService isFavoritedByService,
     final DashboardMilestoneRepository dashboardMilestoneRepository,
     final RiskRepository riskRepository,
-    final CompletedRepository completedRepository
+    final CompletedRepository completedRepository,
+    final GetWorkpackPermissions getWorkpackPermissions
   ) {
     this.responseHandler = responseHandler;
     this.workpackService = workpackService;
@@ -135,6 +141,7 @@ public class WorkpackController {
     this.dashboardMilestoneRepository = dashboardMilestoneRepository;
     this.riskRepository = riskRepository;
     this.completedRepository = completedRepository;
+    this.getWorkpackPermissions = getWorkpackPermissions;
   }
 
   @GetMapping
@@ -289,40 +296,61 @@ public class WorkpackController {
   @PutMapping
   @Transactional
   public ResponseEntity<ResponseBase<EntityDto>> update(
-    @RequestBody @Valid final WorkpackParamDto request,
-    @Authorization final String authorization
+      @RequestBody @Valid final WorkpackParamDto request,
+      @Authorization final String authorization
   ) {
-    this.canAccessService.ensureCanEditResource(
-      request.getId(),
-      authorization
-    );
-    final Long idPerson = this.tokenService.getUserId(authorization);
-    final String justificativa = request.getReason();
-    final Workpack workpack = this.workpackService.update(this.workpackService.getWorkpack(request));
-    this.journalCreator.edition(
-      workpack,
-      JournalAction.EDITED,
-      idPerson
-    );
-    final boolean isMilestone = workpack instanceof Milestone;
-    if (isMilestone && workpack.isReasonRequired()) {
-      if (justificativa == null || justificativa.trim().isEmpty()) {
-        throw new NegocioException(ApplicationMessage.REASON_NOT_PRESENT);
-      }
-      this.journalCreator.dateChanged(
-        workpack,
-        JournalAction.EDITED,
-        justificativa,
-        workpack.getNewDate(),
-        workpack.getPreviousDate(),
-        idPerson
+      this.canAccessService.ensureCanUpdateResource(
+          request.getId(),
+          authorization
       );
-    }
-    if (isMilestone) {
-      this.workpackService.calculateDashboard();
-    }
-    return ResponseEntity.ok(ResponseBase.of(EntityDto.of(workpack)));
+
+      final Long idPerson = this.tokenService.getUserId(authorization);
+
+
+      final WorkpackPermissionResponse permissionResponse =
+              this.getWorkpackPermissions.execute(idPerson, request.getId(), request.getIdPlan());
+
+      final PermissionLevelEnum level = permissionResponse.getPermissions().stream()
+          .map(PermissionDto::getLevel)
+          .findFirst()
+          .orElse(null);
+
+      Workpack workpack;
+      if (PermissionLevelEnum.UPDATE.equals(level)) {
+          workpack = this.workpackService.updateMilestoneDate(this.workpackService.getWorkpack(request));
+      } else {
+          workpack = this.workpackService.update(this.workpackService.getWorkpack(request));
+      }
+
+      this.journalCreator.edition(
+          workpack,
+          JournalAction.EDITED,
+          idPerson
+      );
+
+      final boolean isMilestone = workpack instanceof Milestone;
+      final String justificativa = request.getReason();
+      if (isMilestone && workpack.isReasonRequired()) {
+          if (justificativa == null || justificativa.trim().isEmpty()) {
+              throw new NegocioException(ApplicationMessage.REASON_NOT_PRESENT);
+          }
+          this.journalCreator.dateChanged(
+              workpack,
+              JournalAction.EDITED,
+              justificativa,
+              workpack.getNewDate(),
+              workpack.getPreviousDate(),
+              idPerson
+          );
+      }
+
+      if (isMilestone) {
+          this.workpackService.calculateDashboard();
+      }
+
+      return ResponseEntity.ok(ResponseBase.of(EntityDto.of(workpack)));
   }
+
 
   @PatchMapping("/{id}/cancel")
   public ResponseEntity<Void> cancel(
@@ -381,10 +409,11 @@ public class WorkpackController {
     @RequestBody final CompleteWorkpackRequest request,
     @Authorization final String authorization
   ) {
-    this.canAccessService.ensureCanEditResource(
+    this.canAccessService.ensureCanUpdateResource(
       idDeliverable,
       authorization
     );
+
     this.completeDeliverableService.apply(
       idDeliverable,
       request

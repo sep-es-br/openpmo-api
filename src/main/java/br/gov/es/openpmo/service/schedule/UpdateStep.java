@@ -142,6 +142,29 @@ public class UpdateStep {
     return stepUpdated;
   }
 
+  public Step executeRestricted(final StepUpdateDto stepUpdateDto, Boolean updateScheduleAndDeliverable) {
+    final Step step = this.findById(stepUpdateDto.getId());
+
+    step.setActualWork(
+        Optional.ofNullable(stepUpdateDto.getActualWork())
+            .orElse(BigDecimal.ZERO)
+    );
+
+    if (!CollectionUtils.isEmpty(stepUpdateDto.getConsumes())) {
+        for (ConsumesParamDto consumesDto : stepUpdateDto.getConsumes()) {
+            if (consumesDto.getId() != null && step.getConsumes() != null) {
+                step.getConsumes().stream()
+                    .filter(c -> Objects.nonNull(c.getId()) && c.getId().equals(consumesDto.getId()))
+                    .findFirst()
+                    .ifPresent(c -> c.setActualCost(consumesDto.getActualCost()));
+            }
+        }
+    }
+
+    return this.stepRepository.save(step);
+}
+
+
   private Step findById(final Long id) {
     return this.stepRepository.findById(id).orElseThrow(() -> new NegocioException(STEP_NOT_FOUND));
   }

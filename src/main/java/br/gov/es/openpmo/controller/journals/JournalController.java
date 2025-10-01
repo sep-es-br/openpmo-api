@@ -82,7 +82,7 @@ public class JournalController {
       @RequestBody final JournalRequest journalRequest,
       @RequestHeader(name = "Authorization") final String authorization) {
 
-    this.canAccessService.ensureCanEditResource(journalRequest.getWorkpackId(), authorization);
+    this.canAccessService.ensureCanUpdateResource(journalRequest.getWorkpackId(), authorization);
     final Long idPerson = this.tokenService.getUserId(authorization);
     final EntityDto information = this.journalCreator.newInformation(journalRequest, idPerson);
     return this.responseHandler.success(information);

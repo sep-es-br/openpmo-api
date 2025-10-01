@@ -22,6 +22,10 @@ public interface ICanAccessService {
                         @Valid Long id,
                         String authorization);
 
+        void ensureCanUpdateResource(
+                        @Valid Long id,
+                        String authorization);
+
         void ensureIsAdministrator(String authorization);
 
         void ensureCanAccessSelfResource(
@@ -44,5 +48,9 @@ public interface ICanAccessService {
         void ensureCanEditResource(
                         List<Long> ids,
                         String authorization);
+
+        void ensureCanUpdateResource(
+            List<Long> ids,
+            String authorization);
 
 }

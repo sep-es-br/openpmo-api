@@ -88,6 +88,25 @@ public class IndicatorService {
         return IndicatorDetailDto.of(indicator);
     }
 
+    public IndicatorDetailDto updateAchievedValues(final @Valid IndicatorUpdateDto request) {
+        final Indicator indicator = this.findById(request.getId());
+
+        List<PeriodGoal> periodGoals = this.repository.findPeriodGoalsByIndicatorId(indicator.getId())
+            .orElse(Collections.emptyList());
+        indicator.setPeriodGoals(periodGoals);
+    
+        request.getPeriodGoals().forEach(goalRequest -> {
+            indicator.getPeriodGoals().stream()
+                .filter(pg -> pg.getPeriod().equals(goalRequest.getPeriod()))
+                .findFirst()
+                .ifPresent(pg -> pg.setAchievedValue(goalRequest.getAchievedValue()));
+        });
+    
+        this.repository.save(indicator);
+    
+        return IndicatorDetailDto.of(indicator);
+    }
+
     public List<IndicatorCardDto> findAllAsCardDto(
             final Long idWorkpack,
             final Long idFilter,

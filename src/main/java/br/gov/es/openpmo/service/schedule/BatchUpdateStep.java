@@ -38,4 +38,22 @@ public class BatchUpdateStep {
     return this.updateStep.execute(step, false);
   }
 
+  public List<Long> executeRestricted(final Iterable<? extends StepUpdateDto> steps, final Long idSchedule) {
+    List<Long> updatedSteps = new ArrayList<>();
+
+    for (StepUpdateDto stepDto : steps) {
+        Step updatedStep = this.updateStepRestricted(stepDto);
+        updatedSteps.add(updatedStep.getId());
+    }
+
+    List<Deliverable> deliverables = this.updateStatusService.getDeliverablesByScheduleId(idSchedule);
+    this.updateStatusService.update(deliverables);
+
+    return updatedSteps;
+  }
+
+  private Step updateStepRestricted(final StepUpdateDto step) {
+    return this.updateStep.executeRestricted(step, false);
+  }
+
 }
