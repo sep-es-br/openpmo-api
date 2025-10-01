@@ -17,6 +17,9 @@ public class IndicatorUpdateDto {
     private final Long idWorkpack;
 
     @NotNull
+    private final Long idPlan;
+
+    @NotNull
     @NotEmpty
     @Size(max = 50, message = "O nome deve ter no máximo 50 caracteres")
     private final String name;
@@ -52,6 +55,7 @@ public class IndicatorUpdateDto {
     public IndicatorUpdateDto(
         final Long id,
         final Long idWorkpack,
+        final Long idPlan,
         final String name,
         final String description,
         final String source,
@@ -63,6 +67,7 @@ public class IndicatorUpdateDto {
     ) {
         this.id = id;
         this.idWorkpack = idWorkpack;
+        this.idPlan = idPlan;
         this.name = name;
         this.description = description;
         this.source = source;
@@ -112,5 +117,11 @@ public class IndicatorUpdateDto {
     public List<PeriodGoalDto> getPeriodGoals() {
         return periodGoals;
     }
+
+    public Long getIdPlan() {
+        return idPlan;
+    }
+
+    
 
 }

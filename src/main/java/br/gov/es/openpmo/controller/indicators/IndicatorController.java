@@ -7,15 +7,22 @@ import br.gov.es.openpmo.dto.indicators.IndicatorCardDto;
 import br.gov.es.openpmo.dto.indicators.IndicatorCreateDto;
 import br.gov.es.openpmo.dto.indicators.IndicatorDetailDto;
 import br.gov.es.openpmo.dto.indicators.IndicatorUpdateDto;
+import br.gov.es.openpmo.dto.permission.PermissionDto;
+import br.gov.es.openpmo.dto.permission.WorkpackPermissionResponse;
+import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.model.indicators.Indicator;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.indicators.IndicatorService;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
+import br.gov.es.openpmo.service.workpack.GetWorkpackPermissions;
 import io.swagger.annotations.Api;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @Api
@@ -24,18 +31,20 @@ import java.util.List;
 public class IndicatorController {
 
     private final IndicatorService service;
-
+    private final GetWorkpackPermissions getWorkpackPermissions;
     private final TokenService tokenService;
     private final ICanAccessService canAccessService;
 
     public IndicatorController(
         final IndicatorService service,
         final TokenService tokenService,
-        final ICanAccessService canAccessService
+        final ICanAccessService canAccessService,
+        final GetWorkpackPermissions getWorkpackPermissions
     ) {
         this.service = service;
         this.tokenService = tokenService;
         this.canAccessService = canAccessService;
+        this.getWorkpackPermissions = getWorkpackPermissions;
     }
 
     @GetMapping
@@ -78,8 +87,27 @@ public class IndicatorController {
     public ResponseEntity<ResponseBase<IndicatorDetailDto>> update(
             @Valid @RequestBody final IndicatorUpdateDto request,
             @Authorization final String authorization) {
+    
+        this.canAccessService.ensureCanUpdateResource(request.getIdWorkpack(), authorization);
+        
+        final Long idUser = this.tokenService.getUserId(authorization);
 
-        final IndicatorDetailDto indicator = this.service.update(request);
+        final WorkpackPermissionResponse permissionResponse =
+                this.getWorkpackPermissions.execute(idUser, request.getIdWorkpack(), request.getIdPlan());
+
+        Collection<PermissionDto> permissions = permissionResponse.getPermissions();
+
+        PermissionLevelEnum level = permissions.stream()
+            .map(PermissionDto::getLevel) 
+            .findFirst()
+            .orElse(null);     
+
+        final IndicatorDetailDto indicator;
+        if (level == PermissionLevelEnum.UPDATE) {
+            indicator = this.service.updateAchievedValues(request);
+        } else {
+            indicator = this.service.update(request);
+        }
         final ResponseBase<IndicatorDetailDto> response = ResponseBase.of(indicator);
         return ResponseEntity.ok(response);
     }

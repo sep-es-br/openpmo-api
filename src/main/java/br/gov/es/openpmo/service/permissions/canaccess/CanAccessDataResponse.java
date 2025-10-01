@@ -12,6 +12,7 @@ public class CanAccessDataResponse implements ICanAccessDataResponse {
 
   private final Boolean edit;
   private final Boolean read;
+  private final Boolean update;
   private final Boolean basicRead;
   private final Boolean admin;
   private final Boolean self;
@@ -21,6 +22,7 @@ public class CanAccessDataResponse implements ICanAccessDataResponse {
   public CanAccessDataResponse(
     final Boolean edit,
     final Boolean read,
+    final Boolean update,
     final Boolean basicRead,
     final Boolean admin,
     final Boolean self,
@@ -29,6 +31,7 @@ public class CanAccessDataResponse implements ICanAccessDataResponse {
   ) {
     this.edit = edit;
     this.read = read;
+    this.update = update;
     this.basicRead = basicRead;
     this.admin = admin;
     this.self = self;
@@ -38,6 +41,7 @@ public class CanAccessDataResponse implements ICanAccessDataResponse {
 
   public static CanAccessDataResponse administrator(final String key, final Boolean self) {
     return new CanAccessDataResponse(
+      false,
       false,
       false,
       false,
@@ -54,6 +58,7 @@ public class CanAccessDataResponse implements ICanAccessDataResponse {
       false,
       false,
       false,
+      false,
       self,
       key,
       new CanAccessManagementDataResponse(editManagement, true)
@@ -62,6 +67,20 @@ public class CanAccessDataResponse implements ICanAccessDataResponse {
 
   public static CanAccessDataResponse read(final String key, final Boolean editManagement, final Boolean self) {
     return new CanAccessDataResponse(
+      false,
+      true,
+      false,
+      false,
+      false,
+      self,
+      key,
+      new CanAccessManagementDataResponse(editManagement, true)
+    );
+  }
+
+  public static CanAccessDataResponse update(final String key, final Boolean editManagement, final Boolean self) {
+    return new CanAccessDataResponse(
+      false,
       false,
       true,
       false,
@@ -89,6 +108,11 @@ public class CanAccessDataResponse implements ICanAccessDataResponse {
   }
 
   @Override
+  public Boolean getUpdate() {
+    return update;
+  }
+
+  @Override
   public Boolean getBasicRead() {
     return this.basicRead;
   }
@@ -106,18 +130,34 @@ public class CanAccessDataResponse implements ICanAccessDataResponse {
   }
 
   @Override
+  public Boolean canUpdateResource() {
+    if (Boolean.TRUE.equals(this.admin))
+      return true;
+    if (Boolean.TRUE.equals(this.update))
+      return true;
+    return this.edit;
+  }
+
+  @Override
   public Boolean canReadResource() {
     if (Boolean.TRUE.equals(this.admin))
       return true;
     if (Boolean.TRUE.equals(this.edit))
       return true;
-    return this.read || this.basicRead;
+    return this.read || this.basicRead || this.update;
   }
 
   @Override
   public void ensureCanReadResource() {
     if (Boolean.FALSE.equals(this.canReadResource())) {
       throw new CannotAccessResourceException(CANNOT_READ_RESOURCE);
+    }
+  }
+
+  @Override
+  public void ensureCanUpdateResource() {
+    if (Boolean.FALSE.equals(this.canUpdateResource())) {
+      throw new CannotAccessResourceException(CANNOT_EDIT_RESOURCE);
     }
   }
 

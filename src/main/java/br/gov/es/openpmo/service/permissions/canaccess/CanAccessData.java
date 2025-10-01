@@ -82,6 +82,7 @@ public class CanAccessData implements ICanAccessData {
         false,
         false,
         false,
+        false,
         personData.getKey(),
         new CanAccessManagementDataResponse(
             false,
@@ -119,12 +120,17 @@ public class CanAccessData implements ICanAccessData {
     if (edit) {
       return CanAccessDataResponse.edit(personData.getKey(), false, self);
     }
+    final boolean update = hasPermission(ids, personData.getKey(), this.permissionRepository::hasUpdatePermission);
+    if (update) {
+      return CanAccessDataResponse.update(personData.getKey(), false, self);
+    }
     final boolean read = hasPermission(ids, personData.getKey(), this.permissionRepository::hasReadPermission);
     if (read) {
       return CanAccessDataResponse.read(personData.getKey(), false, self);
     }
 
     return new CanAccessDataResponse(
+      false,
       false,
       false,
       hasPermission(ids, personData.getKey(), this.permissionRepository::hasBasicReadPermission),
@@ -142,6 +148,7 @@ public class CanAccessData implements ICanAccessData {
   public ICanAccessDataResponse execute(final String authorizationHeader) {
     final PersonDataResponse personData = this.getPerson(authorizationHeader);
     return new CanAccessDataResponse(
+      null,
       null,
       null,
       null,

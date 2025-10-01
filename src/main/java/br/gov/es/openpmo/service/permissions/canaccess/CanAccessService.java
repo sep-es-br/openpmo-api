@@ -24,6 +24,7 @@ public class CanAccessService implements ICanAccessService {
     final String authorization
   ) {
     final ICanAccessDataResponse canAccess = this.getCanAccess(id, authorization);
+
     canAccess.ensureCanReadResource();
   }
 
@@ -40,6 +41,15 @@ public class CanAccessService implements ICanAccessService {
   ) {
     final ICanAccessDataResponse canAccess = this.getCanAccess(id, authorization);
     canAccess.ensureCanEditResource();
+  }
+
+  @Override
+  public void ensureCanUpdateResource(
+    final Long id,
+    final String authorization
+  ) {
+    final ICanAccessDataResponse canAccess = this.getCanAccess(id, authorization);
+    canAccess.ensureCanUpdateResource();
   }
 
   @Override
@@ -97,6 +107,15 @@ public class CanAccessService implements ICanAccessService {
   ) {
     final ICanAccessDataResponse canAccess = this.getCanAccess(ids, authorization);
     canAccess.ensureCanEditResource();
+  }
+
+  @Override
+  public void ensureCanUpdateResource(
+    final List<Long> ids,
+    final String authorization
+  ) {
+    final ICanAccessDataResponse canAccess = this.getCanAccess(ids, authorization);
+    canAccess.ensureCanUpdateResource();
   }
 
   private ICanAccessDataResponse getCanAccess(
