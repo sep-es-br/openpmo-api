@@ -2,6 +2,7 @@ package br.gov.es.openpmo.service.workpack.breakdown.structure;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
@@ -16,10 +17,15 @@ import br.gov.es.openpmo.dto.dashboards.RiskResultDto;
 import br.gov.es.openpmo.dto.dashboards.RiskWorkpackDto;
 import br.gov.es.openpmo.dto.menu.WorkpackResultDto;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.JournalInformationDto;
+import br.gov.es.openpmo.dto.workpack.breakdown.structure.ScheduleMeasureUnit;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.WorkpackBreakdownClassificationDto;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.WorkpackRepresentation;
+import br.gov.es.openpmo.model.office.UnitMeasure;
+import br.gov.es.openpmo.model.properties.Property;
+import br.gov.es.openpmo.model.properties.UnitSelection;
 import br.gov.es.openpmo.model.risk.Importance;
 import br.gov.es.openpmo.model.risk.Risk;
+import br.gov.es.openpmo.model.workpacks.Deliverable;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
@@ -88,6 +94,28 @@ public class GetWorkpackRepresentation {
       workpackRepresentation.setClassifications(newClassifications);
     }
 
+    if ("Milestone".equals(workpackType)) {
+      MilestoneDateDto milestone = milestoneWorkpacks
+        .stream()
+        .filter(m -> m.getIdWorkpack().equals(workpackDto.getId()))
+        .findFirst()
+        .orElse(null);
+      if (milestone != null) {
+        MilestoneDto milestoneDto = MilestoneDto.setMiletoneOfMilestoneDate(milestone);
+        workpackRepresentation.setMilestone(milestoneDto);
+      }
+    } else if ("Deliverable".equals(workpackType)) {
+      Workpack deliverable = deliverables
+        .stream()
+        .filter(w -> w.getId().equals(workpackDto.getId()))
+        .findFirst()
+        .orElse(null);
+      if (deliverable != null) {
+        final ScheduleMeasureUnit unitMeasure = this.buildUnitMeasure((Deliverable) deliverable);
+        workpackRepresentation.setUnitMeasure(unitMeasure);
+      }
+    }
+
     return workpackRepresentation;
   }
 
@@ -149,16 +177,16 @@ public class GetWorkpackRepresentation {
     );
   }
 
-  // private ScheduleMeasureUnit buildUnitMeasure(final Deliverable workpack) {
-  //   final Set<Property> properties = workpack.getProperties();
-  //   for (Property property : properties) {
-  //     if (property instanceof UnitSelection) {
-  //       final UnitMeasure value = ((UnitSelection) property).getValue();
-  //       if (value != null) {
-  //         return ScheduleMeasureUnit.of(value);
-  //       }
-  //     }
-  //   }
-  //   return null;
-  // }
+  private ScheduleMeasureUnit buildUnitMeasure(final Deliverable workpack) {
+    final Set<Property> properties = workpack.getProperties();
+    for (Property property : properties) {
+      if (property instanceof UnitSelection) {
+        final UnitMeasure value = ((UnitSelection) property).getValue();
+        if (value != null) {
+          return ScheduleMeasureUnit.of(value);
+        }
+      }
+    }
+    return null;
+  }
 }
