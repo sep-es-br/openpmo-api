@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.repository;
 
 import br.gov.es.openpmo.model.budget.UnidadeOrcamentaria;
+import java.util.List;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
@@ -19,4 +20,9 @@ public interface UnidadeOrcamentariaRepository extends Neo4jRepository<UnidadeOr
             + "and id(c) = $costAccountId "
             + "return uo")
     Optional<UnidadeOrcamentaria> findByCodeAndIdCostAccount(Integer code, Long costAccountId);
+
+    @Query("match (uo:UnidadeOrcamentaria)-[:CONTROLS]-(:CostAccount)<-[:ASSIGNED]-(po:PlanoOrcamentario{code: $codPo}) " + 
+                "where uo.code IS NOT NULL AND po.code IS NOT NULL " + 
+                "return uo ")
+    List<UnidadeOrcamentaria> findAllByPoCodeWithCostAccount(int codPo);
 }

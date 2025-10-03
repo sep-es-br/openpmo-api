@@ -34,6 +34,7 @@ public interface CostAccountRepository extends Neo4jRepository<CostAccount, Long
     + " [(c)<-[fo:FEATURES]-(po:Property)-[v1:VALUES]->(o:Organization) | [fo, po, v1, o] ], "
     + " [(c)<-[fl:FEATURES]-(pl:Property)-[v2:VALUES]-(l:Locality) | [fl, pl, v2, l] ], "
     + " [(c)<-[fu:FEATURES]-(pu:Property)-[v3:VALUES]-(u:UnitMeasure) | [fu, pu, v3, u] ], "
+    + " [(c)<-[funds:FUNDS]-(in:Instrument) | [funds, in]], "
     + " [(c)-[ii:IS_INSTANCE_BY]->(cm:CostAccountModel) | [ii,cm]] "
     + "]")
   Optional<CostAccount> findByIdWithPropertyModel(@Param("id") Long id);
@@ -157,5 +158,21 @@ public interface CostAccountRepository extends Neo4jRepository<CostAccount, Long
           + "return uo is not null "
           + "and po is not null")
   boolean hasUOandPO(Long costAccountId);
+  
+  @Query("match (instrument:Instrument{sigefesCode: $sigefesCode})-[:FUNDS]->(ca:CostAccount) "
+          + "return ca "
+          + "limit 1")
+  Optional<CostAccount> findByInstrument(String sigefesCode);
+  
+  @Query(
+    "match (:UnidadeOrcamentaria{code: $codUo})-[:CONTROLS]->(ca:CostAccount)<-[:ASSIGNED]-(:PlanoOrcamentario{code: $codPo}) " + 
+    "return ca " + 
+    "limit 1")
+  Optional<CostAccount> findByUoPoCode(int codUo, int codPo);
+  
+  @Query(
+    "match (:UnidadeOrcamentaria{code: $codUo})-[:CONTROLS]->(ca:CostAccount) " + 
+    "return ca ")
+  List<CostAccount> findByUoCode(int codUo);
 
 }

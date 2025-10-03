@@ -103,7 +103,7 @@ public class SubmitBaselineService implements ISubmitBaselineService {
       for (Workpack workpackWithoutChange : workpackWithoutChanges) {
         BaselineScheduleSubmitDto baseSchedule = schduleWithoutChanges.stream().filter(
             s -> s.getIdWorkpack().equals(workpackWithoutChange.getId())).findFirst().orElse(null);
-        baselineServiceUtil.createSnapshot(workpackWithoutChange, baseline, baseSchedule);
+        baselineServiceUtil.createSnapshot(workpackWithoutChange, baseline, baseSchedule, false);
       }
     }
   }
@@ -199,6 +199,7 @@ public class SubmitBaselineService implements ISubmitBaselineService {
                   .filter(r -> Boolean.TRUE.equals(r.getIncluded())
                       && (BaselineStatus.NEW.equals(r.getClassification())
                           || BaselineStatus.CHANGED.equals(r.getClassification())
+                          || BaselineStatus.TO_CANCEL.equals(r.getClassification())
                           )
                   ).map(UpdateRequest::getIdWorkpack)
                   .collect(Collectors.toSet());
@@ -225,8 +226,10 @@ public class SubmitBaselineService implements ISubmitBaselineService {
     if (workpack != null) {
       if (BaselineStatus.NEW.equals(update.getClassification())
           || BaselineStatus.CHANGED.equals(update.getClassification())){
-        baselineServiceUtil.createSnapshot(workpack, baseline, schedule);
-      }
+        baselineServiceUtil.createSnapshot(workpack, baseline, schedule, false);
+      } else if (BaselineStatus.TO_CANCEL.equals(update.getClassification())) {
+        baselineServiceUtil.createSnapshot(workpack, baseline, schedule, true);
+    }
     }
   }
 
@@ -245,8 +248,8 @@ public class SubmitBaselineService implements ISubmitBaselineService {
         || BaselineStatus.DELETED.equals(update.getClassification())) {
       if (master != null && snapshot != null) {
         baselineServiceUtil.createSnapshot(master, snapshot, baseline, scheduleSnapshot);
-      }
-    }
+      } 
+    } 
   }
 
   private Baseline getBaselineById(final Long idBaseline) {

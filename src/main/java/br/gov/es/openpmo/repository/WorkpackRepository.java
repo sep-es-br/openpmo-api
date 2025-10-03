@@ -2,6 +2,7 @@ package br.gov.es.openpmo.repository;
 
 import br.gov.es.openpmo.dto.menu.PlanWorkpackDto;
 import br.gov.es.openpmo.dto.menu.WorkpackResultDto;
+import br.gov.es.openpmo.dto.workpack.breakdown.structure.WorkpackBreakdownClassificationDto;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.workpacks.Program;
 import br.gov.es.openpmo.model.workpacks.Project;
@@ -652,4 +653,96 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       "WHERE id(w)=$workpackId " +
       "RETURN ID(children) ")
   Set<Long> findAllChildren(@Param("workpackId") Long workpackId);
+  
+  @Query("MATCH (w:Workpack)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel {name: 'Situação'}) " +
+       "WHERE id(w) = $id " +
+       "SET p.value = $value")
+  void updateSituationValue(Long id, String value);
+
+  @Query("MATCH (w:Workpack)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel {name:'Situação'}) " +
+       "WHERE id(w) = $id " +
+       "RETURN p.value = 'Concluída'")
+  boolean isSituationConcluded(Long id);
+
+  @Query("MATCH (w:Workpack) " +
+       "WHERE id(w) = $id " +
+       "WITH CASE " +
+       "        WHEN w.category = 'SNAPSHOT' " +
+       "        THEN head([(w)-[:IS_SNAPSHOT_OF]->(master:Workpack) | master]) " +
+       "        ELSE w " +
+       "     END AS masterW " +
+       "MATCH (masterW)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel {name:'Situação'}) " +
+       "RETURN p.value = 'A cancelar'")
+  Boolean isSituationToCancel(Long id);
+
+
+  @Query("MATCH (snapshot:Workpack)-[:IS_SNAPSHOT_OF]->(master:Workpack) " +
+       "MATCH (master)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel {name:'Situação'}) " +
+       "WHERE id(snapshot) = $id and snapshot.canceled = true " +
+       "RETURN p.value = 'Cancelada'")
+  Boolean isSituationCanceled(Long id);
+
+  @Query("MATCH (w:Workpack)<-[:FEATURES]-(p:Property) " +
+       "WHERE id(p) = $id " +
+       "RETURN id(w)")
+  Long findWorkpackIdByPropertyId(Long id);
+
+  // @Query(
+  //   "MATCH (organizer:Organizer)-[:IS_IN*]->(project:Project) " +
+  //   "WHERE id(organizer) = $idOrganizer " +
+  //   "RETURN ID(project)"
+  // )
+  // Optional<Long> findProjectIdByOrganizerId(Long idOrganizer);
+
+  // @Query(
+  //   "MATCH (milestone:Milestone)-[:IS_IN*]->(project:Project) " +
+  //   "WHERE id(milestone) = $idMilestone " +
+  //   "RETURN ID(project)"
+  // )
+  // Long findProjectIdByMilestoneId(Long idMilestone);
+
+  // @Query(
+  //   "MATCH (deliverable:Deliverable)-[:IS_IN*]->(project:Project) " +
+  //   "WHERE id(deliverable) = $idDeliverable " +
+  //   "RETURN ID(project)"
+  // )
+  // Long findProjectIdByDeliverableId(Long idDeliverable);
+
+  // @Query(
+  //   "MATCH (children:Workpack{deleted:false})-[:IS_IN*]->(parent:Workpack) " +
+  //   "WHERE ID(parent) = $idParent AND (ANY(label IN labels(children) WHERE label IN ['Deliverable']) " +
+  //   "AND NOT (children)<-[:FEATURES]-(:Schedule)) " +
+  //   "RETURN children"
+  // )
+  // List<Workpack> findDeliveriesWithoutScheduleByParentId(Long idParent);
+
+  @Query(
+    "MATCH (w:Workpack) " +
+    "WHERE ID(w) = $idWorkpack " +
+    "OPTIONAL MATCH (w)<-[:IS_IN*0..]-(e:Workpack) " +
+    "OPTIONAL MATCH (e)<-[:FEATURES]-(sc:Schedule) " +
+    "OPTIONAL MATCH (sc)<-[:COMPOSES]-(st:Step) " +
+    "WITH DISTINCT e " +
+    ", CASE WHEN NOT (e.deleted OR e.canceled) AND sc IS NULL AND 'Deliverable' IN labels(e) THEN 1 ELSE 0 end AS noCron " +
+    ", CASE WHEN NOT (e.deleted OR e.canceled) AND SUM(toFloat(st.plannedWork)) <= 0 AND 'Deliverable' IN labels(e) THEN 1 ELSE 0 end AS noScope " +
+    ", CASE WHEN NOT e.deleted AND EXISTS ((e)<-[:FEATURES]-(:Property {value:'A cancelar'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Situação'}) ) AND 'Deliverable' IN labels(e) THEN 1 ELSE 0 end AS toCancel " +
+    ", CASE WHEN e.deleted AND EXISTS ((e)<-[:IS_SNAPSHOT_OF]-(:Workpack)-[:COMPOSES]->(:Baseline {active:TRUE})) AND ('Deliverable' IN labels(e) OR 'Milestone' IN labels(e)) THEN 1 ELSE 0 end AS deleted " +
+    ", CASE WHEN NOT (e.deleted or e.canceled) AND NOT EXISTS ((e)<-[:IS_SNAPSHOT_OF]-(:Workpack)-[:COMPOSES]->(:Baseline)) AND ('Deliverable' IN labels(e) OR 'Milestone' IN labels(e)) THEN 1 ELSE 0 end AS isNew " +
+    " " +
+    "RETURN " +
+    "  CASE WHEN SUM(noCron) > 0 THEN true ELSE false end AS noSchedule " +
+    ", CASE WHEN SUM(noScope) > 0 THEN true ELSE false end AS noScope " +
+    ", CASE WHEN SUM(toCancel) > 0 THEN true ELSE false end AS toCancel " +
+    ", CASE WHEN SUM(deleted) > 0 THEN true ELSE false end AS deletedWithBaseline " +
+    ", CASE WHEN SUM(isNew) > 0 THEN true ELSE false end AS isNew "
+  )
+  WorkpackBreakdownClassificationDto getWorkpackClassifications(@Param("idWorkpack") Long idWorkpack);
+
+  @Query(
+    "MATCH (o:Organizer) " +
+    "WHERE ID(o) = $idOrganizer " +
+    "RETURN EXISTS ((o)-[:IS_IN*]->(:Project)) "
+  )
+  Boolean getOrganizerIsInAProject(@Param("idOrganizer") Long idOrganizer);
 }
+

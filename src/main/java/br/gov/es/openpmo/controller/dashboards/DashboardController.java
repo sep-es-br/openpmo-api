@@ -16,7 +16,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.YearMonth;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Api
 @RestController
@@ -86,6 +88,17 @@ public class DashboardController implements IDashboardController {
     final DashboardResponse response = this.dashboardService.build(parameters);
     return this.responseHandler.success(response);
   }
+
+    @Override
+    public Map<String, Boolean> isItemInBeingBuild(Long workpackId) {
+        HashMap<String, Boolean> result = new HashMap<>();
+        
+        result.put("value", dashboardService.isItemBeingBuild(workpackId));
+        
+        return result;
+    }
+  
+  
 
 
 }

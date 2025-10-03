@@ -15,6 +15,7 @@ import org.neo4j.ogm.annotation.Relationship;
 import org.springframework.data.annotation.Transient;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @NodeEntity
@@ -45,6 +46,9 @@ public class CostAccount extends Entity implements Snapshotable<CostAccount> {
 
   @Relationship(type = "ASSIGNED", direction = Relationship.INCOMING)
   private PlanoOrcamentario planoOrcamentario;
+  
+  @Relationship(type = "FUNDS", direction = Relationship.INCOMING)
+  private List<Instrument> instruments;
 
   public CostAccount() {
   }
@@ -145,4 +149,14 @@ public class CostAccount extends Entity implements Snapshotable<CostAccount> {
   public void setPlanoOrcamentario(PlanoOrcamentario planoOrcamentario) {
     this.planoOrcamentario = planoOrcamentario;
   }
+
+    public List<Instrument> getInstruments() {
+        return instruments;
+    }
+
+    public void setInstruments(List<Instrument> instruments) {
+        this.instruments = instruments;
+    }
+  
+  
 }

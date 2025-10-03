@@ -336,7 +336,7 @@ public class WorkpackService {
     models.forEach(m -> validateProperty(m, workpack.getProperties()));
 
   }
-
+   
   private static void validateProperty(
     final PropertyModel propertyModel,
     final Collection<? extends Property> properties
@@ -751,6 +751,36 @@ public class WorkpackService {
     this.cacheUtil.loadAllCache();
     return savedWorkpack;
   }
+
+  public Workpack updateMilestoneDate(final Workpack workpack) {
+    final Long workpackId = workpack.getId();
+    final Workpack workpackUpdate = this.findById(workpackId);
+
+    if (!(workpackUpdate instanceof Milestone)) {
+        throw new IllegalArgumentException("O Workpack não é um Milestone");
+    }
+
+    final LocalDate previousDate = workpackUpdate.getDate().toLocalDate();
+    final LocalDate newDate = workpack.getDate().toLocalDate();
+
+    workpackUpdate.setDate(workpack.getDate());
+    workpackUpdate.setPreviousDate(previousDate);
+    workpackUpdate.setNewDate(newDate);
+
+    final Workpack savedWorkpack = this.workpackRepository.save(workpackUpdate, 3);
+
+    savedWorkpack.setReasonRequired(false);
+    if (!previousDate.isEqual(newDate)) {
+        final LocalDateTime baselineDate = getBaselineDate(workpackId);
+        if (baselineDate != null && !newDate.isEqual(baselineDate.toLocalDate())) {
+            savedWorkpack.setReasonRequired(true);
+        }
+    }
+
+    this.cacheUtil.loadAllCache();
+    return savedWorkpack;
+}
+
 
   private LocalDateTime getBaselineDate(Long idMilestone) {
     return milestoneRepository.fetchMilestoneBaselineDate(idMilestone)

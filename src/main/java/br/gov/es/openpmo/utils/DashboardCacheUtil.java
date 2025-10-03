@@ -50,7 +50,7 @@ public class DashboardCacheUtil {
             loadingAll = true;
             final DashboardRepository dashboardRepository = applicationContext.getBean(DashboardRepository.class);
             final List<DashboardWorkpackDetailDto> listDetail = dashboardRepository.findAllScheduleAndStep(null, null);
-            final List<DashboardWorkpackDetailDto> listCost = dashboardRepository.findAllCost(null, null);
+            final List<DashboardWorkpackDetailDto> listCost = dashboardRepository.findAllCost(null, null, null);
             listCost.forEach(
                 c -> listDetail.stream().filter(d -> d.getIdWorkpack().equals(c.getIdWorkpack()) && d.getIdPlan().equals(c.getIdPlan())).findFirst().ifPresent(
                     x -> x.setForeseenCost(c.getForeseenCost())));
@@ -229,7 +229,7 @@ public class DashboardCacheUtil {
 
         workpackIds.add(idWorkpack);
         final List<DashboardWorkpackDetailDto> listDetail = dashboardRepository.findAllScheduleAndStep(workpackIds, idPlan);
-        final List<DashboardWorkpackDetailDto> listCost = dashboardRepository.findAllCost(workpackIds, idPlan);
+        final List<DashboardWorkpackDetailDto> listCost = dashboardRepository.findAllCost(workpackIds, idPlan, idBaseline);
         listCost.forEach(
             c -> listDetail.stream().filter(d -> d.getIdWorkpack().equals(c.getIdWorkpack())).findFirst().ifPresent(
                 x -> x.setForeseenCost(c.getForeseenCost())));

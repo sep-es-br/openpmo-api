@@ -8,11 +8,15 @@ public interface ICanAccessDataResponse {
 
   Boolean getRead();
 
+  Boolean getUpdate();
+
   Boolean getBasicRead();
 
   Boolean getAdmin();
 
   Boolean canEditResource();
+
+  Boolean canUpdateResource();
 
   Boolean canReadResource();
 
@@ -25,6 +29,8 @@ public interface ICanAccessDataResponse {
   Boolean getSelf();
 
   void ensureCanReadResource();
+
+  void ensureCanUpdateResource();
 
   void ensureCanEditResource();
 

@@ -4,17 +4,22 @@ import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.ResponseBaseItens;
+import br.gov.es.openpmo.dto.permission.PermissionDto;
+import br.gov.es.openpmo.dto.permission.WorkpackPermissionResponse;
 import br.gov.es.openpmo.dto.schedule.StepDto;
 import br.gov.es.openpmo.dto.schedule.StepStoreParamDto;
 import br.gov.es.openpmo.dto.schedule.StepUpdateDto;
 import br.gov.es.openpmo.dto.schedule.UpdateCostAccountByStepIdRequest;
+import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.model.schedule.Step;
 import br.gov.es.openpmo.model.workpacks.Deliverable;
+import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.schedule.BatchUpdateStep;
 import br.gov.es.openpmo.service.schedule.StepService;
 import br.gov.es.openpmo.service.schedule.UpdateStatusService;
 import br.gov.es.openpmo.service.schedule.UpdateStep;
+import br.gov.es.openpmo.service.workpack.GetWorkpackPermissions;
 import br.gov.es.openpmo.service.workpack.UpdateCostAccountByStepId;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +28,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,6 +43,8 @@ public class StepController {
 
   private final UpdateStatusService status;
 
+  private final GetWorkpackPermissions getWorkpackPermissions;
+
   private final BatchUpdateStep batchUpdateStep;
 
   private final UpdateStep updateStep;
@@ -44,6 +53,8 @@ public class StepController {
 
   private final UpdateCostAccountByStepId updateCostAccountByStepId;
 
+  private final TokenService tokenService;
+
   @Autowired
   public StepController(
     final StepService stepService,
@@ -51,7 +62,9 @@ public class StepController {
     final BatchUpdateStep batchUpdateStep,
     final UpdateStep updateStep,
     final ICanAccessService canAccessService,
-    final UpdateCostAccountByStepId updateCostAccountByStepId
+    final UpdateCostAccountByStepId updateCostAccountByStepId,
+    final GetWorkpackPermissions getWorkpackPermissions,
+    final TokenService tokenService
   ) {
     this.stepService = stepService;
     this.status = status;
@@ -59,6 +72,8 @@ public class StepController {
     this.updateStep = updateStep;
     this.canAccessService = canAccessService;
     this.updateCostAccountByStepId = updateCostAccountByStepId;
+    this.getWorkpackPermissions = getWorkpackPermissions;
+    this.tokenService = tokenService;
   }
 
   @GetMapping("/{id}")
@@ -92,6 +107,8 @@ public class StepController {
   @PutMapping("/batch/{idSchedule}")
   public ResponseEntity<ResponseBaseItens<Long>> batchUpdate(
     @PathVariable final Long idSchedule,
+    @RequestParam final Long idPlan,
+    @RequestParam final Long idWorkpack,
     @RequestBody final List<? extends @Valid StepUpdateDto> stepUpdates,
     @Authorization final String authorization
   ) {
@@ -99,12 +116,30 @@ public class StepController {
       .map(StepUpdateDto::getId)
       .collect(Collectors.toList());
 
-    this.canAccessService.ensureCanEditResource(
+    this.canAccessService.ensureCanUpdateResource(
       stepIds,
       authorization
     );
 
-    final List<Long> ids = this.batchUpdateStep.execute(stepUpdates, idSchedule);
+    final Long idUser = this.tokenService.getUserId(authorization);
+
+    final WorkpackPermissionResponse permissionResponse =
+            this.getWorkpackPermissions.execute(idUser, idWorkpack, idPlan);
+
+    Collection<PermissionDto> permissions = permissionResponse.getPermissions();
+
+    PermissionLevelEnum level = permissions.stream()
+        .map(PermissionDto::getLevel) 
+        .findFirst()
+        .orElse(null);  
+
+        final List<Long> ids;
+
+        if (PermissionLevelEnum.UPDATE.equals(level)) {
+            ids = this.batchUpdateStep.executeRestricted(stepUpdates, idSchedule);
+        } else {
+            ids = this.batchUpdateStep.execute(stepUpdates, idSchedule);
+        }
 
     return ResponseEntity.ok(ResponseBaseItens.of(ids));
   }
@@ -156,6 +191,19 @@ public class StepController {
       request
     );
     return ResponseEntity.ok(ResponseBase.success());
+  }
+
+  @GetMapping("/check-complete/{id}")
+  public ResponseEntity<ResponseBase<Boolean>> checkIfComplete(
+      @PathVariable final Long id,
+      @Authorization final String authorization
+  ) {
+
+    this.canAccessService.ensureCanReadResource(id, authorization);
+
+    boolean complete = !status.checkHasWorkToComplete(id);
+
+    return ResponseEntity.ok(ResponseBase.of(complete));
   }
 
 }

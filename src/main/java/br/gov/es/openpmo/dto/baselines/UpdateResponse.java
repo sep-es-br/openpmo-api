@@ -1,11 +1,12 @@
 package br.gov.es.openpmo.dto.baselines;
 
 import br.gov.es.openpmo.enumerator.BaselineStatus;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class UpdateResponse {
-
   private final Long idWorkpack;
 
   private final String icon;
@@ -13,9 +14,17 @@ public class UpdateResponse {
   private final String description;
 
   @JsonProperty("classification")
-  private final BaselineStatus classification;
+  private BaselineStatus classification;
 
   private final Boolean included;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private String workpackType;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private Boolean deliveryModelHasActiveSchedule;
+  // ↳ Apenas é incluído se workpack for do tipo Deliverable
+  // ↳ Diz se o modelo da Entrega exige Cronograma ativo
 
   @JsonCreator
   public UpdateResponse(
@@ -48,8 +57,27 @@ public class UpdateResponse {
     return this.classification;
   }
 
+  public void setClassification(BaselineStatus newStatus) {
+    this.classification = newStatus;
+  }
+
   public Boolean isIncluded() {
     return this.included;
   }
 
+  public String getWorkpackType() {
+    return this.workpackType;
+  }
+
+  public void setWorkpackType(String workpackType) {
+    this.workpackType = workpackType;
+  }
+
+  public Boolean getDeliveryModelHasActiveSchedule() {
+    return this.deliveryModelHasActiveSchedule;
+  }
+
+  public void setDeliveryModelHasActiveSchedule(Boolean deliveryModelHasActiveSchedule) {
+    this.deliveryModelHasActiveSchedule = deliveryModelHasActiveSchedule;
+  }  
 }

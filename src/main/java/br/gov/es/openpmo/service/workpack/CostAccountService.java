@@ -36,6 +36,7 @@ import br.gov.es.openpmo.model.properties.Toggle;
 import br.gov.es.openpmo.model.properties.UnitSelection;
 import br.gov.es.openpmo.model.relations.Consumes;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
+import br.gov.es.openpmo.model.workpacks.Instrument;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.CostAccountModel;
 import br.gov.es.openpmo.repository.*;
@@ -75,10 +76,25 @@ import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_TEXT_AREA;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_TOGGLE;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_UNIT_SELECTION;
+import br.gov.es.openpmo.utils.RestTemplateUtils;
+import br.gov.es.openpmo.utils.factory.CostAccountFactory;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.StreamSupport;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 public class CostAccountService {
 
+    private final String RESULTSET_FIELD = "resultset";
+    
   private final CostAccountRepository costAccountRepository;
 
   private final ConsumesRepository consumesRepository;
@@ -110,6 +126,31 @@ public class CostAccountService {
   private final UnidadeOrcamentariaRepository unidadeOrcamentariaRepository;
 
   private final PlanoOrcamentarioRepository planoOrcamentarioRepository;
+  
+  private final InstrumentService instrumentService;
+  
+  private final CostAccountFactory costAccountFactory;
+  
+  @Value("${pentaho.api.contratos.url}")
+  private String instrumentsUrl;
+
+  @Value("${pentaho.api.liquidacao.url}")
+  private String liquidacaoUrl;
+  
+  @Value("${pentaho.api.uo.url}")
+  private String uoUrl;
+  
+  @Value("${pentaho.api.po.url}")
+  private String poUrl;
+
+  @Value("${pentahoBI.userId}")
+  private String pentahoUserId;
+
+  @Value("${pentahoBI.password}")
+  private String pentahoPassword;
+  
+  
+  private final RestTemplateUtils restTemplateUtils = new RestTemplateUtils();
 
   @Autowired
   public CostAccountService(
@@ -128,7 +169,9 @@ public class CostAccountService {
     final ApplicationCacheUtil applicationCacheUtil,
     final PropertyRepository propertyRepository,
     final UnidadeOrcamentariaRepository unidadeOrcamentariaRepository,
-    final PlanoOrcamentarioRepository planoOrcamentarioRepository
+    final PlanoOrcamentarioRepository planoOrcamentarioRepository,
+    final InstrumentService instrumentService,
+    final CostAccountFactory costAccountFactory
   ) {
     this.costAccountRepository = costAccountRepository;
     this.consumesRepository = consumesRepository;
@@ -146,6 +189,8 @@ public class CostAccountService {
     this.propertyRepository = propertyRepository;
     this.unidadeOrcamentariaRepository = unidadeOrcamentariaRepository;
     this.planoOrcamentarioRepository = planoOrcamentarioRepository;
+    this.instrumentService = instrumentService;
+    this.costAccountFactory = costAccountFactory;
   }
 
   public List<CostAccountDto> findAllByIdWorkpack(
@@ -394,7 +439,7 @@ public class CostAccountService {
   }
 
   private CostAccountDto mapToDto(final CostAccount costAccount) {
-    final CostAccountDto dto = CostAccountDto.of(costAccount);
+    final CostAccountDto dto = costAccountFactory.fromModel(costAccount);
     final Long workpackId = costAccount.getWorkpackId();
     this.maybeSetWorkpackNameData(
       dto,
@@ -458,6 +503,7 @@ public class CostAccountService {
     Workpack workpack = null;
     UnidadeOrcamentaria unidadeOrcamentaria;
     PlanoOrcamentario planoOrcamentario;
+    List<Instrument> instruments;
 
     if (cost instanceof CostAccountStoreDto) {
 
@@ -475,6 +521,7 @@ public class CostAccountService {
 
       unidadeOrcamentaria = store.getUnidadeOrcamentaria();
       planoOrcamentario = store.getPlanoOrcamentario();
+      instruments = store.getInstruments();
 
     } else {
       idCostAccount = ((CostAccountUpdateDto) cost).getId();
@@ -489,14 +536,14 @@ public class CostAccountService {
 
       unidadeOrcamentaria = update.getUnidadeOrcamentaria();
       planoOrcamentario = update.getPlanoOrcamentario();
+      instruments = update.getInstruments();
+      
     }
 
     CostAccount costAccount;
     if (idCostAccount == null) {
       costAccount = this.modelMapper.map(cost, CostAccount.class);
       costAccount.setWorkpack(workpack);
-      costAccount.setUnidadeOrcamentaria(unidadeOrcamentaria);
-      costAccount.setPlanoOrcamentario(planoOrcamentario);
     } else {
       costAccount = this.findById(idCostAccount);
 
@@ -507,16 +554,19 @@ public class CostAccountService {
       if (costAccount.getPlanoOrcamentario() != null) {
         planoOrcamentarioRepository.deleteById(costAccount.getPlanoOrcamentario().getId());
       }
+      
     }
 
     costAccount.setPlanoOrcamentario(planoOrcamentario);
     costAccount.setUnidadeOrcamentaria(unidadeOrcamentaria);
+    costAccount.setInstruments(instrumentService.findOrCreateAll(instruments));
 
-    if (unidadeOrcamentaria != null) {
+    if (unidadeOrcamentaria != null && planoOrcamentario != null) {
       if (unidadeOrcamentaria.getPlanoOrcamentario() == null) {
         unidadeOrcamentaria.setPlanoOrcamentario(new HashSet<>());
       }
-      unidadeOrcamentaria.getPlanoOrcamentario().add(planoOrcamentario);
+      if(planoOrcamentario != null)
+        unidadeOrcamentaria.getPlanoOrcamentario().add(planoOrcamentario);
     }
 
     costAccount.setProperties(properties);
@@ -535,6 +585,178 @@ public class CostAccountService {
     }
 
     return costAccount;
+  }
+  
+  /**
+   * 
+   * @param codUo
+   * @param codPo
+   * @return 
+   */
+  
+  public Optional<CostAccount> findByUoPoCode(int codUo, int codPo) {
+      return costAccountRepository.findByUoPoCode(codUo, codPo)
+              .map(CostAccount::getId)
+              .flatMap(costAccountRepository::findById);
+  }
+  
+  /**
+   * 
+   * @param codUo
+   * @return 
+   */
+  
+  public List<CostAccount> findByUoCode(int codUo) {
+      return costAccountRepository.findByUoCode(codUo).stream()
+              .map(CostAccount::getId)
+              .map(costAccountRepository::findById)
+              .map(Optional::get)
+              .collect(Collectors.toList());
+  }
+  
+  public JsonNode listInstrumentsFromPentaho(
+        String codUo,
+        String codPo,
+        Long startYear,
+        Long endYear
+  ) throws Exception {
+         
+    RestTemplate restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
+    
+    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+    
+    String url = String.format(instrumentsUrl, codUo, startYear, endYear);
+
+      CompletableFuture<JsonNode> futureResponse = restTemplateUtils.createRequestWithAuth(restTemplate,
+              url,
+              pentahoUserId,
+              pentahoPassword
+      );
+      
+      
+      JsonNode response = futureResponse.join();
+      
+      
+      ArrayNode resultSet = (ArrayNode) response.get(RESULTSET_FIELD);
+      ArrayNode filteredResultSet = JsonNodeFactory.instance.arrayNode();
+      
+      List<CostAccount> CaList = this.findByUoCode(java.lang.Integer.parseInt(codUo));
+      List<String> UsedInstrumentsCode = CaList.stream()
+              .flatMap(ca -> ca.getInstruments().stream())
+              .map(Instrument::getSigefesCode)
+              .collect(Collectors.toList());
+      
+      if(UsedInstrumentsCode.isEmpty()) return response;
+       
+      for(JsonNode registro : resultSet) {
+          
+          ArrayNode registroArray = (ArrayNode) registro;
+          
+          String sigefesCode = registroArray.get(2).asText();
+          
+          if( 
+            !UsedInstrumentsCode.contains(sigefesCode)
+            ) 
+            filteredResultSet.add(registro);
+          
+          
+      }
+      
+      ((ObjectNode) response).set(RESULTSET_FIELD, filteredResultSet);
+      
+      
+      return response;
+    }
+  
+  public JsonNode getUOFromPentaho(java.lang.Integer codPo) throws Exception {
+      
+    RestTemplate restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();;
+    
+    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+
+    CompletableFuture<JsonNode> futureResponse = restTemplateUtils.createRequestWithAuth(
+            restTemplate,
+            uoUrl,
+            pentahoUserId,
+            pentahoPassword
+    );
+    JsonNode response = futureResponse.join();
+    
+    if(codPo != null) {
+        List<UnidadeOrcamentaria> uos = unidadeOrcamentariaRepository.findAllByPoCodeWithCostAccount(codPo);
+        Set<String> uoCodes = uos.stream()
+            .map(UnidadeOrcamentaria::getCode)
+            .filter( uoCode -> {
+                    List<Instrument> instruments = costAccountRepository.findByUoPoCode(uoCode, codPo).get().getInstruments();
+
+                    return instruments == null || instruments.isEmpty();
+                  })
+            .map(code -> String.format("%06d", code))
+            .collect(Collectors.toSet());
+
+        ArrayNode resultSet = (ArrayNode) response.get(RESULTSET_FIELD);
+        ArrayNode filteredResultSet = JsonNodeFactory.instance.arrayNode();
+
+        StreamSupport.stream(resultSet.spliterator(), true)
+            .filter(elem -> !uoCodes.contains(elem.get(0).asText()))
+            .forEach(filteredResultSet::add);
+        
+        ((ObjectNode) response).set(RESULTSET_FIELD, filteredResultSet);
+    }
+
+    return response;
+    
+  }
+  
+  
+  public JsonNode getPOFromPentaho(String codUo) throws Exception {
+      RestTemplate restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
+    
+    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+
+    String url = poUrl + codUo;
+
+      CompletableFuture<JsonNode> futureResponse = restTemplateUtils.createRequestWithAuth(restTemplate,
+              url,
+              pentahoUserId,
+              pentahoPassword
+      );
+      JsonNode response = futureResponse.join();
+      
+      if(codUo != null) {
+          
+          java.lang.Integer codUoAsInt = java.lang.Integer.valueOf(codUo);
+          
+            ArrayNode resultSet = (ArrayNode) response.get(RESULTSET_FIELD);
+            ArrayNode filteredResultSet = JsonNodeFactory.instance.arrayNode();
+
+            List<String> usedPoCodes = planoOrcamentarioRepository
+                                      .findAllByUoCodeWithCostAccount(codUoAsInt)
+                                      .stream()
+                                      .map(PlanoOrcamentario::getCode)
+                                      .filter( poCode -> {
+                                            List<Instrument> instruments = 
+                                                    costAccountRepository.findByUoPoCode(codUoAsInt, poCode)
+                                                            .map(CostAccount::getId)
+                                                            .flatMap(costAccountRepository::findById)
+                                                            .get().getInstruments();
+
+                                            return instruments == null || instruments.isEmpty();
+                                          })
+                                       .collect(ArrayList::new, (arr, code) -> arr.add(String.format("%06d", code)), ArrayList::addAll);
+
+
+            StreamSupport.stream(resultSet.spliterator(), true)
+                .filter(elem -> !usedPoCodes.contains(elem.get(1).asText()))
+                .forEach(filteredResultSet::add);
+            
+            ((ObjectNode) response).set(RESULTSET_FIELD, filteredResultSet);
+        
+      }
+      
+
+      
+      return response;
   }
 
 

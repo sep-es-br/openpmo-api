@@ -64,11 +64,14 @@ public class UpdateStep {
   public Step execute(final StepUpdateDto stepUpdateDto, Boolean updateScheduleAndDeliverable) {
     final Step step = this.getStepForUpdate(stepUpdateDto);
     final Step stepUpdate = this.findById(step.getId());
+    boolean canSave = updateStatusService.canSaveStep(step.getId());
 
-    stepUpdate.setActualWork(
-      Optional.ofNullable(step.getActualWork())
-        .orElse(BigDecimal.ZERO)
-    );
+    if (canSave) {
+      stepUpdate.setActualWork(
+          Optional.ofNullable(step.getActualWork())
+              .orElse(BigDecimal.ZERO)
+      );
+  }
     stepUpdate.setPlannedWork(
       Optional.ofNullable(step.getPlannedWork())
         .orElse(BigDecimal.ZERO)
@@ -115,7 +118,9 @@ public class UpdateStep {
             .filter(c -> Objects.nonNull(c.getId()) && c.getId().equals(consumes.getId())).findFirst()
             .orElse(null);
           if (Objects.nonNull(consumesUpdate)) {
-            consumesUpdate.setActualCost(consumes.getActualCost());
+            if (canSave) {
+              consumesUpdate.setActualCost(consumes.getActualCost());
+            }
             consumesUpdate.setPlannedCost(consumes.getPlannedCost());
           }
         }
@@ -136,6 +141,29 @@ public class UpdateStep {
 
     return stepUpdated;
   }
+
+  public Step executeRestricted(final StepUpdateDto stepUpdateDto, Boolean updateScheduleAndDeliverable) {
+    final Step step = this.findById(stepUpdateDto.getId());
+
+    step.setActualWork(
+        Optional.ofNullable(stepUpdateDto.getActualWork())
+            .orElse(BigDecimal.ZERO)
+    );
+
+    if (!CollectionUtils.isEmpty(stepUpdateDto.getConsumes())) {
+        for (ConsumesParamDto consumesDto : stepUpdateDto.getConsumes()) {
+            if (consumesDto.getId() != null && step.getConsumes() != null) {
+                step.getConsumes().stream()
+                    .filter(c -> Objects.nonNull(c.getId()) && c.getId().equals(consumesDto.getId()))
+                    .findFirst()
+                    .ifPresent(c -> c.setActualCost(consumesDto.getActualCost()));
+            }
+        }
+    }
+
+    return this.stepRepository.save(step);
+}
+
 
   private Step findById(final Long id) {
     return this.stepRepository.findById(id).orElseThrow(() -> new NegocioException(STEP_NOT_FOUND));

@@ -32,7 +32,10 @@ public interface DashboardDatasheetRepository extends Neo4jRepository<Workpack, 
     "WHERE (NOT ('Milestone' IN labels(child))) OR ( " +
     "(baselined AND baselineDate >= pl.start AND baselineDate <= pl.finish) OR " +
     "(NOT baselined AND actualDate >= pl.start AND actualDate <= pl.finish) " +
-    ") " +
+    ") AND \n" +
+    "(NOT ('Deliverable' IN labels(child))) OR ( \n" +
+    "   EXISTS((child)<-[:IS_SNAPSHOT_OF]-()-[]-(:Baseline{active: true})) \n" +
+    ") \n" +
     "RETURN idWorkpackModel, " +
     "count(DISTINCT child) AS quantity, " +
     "singularName, " +

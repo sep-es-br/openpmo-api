@@ -14,6 +14,8 @@ import br.gov.es.openpmo.service.workpack.CostAccountService;
 import br.gov.es.openpmo.utils.RestTemplateUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import io.swagger.annotations.Api;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,7 +38,10 @@ import org.springframework.web.client.RestTemplate;
 import javax.validation.Valid;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import org.apache.logging.log4j.Level;
 
 @Api
 @RestController
@@ -46,18 +51,6 @@ public class CostAccountController {
 
   private final CostAccountService costAccountService;
   private final ICanAccessService canAccessService;
-
-  @Value("${pentaho.api.uo.url}")
-  private String uoUrl;
-
-  @Value("${pentaho.api.po.url}")
-  private String poUrl;
-
-  @Value("${pentahoBI.userId}")
-  private String pentahoUserId;
-
-  @Value("${pentahoBI.password}")
-  private String pentahoPassword;
 
   private final RestTemplateUtils restTemplateUtils = new RestTemplateUtils();
 
@@ -142,36 +135,22 @@ public class CostAccountController {
   /**
    * Método responsável pela requisição ao Pentaho
    * @param idCostAccount
+   * @param codPo
    * @param authorization
    * @return Lista com todas as UOs
    */
   @GetMapping("/pentaho/budgetUnit/{idCostAccount}")
   public ResponseEntity<Object> getUO(@PathVariable("idCostAccount") Long idCostAccount,
+                                      @RequestParam(name = "codPo", required = false) Integer codPo,
                                       @Authorization final String authorization) {
 
-    this.canAccessService.ensureCanReadResource(idCostAccount, authorization);
-
-    RestTemplate restTemplate;
+    this.canAccessService.ensureCanReadResource(idCostAccount, authorization);  
     try {
-      restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
+      return ResponseEntity.ok(costAccountService.getUOFromPentaho(codPo));
     } catch (Exception e) {
-      logger.error("Erro ao realizar requisição ao Pentaho: {}", e.getMessage(), e);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao configurar o RestTemplate para a URL " + uoUrl);
-    }
-    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
-
-    try {
-      CompletableFuture<JsonNode> futureResponse = restTemplateUtils.createRequestWithAuth(
-              restTemplate,
-              uoUrl,
-              pentahoUserId,
-              pentahoPassword
-      );
-      JsonNode response = futureResponse.join();
-
-      return ResponseEntity.ok(response);
-    } catch (Exception e) {
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        final UUID uuid = UUID.randomUUID();
+        logger.log(Level.FATAL, uuid, e);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(uuid + " - " + e.getMessage());
     }
 
   }
@@ -184,34 +163,35 @@ public class CostAccountController {
    * @return Lista de POs dado uma UO
    */
   @GetMapping("/pentaho/budgetPlan")
-  public ResponseEntity<Object> getPO(@RequestParam("codUo") String codUo,
+  public ResponseEntity<Object> getPO(@RequestParam(value = "codUo", required = false) String codUo,
                                       @RequestParam("costAccountId") Long idCostAccount,
                                       @Authorization final String authorization) {
 
     this.canAccessService.ensureCanReadResource(idCostAccount, authorization);
 
-    RestTemplate restTemplate;
     try {
-      restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
-    } catch (Exception e) {
-      logger.error("Erro ao realizar requisição ao Pentaho: {}", e.getMessage(), e);
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao configurar o RestTemplate para a URL " + poUrl);
-    }
-
-    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
-
-    String url = poUrl + codUo;
-
-    try {
-      CompletableFuture<JsonNode> futureResponse = restTemplateUtils.createRequestWithAuth(restTemplate,
-              url,
-              pentahoUserId,
-              pentahoPassword
-      );
-      JsonNode response = futureResponse.join();
-      return ResponseEntity.ok(response);
+      return ResponseEntity.ok(this.costAccountService.getPOFromPentaho(codUo));
     } catch (Exception e) {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+    }
+  }
+  
+  
+
+  @GetMapping("/pentaho/instrumentsList")
+  public ResponseEntity<Object> getInstruments(
+        @RequestParam("costAccountId") Long idCostAccount,
+        @RequestParam("codUo") String codUo,
+        @RequestParam(name = "codPo", required = false, defaultValue = "-1") String codPo,
+        @RequestParam("startYear") Long startYear,
+        @RequestParam("endYear") Long endYear,
+        @Authorization final String authorization) {
+    try {
+      return ResponseEntity.ok(costAccountService.listInstrumentsFromPentaho(codUo, codPo, startYear, endYear));
+    } catch (Exception e) {
+        UUID uuid = UUID.randomUUID();
+       logger.log(Level.FATAL, uuid.toString(), e);
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(uuid + " - " + e.getMessage());
     }
   }
 }

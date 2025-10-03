@@ -48,21 +48,27 @@ public interface StepRepository extends Neo4jRepository<Step, Long> {
   Optional<Step> findSnapshotOfActiveBaseline(Long idStep);
 
   @Query("MATCH (deliverable:Deliverable) " +
-         "WHERE id(deliverable)=$idDeliverable " +
-         "MATCH (deliverable)<-[:FEATURES]-(:Schedule)<-[:COMPOSES]-(step:Step) " +
-         "WITH step, " +
-         "   toFloat(step.plannedWork) AS estimedWork, " +
-         "   toFloat(step.actualWork) AS actualWork " +
-         "RETURN sum(actualWork) < sum(estimedWork) ")
+       "WHERE id(deliverable)=$idDeliverable " +
+       "MATCH (deliverable)<-[:FEATURES]-(:Schedule)<-[:COMPOSES]-(step:Step) " +
+       "WITH sum(toFloat(step.plannedWork)) AS estimedWork, " +
+       "     sum(toFloat(step.actualWork)) AS actualWork " +
+       "RETURN CASE " +
+       "         WHEN estimedWork = 0 THEN true " +
+       "         ELSE actualWork < estimedWork " +
+       "       END")
   boolean hasWorkToCompleteComparingWithMaster(Long idDeliverable);
 
+
   @Query("MATCH (deliverable:Deliverable)<-[:FEATURES]-(:Schedule)<-[:COMPOSES]-(step:Step) " +
-         "MATCH (step)<-[:IS_SNAPSHOT_OF]-(snapshot:Step)-[:COMPOSES]->(baseline:Baseline{active:true}) " +
-         "WITH step, snapshot, baseline, " +
-         "    toFloat(step.actualWork) AS actualWork, " +
-         "    toFloat(snapshot.plannedWork) AS plannedWork  " +
-         "RETURN id(deliverable)=$idDeliverable AND sum(actualWork) < sum(plannedWork) ")
+       "MATCH (step)<-[:IS_SNAPSHOT_OF]-(snapshot:Step)-[:COMPOSES]->(baseline:Baseline{active:true}) " +
+       "WITH sum(toFloat(step.actualWork)) AS actualWork, " +
+       "     sum(toFloat(snapshot.plannedWork)) AS plannedWork " +
+       "RETURN CASE " +
+       "         WHEN plannedWork = 0 THEN true " +
+       "         ELSE actualWork < plannedWork " +
+       "       END")
   boolean hasWorkToCompleteComparingWithActiveBaseline(Long idDeliverable);
+
 
   @Query("match (s:Step)-[:COMPOSES]->(:Schedule)-[:FEATURES]->(d:Deliverable) " +
          "where id(s)=$stepId " +
@@ -122,5 +128,12 @@ public interface StepRepository extends Neo4jRepository<Step, Long> {
       Long scheduleId,
       Long snapshotId
   );
+
+  @Query("MATCH (s:Step)-[:COMPOSES]->(sch:Schedule) " +
+       "WHERE id(s) = $stepId " +
+       "WITH date(sch.start) AS startDate, s.periodFromStart AS offset " +
+       "WITH startDate + duration({months: offset}) AS stepDate " +
+       "RETURN stepDate <= date() AS canSave")
+  Boolean canSaveStep(Long stepId);
 
 }
