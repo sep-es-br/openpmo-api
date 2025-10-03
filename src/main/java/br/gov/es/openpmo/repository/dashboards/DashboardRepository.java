@@ -375,7 +375,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
                         Long planId);
         
         @Query("MATCH (w:Workpack)<-[:IS_IN*]-(d:Deliverable)\n" +
-                "WHERE id(w) = 1094931\n" +
+                "WHERE id(w) = $workpackId\n" +
                 "\n" +
                 "OPTIONAL MATCH (d)<-[:FEATURES]-(propConcluida:Property {value: 'Concluída'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Situação'})\n" +
                 "OPTIONAL MATCH (d)<-[:FEATURES]-(propEmExec:Property {value: 'Em execução'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Situação'})\n" +
