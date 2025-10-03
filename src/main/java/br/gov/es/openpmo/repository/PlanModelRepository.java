@@ -50,4 +50,12 @@ public interface PlanModelRepository extends Neo4jRepository<PlanModel, Long>, C
          "RETURN max(wm.position)")
   Long findActualPosition(@Param("idPlanModel") Long idPlanModel);
 
+  @Query("MATCH path = (p:PlanModel)<-[:BELONGS_TO]-(c:CostAccountModel)<-[:FEATURES]-(prop:PropertyModel) " +
+       "WHERE id(p) = $planModelId " +
+       "WITH collect(path) AS paths " +
+       "CALL apoc.refactor.cloneSubgraphFromPaths(paths, {skipProperties: ['id']}) YIELD output " +
+       "WHERE 'PlanModel' IN labels(output)  " +
+       "RETURN id(output) AS newPlanModelId " )
+   Long clonePlanModelWithCostAccountAndProperties(@Param("planModelId") Long planModelId);
+
 }
