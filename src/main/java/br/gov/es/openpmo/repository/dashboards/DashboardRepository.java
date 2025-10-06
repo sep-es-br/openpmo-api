@@ -50,10 +50,10 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
                         "    <-[:FEATURES]-(s:Schedule) \n" +
                         "    <-[:COMPOSES]-(st:Step) \n" +
                         "    -[co:CONSUMES]->(ca:CostAccount),\n" +
-                        "    (w)<-[:IS_SNAPSHOT_OF]-()-[]-(bl:Baseline{active: true, status: 'APPROVED'})\n" +
+                        "    (w)<-[:IS_SNAPSHOT_OF]-()-[]-(bl:Baseline)\n" +
                         "WHERE \n" +
                         "    (w.category <> 'SNAPSHOT' OR w.category IS NULL) \n" +
-                        "    AND ($baselineId IS NULL OR id(bl) = $baselineId)\n" +
+                        "    AND (($baselineId IS NULL AND bl.active AND bl.status = 'APPROVED'  ) OR id(bl) = $baselineId)\n" +
                         "    AND ($planId IS NULL OR ID(plan) = $planId) \n" +
                         "    AND ($workpackIds IS NULL OR ID(w) IN $workpackIds)\n" +
                         "    AND date.truncate('month', date(s.start) + Duration({months: st.periodFromStart})) <= date.truncate('month', date(plan.finish)) \n"
@@ -198,7 +198,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
                         "RETURN ID(w) AS idWorkpack, ID(plan) as idPlan, toString(SUM(toFloat(st.actualWork))) AS actualWork, toString(SUM(toFloat(st.plannedWork))) AS foreseenWorkRefMonth ")
         List<DashboardWorkpackDetailDto> findAllActualWork(List<Long> workpackIds, LocalDate yearMonth, Long planId);
 
-        @Query("MATCH (plan:Plan)<-[:BELONGS_TO]-(w:Deliverable{deleted:false,canceled:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]-(c:CostAccount) "
+        @Query("MATCH (plan:Plan)<-[:BELONGS_TO]-(w:Deliverable{deleted:false,canceled:false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step)-[co:CONSUMES]-(c:CostAccount) , (w)<-[:IS_SNAPSHOT_OF]-()-[]-(:Baseline{active: true, status: 'APPROVED'})"
                         +
                         "WHERE (w.category <> 'SNAPSHOT' OR w.category IS NULL) AND st.periodFromStart IS NOT NULL " +
                         "AND ($planId IS NULL OR ID(plan) = $planId) " +
