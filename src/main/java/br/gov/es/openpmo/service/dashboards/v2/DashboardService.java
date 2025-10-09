@@ -3,13 +3,16 @@ package br.gov.es.openpmo.service.dashboards.v2;
 import br.gov.es.openpmo.dto.MilestoneResultDto;
 import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
 import br.gov.es.openpmo.dto.dashboards.DashboardParameters;
+import br.gov.es.openpmo.dto.dashboards.DashboardStatusData;
 import br.gov.es.openpmo.dto.dashboards.MilestoneDto;
 import br.gov.es.openpmo.dto.dashboards.RiskDataChart;
 import br.gov.es.openpmo.dto.dashboards.datasheet.DatasheetResponse;
 import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.EarnedValueByStepDto;
 import br.gov.es.openpmo.dto.dashboards.v2.DashboardResponse;
+import br.gov.es.openpmo.model.dashboards.Dashboard;
 import br.gov.es.openpmo.model.workpacks.Deliverable;
 import br.gov.es.openpmo.model.workpacks.Workpack;
+import br.gov.es.openpmo.repository.dashboards.DashboardRepository;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
 import br.gov.es.openpmo.utils.DashboardCacheUtil;
 
@@ -37,14 +40,17 @@ public class DashboardService implements IDashboardService {
   private final WorkpackService wpSrv;
 
   private final DashboardCacheUtil dashboardCacheUtil;
-
+  
+  private final DashboardRepository dashboardRepository;
+  
   public DashboardService(
     final IDashboardMilestoneService milestoneService,
     final IDashboardRiskService riskService,
     final IDashboardDatasheetService datasheetService,
     final IDashboardBaselineService baselineSrv,
     final WorkpackService wpSrv,
-    final DashboardCacheUtil dashboardCacheUtil
+    final DashboardCacheUtil dashboardCacheUtil,
+    final DashboardRepository dashboardRepository
   ) {
     this.milestoneService = milestoneService;
     this.riskService = riskService;
@@ -52,6 +58,7 @@ public class DashboardService implements IDashboardService {
     this.baselineSrv = baselineSrv;
     this.wpSrv = wpSrv;
     this.dashboardCacheUtil = dashboardCacheUtil;
+    this.dashboardRepository = dashboardRepository;
   }
 
   @Override
@@ -68,6 +75,8 @@ public class DashboardService implements IDashboardService {
     List<EarnedValueByStepDto> stepDtos = this.getEarnedValueAnalysis(parameters);
     List<MilestoneDto> milestones = this.getMilestones(parameters);
     MilestoneResultDto milestoneResultDto = MilestoneResultDto.of(milestones);
+    
+    DashboardStatusData dashDataStatus = dashboardRepository.getStatusAmmountData(parameters.getWorkpackId()).orElse(null);
 
     return new DashboardResponse(
       this.getRisk(parameters),
@@ -75,7 +84,8 @@ public class DashboardService implements IDashboardService {
       this.getDatasheet(parameters),
       stepDtos,
       dashboardMonthDto.getPerformanceIndex(),
-      milestoneResultDto
+      milestoneResultDto,
+      dashDataStatus
     );
   }
 

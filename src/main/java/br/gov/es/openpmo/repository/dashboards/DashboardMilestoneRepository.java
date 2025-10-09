@@ -39,7 +39,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
           "WHERE id(w)=$workpackId " +
           "MATCH (b:Baseline) " +
           "WHERE id(b)=$baselineId " +
-          "MATCH (m)<-[:IS_SNAPSHOT_OF]-(s:Milestone{deleted:false ,canceled:false }) " +
+          "MATCH (m)<-[:IS_SNAPSHOT_OF]-(s:Milestone{deleted:false ,canceled:false })-[:COMPOSES]->(b)" +
           "RETURN m.completed AS completed, m.date AS milestoneDate, s.date AS snapshotDate")
   List<MilestoneDateDto> findByParentAndBaselineId(Long workpackId, Long baselineId);
 
