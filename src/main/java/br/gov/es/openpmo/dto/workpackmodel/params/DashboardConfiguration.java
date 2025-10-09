@@ -10,21 +10,29 @@ public class DashboardConfiguration {
   private final Boolean dashboardShowRisks;
   private final Boolean dashboardShowEva;
   private final Boolean dashboardShowMilestones;
+  private final Boolean dashboardShowDeliveryStatus;
   private final Set<String> dashboardShowStakeholders;
 
+  
   @JsonCreator
   public DashboardConfiguration(
     @JsonProperty("dashboardShowRisks") final Boolean dashboardShowRisks,
     @JsonProperty("dashboardShowEva") final Boolean dashboardShowEva,
     @JsonProperty("dashboardShowMilestones") final Boolean dashboardShowMilestones,
-    @JsonProperty("dashboardShowStakeholders") final Set<String> dashboardShowStakeholders
+    @JsonProperty("dashboardShowStakeholders") final Set<String> dashboardShowStakeholders,
+    @JsonProperty("dashboardShowDeliveryStatus") final boolean dashboardShowDeliveryStatus
   ) {
     this.dashboardShowRisks = dashboardShowRisks;
     this.dashboardShowEva = dashboardShowEva;
     this.dashboardShowMilestones = dashboardShowMilestones;
     this.dashboardShowStakeholders = dashboardShowStakeholders;
+    this.dashboardShowDeliveryStatus = dashboardShowDeliveryStatus;
   }
 
+    public Boolean getDashboardShowDeliveryStatus() {
+        return dashboardShowDeliveryStatus;
+    }
+  
   public Boolean getDashboardShowRisks() {
     return this.dashboardShowRisks;
   }

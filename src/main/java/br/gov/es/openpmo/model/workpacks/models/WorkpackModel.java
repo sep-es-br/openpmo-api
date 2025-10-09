@@ -63,6 +63,8 @@ public abstract class WorkpackModel extends Entity {
   private Boolean dashboardShowEva;
 
   private Boolean dashboardShowMilestones;
+  
+  private Boolean dashboardShowDeliveryStatus;
 
   private Set<String> dashboardShowStakeholders;
 
@@ -102,6 +104,13 @@ public abstract class WorkpackModel extends Entity {
   @Transient
   private Long idPlanModel;
 
+    public Boolean getDashboardShowDeliveryStatus() {
+        return dashboardShowDeliveryStatus;
+    }
+
+    public void setDashboardShowDeliveryStatus(Boolean dashboardShowDeliveryStatus) {
+        this.dashboardShowDeliveryStatus = dashboardShowDeliveryStatus;
+    }
   public String getFontIcon() {
     return this.fontIcon;
   }
