@@ -33,8 +33,7 @@ public interface DashboardDatasheetRepository extends Neo4jRepository<Workpack, 
       "     left(child.date, 10) AS actualDate\n" +
       "WHERE CASE \n" +
       "        WHEN ('Milestone' IN labels(child)) THEN (\n" +
-      "          (baselined AND baselineDate >= pl.start AND baselineDate <= pl.finish) OR\n" +
-      "          (NOT baselined AND actualDate >= pl.start AND actualDate <= pl.finish)\n" +
+      "          (baselined AND baselineDate >= pl.start AND baselineDate <= pl.finish) \n" +
       "        )\n" +
       "        WHEN ('Deliverable' IN labels(child)) THEN (\n" +
       "          EXISTS((child)<-[:IS_SNAPSHOT_OF]-()-[]-(:Baseline{active: true}))\n" +

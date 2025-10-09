@@ -599,11 +599,11 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "WITH *\n" +
             "WHERE CASE\n" +
             "        WHEN ('Milestone' IN labels(x)) THEN (NOT snap.deleted) AND (NOT snap.canceled) AND (\n" +
-            "          (bl IS NOT NULL AND pl.start <= left(snap.date, 10) <= pl.finish) OR\n" +
-            "          (bl IS NULL AND  pl.start <= left(x.date, 10) <= pl.finish)\n" +
+            "          (bl IS NOT NULL AND pl.start <= left(snap.date, 10) <= pl.finish) \n" +
             "        )\n" +
             "        WHEN ('Deliverable' IN labels(x)) THEN (\n" +
             "          EXISTS((x)<-[:IS_SNAPSHOT_OF]-()-[]-(:Baseline{active: true}))\n" +
+            "          AND (NOT x.canceled)\n" +
             "        )\n" +
             "        ELSE true\n" +
             "      END\n" +
@@ -622,11 +622,11 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "WITH *\n" +
             "WHERE CASE\n" +
             "        WHEN ('Milestone' IN labels(x)) THEN (NOT snap.deleted) AND (NOT snap.canceled) AND (\n" +
-            "          (bl IS NOT NULL AND pl.start <= left(snap.date, 10) <= pl.finish) OR\n" +
-            "          (bl IS NULL AND  pl.start <= left(x.date, 10) <= pl.finish)\n" +
+            "          (bl IS NOT NULL AND pl.start <= left(snap.date, 10) <= pl.finish) \n" +
             "        )\n" +
             "        WHEN ('Deliverable' IN labels(x)) THEN (\n" +
             "          EXISTS((x)<-[:IS_SNAPSHOT_OF]-()-[]-(:Baseline{active: true}))\n" +
+            "          AND (NOT x.canceled)\n" +
             "        )\n" +
             "        ELSE true\n" +
             "      END\n" +
