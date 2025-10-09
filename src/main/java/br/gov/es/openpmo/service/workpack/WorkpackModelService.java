@@ -154,11 +154,19 @@ public class WorkpackModelService {
 
   public WorkpackModel findById(final Long id) {
     return this.workpackModelRepository.findAllByIdWorkpackModel(id)
+            .map(wpModel -> {
+                wpModel.setDashboardShowDeliveryStatus(!(wpModel instanceof DeliverableModel));
+                return wpModel;
+            })
       .orElseThrow(() -> new NegocioException(WORKPACKMODEL_NOT_FOUND));
   }
 
   public WorkpackModel findByIdWithAllChildrens(final Long id) {
     return this.workpackModelRepository.findAllByIdWorkpackModelWithAllChildren(id)
+            .map(wpModel -> {
+                wpModel.setDashboardShowDeliveryStatus(!(wpModel instanceof DeliverableModel));
+                return wpModel;
+            })
             .orElseThrow(() -> new NegocioException(WORKPACKMODEL_NOT_FOUND));
   }
 

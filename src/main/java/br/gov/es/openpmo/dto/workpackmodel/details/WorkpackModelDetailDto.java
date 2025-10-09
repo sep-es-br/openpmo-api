@@ -314,7 +314,8 @@ public abstract class WorkpackModelDetailDto {
       workpackModel.getDashboardShowRisks(),
       workpackModel.getDashboardShowEva(),
       workpackModel.getDashboardShowMilestones(),
-      dashboardShowStakeholders
+      dashboardShowStakeholders,
+      workpackModel.getDashboardShowDeliveryStatus()
     );
   }
 
