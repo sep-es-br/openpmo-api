@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.repository.dashboards;
 
 import br.gov.es.openpmo.dto.dashboards.DashboardBaseline;
+import br.gov.es.openpmo.dto.dashboards.DashboardStatusData;
 import br.gov.es.openpmo.dto.dashboards.DashboardWorkpackDetailDto;
 import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.EarnedValueByStepDto;
 import br.gov.es.openpmo.model.dashboards.Dashboard;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Repository
@@ -371,6 +373,28 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
                         "ORDER BY date ")
         List<EarnedValueByStepDto> findAllEarnedValuePlannedWork(List<Long> baselineIds, List<Long> workpackIds,
                         Long planId);
+        
+        @Query("MATCH (w:Workpack)<-[:IS_IN*]-(d:Deliverable)\n" +
+                "WHERE id(w) = $workpackId\n" +
+                "\n" +
+                "OPTIONAL MATCH (d)<-[:FEATURES]-(propConcluida:Property {value: 'Concluída'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Situação'})\n" +
+                "OPTIONAL MATCH (d)<-[:FEATURES]-(propEmExec:Property {value: 'Em execução'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Situação'})\n" +
+                "OPTIONAL MATCH (d)<-[:FEATURES]-(propCancelada:Property {value: 'Cancelada'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Situação'})\n" +
+                "OPTIONAL MATCH (d)<-[:FEATURES]-(propCancelar:Property {value: 'A cancelar'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Situação'})\n" +
+                "OPTIONAL MATCH (d)<-[:FEATURES]-(propParalisada:Property {value: 'Paralisada'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Situação'})\n" +
+                "OPTIONAL MATCH (d)<-[:FEATURES]-(propPlanejamento:Property)-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Situação'})\n" +
+                "WHERE propPlanejamento.value STARTS WITH 'Planejamento\\\\'\n" +
+                "\n" +
+                "RETURN\n" +
+                "    count(DISTINCT propConcluida) as statusConcluida,\n" +
+                "    count(DISTINCT propEmExec) as statusEmExec,\n" +
+                "    count(DISTINCT propCancelada) as statusCancelada,\n" +
+                "    count(DISTINCT propCancelar) as statusCancelar,\n" +
+                "    count(DISTINCT propPlanejamento) as statusPlanejamento,\n" +
+                "    count(DISTINCT propParalisada) as statusParalisada,\n" +
+                "    count(DISTINCT d) as totalDeliverable\n" +
+                "LIMIT 1")
+        Optional<DashboardStatusData> getStatusAmmountData(Long workpackId);
         
 
 }

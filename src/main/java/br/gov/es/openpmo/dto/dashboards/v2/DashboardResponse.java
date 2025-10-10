@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.dto.dashboards.v2;
 
 import br.gov.es.openpmo.dto.MilestoneResultDto;
+import br.gov.es.openpmo.dto.dashboards.DashboardStatusData;
 import br.gov.es.openpmo.dto.dashboards.PerformanceIndexDto;
 import br.gov.es.openpmo.dto.dashboards.RiskDataChart;
 import br.gov.es.openpmo.dto.dashboards.TripleConstraintDto;
@@ -27,6 +28,9 @@ public class DashboardResponse {
 
 
   private final MilestoneResultDto milestone;
+  
+  private final DashboardStatusData dashboardStatusData;
+
 
 
 
@@ -42,7 +46,8 @@ public class DashboardResponse {
     final DatasheetResponse datasheet,
     final List<EarnedValueByStepDto> earnedValueByStep,
     final PerformanceIndexDto performanceIndexes,
-    final MilestoneResultDto milestone
+    final MilestoneResultDto milestone,
+    final DashboardStatusData dashboardStatusData
   ) {
     this.risk = risk;
     this.datasheet = datasheet;
@@ -50,8 +55,13 @@ public class DashboardResponse {
     this.tripleConstraint = tripleConstraint;
     this.performanceIndex = performanceIndexes;
     this.milestone = milestone;
+    this.dashboardStatusData = dashboardStatusData;
   }
 
+    public DashboardStatusData getDashboardStatusData() {
+        return dashboardStatusData;
+    }
+    
   public RiskDataChart getRisk() {
     return this.risk;
   }

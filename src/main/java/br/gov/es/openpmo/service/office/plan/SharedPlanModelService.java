@@ -46,20 +46,20 @@ public class SharedPlanModelService {
     this.propertyModelRepository = propertyModelRepository;
   }
 
-  private static void copyPropertiesToPlanModel(
-    final PlanModel source,
-    final PlanModel target
-  ) {
-    BeanUtils.copyProperties(source, target);
+  // private static void copyPropertiesToPlanModel(
+  //   final PlanModel source,
+  //   final PlanModel target
+  // ) {
+  //   BeanUtils.copyProperties(source, target);
 
-    target.setId(null);
-    target.setPublicShared(false);
+  //   target.setId(null);
+  //   target.setPublicShared(false);
 
-    final Set<Office> sharedWith = target.getSharedWith();
-    if(sharedWith != null) {
-      sharedWith.clear();
-    }
-  }
+  //   final Set<Office> sharedWith = target.getSharedWith();
+  //   if(sharedWith != null) {
+  //     sharedWith.clear();
+  //   }
+  // }
 
   private static void cleanUpProperty(final PropertyModel property) {
     property.setId(null);
@@ -175,16 +175,18 @@ public class SharedPlanModelService {
     final Long idOffice,
     final Long idPlanModelShared
   ) {
-    final PlanModel planModel = new PlanModel();
-    final PlanModel sharingPlanModel = this.findById(idPlanModelShared);
 
-    copyPropertiesToPlanModel(sharingPlanModel, planModel);
-    this.setOffice(idOffice, planModel);
+    final Long newPlanModelId  = this.planModelRepository.clonePlanModelWithCostAccountAndProperties(idPlanModelShared);
 
-    final PlanModel savedPlanModel = this.planModelRepository.save(planModel);
+    PlanModel clonedPlanModel = planModelRepository.findById(newPlanModelId)
+    .orElseThrow(() -> new RuntimeException("PlanModel clonada não encontrada"));
+    clonedPlanModel.setPublicShared(false);
+    this.setOffice(idOffice, clonedPlanModel);
+
+    final PlanModel savedPlanModel = this.planModelRepository.save(clonedPlanModel);
 
     final Map<Long, WorkpackModel> cache = new HashMap<>();
-    final List<WorkpackModel> workpacks = this.copyWorkpackModels(sharingPlanModel, cache);
+    final List<WorkpackModel> workpacks = this.copyWorkpackModels(idPlanModelShared, cache);
 
     this.setPlanModelToWorkpackModels(savedPlanModel, workpacks);
     return new EntityDto(savedPlanModel.getId());
@@ -209,11 +211,11 @@ public class SharedPlanModelService {
   }
 
   private List<WorkpackModel> copyWorkpackModels(
-    final PlanModel other,
+    final Long idPlanModelShared,
     final Map<Long, WorkpackModel> cache
   ) {
     final Set<WorkpackModel> models =
-      this.workpackModelRepository.findAllByIdPlanModelWithChildren(other.getId());
+      this.workpackModelRepository.findAllByIdPlanModelWithChildren(idPlanModelShared);
 
     final List<WorkpackModel> list = new ArrayList<>();
 

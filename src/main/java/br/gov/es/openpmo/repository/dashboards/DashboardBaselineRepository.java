@@ -32,11 +32,11 @@ public interface DashboardBaselineRepository extends Neo4jRepository<Baseline, L
   List<DashboardBaselineResponse> findAllByWorkpackId(Long workpackId);
   
   @Query(
-        "MATCH (wp:Workpack)-[]-()-[]-(bl:Baseline{status: 'APPROVED'})\n" +
+        "MATCH (wp:Workpack)-[]-()-[]-(bl:Baseline{active: true, status: 'APPROVED'})\n" +
         "WHERE\n" +
         "    id(wp) = $workpackId and\n" +
         "    ($workpackType IS NULL or $workpackType IN labels(wp))\n" +
-        "return bl"
+        "return bl LIMIT 1"
   )
   Optional<Baseline> getActiveBaselineByWorkpack(Long workpackId, String workpackType);
   

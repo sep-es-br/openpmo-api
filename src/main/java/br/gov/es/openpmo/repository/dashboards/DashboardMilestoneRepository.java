@@ -16,7 +16,6 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
           "OPTIONAL MATCH (m)<-[:IS_SNAPSHOT_OF]-(s:Milestone{deleted:false , canceled:false })-[:COMPOSES]->(b:Baseline{active: true }) " +
           "WITH w, m, plan,s, b " +
           "WHERE ((b is not null) and left(s.date,10) >= left(plan.start,10) and left(s.date,10) <= left(plan.finish,10)) " +
-              "or ((b is null) and left(m.date,10) >= left(plan.start,10) and left(m.date,10) <= left(plan.finish,10)) " +
           "RETURN m.completed AS completed, m.date AS milestoneDate, s.date AS snapshotDate")
   List<MilestoneDateDto> findByParentId(Long workpackId);
 
@@ -39,7 +38,7 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
           "WHERE id(w)=$workpackId " +
           "MATCH (b:Baseline) " +
           "WHERE id(b)=$baselineId " +
-          "MATCH (m)<-[:IS_SNAPSHOT_OF]-(s:Milestone{deleted:false ,canceled:false }) " +
+          "MATCH (m)<-[:IS_SNAPSHOT_OF]-(s:Milestone{deleted:false ,canceled:false })-[:COMPOSES]->(b)" +
           "RETURN m.completed AS completed, m.date AS milestoneDate, s.date AS snapshotDate")
   List<MilestoneDateDto> findByParentAndBaselineId(Long workpackId, Long baselineId);
 
