@@ -192,6 +192,17 @@ public class BaselineController implements IBaselineController {
   }
 
   @Override
+  public Response<BaselineDetailResponse> getByWorkpackId(
+    final Long idWorkpack,
+    final Long idBaseline,
+    @RequestHeader(name = "Authorization") final String authorization
+  ) {
+    this.canAccessService.ensureCanReadResourceWorkpack(idWorkpack, authorization);
+    final BaselineDetailResponse response = this.getBaselineService.getById(idBaseline);
+    return this.responseHandler.success(response);
+  }
+
+  @Override
   public Response<BaselineDetailCCBMemberResponse> getBaselineByIdAsCCBMemberView(
     @RequestHeader(name = "Authorization") final String authorization,
     final Long idBaseline
