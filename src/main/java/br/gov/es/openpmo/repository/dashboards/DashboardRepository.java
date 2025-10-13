@@ -374,8 +374,11 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
         List<EarnedValueByStepDto> findAllEarnedValuePlannedWork(List<Long> baselineIds, List<Long> workpackIds,
                         Long planId);
         
-        @Query("MATCH (w:Workpack)<-[:IS_IN*]-(d:Deliverable)\n" +
+        @Query("MATCH (w:Workpack)<-[:IS_IN*]-(d:Deliverable)<-[:IS_SNAPSHOT_OF]-(:Deliverable {category: 'SNAPSHOT'})-[]-(bl:Baseline)\n" +
                 "WHERE id(w) = $workpackId\n" +
+                "  AND CASE \n" +
+                "        WHEN $baselineId IS NULL THEN bl.active\n" +
+                "        ELSE id(bl) = $baselineId END" +
                 "\n" +
                 "OPTIONAL MATCH (d)<-[:FEATURES]-(propConcluida:Property {value: 'Concluída'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Situação'})\n" +
                 "OPTIONAL MATCH (d)<-[:FEATURES]-(propEmExec:Property {value: 'Em execução'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Situação'})\n" +
@@ -394,7 +397,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
                 "    count(DISTINCT propParalisada) as statusParalisada,\n" +
                 "    count(DISTINCT d) as totalDeliverable\n" +
                 "LIMIT 1")
-        Optional<DashboardStatusData> getStatusAmmountData(Long workpackId);
+        Optional<DashboardStatusData> getStatusAmmountData(Long workpackId, Long baselineId);
         
 
 }

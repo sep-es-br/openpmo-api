@@ -76,7 +76,7 @@ public class DashboardService implements IDashboardService {
     List<MilestoneDto> milestones = this.getMilestones(parameters);
     MilestoneResultDto milestoneResultDto = MilestoneResultDto.of(milestones);
     
-    DashboardStatusData dashDataStatus = dashboardRepository.getStatusAmmountData(parameters.getWorkpackId()).orElse(null);
+    DashboardStatusData dashDataStatus = dashboardRepository.getStatusAmmountData(parameters.getWorkpackId(), parameters.getBaselineId()).orElse(null);
 
     return new DashboardResponse(
       this.getRisk(parameters),
