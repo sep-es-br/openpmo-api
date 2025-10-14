@@ -234,13 +234,17 @@ public class PersonService {
     final List<IsCCBMemberFor> isCCBMemberFors = repository.findAllIsCCBMemberForByIdPerson(personId, officeId);
     List<WorkpackPermissionDetailDto> canAccessWorkpack = new ArrayList<>();
     Set<Long> idsWorkpackPermission = canAccessWorkpackAll.stream().map( w -> w.getId()).collect(Collectors.toSet());
-    if(canAccessWorkpackAll != null && !canAccessWorkpackAll.isEmpty()) {
-      idsWorkpackPermission.stream().forEach( w -> {
+
+    if (canAccessWorkpackAll != null && !canAccessWorkpackAll.isEmpty()) {
+      idsWorkpackPermission.stream().forEach(w -> {
         List<WorkpackPermissionDetailDto> workpackPermissions = canAccessWorkpackAll.stream().filter( wp -> wp.getId().equals(w)).collect(Collectors.toList());
-        if(!workpackPermissions.isEmpty()) {
-          if(workpackPermissions.stream().anyMatch( wp -> wp.getAccessLevel().equals(PermissionLevelEnum.EDIT))) {
+
+        if (!workpackPermissions.isEmpty()) {
+          if (workpackPermissions.stream().anyMatch(wp -> wp.getAccessLevel().equals(PermissionLevelEnum.EDIT))) {
             canAccessWorkpack.add(workpackPermissions.stream().filter(wp -> wp.getAccessLevel().equals(PermissionLevelEnum.EDIT)).findFirst().get());
-          } else {
+          } else if (workpackPermissions.stream().anyMatch(wp -> wp.getAccessLevel().equals(PermissionLevelEnum.UPDATE))) {
+            canAccessWorkpack.add(workpackPermissions.stream().filter(wp -> wp.getAccessLevel().equals(PermissionLevelEnum.UPDATE)).findFirst().get());
+          } else if (workpackPermissions.stream().anyMatch(wp -> wp.getAccessLevel().equals(PermissionLevelEnum.READ))) {
             canAccessWorkpack.add(workpackPermissions.stream().filter(wp -> wp.getAccessLevel().equals(PermissionLevelEnum.READ)).findFirst().get());
           }
         }
