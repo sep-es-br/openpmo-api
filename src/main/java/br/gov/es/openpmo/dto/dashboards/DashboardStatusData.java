@@ -15,7 +15,6 @@ public class DashboardStatusData {
     
     private Integer statusConcluida;
     private Integer statusEmExec;
-    private Integer statusCancelada;
     private Integer statusCancelar;
     private Integer statusPlanejamento;
     private Integer statusParalisada;
@@ -52,15 +51,7 @@ public class DashboardStatusData {
     public void setStatusEmExec(Integer statusEmExec) {
         this.statusEmExec = statusEmExec;
     }
-
-    public Integer getStatusCancelada() {
-        return statusCancelada;
-    }
-
-    public void setStatusCancelada(Integer statusCancelada) {
-        this.statusCancelada = statusCancelada;
-    }
-
+    
     public Integer getStatusCancelar() {
         return statusCancelar;
     }
