@@ -2,8 +2,11 @@ package br.gov.es.openpmo.service.workpack;
 
 import br.gov.es.openpmo.configuration.properties.AppProperties;
 import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
+import br.gov.es.openpmo.dto.dashboards.DashboardParameters;
 import br.gov.es.openpmo.dto.menu.PlanWorkpackDto;
 import br.gov.es.openpmo.dto.plan.PlanDto;
+import br.gov.es.openpmo.dto.universalSearch.UniversalSearchItemQueryResult;
+import br.gov.es.openpmo.dto.universalSearch.UniversalSearchParameters;
 import br.gov.es.openpmo.dto.workpack.CurrencyDto;
 import br.gov.es.openpmo.dto.workpack.DateDto;
 import br.gov.es.openpmo.dto.workpack.DeliverableDetailDto;
@@ -1716,6 +1719,10 @@ public class WorkpackService {
 
   public void calculateDashboard() {
     this.dashboardService.calculate();
+  }
+  
+  public List<UniversalSearchItemQueryResult> doUniversalSearch(UniversalSearchParameters parameters) {
+      return this.workpackRepository.doSearchInAll(parameters.getWorkpackId(), parameters.getTerm(), parameters.getUserId(), parameters.getPlanId());
   }
 
 }
