@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import static br.gov.es.openpmo.enumerator.PermissionLevelEnum.EDIT;
 import static br.gov.es.openpmo.enumerator.PermissionLevelEnum.NONE;
 import static br.gov.es.openpmo.enumerator.PermissionLevelEnum.READ;
+import static br.gov.es.openpmo.enumerator.PermissionLevelEnum.UPDATE;
 import static java.lang.Boolean.TRUE;
 
 
@@ -104,45 +105,64 @@ public class WorkpackPermissionVerifier {
 
     final List<PermissionDto> permissionsOffice = this.fetchOfficePermissions(plan.getOffice(), person);
     List<PermissionDto> permissionEditOffice = permissionsOffice.stream().filter(
-        p -> EDIT.equals(p.getLevel())).collect(Collectors.toList());
+      p -> EDIT.equals(p.getLevel())).collect(Collectors.toList());
     if (!permissionEditOffice.isEmpty()) {
       return permissionEditOffice;
     }
+    List<PermissionDto> permissionUpdateOffice = permissionsOffice.stream().filter(
+      p -> UPDATE.equals(p.getLevel())).collect(Collectors.toList());
+    if (!permissionUpdateOffice.isEmpty()) {
+      return permissionUpdateOffice;
+    }
+    
     final List<PermissionDto> permissions = new ArrayList<>(permissionsOffice);
 
 
     final List<PermissionDto> permissionsPlan = this.fetchPlanPermissions(idPlan, idUser);
     List<PermissionDto> permissionEditPlan = permissionsPlan.stream().filter(
-        p -> p.getIdPlan().equals(idPlan) && EDIT.equals(p.getLevel())).collect(Collectors.toList());
+      p -> p.getIdPlan().equals(idPlan) && EDIT.equals(p.getLevel())).collect(Collectors.toList());
     if (!permissionEditPlan.isEmpty()) {
       return permissionEditPlan;
     }
+    List<PermissionDto> permissionUpdatePlan = permissionsPlan.stream().filter(
+      p -> p.getIdPlan().equals(idPlan) && UPDATE.equals(p.getLevel())).collect(Collectors.toList());
+    if (!permissionUpdatePlan.isEmpty()) {
+      return permissionUpdatePlan;
+    }
+
     permissions.addAll(permissionsPlan);
 
     List<Long> idsWorkpakWithParents = applicationCacheUtil.getListIdWorkpackWithParent(idWorkpack);
     List<Long> idsWorkpakWithChildren = new ArrayList<>(workpackRepository.findAllChildren(idWorkpack));
 
     final List<CanAccessWorkpack> canAccessWorkpack = this.workpackPermissionRepository
-        .findByIdPlanAndIdPerson(idPlan,idUser).stream()
-        .filter(c -> idsWorkpakWithChildren.stream().anyMatch(id -> id.equals(c.getIdWorkpack()))
-            || idsWorkpakWithParents.stream().anyMatch(id -> id.equals(c.getIdWorkpack())))
-        .collect(Collectors.toList());
+      .findByIdPlanAndIdPerson(idPlan,idUser).stream()
+      .filter(
+        c ->
+        idsWorkpakWithChildren
+          .stream()
+          .anyMatch(id -> id.equals(c.getIdWorkpack())) ||
+        idsWorkpakWithParents
+          .stream()
+          .anyMatch(id -> id.equals(c.getIdWorkpack()))
+      )
+      .collect(Collectors.toList());
 
     List<CanAccessWorkpack> permissionPrent = canAccessWorkpack.stream()
-           .filter(p -> !NONE.equals(p.getPermissionLevel()) && idsWorkpakWithParents.contains(p.getIdWorkpack()))
-           .collect(Collectors.toList());
+      .filter(p -> !NONE.equals(p.getPermissionLevel()) && idsWorkpakWithParents.contains(p.getIdWorkpack()))
+      .collect(Collectors.toList());
 
     if (!permissionPrent.isEmpty()) {
       return permissionPrent.stream().map(PermissionDto::of).collect(Collectors.toList());
     }
 
     List<CanAccessWorkpack> permissionChildren = canAccessWorkpack.stream()
-        .filter(p -> !NONE.equals(p.getPermissionLevel()) && idsWorkpakWithChildren.contains(p.getIdWorkpack()))
-        .collect(Collectors.toList());
+      .filter(p -> !NONE.equals(p.getPermissionLevel()) && idsWorkpakWithChildren.contains(p.getIdWorkpack()))
+      .collect(Collectors.toList());
 
     if (!permissions.isEmpty()) {
-      List<PermissionDto>  permissionsReadOfficePlan = permissions.stream()
-                                                              .filter(c -> READ.equals(c.getLevel())).collect(Collectors.toList());
+      List<PermissionDto> permissionsReadOfficePlan = permissions.stream()
+        .filter(c -> READ.equals(c.getLevel())).collect(Collectors.toList());
       if (!permissionsReadOfficePlan.isEmpty()) {
         return permissionsReadOfficePlan;
       }

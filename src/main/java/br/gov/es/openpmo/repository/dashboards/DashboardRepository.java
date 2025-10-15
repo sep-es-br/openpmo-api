@@ -374,12 +374,15 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
         List<EarnedValueByStepDto> findAllEarnedValuePlannedWork(List<Long> baselineIds, List<Long> workpackIds,
                         Long planId);
         
-        @Query("MATCH (w:Workpack)<-[:IS_IN*]-(d:Deliverable)\n" +
+        @Query("MATCH (w:Workpack)<-[:IS_IN*]-(d:Deliverable{canceled: FALSE})<-[:IS_SNAPSHOT_OF]-(:Deliverable {category: 'SNAPSHOT'})-[]-(bl:Baseline)\n" +
                 "WHERE id(w) = $workpackId\n" +
+                "  AND CASE \n" +
+                "        WHEN $baselineId IS NULL THEN bl.active\n" +
+                "        ELSE id(bl) = $baselineId \n" +
+                "  END\n" +
                 "\n" +
                 "OPTIONAL MATCH (d)<-[:FEATURES]-(propConcluida:Property {value: 'Concluída'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Situação'})\n" +
                 "OPTIONAL MATCH (d)<-[:FEATURES]-(propEmExec:Property {value: 'Em execução'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Situação'})\n" +
-                "OPTIONAL MATCH (d)<-[:FEATURES]-(propCancelada:Property {value: 'Cancelada'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Situação'})\n" +
                 "OPTIONAL MATCH (d)<-[:FEATURES]-(propCancelar:Property {value: 'A cancelar'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Situação'})\n" +
                 "OPTIONAL MATCH (d)<-[:FEATURES]-(propParalisada:Property {value: 'Paralisada'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Situação'})\n" +
                 "OPTIONAL MATCH (d)<-[:FEATURES]-(propPlanejamento:Property)-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Situação'})\n" +
@@ -388,13 +391,12 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
                 "RETURN\n" +
                 "    count(DISTINCT propConcluida) as statusConcluida,\n" +
                 "    count(DISTINCT propEmExec) as statusEmExec,\n" +
-                "    count(DISTINCT propCancelada) as statusCancelada,\n" +
                 "    count(DISTINCT propCancelar) as statusCancelar,\n" +
                 "    count(DISTINCT propPlanejamento) as statusPlanejamento,\n" +
                 "    count(DISTINCT propParalisada) as statusParalisada,\n" +
                 "    count(DISTINCT d) as totalDeliverable\n" +
                 "LIMIT 1")
-        Optional<DashboardStatusData> getStatusAmmountData(Long workpackId);
+        Optional<DashboardStatusData> getStatusAmmountData(Long workpackId, Long baselineId);
         
 
 }

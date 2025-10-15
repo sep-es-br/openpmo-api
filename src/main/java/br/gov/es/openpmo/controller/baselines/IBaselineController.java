@@ -88,6 +88,13 @@ public interface IBaselineController {
     @RequestHeader(name = "Authorization") String authorization
   );
 
+  @GetMapping("/{id-workpack}/{id-baseline}")
+  Response<BaselineDetailResponse> getByWorkpackId(
+    @PathVariable("id-workpack") Long idWorkpack,
+    @PathVariable("id-baseline") Long idBaseline,
+    @RequestHeader(name = "Authorization") String authorization
+  );
+
   @GetMapping("/{id-baseline}/ccb-member-view")
   Response<BaselineDetailCCBMemberResponse> getBaselineByIdAsCCBMemberView(
     @RequestHeader(name = "Authorization") String authorization,
