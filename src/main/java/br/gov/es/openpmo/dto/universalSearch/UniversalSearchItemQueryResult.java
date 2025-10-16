@@ -20,6 +20,7 @@ public class UniversalSearchItemQueryResult {
     private String icon;
     private String name;
     private String fullName;
+    private Double matchDistance;
     private List<BreadCrumb> breadcrumbs;
 
     public Long getPlanId() {
@@ -77,9 +78,15 @@ public class UniversalSearchItemQueryResult {
     public void setBreadcrumbs(List<BreadCrumb> breadcrumbs) {
         this.breadcrumbs = breadcrumbs;
     }
-    
-    
-    
+
+    public Double getMatchDistance() {
+        return matchDistance;
+    }
+
+    public void setMatchDistance(Double matchDistance) {
+        this.matchDistance = matchDistance;
+    }
+        
     public static class BreadCrumb {
         
         private Long id;
