@@ -148,7 +148,7 @@ public class JasperUtils {
 
     } catch (final JRException e) {
       e.printStackTrace();
-      throw new NegocioException(ApplicationMessage.REPORT_GENERATE_ERROR);
+      throw new NegocioException(ApplicationMessage.REPORT_GENERATE_ERROR, e);
     }
 
     return report;
