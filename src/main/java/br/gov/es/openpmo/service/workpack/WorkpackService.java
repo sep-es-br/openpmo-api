@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.service.workpack;
 
 import br.gov.es.openpmo.configuration.properties.AppProperties;
+import br.gov.es.openpmo.dto.PageResponse;
 import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
 import br.gov.es.openpmo.dto.dashboards.DashboardParameters;
 import br.gov.es.openpmo.dto.menu.PlanWorkpackDto;
@@ -154,6 +155,8 @@ import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_TOGGLE;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_UNIT_SELECTION;
 import static java.lang.Boolean.TRUE;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 @Service
 public class WorkpackService {
@@ -1721,8 +1724,9 @@ public class WorkpackService {
     this.dashboardService.calculate();
   }
   
-  public List<UniversalSearchItemQueryResult> doUniversalSearch(UniversalSearchParameters parameters) {
-      return this.workpackRepository.doSearchInAll(parameters.getWorkpackId(), parameters.getTerm(), parameters.getUserId(), parameters.getPlanId());
+  public Page<UniversalSearchItemQueryResult> doUniversalSearch(UniversalSearchParameters parameters, PageRequest pageRequest) {
+      
+      return this.workpackRepository.doSearchInAll(parameters.getWorkpackId(), parameters.getTerm(), parameters.getUserId(), parameters.getPlanId(), pageRequest);
   }
 
 }

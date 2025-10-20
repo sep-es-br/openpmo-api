@@ -17,6 +17,8 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, CustomRepository {
 
@@ -776,15 +778,8 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   )
   Boolean getOrganizerIsInAProject(@Param("idOrganizer") Long idOrganizer);
   
-  /**
-   * 
-   * @param workpackId
-   * @param term
-   * @param userId
-   * @param planId
-   * @return 
-   */
-  @Query("//PARÂMETROS:\n" +
+  static final String doSearchInAll_queryBase = 
+          "//PARÂMETROS:\n" +
             "WITH \n" +
             "$workpackId \n" +
             "//null \n" +
@@ -850,10 +845,22 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "    // Calculando a pontuação no ranking de proximidade\n" +
             "    apoc.text.jaroWinklerDistance(token, apoc.text.clean(w.name))/fator\n" +
             "    + apoc.text.jaroWinklerDistance(token, apoc.text.clean(w.fullName)) AS matchDistance\n" +
-            "  	\n" +
+            "  	\n";
+  
+  /**
+   * 
+   * @param workpackId
+   * @param term
+   * @param userId
+   * @param planId
+   * @param request
+   * @return 
+   */
+  @Query( value = doSearchInAll_queryBase +
             "RETURN planId, id, model, icon, name, fullName, matchDistance, breadcrumbs\n" +
-            "ORDER BY matchDistance ASC")
-    public List<UniversalSearchItemQueryResult> doSearchInAll(Long workpackId, String term, Long userId, Long planId );
+            "ORDER BY matchDistance ASC", countQuery = doSearchInAll_queryBase +
+            "RETURN count(id)")
+    public Page<UniversalSearchItemQueryResult> doSearchInAll(Long workpackId, String term, Long userId, Long planId, PageRequest request );
             
 }
 
