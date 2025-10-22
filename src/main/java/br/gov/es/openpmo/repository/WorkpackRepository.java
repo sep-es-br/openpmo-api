@@ -10,15 +10,14 @@ import br.gov.es.openpmo.model.workpacks.Project;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
-import org.springframework.data.neo4j.annotation.Query;
-import org.springframework.data.neo4j.repository.Neo4jRepository;
-import org.springframework.data.repository.query.Param;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.neo4j.annotation.Query;
+import org.springframework.data.neo4j.repository.Neo4jRepository;
+import org.springframework.data.repository.query.Param;
 
 public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, CustomRepository {
 
@@ -843,8 +842,8 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "     end as fator\n" +
             "WITH  id, planId, token, frase, model, icon, name, fullName, breadcrumbs,\n" +
             "    // Calculando a pontuação no ranking de proximidade\n" +
-            "    apoc.text.jaroWinklerDistance(token, apoc.text.clean(w.name))/fator\n" +
-            "    + apoc.text.jaroWinklerDistance(token, apoc.text.clean(w.fullName)) AS matchDistance\n" +
+            "    (apoc.text.jaroWinklerDistance(token, apoc.text.clean(w.name))\n" +
+            "    + apoc.text.jaroWinklerDistance(token, apoc.text.clean(w.fullName)))/fator AS matchDistance\n" +
             "  	\n";
   
   /**
