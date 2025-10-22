@@ -789,29 +789,42 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "\n" +
             "\n" +
             "WITH rootId, userId, planId, frase,\n" +
-            "apoc.text.clean(frase) as token, // Obtem a frase completa em um só token\n" +
-            "[t IN split(frase, ' ') WHERE size(apoc.text.clean(t)) > 2] as tokens    // Obtém a coleção de palavras (>2 caracteres) da frase\n" +
+            "apoc.text.clean(frase) as token  // Obtem a frase completa em um só token\n" +
+            "//[t IN split(frase, ' ') WHERE size(apoc.text.clean(t)) > 2] as tokens    // Obtém a coleção de palavras (>2 caracteres) da frase\n" +
             "\n" +
             "\n" +
             "// SELECIONA A (Person) DO USUÁRIO\n" +
             "MATCH (user:Person) \n" +
             "where id(user) = userId\n" +
             "\n" +
-            "// Filtra os workpacks pelo escopo a partir da raiz da busca\n" +
-            "MATCH (p:Plan)<-[:BELONGS_TO]-(r:Workpack)<-[:IS_IN*0..]-(w:Workpack { deleted:FALSE, canceled:FALSE })-[:IS_INSTANCE_BY]->(wm:WorkpackModel)\n" +
-            "WHERE size(apoc.text.join(tokens,'')) >= 3\n" +
-            "    and id(p) = planId\n" +
-            "	and (id(r)=rootId or rootId is null)\n" +
-            "    and (apoc.text.clean(w.name) CONTAINS token         // Procura nos names pela frase completa\n" +
-            "        OR apoc.text.clean(w.fullName) CONTAINS token   // Procura nos fullNames pela frase completa\n" +
-            "        // Procura nos names e fullNames pelas palavras > 3\n" +
-            "        OR any(t IN tokens WHERE apoc.text.clean(w.name) CONTAINS apoc.text.clean(t))        \n" +
-            "        OR any(t IN tokens WHERE apoc.text.clean(w.fullName) CONTAINS apoc.text.clean(t))\n" +
-            "    )\n" +
+            "CALL {\n" +
+            "	WITH token, planId, rootId\n" +
+            "	// Filtra os workpacks pelo escopo a partir da raiz da busca\n" +
+            "	MATCH (p:Plan)<-[:BELONGS_TO]-(r:Workpack)<-[:IS_IN*0..]-(w:Workpack { deleted:FALSE, canceled:FALSE })-[:IS_INSTANCE_BY]->(wm:WorkpackModel)\n" +
+            "	WHERE size(token) >= 3\n" +
+            "		and (rootId IS NOT NULL AND id(r)=rootId)\n" +
+            "		and id(p) = planId\n" +
+            "		and apoc.text.clean(w.name) CONTAINS token         // Procura nos names pela frase completa\n" +
+            "			OR apoc.text.clean(w.fullName) CONTAINS token   // Procura nos fullNames pela frase completa\n" +
+            "	RETURN w, wm\n" +
             "	\n" +
-            "// Filtra o resultado pela por permissão\n" +
+            "	UNION ALL\n" +
+            "	\n" +
+            "	// Filtra os workpacks pelo escopo a partir da raiz da busca\n" +
+            "	WITH token, planId, rootId\n" +
+            "	MATCH (p:Plan)<-[:BELONGS_TO]-(w:Workpack { deleted:FALSE, canceled:FALSE })-[:IS_INSTANCE_BY]->(wm:WorkpackModel)\n" +
+            "	WHERE size(token) >= 3\n" +
+            "    and rootId IS NULL\n" +
+            "	and id(p) = planId\n" +
+            "    and apoc.text.clean(w.name) CONTAINS token         // Procura nos names pela frase completa\n" +
+            "        OR apoc.text.clean(w.fullName) CONTAINS token   // Procura nos fullNames pela frase completa\n" +
+            "	RETURN w, wm\n" +
+            "}\n" +
+            "\n" +
+            "  \n" +
+            "WITH DISTINCT w, wm, token, user, planId, rootId, frase\n" +
+            "// Filtra o resultado por permissão\n" +
             "OPTIONAL MATCH (w)-[:IS_IN|BELONGS_TO|IS_ADOPTED_BY*0..]->(scope)<-[access:CAN_ACCESS_OFFICE|CAN_ACCESS_PLAN|CAN_ACCESS_WORKPACK]-(user)\n" +
-            "WITH DISTINCT w, r, wm, token, access, user, planId, rootId,frase\n" +
             "WHERE access is not null and access.permissionLevel <> 'NONE'\n" +
             "	or user.administrator\n" +
             "\n" +
@@ -836,15 +849,21 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "     wm.fontIcon AS icon,\n" +
             "     trim(w.name) AS name,\n" +
             "     trim(w.fullName) AS fullName,\n" +
-            "     case   when apoc.text.clean(w.name) contains token then 2\n" +
-            "            when w.name = frase then 4\n" +
+            "     case   \n" +
+            "			when w.name = frase then 16\n" +
+            "			when apoc.text.clean(w.name) = token then 14\n" +
+            "			when w.fullName = frase then 12\n" +
+            "			when apoc.text.clean(w.fullName) = token then 10\n" +
+            "			when apoc.text.clean(w.name) contains token and apoc.text.clean(w.fullName) contains token then 8\n" +
+            "            when apoc.text.clean(w.name) contains token then 6\n" +
+            "            when apoc.text.clean(w.fullName) contains token then 4\n" +
             "            else 1\n" +
             "     end as fator\n" +
             "WITH  id, planId, token, frase, model, icon, name, fullName, breadcrumbs,\n" +
             "    // Calculando a pontuação no ranking de proximidade\n" +
             "    (apoc.text.jaroWinklerDistance(token, apoc.text.clean(w.name))\n" +
             "    + apoc.text.jaroWinklerDistance(token, apoc.text.clean(w.fullName)))/fator AS matchDistance\n" +
-            "  	\n";
+            "  	";
   
   /**
    * 
