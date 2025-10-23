@@ -783,7 +783,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "$workpackId \n" +
             "//null \n" +
             "as rootId,                      	// id do workpack escopo raiz da busca. Se NULL, procura no plano inteiro.\n" +
-            "trim($term) as frase,     // Frase procurada\n" +
+            "'' + trim($term) as frase,     // Frase procurada\n" +
             "$userId as userId,                           		// id do usuário\n" +
             "$planId as planId                               // id do plano\n" +
             "\n" +
