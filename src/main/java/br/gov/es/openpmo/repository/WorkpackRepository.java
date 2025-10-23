@@ -2,6 +2,7 @@ package br.gov.es.openpmo.repository;
 
 import br.gov.es.openpmo.dto.menu.PlanWorkpackDto;
 import br.gov.es.openpmo.dto.menu.WorkpackResultDto;
+import br.gov.es.openpmo.dto.universalSearch.UniversalSearchItemQueryResult;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.WorkpackBreakdownClassificationDto;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.workpacks.Program;
@@ -9,13 +10,14 @@ import br.gov.es.openpmo.model.workpacks.Project;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
-import org.springframework.data.neo4j.annotation.Query;
-import org.springframework.data.neo4j.repository.Neo4jRepository;
-import org.springframework.data.repository.query.Param;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.neo4j.annotation.Query;
+import org.springframework.data.neo4j.repository.Neo4jRepository;
+import org.springframework.data.repository.query.Param;
 
 public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, CustomRepository {
 
@@ -774,5 +776,111 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
     "RETURN EXISTS ((o)-[:IS_IN*]->(:Project)) "
   )
   Boolean getOrganizerIsInAProject(@Param("idOrganizer") Long idOrganizer);
+  
+  static final String doSearchInAll_queryBase = 
+          "//PARÂMETROS:\n" +
+            "WITH \n" +
+            "$workpackId \n" +
+            "//null \n" +
+            "as rootId,                      	// id do workpack escopo raiz da busca. Se NULL, procura no plano inteiro.\n" +
+            "trim($term) as frase,     // Frase procurada\n" +
+            "$userId as userId,                           		// id do usuário\n" +
+            "$planId as planId                               // id do plano\n" +
+            "\n" +
+            "\n" +
+            "WITH rootId, userId, planId, frase,\n" +
+            "apoc.text.clean(frase) as token  // Obtem a frase completa em um só token\n" +
+            "//[t IN split(frase, ' ') WHERE size(apoc.text.clean(t)) > 2] as tokens    // Obtém a coleção de palavras (>2 caracteres) da frase\n" +
+            "\n" +
+            "\n" +
+            "// SELECIONA A (Person) DO USUÁRIO\n" +
+            "MATCH (user:Person) \n" +
+            "where id(user) = userId\n" +
+            "\n" +
+            "CALL {\n" +
+            "	WITH token, planId, rootId\n" +
+            "	// Filtra os workpacks pelo escopo a partir da raiz da busca\n" +
+            "	MATCH (p:Plan)<-[:BELONGS_TO]-(r:Workpack)<-[:IS_IN*0..]-(w:Workpack { deleted:FALSE, canceled:FALSE })-[:IS_INSTANCE_BY]->(wm:WorkpackModel)\n" +
+            "	WHERE size(token) >= 3\n" +
+            "		and (rootId IS NOT NULL AND id(r)=rootId)\n" +
+            "		and id(p) = planId\n" +
+            "		and apoc.text.clean(w.name) CONTAINS token         // Procura nos names pela frase completa\n" +
+            "			OR apoc.text.clean(w.fullName) CONTAINS token   // Procura nos fullNames pela frase completa\n" +
+            "	RETURN w, wm\n" +
+            "	\n" +
+            "	UNION ALL\n" +
+            "	\n" +
+            "	// Filtra os workpacks pelo escopo a partir da raiz da busca\n" +
+            "	WITH token, planId, rootId\n" +
+            "	MATCH (p:Plan)<-[:BELONGS_TO]-(w:Workpack { deleted:FALSE, canceled:FALSE })-[:IS_INSTANCE_BY]->(wm:WorkpackModel)\n" +
+            "	WHERE size(token) >= 3\n" +
+            "    and rootId IS NULL\n" +
+            "	and id(p) = planId\n" +
+            "    and apoc.text.clean(w.name) CONTAINS token         // Procura nos names pela frase completa\n" +
+            "        OR apoc.text.clean(w.fullName) CONTAINS token   // Procura nos fullNames pela frase completa\n" +
+            "	RETURN w, wm\n" +
+            "}\n" +
+            "\n" +
+            "  \n" +
+            "WITH DISTINCT w, wm, token, user, planId, rootId, frase\n" +
+            "// Filtra o resultado por permissão\n" +
+            "OPTIONAL MATCH (w)-[:IS_IN|BELONGS_TO|IS_ADOPTED_BY*0..]->(scope)<-[access:CAN_ACCESS_OFFICE|CAN_ACCESS_PLAN|CAN_ACCESS_WORKPACK]-(user)\n" +
+            "WHERE access is not null and access.permissionLevel <> 'NONE'\n" +
+            "	or user.administrator\n" +
+            "\n" +
+            "// Chama uma subquery para resgatar o breadcrumb de cada item encontrado\n" +
+            "CALL {\n" +
+            "    WITH w, rootId\n" +
+            "    MATCH (w)-[:IS_IN*0..]->(parent:Workpack)-[:IS_IN*0..]->(last:Workpack),\n" +
+            "    (parent)-[:IS_INSTANCE_BY]->(pwm:WorkpackModel)\n" +
+            "    WHERE id(last) = rootId or (rootId IS NULL AND not exists ((last)-[:IS_IN]->(:Workpack)))\n" +
+            "    MATCH path = ((w)-[:IS_IN*]->(parent))\n" +
+            "    WITH distinct parent, pwm, length(path) AS hops\n" +
+            "    ORDER BY hops desc\n" +
+            "    WITH parent, pwm\n" +
+            "    RETURN distinct \n" +
+            "        //collect('(' + pwm.modelName + ') ' + parent.name) AS parents,\n" +
+            "        collect({modelo: pwm.modelName, id:id(parent), nome: parent.name}) as breadcrumbs\n" +
+            "}\n" +
+            "\n" +
+            "// Organiza as variáveis e calcula o nível de similaridade (com o token) para cada workpack encontrado\n" +
+            "WITH distinct id(w) AS id, planId, token, frase, w, breadcrumbs, \n" +
+            "     wm.modelName AS model,\n" +
+            "     wm.fontIcon AS icon,\n" +
+            "     trim(w.name) AS name,\n" +
+            "     trim(w.fullName) AS fullName,\n" +
+            "     case   \n" +
+            "			when w.name = frase then 16\n" +
+            "			when apoc.text.clean(w.name) = token then 14\n" +
+            "			when w.fullName = frase then 12\n" +
+            "			when apoc.text.clean(w.fullName) = token then 10\n" +
+            "			when apoc.text.clean(w.name) contains token and apoc.text.clean(w.fullName) contains token then 8\n" +
+            "            when apoc.text.clean(w.name) contains token then 6\n" +
+            "            when apoc.text.clean(w.fullName) contains token then 4\n" +
+            "            else 1\n" +
+            "     end as fator\n" +
+            "WITH  id, planId, token, frase, model, icon, name, fullName, breadcrumbs,\n" +
+            "    // Calculando a pontuação no ranking de proximidade\n" +
+            "    (apoc.text.jaroWinklerDistance(token, apoc.text.clean(w.name))\n" +
+
+            "    + apoc.text.jaroWinklerDistance(token, apoc.text.clean(w.fullName)))/fator AS matchDistance\n" +
+            "WHERE breadcrumbs IS NOT NULL AND size(breadcrumbs) > 0\n" +
+            "  	";
+  
+  /**
+   * 
+   * @param workpackId
+   * @param term
+   * @param userId
+   * @param planId
+   * @param request
+   * @return 
+   */
+  @Query( value = doSearchInAll_queryBase +
+            "RETURN planId, id, model, icon, name, fullName, matchDistance, breadcrumbs\n" +
+            "ORDER BY matchDistance ASC", countQuery = doSearchInAll_queryBase +
+            "RETURN count(id)")
+    public Page<UniversalSearchItemQueryResult> doSearchInAll(Long workpackId, String term, Long userId, Long planId, PageRequest request );
+            
 }
 
