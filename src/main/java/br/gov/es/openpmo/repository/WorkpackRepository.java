@@ -804,8 +804,8 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "	WHERE size(token) >= 3\n" +
             "		and (rootId IS NOT NULL AND id(r)=rootId)\n" +
             "		and id(p) = planId\n" +
-            "		and apoc.text.clean(w.name) CONTAINS token         // Procura nos names pela frase completa\n" +
-            "			OR apoc.text.clean(w.fullName) CONTAINS token   // Procura nos fullNames pela frase completa\n" +
+            "		and (apoc.text.clean(w.name) CONTAINS token         // Procura nos names pela frase completa\n" +
+            "			OR apoc.text.clean(w.fullName) CONTAINS token)   // Procura nos fullNames pela frase completa\n" +
             "	RETURN w, wm\n" +
             "	\n" +
             "	UNION ALL\n" +
@@ -816,8 +816,8 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "	WHERE size(token) >= 3\n" +
             "    and rootId IS NULL\n" +
             "	and id(p) = planId\n" +
-            "    and apoc.text.clean(w.name) CONTAINS token         // Procura nos names pela frase completa\n" +
-            "        OR apoc.text.clean(w.fullName) CONTAINS token   // Procura nos fullNames pela frase completa\n" +
+            "    and (apoc.text.clean(w.name) CONTAINS token         // Procura nos names pela frase completa\n" +
+            "        OR apoc.text.clean(w.fullName) CONTAINS token)   // Procura nos fullNames pela frase completa\n" +
             "	RETURN w, wm\n" +
             "}\n" +
             "\n" +
