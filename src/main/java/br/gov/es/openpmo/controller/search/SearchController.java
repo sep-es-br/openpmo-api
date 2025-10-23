@@ -53,7 +53,7 @@ public class SearchController {
         @RequestParam int page, @RequestParam int pageSize,
         @Authorization final String authorization){
         
-        if(term.trim().length() >= 3){
+        if(term.trim().length() < 3){
             return this.responseHandler.success(PageResponse.of(Page.empty()));
         }
         
