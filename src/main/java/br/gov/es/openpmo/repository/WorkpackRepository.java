@@ -862,7 +862,9 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "WITH  id, planId, token, frase, model, icon, name, fullName, breadcrumbs,\n" +
             "    // Calculando a pontuação no ranking de proximidade\n" +
             "    (apoc.text.jaroWinklerDistance(token, apoc.text.clean(w.name))\n" +
+
             "    + apoc.text.jaroWinklerDistance(token, apoc.text.clean(w.fullName)))/fator AS matchDistance\n" +
+            "WHERE breadcrumbs IS NOT NULL AND size(breadcrumbs) > 0\n" +
             "  	";
   
   /**
