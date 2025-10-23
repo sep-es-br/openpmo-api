@@ -13,8 +13,8 @@ import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
 import br.gov.es.openpmo.utils.ResponseHandler;
 import io.swagger.annotations.Api;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -53,7 +53,9 @@ public class SearchController {
         @RequestParam int page, @RequestParam int pageSize,
         @Authorization final String authorization){
         
-        Assert.isTrue(term.trim().length() >= 3, "O texto da busca deve ter ao menos 3 caracteres");
+        if(term.trim().length() >= 3){
+            return this.responseHandler.success(PageResponse.of(Page.empty()));
+        }
         
         final Long userId = this.tokenService.getUserId(authorization);
 
