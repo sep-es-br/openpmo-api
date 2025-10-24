@@ -783,7 +783,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "$workpackId \n" +
             "//null \n" +
             "as rootId,                      	// id do workpack escopo raiz da busca. Se NULL, procura no plano inteiro.\n" +
-            "trim($term) as frase,     // Frase procurada\n" +
+            "trim(coalesce($term, '')) as frase,     // Frase procurada\n" +
             "$userId as userId,                           		// id do usuário\n" +
             "$planId as planId                               // id do plano\n" +
             "\n" +
@@ -804,8 +804,8 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "	WHERE size(token) >= 3\n" +
             "		and (rootId IS NOT NULL AND id(r)=rootId)\n" +
             "		and id(p) = planId\n" +
-            "		and apoc.text.clean(w.name) CONTAINS token         // Procura nos names pela frase completa\n" +
-            "			OR apoc.text.clean(w.fullName) CONTAINS token   // Procura nos fullNames pela frase completa\n" +
+            "		and (apoc.text.clean(w.name) CONTAINS token              // Procura nos names pela frase completa\n" +
+            "			OR apoc.text.clean(w.fullName) CONTAINS token)   // Procura nos fullNames pela frase completa\n" +
             "	RETURN w, wm\n" +
             "	\n" +
             "	UNION ALL\n" +
@@ -816,17 +816,16 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "	WHERE size(token) >= 3\n" +
             "    and rootId IS NULL\n" +
             "	and id(p) = planId\n" +
-            "    and apoc.text.clean(w.name) CONTAINS token         // Procura nos names pela frase completa\n" +
-            "        OR apoc.text.clean(w.fullName) CONTAINS token   // Procura nos fullNames pela frase completa\n" +
+            "    and (apoc.text.clean(w.name) CONTAINS token          // Procura nos names pela frase completa\n" +
+            "        OR apoc.text.clean(w.fullName) CONTAINS token)   // Procura nos fullNames pela frase completa\n" +
             "	RETURN w, wm\n" +
             "}\n" +
             "\n" +
             "  \n" +
             "WITH DISTINCT w, wm, token, user, planId, rootId, frase\n" +
-            "// Filtra o resultado por permissão\n" +
-            "OPTIONAL MATCH (w)-[:IS_IN|BELONGS_TO|IS_ADOPTED_BY*0..]->(scope)<-[access:CAN_ACCESS_OFFICE|CAN_ACCESS_PLAN|CAN_ACCESS_WORKPACK]-(user)\n" +
-            "WHERE access is not null and access.permissionLevel <> 'NONE'\n" +
-            "	or user.administrator\n" +
+            "where (w)-[:IS_IN|BELONGS_TO|IS_ADOPTED_BY0*0..]->()<-[:CAN_ACCESS_OFFICE|CAN_ACCESS_PLAN|CAN_ACCESS_WORKPACK]-(user)\n" +
+            "    OR (w)<-[:IS_IN0*0..]-()<-[:CAN_ACCESS_WORKPACK]-(user)\n" +
+            "    or user.administrator\n" +
             "\n" +
             "// Chama uma subquery para resgatar o breadcrumb de cada item encontrado\n" +
             "CALL {\n" +

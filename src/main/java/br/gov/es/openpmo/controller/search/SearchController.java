@@ -7,23 +7,18 @@ package br.gov.es.openpmo.controller.search;
 import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.PageResponse;
 import br.gov.es.openpmo.dto.Response;
-import br.gov.es.openpmo.dto.dashboards.v2.DashboardResponse;
 import br.gov.es.openpmo.dto.universalSearch.UniversalSearchItemQueryResult;
 import br.gov.es.openpmo.dto.universalSearch.UniversalSearchParameters;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
 import br.gov.es.openpmo.utils.ResponseHandler;
 import io.swagger.annotations.Api;
-import java.time.YearMonth;
-import java.util.List;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  *
@@ -57,6 +52,10 @@ public class SearchController {
         @RequestParam(name = "term", required = false, defaultValue = "") String term,
         @RequestParam int page, @RequestParam int pageSize,
         @Authorization final String authorization){
+        
+        if(term.trim().length() < 3){
+            return this.responseHandler.success(PageResponse.of(Page.empty()));
+        }
         
         final Long userId = this.tokenService.getUserId(authorization);
 
