@@ -1,6 +1,6 @@
 package br.gov.es.openpmo.service.baselines;
 
-import br.gov.es.openpmo.dto.baselines.UpdateResponse;
+import br.gov.es.openpmo.dto.baselines.UpdateObject;
 import br.gov.es.openpmo.enumerator.BaselineStatus;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
@@ -21,8 +21,7 @@ public class GetFirstTimeBaselineUpdatesService implements IGetFirstTimeBaseline
 
   @Autowired
   public GetFirstTimeBaselineUpdatesService(
-    final BaselineRepository baselineRepository
-  ) {
+      final BaselineRepository baselineRepository) {
     this.baselineRepository = baselineRepository;
   }
 
@@ -32,39 +31,36 @@ public class GetFirstTimeBaselineUpdatesService implements IGetFirstTimeBaseline
   }
 
   @Nullable
-  private UpdateResponse getUpdate(
-    final Workpack workpack,
-    final boolean isSnapshot
-  ) {
-    UpdateResponse result = null;
+  private UpdateObject getUpdate(
+      final Workpack workpack,
+      final boolean isSnapshot) {
+    UpdateObject result = null;
     final Workpack master = this.getWorkpack(workpack, isSnapshot);
 
-    if(master != null) {
-      result = new UpdateResponse(
-        master.getId(),
-        getIcon(master),
-        master.getName(),
-        BaselineStatus.NEW,
-        null
-      );
+    if (master != null) {
+      result = new UpdateObject(
+          master.getId(),
+          getIcon(master),
+          master.getName(),
+          BaselineStatus.NEW,
+          null);
     }
 
     return result;
   }
 
   @Override
-  public List<UpdateResponse> getUpdates(
-    final Iterable<? extends Workpack> workpacks,
-    final boolean isSnapshot
-  ) {
-    if(workpacks == null) {
+  public List<UpdateObject> getUpdates(
+      final Iterable<? extends Workpack> workpacks,
+      final boolean isSnapshot) {
+    if (workpacks == null) {
       return Collections.emptyList();
     }
 
-    final List<UpdateResponse> updates = new ArrayList<>();
+    final List<UpdateObject> updates = new ArrayList<>();
 
-    for(final Workpack workpack : workpacks) {
-      if(workpack.isDeliverable() || workpack.isMilestone()) {
+    for (final Workpack workpack : workpacks) {
+      if (workpack.isDeliverable() || workpack.isMilestone()) {
         Optional.ofNullable(this.getUpdate(workpack, isSnapshot)).ifPresent(updates::add);
       }
       updates.addAll(this.getUpdates(workpack.getChildren(), isSnapshot));
@@ -75,13 +71,12 @@ public class GetFirstTimeBaselineUpdatesService implements IGetFirstTimeBaseline
 
   @Nullable
   private Workpack getWorkpack(
-    final Workpack workpack,
-    final boolean isSnapshot
-  ) {
+      final Workpack workpack,
+      final boolean isSnapshot) {
     final Workpack master = this.baselineRepository.findMasterBySnapshotId(workpack.getId()).orElse(null);
     return isSnapshot
-      ? master
-      : workpack;
+        ? master
+        : workpack;
   }
 
 }

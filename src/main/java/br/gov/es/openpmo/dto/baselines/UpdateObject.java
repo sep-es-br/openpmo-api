@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class UpdateResponse {
+public class UpdateObject {
   private final Long idWorkpack;
 
   private final String icon;
@@ -27,13 +27,12 @@ public class UpdateResponse {
   // ↳ Diz se o modelo da Entrega exige Cronograma ativo
 
   @JsonCreator
-  public UpdateResponse(
-    final Long idWorkpack,
-    final String icon,
-    final String description,
-    final BaselineStatus classification,
-    final Boolean included
-  ) {
+  public UpdateObject(
+      final Long idWorkpack,
+      final String icon,
+      final String description,
+      final BaselineStatus classification,
+      final Boolean included) {
     this.idWorkpack = idWorkpack;
     this.icon = icon;
     this.description = description;
@@ -79,5 +78,5 @@ public class UpdateResponse {
 
   public void setDeliveryModelHasActiveSchedule(Boolean deliveryModelHasActiveSchedule) {
     this.deliveryModelHasActiveSchedule = deliveryModelHasActiveSchedule;
-  }  
+  }
 }

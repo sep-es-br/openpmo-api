@@ -102,9 +102,9 @@ public class BaselineController implements IBaselineController {
   }
 
   @Override
-  public Response<List<UpdateResponse>> getUpdates(final Long idWorkpack) {
-    final List<UpdateResponse> updates = this.getBaselineUpdatesService.getUpdates(idWorkpack);
-    return this.responseHandler.success(updates);
+  public Response<List<BaselineUpdateBreakdown>> getUpdates(final Long idWorkpack, final Long idPlan) {
+    final List<BaselineUpdateBreakdown> breakdown = this.getBaselineUpdatesService.getUpdates(idWorkpack, idPlan);
+    return this.responseHandler.success(breakdown);
   }
 
   @Override

@@ -1,6 +1,6 @@
 package br.gov.es.openpmo.service.baselines;
 
-import br.gov.es.openpmo.dto.baselines.UpdateResponse;
+import br.gov.es.openpmo.dto.baselines.UpdateObject;
 import br.gov.es.openpmo.enumerator.BaselineStatus;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
@@ -30,23 +30,22 @@ public class GetAnotherTimeBaselineUpdatesService implements IGetAnotherTimeBase
 
   @Autowired
   public GetAnotherTimeBaselineUpdatesService(
-    final BaselineRepository baselineRepository,
-    final IBaselineChangesService baselineChangesService,
-    final IBaselineComposeService baselineComposeService,
-    final IBaselineStructuralChangesService baselineStructuralChangesService
-  ) {
+      final BaselineRepository baselineRepository,
+      final IBaselineChangesService baselineChangesService,
+      final IBaselineComposeService baselineComposeService,
+      final IBaselineStructuralChangesService baselineStructuralChangesService) {
     this.baselineRepository = baselineRepository;
     this.baselineChangesService = baselineChangesService;
     this.baselineComposeService = baselineComposeService;
     this.baselineStructuralChangesService = baselineStructuralChangesService;
   }
 
-  private static UpdateResponse getStructureChangedResponse() {
-    return new UpdateResponse(
-      null,
-      "plan",
-      "structure",
-      BaselineStatus.CHANGED,
+  private static UpdateObject getStructureChangedResponse() {
+    return new UpdateObject(
+        null,
+        "plan",
+        "structure",
+        BaselineStatus.CHANGED,
       null
     );
   }
@@ -58,15 +57,15 @@ public class GetAnotherTimeBaselineUpdatesService implements IGetAnotherTimeBase
   private void addIfWorkpackIsDeleted(
     final Baseline baseline,
     final Workpack workpack,
-    final Collection<? super UpdateResponse> updates
+    final Collection<? super UpdateObject> updates
   ) {
-    if(isDeliverableOrMilestone(workpack) && this.isWorkpackDeletedAndHasSnapshot(workpack, baseline)) {
+    if (isDeliverableOrMilestone(workpack) && this.isWorkpackDeletedAndHasSnapshot(workpack, baseline)) {
       updates.add(this.getDeletedResponse(workpack));
     }
   }
 
   private boolean isWorkpackDeletedAndHasSnapshot(
-    final Workpack workpack,
+      final Workpack workpack,
     final Baseline baseline
   ) {
     return this.baselineRepository.isWorkpackDeletedAndHasSnapshot(workpack.getId(), baseline.getId());
@@ -77,8 +76,8 @@ public class GetAnotherTimeBaselineUpdatesService implements IGetAnotherTimeBase
     return Optional.ofNullable(workpackModel).map(WorkpackModel::getFontIcon).orElse("");
   }
 
-  private UpdateResponse getDeletedResponse(final Workpack workpack) {
-    return new UpdateResponse(
+  private UpdateObject getDeletedResponse(final Workpack workpack) {
+    return new UpdateObject(
       workpack.getId(),
       getIcon(workpack),
       workpack.getName(),
@@ -90,23 +89,23 @@ public class GetAnotherTimeBaselineUpdatesService implements IGetAnotherTimeBase
   private void addUpdatesRecursively(
     final Baseline baseline,
     final Iterable<? extends Workpack> workpacks,
-    final List<UpdateResponse> updates
+    final List<UpdateObject> updates
   ) {
-    if(workpacks == null) {
+    if (workpacks == null) {
       return;
     }
 
-    for(final Workpack workpack : workpacks) {
+    for (final Workpack workpack : workpacks) {
       this.addUpdates(baseline, workpack, updates);
     }
   }
 
   @Override
-  public List<UpdateResponse> getUpdates(
+  public List<UpdateObject> getUpdates(
     final Baseline baseline,
     final Workpack workpack
   ) {
-    final List<UpdateResponse> updates = new ArrayList<>();
+    final List<UpdateObject> updates = new ArrayList<>();
 
     final MutableBoolean hasStructureChange = new MutableBoolean();
     this.addUpdatesRecursively(baseline, workpack.getChildren(), updates);
@@ -120,14 +119,14 @@ public class GetAnotherTimeBaselineUpdatesService implements IGetAnotherTimeBase
   private void addSnapshotsRecursively(
     final Baseline baseline,
     final Workpack snapshot,
-    final List<UpdateResponse> updates,
+    final List<UpdateObject> updates,
     final MutableBoolean hasStructureChange
   ) {
-    if(snapshot.getChildren() == null) {
+    if (snapshot.getChildren() == null) {
       return;
     }
 
-    for(final Workpack child : snapshot.getChildren()) {
+    for (final Workpack child : snapshot.getChildren()) {
       this.addIfHasStructureChanges(baseline, child, updates, hasStructureChange);
       this.addSnapshotsRecursively(baseline, child, updates, hasStructureChange);
     }
@@ -136,13 +135,13 @@ public class GetAnotherTimeBaselineUpdatesService implements IGetAnotherTimeBase
   private void addUpdates(
     final Baseline baseline,
     final Workpack workpack,
-    final List<UpdateResponse> updates
+    final List<UpdateObject> updates
   ) {
     this.addChanges(baseline, workpack, updates);
     this.addIfNotComposingBaseline(baseline, workpack, updates);
     this.addIfWorkpackIsDeleted(baseline, workpack, updates);
 
-    if(!workpack.isDeleted()) {
+    if (!workpack.isDeleted()) {
       this.addUpdatesRecursively(baseline, workpack.getChildren(), updates);
     }
   }
@@ -150,12 +149,14 @@ public class GetAnotherTimeBaselineUpdatesService implements IGetAnotherTimeBase
   private void addIfHasStructureChanges(
     final Baseline baseline,
     final Workpack workpack,
-    final Collection<? super UpdateResponse> updates,
+    final Collection<? super UpdateObject> updates,
     final MutableBoolean hasStructureChange
   ) {
-    if(isDeliverableOrMilestone(workpack)
-       && !this.hasStructureChanges(baseline, workpack)
-       && !hasStructureChange.isValue()) {
+    if (
+      isDeliverableOrMilestone(workpack) &&
+      !this.hasStructureChanges(baseline, workpack) &&
+      !hasStructureChange.isValue()
+    ) {
       updates.add(getStructureChangedResponse());
       hasStructureChange.setValue(true);
     }
@@ -165,17 +166,19 @@ public class GetAnotherTimeBaselineUpdatesService implements IGetAnotherTimeBase
     final Baseline baseline,
     final Workpack workpack
   ) {
-    return this.baselineRepository.findSnapshotWithChildrenAndPropertiesByWorkpackIdAndBaselineId(workpack.getId(),
-                                                                                                  baseline.getId())
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_HAS_NO_SNAPSHOT_INVALID_STATE_ERROR));
+    return this.baselineRepository.findSnapshotWithChildrenAndPropertiesByWorkpackIdAndBaselineId(
+      workpack.getId(),
+      baseline.getId()
+    )
+     .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_HAS_NO_SNAPSHOT_INVALID_STATE_ERROR));
   }
 
   private void addChanges(
     final Baseline baseline,
     final Workpack workpack,
-    final Collection<? super UpdateResponse> updates
+    final Collection<? super UpdateObject> updates
   ) {
-    if(!workpack.isDeleted() && this.hasChanges(baseline, workpack)) {
+    if (!workpack.isDeleted() && this.hasChanges(baseline, workpack)) {
       updates.add(this.getChangedResponse(workpack));
     }
   }
@@ -185,12 +188,12 @@ public class GetAnotherTimeBaselineUpdatesService implements IGetAnotherTimeBase
     final Workpack workpack
   ) {
     return isDeliverableOrMilestone(workpack)
-           && this.isSnapshotOfWorkpackComposingBaseline(baseline, workpack)
-           && this.baselineChangesService.hasChanges(baseline, workpack, false);
+      && this.isSnapshotOfWorkpackComposingBaseline(baseline, workpack)
+      && this.baselineChangesService.hasChanges(baseline, workpack, false);
   }
 
-  private UpdateResponse getChangedResponse(final Workpack workpack) {
-    return new UpdateResponse(
+  private UpdateObject getChangedResponse(final Workpack workpack) {
+    return new UpdateObject(
       workpack.getId(),
       getIcon(workpack),
       workpack.getName(),
@@ -209,10 +212,13 @@ public class GetAnotherTimeBaselineUpdatesService implements IGetAnotherTimeBase
   private void addIfNotComposingBaseline(
     final Baseline baseline,
     final Workpack workpack,
-    final Collection<? super UpdateResponse> updates
+    final Collection<? super UpdateObject> updates
   ) {
-    if(!workpack.isDeleted() && isDeliverableOrMilestone(workpack)
-       && !this.isSnapshotOfWorkpackComposingBaseline(baseline, workpack)) {
+    if (
+      !workpack.isDeleted() &&
+      isDeliverableOrMilestone(workpack) &&
+      !this.isSnapshotOfWorkpackComposingBaseline(baseline, workpack)
+    ) {
       updates.add(this.getNewResponse(workpack));
     }
   }
@@ -224,8 +230,8 @@ public class GetAnotherTimeBaselineUpdatesService implements IGetAnotherTimeBase
     return this.baselineComposeService.isSnapshotOfWorkpackComposingBaseline(baseline, workpack);
   }
 
-  private UpdateResponse getNewResponse(final Workpack workpack) {
-    return new UpdateResponse(
+  private UpdateObject getNewResponse(final Workpack workpack) {
+    return new UpdateObject(
       workpack.getId(),
       getIcon(workpack),
       workpack.getName(),
@@ -233,5 +239,4 @@ public class GetAnotherTimeBaselineUpdatesService implements IGetAnotherTimeBase
       null
     );
   }
-
 }

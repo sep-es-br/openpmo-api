@@ -6,7 +6,7 @@ import br.gov.es.openpmo.dto.baselines.BaselineResultDto;
 import br.gov.es.openpmo.dto.baselines.BaselineScheduleStep;
 import br.gov.es.openpmo.dto.baselines.BaselineWorkpackDto;
 import br.gov.es.openpmo.dto.baselines.EvaluationItem;
-import br.gov.es.openpmo.dto.baselines.UpdateResponse;
+import br.gov.es.openpmo.dto.baselines.UpdateObject;
 import br.gov.es.openpmo.enumerator.BaselineStatus;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
@@ -52,8 +52,10 @@ public class GetBaselineService implements IGetBaselineService {
 
     final Baseline baseline = this.getBaselineById(idBaseline);
 
-    final List<BaselineResultDto> bases = this.baselineRepository.findAllInWorkpackByIdWorkpack(baseline.getIdWorkpack());
-    BaselineResultDto baseLineParam = bases.stream().filter(b -> b.getIdBaseline().equals(idBaseline)).findFirst().orElse(null);
+    final List<BaselineResultDto> bases = this.baselineRepository
+        .findAllInWorkpackByIdWorkpack(baseline.getIdWorkpack());
+    BaselineResultDto baseLineParam = bases.stream().filter(b -> b.getIdBaseline().equals(idBaseline)).findFirst()
+        .orElse(null);
     BaselineResultDto baselineCompare = null;
     if (baseLineParam != null) {
       switch (baseLineParam.getStatus()) {
@@ -63,13 +65,16 @@ public class GetBaselineService implements IGetBaselineService {
         case APPROVED:
           baselineCompare = bases.stream().filter(
               b -> b.getActivationDate() != null && b.getActivationDate().isBefore(
-                  baseLineParam.getActivationDate())).max(
-              Comparator.comparing(BaselineResultDto::getActivationDate)).orElse(null);
+                  baseLineParam.getActivationDate()))
+              .max(
+                  Comparator.comparing(BaselineResultDto::getActivationDate))
+              .orElse(null);
           break;
         case REJECTED:
           baselineCompare = bases.stream().filter(b -> b.getActivationDate() != null && b.getActivationDate().isBefore(
               baseLineParam.getProposalDate())).max(
-              Comparator.comparing(BaselineResultDto::getActivationDate)).orElse(null);
+                  Comparator.comparing(BaselineResultDto::getActivationDate))
+              .orElse(null);
           break;
       }
       result = this.compareBaseline(baseline, baseLineParam, baselineCompare);
@@ -77,15 +82,18 @@ public class GetBaselineService implements IGetBaselineService {
     return result;
   }
 
-  private BaselineDetailResponse compareBaseline(Baseline baseline, BaselineResultDto baseLineParam, BaselineResultDto baselineCompare) {
-    final List<BaselineWorkpackDto> workpacksBaseline = this.baselineRepository.findAllWorkpacBaselineById(baseLineParam.getIdBaseline());
+  private BaselineDetailResponse compareBaseline(Baseline baseline, BaselineResultDto baseLineParam,
+      BaselineResultDto baselineCompare) {
+    final List<BaselineWorkpackDto> workpacksBaseline = this.baselineRepository
+        .findAllWorkpacBaselineById(baseLineParam.getIdBaseline());
     if (baselineCompare == null) {
       workpacksBaseline.forEach(w -> w.setClassification(BaselineStatus.NEW));
       return getBaselineDetailResponse(baseline, workpacksBaseline);
     }
     addScheduleAndConsumes(workpacksBaseline);
 
-    final List<BaselineWorkpackDto> workpackBaselineCompare = this.baselineRepository.findAllWorkpacBaselineById(baselineCompare.getIdBaseline());
+    final List<BaselineWorkpackDto> workpackBaselineCompare = this.baselineRepository
+        .findAllWorkpacBaselineById(baselineCompare.getIdBaseline());
     addScheduleAndConsumes(workpackBaselineCompare);
 
     final List<BaselineWorkpackDto> result = baselineServiceUtil.compare(workpacksBaseline, workpackBaselineCompare);
@@ -93,12 +101,13 @@ public class GetBaselineService implements IGetBaselineService {
     return getBaselineDetailResponse(baseline, result);
   }
 
-
   private void addScheduleAndConsumes(final List<BaselineWorkpackDto> workpacks) {
     Set<Long> deliverablesId = workpacks.stream().filter(d -> "Deliverable".equals(d.getType())).map(
         BaselineWorkpackDto::getId).collect(Collectors.toSet());
-    List<BaselineScheduleStep> scheduleSteps = baselineRepository.findAllBaselineScheduleStepById(new ArrayList<>(deliverablesId));
-    List<BaselineConsumesStep> stepConsumes = baselineRepository.findAllStepConsumesById(new ArrayList<>(deliverablesId));
+    List<BaselineScheduleStep> scheduleSteps = baselineRepository
+        .findAllBaselineScheduleStepById(new ArrayList<>(deliverablesId));
+    List<BaselineConsumesStep> stepConsumes = baselineRepository
+        .findAllStepConsumesById(new ArrayList<>(deliverablesId));
     for (BaselineWorkpackDto workpack : workpacks) {
       workpack.setSchedule(
           scheduleSteps.stream().filter(s -> s.getIdWorkpack().equals(workpack.getId())).collect(Collectors.toList()));
@@ -107,21 +116,22 @@ public class GetBaselineService implements IGetBaselineService {
     }
   }
 
-  private BaselineDetailResponse getBaselineDetailResponse(Baseline baseline,List<BaselineWorkpackDto> workpacks) {
+  private BaselineDetailResponse getBaselineDetailResponse(Baseline baseline, List<BaselineWorkpackDto> workpacks) {
     final BaselineDetailResponse response = BaselineDetailResponse.of(baseline);
     final List<EvaluationItem> items = this.getEvaluationItems(baseline.getId());
     response.setEvaluations(items);
     response.setUpdates(new ArrayList<>(0));
     workpacks.forEach(w -> {
       Long id = BaselineStatus.DELETED.equals(w.getClassification()) ? w.getIdMaster() : w.getId();
-      response.getUpdates().add(new UpdateResponse(id, w.getFontIcon(), w.getName(), w.getClassification(), true));
+      response.getUpdates()
+          .add(new UpdateObject(id, w.getFontIcon(), w.getName(), w.getClassification(), true));
     });
     return response;
   }
 
   private Baseline getBaselineById(final Long idBaseline) {
     return this.repository.findBaselineDetailById(idBaseline)
-      .orElseThrow(() -> new NegocioException(BASELINE_NOT_FOUND));
+        .orElseThrow(() -> new NegocioException(BASELINE_NOT_FOUND));
   }
 
   private List<EvaluationItem> getEvaluationItems(final Long idBaseline) {

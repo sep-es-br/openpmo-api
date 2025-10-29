@@ -3,7 +3,6 @@ package br.gov.es.openpmo.dto.baselines;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.baselines.Status;
 import com.fasterxml.jackson.annotation.JsonFormat;
-
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -23,20 +22,20 @@ public class BaselineDetailResponse {
   private final boolean cancelation;
   private final boolean active;
   private final String proposer;
-  private List<UpdateResponse> updates;
+  private List<UpdateObject> updates;
   private List<? extends EvaluationItem> evaluations;
 
   public BaselineDetailResponse(
-    final Long id,
-    final Long idWorkpack,
-    final String name,
-    final Status status,
-    final String description,
-    final LocalDateTime activationDate,
-    final LocalDateTime proposalDate,
-    final String message,
-    final boolean cancelation,
-    final boolean active,
+      final Long id,
+      final Long idWorkpack,
+      final String name,
+      final Status status,
+      final String description,
+      final LocalDateTime activationDate,
+      final LocalDateTime proposalDate,
+      final String message,
+      final boolean cancelation,
+      final boolean active,
     final String proposer
   ) {
     this.id = id;
@@ -54,16 +53,16 @@ public class BaselineDetailResponse {
 
   public static BaselineDetailResponse of(final Baseline baseline) {
     return new BaselineDetailResponse(
-      baseline.getId(),
-      baseline.getBaselinedBy().getIdWorkpack(),
-      baseline.getName(),
-      baseline.getStatus(),
-      baseline.getDescription(),
-      baseline.getActivationDate(),
-      baseline.getProposalDate(),
-      baseline.getMessage(),
-      baseline.isCancelation(),
-      baseline.isActive(),
+        baseline.getId(),
+        baseline.getBaselinedBy().getIdWorkpack(),
+        baseline.getName(),
+        baseline.getStatus(),
+        baseline.getDescription(),
+        baseline.getActivationDate(),
+        baseline.getProposalDate(),
+        baseline.getMessage(),
+        baseline.isCancelation(),
+        baseline.isActive(),
       baseline.getProposer().getFormattedRole()
     );
   }
@@ -120,11 +119,11 @@ public class BaselineDetailResponse {
     return this.proposer;
   }
 
-  public List<UpdateResponse> getUpdates() {
+  public List<UpdateObject> getUpdates() {
     return this.updates;
   }
 
-  public void setUpdates(final List<UpdateResponse> updates) {
+  public void setUpdates(final List<UpdateObject> updates) {
     this.updates = updates;
   }
 
