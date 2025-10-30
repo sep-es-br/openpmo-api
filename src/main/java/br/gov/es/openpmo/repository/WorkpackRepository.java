@@ -823,8 +823,8 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "\n" +
             "  \n" +
             "WITH DISTINCT w, wm, token, user, planId, rootId, frase\n" +
-            "where (w)-[:IS_IN|BELONGS_TO|IS_ADOPTED_BY0*0..]->()<-[:CAN_ACCESS_OFFICE|CAN_ACCESS_PLAN|CAN_ACCESS_WORKPACK]-(user)\n" +
-            "    OR (w)<-[:IS_IN0*0..]-()<-[:CAN_ACCESS_WORKPACK]-(user)\n" +
+            "where (w)-[:IS_IN|BELONGS_TO|IS_ADOPTED_BY*0..]->()<-[:CAN_ACCESS_OFFICE|CAN_ACCESS_PLAN|CAN_ACCESS_WORKPACK]-(user)\n" +
+            "    OR (w)<-[:IS_IN*0..]-()<-[:CAN_ACCESS_WORKPACK]-(user)\n" +
             "    or user.administrator\n" +
             "\n" +
             "// Chama uma subquery para resgatar o breadcrumb de cada item encontrado\n" +
