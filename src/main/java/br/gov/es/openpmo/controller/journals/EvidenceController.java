@@ -8,6 +8,7 @@ import br.gov.es.openpmo.service.journals.EvidenceFinder;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.utils.ResponseHandler;
 import io.swagger.annotations.Api;
+import java.io.IOException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -17,8 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
 
 @Api
 @RestController
@@ -68,7 +67,7 @@ public class EvidenceController {
       @RequestParam final MultipartFile file,
       @Authorization final String authorization) {
 
-    this.canAccessService.ensureCanEditResource(idJournal, authorization);
+    this.canAccessService.ensureCanUpdateResource(idJournal, authorization);
     final EvidenceCreatedResponse response = this.evidenceCreator.create(idJournal, file);
     return this.responseHandler.success(response);
   }
