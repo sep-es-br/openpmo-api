@@ -55,11 +55,13 @@ public class GetBaselineUpdatesFromBaselineService implements IGetBaselineUpdate
 
   private static UpdateObject getStructureChangedResponse() {
     return new UpdateObject(
-        null,
-        "plan",
-        "structure",
-        BaselineStatus.CHANGED,
-        null);
+      null,
+      null,
+      "plan",
+      "structure",
+      BaselineStatus.CHANGED,
+      null
+    );
   }
 
   private static boolean isDeliverableOrMilestone(final Workpack workpack) {
@@ -86,11 +88,13 @@ public class GetBaselineUpdatesFromBaselineService implements IGetBaselineUpdate
 
   private UpdateObject getDeletedResponse(final Workpack workpack) {
     return new UpdateObject(
-        workpack.getId(),
-        this.getIcon(workpack),
-        workpack.getName(),
-        BaselineStatus.DELETED,
-        null);
+      workpack.getId(),
+      workpack.getMaster().getId(),
+      this.getIcon(workpack),
+      workpack.getName(),
+      BaselineStatus.DELETED,
+      null
+    );
   }
 
   private static CategoryEnum getCategoryOrMaster(final Snapshotable<Workpack> workpack) {
@@ -194,11 +198,13 @@ public class GetBaselineUpdatesFromBaselineService implements IGetBaselineUpdate
 
   private UpdateObject getNewResponse(final Workpack workpack) {
     return new UpdateObject(
-        workpack.getId(),
-        this.getIcon(workpack),
-        workpack.getName(),
-        BaselineStatus.NEW,
-        null);
+      workpack.getId(),
+      workpack.getMaster().getId(),
+      this.getIcon(workpack),
+      workpack.getName(),
+      BaselineStatus.NEW,
+      null
+    );
   }
 
   private boolean isMasterDeleted(final Workpack workpack) {
@@ -222,11 +228,13 @@ public class GetBaselineUpdatesFromBaselineService implements IGetBaselineUpdate
 
   private UpdateObject getChangedResponse(final Workpack snapshot) {
     return new UpdateObject(
-        snapshot.getId(),
-        this.getIcon(snapshot),
-        snapshot.getName(),
-        BaselineStatus.CHANGED,
-        null);
+      snapshot.getId(),
+      snapshot.getMaster().getId(),
+      this.getIcon(snapshot),
+      snapshot.getName(),
+      BaselineStatus.CHANGED,
+      null
+    );
   }
 
   private boolean hasChanges(

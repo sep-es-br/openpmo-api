@@ -1,13 +1,14 @@
 package br.gov.es.openpmo.dto.baselines;
 
 import br.gov.es.openpmo.enumerator.BaselineStatus;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class UpdateObject {
   private final Long idWorkpack;
+
+  private final Long idMaster;
 
   private final String icon;
 
@@ -28,12 +29,15 @@ public class UpdateObject {
 
   @JsonCreator
   public UpdateObject(
-      final Long idWorkpack,
-      final String icon,
-      final String description,
-      final BaselineStatus classification,
-      final Boolean included) {
+    final Long idWorkpack,
+    final Long idMaster,
+    final String icon,
+    final String description,
+    final BaselineStatus classification,
+    final Boolean included
+  ) {
     this.idWorkpack = idWorkpack;
+    this.idMaster = idMaster;
     this.icon = icon;
     this.description = description;
     this.classification = classification;
@@ -42,6 +46,10 @@ public class UpdateObject {
 
   public Long getIdWorkpack() {
     return this.idWorkpack;
+  }
+
+  public Long getIdMaster() {
+    return this.idMaster;
   }
 
   public String getIcon() {

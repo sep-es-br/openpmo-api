@@ -26,6 +26,11 @@ public class BaselineUpdateBreakdown {
 
   private String type;
 
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private Boolean deliveryModelHasActiveSchedule;
+  // ↳ Apenas é incluído se workpack for do tipo Deliverable
+  // ↳ Diz se o modelo da Entrega exige Cronograma ativo
+
   @JsonInclude(JsonInclude.Include.NON_EMPTY)
   private List<BaselineUpdateBreakdown> children;
 
@@ -166,6 +171,13 @@ public class BaselineUpdateBreakdown {
   }
   public void setType(String type) {
     this.type = type;
+  }
+
+  public Boolean getDeliveryModelHasActiveSchedule() {
+    return deliveryModelHasActiveSchedule;
+  }
+  public void setDeliveryModelHasActiveSchedule(Boolean deliveryModelHasActiveSchedule) {
+    this.deliveryModelHasActiveSchedule = deliveryModelHasActiveSchedule;
   }
 
   public List<BaselineUpdateBreakdown> getChildren() {

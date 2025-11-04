@@ -40,6 +40,7 @@ public class GetFirstTimeBaselineUpdatesService implements IGetFirstTimeBaseline
     if (master != null) {
       result = new UpdateObject(
           master.getId(),
+          master.getId(),
           getIcon(master),
           master.getName(),
           BaselineStatus.NEW,

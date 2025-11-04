@@ -42,10 +42,11 @@ public class GetAnotherTimeBaselineUpdatesService implements IGetAnotherTimeBase
 
   private static UpdateObject getStructureChangedResponse() {
     return new UpdateObject(
-        null,
-        "plan",
-        "structure",
-        BaselineStatus.CHANGED,
+      null,
+      null,
+      "plan",
+      "structure",
+      BaselineStatus.CHANGED,
       null
     );
   }
@@ -79,6 +80,7 @@ public class GetAnotherTimeBaselineUpdatesService implements IGetAnotherTimeBase
   private UpdateObject getDeletedResponse(final Workpack workpack) {
     return new UpdateObject(
       workpack.getId(),
+      workpack.getMaster().getId(),
       getIcon(workpack),
       workpack.getName(),
       BaselineStatus.DELETED,
@@ -195,6 +197,7 @@ public class GetAnotherTimeBaselineUpdatesService implements IGetAnotherTimeBase
   private UpdateObject getChangedResponse(final Workpack workpack) {
     return new UpdateObject(
       workpack.getId(),
+      workpack.getMaster().getId(),
       getIcon(workpack),
       workpack.getName(),
       BaselineStatus.CHANGED,
@@ -233,6 +236,7 @@ public class GetAnotherTimeBaselineUpdatesService implements IGetAnotherTimeBase
   private UpdateObject getNewResponse(final Workpack workpack) {
     return new UpdateObject(
       workpack.getId(),
+      workpack.getMaster().getId(),
       getIcon(workpack),
       workpack.getName(),
       BaselineStatus.NEW,

@@ -187,7 +187,7 @@ public class BaselineController implements IBaselineController {
       idBaseline,
       authorization
     );
-    final BaselineDetailResponse response = this.getBaselineService.getById(idBaseline);
+    final BaselineDetailResponse response = this.getBaselineService.getById(idBaseline, null);
     return this.responseHandler.success(response);
   }
 
@@ -198,7 +198,7 @@ public class BaselineController implements IBaselineController {
     @RequestHeader(name = "Authorization") final String authorization
   ) {
     this.canAccessService.ensureCanReadResourceWorkpack(idWorkpack, authorization);
-    final BaselineDetailResponse response = this.getBaselineService.getById(idBaseline);
+    final BaselineDetailResponse response = this.getBaselineService.getById(idBaseline, idWorkpack);
     return this.responseHandler.success(response);
   }
 

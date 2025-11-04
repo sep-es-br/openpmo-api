@@ -124,8 +124,14 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
   private List<UpdateObject> getBaselineDetailResponse(List<BaselineWorkpackDto> workpacks) {
     final List<UpdateObject> list = new ArrayList<>(0);
     workpacks.forEach(w -> {
-      UpdateObject newUR = new UpdateObject(w.getId(), w.getFontIcon(), w.getName(),
-          w.getClassification(), true);
+      UpdateObject newUR = new UpdateObject(
+        w.getId(),
+        w.getIdMaster(),
+        w.getFontIcon(),
+        w.getName(),
+        w.getClassification(),
+        true
+      );
       newUR.setWorkpackType(w.getType());
 
       if (w.getType().equals("Deliverable")) {
@@ -158,7 +164,7 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
         .ifIsNotProjectThrowsException();
   }
 
-  private List<BaselineUpdateBreakdown> createBaselineBreakdown(
+  public List<BaselineUpdateBreakdown> createBaselineBreakdown(
     List<UpdateObject> updates,
     WorkpackResultDto workpackDto
   ) {
@@ -194,7 +200,7 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
           for (WorkpackResultDto entrega : child.getChildren()) {          
             UpdateObject entregaObject = updates
               .stream()
-              .filter(item -> item.getIdWorkpack().equals(entrega.getId()))
+              .filter(item -> item.getIdWorkpack().equals(entrega.getId()) || item.getIdMaster().equals(entrega.getId()))
               .findFirst()
               .orElse(null);
 
@@ -212,6 +218,7 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
                 entregaObject.getClassification()
               );
 
+              entregaBreakdown.setDeliveryModelHasActiveSchedule(entregaObject.getDeliveryModelHasActiveSchedule());
               subEtapaBreakdown.addChild(entregaBreakdown);
             }
           };
@@ -225,7 +232,7 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
         ) {
           UpdateObject deliveryOrMilestoneObject = updates
             .stream()
-            .filter(item -> item.getIdWorkpack().equals(child.getId()))
+            .filter(item -> item.getIdWorkpack().equals(child.getId()) || item.getIdMaster().equals(child.getId()))
             .findFirst()
             .orElse(null);
 
@@ -243,6 +250,9 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
               deliveryOrMilestoneObject.getClassification()
             );
 
+            if (child.getType().equals("Deliverable")) {
+              entregaBreakdown.setDeliveryModelHasActiveSchedule(deliveryOrMilestoneObject.getDeliveryModelHasActiveSchedule());
+            }
             etapaBreakdown.addChild(entregaBreakdown);
           }
         }

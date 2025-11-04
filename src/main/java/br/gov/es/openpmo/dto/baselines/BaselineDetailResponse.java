@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.List;
 
 public class BaselineDetailResponse {
-
   private final Long id;
   private final Long idWorkpack;
   private final String name;
@@ -22,20 +21,20 @@ public class BaselineDetailResponse {
   private final boolean cancelation;
   private final boolean active;
   private final String proposer;
-  private List<UpdateObject> updates;
+  private List<BaselineUpdateBreakdown> updates;
   private List<? extends EvaluationItem> evaluations;
 
   public BaselineDetailResponse(
-      final Long id,
-      final Long idWorkpack,
-      final String name,
-      final Status status,
-      final String description,
-      final LocalDateTime activationDate,
-      final LocalDateTime proposalDate,
-      final String message,
-      final boolean cancelation,
-      final boolean active,
+    final Long id,
+    final Long idWorkpack,
+    final String name,
+    final Status status,
+    final String description,
+    final LocalDateTime activationDate,
+    final LocalDateTime proposalDate,
+    final String message,
+    final boolean cancelation,
+    final boolean active,
     final String proposer
   ) {
     this.id = id;
@@ -51,18 +50,18 @@ public class BaselineDetailResponse {
     this.proposer = proposer;
   }
 
-  public static BaselineDetailResponse of(final Baseline baseline) {
+  public static BaselineDetailResponse of (final Baseline baseline) {
     return new BaselineDetailResponse(
-        baseline.getId(),
-        baseline.getBaselinedBy().getIdWorkpack(),
-        baseline.getName(),
-        baseline.getStatus(),
-        baseline.getDescription(),
-        baseline.getActivationDate(),
-        baseline.getProposalDate(),
-        baseline.getMessage(),
-        baseline.isCancelation(),
-        baseline.isActive(),
+      baseline.getId(),
+      baseline.getBaselinedBy().getIdWorkpack(),
+      baseline.getName(),
+      baseline.getStatus(),
+      baseline.getDescription(),
+      baseline.getActivationDate(),
+      baseline.getProposalDate(),
+      baseline.getMessage(),
+      baseline.isCancelation(),
+      baseline.isActive(),
       baseline.getProposer().getFormattedRole()
     );
   }
@@ -119,12 +118,11 @@ public class BaselineDetailResponse {
     return this.proposer;
   }
 
-  public List<UpdateObject> getUpdates() {
+  public List<BaselineUpdateBreakdown> getUpdates() {
     return this.updates;
   }
 
-  public void setUpdates(final List<UpdateObject> updates) {
+  public void setUpdates(final List<BaselineUpdateBreakdown> updates) {
     this.updates = updates;
   }
-
 }
