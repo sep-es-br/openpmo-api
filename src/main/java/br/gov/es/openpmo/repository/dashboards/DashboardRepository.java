@@ -5,17 +5,16 @@ import br.gov.es.openpmo.dto.dashboards.DashboardStatusData;
 import br.gov.es.openpmo.dto.dashboards.DashboardWorkpackDetailDto;
 import br.gov.es.openpmo.dto.dashboards.earnevalueanalysis.EarnedValueByStepDto;
 import br.gov.es.openpmo.model.dashboards.Dashboard;
-import org.springframework.data.neo4j.annotation.Query;
-import org.springframework.data.neo4j.repository.Neo4jRepository;
-import org.springframework.stereotype.Repository;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import org.springframework.data.neo4j.annotation.Query;
+import org.springframework.data.neo4j.repository.Neo4jRepository;
+import org.springframework.stereotype.Repository;
 
 @Repository
-public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
+public interface DashboardRepository extends Neo4jRepository<Dashboard, Long>, DashboardRepositoryCustom {
 
         @Query("MATCH (plan:Plan)<-[:BELONGS_TO]-(w:Deliverable{deleted: false, canceled: false})<-[:FEATURES]-(s:Schedule)<-[:COMPOSES]-(st:Step) "
                         +
@@ -398,5 +397,5 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long> {
                 "LIMIT 1")
         Optional<DashboardStatusData> getStatusAmmountData(Long workpackId, Long baselineId);
         
-
+        
 }

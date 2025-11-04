@@ -1,0 +1,124 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package br.gov.es.openpmo.dto.dashboards;
+
+/**
+ *
+ * @author gean.carneiro
+ */
+public class DashboardDataByMonth {
+    
+    private Integer mes;
+    private Double custoReprogramadoAcumuladoMes;
+    private Double custoPlanejadoAcumuladoMes;
+    private Double custoRealizadoAcumuladoMes;
+    private Double pcFisicoRealizadoAcumMesMedio;
+    private Double valorAgregado;
+    private Double variacaoPrazo;
+    private Double variacaoCusto;
+    private Double estimadoNaConclusao;
+    private Double estimadoParaConclusao;
+    private Double idc;
+    private Double idp;
+
+    public Integer getMes() {
+        return mes;
+    }
+
+    public void setMes(Integer mes) {
+        this.mes = mes;
+    }
+
+    public Double getCustoReprogramadoAcumuladoMes() {
+        return custoReprogramadoAcumuladoMes;
+    }
+
+    public void setCustoReprogramadoAcumuladoMes(Double custoReprogramadoAcumuladoMes) {
+        this.custoReprogramadoAcumuladoMes = custoReprogramadoAcumuladoMes;
+    }
+
+    public Double getCustoPlanejadoAcumuladoMes() {
+        return custoPlanejadoAcumuladoMes;
+    }
+
+    public void setCustoPlanejadoAcumuladoMes(Double custoPlanejadoAcumuladoMes) {
+        this.custoPlanejadoAcumuladoMes = custoPlanejadoAcumuladoMes;
+    }
+
+    public Double getCustoRealizadoAcumuladoMes() {
+        return custoRealizadoAcumuladoMes;
+    }
+
+    public void setCustoRealizadoAcumuladoMes(Double custoRealizadoAcumuladoMes) {
+        this.custoRealizadoAcumuladoMes = custoRealizadoAcumuladoMes;
+    }
+
+    public Double getPcFisicoRealizadoAcumMesMedio() {
+        return pcFisicoRealizadoAcumMesMedio;
+    }
+
+    public void setPcFisicoRealizadoAcumMesMedio(Double pcFisicoRealizadoAcumMesMedio) {
+        this.pcFisicoRealizadoAcumMesMedio = pcFisicoRealizadoAcumMesMedio;
+    }
+
+    public Double getValorAgregado() {
+        return valorAgregado;
+    }
+
+    public void setValorAgregado(Double valorAgregado) {
+        this.valorAgregado = valorAgregado;
+    }
+
+    public Double getVariacaoPrazo() {
+        return variacaoPrazo;
+    }
+
+    public void setVariacaoPrazo(Double variacaoPrazo) {
+        this.variacaoPrazo = variacaoPrazo;
+    }
+
+    public Double getVariacaoCusto() {
+        return variacaoCusto;
+    }
+
+    public void setVariacaoCusto(Double variacaoCusto) {
+        this.variacaoCusto = variacaoCusto;
+    }
+
+    public Double getEstimadoNaConclusao() {
+        return estimadoNaConclusao;
+    }
+
+    public void setEstimadoNaConclusao(Double estimadoNaConclusao) {
+        this.estimadoNaConclusao = estimadoNaConclusao;
+    }
+
+    public Double getEstimadoParaConclusao() {
+        return estimadoParaConclusao;
+    }
+
+    public void setEstimadoParaConclusao(Double estimadoParaConclusao) {
+        this.estimadoParaConclusao = estimadoParaConclusao;
+    }
+
+    public Double getIdc() {
+        return idc;
+    }
+
+    public void setIdc(Double idc) {
+        this.idc = idc;
+    }
+
+    public Double getIdp() {
+        return idp;
+    }
+
+    public void setIdp(Double idp) {
+        this.idp = idp;
+    }
+    
+    
+    
+}
