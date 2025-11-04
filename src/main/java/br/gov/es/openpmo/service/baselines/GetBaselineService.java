@@ -134,8 +134,7 @@ public class GetBaselineService implements IGetBaselineService {
     addScheduleAndConsumes(workpackBaselineCompare);
 
     List<BaselineWorkpackDto> result = baselineServiceUtil.compare(workpacksBaseline, workpackBaselineCompare);
-    // result.removeIf(b -> b.getClassification() == null);
-    result = result.stream().filter(el -> el.getClassification() != null).collect(Collectors.toList());
+    result.removeIf(b -> b.getClassification() == null);
     return getBaselineDetailResponse(baseline, result, idWorkpack);
   }
 
@@ -166,8 +165,43 @@ public class GetBaselineService implements IGetBaselineService {
 
     Long idPlan = this.workpackRepository.findPlanByWorkpackId(idWorkpack).getId();
     WorkpackResultDto workpackDto = cacheUtil.getWorkpackBreakdownStructure(idWorkpack, idPlan, true);
+
     List<UpdateObject> updateList = this.assembleListOfUpdates(workpacks);
     List<BaselineUpdateBreakdown> updateBreakdown = this.getBaselineUpdatesService.createBaselineBreakdown(updateList, workpackDto);
+
+    List<UpdateObject> deletedUpdates = updateList.stream().filter(update -> update.getClassification().equals(BaselineStatus.DELETED)).collect(Collectors.toList());
+
+    if (deletedUpdates.size() > 0) {
+      BaselineUpdateBreakdown deletedBlock = new BaselineUpdateBreakdown(
+        Long.valueOf("-1"),
+        Long.valueOf("-1"),
+        idPlan,
+        "Excluído",
+        "Excluídos",
+        "far fa-trash-alt",
+        "Excluídos",
+        "Excluídos",
+        "Organizer",
+        BaselineStatus.DELETED
+      );
+
+      for (UpdateObject deletedObject : deletedUpdates) {
+        deletedBlock.addChild(new BaselineUpdateBreakdown(
+          deletedObject.getIdWorkpack(),
+          Long.valueOf("-1"),
+          idPlan,
+          deletedObject.getDescription(),
+          deletedObject.getDescription(),
+          deletedObject.getIcon(),
+          "Excluído",
+          "Excluídos",
+          deletedObject.getWorkpackType(),
+          BaselineStatus.DELETED
+        ));
+      }
+
+      updateBreakdown.add(deletedBlock);
+    }
 
     response.setUpdates(updateBreakdown);
 
@@ -206,12 +240,14 @@ public class GetBaselineService implements IGetBaselineService {
           newUR.setDeliveryModelHasActiveSchedule(false);
         }
 
-        if (w.getSchedule().size() == 0) {
-          // Entrega não possui cronograma
-          newUR.setClassification(BaselineStatus.NO_SCHEDULE);
-        } else if (!this.workpackModelService.deliveryHasValidScope(w.getId())) {
-          // Entrega não possui cronograma com escopo válido
-          newUR.setClassification(BaselineStatus.UNDEFINED_SCOPE);
+        if (w.getClassification() != BaselineStatus.DELETED) {
+          if (w.getSchedule().size() == 0) {
+            // Entrega não possui cronograma
+            newUR.setClassification(BaselineStatus.NO_SCHEDULE);
+          } else if (!this.workpackModelService.deliveryHasValidScope(w.getId())) {
+            // Entrega não possui cronograma com escopo válido
+            newUR.setClassification(BaselineStatus.UNDEFINED_SCOPE);
+          }
         }
       }
 
