@@ -121,12 +121,12 @@ public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, C
     "CALL {  " +
       "MATCH (plan1:Plan)<-[c1:CAN_ACCESS_PLAN]-(p1:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
       "WHERE ID (plan1) = $id " +
-      "AND c1.permissionLevel in ['EDIT', 'READ'] " +
+      "AND c1.permissionLevel in ['EDIT', 'READ', 'UPDATE'] " +
       "RETURN COUNT(DISTINCT ID(c1)) AS totalPermissions " +
       "UNION ALL " +
       "MATCH (plan2:Plan)-[:IS_ADOPTED_BY]->(o:Office)<-[c2:CAN_ACCESS_OFFICE]-(p2:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
       "WHERE ID (plan2) = $id " +
-      "AND c2.permissionLevel in ['EDIT', 'READ'] " +
+      "AND c2.permissionLevel in ['EDIT', 'READ', 'UPDATE'] " +
       "RETURN COUNT(DISTINCT ID(c2)) AS totalPermissions " +
     "} " +
     "RETURN SUM(totalPermissions) > 0 "
@@ -140,12 +140,12 @@ public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, C
     " CALL {  " +
       "MATCH (children1:Workpack)-[:IS_IN*]->(parent1:Workpack)<-[c1:CAN_ACCESS_WORKPACK]-(p1:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
       "WHERE ID(children1) = $id " +
-      "AND c1.permissionLevel in ['EDIT', 'READ'] " +
+      "AND c1.permissionLevel in ['EDIT', 'READ', 'UPDATE'] " +
       "RETURN COUNT(DISTINCT ID(c1)) AS totalPermissions " +
       "UNION ALL " +
       "MATCH (w:Workpack)<-[c3:CAN_ACCESS_WORKPACK]-(p3:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
       "WHERE ID(w) = $id " +
-      "AND c3.permissionLevel in ['EDIT', 'READ'] " +
+      "AND c3.permissionLevel in ['EDIT', 'READ', 'UPDATE'] " +
       "RETURN COUNT(DISTINCT ID(c3)) AS totalPermissions " +
     "} " +
     "RETURN SUM(totalPermissions) > 0 "
@@ -159,7 +159,7 @@ public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, C
     "MATCH (w:Workpack)-[i:IS_IN*]->(p:Workpack), " +
     "(w)<-[c3:CAN_ACCESS_WORKPACK]-(p3:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
     "WHERE id(p) IN $idsWorkpacks " +
-    "AND c3.permissionLevel in ['EDIT', 'READ'] " +
+    "AND c3.permissionLevel in ['EDIT', 'READ', 'UPDATE'] " +
     "RETURN id(w)"
   )
   List<Long> idsWorkpacksChildrenWithPermission(
