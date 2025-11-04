@@ -539,7 +539,8 @@ public class PersonService {
         Optional.ofNullable(newPreferences.getPageSize())
             .ifPresent(person::setPageSize);
         
-        person.setFixedMenu(newPreferences.getFixedMenu());
+        Optional.ofNullable(newPreferences.getFixedMenu())
+                .ifPresent(person::setFixedMenu);
         
         Optional.ofNullable(newPreferences.getDisplayMode())
             .ifPresent(person::setDisplayMode);
