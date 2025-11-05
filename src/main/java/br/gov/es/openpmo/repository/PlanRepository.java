@@ -105,7 +105,7 @@ public interface PlanRepository extends Neo4jRepository<Plan, Long>, CustomRepos
           "match (p:Plan)<-[bt:BELONGS_TO]-(w:Workpack{deleted:false})<-[c:CAN_ACCESS_WORKPACK]-(person:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
                   "where id(p)=$idPlan " +
                   "and (NOT EXISTS(bt.linked) OR bt.linked = false) " +
-                  "AND c.permissionLevel in ['EDIT', 'READ'] " +
+                  "AND c.permissionLevel in ['EDIT', 'READ', 'UPDATE'] " +
                   "return id(w)"
   )
   List<Long> findWorkpacksBelongsToPlanWithPermission(
