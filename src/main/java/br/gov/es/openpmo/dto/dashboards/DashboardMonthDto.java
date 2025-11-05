@@ -4,6 +4,11 @@ public class DashboardMonthDto {
 
   private TripleConstraintDto tripleConstraint;
   private PerformanceIndexDto performanceIndex;
+  
+  public DashboardMonthDto(){
+      this.tripleConstraint = new TripleConstraintDto();
+      this.performanceIndex = new PerformanceIndexDto();
+  }
 
   public static DashboardMonthDto of(DashboardDto dashboardDto) {
     final DashboardMonthDto dashboardMonthDto = new DashboardMonthDto();

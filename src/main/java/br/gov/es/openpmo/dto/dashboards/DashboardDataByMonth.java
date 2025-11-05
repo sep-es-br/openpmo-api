@@ -4,6 +4,8 @@
  */
 package br.gov.es.openpmo.dto.dashboards;
 
+import java.time.LocalDate;
+
 /**
  *
  * @author gean.carneiro
@@ -22,7 +24,18 @@ public class DashboardDataByMonth {
     private Double estimadoParaConclusao;
     private Double idc;
     private Double idp;
-
+    private LocalDate actualStartDate;
+    private LocalDate actualEndDate;
+    private LocalDate plannedStartDate;
+    private LocalDate plannedEndDate;
+    private LocalDate reprogStartDate;
+    private LocalDate reprogEndDate;
+    private Long scheduleActualValue;
+    private Long schedulePlannedValue;
+    private Long scheduleForeseenValue;
+    
+    
+    
     public Integer getMes() {
         return mes;
     }
@@ -118,6 +131,79 @@ public class DashboardDataByMonth {
     public void setIdp(Double idp) {
         this.idp = idp;
     }
+
+    public LocalDate getActualStartDate() {
+        return actualStartDate;
+    }
+
+    public void setActualStartDate(LocalDate actualStartDate) {
+        this.actualStartDate = actualStartDate;
+    }
+
+    public LocalDate getActualEndDate() {
+        return actualEndDate;
+    }
+
+    public void setActualEndDate(LocalDate actualEndDate) {
+        this.actualEndDate = actualEndDate;
+    }
+
+    public LocalDate getPlannedStartDate() {
+        return plannedStartDate;
+    }
+
+    public void setPlannedStartDate(LocalDate plannedStartDate) {
+        this.plannedStartDate = plannedStartDate;
+    }
+
+    public LocalDate getPlannedEndDate() {
+        return plannedEndDate;
+    }
+
+    public void setPlannedEndDate(LocalDate plannedEndDate) {
+        this.plannedEndDate = plannedEndDate;
+    }
+
+    public LocalDate getReprogStartDate() {
+        return reprogStartDate;
+    }
+
+    public void setReprogStartDate(LocalDate reprogStartDate) {
+        this.reprogStartDate = reprogStartDate;
+    }
+
+    public LocalDate getReprogEndDate() {
+        return reprogEndDate;
+    }
+
+    public void setReprogEndDate(LocalDate reprogEndDate) {
+        this.reprogEndDate = reprogEndDate;
+    }
+
+    public Long getScheduleActualValue() {
+        return scheduleActualValue;
+    }
+
+    public void setScheduleActualValue(Long scheduleActualValue) {
+        this.scheduleActualValue = scheduleActualValue;
+    }
+
+    public Long getSchedulePlannedValue() {
+        return schedulePlannedValue;
+    }
+
+    public void setSchedulePlannedValue(Long schedulePlannedValue) {
+        this.schedulePlannedValue = schedulePlannedValue;
+    }
+
+    public Long getScheduleForeseenValue() {
+        return scheduleForeseenValue;
+    }
+
+    public void setScheduleForeseenValue(Long scheduleForeseenValue) {
+        this.scheduleForeseenValue = scheduleForeseenValue;
+    }
+    
     
     
     

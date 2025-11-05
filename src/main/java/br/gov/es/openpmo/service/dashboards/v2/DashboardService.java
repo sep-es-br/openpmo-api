@@ -76,10 +76,13 @@ public class DashboardService implements IDashboardService {
     
     List<DashboardDataByMonth> dataByMonth = dashboardRepository.getDataByMonth(scopeId, baselineId, Integer.valueOf(yearMonthAsStr));
     
-    final DashboardMonthDto dashboardMonthDto = getDashboardMonthDto(parameters);
-    if (dashboardMonthDto == null) {
-      return null;
-    }
+    
+    
+//    final DashboardMonthDto dashboardMonthDto = getDashboardMonthDto(parameters);
+//    if (dashboardMonthDto == null) {
+//      return null;
+//    }
+    final DashboardMonthDto dashboardMonthDto = new DashboardMonthDto();
     List<EarnedValueByStepDto> stepDtos = new ArrayList<>();
     
     for (int i = 0; i < dataByMonth.size(); i++) {
@@ -93,9 +96,23 @@ public class DashboardService implements IDashboardService {
         if(yearMonthRef.equals(dbmYearMonth)) {
             
             dashboardMonthDto.getTripleConstraint().setCostActualValue(BigDecimal.valueOf(dbm.getCustoRealizadoAcumuladoMes()));
+            dashboardMonthDto.getTripleConstraint().setCostForeseenValue(BigDecimal.valueOf(dbm.getCustoReprogramadoAcumuladoMes()));
             dashboardMonthDto.getTripleConstraint().setCostVariation(BigDecimal.valueOf(dbm.getVariacaoCusto()));
-            dashboardMonthDto.getTripleConstraint().setScheduleVariation(BigDecimal.valueOf(dbm.getVariacaoPrazo()));
+            
+            dashboardMonthDto.getTripleConstraint().setScheduleVariation(BigDecimal.valueOf(dbm.getVariacaoPrazo()));            
+            dashboardMonthDto.getTripleConstraint().setScheduleActualStartDate(dbm.getActualStartDate());            
+            dashboardMonthDto.getTripleConstraint().setScheduleActualEndDate(dbm.getActualEndDate());            
+            dashboardMonthDto.getTripleConstraint().setSchedulePlannedStartDate(dbm.getPlannedStartDate());            
+            dashboardMonthDto.getTripleConstraint().setSchedulePlannedEndDate(dbm.getPlannedEndDate());            
+            dashboardMonthDto.getTripleConstraint().setScheduleForeseenStartDate(dbm.getReprogStartDate());            
+            dashboardMonthDto.getTripleConstraint().setScheduleForeseenEndDate(dbm.getReprogEndDate()); 
+            
+            dashboardMonthDto.getTripleConstraint().setScheduleActualValue(BigDecimal.valueOf(dbm.getScheduleActualValue()));
+            dashboardMonthDto.getTripleConstraint().setSchedulePlannedValue(BigDecimal.valueOf(dbm.getSchedulePlannedValue()));
+            dashboardMonthDto.getTripleConstraint().setScheduleForeseenValue(BigDecimal.valueOf(dbm.getScheduleForeseenValue()));
+            
             dashboardMonthDto.getTripleConstraint().setScopeActualVariationPercent(BigDecimal.valueOf(dbm.getPcFisicoRealizadoAcumMesMedio()));
+            
             
             dashboardMonthDto.getPerformanceIndex().setEstimateToComplete(BigDecimal.valueOf(dbm.getEstimadoParaConclusao()));
             dashboardMonthDto.getPerformanceIndex().setEstimatesAtCompletion(BigDecimal.valueOf(dbm.getEstimadoNaConclusao()));
