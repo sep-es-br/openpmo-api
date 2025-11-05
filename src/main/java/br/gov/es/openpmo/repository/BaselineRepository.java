@@ -12,14 +12,13 @@ import br.gov.es.openpmo.dto.baselines.TripleConstraintDto;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 
 @Repository
 public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, CustomRepository {
@@ -322,7 +321,7 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
   void createComposesRelationshipWithProperty(Long baselineId, Long propertyId);
 
   @Query(
-    "MATCH (w:Workpack)-[ii:IS_BASELINED_BY]->(b:Baseline), " +
+    "MATCH (w:Workpack{deleted: false})-[ii:IS_BASELINED_BY]->(b:Baseline), " +
     "(p:Person)-[c:IS_CCB_MEMBER_FOR{active:true}]->(w) " +
     "WITH *, " +
     "apoc.text.levenshteinSimilarity(apoc.text.clean(b.name), apoc.text.clean($term)) AS nameScore, " +
@@ -336,7 +335,7 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
   List<Baseline> findAllApprovedByPersonId(Long personId, String term, Double searchCutOffScore);
 
   @Query(
-    "MATCH (w:Workpack)-[ii:IS_BASELINED_BY]->(b:Baseline), " +
+    "MATCH (w:Workpack{deleted: false})-[ii:IS_BASELINED_BY]->(b:Baseline), " +
     "(p:Person)-[c:IS_CCB_MEMBER_FOR{active:true}]->(w) " +
     "WITH *, " +
     "apoc.text.levenshteinSimilarity(apoc.text.clean(b.name), apoc.text.clean($term)) AS nameScore, " +
@@ -350,7 +349,7 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
   List<Baseline> findAllRejectedByPersonId(Long personId, String term, Double searchCutOffScore);
 
   @Query(
-    "MATCH (w:Workpack)-[ii:IS_BASELINED_BY]->(b:Baseline), " +
+    "MATCH (w:Workpack{deleted: false})-[ii:IS_BASELINED_BY]->(b:Baseline), " +
     "(p:Person)-[c:IS_CCB_MEMBER_FOR{active:true}]->(w) " +
     "WITH *, " +
     "apoc.text.levenshteinSimilarity(apoc.text.clean(b.name), apoc.text.clean($term)) AS nameScore, " +
@@ -364,7 +363,7 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
   List<Baseline> findAllWaitingMyEvaluationByPersonId(Long personId, String term, Double searchCutOffScore);
 
   @Query(
-    "MATCH (w:Workpack)-[ii:IS_BASELINED_BY]->(b:Baseline), " +
+    "MATCH (w:Workpack{deleted: false})-[ii:IS_BASELINED_BY]->(b:Baseline), " +
     "(p:Person)-[c:IS_CCB_MEMBER_FOR{active:true}]->(w) " +
     "WITH *, " +
     "apoc.text.levenshteinSimilarity(apoc.text.clean(b.name), apoc.text.clean($term)) AS nameScore, " +
