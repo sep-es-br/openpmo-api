@@ -137,6 +137,10 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
   private void rejectBaseline(final Baseline baseline) {
     if(baseline.getStatus() == Status.REJECTED) return;
     baseline.reject();
+    if(baseline.isCancelation()){
+      workpackRepository.resetSituationOrStatusToDefault(baseline.getBaselinedBy().getIdWorkpack());
+    }
+
     this.repository.setStatusBaseline(baseline.getId(), baseline.getStatus().name());
   }
 
@@ -206,6 +210,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     final Workpack workpack = this.repository.findWorkpackByBaselineId(baseline.getId())
       .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
     this.workpackService.cancel(workpack.getId());
+    workpackRepository.updateSituationValue(workpack.getId(), "Cancelado");
     this.journalCreator.edition(workpack, JournalAction.CANCELLED, idPerson);
   }
 

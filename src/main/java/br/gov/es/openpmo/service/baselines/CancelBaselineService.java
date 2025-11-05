@@ -86,6 +86,7 @@ public class CancelBaselineService implements ICancelBaselineService {
     final IsBaselinedBy isBaselinedBy = new IsBaselinedBy();
     isBaselinedBy.setWorkpack(workpack);
     isBaselinedBy.setBaseline(baselineCancelled);
+    workpackRepository.updateSituationValue(workpack.getId(), "A cancelar");
     this.isBaselinedByRepository.save(isBaselinedBy, 0);
   }
 

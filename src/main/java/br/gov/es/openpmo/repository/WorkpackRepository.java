@@ -686,10 +686,17 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       "RETURN ID(children) ")
   Set<Long> findAllChildren(@Param("workpackId") Long workpackId);
   
-  @Query("MATCH (w:Workpack)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel {name: 'Situação'}) " +
-       "WHERE id(w) = $id " +
+  @Query(
+       "MATCH (w:Workpack)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel) " +
+       "WHERE id(w) = $id AND pm.name IN ['Situação', 'Status'] " +
        "SET p.value = $value")
   void updateSituationValue(Long id, String value);
+
+  @Query(
+       "MATCH (w:Workpack)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel) " +
+       "WHERE id(w) = $id AND pm.name IN ['Situação', 'Status'] " +
+       "SET p.value = pm.defaultValue")
+  void resetSituationOrStatusToDefault(Long id);
 
   @Query("MATCH (w:Workpack)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel {name:'Situação'}) " +
        "WHERE id(w) = $id " +
