@@ -27,6 +27,9 @@ public class UpdateObject {
   // ↳ Apenas é incluído se workpack for do tipo Deliverable
   // ↳ Diz se o modelo da Entrega exige Cronograma ativo
 
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private Boolean isFromAnOldBaseline;
+
   @JsonCreator
   public UpdateObject(
     final Long idWorkpack,
@@ -63,7 +66,6 @@ public class UpdateObject {
   public BaselineStatus getClassification() {
     return this.classification;
   }
-
   public void setClassification(BaselineStatus newStatus) {
     this.classification = newStatus;
   }
@@ -75,7 +77,6 @@ public class UpdateObject {
   public String getWorkpackType() {
     return this.workpackType;
   }
-
   public void setWorkpackType(String workpackType) {
     this.workpackType = workpackType;
   }
@@ -83,8 +84,14 @@ public class UpdateObject {
   public Boolean getDeliveryModelHasActiveSchedule() {
     return this.deliveryModelHasActiveSchedule;
   }
-
   public void setDeliveryModelHasActiveSchedule(Boolean deliveryModelHasActiveSchedule) {
     this.deliveryModelHasActiveSchedule = deliveryModelHasActiveSchedule;
+  }
+
+  public Boolean getIsFromAnOldBaseline() {
+    return isFromAnOldBaseline;
+  }
+  public void setIsFromAnOldBaseline(Boolean isFromAnOldBaseline) {
+    this.isFromAnOldBaseline = isFromAnOldBaseline;
   }
 }

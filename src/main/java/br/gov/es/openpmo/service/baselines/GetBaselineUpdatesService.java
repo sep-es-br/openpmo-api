@@ -17,6 +17,7 @@ import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.workpack.WorkpackModelService;
 import br.gov.es.openpmo.utils.ApplicationCacheUtil;
 import br.gov.es.openpmo.utils.ApplicationMessage;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.ArrayList;
@@ -84,6 +85,57 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
           workpackBaselineCompare);
       result.removeIf(r -> r.getClassification() == null);
       updatesList.addAll(getBaselineDetailResponse(result));
+
+      final List<BaselineResultDto> remainingBaselines = bases.stream().filter(b -> b.getIdBaseline() != baseline.getId()).collect(Collectors.toList());
+      for (BaselineResultDto oldBaseline : remainingBaselines) {
+        final List<BaselineWorkpackDto> oldBaselineWorkpacks = this.baselineRepository.findAllWorkpacBaselineById(oldBaseline.getIdBaseline());
+        addScheduleAndConsumesSnapshot(oldBaselineWorkpacks);
+
+        final List<UpdateObject> oldProblematicDeliveries = new ArrayList<>();
+        for (BaselineWorkpackDto oldWorkpack : oldBaselineWorkpacks) {
+          if (oldWorkpack.getType().equals("Deliverable")) {
+            UpdateObject newUR = new UpdateObject(
+              oldWorkpack.getId(),
+              oldWorkpack.getIdMaster(),
+              oldWorkpack.getFontIcon(),
+              oldWorkpack.getName(),
+              oldWorkpack.getClassification(),
+              true
+            );
+            newUR.setWorkpackType(oldWorkpack.getType());
+  
+            try {
+              Optional<WorkpackModel> deliveryModel = this.workpackModelService.getWorkpackModelByWorkpackId(oldWorkpack.getId());
+              newUR.setDeliveryModelHasActiveSchedule(deliveryModel.isPresent() && deliveryModel.get().getScheduleSessionActive());
+            } catch (Exception e) {
+              newUR.setDeliveryModelHasActiveSchedule(false);
+            }
+  
+            if (oldWorkpack.getSchedule().size() == 0) {
+              // Entrega não possui cronograma
+              newUR.setClassification(BaselineStatus.NO_SCHEDULE);
+            } else if (!this.workpackModelService.deliveryHasValidScope(oldWorkpack.getId())) {
+              // Entrega não possui cronograma com escopo válido
+              newUR.setClassification(BaselineStatus.UNDEFINED_SCOPE);
+            }
+
+            if (
+              newUR.getClassification() != null &&
+              (
+                newUR.getClassification().equals(BaselineStatus.NO_SCHEDULE) ||
+                newUR.getClassification().equals(BaselineStatus.UNDEFINED_SCOPE)
+              )
+            ) {
+              newUR.setIsFromAnOldBaseline(true);
+              oldProblematicDeliveries.add(newUR);
+            }
+          }
+        }
+
+        if (oldProblematicDeliveries.size() > 0) {
+          updatesList.addAll(oldProblematicDeliveries);
+        }
+      }
     }
 
     // return new UpdateResponse(list, workpackDto);
