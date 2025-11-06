@@ -1,15 +1,5 @@
 package br.gov.es.openpmo.service.baselines;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import br.gov.es.openpmo.dto.baselines.BaselineConsumesStepSubmitDto;
 import br.gov.es.openpmo.dto.baselines.BaselineResultDto;
 import br.gov.es.openpmo.dto.baselines.BaselineScheduleSubmitDto;
@@ -23,9 +13,16 @@ import br.gov.es.openpmo.model.baselines.Status;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
-import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
 import br.gov.es.openpmo.service.journals.JournalCreator;
 import br.gov.es.openpmo.utils.ApplicationMessage;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 public class SubmitBaselineService implements ISubmitBaselineService {
@@ -33,7 +30,6 @@ public class SubmitBaselineService implements ISubmitBaselineService {
   private final JournalCreator journalCreator;
 
   private final BaselineRepository baselineRepository;
-  private final IAsyncDashboardService dashboardService;
 
   private final WorkpackRepository workpackRepository;
   private final BaselineServiceUtil baselineServiceUtil;
@@ -43,12 +39,10 @@ public class SubmitBaselineService implements ISubmitBaselineService {
     final JournalCreator journalCreator,
     final BaselineRepository baselineRepository,
     final WorkpackRepository workpackRepository,
-    final BaselineServiceUtil baselineServiceUtil,
-    final IAsyncDashboardService dashboardService
+    final BaselineServiceUtil baselineServiceUtil
   ) {
     this.journalCreator = journalCreator;
     this.baselineRepository = baselineRepository;
-    this.dashboardService = dashboardService;
     this.workpackRepository = workpackRepository;
     this.baselineServiceUtil = baselineServiceUtil;
   }

@@ -19,19 +19,16 @@ import br.gov.es.openpmo.repository.PlanRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllPlanUsingCustomFilter;
 import br.gov.es.openpmo.service.actors.PersonService;
-import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
 import br.gov.es.openpmo.service.office.OfficeService;
 import br.gov.es.openpmo.service.permissions.OfficePermissionService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
+import static br.gov.es.openpmo.utils.ApplicationMessage.CUSTOM_FILTER_NOT_FOUND;
+import static br.gov.es.openpmo.utils.ApplicationMessage.PLAN_NOT_FOUND;
+import java.util.*;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static br.gov.es.openpmo.utils.ApplicationMessage.CUSTOM_FILTER_NOT_FOUND;
-import static br.gov.es.openpmo.utils.ApplicationMessage.PLAN_NOT_FOUND;
 
 @Service
 public class PlanService {
@@ -45,7 +42,6 @@ public class PlanService {
   private final FindAllPlanUsingCustomFilter findAllPlan;
   private final WorkpackRepository workpackRepository;
   private final AppProperties appProperties;
-  private final IAsyncDashboardService dashboardService;
 
   @Autowired
   public PlanService(
@@ -57,7 +53,6 @@ public class PlanService {
     final CustomFilterRepository customFilterRepository,
     final FindAllPlanUsingCustomFilter findAllPlan,
     final WorkpackRepository workpackRepository,
-    final IAsyncDashboardService dashboardService,
     final AppProperties appProperties
   ) {
     this.planRepository = planRepository;
@@ -68,7 +63,6 @@ public class PlanService {
     this.customFilterRepository = customFilterRepository;
     this.findAllPlan = findAllPlan;
     this.workpackRepository = workpackRepository;
-    this.dashboardService = dashboardService;
     this.appProperties = appProperties;
   }
 
@@ -121,7 +115,6 @@ public class PlanService {
 
   public Plan save(final Plan plan) {
     Plan saved = this.planRepository.save(plan);
-    this.dashboardService.calculate();
     return saved;
   }
 

@@ -13,18 +13,16 @@ import br.gov.es.openpmo.repository.PropertyModelRepository;
 import br.gov.es.openpmo.repository.PropertyRepository;
 import br.gov.es.openpmo.repository.WorkpackModelRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
-import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PasteToWorkpackService {
@@ -41,8 +39,6 @@ public class PasteToWorkpackService {
 
   private final PropertyModelRepository propertyModelRepository;
 
-  private final IAsyncDashboardService dashboardService;
-
   @Autowired
   public PasteToWorkpackService(
     final WorkpackRepository workpackRepository,
@@ -50,8 +46,7 @@ public class PasteToWorkpackService {
     final PlanRepository planRepository,
     final WorkpackModelRepository workpackModelRepository,
     final PropertyRepository propertyRepository,
-    final PropertyModelRepository propertyModelRepository,
-    final IAsyncDashboardService dashboardService
+    final PropertyModelRepository propertyModelRepository
   ) {
     this.workpackRepository = workpackRepository;
     this.belongsToRepository = belongsToRepository;
@@ -59,7 +54,6 @@ public class PasteToWorkpackService {
     this.workpackModelRepository = workpackModelRepository;
     this.propertyRepository = propertyRepository;
     this.propertyModelRepository = propertyModelRepository;
-    this.dashboardService = dashboardService;
   }
 
   private static boolean areWorkpackModelsCompatible(
@@ -153,10 +147,6 @@ public class PasteToWorkpackService {
 
   public void saveIdParent(Long idWorkpack, Long idParentTo) {
     this.workpackRepository.setNewIdParentPasted(idWorkpack, idParentTo);
-  }
-
-  public void calculateDashboard() {
-    this.dashboardService.calculate();
   }
 
   private Plan getPlan(final Long idPlan) {

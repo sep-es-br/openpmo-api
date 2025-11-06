@@ -1,7 +1,7 @@
 WITH 
-	204 AS _scope,
-	null AS _baselineId,
-	202509 AS _anomesRef
+	$scope AS _scope,
+	$baselineId AS _baselineId,
+	$monthYear AS _anomesRef
 
 // Pega todas as entregas MASTER não excluídas nem canceladas
 MATCH (Wp:Workpack)<-[:IS_IN*1..]-(w:Deliverable)-[:BELONGS_TO]->(p:Plan)-[:IS_ADOPTED_BY]->(o:Office)
@@ -59,7 +59,7 @@ UNION ALL
 
 // Filtra meses fora do plano e agrega por anomes/wId
 WITH anomes, id(w) AS wId,planoStart,planoFinish,p,	
-  w.completed as wCompleted,
+  w.completed as wCompleted,_anomesRef,
   coalesce(sum(custoreprogramado),0) AS custoreprogramado,
   coalesce(sum(custoplanejado),0) AS custoplanejado,
   coalesce(sum(custorealizado),0) AS custorealizado,
@@ -73,7 +73,7 @@ WITH anomes, id(w) AS wId,planoStart,planoFinish,p,
 WHERE anomes >= planoStart AND anomes <= planoFinish
 
 // Agrupa por entrega (wId) os rows mensais existentes
-WITH wId, wCompleted,
+WITH wId, wCompleted, _anomesRef,
 	masterStart,
 	masterEnd,
 	snapshotStart,
@@ -90,7 +90,7 @@ WITH wId, wCompleted,
 
 // Calcula BAC (total por entrega) usando os rows disponíveis (antes de preencher zeros)
 WITH 
-  wId, wCompleted,
+  wId, wCompleted, _anomesRef,
   masterStart,
   masterEnd,
   snapshotStart,
@@ -102,7 +102,7 @@ WITH
 // Volto para o formato tabular, PARA APURAR O PERCENTUAL MENSAL
 UNWIND rows AS r
 WITH
-	wId, wCompleted, bacEntrega, fisicoTotal,
+	wId, wCompleted, bacEntrega, fisicoTotal, _anomesRef,
 	masterStart,
 	masterEnd,
 	snapshotStart,
@@ -119,7 +119,7 @@ WITH
 order by wId, anomes
 
 // Agrupa novamente por entrega (wId) os rows mensais existentes, agora para acumular
-WITH wId, wCompleted, bacEntrega, fisicoTotal,
+WITH wId, wCompleted, bacEntrega, fisicoTotal, _anomesRef,
 	masterStart,
 	masterEnd,
 	snapshotStart,
@@ -136,6 +136,7 @@ WITH wId, wCompleted, bacEntrega, fisicoTotal,
 // Coleta todas as entregas em uma lista para calcular globalAnomes
 WITH collect({
   wId: wId,
+  _anomesRef: _anomesRef,
   wCompleted: wCompleted,
   masterStart: masterStart,
   masterEnd: masterEnd,
@@ -154,6 +155,7 @@ WITH entregas,
 UNWIND entregas AS ent
 WITH 
 	ent.wId AS wId,
+	ent._anomesRef AS _anomesRef,
 	ent.wCompleted as wCompleted,
 	ent.masterStart AS masterStart,
 	ent.masterEnd AS masterEnd,
@@ -165,7 +167,7 @@ WITH
 
 
 // Para cada anomes do conjunto global, achar row existente ou criar row zero
-WITH wId, wCompleted, bacEntrega, masterStart, masterEnd, snapshotStart, snapshotEnd,
+WITH wId, wCompleted, bacEntrega, masterStart, masterEnd, snapshotStart, snapshotEnd, _anomesRef,
      [a IN apoc.coll.toSet(globalAnomes) | 
         COALESCE(
           [x IN rows WHERE x.anomes = a | x][0],
@@ -181,7 +183,7 @@ WITH wId, wCompleted, bacEntrega, masterStart, masterEnd, snapshotStart, snapsho
 
 // Acumula mês a mês com REDUCE (agora sem faltar meses)
 WITH 
-  wId, wCompleted,
+  wId, wCompleted, _anomesRef,
   bacEntrega AS bac, masterStart, masterEnd, snapshotStart, snapshotEnd,
   REDUCE(
     s = { crAcum:0.0, cpAcum:0.0, cgAcum:0.0, pcfrAcum:0.0, listAcum: [] },
@@ -207,7 +209,7 @@ WITH
 // Expande os acumulados por entrega para agregação por mês total do projeto
 UNWIND accumResult.listAcum AS list
 WITH
-  wId, wCompleted,
+  wId, wCompleted, _anomesRef,
   bac AS bacEntrega, masterStart, masterEnd, snapshotStart, snapshotEnd,
   list.anomes AS anomes,
   list.pcfrAcum as pcFisicoRealizadoAcum,
@@ -218,7 +220,7 @@ WITH
 
 // Agora agregue entre entregas para obter os totais mensais do conjunto
 WITH  
-  anomes,
+  anomes, _anomesRef,
   min(wCompleted) as wCompleted,
   sum(custoReprogramado_Acum) AS custoReprogramado_MensalTotal,
   sum(custoRealizado_Acum)   AS custoRealizado_MensalTotal,
@@ -236,7 +238,9 @@ WITH
   max(masterEnd) 		AS masterEnd
 
 WITH 
-    anomes 																			AS mes,
+    anomes																			AS mes,
+	_anomesRef																		AS mesRef,
+	max(anomes) as lastMonth,
     round(custoReprogramado_MensalTotal,2) 											AS custoReprogramadoAcumuladoMes,
     round(custoPlanejado_MensalTotal,2) 											AS custoPlanejadoAcumuladoMes,
     round(custoRealizado_MensalTotal,2) 											AS custoRealizadoAcumuladoMes,
@@ -279,42 +283,118 @@ WITH
 		end
 	end as actualEndDate,
 	masterEnd as reprogEndDate
-RETURN mes, custoReprogramadoAcumuladoMes, custoPlanejadoAcumuladoMes, custoRealizadoAcumuladoMes, pcFisicoRealizadoAcumMesMedio,
-		valorAgregado, variacaoPrazo, variacaoCusto, estimadoNaConclusao, estimadoParaConclusao, idc, idp, plannedStartDate,
-		plannedEndDate, actualStartDate, reprogStartDate, actualEndDate, reprogEndDate,
-		CASE
-			WHEN actualStartDate IS NOT NULL AND actualEndDate IS NOT NULL THEN
+
+WITH mes, mesRef, custoReprogramadoAcumuladoMes, custoPlanejadoAcumuladoMes, custoRealizadoAcumuladoMes, 
+	pcFisicoRealizadoAcumMesMedio, valorAgregado, variacaoPrazo, variacaoCusto, estimadoNaConclusao, 
+	estimadoParaConclusao, idc, idp, plannedStartDate,plannedEndDate, actualStartDate, reprogStartDate, 
+	actualEndDate, reprogEndDate,
+	CASE
+		WHEN actualStartDate IS NOT NULL AND actualEndDate IS NOT NULL THEN
+		  CASE
+			WHEN (duration.inMonths(date(actualStartDate), date(actualEndDate)).months + 1) = 0 THEN
 			  CASE
-				WHEN (duration.inMonths(date(actualStartDate), date(actualEndDate)).months + 1) = 0 THEN
-				  CASE
-					WHEN duration.inDays(date(actualStartDate), date(actualEndDate)).days > 0 THEN 1
-					ELSE 0
-				  END
-				ELSE (duration.inMonths(date(actualStartDate), date(actualEndDate)).months + 1)
+				WHEN duration.inDays(date(actualStartDate), date(actualEndDate)).days > 0 THEN 1
+				ELSE 0
 			  END
-			ELSE NULL
-		END AS scheduleActualValue,
-		CASE
-			WHEN plannedStartDate IS NOT NULL AND plannedEndDate IS NOT NULL THEN
-				CASE
-					WHEN (duration.inMonths(date(plannedStartDate), date(plannedEndDate)).months + 1) = 0 THEN
-						CASE
-							WHEN duration.inDays(date(plannedStartDate), date(plannedEndDate)).days > 0 THEN 1
-							ELSE 0
-						END
-					ELSE (duration.inMonths(date(plannedStartDate), date(plannedEndDate)).months + 1)
-				END
-			ELSE NULL
-		END AS schedulePlannedValue,
-		CASE
-		WHEN reprogStartDate IS NOT NULL AND reprogEndDate IS NOT NULL THEN
+			ELSE (duration.inMonths(date(actualStartDate), date(actualEndDate)).months + 1)
+		  END
+		ELSE NULL
+	END AS scheduleActualValue,
+	CASE
+		WHEN plannedStartDate IS NOT NULL AND plannedEndDate IS NOT NULL THEN
 			CASE
-				WHEN (duration.inMonths(date(reprogStartDate), date(reprogEndDate)).months + 1) = 0 THEN
+				WHEN (duration.inMonths(date(plannedStartDate), date(plannedEndDate)).months + 1) = 0 THEN
 					CASE
-						WHEN duration.inDays(date(reprogStartDate), date(reprogEndDate)).days > 0 THEN 1
+						WHEN duration.inDays(date(plannedStartDate), date(plannedEndDate)).days > 0 THEN 1
 						ELSE 0
 					END
-				ELSE (duration.inMonths(date(reprogStartDate), date(reprogEndDate)).months + 1)
+				ELSE (duration.inMonths(date(plannedStartDate), date(plannedEndDate)).months + 1)
 			END
 		ELSE NULL
-		END AS scheduleForeseenValue
+	END AS schedulePlannedValue,
+	CASE
+	WHEN reprogStartDate IS NOT NULL AND reprogEndDate IS NOT NULL THEN
+		CASE
+			WHEN (duration.inMonths(date(reprogStartDate), date(reprogEndDate)).months + 1) = 0 THEN
+				CASE
+					WHEN duration.inDays(date(reprogStartDate), date(reprogEndDate)).days > 0 THEN 1
+					ELSE 0
+				END
+			ELSE (duration.inMonths(date(reprogStartDate), date(reprogEndDate)).months + 1)
+		END
+	ELSE NULL
+	END AS scheduleForeseenValue
+	
+WITH
+COLLECT({
+	plannedCost: custoPlanejadoAcumuladoMes,
+	actualCost: custoRealizadoAcumuladoMes,
+	estimatedCost: custoReprogramadoAcumuladoMes,
+	earnedValue: valorAgregado,
+	anomes: mes,
+	
+	actualWork: pcFisicoRealizadoAcumMesMedio,
+ 	
+	costVariation: variacaoCusto,
+	scheduleVariation: variacaoPrazo,
+
+	estimadoNaConclusao: estimadoNaConclusao, 
+	estimadoParaConclusao: estimadoParaConclusao, 
+	idc: idc, 
+	idp: idc
+}) as months,
+max(mesRef) AS refDate,
+max(mes) as lastMonth,
+max(plannedStartDate) AS schedulePlannedStartDate,
+max(plannedEndDate) AS schedulePlannedEndDate,
+max(reprogStartDate) AS scheduleForeseenStartDate,
+max(reprogEndDate) AS scheduleForeseenEndDate,
+max(actualStartDate) AS scheduleActualStartDate,
+max(actualEndDate) AS scheduleActualEndDate,
+max(schedulePlannedValue) AS schedulePlannedValue,
+max(scheduleForeseenValue) AS scheduleForeseenValue,
+max(scheduleActualValue) AS scheduleActualValue
+
+WITH 
+    {
+        costPlannedValue: [x IN months WHERE x.anomes = lastMonth][0].plannedCost,
+        costActualValue: [x IN months WHERE x.anomes = refDate][0].actualCost,
+        schedulePlannedStartDate: schedulePlannedStartDate,
+        schedulePlannedEndDate: schedulePlannedEndDate,
+        scheduleActualStartDate: scheduleActualStartDate,
+        scheduleActualEndDate: scheduleActualEndDate,
+        schedulePlannedValue: schedulePlannedValue,
+        scheduleActualValue: scheduleActualValue,
+        scopeActualValue: [x IN months WHERE x.anomes = refDate][0].actualWork
+    } AS TripleConstraintDto,
+
+    {
+        costPerformanceIndexValue: [x IN months WHERE x.anomes = refDate][0].idc,
+        costPerformanceIndexVariation: [x IN months WHERE x.anomes = refDate][0].costVariation,
+        schedulePerformanceIndexValue: [x IN months WHERE x.anomes = refDate][0].idp,
+        schedulePerformanceIndexVariation: [x IN months WHERE x.anomes = refDate][0].scheduleVariation,
+        estimateToComplete: [x IN months WHERE x.anomes = refDate][0].estimadoParaConclusao,
+        estimatesAtCompletion: [x IN months WHERE x.anomes = refDate][0].estimadoNaConclusao,
+        earnedValue: [x IN months WHERE x.anomes = refDate][0].earnedValue,
+        actualCost: [x IN months WHERE x.anomes = refDate][0].actualCost,
+        plannedValue: [x IN months WHERE x.anomes = lastMonth][0].plannedCost,
+        plannedValueRefMonth: [x IN months WHERE x.anomes = refDate][0].plannedCost
+    } AS PerformanceIndexDto,
+
+    [p IN months | {
+        date: toString(toInteger(p.anomes) / 100) + '-' + 
+              right('0' + toString(p.anomes % 100), 2),
+        plannedCost: p.plannedCost, 
+        actualCost: p.actualCost,
+        estimatedCost: p.estimatedCost,
+        earnedValue: p.earnedValue,
+        actualWork: p.actualWork
+    }] AS EarnedValueByStepDto
+
+RETURN {
+    dashboardMonthDto: {
+        tripleConstraint: TripleConstraintDto,
+        performanceIndex: PerformanceIndexDto
+    },
+    earnedValueByStepDto: EarnedValueByStepDto
+} AS RESULT
