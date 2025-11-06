@@ -37,6 +37,9 @@ public class BaselineUpdateBreakdown {
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private BaselineStatus classification;
 
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private Boolean isFromAnOldBaseline;
+
   @JsonCreator
   public BaselineUpdateBreakdown(
     Long idWorkpack,
@@ -48,7 +51,8 @@ public class BaselineUpdateBreakdown {
     String modelName,
     String modelNameInPlural,
     String type,
-    List<BaselineUpdateBreakdown> children
+    List<BaselineUpdateBreakdown> children,
+    Boolean isFromAnOldBaseline
   ) {
     this.idWorkpack = idWorkpack;
     this.idWorkpackModel = idWorkpackModel;
@@ -60,6 +64,7 @@ public class BaselineUpdateBreakdown {
     this.modelNameInPlural = modelNameInPlural;
     this.type = type;
     this.children = children;
+    this.isFromAnOldBaseline = isFromAnOldBaseline;
   }
 
   public BaselineUpdateBreakdown(
@@ -195,5 +200,12 @@ public class BaselineUpdateBreakdown {
   }
   public void setClassification(BaselineStatus classification) {
     this.classification = classification;
+  }
+
+  public Boolean getIsFromAnOldBaseline() {
+    return isFromAnOldBaseline;
+  }
+  public void setIsFromAnOldBaseline(Boolean isFromAnOldBaseline) {
+    this.isFromAnOldBaseline = isFromAnOldBaseline;
   }
 }

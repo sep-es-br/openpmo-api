@@ -45,6 +45,7 @@ public class UpdateObject {
     this.description = description;
     this.classification = classification;
     this.included = included;
+    this.isFromAnOldBaseline = false;
   }
 
   public Long getIdWorkpack() {
