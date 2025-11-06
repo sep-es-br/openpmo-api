@@ -10,6 +10,7 @@ import br.gov.es.openpmo.dto.baselines.BaselineStepSubmitDto;
 import br.gov.es.openpmo.dto.baselines.BaselineWorkpackDto;
 import br.gov.es.openpmo.dto.baselines.TripleConstraintDto;
 import br.gov.es.openpmo.model.baselines.Baseline;
+import br.gov.es.openpmo.model.workpacks.Project;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
 import java.util.List;
@@ -577,4 +578,11 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
     "RETURN EXISTS( (project)-[:IS_BASELINED_BY]->(baseline:Baseline {active:true, cancelation:false}) ) "
   )
   Boolean existsActiveBaselineByProjectId(Long idProject);
+
+  @Query(
+    "MATCH (project:Project {deleted: false})-[:IS_BASELINED_BY]->(b:Baseline) " +
+    "WHERE ID(b) = $idBaseline " +
+    "RETURN project "
+  )
+  Project findProjectByBaselineId(Long idBaseline);
 }

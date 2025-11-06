@@ -5,6 +5,7 @@ import br.gov.es.openpmo.dto.menu.WorkpackResultDto;
 import br.gov.es.openpmo.dto.universalSearch.UniversalSearchItemQueryResult;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.WorkpackBreakdownClassificationDto;
 import br.gov.es.openpmo.model.baselines.Baseline;
+import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.workpacks.Program;
 import br.gov.es.openpmo.model.workpacks.Project;
 import br.gov.es.openpmo.model.workpacks.Workpack;
@@ -633,9 +634,11 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   Set<Long> findAllDeliverableAndMilestoneByProject(Long id);
 
 
-  @Query("MATCH (w:Workpack)<-[:IS_IN*]-(children:Workpack) " +
-      "WHERE id(w)=$workpackId " +
-      "RETURN ID(children) ")
+  @Query(
+        "MATCH (w:Workpack)<-[:IS_IN*]-(children:Workpack) " +
+        "WHERE id(w)=$workpackId " +
+        "RETURN ID(children) "
+  )
   Set<Long> findAllChildren(@Param("workpackId") Long workpackId);
   
   @Query("MATCH (w:Workpack)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel {name: 'Situação'}) " +
@@ -832,6 +835,13 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "ORDER BY matchDistance ASC", countQuery = doSearchInAll_queryBase +
             "RETURN count(id)")
     public Page<UniversalSearchItemQueryResult> doSearchInAll(Long workpackId, String term, Long userId, Long planId, PageRequest request );
+
+  @Query(
+    "MATCH (w:Workpack)-[:BELONGS_TO]->(plan:Plan) " +
+    "WHERE ID(w) = $idWorkpack " +
+    "RETURN plan "
+  )
+  public Plan findPlanByWorkpackId(Long idWorkpack);
             
 }
 

@@ -3,13 +3,11 @@ package br.gov.es.openpmo.dto.baselines;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.baselines.Status;
 import com.fasterxml.jackson.annotation.JsonFormat;
-
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
 public class BaselineDetailResponse {
-
   private final Long id;
   private final Long idWorkpack;
   private final String name;
@@ -23,7 +21,7 @@ public class BaselineDetailResponse {
   private final boolean cancelation;
   private final boolean active;
   private final String proposer;
-  private List<UpdateResponse> updates;
+  private List<BaselineUpdateBreakdown> updates;
   private List<? extends EvaluationItem> evaluations;
 
   public BaselineDetailResponse(
@@ -52,7 +50,7 @@ public class BaselineDetailResponse {
     this.proposer = proposer;
   }
 
-  public static BaselineDetailResponse of(final Baseline baseline) {
+  public static BaselineDetailResponse of (final Baseline baseline) {
     return new BaselineDetailResponse(
       baseline.getId(),
       baseline.getBaselinedBy().getIdWorkpack(),
@@ -120,12 +118,11 @@ public class BaselineDetailResponse {
     return this.proposer;
   }
 
-  public List<UpdateResponse> getUpdates() {
+  public List<BaselineUpdateBreakdown> getUpdates() {
     return this.updates;
   }
 
-  public void setUpdates(final List<UpdateResponse> updates) {
+  public void setUpdates(final List<BaselineUpdateBreakdown> updates) {
     this.updates = updates;
   }
-
 }
