@@ -365,7 +365,8 @@ WITH
         scheduleActualEndDate: scheduleActualEndDate,
         schedulePlannedValue: schedulePlannedValue,
         scheduleActualValue: scheduleActualValue,
-        scopeActualValue: [x IN months WHERE x.anomes = refDate][0].actualWork
+        scopeActualVariationPercent: [x IN months WHERE x.anomes = refDate][0].actualWork,
+        scopePlannedVariationPercent: 1
     } AS TripleConstraintDto,
 
     {
