@@ -1,15 +1,12 @@
 package br.gov.es.openpmo.dto.dashboards.earnevalueanalysis;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
-import java.time.LocalDate;
-import java.util.Optional;
-
+import java.time.YearMonth;
 import org.springframework.data.neo4j.annotation.QueryResult;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @QueryResult
 public class EarnedValueByStepDto {
@@ -18,12 +15,10 @@ public class EarnedValueByStepDto {
 
   private BigDecimal actualCost;
 
-  private BigDecimal estimatedCost;
-
   private BigDecimal earnedValue;
 
   @JsonFormat(pattern = "yyyy-MM")
-  private LocalDate date;
+  private YearMonth date;
 
   @JsonIgnore
   private BigDecimal plannedWork;
@@ -71,19 +66,11 @@ public class EarnedValueByStepDto {
     this.earnedValue = earnedValue;
   }
 
-  public BigDecimal getEstimatedCost() {
-    return this.estimatedCost;
-  }
-
-  public void setEstimatedCost(final BigDecimal estimatedCost) {
-    this.estimatedCost = estimatedCost;
-  }
-
-  public LocalDate getDate() {
+  public YearMonth getDate() {
     return this.date;
   }
 
-  public void setDate(final LocalDate date) {
+  public void setDate(final YearMonth date) {
     this.date = date;
   }
 
