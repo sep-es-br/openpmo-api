@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.service.actors;
 
 import br.gov.es.openpmo.dto.ComboDto;
+import br.gov.es.openpmo.dto.actor.PreferencesDto;
 import br.gov.es.openpmo.dto.person.LocalWorkRequest;
 import br.gov.es.openpmo.dto.person.PersonCreateRequest;
 import br.gov.es.openpmo.dto.person.PersonDto;
@@ -8,14 +9,14 @@ import br.gov.es.openpmo.dto.person.PersonGetByIdDto;
 import br.gov.es.openpmo.dto.person.PersonListDto;
 import br.gov.es.openpmo.dto.person.PersonUpdateDto;
 import br.gov.es.openpmo.dto.person.detail.PersonDetailDto;
+import br.gov.es.openpmo.dto.person.detail.permissions.CanAccessPlanResultDto;
 import br.gov.es.openpmo.dto.person.detail.permissions.OfficePermissionDetailDto;
 import br.gov.es.openpmo.dto.person.detail.permissions.PlanPermissionDetailDto;
+import br.gov.es.openpmo.dto.person.detail.permissions.PlanResultDto;
 import br.gov.es.openpmo.dto.person.detail.permissions.WorkpackPermissionDetailDto;
 import br.gov.es.openpmo.dto.person.queries.PersonByFullNameQuery;
 import br.gov.es.openpmo.dto.person.queries.PersonDetailQuery;
 import br.gov.es.openpmo.dto.person.queries.PersonQuery;
-import br.gov.es.openpmo.dto.person.detail.permissions.CanAccessPlanResultDto;
-import br.gov.es.openpmo.dto.person.detail.permissions.PlanResultDto;
 import br.gov.es.openpmo.enumerator.CcbMemberFilterEnum;
 import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.enumerator.StakeholderFilterEnum;
@@ -34,8 +35,16 @@ import br.gov.es.openpmo.repository.OfficeRepository;
 import br.gov.es.openpmo.repository.PersonRepository;
 import br.gov.es.openpmo.repository.PlanRepository;
 import br.gov.es.openpmo.utils.ApplicationMessage;
-
+import static br.gov.es.openpmo.utils.ApplicationMessage.OFFICE_NOT_FOUND;
 import br.gov.es.openpmo.utils.NameFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -45,17 +54,6 @@ import org.springframework.data.util.Streamable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
-
-import static br.gov.es.openpmo.utils.ApplicationMessage.OFFICE_NOT_FOUND;
 
 @Service
 public class PersonService {
@@ -523,5 +521,31 @@ public class PersonService {
     person.setIdWorkpack(request.getIdWorkpack());
     person.setIdWorkpackModelLinked(request.getIdWorkpackModelLinked());
     this.repository.updateLocalWork(person.getId(), person.getIdOffice(), person.getIdPlan(), person.getIdWorkpack(), person.getIdWorkpackModelLinked());
+  }
+  
+  public void updatePreference(Long idPerson, PreferencesDto newPreferences){
+        Person person = repository.findById(idPerson)
+                .orElseThrow(() -> new NegocioException(ApplicationMessage.PERSON_NOT_FOUND));
+            
+        Optional.ofNullable(newPreferences.getOfficeId())
+            .ifPresent(person::setIdOffice);
+        
+        Optional.ofNullable(newPreferences.getWorkpackId())
+            .ifPresent(person::setIdWorkpack);
+        
+        Optional.ofNullable(newPreferences.getIdWorkpackModelLinked())
+            .ifPresent(person::setIdWorkpackModelLinked);
+        
+        Optional.ofNullable(newPreferences.getPageSize())
+            .ifPresent(person::setPageSize);
+        
+        Optional.ofNullable(newPreferences.getFixedMenu())
+                .ifPresent(person::setFixedMenu);
+        
+        Optional.ofNullable(newPreferences.getDisplayMode())
+            .ifPresent(person::setDisplayMode);
+        
+        repository.save(person);
+      
   }
 }

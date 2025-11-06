@@ -24,7 +24,7 @@ public abstract class FindAllBaselineUsingCustomFilter extends FindAllUsingCusto
           final CustomFilter filter,
           final StringBuilder query
   ) {
-    query.append("match (w:Workpack)-[ii:IS_BASELINED_BY]->(")
+    query.append("match (w:Workpack{deleted: false})-[ii:IS_BASELINED_BY]->(")
             .append(this.nodeName)
             .append(":Baseline), (p:Person)-[c:IS_CCB_MEMBER_FOR{active:true}]->(w), ")
             .append("(w)-[iib:IS_INSTANCE_BY]->(model:WorkpackModel), ")
