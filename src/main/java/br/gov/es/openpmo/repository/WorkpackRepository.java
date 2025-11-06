@@ -594,54 +594,6 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   @Override
   List<Workpack> findAll();
 
-  @Query("match (w:Workpack)<-[:IS_IN]-(x:Workpack)-[z:IS_INSTANCE_BY|IS_LINKED_TO]->(m:WorkpackModel)-[:IS_IN]->(:WorkpackModel)<-[:IS_INSTANCE_BY|IS_LINKED_TO]-(w), (x)-[:BELONGS_TO]->(pl:Plan)\n" +
-            "\n" +
-            "where id(w)=$idWorkpackActual and id(m)=$idWorkpackModel\n" +
-            "OPTIONAL MATCH (x)<-[:IS_SNAPSHOT_OF]-(snap)-[]-(bl:Baseline{active: true})\n" +
-            "WITH *\n" +
-            "WHERE CASE\n" +
-            "        WHEN ('Milestone' IN labels(x)) THEN (NOT snap.deleted) AND (NOT snap.canceled) AND (\n" +
-            "          (bl IS NOT NULL AND pl.start <= left(snap.date, 10) <= pl.finish) \n" +
-            "        )\n" +
-            "        WHEN ('Deliverable' IN labels(x)) THEN (\n" +
-            "          EXISTS((x)<-[:IS_SNAPSHOT_OF]-()-[]-(:Baseline{active: true}))\n" +
-            "          AND (NOT x.canceled)\n" +
-            "        )\n" +
-            "        ELSE true\n" +
-            "      END\n" +
-            "return x,z,m, [\n" +
-            "  [(x)<-[a:IS_IN]-(b:Workpack)-[c:IS_INSTANCE_BY|IS_LINKED_TO]->(d:WorkpackModel)-[e:IS_IN]->(f:WorkpackModel) | [a,b,c,d,e,f]],\n" +
-            "  [(x)-[:IS_INSTANCE_BY]->(:WorkpackModel)-[a:IS_SORTED_BY]->(b:PropertyModel)<-[c:IS_DRIVEN_BY]-(d:Property)-[e:FEATURES]->(x) | [a,b,c,d,e]],\n" +
-            "  [(x)<-[a:IS_IN]-(b:Workpack)-[c:IS_INSTANCE_BY]->(d:WorkpackModel)-[e:IS_SORTED_BY]->(f:PropertyModel)<-[g:IS_DRIVEN_BY]-(h:Property)-[i:FEATURES]->(b) | [a,b,c,d,e,f,g,h,i]]\n" +
-            "]")
-  List<Workpack> findWorkpackByWorkpackModelLevel1(Long idWorkpackActual, Long idWorkpackModel);
-
-  @Query("match (w:Workpack)<-[:IS_IN]-(:Workpack)<-[:IS_IN]-(x:Workpack)-[z:IS_INSTANCE_BY|IS_LINKED_TO]->(m:WorkpackModel)-[:IS_IN]->(:WorkpackModel)-[:IS_IN]->(:WorkpackModel)<-[:IS_INSTANCE_BY|IS_LINKED_TO]-(w), (x)-[:BELONGS_TO]->(pl:Plan)\n" +
-            "\n" +
-            "WHERE id(w) = $idWorkpackActual\n" +
-            "  AND id(m) = $idWorkpackModel\n" +
-            "OPTIONAL MATCH (x)<-[:IS_SNAPSHOT_OF]-(snap)-[]-(bl:Baseline{active: true})\n" +
-            "WITH *\n" +
-            "WHERE CASE\n" +
-            "        WHEN ('Milestone' IN labels(x)) THEN (NOT snap.deleted) AND (NOT snap.canceled) AND (\n" +
-            "          (bl IS NOT NULL AND pl.start <= left(snap.date, 10) <= pl.finish) \n" +
-            "        )\n" +
-            "        WHEN ('Deliverable' IN labels(x)) THEN (\n" +
-            "          EXISTS((x)<-[:IS_SNAPSHOT_OF]-()-[]-(:Baseline{active: true}))\n" +
-            "          AND (NOT x.canceled)\n" +
-            "        )\n" +
-            "        ELSE true\n" +
-            "      END\n" +
-            "RETURN x, z, m, [\n" +
-            "    [(x)<-[a:IS_IN]-(b:Workpack)-[c:IS_INSTANCE_BY|IS_LINKED_TO]->(d:WorkpackModel)-[e:IS_IN]->(f:WorkpackModel)\n" +
-            "      | [a, b, c, d, e, f]],\n" +
-            "    [(x)-[:IS_INSTANCE_BY]->(:WorkpackModel)-[a:IS_SORTED_BY]->(b:PropertyModel)<-[c:IS_DRIVEN_BY]-(d:Property)-[e:FEATURES]->(x)\n" +
-            "      | [a, b, c, d, e]],\n" +
-            "    [(x)<-[a:IS_IN]-(b:Workpack)-[c:IS_INSTANCE_BY]->(d:WorkpackModel)-[e:IS_SORTED_BY]->(f:PropertyModel)<-[g:IS_DRIVEN_BY]-(h:Property)-[i:FEATURES]->(b)\n" +
-            "      | [a, b, c, d, e, f, g, h, i]]\n" +
-            "  ]")
-  List<Workpack> findWorkpackByWorkpackModelLevel2(Long idWorkpackActual, Long idWorkpackModel);
-
   @Query(
       "MATCH (workpack:Workpack) " +
       "WHERE id(workpack) IN $ids " +
