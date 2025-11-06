@@ -681,9 +681,11 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   Set<Long> findAllDeliverableAndMilestoneByProject(Long id);
 
 
-  @Query("MATCH (w:Workpack)<-[:IS_IN*]-(children:Workpack) " +
-      "WHERE id(w)=$workpackId " +
-      "RETURN ID(children) ")
+  @Query(
+        "MATCH (w:Workpack)<-[:IS_IN*]-(children:Workpack) " +
+        "WHERE id(w)=$workpackId " +
+        "RETURN ID(children) "
+  )
   Set<Long> findAllChildren(@Param("workpackId") Long workpackId);
   
   @Query("MATCH (w:Workpack)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel {name: 'Situação'}) " +

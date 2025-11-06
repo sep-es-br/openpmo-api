@@ -5,12 +5,11 @@
 package br.gov.es.openpmo.repository.dashboards;
 
 import br.gov.es.openpmo.dto.dashboards.DashboardDataByMonth;
-import java.util.List;
 
 /**
  *
  * @author gean.carneiro
  */
 public interface DashboardRepositoryCustom {
-    public List<DashboardDataByMonth> getDataByMonth(Long scope, Long baselineId, Integer monthYear);
+    public DashboardDataByMonth getDataByMonth(Long scope, Long baselineId, Integer monthYear);
 }

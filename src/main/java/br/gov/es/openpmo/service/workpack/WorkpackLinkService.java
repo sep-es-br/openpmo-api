@@ -1,6 +1,8 @@
 package br.gov.es.openpmo.service.workpack;
 
 import br.gov.es.openpmo.dto.permission.PermissionDto;
+import static br.gov.es.openpmo.dto.permission.PermissionDto.of;
+import static br.gov.es.openpmo.dto.permission.PermissionDto.read;
 import br.gov.es.openpmo.dto.plan.PlanDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackDetailDto;
 import br.gov.es.openpmo.dto.workpackLink.WorkpackModelLinkedDetailDto;
@@ -17,12 +19,9 @@ import br.gov.es.openpmo.repository.BelongsToRepository;
 import br.gov.es.openpmo.repository.WorkpackLinkRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.repository.WorkpackSharedRepository;
-import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
 import br.gov.es.openpmo.service.office.plan.PlanService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import static br.gov.es.openpmo.utils.ApplicationMessage.*;
+import static java.lang.Boolean.TRUE;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -31,11 +30,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static br.gov.es.openpmo.dto.permission.PermissionDto.of;
-import static br.gov.es.openpmo.dto.permission.PermissionDto.read;
-import static br.gov.es.openpmo.utils.ApplicationMessage.*;
-import static java.lang.Boolean.TRUE;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class WorkpackLinkService {
@@ -47,7 +44,6 @@ public class WorkpackLinkService {
   private final WorkpackSharedRepository workpackSharedRepository;
   private final PlanService planService;
   private final WorkpackRepository workpackRepository;
-  private final IAsyncDashboardService dashboardService;
 
   @Autowired
   public WorkpackLinkService(
@@ -57,7 +53,7 @@ public class WorkpackLinkService {
           final BelongsToRepository belongsToRepository,
           final WorkpackSharedRepository workpackSharedRepository,
           final PlanService planService,
-          final WorkpackRepository workpackRepository, final IAsyncDashboardService dashboardService
+          final WorkpackRepository workpackRepository
   ) {
     this.repository = repository;
     this.workpackService = workpackService;
@@ -66,7 +62,6 @@ public class WorkpackLinkService {
     this.workpackSharedRepository = workpackSharedRepository;
     this.planService = planService;
     this.workpackRepository = workpackRepository;
-    this.dashboardService = dashboardService;
   }
 
   private static void ifNotSameModelTypeThrowException(
@@ -120,7 +115,6 @@ public class WorkpackLinkService {
     ifNotSameModelTypeThrowException(workpackModelInstance, workpackModelToLink);
     this.ifHasParentCreateRelationshipAsChildren(idParent, workpack);
     this.createLinkBetween(workpack, workpackModelToLink, idPlan);
-    this.dashboardService.calculate();
   }
 
   private void createLinkBetween(
@@ -318,7 +312,6 @@ public class WorkpackLinkService {
     this.repository.unlinkParentRelation(idPlan, idWorkpackModel, idWorkpack);
     this.repository.unlinkPlan(idPlan, idWorkpack);
     unlinkBetween(workpack, workpackModelLinked, idPlan);
-    this.dashboardService.calculate();
   }
 
   private void unlinkBetween(
