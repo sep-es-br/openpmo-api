@@ -8,6 +8,7 @@ import br.gov.es.openpmo.dto.dashboards.DashboardDataByMonth;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -34,7 +35,18 @@ public class DashboardRepositoryCustomImpl implements DashboardRepositoryCustom 
     @Override
     public DashboardDataByMonth getDataByMonth(Long scope, Long baselineId, Integer monthYear) {
         try(InputStream is = new ClassPathResource("cyphers/getDataByMonth.cypher").getInputStream()) {
-            String query = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+            
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            byte[] data = new byte[1024];
+            int nRead;
+            while ((nRead = is.read(data, 0, data.length)) != -1) {
+                buffer.write(data, 0, nRead);
+            }
+            buffer.flush();
+            byte[] allBytes = buffer.toByteArray();
+            
+            
+            String query = new String(allBytes, StandardCharsets.UTF_8);
             
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("scope", scope);
