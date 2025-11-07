@@ -341,7 +341,7 @@ COLLECT({
 	estimadoNaConclusao: estimadoNaConclusao, 
 	estimadoParaConclusao: estimadoParaConclusao, 
 	idc: idc, 
-	idp: idc
+	idp: idp
 }) as months,
 max(mesRef) AS refDate,
 max(mes) as lastMonth,
