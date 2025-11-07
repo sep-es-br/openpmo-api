@@ -266,12 +266,12 @@ WITH
 	masterEnd as plannedEndDate, 
 	case 
 		when masterStart > toString(date()) 
-		then '' 
+		then masterStart 
 		else masterStart 
 	end as actualStartDate,
 	masterStart as reprogStartDate,
 	case when masterStart > toString(date()) 
-	then '' 
+	then masterStart 
 	else
 		case when masterEnd > toString(date()) 
 		then toString(date())
