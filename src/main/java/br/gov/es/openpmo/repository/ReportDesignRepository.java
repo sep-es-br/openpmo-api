@@ -2,14 +2,13 @@ package br.gov.es.openpmo.repository;
 
 import br.gov.es.openpmo.model.office.plan.PlanModel;
 import br.gov.es.openpmo.model.reports.ReportDesign;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 
 @Repository
 public interface ReportDesignRepository extends Neo4jRepository<ReportDesign, Long> {
@@ -27,8 +26,9 @@ public interface ReportDesignRepository extends Neo4jRepository<ReportDesign, Lo
     "optional match (rd)<-[s:IS_SOURCE_TEMPLATE_OF]-(ts:File) " +
     "optional match (rd)<-[:IS_SOURCE_TEMPLATE_OF]-(:File)<-[ic:IS_COMPILATION_OF]-(ct:File) " +
     "optional match (rd)<-[c:IS_COMPILED_TEMPLATE_OF]-(cs:File) " +
-    "with rd, i, pl, p, pm, d, n, s, ts, c, cs, ic, ct " +
-    "return rd, i, pl, p, pm, d, n, s, ts, c, cs, ic, ct")
+    "OPTIONAL MATCH (pm)-[dr:IS_LIMITED_BY]->(dm:Domain) " +
+    "with rd, i, pl, p, pm, d, n, s, ts, c, cs, ic, ct, dr, dm " +
+    "return rd, i, pl, p, pm, d, n, s, ts, c, cs, ic, ct, dr, dm")
   Optional<ReportDesign> findByIdWithRelationships(@Param("id") Long id);
 
   @Query(
