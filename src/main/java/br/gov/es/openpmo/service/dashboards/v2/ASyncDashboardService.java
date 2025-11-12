@@ -16,6 +16,8 @@ import java.time.YearMonth;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,7 +50,7 @@ public class ASyncDashboardService {
     
   @Transactional
   @Async
-  public CompletableFuture<DashboardDataByMonth> buildDataByMonth(final DashboardParameters parameters) {
+  public CompletableFuture<DashboardDataByMonth> buildDataByMonth(final DashboardParameters parameters, Long agora) {
     
 
     YearMonth yearMonth = Optional.ofNullable(parameters.getYearMonth()).orElse(YearMonth.now().minusMonths(1));
@@ -59,6 +61,7 @@ public class ASyncDashboardService {
     
     DashboardDataByMonth dataByMonth = dashboardRepository.getDataByMonth(scopeId, baselineId, Integer.valueOf(yearMonthAsStr));
     
+    Logger.getGlobal().log(Level.INFO, "data by month concluido em: {0}ms", System.currentTimeMillis() - agora);
 
     return CompletableFuture.completedFuture(dataByMonth);
   }
@@ -67,10 +70,12 @@ public class ASyncDashboardService {
 
   @Transactional
   @Async
-  public CompletableFuture<MilestoneResultDto> buildMilestones(final DashboardParameters parameters) {
+  public CompletableFuture<MilestoneResultDto> buildMilestones(final DashboardParameters parameters, Long agora) {
     
     List<MilestoneDto> milestones = this.getMilestones(parameters);
     MilestoneResultDto milestoneResultDto = MilestoneResultDto.of(milestones);
+    
+    Logger.getGlobal().log(Level.INFO, "milestones concluido em: {0}ms", System.currentTimeMillis() - agora);
     
     return CompletableFuture.completedFuture(milestoneResultDto);
   }
@@ -79,28 +84,42 @@ public class ASyncDashboardService {
 
   @Transactional
   @Async
-  public CompletableFuture<DashboardStatusData> buildStatusData(final DashboardParameters parameters) {
+  public CompletableFuture<DashboardStatusData> buildStatusData(final DashboardParameters parameters, Long agora) {
     
     DashboardStatusData dashDataStatus = dashboardRepository.getStatusAmmountData(parameters.getWorkpackId(), parameters.getBaselineId()).orElse(null);
 
+    Logger.getGlobal().log(Level.INFO, "status data concluido em: {0}ms", System.currentTimeMillis() - agora);
+    
     return CompletableFuture.completedFuture(dashDataStatus);
   }
   
     @Transactional
     @Async
-    public CompletableFuture<DatasheetResponse> buildDatasheet(final DashboardParameters parameters) {
-      return CompletableFuture.completedFuture(Optional.of(parameters)
+    public CompletableFuture<DatasheetResponse> buildDatasheet(final DashboardParameters parameters, Long agora) {
+        
+        DatasheetResponse resp = Optional.of(parameters)
             .map(this.datasheetService::build)
-            .orElse(null));
+            .orElse(null);
+                
+                
+        Logger.getGlobal().log(Level.INFO, "datasheet concluido em: {0}ms", System.currentTimeMillis() - agora);
+
+        
+        return CompletableFuture.completedFuture(resp);
     }
   
    @Transactional
    @Async
-  public CompletableFuture<RiskDataChart> buildRisk(final DashboardParameters parameters) {
-    return CompletableFuture.completedFuture(Optional.of(parameters)
-      .map(this.riskService::build)
-      .orElse(null));
-  }
+    public CompletableFuture<RiskDataChart> buildRisk(final DashboardParameters parameters, Long agora) {
+      
+        RiskDataChart resp = Optional.of(parameters)
+                                .map(this.riskService::build)
+                                .orElse(null);
+      
+        Logger.getGlobal().log(Level.INFO, "risk concluido em: {0}ms", System.currentTimeMillis() - agora);
+      
+        return CompletableFuture.completedFuture(resp);
+    }
   
 
   private List<MilestoneDto> getMilestones(final DashboardParameters parameters) {
