@@ -46,12 +46,14 @@ public class DashboardService {
     if (parameters == null) {
       return null;
     }
+      
+    final Long agora = System.currentTimeMillis();
     
-      CompletableFuture<DashboardDataByMonth> dataByMonthFuture = aSyncDashboardService.buildDataByMonth(parameters);
-      CompletableFuture<MilestoneResultDto> milestonesFuture = aSyncDashboardService.buildMilestones(parameters);
-      CompletableFuture<DashboardStatusData> statusDataFuture = aSyncDashboardService.buildStatusData(parameters);
-      CompletableFuture<DatasheetResponse> datasheetFuture = aSyncDashboardService.buildDatasheet(parameters);
-      CompletableFuture<RiskDataChart> riskFuture = aSyncDashboardService.buildRisk(parameters);
+    CompletableFuture<DashboardDataByMonth> dataByMonthFuture = aSyncDashboardService.buildDataByMonth(parameters, agora);
+    CompletableFuture<MilestoneResultDto> milestonesFuture = aSyncDashboardService.buildMilestones(parameters, agora);
+    CompletableFuture<DashboardStatusData> statusDataFuture = aSyncDashboardService.buildStatusData(parameters, agora);
+    CompletableFuture<DatasheetResponse> datasheetFuture = aSyncDashboardService.buildDatasheet(parameters, agora);
+    CompletableFuture<RiskDataChart> riskFuture = aSyncDashboardService.buildRisk(parameters, agora);
       
       CompletableFuture.allOf(dataByMonthFuture, milestonesFuture, statusDataFuture, datasheetFuture, riskFuture).join();
       
