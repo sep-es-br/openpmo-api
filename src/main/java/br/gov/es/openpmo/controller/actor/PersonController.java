@@ -7,6 +7,7 @@ import br.gov.es.openpmo.dto.Response;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.ResponseBasePaginated;
 import br.gov.es.openpmo.dto.actor.PersonListFilterParameters;
+import br.gov.es.openpmo.dto.actor.PreferencesDto;
 import br.gov.es.openpmo.dto.person.LocalWorkRequest;
 import br.gov.es.openpmo.dto.person.NameRequest;
 import br.gov.es.openpmo.dto.person.PersonCreateRequest;
@@ -22,6 +23,11 @@ import br.gov.es.openpmo.service.permissions.PersonPermissionsService;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.utils.ResponseHandler;
 import io.swagger.annotations.Api;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,12 +45,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
-
-import javax.validation.Valid;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 
 @Api
 @RestController
@@ -206,6 +206,31 @@ public class PersonController {
     final Long idPerson = this.tokenService.getUserId(authorization);
     this.personService.updateLocalWork(idPerson, request);
     return this.responseHandler.success();
+  }
+  
+  @GetMapping("/preferences")
+  public Response<PreferencesDto> getPreferences(
+          @Authorization final String authorization
+  ){
+      final Long idPerson = this.tokenService.getUserId(authorization);
+      
+      Person person = this.personService.findByIdOrElseThrow(idPerson);
+      
+      return responseHandler.success(PreferencesDto.of(person));
+  }
+  
+  
+  @Transactional
+  @PutMapping("/preferences")
+  public Response<Void> savePreference(
+          @RequestBody final PreferencesDto preferencesRequest,
+          @Authorization final String authorization
+  ){
+      final Long idPerson = this.tokenService.getUserId(authorization);
+      
+      this.personService.updatePreference(idPerson, preferencesRequest);
+      
+      return responseHandler.success();
   }
 
 }

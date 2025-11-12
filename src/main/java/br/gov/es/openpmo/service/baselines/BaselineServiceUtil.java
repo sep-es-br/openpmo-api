@@ -1,7 +1,6 @@
 package br.gov.es.openpmo.service.baselines;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,7 +15,6 @@ import br.gov.es.openpmo.enumerator.BaselineStatus;
 import br.gov.es.openpmo.enumerator.CategoryEnum;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.relations.Consumes;
-import br.gov.es.openpmo.model.relations.IsWorkpackSnapshotOf;
 import br.gov.es.openpmo.model.schedule.Schedule;
 import br.gov.es.openpmo.model.schedule.Step;
 import br.gov.es.openpmo.model.workpacks.CostAccount;

@@ -264,24 +264,20 @@ WITH
 	END AS idp,
 	snapshotStart as plannedStartDate,
 	masterEnd as plannedEndDate, 
-	case 
-		when masterStart > toString(date()) 
-		then '' 
-		else masterStart 
-	end as actualStartDate,
+	masterStart as actualStartDate,
+
 	masterStart as reprogStartDate,
-	case when masterStart > toString(date()) 
-	then '' 
-	else
-		case when masterEnd > toString(date()) 
-		then toString(date())
-		else 
-			case when wCompleted
-			then masterEnd
-			else toString(date())
-			end
-		end
-	end as actualEndDate,
+
+    case when masterEnd > toString(date()) 
+    then toString(date())
+    else 
+        case when wCompleted
+        then masterEnd
+        else toString(date())
+        end
+    end as actualEndDate,
+
+    
 	masterEnd as reprogEndDate
 
 WITH mes, mesRef, custoReprogramadoAcumuladoMes, custoPlanejadoAcumuladoMes, custoRealizadoAcumuladoMes, 
@@ -291,7 +287,7 @@ WITH mes, mesRef, custoReprogramadoAcumuladoMes, custoPlanejadoAcumuladoMes, cus
 	CASE
 		WHEN actualStartDate IS NOT NULL AND actualEndDate IS NOT NULL THEN
 		  CASE
-			WHEN (duration.inMonths(date(actualStartDate), date(actualEndDate)).months + 1) = 0 THEN
+			WHEN (duration.inMonths(date(actualStartDate), date(actualEndDate)).months + 1) <= 0 THEN
 			  CASE
 				WHEN duration.inDays(date(actualStartDate), date(actualEndDate)).days > 0 THEN 1
 				ELSE 0
@@ -303,7 +299,7 @@ WITH mes, mesRef, custoReprogramadoAcumuladoMes, custoPlanejadoAcumuladoMes, cus
 	CASE
 		WHEN plannedStartDate IS NOT NULL AND plannedEndDate IS NOT NULL THEN
 			CASE
-				WHEN (duration.inMonths(date(plannedStartDate), date(plannedEndDate)).months + 1) = 0 THEN
+				WHEN (duration.inMonths(date(plannedStartDate), date(plannedEndDate)).months + 1) <= 0 THEN
 					CASE
 						WHEN duration.inDays(date(plannedStartDate), date(plannedEndDate)).days > 0 THEN 1
 						ELSE 0
@@ -315,7 +311,7 @@ WITH mes, mesRef, custoReprogramadoAcumuladoMes, custoPlanejadoAcumuladoMes, cus
 	CASE
 	WHEN reprogStartDate IS NOT NULL AND reprogEndDate IS NOT NULL THEN
 		CASE
-			WHEN (duration.inMonths(date(reprogStartDate), date(reprogEndDate)).months + 1) = 0 THEN
+			WHEN (duration.inMonths(date(reprogStartDate), date(reprogEndDate)).months + 1) <= 0 THEN
 				CASE
 					WHEN duration.inDays(date(reprogStartDate), date(reprogEndDate)).days > 0 THEN 1
 					ELSE 0
