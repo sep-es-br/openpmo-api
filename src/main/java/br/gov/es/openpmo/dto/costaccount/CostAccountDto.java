@@ -9,6 +9,7 @@ import br.gov.es.openpmo.model.workpacks.CostAccount;
 import br.gov.es.openpmo.model.workpacks.Instrument;
 import br.gov.es.openpmo.utils.PropertyModelInstanceType;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
