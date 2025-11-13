@@ -1,13 +1,14 @@
 package br.gov.es.openpmo.dto.baselines;
 
 import br.gov.es.openpmo.enumerator.BaselineStatus;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class UpdateResponse {
+public class UpdateObject {
   private final Long idWorkpack;
+
+  private final Long idMaster;
 
   private final String icon;
 
@@ -26,23 +27,33 @@ public class UpdateResponse {
   // ↳ Apenas é incluído se workpack for do tipo Deliverable
   // ↳ Diz se o modelo da Entrega exige Cronograma ativo
 
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private Boolean isFromAnOldBaseline;
+
   @JsonCreator
-  public UpdateResponse(
+  public UpdateObject(
     final Long idWorkpack,
+    final Long idMaster,
     final String icon,
     final String description,
     final BaselineStatus classification,
     final Boolean included
   ) {
     this.idWorkpack = idWorkpack;
+    this.idMaster = idMaster;
     this.icon = icon;
     this.description = description;
     this.classification = classification;
     this.included = included;
+    this.isFromAnOldBaseline = false;
   }
 
   public Long getIdWorkpack() {
     return this.idWorkpack;
+  }
+
+  public Long getIdMaster() {
+    return this.idMaster;
   }
 
   public String getIcon() {
@@ -56,7 +67,6 @@ public class UpdateResponse {
   public BaselineStatus getClassification() {
     return this.classification;
   }
-
   public void setClassification(BaselineStatus newStatus) {
     this.classification = newStatus;
   }
@@ -68,7 +78,6 @@ public class UpdateResponse {
   public String getWorkpackType() {
     return this.workpackType;
   }
-
   public void setWorkpackType(String workpackType) {
     this.workpackType = workpackType;
   }
@@ -76,8 +85,14 @@ public class UpdateResponse {
   public Boolean getDeliveryModelHasActiveSchedule() {
     return this.deliveryModelHasActiveSchedule;
   }
-
   public void setDeliveryModelHasActiveSchedule(Boolean deliveryModelHasActiveSchedule) {
     this.deliveryModelHasActiveSchedule = deliveryModelHasActiveSchedule;
-  }  
+  }
+
+  public Boolean getIsFromAnOldBaseline() {
+    return isFromAnOldBaseline;
+  }
+  public void setIsFromAnOldBaseline(Boolean isFromAnOldBaseline) {
+    this.isFromAnOldBaseline = isFromAnOldBaseline;
+  }
 }

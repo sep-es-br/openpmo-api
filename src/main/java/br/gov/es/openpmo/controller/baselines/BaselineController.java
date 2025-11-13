@@ -102,9 +102,9 @@ public class BaselineController implements IBaselineController {
   }
 
   @Override
-  public Response<List<UpdateResponse>> getUpdates(final Long idWorkpack) {
-    final List<UpdateResponse> updates = this.getBaselineUpdatesService.getUpdates(idWorkpack);
-    return this.responseHandler.success(updates);
+  public Response<List<BaselineUpdateBreakdown>> getUpdates(final Long idWorkpack, final Long idPlan) {
+    final List<BaselineUpdateBreakdown> breakdown = this.getBaselineUpdatesService.getUpdates(idWorkpack, idPlan);
+    return this.responseHandler.success(breakdown);
   }
 
   @Override
@@ -187,7 +187,7 @@ public class BaselineController implements IBaselineController {
       idBaseline,
       authorization
     );
-    final BaselineDetailResponse response = this.getBaselineService.getById(idBaseline);
+    final BaselineDetailResponse response = this.getBaselineService.getById(idBaseline, null);
     return this.responseHandler.success(response);
   }
 
@@ -198,7 +198,7 @@ public class BaselineController implements IBaselineController {
     @RequestHeader(name = "Authorization") final String authorization
   ) {
     this.canAccessService.ensureCanReadResourceWorkpack(idWorkpack, authorization);
-    final BaselineDetailResponse response = this.getBaselineService.getById(idBaseline);
+    final BaselineDetailResponse response = this.getBaselineService.getById(idBaseline, idWorkpack);
     return this.responseHandler.success(response);
   }
 

@@ -1,12 +1,9 @@
 package br.gov.es.openpmo.service.baselines;
 
-import br.gov.es.openpmo.dto.baselines.UpdateResponse;
-
 import java.util.List;
+import br.gov.es.openpmo.dto.baselines.BaselineUpdateBreakdown;
 
 @FunctionalInterface
 public interface IGetBaselineUpdatesService {
-
-  List<UpdateResponse> getUpdates(Long idWorkpack);
-
+  List<BaselineUpdateBreakdown> getUpdates(Long idWorkpack, Long idPlan);
 }
