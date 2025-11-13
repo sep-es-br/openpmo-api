@@ -45,7 +45,7 @@ public class LabelController {
                     ResponseEntity.ok(ResponseBase.of(response ? "abbreviatedReprogrammed" : "abbreviatedForeseen"))
             );
         } catch (Exception e) {
-            return Arrays.asList(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
+            return Arrays.asList(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()) ;
         }
     }
 }
