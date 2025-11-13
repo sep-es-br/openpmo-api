@@ -19,7 +19,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.neo4j.ogm.model.Result;
 import org.neo4j.ogm.session.Session;
-import org.neo4j.ogm.session.SessionFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Repository;
 
@@ -30,10 +29,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class DashboardRepositoryCustomImpl implements DashboardRepositoryCustom {
 
-    private final SessionFactory sessionFactory;
+    private final Session session;
+    
 
-    public DashboardRepositoryCustomImpl(SessionFactory sessionFactory) {
-        this.sessionFactory = sessionFactory;
+    public DashboardRepositoryCustomImpl(Session session) {
+        this.session = session;
     }
     
     @Override
@@ -53,10 +53,6 @@ public class DashboardRepositoryCustomImpl implements DashboardRepositoryCustom 
             parameters.put("scope", scope);
             parameters.put("baselineId", baselineId);
             parameters.put("monthYear", monthYear);
-            
-            
-            Session session = this.sessionFactory.openSession();
-            
             
             Result result = session.query(query, parameters);
             
