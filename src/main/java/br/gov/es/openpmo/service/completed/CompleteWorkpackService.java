@@ -4,6 +4,7 @@ import br.gov.es.openpmo.dto.completed.CompleteWorkpackRequest;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.workpacks.Milestone;
 import br.gov.es.openpmo.model.workpacks.Workpack;
+import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.repository.completed.CompletedRepository;
 import org.springframework.stereotype.Service;
 
@@ -17,11 +18,15 @@ public class CompleteWorkpackService implements ICompleteWorkpackService {
 
   private final CompletedRepository repository;
 
+  private final WorkpackRepository workpackRepository;
+
 
   public CompleteWorkpackService(
-    final CompletedRepository repository
+    final CompletedRepository repository,
+    final WorkpackRepository workpackRepository
   ) {
     this.repository = repository;
+    this.workpackRepository = workpackRepository;
   }
 
   private static void assertDateIsValid(
@@ -74,6 +79,9 @@ public class CompleteWorkpackService implements ICompleteWorkpackService {
         parentId,
         false
       );
+      if(workpackRepository.isProject(parentId)){
+        this.workpackRepository.resetSituationOrStatusToDefault(parentId);
+      }
       this.setAllIncomplete(parentId);
     }
   }
@@ -93,6 +101,9 @@ public class CompleteWorkpackService implements ICompleteWorkpackService {
         parentId,
         true
       );
+      if(workpackRepository.isProject(parentId)){
+        this.workpackRepository.updateSituationValue(parentId, "Concluído");
+      }
       this.testHierarchyAndSetCompleted(parentId);
     }
   }

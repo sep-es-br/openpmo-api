@@ -1666,6 +1666,12 @@ public class WorkpackService {
     );
     final List<Long> workpackIds = workpacks.stream().map(w -> w.getId()).collect(Collectors.toList());
     this.workpackRepository.setWorkpacksCanceled(workpackIds, true);
+
+    workpacks.stream()
+    .filter(w -> w.getClass().getSimpleName().equalsIgnoreCase("Deliverable"))
+    .forEach(deliverable -> {
+        this.workpackRepository.updateSituationValue(deliverable.getId(), "Cancelada");
+    });
     this.dashboardService.calculate();
     this.cacheUtil.loadAllCache();
     return workpack;

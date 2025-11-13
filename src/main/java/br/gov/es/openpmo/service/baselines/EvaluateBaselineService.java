@@ -177,6 +177,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
   ) {
     baseline.approve();
     this.saveBaseline(baseline);
+    workpackRepository.resetSituationOrStatusToDefault(baseline.getIdWorkpack());
     this.cancelWorkpacksFromSnapshots(baseline, idPerson);
     if(baseline.isCancelation()) {
       this.cancelWorkpackByBaseline(baseline, idPerson);
