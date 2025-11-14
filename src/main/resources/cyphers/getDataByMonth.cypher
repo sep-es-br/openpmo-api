@@ -201,7 +201,11 @@ WITH
           cgAcum: s.cgAcum + item.custoReprogramado,
           pcfrAcum: s.pcfrAcum + item.prcFisicoRealizado,
 		  // VA(Valor Agregado) = %Concluído(pcfrAcum) * VP(cpAcum)
-          va: (s.pcfrAcum + item.prcFisicoRealizado) * (s.cpAcum + item.custoPlanejado)
+          va: 
+			CASE WHEN (s.pcfrAcum + item.prcFisicoRealizado) > 1 
+				THEN 1 
+				ELSE (s.pcfrAcum + item.prcFisicoRealizado)
+			END * (s.cpAcum + item.custoPlanejado)
         }]
     }
   ) AS accumResult
@@ -212,7 +216,7 @@ WITH
   wId, wCompleted, _anomesRef,
   bac AS bacEntrega, masterStart, masterEnd, snapshotStart, snapshotEnd,
   list.anomes AS anomes,
-  list.pcfrAcum as pcFisicoRealizadoAcum,
+  case when list.pcfrAcum > 1 then 1 else list.pcfrAcum end as pcFisicoRealizadoAcum,
   list.cgAcum AS custoReprogramado_Acum,
   list.crAcum AS custoRealizado_Acum,
   list.cpAcum AS custoPlanejado_Acum,
@@ -244,11 +248,7 @@ WITH
     round(custoReprogramado_MensalTotal,2) 											AS custoReprogramadoAcumuladoMes,
     round(custoPlanejado_MensalTotal,2) 											AS custoPlanejadoAcumuladoMes,
     round(custoRealizado_MensalTotal,2) 											AS custoRealizadoAcumuladoMes,
-	case 
-		when (custoPlanejado_MensalTotal = 0 or valorAgregado_MensalTotal = 0)
-		then pcFisicoRealizadoAcumMesMedio 
-		else round(valorAgregado_MensalTotal/custoPlanejado_MensalTotal,4) 
-	end 																			AS pcFisicoRealizadoAcumMesMedio,
+	round(pcFisicoRealizadoAcumMesMedio, 4)											AS pcFisicoRealizadoAcumMesMedio,
     round(valorAgregado_MensalTotal,2) 												AS valorAgregado,
     round(variacaoDePrazo_MensalTotal,2) 											AS variacaoPrazo,
     round(variacaoDeCusto_MensalTotal,2) 											AS variacaoCusto,
