@@ -1,9 +1,7 @@
 package br.gov.es.openpmo.service.workpack;
 
 import br.gov.es.openpmo.configuration.properties.AppProperties;
-import br.gov.es.openpmo.dto.PageResponse;
 import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
-import br.gov.es.openpmo.dto.dashboards.DashboardParameters;
 import br.gov.es.openpmo.dto.menu.PlanWorkpackDto;
 import br.gov.es.openpmo.dto.plan.PlanDto;
 import br.gov.es.openpmo.dto.universalSearch.UniversalSearchItemQueryResult;
@@ -94,23 +92,42 @@ import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllWorkpackByParentUsingCustomFilter;
 import br.gov.es.openpmo.repository.custom.filters.FindAllWorkpackUsingCustomFilter;
 import br.gov.es.openpmo.service.actors.OrganizationService;
-import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
 import br.gov.es.openpmo.service.journals.JournalDeleter;
 import br.gov.es.openpmo.service.office.LocalityService;
 import br.gov.es.openpmo.service.office.UnitMeasureService;
 import br.gov.es.openpmo.service.office.plan.PlanService;
 import br.gov.es.openpmo.service.properties.PropertyModelService;
 import br.gov.es.openpmo.service.properties.PropertyService;
+import static br.gov.es.openpmo.service.workpack.GetPropertyValue.getValueProperty;
 import br.gov.es.openpmo.utils.ApplicationCacheUtil;
 import br.gov.es.openpmo.utils.ApplicationMessage;
+import static br.gov.es.openpmo.utils.ApplicationMessage.CUSTOM_FILTER_NOT_FOUND;
+import static br.gov.es.openpmo.utils.ApplicationMessage.PLAN_NOT_FOUND;
+import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_RELATIONSHIP_MODEL_NOT_FOUND;
+import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_REQUIRED_NOT_FOUND;
+import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_UPDATE_TYPE_ERROR;
+import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_VALUE_NOT_EMPTY;
+import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_VALUE_NOT_MAX;
+import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_VALUE_NOT_MIN;
+import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_VALUE_NOT_NULL;
+import static br.gov.es.openpmo.utils.ApplicationMessage.VALUE_DOES_NOT_MATCH_PRECISION;
+import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACKMODEL_NOT_FOUND;
+import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_DELETE_RELATIONSHIP_ERROR;
+import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_NOT_FOUND;
 import br.gov.es.openpmo.utils.DashboardCacheUtil;
-
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_CURRENCY;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_DATE;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_GROUP;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_INTEGER;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_LOCALITY_SELECTION;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_NUMBER;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_ORGANIZATION_SELECTION;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_SELECTION;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_TEXT;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_TEXT_AREA;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_TOGGLE;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_UNIT_SELECTION;
+import static java.lang.Boolean.TRUE;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -127,36 +144,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
-import static br.gov.es.openpmo.service.workpack.GetPropertyValue.getValueProperty;
-import static br.gov.es.openpmo.utils.ApplicationMessage.CUSTOM_FILTER_NOT_FOUND;
-import static br.gov.es.openpmo.utils.ApplicationMessage.PLAN_NOT_FOUND;
-import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_RELATIONSHIP_MODEL_NOT_FOUND;
-import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_REQUIRED_NOT_FOUND;
-import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_UPDATE_TYPE_ERROR;
-import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_VALUE_NOT_EMPTY;
-import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_VALUE_NOT_MAX;
-import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_VALUE_NOT_MIN;
-import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_VALUE_NOT_NULL;
-import static br.gov.es.openpmo.utils.ApplicationMessage.VALUE_DOES_NOT_MATCH_PRECISION;
-import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACKMODEL_NOT_FOUND;
-import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_DELETE_RELATIONSHIP_ERROR;
-import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_NOT_FOUND;
-import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_CURRENCY;
-import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_DATE;
-import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_GROUP;
-import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_INTEGER;
-import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_LOCALITY_SELECTION;
-import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_NUMBER;
-import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_ORGANIZATION_SELECTION;
-import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_SELECTION;
-import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_TEXT;
-import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_TEXT_AREA;
-import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_TOGGLE;
-import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_UNIT_SELECTION;
-import static java.lang.Boolean.TRUE;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Service
 public class WorkpackService {
@@ -203,8 +197,6 @@ public class WorkpackService {
 
   private final WorkpackSorter workpackSorter;
 
-  private final IAsyncDashboardService dashboardService;
-
   private final HasScheduleSessionActive hasScheduleSessionActive;
 
   private final MilestoneRepository milestoneRepository;
@@ -232,7 +224,6 @@ public class WorkpackService {
     final MilestoneService milestoneService,
     final JournalDeleter journalDeleter,
     final WorkpackSorter workpackSorter,
-    final IAsyncDashboardService dashboardService,
     final HasScheduleSessionActive hasScheduleSessionActive,
     final MilestoneRepository milestoneRepository,
     final AppProperties appProperties,
@@ -255,7 +246,6 @@ public class WorkpackService {
     this.milestoneService = milestoneService;
     this.journalDeleter = journalDeleter;
     this.workpackSorter = workpackSorter;
-    this.dashboardService = dashboardService;
     this.hasScheduleSessionActive = hasScheduleSessionActive;
     this.milestoneRepository = milestoneRepository;
     this.appProperties = appProperties;
@@ -1707,7 +1697,6 @@ public class WorkpackService {
     );
     final List<Long> workpackIds = workpacks.stream().map(w -> w.getId()).collect(Collectors.toList());
     this.workpackRepository.setWorkpacksCanceled(workpackIds, false);
-    this.dashboardService.calculate();
     this.cacheUtil.loadAllCache();
   }
 
@@ -1726,9 +1715,6 @@ public class WorkpackService {
     return this.workpackRepository.findAllByPlanWithProperties(idPlan);
   }
 
-  public void calculateDashboard() {
-    this.dashboardService.calculate();
-  }
   
   public Page<UniversalSearchItemQueryResult> doUniversalSearch(UniversalSearchParameters parameters, PageRequest pageRequest) {
       

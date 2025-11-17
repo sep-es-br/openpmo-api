@@ -9,9 +9,9 @@ import br.gov.es.openpmo.dto.completed.CompleteWorkpackRequest;
 import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
 import br.gov.es.openpmo.dto.dashboards.MilestoneDateDto;
 import br.gov.es.openpmo.dto.dashboards.MilestoneDto;
+import br.gov.es.openpmo.dto.dashboards.RiskDto;
 import br.gov.es.openpmo.dto.dashboards.RiskResultDto;
 import br.gov.es.openpmo.dto.dashboards.RiskWorkpackDto;
-import br.gov.es.openpmo.dto.dashboards.RiskDto;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.dto.permission.WorkpackPermissionResponse;
 import br.gov.es.openpmo.dto.workpack.EndDeliverableManagementRequest;
@@ -46,6 +46,11 @@ import br.gov.es.openpmo.service.workpack.WorkpackService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import br.gov.es.openpmo.utils.ResponseHandler;
 import io.swagger.annotations.Api;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,12 +65,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import javax.validation.Valid;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Api
 @RestController
@@ -287,9 +286,6 @@ public class WorkpackController {
       idPerson
     );
 
-    if (workpack instanceof Milestone) {
-      this.workpackService.calculateDashboard();
-    }
     return ResponseEntity.ok(ResponseBase.of(response));
   }
 
@@ -347,9 +343,6 @@ public class WorkpackController {
           );
       }
 
-      if (isMilestone) {
-          this.workpackService.calculateDashboard();
-      }
 
       return ResponseEntity.ok(ResponseBase.of(EntityDto.of(workpack)));
   }
@@ -398,9 +391,7 @@ public class WorkpackController {
     );
     final Workpack workpack = this.workpackService.findById(idWorkpack);
     this.workpackService.delete(workpack);
-    if (workpack instanceof Milestone) {
-      this.workpackService.calculateDashboard();
-    }
+    
 
     return ResponseEntity.ok().build();
   }

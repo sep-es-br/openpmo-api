@@ -5,16 +5,14 @@ import br.gov.es.openpmo.dto.budget.UnidadeOrcamentariaDto;
 import br.gov.es.openpmo.dto.workpack.PropertyDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.PropertyModelDto;
 import br.gov.es.openpmo.model.Entity;
-import br.gov.es.openpmo.model.budget.PlanoOrcamentario;
-import br.gov.es.openpmo.model.budget.UnidadeOrcamentaria;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
 import br.gov.es.openpmo.model.workpacks.Instrument;
 import br.gov.es.openpmo.utils.PropertyModelInstanceType;
-
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class CostAccountDto {
@@ -38,7 +36,7 @@ public class CostAccountDto {
     instance.setProperties(getPropertiesFrom(costAccount));
     instance.setModels(getModelsFrom(costAccount));
     instance.setIdCostAccountModel(getIdCostAccountModel(costAccount));
-    instance.setUnidadeOrcamentaria(UnidadeOrcamentariaDto.of(costAccount.getUnidadeOrcamentaria(), null , Set.of(instance)));
+    instance.setUnidadeOrcamentaria(UnidadeOrcamentariaDto.of(costAccount.getUnidadeOrcamentaria(), null , Collections.singleton(instance)));
     instance.setPlanoOrcamentario(PlanoOrcamentarioDto.of(costAccount.getPlanoOrcamentario()));
     instance.setInstruments(costAccount.getInstruments());
     return instance;

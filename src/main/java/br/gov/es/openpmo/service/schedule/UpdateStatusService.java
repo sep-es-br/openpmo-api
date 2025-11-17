@@ -8,13 +8,11 @@ import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.StepRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.completed.ICompleteWorkpackService;
-import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
-import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Service;
 
 @Service
 public class UpdateStatusService {
@@ -23,19 +21,16 @@ public class UpdateStatusService {
 
   private final StepRepository stepRepository;
 
-  private final IAsyncDashboardService dashboardService;
 
   private final ICompleteWorkpackService completeWorkpackService;
 
   public UpdateStatusService(
     final WorkpackRepository workpackRepository,
     final StepRepository stepRepository,
-    final IAsyncDashboardService dashboardService,
     final ICompleteWorkpackService completeWorkpackService
   ) {
     this.workpackRepository = workpackRepository;
     this.stepRepository = stepRepository;
-    this.dashboardService = dashboardService;
     this.completeWorkpackService = completeWorkpackService;
   }
 
@@ -64,7 +59,6 @@ public class UpdateStatusService {
       this.completeWorkpackService.apply(workpack.getId(), request);
     }
 
-    this.dashboardService.calculate();
   }
 
   private void updateIfCompleted(

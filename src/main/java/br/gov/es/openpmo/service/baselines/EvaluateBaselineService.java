@@ -6,32 +6,29 @@ import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.baselines.Decision;
 import br.gov.es.openpmo.model.baselines.Status;
+import static br.gov.es.openpmo.model.baselines.Status.PROPOSED;
 import br.gov.es.openpmo.model.journals.JournalAction;
 import br.gov.es.openpmo.model.relations.IsEvaluatedBy;
+import static br.gov.es.openpmo.model.relations.IsEvaluatedBy.fromMemberEvaluation;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.IsCCBMemberRepository;
 import br.gov.es.openpmo.repository.IsEvaluatedByRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
-import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
 import br.gov.es.openpmo.service.journals.JournalCreator;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import static br.gov.es.openpmo.model.baselines.Status.PROPOSED;
-import static br.gov.es.openpmo.model.relations.IsEvaluatedBy.fromMemberEvaluation;
 import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_IS_NOT_PROPOSED_INVALID_STATE_ERROR;
 import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.CCB_MEMBER_ALREADY_EVALUATED;
 import static br.gov.es.openpmo.utils.ApplicationMessage.NOT_VALID_CCB_MEMBER;
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_NOT_FOUND;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 public class EvaluateBaselineService implements IEvaluateBaselineService {
@@ -46,8 +43,6 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
 
   private final IsEvaluatedByRepository evaluatedByRepository;
 
-  private final IAsyncDashboardService dashboardService;
-
   private final JournalCreator journalCreator;
 
 
@@ -58,7 +53,6 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     final WorkpackRepository workpackRepository,
     final IsCCBMemberRepository ccbMemberRepository,
     final IsEvaluatedByRepository evaluatedByRepository,
-    final IAsyncDashboardService dashboardService,
     final JournalCreator journalCreator
     
   ) {
@@ -67,7 +61,6 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     this.workpackRepository = workpackRepository;
     this.ccbMemberRepository = ccbMemberRepository;
     this.evaluatedByRepository = evaluatedByRepository;
-    this.dashboardService = dashboardService;
     this.journalCreator = journalCreator;
   }
 
@@ -124,7 +117,6 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     if (baseline.getStatus() != Status.APPROVED || baseline.isCancelation()) {
       return;
     }
-    this.dashboardService.calculate();
 
   }
 
@@ -271,9 +263,6 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
             this.updateBaselineStatus(baseline, null);
             this.journalCreator.baselineForAllApprovedPersons(baseline);
 
-            if (baseline.getStatus() == Status.APPROVED && !baseline.isCancelation()) {
-                this.dashboardService.calculate();
-            }
         }
     }
   }
