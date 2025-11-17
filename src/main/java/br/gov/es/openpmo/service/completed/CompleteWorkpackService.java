@@ -79,8 +79,10 @@ public class CompleteWorkpackService implements ICompleteWorkpackService {
         parentId,
         false
       );
-      if(workpackRepository.isProject(parentId)){
-        this.workpackRepository.resetSituationOrStatusToDefault(parentId);
+      if (workpackRepository.isProject(parentId) 
+          && workpackRepository.isSituationCompleted(parentId)) {
+
+          this.workpackRepository.resetSituationOrStatusToDefault(parentId);
       }
       this.setAllIncomplete(parentId);
     }

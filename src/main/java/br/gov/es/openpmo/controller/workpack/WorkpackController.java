@@ -248,10 +248,10 @@ public class WorkpackController {
 
     final WorkpackDetailDto workpackDetailDto = this.workpackService.getWorkpackDetailDto(workpack, idPlan);
 
-    final List<PermissionDto> permissions = this.workpackPermissionVerifier.fetchPermissions(
+    final List<PermissionDto> permissions = this.workpackPermissionVerifier.fetchAccessPermissions(
       idPerson,
-      idPlan,
-      idWorkpack
+      idWorkpack,
+      authorization
     );
 
     final boolean isFavoritedBy = this.isFavoritedByService.isFavoritedBy(
@@ -307,10 +307,13 @@ public class WorkpackController {
       final Long idPerson = this.tokenService.getUserId(authorization);
 
 
-      final WorkpackPermissionResponse permissionResponse =
-              this.getWorkpackPermissions.execute(idPerson, request.getId(), request.getIdPlan());
+      final List<PermissionDto> permissions = this.workpackPermissionVerifier.fetchAccessPermissions(
+        idPerson,
+        request.getId(),
+        authorization
+      );
 
-      final PermissionLevelEnum level = permissionResponse.getPermissions().stream()
+      final PermissionLevelEnum level = permissions.stream()
           .map(PermissionDto::getLevel)
           .findFirst()
           .orElse(null);

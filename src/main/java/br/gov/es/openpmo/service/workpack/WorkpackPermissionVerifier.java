@@ -2,6 +2,7 @@ package br.gov.es.openpmo.service.workpack;
 
 import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackDetailParentDto;
+import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.office.Office;
@@ -9,6 +10,7 @@ import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.relations.CanAccessOffice;
 import br.gov.es.openpmo.model.relations.CanAccessPlan;
 import br.gov.es.openpmo.model.relations.CanAccessWorkpack;
+import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.WorkpackPermissionRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
@@ -17,6 +19,8 @@ import br.gov.es.openpmo.service.actors.PersonService;
 import br.gov.es.openpmo.service.office.plan.PlanService;
 import br.gov.es.openpmo.service.permissions.OfficePermissionService;
 import br.gov.es.openpmo.service.permissions.PlanPermissionService;
+import br.gov.es.openpmo.service.permissions.canaccess.CanAccessData;
+import br.gov.es.openpmo.service.permissions.canaccess.CanAccessDataResponse;
 import br.gov.es.openpmo.utils.ApplicationCacheUtil;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +53,7 @@ public class WorkpackPermissionVerifier {
   private final WorkpackSharedRepository workpackSharedRepository;
   private final WorkpackPermissionRepository workpackPermissionRepository;
   private final ApplicationCacheUtil applicationCacheUtil;
+  private final CanAccessData canAccessData;
 
   @Autowired
   public WorkpackPermissionVerifier(
@@ -59,7 +64,8 @@ public class WorkpackPermissionVerifier {
     final OfficePermissionService officePermissionService,
     final WorkpackPermissionRepository workpackPermissionRepository,
     final ApplicationCacheUtil applicationCacheUtil,
-    final WorkpackSharedRepository workpackSharedRepository
+    final WorkpackSharedRepository workpackSharedRepository,
+    final CanAccessData canAccessData
   ) {
     this.personService = personService;
     this.planService = planService;
@@ -69,6 +75,7 @@ public class WorkpackPermissionVerifier {
     this.workpackSharedRepository = workpackSharedRepository;
     this.workpackPermissionRepository = workpackPermissionRepository;
     this.applicationCacheUtil = applicationCacheUtil;
+    this.canAccessData = canAccessData;
 
   }
 
@@ -173,6 +180,56 @@ public class WorkpackPermissionVerifier {
     }
 
     return Collections.emptyList();
+  }
+
+  public List<PermissionDto> fetchAccessPermissions(
+    final Long idUser,
+    final Long idWorkpack,
+    final String authorization
+  ) {
+    final Person person = this.personService.findById(idUser);
+    if (Boolean.TRUE.equals(person.getAdministrator())) {
+      return new ArrayList<>();
+    }
+
+
+     final CanAccessDataResponse access =
+        canAccessData.execute(List.of(idWorkpack), authorization);
+
+        if (Boolean.TRUE.equals(access.getEdit())) {
+          return List.of(
+              new PermissionDto(     // pega role do execute
+                  PermissionLevelEnum.EDIT
+              )
+          );
+      }
+  
+      if (Boolean.TRUE.equals(access.getUpdate())) {
+          return List.of(
+              new PermissionDto(
+                  PermissionLevelEnum.UPDATE
+              )
+          );
+      }
+  
+      if (Boolean.TRUE.equals(access.getRead())) {
+          return List.of(
+              new PermissionDto(
+                  PermissionLevelEnum.READ
+              )
+          );
+      }
+  
+      if (Boolean.TRUE.equals(access.getBasicRead())) {
+          return List.of(
+              new PermissionDto(
+                  PermissionLevelEnum.READ // basicRead = READ
+              )
+          );
+      }
+
+      return Collections.emptyList();
+
   }
 
   private Set<Workpack> getAllWorkpacksUsingPlan(final Long idPlan) {

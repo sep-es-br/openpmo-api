@@ -20,6 +20,12 @@ public class PermissionDto {
   }
 
   public PermissionDto(
+    final PermissionLevelEnum level
+  ) {
+    this.level = level;
+  }
+
+  public PermissionDto(
     final Long id,
     final String role,
     final PermissionLevelEnum level
