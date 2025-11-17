@@ -1662,7 +1662,7 @@ public class WorkpackService {
     .forEach(deliverable -> {
         this.workpackRepository.updateSituationValue(deliverable.getId(), "Cancelada");
     });
-    this.dashboardService.calculate();
+    
     this.cacheUtil.loadAllCache();
     return workpack;
   }
