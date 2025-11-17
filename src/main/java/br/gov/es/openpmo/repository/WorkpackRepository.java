@@ -641,10 +641,24 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   )
   Set<Long> findAllChildren(@Param("workpackId") Long workpackId);
   
-  @Query("MATCH (w:Workpack)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel {name: 'Situação'}) " +
-       "WHERE id(w) = $id " +
+  @Query(
+       "MATCH (w:Workpack)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel) " +
+       "WHERE id(w) = $id AND pm.name IN ['Situação', 'Status'] " +
        "SET p.value = $value")
   void updateSituationValue(Long id, String value);
+
+  @Query(
+       "MATCH (w:Workpack)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel) " +
+       "WHERE id(w) = $id AND pm.name IN ['Situação', 'Status'] " +
+       "OPTIONAL MATCH (w)-[:IS_BASELINED_BY]->(b:Baseline {active: true}) " +
+       "WITH w, p, pm, b " +
+       "SET p.value = CASE " +
+       "  WHEN b IS NOT NULL AND w:Project AND w.completed = true THEN 'Concluído' " + // não altera se concluído
+       "  WHEN b IS NOT NULL AND w:Project THEN 'Execução' " +
+       "  ELSE pm.defaultValue " +
+       "END"
+   )
+   void resetSituationOrStatusToDefault(Long id);
 
   @Query("MATCH (w:Workpack)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel {name:'Situação'}) " +
        "WHERE id(w) = $id " +
@@ -673,6 +687,21 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
        "WHERE id(p) = $id " +
        "RETURN id(w)")
   Long findWorkpackIdByPropertyId(Long id);
+
+  @Query(
+       "MATCH (w:Workpack) " +
+       "WHERE id(w) = $id " +
+       "RETURN 'Project' IN labels(w)"
+       )
+  boolean isProject(Long id);
+
+  @Query(
+       "MATCH (w:Workpack)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel) " +
+       "WHERE id(w) = $id " +
+       "AND pm.name IN ['Situação', 'Status'] " +
+       "RETURN p.value = 'Concluído'"
+       )
+  Boolean isSituationCompleted(Long id);
 
   // @Query(
   //   "MATCH (organizer:Organizer)-[:IS_IN*]->(project:Project) " +
