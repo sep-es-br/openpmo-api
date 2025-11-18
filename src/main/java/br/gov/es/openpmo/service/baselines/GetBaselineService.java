@@ -165,6 +165,12 @@ public class GetBaselineService implements IGetBaselineService {
 
     Long idPlan = this.workpackRepository.findPlanByWorkpackId(idWorkpack).getId();
     WorkpackResultDto workpackDto = cacheUtil.getWorkpackBreakdownStructure(idWorkpack, idPlan, true);
+    if(workpackDto == null){
+      List<WorkpackResultDto> result = workpackRepository.findWorkpackMenuById(idPlan, idWorkpack);
+      if (!result.isEmpty()) {
+        workpackDto = result.get(0);
+      }
+    }
 
     List<UpdateObject> updateList = this.assembleListOfUpdates(workpacks);
     List<BaselineUpdateBreakdown> updateBreakdown = this.getBaselineUpdatesService.createBaselineBreakdown(updateList, workpackDto);

@@ -79,6 +79,49 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   List<WorkpackResultDto> findAllMenuCustomByIdPlan(final Long idPlan);
 
   @Query(
+       "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO]-(w:Workpack {deleted:false})-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
+                     "WHERE id(plan) = $idPlan AND id(w) = $idWorkpackId AND NOT (w)-[:IS_IN]->(:Workpack) " +
+                     "AND (NOT EXISTS(belongsTo.linked) OR belongsTo.linked = false) " +
+                     "RETURN DISTINCT id(w) as id, id(model) as idWorkpackModel, false as linked, id(plan) as idPlan, w.idParent as idParent " +
+                     ", w.name as name, w.fullName as fullName, model.fontIcon as fontIcon, model.modelName as modelName " +
+                     ", model.modelNameInPlural as modelNameInPlural, labels(w) as labels, model.position as position " +
+                     ", w.date as date, model.sortByField as sortByField " +
+                     
+                     " UNION ALL " +
+
+                     "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO]-(w:Workpack {deleted:false})-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel), " +
+                     "(w)<-[:IS_IN*]-(children:Workpack {deleted:false})-[:IS_INSTANCE_BY]->(modelChildren:WorkpackModel), " +
+                     "(children)-[childBelongsTo:BELONGS_TO]-(plan) " +
+                     "WHERE id(plan) = $idPlan AND id(children) = $idWorkpackId AND (children)-[:IS_IN]->(w) " +
+                     "AND (NOT EXISTS(belongsTo.linked) OR belongsTo.linked = false) " +
+                     "AND (NOT EXISTS(childBelongsTo.linked) OR childBelongsTo.linked = false) " +
+                     "RETURN id(children) as id, id(modelChildren) as idWorkpackModel, false as linked, id(plan) as idPlan, id(w) as idParent " +
+                     ", children.name as name, children.fullName as fullName, modelChildren.fontIcon as fontIcon, modelChildren.modelName as modelName " +
+                     ", modelChildren.modelNameInPlural as modelNameInPlural, labels(children) as labels, modelChildren.position as position " +
+                     ", children.date as date, modelChildren.sortByField as sortByField " +
+
+                     " UNION ALL " +
+
+                     "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO {linked:true}]-(w:Workpack {deleted:false})-[isLinkedTo:IS_LINKED_TO]->(model:WorkpackModel), " +
+                     "(w)-[:IS_IN]->(parent:Workpack)-[:BELONGS_TO]-(plan) " +
+                     "WHERE id(plan) = $idPlan AND id(w) = $idWorkpackId " +
+                     "RETURN DISTINCT id(w) as id, id(model) as idWorkpackModel, true as linked, id(plan) as idPlan, id(parent) as idParent " +
+                     ", w.name as name, w.fullName as fullName, model.fontIcon as fontIcon, model.modelName as modelName " +
+                     ", model.modelNameInPlural as modelNameInPlural, labels(w) as labels, model.position as position " +
+                     ", w.date as date, model.sortByField as sortByField " +
+
+                     " UNION ALL " +
+
+                     "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO {linked:true}]-(w:Workpack {deleted:false})-[isLinkedTo:IS_LINKED_TO]->(model:WorkpackModel) " +
+                     "WHERE id(plan) = $idPlan AND id(w) = $idWorkpackId AND NOT (w)-[:IS_IN]->(:Workpack) " +
+                     "RETURN DISTINCT id(w) as id, id(model) as idWorkpackModel, true as linked, id(plan) as idPlan, w.idParent as idParent " +
+                     ", w.name as name, w.fullName as fullName, model.fontIcon as fontIcon, model.modelName as modelName " +
+                     ", model.modelNameInPlural as modelNameInPlural, labels(w) as labels, model.position as position " +
+                     ", w.date as date, model.sortByField as sortByField "
+       )
+  List<WorkpackResultDto> findWorkpackMenuById(Long idPlan, Long idWorkpackId);
+
+  @Query(
       "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO]-(w:Workpack{deleted:false,canceled:false}) " +
           ", (w)-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel)-[:IS_SORTED_BY]->(pm:PropertyModel)<-[:IS_DRIVEN_BY]-(prop:Property)-[:FEATURES]->(w) " +
           "WHERE id(plan) = $idPlan AND NOT (w)-[:IS_IN]->(:Workpack) " +
