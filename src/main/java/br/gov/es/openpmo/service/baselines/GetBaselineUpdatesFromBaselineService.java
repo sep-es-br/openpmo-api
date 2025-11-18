@@ -1,6 +1,6 @@
 package br.gov.es.openpmo.service.baselines;
 
-import br.gov.es.openpmo.dto.baselines.UpdateResponse;
+import br.gov.es.openpmo.dto.baselines.UpdateObject;
 import br.gov.es.openpmo.enumerator.BaselineStatus;
 import br.gov.es.openpmo.enumerator.CategoryEnum;
 import br.gov.es.openpmo.exception.NegocioException;
@@ -37,12 +37,11 @@ public class GetBaselineUpdatesFromBaselineService implements IGetBaselineUpdate
 
   @Autowired
   public GetBaselineUpdatesFromBaselineService(
-    final BaselineRepository baselineRepository,
-    final WorkpackRepository workpackRepository,
-    final IBaselineChangesService baselineChangesService,
-    final IBaselineComposeService baselineComposeService,
-    final IBaselineStructuralChangesService baselineStructuralChangesService
-  ) {
+      final BaselineRepository baselineRepository,
+      final WorkpackRepository workpackRepository,
+      final IBaselineChangesService baselineChangesService,
+      final IBaselineComposeService baselineComposeService,
+      final IBaselineStructuralChangesService baselineStructuralChangesService) {
     this.baselineRepository = baselineRepository;
     this.workpackRepository = workpackRepository;
     this.baselineChangesService = baselineChangesService;
@@ -54,8 +53,9 @@ public class GetBaselineUpdatesFromBaselineService implements IGetBaselineUpdate
     return Optional.ofNullable(workpack.getChildren()).orElse(Collections.emptySet());
   }
 
-  private static UpdateResponse getStructureChangedResponse() {
-    return new UpdateResponse(
+  private static UpdateObject getStructureChangedResponse() {
+    return new UpdateObject(
+      null,
       null,
       "plan",
       "structure",
@@ -69,28 +69,27 @@ public class GetBaselineUpdatesFromBaselineService implements IGetBaselineUpdate
   }
 
   private static boolean notIncluded(
-    final Workpack workpack,
-    final Collection<? extends UpdateResponse> updates
-  ) {
+      final Workpack workpack,
+      final Collection<? extends UpdateObject> updates) {
     return updates.stream()
-      .filter(update -> update.getClassification() == BaselineStatus.DELETED)
-      .noneMatch(update -> update.getIdWorkpack().equals(workpack.getWorkpackMasterId()));
+        .filter(update -> update.getClassification() == BaselineStatus.DELETED)
+        .noneMatch(update -> update.getIdWorkpack().equals(workpack.getWorkpackMasterId()));
   }
 
   private void addIfWorkpackIsDeleted(
-    final Workpack snapshot,
-    final Collection<UpdateResponse> updates
-  ) {
-    if(notIncluded(snapshot, updates)
-       && isDeliverableOrMilestone(snapshot)
-       && this.isMasterDeleted(snapshot)) {
+      final Workpack snapshot,
+      final Collection<UpdateObject> updates) {
+    if (notIncluded(snapshot, updates)
+        && isDeliverableOrMilestone(snapshot)
+        && this.isMasterDeleted(snapshot)) {
       updates.add(this.getDeletedResponse(snapshot.getWorkpackMaster()));
     }
   }
 
-  private UpdateResponse getDeletedResponse(final Workpack workpack) {
-    return new UpdateResponse(
+  private UpdateObject getDeletedResponse(final Workpack workpack) {
+    return new UpdateObject(
       workpack.getId(),
+      workpack.getMaster().getId(),
       this.getIcon(workpack),
       workpack.getName(),
       BaselineStatus.DELETED,
@@ -106,24 +105,23 @@ public class GetBaselineUpdatesFromBaselineService implements IGetBaselineUpdate
     final CategoryEnum category = getCategoryOrMaster(workpack);
 
     return category == CategoryEnum.MASTER
-      ? this.workpackRepository.findWorkpackModelByWorkpackId(workpack.getId())
-      : this.workpackRepository.findWorkpackModelBySnapshotId(workpack.getId());
+        ? this.workpackRepository.findWorkpackModelByWorkpackId(workpack.getId())
+        : this.workpackRepository.findWorkpackModelBySnapshotId(workpack.getId());
   }
 
   private String getIcon(final Workpack workpack) {
     return this.getWorkpackModel(workpack)
-      .map(WorkpackModel::getFontIcon)
-      .orElse(null);
+        .map(WorkpackModel::getFontIcon)
+        .orElse(null);
   }
 
   private void addIfMasterNotComposingBaseline(
-    final Baseline baseline,
-    final Workpack snapshot,
-    final Collection<? super UpdateResponse> updates
-  ) {
-    if(isDeliverableOrMilestone(snapshot) &&
-       this.workpackHasMaster(snapshot) &&
-       !this.isSnapshotOfMasterComposingBaseline(baseline, snapshot)) {
+      final Baseline baseline,
+      final Workpack snapshot,
+      final Collection<? super UpdateObject> updates) {
+    if (isDeliverableOrMilestone(snapshot) &&
+        this.workpackHasMaster(snapshot) &&
+        !this.isSnapshotOfMasterComposingBaseline(baseline, snapshot)) {
       updates.add(this.getNewResponse(snapshot.getWorkpackMaster()));
     }
   }
@@ -133,11 +131,10 @@ public class GetBaselineUpdatesFromBaselineService implements IGetBaselineUpdate
   }
 
   @Override
-  public List<UpdateResponse> getUpdates(
-    final Baseline baseline,
-    final Baseline anotherBaseline
-  ) {
-    final List<UpdateResponse> updates = new ArrayList<>();
+  public List<UpdateObject> getUpdates(
+      final Baseline baseline,
+      final Baseline anotherBaseline) {
+    final List<UpdateObject> updates = new ArrayList<>();
 
     final Workpack snapshot = this.getSnapshotFromBaseline(anotherBaseline);
     this.addUpdatesRecursively(baseline, snapshot, updates, new MutableBoolean());
@@ -147,34 +144,31 @@ public class GetBaselineUpdatesFromBaselineService implements IGetBaselineUpdate
   }
 
   private void addDeletedRecursively(
-    final Workpack workpack,
-    final List<UpdateResponse> updates
-  ) {
-    for(final Workpack child : getChildrenOrEmpty(workpack)) {
+      final Workpack workpack,
+      final List<UpdateObject> updates) {
+    for (final Workpack child : getChildrenOrEmpty(workpack)) {
       this.addIfWorkpackIsDeleted(child, updates);
       this.addDeletedRecursively(child, updates);
     }
   }
 
   private void addUpdatesRecursively(
-    final Baseline baseline,
-    final Workpack snapshot,
-    final List<UpdateResponse> updates,
-    final MutableBoolean hasStructureChange
-  ) {
+      final Baseline baseline,
+      final Workpack snapshot,
+      final List<UpdateObject> updates,
+      final MutableBoolean hasStructureChange) {
     final Set<Workpack> children = getChildrenOrEmpty(snapshot);
 
-    for(final Workpack child : children) {
+    for (final Workpack child : children) {
       this.addUpdates(baseline, child, updates, hasStructureChange);
     }
   }
 
   private void addUpdates(
-    final Baseline baseline,
-    final Workpack snapshot,
-    final List<UpdateResponse> updates,
-    final MutableBoolean hasStructureChange
-  ) {
+      final Baseline baseline,
+      final Workpack snapshot,
+      final List<UpdateObject> updates,
+      final MutableBoolean hasStructureChange) {
     this.addChanges(baseline, snapshot, updates);
     this.addIfMasterNotComposingBaseline(baseline, snapshot, updates);
     this.addIfWorkpackIsDeleted(snapshot, updates);
@@ -183,14 +177,13 @@ public class GetBaselineUpdatesFromBaselineService implements IGetBaselineUpdate
   }
 
   private void addIfHasStructureChanges(
-    final Baseline baseline,
-    final Workpack snapshot,
-    final List<? super UpdateResponse> updates,
-    final MutableBoolean hasStructureChange
-  ) {
-    if(isDeliverableOrMilestone(snapshot)
-       && this.hasStructureChanges(baseline, snapshot)
-       && !hasStructureChange.isValue()) {
+      final Baseline baseline,
+      final Workpack snapshot,
+      final List<? super UpdateObject> updates,
+      final MutableBoolean hasStructureChange) {
+    if (isDeliverableOrMilestone(snapshot)
+        && this.hasStructureChanges(baseline, snapshot)
+        && !hasStructureChange.isValue()) {
       updates.add(getStructureChangedResponse());
       Collections.reverse(updates);
       hasStructureChange.setValue(true);
@@ -198,15 +191,15 @@ public class GetBaselineUpdatesFromBaselineService implements IGetBaselineUpdate
   }
 
   private boolean hasStructureChanges(
-    final Baseline baseline,
-    final Workpack workpack
-  ) {
+      final Baseline baseline,
+      final Workpack workpack) {
     return this.baselineStructuralChangesService.hasBaselineStructureChanges(baseline, workpack);
   }
 
-  private UpdateResponse getNewResponse(final Workpack workpack) {
-    return new UpdateResponse(
+  private UpdateObject getNewResponse(final Workpack workpack) {
+    return new UpdateObject(
       workpack.getId(),
+      workpack.getMaster().getId(),
       this.getIcon(workpack),
       workpack.getName(),
       BaselineStatus.NEW,
@@ -219,25 +212,24 @@ public class GetBaselineUpdatesFromBaselineService implements IGetBaselineUpdate
   }
 
   private void addChanges(
-    final Baseline baseline,
-    final Workpack snapshot,
-    final Collection<? super UpdateResponse> updates
-  ) {
-    if(this.hasChanges(baseline, snapshot)) {
+      final Baseline baseline,
+      final Workpack snapshot,
+      final Collection<? super UpdateObject> updates) {
+    if (this.hasChanges(baseline, snapshot)) {
       updates.add(this.getChangedResponse(snapshot));
     }
   }
 
   private boolean isSnapshotOfMasterComposingBaseline(
-    final Baseline baseline,
-    final Workpack workpack
-  ) {
+      final Baseline baseline,
+      final Workpack workpack) {
     return this.baselineComposeService.isSnapshotOfMasterComposingBaseline(baseline, workpack);
   }
 
-  private UpdateResponse getChangedResponse(final Workpack snapshot) {
-    return new UpdateResponse(
+  private UpdateObject getChangedResponse(final Workpack snapshot) {
+    return new UpdateObject(
       snapshot.getId(),
+      snapshot.getMaster().getId(),
       this.getIcon(snapshot),
       snapshot.getName(),
       BaselineStatus.CHANGED,
@@ -246,16 +238,15 @@ public class GetBaselineUpdatesFromBaselineService implements IGetBaselineUpdate
   }
 
   private boolean hasChanges(
-    final Baseline baseline,
-    final Workpack workpack
-  ) {
+      final Baseline baseline,
+      final Workpack workpack) {
     return isDeliverableOrMilestone(workpack)
-           && this.baselineChangesService.hasChanges(baseline, workpack, true);
+        && this.baselineChangesService.hasChanges(baseline, workpack, true);
   }
 
   private Workpack getSnapshotFromBaseline(final Baseline baseline) {
     return this.baselineRepository.findWorkpackProjectSnapshotFromBaseline(baseline.getId())
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.SNAPSHOT_NOT_FOUND));
+        .orElseThrow(() -> new NegocioException(ApplicationMessage.SNAPSHOT_NOT_FOUND));
   }
 
 }

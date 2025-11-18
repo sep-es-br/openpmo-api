@@ -14,13 +14,10 @@ import br.gov.es.openpmo.repository.IsBaselinedByRepository;
 import br.gov.es.openpmo.repository.IsProposedByRepository;
 import br.gov.es.openpmo.repository.PersonRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
-import br.gov.es.openpmo.service.dashboards.v2.IAsyncDashboardService;
-import org.springframework.stereotype.Service;
-
-import java.util.Optional;
-
 import static br.gov.es.openpmo.utils.ApplicationMessage.PERSON_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_NOT_FOUND;
+import java.util.Optional;
+import org.springframework.stereotype.Service;
 
 @Service
 public class CancelBaselineService implements ICancelBaselineService {
@@ -35,22 +32,18 @@ public class CancelBaselineService implements ICancelBaselineService {
 
   private final IsBaselinedByRepository isBaselinedByRepository;
 
-  private final IAsyncDashboardService dashboardService;
-
   public CancelBaselineService(
     final WorkpackRepository workpackRepository,
     final BaselineRepository baselineRepository,
     final PersonRepository personRepository,
     final IsProposedByRepository isProposedByRepository,
-    final IsBaselinedByRepository isBaselinedByRepository,
-    final IAsyncDashboardService dashboardService
+    final IsBaselinedByRepository isBaselinedByRepository
   ) {
     this.workpackRepository = workpackRepository;
     this.baselineRepository = baselineRepository;
     this.personRepository = personRepository;
     this.isProposedByRepository = isProposedByRepository;
     this.isBaselinedByRepository = isBaselinedByRepository;
-    this.dashboardService = dashboardService;
   }
 
   @Override
@@ -73,7 +66,6 @@ public class CancelBaselineService implements ICancelBaselineService {
 
     this.baselineRepository.save(baselineCancelled, 0);
 
-    this.dashboardService.calculate();
 
     return EntityDto.of(baselineCancelled);
   }

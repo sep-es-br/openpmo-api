@@ -1,10 +1,12 @@
 package br.gov.es.openpmo.service.baselines;
 
+import br.gov.es.openpmo.dto.baselines.BaselineUpdateBreakdown;
 import br.gov.es.openpmo.dto.baselines.BaselineConsumesStep;
 import br.gov.es.openpmo.dto.baselines.BaselineResultDto;
 import br.gov.es.openpmo.dto.baselines.BaselineScheduleStep;
 import br.gov.es.openpmo.dto.baselines.BaselineWorkpackDto;
-import br.gov.es.openpmo.dto.baselines.UpdateResponse;
+import br.gov.es.openpmo.dto.baselines.UpdateObject;
+import br.gov.es.openpmo.dto.menu.WorkpackResultDto;
 import br.gov.es.openpmo.enumerator.BaselineStatus;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
@@ -13,11 +15,11 @@ import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.workpack.WorkpackModelService;
+import br.gov.es.openpmo.utils.ApplicationCacheUtil;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -34,86 +36,177 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
 
   private final WorkpackModelService workpackModelService;
 
+  private final ApplicationCacheUtil cacheUtil;
+
   @Autowired
   public GetBaselineUpdatesService(
-    final BaselineRepository baselineRepository,
-    final WorkpackRepository workpackRepository,
-    final BaselineServiceUtil baselineServiceUtil,
-    final WorkpackModelService workpackModelService
-  ) {
+      final BaselineRepository baselineRepository,
+      final WorkpackRepository workpackRepository,
+      final BaselineServiceUtil baselineServiceUtil,
+      final WorkpackModelService workpackModelService,
+      final ApplicationCacheUtil cacheUtil) {
     this.baselineRepository = baselineRepository;
     this.workpackRepository = workpackRepository;
     this.baselineServiceUtil = baselineServiceUtil;
     this.workpackModelService = workpackModelService;
+    this.cacheUtil = cacheUtil;
   }
 
   @Override
-  public List<UpdateResponse> getUpdates(final Long idWorkpack) {
+  public List<BaselineUpdateBreakdown> getUpdates(final Long idWorkpack, final Long idPlan) {
     final Workpack workpack = this.findProjectWorkpackById(idWorkpack);
-    final List<BaselineWorkpackDto> workpacksMaster = this.baselineRepository.findAllWorkpacksMasterById(workpack.getId());
+    final List<BaselineWorkpackDto> workpacksMaster = this.baselineRepository
+        .findAllWorkpacksMasterById(workpack.getId());
     final Baseline baseline = this.baselineRepository.findActiveBaseline(idWorkpack).orElse(null);
     addScheduleAndConsumesMaster(workpacksMaster);
 
+    WorkpackResultDto workpackDto = cacheUtil.getWorkpackBreakdownStructure(idWorkpack, idPlan, true);
+
     if (baseline == null) {
       workpacksMaster.forEach(w -> w.setClassification(BaselineStatus.NEW));
-      return getBaselineDetailResponse(workpacksMaster);
+      List<UpdateObject> updatesList = getBaselineDetailResponse(workpacksMaster);
+      return createBaselineBreakdown(updatesList, workpackDto);
+      // return new UpdateResponse(updates, workpackDto);
     }
 
     final List<BaselineResultDto> bases = this.baselineRepository.findAllInWorkpackByIdWorkpack(idWorkpack);
 
-    BaselineResultDto baseLineParam = bases.stream().filter(b -> b.getIdBaseline().equals(baseline.getId())).findFirst().orElse(null);
+    BaselineResultDto baseLineParam = bases.stream().filter(b -> b.getIdBaseline().equals(baseline.getId())).findFirst()
+        .orElse(null);
 
-    List<UpdateResponse> list = new ArrayList<>(0);
+    List<UpdateObject> updatesList = new ArrayList<>(0);
 
     if (baseLineParam != null) {
-      final List<BaselineWorkpackDto> workpackBaselineCompare = this.baselineRepository.findAllWorkpacBaselineById(baseLineParam.getIdBaseline());
+      final List<BaselineWorkpackDto> workpackBaselineCompare = this.baselineRepository
+          .findAllWorkpacBaselineById(baseLineParam.getIdBaseline());
       addScheduleAndConsumesSnapshot(workpackBaselineCompare);
 
-      final List<BaselineWorkpackDto> result = this.baselineServiceUtil.compare(workpacksMaster, workpackBaselineCompare);
+      final List<BaselineWorkpackDto> result = this.baselineServiceUtil.compare(workpacksMaster,
+          workpackBaselineCompare);
       result.removeIf(r -> r.getClassification() == null);
-      list.addAll(getBaselineDetailResponse(result));
+      updatesList.addAll(getBaselineDetailResponse(result));
+
+      // O código abaixo foi feito por conta da task #484, onde deveria-se verificar se haviam Entregas inclusas em LBs passadas que não
+      // possuíam Cronograma ou Escopo na época que a LB foi submetida. A ideia era listar essas entregas nas Atualizações ao se criar
+      // uma LB nova. Porém, foi identificado que isso já ocorre, visto que essas entregas aparecem com alerta de "Sem cronograma" ou
+      // "Sem escopo". Portanto, fica o código aí para a posterioridade.
+
+      // final List<BaselineResultDto> remainingBaselines = bases.stream().filter(b -> b.getIdBaseline() != baseline.getId()).collect(Collectors.toList());
+      // for (BaselineResultDto oldBaseline : remainingBaselines) {
+      //   List<BaselineWorkpackDto> oldBaselineWorkpacks = this.baselineRepository.findAllWorkpacBaselineById(oldBaseline.getIdBaseline());
+      //   oldBaselineWorkpacks.removeIf(
+      //     w -> updatesList.stream().anyMatch(
+      //       p -> (
+      //         p.getIdWorkpack().equals(w.getId()) ||
+      //         p.getIdMaster().equals(w.getId()) ||
+      //         p.getIdWorkpack().equals(w.getIdMaster()) ||
+      //         p.getIdMaster().equals(w.getIdMaster())
+      //       )
+      //     )
+      //   );
+
+      //   addScheduleAndConsumesSnapshot(oldBaselineWorkpacks);
+
+      //   final List<UpdateObject> oldProblematicDeliveries = new ArrayList<>();
+      //   for (BaselineWorkpackDto oldWorkpack : oldBaselineWorkpacks) {
+      //     if (oldWorkpack.getType().equals("Deliverable")) {
+      //       UpdateObject newUR = new UpdateObject(
+      //         oldWorkpack.getId(),
+      //         oldWorkpack.getIdMaster(),
+      //         oldWorkpack.getFontIcon(),
+      //         oldWorkpack.getName(),
+      //         oldWorkpack.getClassification(),
+      //         true
+      //       );
+      //       newUR.setWorkpackType(oldWorkpack.getType());
+  
+      //       try {
+      //         Optional<WorkpackModel> deliveryModel = this.workpackModelService.getWorkpackModelByWorkpackId(oldWorkpack.getId());
+      //         newUR.setDeliveryModelHasActiveSchedule(deliveryModel.isPresent() && deliveryModel.get().getScheduleSessionActive());
+      //       } catch (Exception e) {
+      //         newUR.setDeliveryModelHasActiveSchedule(false);
+      //       }
+  
+      //       if (oldWorkpack.getSchedule().size() == 0) {
+      //         // Entrega não possui cronograma
+      //         newUR.setClassification(BaselineStatus.NO_SCHEDULE);
+      //       } else if (!this.workpackModelService.deliveryHasValidScope(oldWorkpack.getId())) {
+      //         // Entrega não possui cronograma com escopo válido
+      //         newUR.setClassification(BaselineStatus.UNDEFINED_SCOPE);
+      //       }
+
+      //       if (
+      //         newUR.getClassification() != null &&
+      //         (
+      //           newUR.getClassification().equals(BaselineStatus.NO_SCHEDULE) ||
+      //           newUR.getClassification().equals(BaselineStatus.UNDEFINED_SCOPE)
+      //         )
+      //       ) {
+      //         newUR.setIsFromAnOldBaseline(true);
+      //         oldProblematicDeliveries.add(newUR);
+      //       }
+      //     }
+      //   }
+
+      //   if (oldProblematicDeliveries.size() > 0) {
+      //     updatesList.addAll(oldProblematicDeliveries);
+      //   }
+      // }
     }
 
-    return list;
+    // return new UpdateResponse(list, workpackDto);
+    return createBaselineBreakdown(updatesList, workpackDto);
   }
 
   private void addScheduleAndConsumesSnapshot(final List<BaselineWorkpackDto> workpacks) {
     Set<Long> deliverablesId = workpacks.stream().filter(d -> "Deliverable".equals(d.getType())).map(
-      BaselineWorkpackDto::getId).collect(Collectors.toSet());
-    List<BaselineConsumesStep> stepConsumes = baselineRepository.findAllStepConsumesById(new ArrayList<>(deliverablesId));
-    List<BaselineScheduleStep> scheduleSteps = baselineRepository.findAllBaselineScheduleStepById(new ArrayList<>(deliverablesId));
+        BaselineWorkpackDto::getId).collect(Collectors.toSet());
+    List<BaselineConsumesStep> stepConsumes = baselineRepository
+        .findAllStepConsumesById(new ArrayList<>(deliverablesId));
+    List<BaselineScheduleStep> scheduleSteps = baselineRepository
+        .findAllBaselineScheduleStepById(new ArrayList<>(deliverablesId));
 
     for (BaselineWorkpackDto workpack : workpacks) {
       workpack.setConsumes(
-        stepConsumes.stream().filter(c -> c.getIdWorkpack().equals(workpack.getId())).collect(Collectors.toList()));
+          stepConsumes.stream().filter(c -> c.getIdWorkpack().equals(workpack.getId())).collect(Collectors.toList()));
       workpack.setSchedule(
-        scheduleSteps.stream().filter(s -> s.getIdWorkpack().equals(workpack.getId())).collect(Collectors.toList()));
+          scheduleSteps.stream().filter(s -> s.getIdWorkpack().equals(workpack.getId())).collect(Collectors.toList()));
     }
   }
 
   private void addScheduleAndConsumesMaster(final List<BaselineWorkpackDto> workpacks) {
     Set<Long> deliverablesId = workpacks.stream().filter(d -> "Deliverable".equals(d.getType())).map(
-      BaselineWorkpackDto::getId).collect(Collectors.toSet());
-    List<BaselineConsumesStep> stepConsumes = baselineRepository.findAllStepConsumesMasterById(new ArrayList<>(deliverablesId));
-    List<BaselineScheduleStep> scheduleSteps = baselineRepository.findAllScheduleStepMasterById(new ArrayList<>(deliverablesId));
+        BaselineWorkpackDto::getId).collect(Collectors.toSet());
+    List<BaselineConsumesStep> stepConsumes = baselineRepository
+        .findAllStepConsumesMasterById(new ArrayList<>(deliverablesId));
+    List<BaselineScheduleStep> scheduleSteps = baselineRepository
+        .findAllScheduleStepMasterById(new ArrayList<>(deliverablesId));
     for (BaselineWorkpackDto workpack : workpacks) {
       workpack.setConsumes(
-        stepConsumes.stream().filter(c -> c.getIdWorkpack().equals(workpack.getId())).collect(Collectors.toList()));
+          stepConsumes.stream().filter(c -> c.getIdWorkpack().equals(workpack.getId())).collect(Collectors.toList()));
       workpack.setSchedule(
-        scheduleSteps.stream().filter(s -> s.getIdWorkpack().equals(workpack.getId())).collect(Collectors.toList()));
+          scheduleSteps.stream().filter(s -> s.getIdWorkpack().equals(workpack.getId())).collect(Collectors.toList()));
     }
   }
 
-  private List<UpdateResponse> getBaselineDetailResponse(List<BaselineWorkpackDto> workpacks) {
-    final List<UpdateResponse> list = new ArrayList<>(0);
+  private List<UpdateObject> getBaselineDetailResponse(List<BaselineWorkpackDto> workpacks) {
+    final List<UpdateObject> list = new ArrayList<>(0);
     workpacks.forEach(w -> {
-      UpdateResponse newUR = new UpdateResponse(w.getId(), w.getFontIcon(), w.getName(), w.getClassification(), true);
+      UpdateObject newUR = new UpdateObject(
+        w.getId(),
+        w.getIdMaster(),
+        w.getFontIcon(),
+        w.getName(),
+        w.getClassification(),
+        true
+      );
       newUR.setWorkpackType(w.getType());
 
       if (w.getType().equals("Deliverable")) {
         try {
           Optional<WorkpackModel> deliveryModel = this.workpackModelService.getWorkpackModelByWorkpackId(w.getId());
-          newUR.setDeliveryModelHasActiveSchedule(deliveryModel.isPresent() && deliveryModel.get().getScheduleSessionActive());
+          newUR.setDeliveryModelHasActiveSchedule(
+              deliveryModel.isPresent() && deliveryModel.get().getScheduleSessionActive());
         } catch (Exception e) {
           newUR.setDeliveryModelHasActiveSchedule(false);
         }
@@ -135,7 +228,113 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
 
   private Workpack findProjectWorkpackById(final Long idWorkpack) {
     return this.workpackRepository.findWithPropertiesAndModelAndChildrenById(idWorkpack)
-      .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND))
-      .ifIsNotProjectThrowsException();
+        .orElseThrow(() -> new NegocioException(ApplicationMessage.WORKPACK_NOT_FOUND))
+        .ifIsNotProjectThrowsException();
   }
+
+  public List<BaselineUpdateBreakdown> createBaselineBreakdown(
+    List<UpdateObject> updates,
+    WorkpackResultDto workpackDto
+  ) {
+    List<BaselineUpdateBreakdown> listEtapas = new ArrayList<>(0);
+
+    for (WorkpackResultDto etapa : workpackDto.getChildren()) {
+      BaselineUpdateBreakdown etapaBreakdown = new BaselineUpdateBreakdown(
+        etapa.getId(),
+        etapa.getIdWorkpackModel(),
+        etapa.getIdPlan(),
+        etapa.getName(),
+        etapa.getFullName(),
+        etapa.getFontIcon(),
+        etapa.getModelName(),
+        etapa.getModelNameInPlural(),
+        etapa.getType()
+      );
+
+      for (WorkpackResultDto child : etapa.getChildren()) {
+        if (child.getType().equals("Organizer") && child.getModelName().equals("Subetapa")) {
+          BaselineUpdateBreakdown subEtapaBreakdown = new BaselineUpdateBreakdown(
+            child.getId(),
+            child.getIdWorkpackModel(),
+            child.getIdPlan(),
+            child.getName(),
+            child.getFullName(),
+            child.getFontIcon(),
+            child.getModelName(),
+            child.getModelNameInPlural(),
+            child.getType()
+          );
+
+          for (WorkpackResultDto entrega : child.getChildren()) {          
+            List<UpdateObject> entregaObjects = updates
+              .stream()
+              .filter(item -> item.getIdWorkpack().equals(entrega.getId()) || item.getIdMaster().equals(entrega.getId()))
+              .collect(Collectors.toList());
+
+            if (entregaObjects != null) {
+              for (UpdateObject entregaObject : entregaObjects) {
+                BaselineUpdateBreakdown entregaBreakdown = new BaselineUpdateBreakdown(
+                  entrega.getId(),
+                  entrega.getIdWorkpackModel(),
+                  entrega.getIdPlan(),
+                  entrega.getName(),
+                  entrega.getFullName(),
+                  entrega.getFontIcon(),
+                  entrega.getModelName(),
+                  entrega.getModelNameInPlural(),
+                  entrega.getType(),
+                  entregaObject.getClassification()
+                );
+  
+                entregaBreakdown.setDeliveryModelHasActiveSchedule(entregaObject.getDeliveryModelHasActiveSchedule());
+                if (entregaObject.getIsFromAnOldBaseline()) entregaBreakdown.setIsFromAnOldBaseline(true);
+                subEtapaBreakdown.addChild(entregaBreakdown);
+              }
+            }
+          };
+
+          if (subEtapaBreakdown.getChildren().size() > 0) {
+            etapaBreakdown.addChild(subEtapaBreakdown);
+          }
+        } else if (
+          (child.getType().equals("Deliverable") && child.getModelName().equals("Entrega")) ||
+          (child.getType().equals("Milestone") && child.getModelName().equals("Marco crítico"))
+        ) {
+          List<UpdateObject> deliveryOrMilestoneObjects = updates
+            .stream()
+            .filter(item -> item.getIdWorkpack().equals(child.getId()) || item.getIdMaster().equals(child.getId()))
+            .collect(Collectors.toList());
+
+          if (deliveryOrMilestoneObjects != null) {
+            for (UpdateObject deliveryOrMilestoneObject : deliveryOrMilestoneObjects) {
+              BaselineUpdateBreakdown entregaBreakdown = new BaselineUpdateBreakdown(
+                child.getId(),
+                child.getIdWorkpackModel(),
+                child.getIdPlan(),
+                child.getName(),
+                child.getFullName(),
+                child.getFontIcon(),
+                child.getModelName(),
+                child.getModelNameInPlural(),
+                child.getType(),
+                deliveryOrMilestoneObject.getClassification()
+              );
+              
+              if (child.getType().equals("Deliverable")) {
+                entregaBreakdown.setDeliveryModelHasActiveSchedule(deliveryOrMilestoneObject.getDeliveryModelHasActiveSchedule());
+                if (deliveryOrMilestoneObject.getIsFromAnOldBaseline()) entregaBreakdown.setIsFromAnOldBaseline(true);
+              }
+              etapaBreakdown.addChild(entregaBreakdown);
+            }
+          }
+        }
+      }
+
+      if (etapaBreakdown.getChildren().size() > 0) {
+        listEtapas.add(etapaBreakdown);
+      }
+    }
+
+    return listEtapas;
+  };
 }

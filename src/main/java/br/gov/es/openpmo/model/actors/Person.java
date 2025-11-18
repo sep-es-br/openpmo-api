@@ -5,13 +5,12 @@ import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
 import br.gov.es.openpmo.model.relations.IsFavoritedBy;
 import br.gov.es.openpmo.model.relations.IsInContactBookOf;
 import br.gov.es.openpmo.model.workpacks.Workpack;
+import br.gov.es.openpmo.utils.DisplayModeEnum;
+import java.util.*;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
-import org.springframework.data.annotation.Transient;
-
-import java.util.*;
-
 import static org.neo4j.ogm.annotation.Relationship.INCOMING;
+import org.springframework.data.annotation.Transient;
 
 @NodeEntity
 public class Person extends Actor {
@@ -21,7 +20,10 @@ public class Person extends Actor {
   private Long idPlan;
   private Long idWorkpack;
   private Long idWorkpackModelLinked;
-
+  private Integer pageSize;
+  private Boolean fixedMenu;
+  private DisplayModeEnum displayMode;
+          
   @Relationship(type = "IS_AUTHENTICATED_BY")
   private Set<IsAuthenticatedBy> authentications;
 
@@ -125,6 +127,40 @@ public class Person extends Actor {
   public void setIsFavoritedBy(final Set<IsFavoritedBy> isFavoritedBy) {
     this.isFavoritedBy = isFavoritedBy;
   }
+
+    public boolean isAdministrator() {
+        return administrator;
+    }
+
+    public void setAdministrator(boolean administrator) {
+        this.administrator = administrator;
+    }
+
+    public Integer getPageSize() {
+        return pageSize;
+    }
+
+    public void setPageSize(Integer pageSize) {
+        this.pageSize = pageSize;
+    }
+
+    public Boolean getFixedMenu() {
+        return fixedMenu;
+    }
+
+    public void setFixedMenu(Boolean fixedMenu) {
+        this.fixedMenu = fixedMenu;
+    }
+
+    public DisplayModeEnum getDisplayMode() {
+        return displayMode;
+    }
+
+    public void setDisplayMode(DisplayModeEnum displayMode) {
+        this.displayMode = displayMode;
+    }
+  
+  
 
   public PersonResponse getPersonResponse() {
     final PersonResponse personResponse = new PersonResponse();

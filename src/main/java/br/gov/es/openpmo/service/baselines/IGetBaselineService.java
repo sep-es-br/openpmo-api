@@ -4,7 +4,5 @@ import br.gov.es.openpmo.dto.baselines.BaselineDetailResponse;
 
 @FunctionalInterface
 public interface IGetBaselineService {
-
-  BaselineDetailResponse getById(Long idBaseline);
-
+  BaselineDetailResponse getById(Long idBaseline, Long idWorkpack);
 }

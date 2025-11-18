@@ -6,19 +6,18 @@ import br.gov.es.openpmo.dto.dashboards.DashboardBaselineResponse;
 import br.gov.es.openpmo.dto.dashboards.DashboardParameters;
 import br.gov.es.openpmo.dto.dashboards.v2.DashboardResponse;
 import br.gov.es.openpmo.service.authentication.TokenService;
+import br.gov.es.openpmo.service.dashboards.v2.DashboardService;
 import br.gov.es.openpmo.service.dashboards.v2.IDashboardBaselineService;
-import br.gov.es.openpmo.service.dashboards.v2.IDashboardService;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.utils.ResponseHandler;
 import io.swagger.annotations.Api;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.util.UriComponentsBuilder;
-
 import java.time.YearMonth;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Api
 @RestController
@@ -27,14 +26,15 @@ public class DashboardController implements IDashboardController {
 
   private final ResponseHandler responseHandler;
   private final IDashboardBaselineService baselineService;
-  private final IDashboardService dashboardService;
+  private final DashboardService dashboardService;
   private final ICanAccessService canAccessService;
   private final TokenService tokenService;
+  
 
   public DashboardController(
     final ResponseHandler responseHandler,
     final IDashboardBaselineService baselineService,
-    final IDashboardService dashboardService,
+    final DashboardService dashboardService,
     final ICanAccessService canAccessService,
     final TokenService tokenService
   ) {
