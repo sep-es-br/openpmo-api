@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.repository;
 
 import br.gov.es.openpmo.dto.menu.PlanWorkpackDto;
+import br.gov.es.openpmo.dto.menu.WorkpackMenuResultDto;
 import br.gov.es.openpmo.dto.menu.WorkpackResultDto;
 import br.gov.es.openpmo.dto.universalSearch.UniversalSearchItemQueryResult;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.WorkpackBreakdownClassificationDto;
@@ -880,6 +881,58 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "ORDER BY matchDistance ASC", countQuery = doSearchInAll_queryBase +
             "RETURN count(id)")
     public Page<UniversalSearchItemQueryResult> doSearchInAll(Long workpackId, String term, Long userId, Long planId, PageRequest request );
-            
+  
+  
+  @Query(
+        "MATCH (p)\n" +
+        "WHERE id(p) = $idPerson\n" +
+        "OPTIONAL MATCH (p)-[:CAN_ACCESS_WORKPACK]->(alwdWp:Workpack)\n" +
+        "MATCH (w:Workpack{deleted: false, canceled: false})-[:BELONGS_TO]->(plan:Plan)\n" +
+        "WHERE \n" +
+        "  id(plan) = $idPlan AND\n" +
+        "  (\n" +
+        "    p.administrator\n" +
+        "    OR (w)<-[:IS_IN*0..]-(alwdWp)\n" +
+        "  ) AND \n" +
+        "  NOT  (w)-[:IS_IN]->()\n" +
+        "RETURN w"
+  )
+  public List<Workpack> findRootsWithAccess(Long idPlan, Long idPerson);
+  
+  @Query(
+        "MATCH (p)\n" +
+        "WHERE id(p) = $idPerson\n" +
+        "OPTIONAL MATCH (p)-[:CAN_ACCESS_WORKPACK]->(alwdWp:Workpack)\n" +
+        "MATCH (w:Workpack{deleted: false, canceled: false})-[:IS_IN]->(parent:Workpack{deleted: false, canceled: false})\n" +
+        "WHERE \n" +
+        "  id(parent) = $idWp AND\n" +
+        "  (\n" +
+        "    p.administrator\n" +
+        "    OR (w)<-[:IS_IN*0..]-(alwdWp)\n" +
+        "    OR (w)-[:IS_IN*0..]->(alwdWp)\n" +
+        "  )\n" +
+        "RETURN w"
+  )
+  public List<Workpack> findChildrenWithAccess(Long idWp, Long idPerson);
+  
+  @Query(
+        "MATCH p=(plan:Plan)<-[blTo:BELONGS_TO]-(w:Workpack{deleted: false, canceled: false})-[:IS_INSTANCE_BY]->(model:WorkpackModel)\n" +
+        "WHERE id(w) = $wpId AND id(plan) = $planId\n" +
+        "OPTIONAL MATCH (parent:Workpack)<-[:IS_IN]-(w)\n" +
+        "WHERE id(parent) = $parentId \n" +
+        "RETURN \n" +
+        "  id(w) as id,\n" +
+        "  id(model) as idWorkpackModel,\n" +
+        "  CASE WHEN blTo.linked THEN id(model) ELSE null END as idWorkpackModelLinked,\n" +
+        "  id(plan) as idPlan,\n" +
+        "  id(parent) as idParent,\n" +
+        "  w.name as name,\n" +
+        "  w.fullName as fullName,\n" +
+        "  model.fontIcon as fontIcon,\n" +
+        "  model.sortByField as sort,\n" +
+        "  model.position as position"
+  )
+  public WorkpackMenuResultDto generateMenuItemFromWp(Long wpId, Long planId, Long parentId);
+             
 }
 
