@@ -11,5 +11,5 @@ import br.gov.es.openpmo.dto.dashboards.DashboardDataByMonth;
  * @author gean.carneiro
  */
 public interface DashboardRepositoryCustom {
-    public DashboardDataByMonth getDataByMonth(Long scope, Long baselineId, Integer monthYear);
+    DashboardDataByMonth getDataByMonth(Long scope, Long baselineId, Integer monthYear, boolean sCurve);
 }
