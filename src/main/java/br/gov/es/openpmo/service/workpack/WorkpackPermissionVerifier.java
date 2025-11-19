@@ -10,7 +10,6 @@ import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.relations.CanAccessOffice;
 import br.gov.es.openpmo.model.relations.CanAccessPlan;
 import br.gov.es.openpmo.model.relations.CanAccessWorkpack;
-import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.WorkpackPermissionRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
@@ -40,6 +39,7 @@ import static br.gov.es.openpmo.enumerator.PermissionLevelEnum.NONE;
 import static br.gov.es.openpmo.enumerator.PermissionLevelEnum.READ;
 import static br.gov.es.openpmo.enumerator.PermissionLevelEnum.UPDATE;
 import static java.lang.Boolean.TRUE;
+import java.util.Arrays;
 
 
 @Component
@@ -194,10 +194,10 @@ public class WorkpackPermissionVerifier {
 
 
      final CanAccessDataResponse access =
-        canAccessData.execute(List.of(idWorkpack), authorization);
+        canAccessData.execute( Arrays.asList(idWorkpack), authorization);
 
         if (Boolean.TRUE.equals(access.getEdit())) {
-          return List.of(
+          return Arrays.asList(
               new PermissionDto(     // pega role do execute
                   PermissionLevelEnum.EDIT
               )
@@ -205,7 +205,7 @@ public class WorkpackPermissionVerifier {
       }
   
       if (Boolean.TRUE.equals(access.getUpdate())) {
-          return List.of(
+          return Arrays.asList(
               new PermissionDto(
                   PermissionLevelEnum.UPDATE
               )
@@ -213,7 +213,7 @@ public class WorkpackPermissionVerifier {
       }
   
       if (Boolean.TRUE.equals(access.getRead())) {
-          return List.of(
+          return Arrays.asList(
               new PermissionDto(
                   PermissionLevelEnum.READ
               )
@@ -221,7 +221,7 @@ public class WorkpackPermissionVerifier {
       }
   
       if (Boolean.TRUE.equals(access.getBasicRead())) {
-          return List.of(
+          return Arrays.asList(
               new PermissionDto(
                   PermissionLevelEnum.READ // basicRead = READ
               )
