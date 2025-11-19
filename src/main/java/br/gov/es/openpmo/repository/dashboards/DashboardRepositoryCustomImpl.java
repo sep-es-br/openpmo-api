@@ -35,9 +35,9 @@ public class DashboardRepositoryCustomImpl implements DashboardRepositoryCustom 
     public DashboardRepositoryCustomImpl(Session session) {
         this.session = session;
     }
-    
+
     @Override
-    public DashboardDataByMonth getDataByMonth(Long scope, Long baselineId, Integer monthYear) {
+    public DashboardDataByMonth getDataByMonth(Long scope, Long baselineId, Integer monthYear, boolean sCurve) {
         
         Long startOfTask = System.currentTimeMillis();
         
@@ -53,6 +53,7 @@ public class DashboardRepositoryCustomImpl implements DashboardRepositoryCustom 
             parameters.put("scope", scope);
             parameters.put("baselineId", baselineId);
             parameters.put("monthYear", monthYear);
+            parameters.put("sCurve", sCurve);
             
             Result result = session.query(query, parameters);
             

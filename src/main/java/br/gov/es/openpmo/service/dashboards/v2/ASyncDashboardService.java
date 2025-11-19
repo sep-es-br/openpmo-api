@@ -50,7 +50,7 @@ public class ASyncDashboardService {
     
   @Transactional
   @Async
-  public CompletableFuture<DashboardDataByMonth> buildDataByMonth(final DashboardParameters parameters, Long agora) {
+  public CompletableFuture<DashboardDataByMonth> buildDataByMonth(final DashboardParameters parameters, Long agora, boolean sCurve) {
     
 
     YearMonth yearMonth = Optional.ofNullable(parameters.getYearMonth()).orElse(YearMonth.now().minusMonths(1));
@@ -59,7 +59,7 @@ public class ASyncDashboardService {
     Long scopeId = Optional.ofNullable(parameters.getWorkpackId()).orElse(parameters.getPlanId());
     Long baselineId = parameters.getBaselineId();
     
-    DashboardDataByMonth dataByMonth = dashboardRepository.getDataByMonth(scopeId, baselineId, Integer.valueOf(yearMonthAsStr));
+    DashboardDataByMonth dataByMonth = dashboardRepository.getDataByMonth(scopeId, baselineId, Integer.valueOf(yearMonthAsStr), sCurve);
     
     Logger.getGlobal().log(Level.INFO, "data by month concluido em: {0}ms", System.currentTimeMillis() - agora);
 

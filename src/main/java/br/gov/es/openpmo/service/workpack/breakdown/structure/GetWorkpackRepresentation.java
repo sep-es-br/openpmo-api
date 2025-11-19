@@ -3,13 +3,17 @@ package br.gov.es.openpmo.service.workpack.breakdown.structure;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import br.gov.es.openpmo.dto.MilestoneResultDto;
+import br.gov.es.openpmo.dto.dashboards.DashboardDataByMonth;
 import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
+import br.gov.es.openpmo.dto.dashboards.DashboardParameters;
 import br.gov.es.openpmo.dto.dashboards.MilestoneDateDto;
 import br.gov.es.openpmo.dto.dashboards.MilestoneDto;
 import br.gov.es.openpmo.dto.dashboards.RiskDto;
@@ -30,22 +34,23 @@ import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.baselines.GetBaselineUpdatesService;
+import br.gov.es.openpmo.service.dashboards.v2.ASyncDashboardService;
 import br.gov.es.openpmo.utils.DashboardCacheUtil;
 
 @Component
 public class GetWorkpackRepresentation {
-  private final DashboardCacheUtil dashboardCacheUtil;
+  private final ASyncDashboardService aSyncDashboardService;
 
   private final WorkpackRepository workpackRepository;
 
   public GetWorkpackRepresentation(
-    DashboardCacheUtil dashboardCacheUtil,
     BaselineRepository baselineRepository,
     GetBaselineUpdatesService baselineUpdatesService,
-    WorkpackRepository workpackRepository
+    WorkpackRepository workpackRepository,
+    ASyncDashboardService aSyncDashboardService
   ) {
-    this.dashboardCacheUtil = dashboardCacheUtil;
     this.workpackRepository = workpackRepository;
+    this.aSyncDashboardService = aSyncDashboardService;
   }
 
   public WorkpackRepresentation execute(
@@ -71,11 +76,33 @@ public class GetWorkpackRepresentation {
         journals.stream().filter(j -> j.getIdWorkapck().equals(workpackDto.getId())).findFirst().orElse(null));
 
     if (this.hasDashboard(workpackDto)) {
-      final DashboardMonthDto monthDto = dashboardCacheUtil.getDashboardMonthDto(
-        workpackDto.getId(),
-        "Deliverable".equals(workpackType),
-        workpackDto.getIdPlan()
+
+      DashboardParameters parameters = new DashboardParameters(
+          true,                      // showHeader
+          workpackDto.getId(),                     // workpackId (ou null)
+          null,                     // workpackModelId
+          null,                     // workpackModelLinkedId
+          workpackDto.getIdPlan(),                      // planId (ou null se for usar o workpackId)
+          null,                     // baselineId (pode ser null!)
+          null,                     // yearMonth (pode ser null!)
+          false,                    // linked
+          null,                      // personId
+          UriComponentsBuilder.newInstance() // uriComponentsBuilder
       );
+
+      final Long agora = System.currentTimeMillis();
+
+      CompletableFuture<DashboardDataByMonth> dataByMonthFuture = aSyncDashboardService.buildDataByMonth(parameters, agora, false);
+      DashboardDataByMonth data = dataByMonthFuture.join();
+      DashboardMonthDto dashboardMonthDto = data.getDashboardMonthDto();
+
+      final DashboardMonthDto monthDto = dashboardMonthDto;
+
+      // final DashboardMonthDto monthDto = dashboardCacheUtil.getDashboardMonthDto(
+      //   workpackDto.getId(),
+      //   "Deliverable".equals(workpackType),
+      //   workpackDto.getIdPlan()
+      // );
       workpackRepresentation.setDashboard(monthDto);
       workpackRepresentation.setMilestones(this.getMilestorneResultDto(milestoneDates, workpackDto));
       workpackRepresentation.setRisks(this.getRiskResultDto(risks, workpackDto));
