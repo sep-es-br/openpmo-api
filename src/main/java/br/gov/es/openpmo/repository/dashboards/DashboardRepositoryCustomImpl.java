@@ -17,8 +17,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import org.neo4j.ogm.model.Result;
-import org.neo4j.ogm.session.Session;
+import org.neo4j.driver.Driver;
+import org.neo4j.driver.Record;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Repository;
 
@@ -29,11 +29,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class DashboardRepositoryCustomImpl implements DashboardRepositoryCustom {
 
-    private final Session session;
+    private final Driver driver;
     
 
-    public DashboardRepositoryCustomImpl(Session session) {
-        this.session = session;
+    public DashboardRepositoryCustomImpl(Driver driver) {
+        this.driver = driver;
     }
     
     @Override
@@ -54,22 +54,27 @@ public class DashboardRepositoryCustomImpl implements DashboardRepositoryCustom 
             parameters.put("baselineId", baselineId);
             parameters.put("monthYear", monthYear);
             
-            Result result = session.query(query, parameters);
+            try (org.neo4j.driver.Session session = driver.session()) {
+                Record record = session.readTransaction(tx ->
+                        tx.run(query, parameters).single()
+                );
+                Logger.getGlobal().log(Level.INFO, "Data By Month: consulta ao banco feita em " + (System.currentTimeMillis() - startOfTask) + "ms");
+                startOfTask = System.currentTimeMillis();
+                
+                Object node = record.values().get(0).asObject();
+
+                ObjectMapper mapper = new ObjectMapper();
+                mapper.registerModule(new JavaTimeModule());
+                mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             
-            Logger.getGlobal().log(Level.INFO, "Data By Month: consulta ao banco feita em " + (System.currentTimeMillis() - startOfTask) + "ms");
-            startOfTask = System.currentTimeMillis();
-            
-            Map<String, Object> row = result.iterator().next();
-            
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.registerModule(new JavaTimeModule());
-            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-            
-            DashboardDataByMonth dto = mapper.convertValue(row.values().iterator().next(), DashboardDataByMonth.class);
-            
-            Logger.getGlobal().log(Level.INFO, "Data By Month: parse do JSON para Objeto DTO feita em " + (System.currentTimeMillis() - startOfTask) + "ms");
-            
-            return dto;
+                DashboardDataByMonth dto = mapper.convertValue(node, DashboardDataByMonth.class);
+                
+                
+                Logger.getGlobal().log(Level.INFO, "Data By Month: parse do JSON para Objeto DTO feita em " + (System.currentTimeMillis() - startOfTask) + "ms");
+
+                return dto;
+                
+            }
             
         } catch(Exception ex) {
             throw new RuntimeException(ex);
