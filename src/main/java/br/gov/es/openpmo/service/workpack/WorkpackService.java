@@ -3,7 +3,6 @@ package br.gov.es.openpmo.service.workpack;
 import br.gov.es.openpmo.configuration.properties.AppProperties;
 import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
 import br.gov.es.openpmo.dto.menu.PlanWorkpackDto;
-import br.gov.es.openpmo.dto.menu.WorkpackMenuResultDto;
 import br.gov.es.openpmo.dto.plan.PlanDto;
 import br.gov.es.openpmo.dto.universalSearch.UniversalSearchItemQueryResult;
 import br.gov.es.openpmo.dto.universalSearch.UniversalSearchParameters;
@@ -594,23 +593,6 @@ public class WorkpackService {
       term,
       this.appProperties.getSearchCutOffScore()
     );
-  }
-  
-  public List<Workpack> findRootsWithAccess(Long idPlan, Long idPerson) {
-      return workpackRepository.findRootsWithAccess(idPlan, idPerson);
-  }
-  
-  public List<Workpack> findChildrenWithAccess(Long idWp, Long idPerson){
-      return workpackRepository.findChildrenWithAccess(idWp, idPerson);
-  }
-  
-  public WorkpackMenuResultDto generateMenuItemFromWorkpack(Long idWorkpack, Long planId, Long parentId){
-      try {
-          return workpackRepository.generateMenuItemFromWp(idWorkpack, planId, parentId);
-      } catch (Exception ex) {
-          throw new RuntimeException("idWorkpack: " + idWorkpack, ex);
-      }
-      
   }
 
   private CustomFilter findCustomFilterById(final Long idFilter) {

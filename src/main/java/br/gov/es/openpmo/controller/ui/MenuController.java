@@ -16,8 +16,6 @@ import br.gov.es.openpmo.service.ui.IGetWorkpackModelParents;
 import br.gov.es.openpmo.service.ui.MenuService;
 import br.gov.es.openpmo.service.ui.WorkpackModelMenuService;
 import io.swagger.annotations.Api;
-import java.util.List;
-import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -26,6 +24,9 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.Set;
 
 @Api
 @RestController
@@ -101,8 +102,8 @@ public class MenuController {
   ) {
 
     final Long idUser = this.tokenService.getUserId(authorization);
-    final List<WorkpackMenuResultDto> portfolios = this.menuService
-        .findPortfolioMenuSimple(new PortfolioMenuRequest(idOffice, idPlan, idUser));
+    final Set<WorkpackMenuResultDto> portfolios = this.menuService
+        .findAllPortfolioCached(new PortfolioMenuRequest(idOffice, idPlan, idUser));
     GetSorterProperty.clear();
 
     if (portfolios.isEmpty()) {

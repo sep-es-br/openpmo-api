@@ -22,6 +22,11 @@ import br.gov.es.openpmo.service.workpack.PropertyComparator;
 import br.gov.es.openpmo.service.workpack.WorkpackPermissionVerifier;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
 import br.gov.es.openpmo.utils.ApplicationCacheUtil;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,9 +41,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 @Service
 public class MenuService {
@@ -78,22 +80,6 @@ public class MenuService {
     this.applicationCacheUtil = applicationCacheUtil;
     this.collator = Collator.getInstance();
     this.collator.setStrength(Collator.PRIMARY);
-  }
-  
-  public List<WorkpackMenuResultDto> findPortfolioMenuSimple(final PortfolioMenuRequest request) {
-      
-      List<Workpack> root = workpackService.findRootsWithAccess(request.getIdPlan(), request.getIdUser());
-      
-      return root.stream().map(rootItem -> this.parseWpToMenuItem(rootItem, request.getIdUser(), request.getIdPlan(), null)).collect(Collectors.toList());
-  }
-  
-  private WorkpackMenuResultDto parseWpToMenuItem(Workpack wp, Long idPerson, Long idPlan, Long idParent) {
-      WorkpackMenuResultDto wpMenu = workpackService.generateMenuItemFromWorkpack(wp.getId(), idPlan, idParent);
-      
-      List<Workpack> childrenWithAccess = workpackService.findChildrenWithAccess(wp.getId(), idPerson);
-      
-      wpMenu.setChildren(childrenWithAccess.stream().map(child -> this.parseWpToMenuItem(child, idPerson, idPlan, wp.getId())).collect(Collectors.toSet()));
-      return wpMenu;
   }
 
   public Set<WorkpackMenuResultDto> findAllPortfolioCached(final PortfolioMenuRequest request) {
