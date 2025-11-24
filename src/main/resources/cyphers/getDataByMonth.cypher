@@ -220,6 +220,11 @@ WITH
 				THEN 1 
 				ELSE (s.pcfrAcum + item.prcFisicoRealizado)
 			END * (s.cpAcum + item.custoPlanejado)
+          va: 
+			CASE WHEN (s.pcfrAcum + item.prcFisicoRealizado) > 1 
+				THEN 1 
+				ELSE (s.pcfrAcum + item.prcFisicoRealizado)
+			END * (s.cpAcum + item.custoPlanejado)
         }]
     }
   ) AS accumResult
