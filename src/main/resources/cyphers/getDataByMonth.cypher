@@ -309,7 +309,7 @@ WITH
    
 	masterEnd as reprogEndDate
 
-WITH mes, mesRef, custoReprogramadoAcumuladoMes, custoPlanejadoAcumuladoMes, custoRealizadoAcumuladoMes, 
+WITH mes, max(mes) as lastMonth, mesRef, custoReprogramadoAcumuladoMes, custoPlanejadoAcumuladoMes, custoRealizadoAcumuladoMes, 
 	fisicoReprogramado, fisicoPlanejado, max([fisicoReprogramado, fisicoPlanejado]) as maxFisicoRepPlan, fisicoRealizadoAcumuladoMes, fisicoVariacao,
 	pcFisicoRealizadoAcumMesMedio, valorAgregado, variacaoPrazo, variacaoCusto, estimadoNaConclusao, 
 	estimadoParaConclusao, idc, idp, plannedStartDate,plannedEndDate, actualStartDate, reprogStartDate, 
@@ -373,8 +373,8 @@ COLLECT({
 	idc: idc, 
 	idp: idp
 }) as months,
-max(mesRef) AS refDate,
-max(mes) as lastMonth,
+CASE WHEN mesRef > lastMonth THEN lastMonth ELSE mesRef END AS refDate,
+lastMonth,
 max(plannedStartDate) AS schedulePlannedStartDate,
 max(plannedEndDate) AS schedulePlannedEndDate,
 max(reprogStartDate) AS scheduleForeseenStartDate,
