@@ -129,11 +129,13 @@ public interface StepRepository extends Neo4jRepository<Step, Long> {
       Long snapshotId
   );
 
-  @Query("MATCH (s:Step)-[:COMPOSES]->(sch:Schedule) " +
+  @Query(
+       "MATCH (s:Step)-[:COMPOSES]->(sch:Schedule) " +
        "WHERE id(s) = $stepId " +
-       "WITH date(sch.start) AS startDate, s.periodFromStart AS offset " +
-       "WITH startDate + duration({months: offset}) AS stepDate " +
-       "RETURN stepDate <= date() AS canSave")
+       "WITH date(sch.start) + duration({months: s.periodFromStart}) AS stepDate " +
+       "RETURN (stepDate.year < date().year) " +
+       "   OR (stepDate.year = date().year AND stepDate.month <= date().month) AS canSave"
+     )
   Boolean canSaveStep(Long stepId);
 
 }

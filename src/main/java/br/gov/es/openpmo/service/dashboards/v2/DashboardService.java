@@ -49,7 +49,7 @@ public class DashboardService {
       
     final Long agora = System.currentTimeMillis();
     
-    CompletableFuture<DashboardDataByMonth> dataByMonthFuture = aSyncDashboardService.buildDataByMonth(parameters, agora);
+    CompletableFuture<DashboardDataByMonth> dataByMonthFuture = aSyncDashboardService.buildDataByMonth(parameters, agora, true);
     CompletableFuture<MilestoneResultDto> milestonesFuture = aSyncDashboardService.buildMilestones(parameters, agora);
     CompletableFuture<DashboardStatusData> statusDataFuture = aSyncDashboardService.buildStatusData(parameters, agora);
     CompletableFuture<DatasheetResponse> datasheetFuture = aSyncDashboardService.buildDatasheet(parameters, agora);
