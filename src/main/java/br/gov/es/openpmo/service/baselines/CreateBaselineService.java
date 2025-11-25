@@ -14,10 +14,14 @@ import br.gov.es.openpmo.repository.IsProposedByRepository;
 import br.gov.es.openpmo.repository.PersonRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.journals.JournalCreator;
+import br.gov.es.openpmo.service.schedule.ScheduleService;
+import br.gov.es.openpmo.service.workpack.MilestoneService;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PERSON_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_HAS_CANCELATION_PROPOSAL_INVALID_STATE_ERROR;
+import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_HAS_NO_PLANNED_WORK_ERROR;
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_HAS_PENDING_BASELINES_INVALID_STATE_ERROR;
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_NOT_FOUND;
+import java.math.BigDecimal;
 import java.util.Optional;
 import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +48,10 @@ public class CreateBaselineService implements ICreateBaselineService {
   private final IsProposedByRepository isProposedByRepository;
 
   private final JournalCreator journalCreator;
+  
+  private final ScheduleService scheduleSrv;
+  
+  private final MilestoneService milestoneSrv;
 
   @Autowired
   public CreateBaselineService(
@@ -52,7 +60,9 @@ public class CreateBaselineService implements ICreateBaselineService {
     final PersonRepository personRepository,
     final WorkpackRepository workpackRepository,
     final IsProposedByRepository isProposedByRepository,
-    final JournalCreator journalCreator
+    final JournalCreator journalCreator,
+    final ScheduleService scheduleSrv,
+    final MilestoneService milestoneSrv
   ) {
     this.baselineRepository = baselineRepository;
     this.isBaselinedByRepository = isBaselinedByRepository;
@@ -60,6 +70,8 @@ public class CreateBaselineService implements ICreateBaselineService {
     this.workpackRepository = workpackRepository;
     this.isProposedByRepository = isProposedByRepository;
     this.journalCreator = journalCreator;
+    this.scheduleSrv = scheduleSrv;
+    this.milestoneSrv = milestoneSrv;
   }
   
   @PostConstruct
@@ -86,6 +98,8 @@ public class CreateBaselineService implements ICreateBaselineService {
 
     this.ifWorkpackHasPendingBaselinesThrowsException(workpack);
     this.ifWorkpackHasCancelationProposalThrowsException(workpack);
+    this.ifWorkpackHasNoPlannedWorkThrowsException(workpack);
+    this.ifWorkpackHasLessThenRequiredMilestone(workpack);
 
     final Baseline baseline = this.createBaseline(request);
 
@@ -151,6 +165,22 @@ public class CreateBaselineService implements ICreateBaselineService {
     if(this.hasCancelationProposal(workpack)) {
       throw new NegocioException(WORKPACK_HAS_CANCELATION_PROPOSAL_INVALID_STATE_ERROR);
     }
+  }
+
+  private void ifWorkpackHasNoPlannedWorkThrowsException(final Workpack workpack) {
+      BigDecimal totalPlannedWork = this.scheduleSrv.getPlannedWorkByWorkpack(workpack.getId());
+      
+      if(totalPlannedWork.equals(BigDecimal.valueOf(0))) {
+          throw new NegocioException(WORKPACK_HAS_NO_PLANNED_WORK_ERROR);
+      }
+  }
+
+  private void ifWorkpackHasLessThenRequiredMilestone(final Workpack workpack) {
+      
+      
+      
+      
+      ss
   }
 
   private boolean hasCancelationProposal(final Workpack workpack) {

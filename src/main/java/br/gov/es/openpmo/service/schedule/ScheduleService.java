@@ -781,7 +781,7 @@ public class ScheduleService {
     return this.baselineRepository.workpackHasSnapshotOrProjectWithBaseline(workpackId);
   }
   
-  public Long getPlannedWorkByWorkpack(Long workpackId) {
+  public BigDecimal getPlannedWorkByWorkpack(Long workpackId) {
       return this.scheduleRepository.getPlannedWorkByWorkpack(workpackId);
   }
 }
