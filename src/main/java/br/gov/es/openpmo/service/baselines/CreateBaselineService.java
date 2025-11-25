@@ -14,18 +14,24 @@ import br.gov.es.openpmo.repository.IsProposedByRepository;
 import br.gov.es.openpmo.repository.PersonRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.journals.JournalCreator;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.Optional;
-
 import static br.gov.es.openpmo.utils.ApplicationMessage.PERSON_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_HAS_CANCELATION_PROPOSAL_INVALID_STATE_ERROR;
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_HAS_PENDING_BASELINES_INVALID_STATE_ERROR;
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_NOT_FOUND;
+import java.util.Optional;
+import javax.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 @Service
 public class CreateBaselineService implements ICreateBaselineService {
+    
+    @Value("${app.minMC}")
+    public Integer appMinMCConfig;
+    
+    @Value("${app.minMCPor}")
+    public String appMinMCPorConfig;
 
   private final BaselineRepository baselineRepository;
 
@@ -54,6 +60,21 @@ public class CreateBaselineService implements ICreateBaselineService {
     this.workpackRepository = workpackRepository;
     this.isProposedByRepository = isProposedByRepository;
     this.journalCreator = journalCreator;
+  }
+  
+  @PostConstruct
+  public void validateProperty() {      
+      
+      if(this.appMinMCConfig == null)
+          throw new NegocioException("Insira um valor minimo de MC(app.minMC) no application.properties");
+      
+      switch (this.appMinMCPorConfig) {
+          case "project":
+          case "deliverable":
+              break;
+          default:
+              throw new NegocioException("Insira um valor valido de base do MC(app.minMCPor) no application.properties");
+      }
   }
 
   @Override
@@ -147,5 +168,14 @@ public class CreateBaselineService implements ICreateBaselineService {
     final IsBaselinedBy baselinedBy = new IsBaselinedBy(baseline, workpack);
     this.isBaselinedByRepository.save(baselinedBy, 0);
   }
+  
+//  @Value("${app.minMC}");
+//  public void setAppMinMCConfig(String value) {
+//      if(value.isEmpty()) {
+//          this.appMinMCConfig = null;
+//      }
+//      
+//      this.appMinMCConfig = Integer.valueOf(value);
+//  }
 
 }

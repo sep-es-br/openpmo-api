@@ -3,12 +3,11 @@ package br.gov.es.openpmo.repository;
 import br.gov.es.openpmo.dto.schedule.ScheduleDto;
 import br.gov.es.openpmo.dto.schedule.StepAggregateDto;
 import br.gov.es.openpmo.model.schedule.Schedule;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
-
-import java.util.List;
-import java.util.Optional;
 
 public interface ScheduleRepository extends Neo4jRepository<Schedule, Long> {
   @Query(
@@ -203,4 +202,9 @@ public interface ScheduleRepository extends Neo4jRepository<Schedule, Long> {
     "ORDER BY stepDate ASC\n"
   )
   List<StepAggregateDto>findCombinedStepData(@Param("idWorkpack") Long idWorkpack);
+  
+  @Query(
+        ""
+  )
+  Long getPlannedWorkByWorkpack(Long workpackId);
 }
