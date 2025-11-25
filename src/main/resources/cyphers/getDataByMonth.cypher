@@ -119,7 +119,7 @@ WITH
 	r.custorealizado			AS custoRealizado,
 	r.custoplanejado      		AS custoPlanejado,
 	r.fisicorealizado			AS fisicoRealizado
-order by wId, anomes
+order by anomes asc
 
 // Agrupa novamente por entrega (wId) os rows mensais existentes, agora para acumular
 WITH wId, wCompleted, bacEntrega, fisicoTotal, fisicoRepTotal, _anomesRef, _sCurve,
@@ -307,8 +307,7 @@ WITH
         else toString(date())
         end
     end as actualEndDate,
-
-    
+   
 	masterEnd as reprogEndDate
 
 WITH mes, mesRef, custoReprogramadoAcumuladoMes, custoPlanejadoAcumuladoMes, custoRealizadoAcumuladoMes, 
@@ -352,6 +351,8 @@ WITH mes, mesRef, custoReprogramadoAcumuladoMes, custoPlanejadoAcumuladoMes, cus
 		END
 	ELSE NULL
 	END AS scheduleForeseenValue
+
+ORDER BY mes ASC
 	
 WITH
 COLLECT({
