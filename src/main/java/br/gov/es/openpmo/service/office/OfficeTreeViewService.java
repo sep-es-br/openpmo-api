@@ -24,6 +24,7 @@ import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.repository.OfficeRepository;
 import br.gov.es.openpmo.repository.PlanRepository;
+import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.utils.ApplicationCacheUtil;
 
 @Service
@@ -33,17 +34,20 @@ public class OfficeTreeViewService {
   private final OfficeRepository officeRepository;
   private final PlanRepository planRepository;
   private final ApplicationCacheUtil cacheUtil;
+  private final WorkpackRepository workpackRepository;
 
 
   @Autowired
   public OfficeTreeViewService(
     final OfficeRepository officeRepository,
     final ApplicationCacheUtil cacheUtil,
-    final PlanRepository planRepository
+    final PlanRepository planRepository,
+    final WorkpackRepository workpackRepository
   ) {
     this.officeRepository = officeRepository;
     this.cacheUtil = cacheUtil;
     this.planRepository = planRepository;
+    this.workpackRepository = workpackRepository;
   }
 
   public OfficeTreeViewDto findOfficeTreeViewById(final Long idOffice, final Long idPlan, final Long idWorkpack) {
@@ -82,6 +86,12 @@ public class OfficeTreeViewService {
 
   private List<WorkpackResultDto> getListWorkpacksById(Long idPlan, Long idWorkpack) {
     WorkpackResultDto workpack = this.cacheUtil.getWorkpackBreakdownStructure(idWorkpack, idPlan,true);
+    if(workpack == null){
+      List<WorkpackResultDto> result = workpackRepository.findWorkpackMenuById(idPlan, idWorkpack);
+      if (!result.isEmpty()) {
+        workpack = result.get(0);
+      }
+    }
     if (workpack == null) return new ArrayList<>(0);
     return Collections.singletonList(workpack);
   }
