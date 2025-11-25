@@ -7,6 +7,7 @@ import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.relations.IsBaselinedBy;
 import br.gov.es.openpmo.model.relations.IsProposedBy;
 import br.gov.es.openpmo.model.relations.IsStakeholderIn;
+import br.gov.es.openpmo.model.workpacks.Deliverable;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.IsBaselinedByRepository;
@@ -14,8 +15,22 @@ import br.gov.es.openpmo.repository.IsProposedByRepository;
 import br.gov.es.openpmo.repository.PersonRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.journals.JournalCreator;
+<<<<<<< Updated upstream
 import br.gov.es.openpmo.service.schedule.ScheduleService;
 import br.gov.es.openpmo.service.workpack.MilestoneService;
+=======
+<<<<<<< Updated upstream
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+
+=======
+import br.gov.es.openpmo.service.schedule.ScheduleService;
+import br.gov.es.openpmo.service.workpack.MilestoneService;
+import br.gov.es.openpmo.utils.ApplicationMessage;
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
 import static br.gov.es.openpmo.utils.ApplicationMessage.PERSON_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_HAS_CANCELATION_PROPOSAL_INVALID_STATE_ERROR;
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_HAS_NO_PLANNED_WORK_ERROR;
@@ -167,6 +182,11 @@ public class CreateBaselineService implements ICreateBaselineService {
     }
   }
 
+<<<<<<< Updated upstream
+=======
+<<<<<<< Updated upstream
+=======
+>>>>>>> Stashed changes
   private void ifWorkpackHasNoPlannedWorkThrowsException(final Workpack workpack) {
       BigDecimal totalPlannedWork = this.scheduleSrv.getPlannedWorkByWorkpack(workpack.getId());
       
@@ -177,12 +197,26 @@ public class CreateBaselineService implements ICreateBaselineService {
 
   private void ifWorkpackHasLessThenRequiredMilestone(final Workpack workpack) {
       
+<<<<<<< Updated upstream
+=======
+      Long countMilestones = this.milestoneSrv.countMilestonesByWorkpack(workpack.getId());
+      
+      if(this.appMinMCPorConfig.equals("project") && countMilestones < this.appMinMCConfig){
+          throw new NegocioException(ApplicationMessage.WORKPACK_HAS_LESS_THEN_REQUIRED_MILESTONE_AMOUNT_ERROR + ";" + this.appMinMCConfig);
+      }
+      
+      Long countDelivable = this.workpackRepository.countTypeByWorkpack(workpack.getId(), Deliverable.class.getSimpleName());
+>>>>>>> Stashed changes
       
       
       
       ss
   }
 
+<<<<<<< Updated upstream
+=======
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
   private boolean hasCancelationProposal(final Workpack workpack) {
     return this.baselineRepository.workpackHasCancelationProposal(workpack.getId());
   }
