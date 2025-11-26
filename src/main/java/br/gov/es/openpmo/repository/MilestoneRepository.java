@@ -26,7 +26,7 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
   );
   
   @Query(
-        "MATCH p=(w:Workpack)<-[:IS_IN*]-(m:Milestone)\n" +
+        "MATCH p=(w:Workpack)<-[:IS_IN*]-(m:Milestone{deleted: false, canceled: false})\n" +
         "where id(w) = $workpackId \n" +
         "return count(m)"
   )
