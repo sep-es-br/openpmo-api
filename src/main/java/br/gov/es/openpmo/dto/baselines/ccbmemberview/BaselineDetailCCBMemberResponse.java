@@ -39,6 +39,8 @@ public class BaselineDetailCCBMemberResponse {
 
   private BaselineScopeDetail scope;
 
+  private List<TripleConstraintBreakdown> tripleConstraintBreakdown;
+
   public BaselineDetailCCBMemberResponse(
     final Long id,
     final Long idWorkpack,
@@ -86,6 +88,7 @@ public class BaselineDetailCCBMemberResponse {
       response.schedule = output.getScheduleDetail();
       response.cost = output.getCostDetail();
       response.scope = output.getScopeDetail();
+      response.tripleConstraintBreakdown = output.getTripleConstraintBreakdown();
       response.scope.roundData();
       response.cost.roundData();
       response.schedule.roundData();
@@ -170,6 +173,10 @@ public class BaselineDetailCCBMemberResponse {
 
   public void addEvaluation(final EvaluationItem evaluation) {
     this.evaluations.add(evaluation);
+  }
+
+  public List<TripleConstraintBreakdown> getTripleConstraintBreakdown() {
+    return this.tripleConstraintBreakdown;
   }
 
 }

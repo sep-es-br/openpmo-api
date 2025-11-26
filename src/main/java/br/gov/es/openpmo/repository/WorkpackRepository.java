@@ -908,12 +908,11 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "RETURN count(id)")
     public Page<UniversalSearchItemQueryResult> doSearchInAll(Long workpackId, String term, Long userId, Long planId, PageRequest request );
     
-      @Query(
-        "MATCH (w:Workpack)-[:BELONGS_TO]->(plan:Plan) " +
-        "WHERE ID(w) = $idWorkpack " +
-        "RETURN plan "
-      )
-      public Plan findPlanByWorkpackId(Long idWorkpack);
-            
+  @Query(
+    "MATCH (w:Workpack)-[:BELONGS_TO]->(plan:Plan) " +
+    "WHERE ID(w) = $idWorkpack " +
+    "RETURN plan "
+  )
+  public Optional<Plan> findPlanByWorkpackId(Long idWorkpack);
 }
 

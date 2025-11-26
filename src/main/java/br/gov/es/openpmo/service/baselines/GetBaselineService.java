@@ -12,6 +12,7 @@ import br.gov.es.openpmo.dto.menu.WorkpackResultDto;
 import br.gov.es.openpmo.enumerator.BaselineStatus;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
+import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
@@ -30,6 +31,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_NOT_FOUND;
+import static br.gov.es.openpmo.utils.ApplicationMessage.PLAN_NOT_FOUND;
 
 @Service
 public class GetBaselineService implements IGetBaselineService {
@@ -163,9 +165,11 @@ public class GetBaselineService implements IGetBaselineService {
       idWorkpack = this.baselineRepository.findProjectByBaselineId(baseline.getId()).getId();
     }
 
-    Long idPlan = this.workpackRepository.findPlanByWorkpackId(idWorkpack).getId();
+    Plan plan = this.workpackRepository.findPlanByWorkpackId(idWorkpack).orElseThrow(() -> new NegocioException(PLAN_NOT_FOUND));
+    Long idPlan = plan.getId();
+
     WorkpackResultDto workpackDto = cacheUtil.getWorkpackBreakdownStructure(idWorkpack, idPlan, true);
-    if(workpackDto == null){
+    if (workpackDto == null){
       List<WorkpackResultDto> result = workpackRepository.findWorkpackMenuById(idPlan, idWorkpack);
       if (!result.isEmpty()) {
         workpackDto = result.get(0);

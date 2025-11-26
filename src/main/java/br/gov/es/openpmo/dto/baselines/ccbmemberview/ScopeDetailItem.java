@@ -13,34 +13,46 @@ import static java.math.BigDecimal.ONE;
 import static java.math.BigDecimal.ZERO;
 
 public class ScopeDetailItem {
+  private final Long idWorkpack;
 
   private final String icon;
+
   private final String description;
+
   @JsonProperty("currentValue")
   private final BigDecimal currentWork;
+
   @JsonProperty("proposedValue")
   private final BigDecimal proposedWork;
+
   @JsonIgnore
   private final BigDecimal currentCost;
+
   @JsonIgnore
   private final BigDecimal proposedCost;
+
   private final String unitName;
+
   @JsonIgnore
   private final BigDecimal unitCost;
+
   @JsonIgnore
   private final boolean hasPreviousBaseline;
+
   private BigDecimal variation;
+
   @JsonIgnore
   private BigDecimal variationValue;
 
-
   public ScopeDetailItem(
+    final Long idWorkpack,
     final String icon,
     final String description,
     final String unitName,
     final StepCollectedData stepCollectedData,
     final boolean hasPreviousBaseline
   ) {
+    this.idWorkpack = idWorkpack;
     this.icon = icon;
     this.description = description;
     this.currentWork = stepCollectedData.work.getCurrentValue();
@@ -59,12 +71,12 @@ public class ScopeDetailItem {
   }
 
   private void calculateVariation() {
-    if((this.proposedWork == null && this.currentWork == null)) {
+    if ((this.proposedWork == null && this.currentWork == null)) {
       this.variation = null;
       return;
     }
 
-    if(this.currentWork == null || this.currentWork.compareTo(ZERO) == 0) {
+    if (this.currentWork == null || this.currentWork.compareTo(ZERO) == 0) {
       this.variation = this.hasPreviousBaseline ? ONE_HUNDRED : ZERO;
       this.variationValue = this.unitCost;
       return;
@@ -85,6 +97,10 @@ public class ScopeDetailItem {
 
   public String getUnitName() {
     return this.unitName;
+  }
+
+  public Long getIdWorkpack() {
+    return this.idWorkpack;
   }
 
   public String getIcon() {
@@ -120,9 +136,7 @@ public class ScopeDetailItem {
     return this.unitCost;
   }
 
-
   public void roundData() {
     this.variation = roundOneDecimal(this.variation);
   }
-
 }
