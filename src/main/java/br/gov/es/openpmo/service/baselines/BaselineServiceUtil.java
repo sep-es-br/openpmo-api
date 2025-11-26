@@ -104,7 +104,7 @@ public class BaselineServiceUtil {
             }
             
             if(principal.getClassification() == null) {
-                principal.setClassification(BaselineStatus.NO_CHANGES);
+                principal.setClassification(BaselineStatus.UNCHANGED);
             }
         }
         final List<BaselineWorkpackDto> workpackBaselineDeleted = listCompare.stream().filter(
