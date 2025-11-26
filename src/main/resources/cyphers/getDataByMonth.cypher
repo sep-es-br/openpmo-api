@@ -373,7 +373,7 @@ COLLECT({
 	idc: idc, 
 	idp: idp
 }) as months,
-CASE WHEN mesRef > max(lastMonth) THEN max(lastMonth) ELSE mesRef END AS refDate,
+CASE WHEN max(mesRef) > max(lastMonth) THEN max(lastMonth) ELSE max(mesRef) END AS refDate,
 max(lastMonth) AS lastMonth,
 max(plannedStartDate) AS schedulePlannedStartDate,
 max(plannedEndDate) AS schedulePlannedEndDate,
