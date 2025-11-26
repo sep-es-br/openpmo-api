@@ -106,15 +106,8 @@ public class ApplicationMessage {
   public static final String BASELINE_NOT_FOUND = "baseline.not.found";
   public static final String BASELINE_IS_NOT_DRAFT_INVALID_STATE_ERROR = "baseline.is.not.draft.invalid-state.error";
   public static final String WORKPACK_HAS_PENDING_BASELINES_INVALID_STATE_ERROR = "workpack.has.pending.baselines.invalid-state.error";
-<<<<<<< Updated upstream
-  public static final String WORKPACK_HAS_NO_PLANNED_WORK_ERROR = "workpack.has.no.planned.work.error";
-=======
-<<<<<<< Updated upstream
-=======
   public static final String WORKPACK_HAS_NO_PLANNED_WORK_ERROR = "workpack.has.no.planned.work.error";
   public static final String WORKPACK_HAS_LESS_THEN_REQUIRED_MILESTONE_AMOUNT_ERROR = "workpack.has.less.then.required.milestone.amount.error";
->>>>>>> Stashed changes
->>>>>>> Stashed changes
   public static final String EMAIL_NOT_NULL = "person.email.not.null";
   public static final String WORKPACK_IS_NOT_SNAPSHOT_INVALID_STATE_ERROR = "workpack.is.not.snapshot.invalid-state.error";
   public static final String CCB_MEMBER_NOT_FOUND = "ccb-member.not.found";

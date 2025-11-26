@@ -7,7 +7,6 @@ import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.relations.IsBaselinedBy;
 import br.gov.es.openpmo.model.relations.IsProposedBy;
 import br.gov.es.openpmo.model.relations.IsStakeholderIn;
-import br.gov.es.openpmo.model.workpacks.Deliverable;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.IsBaselinedByRepository;
@@ -15,22 +14,8 @@ import br.gov.es.openpmo.repository.IsProposedByRepository;
 import br.gov.es.openpmo.repository.PersonRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.journals.JournalCreator;
-<<<<<<< Updated upstream
 import br.gov.es.openpmo.service.schedule.ScheduleService;
-import br.gov.es.openpmo.service.workpack.MilestoneService;
-=======
-<<<<<<< Updated upstream
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.Optional;
-
-=======
-import br.gov.es.openpmo.service.schedule.ScheduleService;
-import br.gov.es.openpmo.service.workpack.MilestoneService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
->>>>>>> Stashed changes
->>>>>>> Stashed changes
 import static br.gov.es.openpmo.utils.ApplicationMessage.PERSON_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_HAS_CANCELATION_PROPOSAL_INVALID_STATE_ERROR;
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_HAS_NO_PLANNED_WORK_ERROR;
@@ -38,21 +23,16 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_HAS_PENDING_BA
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_NOT_FOUND;
 import java.math.BigDecimal;
 import java.util.Optional;
-import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class CreateBaselineService implements ICreateBaselineService {
     
-    @Value("${app.minMC}")
-    public Integer appMinMCConfig;
-    
-    @Value("${app.minMCPor}")
-    public String appMinMCPorConfig;
 
   private final BaselineRepository baselineRepository;
+  
+  private final BaselineServiceUtil baselineSrvUtil;
 
   private final IsBaselinedByRepository isBaselinedByRepository;
 
@@ -66,7 +46,6 @@ public class CreateBaselineService implements ICreateBaselineService {
   
   private final ScheduleService scheduleSrv;
   
-  private final MilestoneService milestoneSrv;
 
   @Autowired
   public CreateBaselineService(
@@ -77,7 +56,7 @@ public class CreateBaselineService implements ICreateBaselineService {
     final IsProposedByRepository isProposedByRepository,
     final JournalCreator journalCreator,
     final ScheduleService scheduleSrv,
-    final MilestoneService milestoneSrv
+    final BaselineServiceUtil baselineSrvUtil
   ) {
     this.baselineRepository = baselineRepository;
     this.isBaselinedByRepository = isBaselinedByRepository;
@@ -86,22 +65,7 @@ public class CreateBaselineService implements ICreateBaselineService {
     this.isProposedByRepository = isProposedByRepository;
     this.journalCreator = journalCreator;
     this.scheduleSrv = scheduleSrv;
-    this.milestoneSrv = milestoneSrv;
-  }
-  
-  @PostConstruct
-  public void validateProperty() {      
-      
-      if(this.appMinMCConfig == null)
-          throw new NegocioException("Insira um valor minimo de MC(app.minMC) no application.properties");
-      
-      switch (this.appMinMCPorConfig) {
-          case "project":
-          case "deliverable":
-              break;
-          default:
-              throw new NegocioException("Insira um valor valido de base do MC(app.minMCPor) no application.properties");
-      }
+    this.baselineSrvUtil = baselineSrvUtil;
   }
 
   @Override
@@ -114,7 +78,7 @@ public class CreateBaselineService implements ICreateBaselineService {
     this.ifWorkpackHasPendingBaselinesThrowsException(workpack);
     this.ifWorkpackHasCancelationProposalThrowsException(workpack);
     this.ifWorkpackHasNoPlannedWorkThrowsException(workpack);
-    this.ifWorkpackHasLessThenRequiredMilestone(workpack);
+    this.ifWorkpackHasLessThenRequiredMilestoneThrowException(workpack);
 
     final Baseline baseline = this.createBaseline(request);
 
@@ -182,11 +146,6 @@ public class CreateBaselineService implements ICreateBaselineService {
     }
   }
 
-<<<<<<< Updated upstream
-=======
-<<<<<<< Updated upstream
-=======
->>>>>>> Stashed changes
   private void ifWorkpackHasNoPlannedWorkThrowsException(final Workpack workpack) {
       BigDecimal totalPlannedWork = this.scheduleSrv.getPlannedWorkByWorkpack(workpack.getId());
       
@@ -195,28 +154,16 @@ public class CreateBaselineService implements ICreateBaselineService {
       }
   }
 
-  private void ifWorkpackHasLessThenRequiredMilestone(final Workpack workpack) {
+  private void ifWorkpackHasLessThenRequiredMilestoneThrowException(final Workpack workpack) {
       
-<<<<<<< Updated upstream
-=======
-      Long countMilestones = this.milestoneSrv.countMilestonesByWorkpack(workpack.getId());
+      Integer requiredAmount = this.baselineSrvUtil.checkMinimumMilestoneRequired(workpack);
       
-      if(this.appMinMCPorConfig.equals("project") && countMilestones < this.appMinMCConfig){
-          throw new NegocioException(ApplicationMessage.WORKPACK_HAS_LESS_THEN_REQUIRED_MILESTONE_AMOUNT_ERROR + ";" + this.appMinMCConfig);
+      if(requiredAmount != null) {
+          throw new NegocioException(ApplicationMessage.WORKPACK_HAS_LESS_THEN_REQUIRED_MILESTONE_AMOUNT_ERROR + ";" + requiredAmount);
       }
       
-      Long countDelivable = this.workpackRepository.countTypeByWorkpack(workpack.getId(), Deliverable.class.getSimpleName());
->>>>>>> Stashed changes
-      
-      
-      
-      ss
   }
 
-<<<<<<< Updated upstream
-=======
->>>>>>> Stashed changes
->>>>>>> Stashed changes
   private boolean hasCancelationProposal(final Workpack workpack) {
     return this.baselineRepository.workpackHasCancelationProposal(workpack.getId());
   }
