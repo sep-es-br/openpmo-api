@@ -162,8 +162,7 @@ public class GetBaselineService implements IGetBaselineService {
       idWorkpack = this.baselineRepository.findProjectByBaselineId(baseline.getId()).getId();
     }
 
-    Plan plan = this.workpackRepository.findPlanByWorkpackId(idWorkpack);
-    if(plan == null) throw new NegocioException(PLAN_NOT_FOUND);
+    Plan plan = this.workpackRepository.findPlanByWorkpackId(idWorkpack).orElseThrow(() -> new NegocioException(PLAN_NOT_FOUND));
     Long idPlan = plan.getId();
 
     WorkpackResultDto workpackDto = cacheUtil.getWorkpackBreakdownStructure(idWorkpack, idPlan, true);

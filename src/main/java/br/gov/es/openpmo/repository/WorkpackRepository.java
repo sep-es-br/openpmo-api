@@ -913,7 +913,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
         "WHERE ID(w) = $idWorkpack " +
         "RETURN plan "
       )
-      public Plan findPlanByWorkpackId(Long idWorkpack);
+      public Optional<Plan> findPlanByWorkpackId(Long idWorkpack);
       
     @Query(
         "MATCH p=(w:Workpack)<-[:IS_IN*]-(child:Workpack{deleted: false})\n" +
