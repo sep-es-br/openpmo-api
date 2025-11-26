@@ -1,6 +1,5 @@
 package br.gov.es.openpmo.dto.baselines.ccbmemberview;
 
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.math.BigDecimal;
@@ -12,23 +11,32 @@ import static br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintUtil
 import static br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintUtils.daysBetween;
 
 public class ScheduleDetailItem {
+  private final Long idWorkpack;
 
   private final String icon;
+
   private final String description;
+
   @JsonIgnore
   private final ScheduleInterval proposedIntervalDate;
+
   @JsonIgnore
   private final ScheduleInterval currentIntervalDate;
+
   private final LocalDate currentDate;
+
   private final LocalDate proposedDate;
+
   private BigDecimal variation;
 
   public ScheduleDetailItem(
+    final Long idWorkpack,
     final String icon,
     final String description,
     final ScheduleInterval proposedIntervalDate,
     final ScheduleInterval currentIntervalDate
   ) {
+    this.idWorkpack = idWorkpack;
     this.icon = icon;
     this.description = description;
     this.proposedIntervalDate = proposedIntervalDate;
@@ -39,7 +47,7 @@ public class ScheduleDetailItem {
   }
 
   private void calculateVariation() {
-    if(this.currentDate == null || this.proposedDate == null || this.currentDate.isEqual(this.proposedDate)) {
+    if (this.currentDate == null || this.proposedDate == null || this.currentDate.isEqual(this.proposedDate)) {
       this.variation = null;
       return;
     }
@@ -58,18 +66,19 @@ public class ScheduleDetailItem {
       currentEndDate
     );
 
-    if(BigDecimal.ZERO.compareTo(daysBetweenCurrentAndInitialCurrent) == 0
-       || BigDecimal.ZERO.compareTo(daysBetweenProposedAndInitialCurrent) == 0) {
+    if (
+      BigDecimal.ZERO.compareTo(daysBetweenCurrentAndInitialCurrent) == 0 ||
+      BigDecimal.ZERO.compareTo(daysBetweenProposedAndInitialCurrent) == 0
+    ) {
       this.variation = null;
       return;
     }
+
     this.variation = daysBetweenProposedAndInitialCurrent
       .divide(daysBetweenCurrentAndInitialCurrent, 6, RoundingMode.HALF_EVEN)
       .subtract(BigDecimal.ONE)
       .multiply(ONE_HUNDRED);
-
   }
-
 
   private static LocalDate getEndDate(final ScheduleInterval currentIntervalDate) {
     return Optional.ofNullable(currentIntervalDate)
@@ -83,6 +92,10 @@ public class ScheduleDetailItem {
 
   public ScheduleInterval getCurrentIntervalDate() {
     return this.currentIntervalDate;
+  }
+
+  public Long getIdWorkpack() {
+    return this.idWorkpack;
   }
 
   public String getIcon() {
@@ -108,5 +121,4 @@ public class ScheduleDetailItem {
   public void roundData() {
     this.variation = TripleConstraintUtils.roundOneDecimal(this.variation);
   }
-
 }

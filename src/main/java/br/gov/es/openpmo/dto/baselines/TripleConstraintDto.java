@@ -7,128 +7,137 @@ import java.util.List;
 
 import org.springframework.data.neo4j.annotation.QueryResult;
 
+import br.gov.es.openpmo.enumerator.BaselineStatus;
 import br.gov.es.openpmo.enumerator.CategoryEnum;
 
 @QueryResult
 public class TripleConstraintDto {
-    private Long idWorkpack;
-    private String name;
-    private String fullName;
-    private LocalDateTime date;
-    private String unitMeasure;
-    private List<String> labels;
-    private String type;
-    private String fontIcon;
-    private BigDecimal sumPlannedCost;
-    private LocalDate end;
-    private LocalDate start;
-    private BigDecimal sumPlannedWork;
-    private CategoryEnum category;
+  private Long idWorkpack;
 
-    public Long getIdWorkpack() {
-        return idWorkpack;
-    }
+  private String name;
 
-    public void setIdWorkpack(Long idWorkpack) {
-        this.idWorkpack = idWorkpack;
-    }
+  private String fullName;
 
-    public String getName() {
-        return name;
-    }
+  private LocalDateTime date;
 
-    public void setName(String name) {
-        this.name = name;
-    }
+  private String unitMeasure;
 
-    public String getFullName() {
-        return fullName;
-    }
+  private List<String> labels;
 
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
+  private String type;
 
-    public LocalDateTime getDate() {
-        return date;
-    }
+  private String fontIcon;
 
-    public void setDate(LocalDateTime date) {
-        this.date = date;
-    }
+  private BigDecimal sumPlannedCost;
 
-    public String getUnitMeasure() {
-        return unitMeasure;
-    }
+  private LocalDate end;
 
-    public void setUnitMeasure(String unitMeasure) {
-        this.unitMeasure = unitMeasure;
-    }
+  private LocalDate start;
 
-    public List<String> getLabels() {
-        return labels;
-    }
+  private BigDecimal sumPlannedWork;
 
-    public void setLabels(List<String> labels) {
-        this.labels = labels;
-    }
+  private CategoryEnum category;
 
-    public String getType() {
-        if (type == null && labels != null) {
-            labels.forEach(t -> type = t);
-        }
-        return type;
-    }
+  private BaselineStatus constraintStatus;
 
-    public void setType(String type) {
-        this.type = type;
-    }
+  public Long getIdWorkpack() {
+    return idWorkpack;
+  }
+  public void setIdWorkpack(Long idWorkpack) {
+    this.idWorkpack = idWorkpack;
+  }
 
-    public String getFontIcon() {
-        return fontIcon;
-    }
+  public String getName() {
+    return name;
+  }
+  public void setName(String name) {
+    this.name = name;
+  }
 
-    public void setFontIcon(String fontIcon) {
-        this.fontIcon = fontIcon;
-    }
+  public String getFullName() {
+    return fullName;
+  }
+  public void setFullName(String fullName) {
+    this.fullName = fullName;
+  }
 
-    public BigDecimal getSumPlannedCost() {
-        return sumPlannedCost;
-    }
+  public LocalDateTime getDate() {
+    return date;
+  }
+  public void setDate(LocalDateTime date) {
+    this.date = date;
+  }
 
-    public void setSumPlannedCost(BigDecimal sumPlannedCost) {
-        this.sumPlannedCost = sumPlannedCost;
-    }
+  public String getUnitMeasure() {
+    return unitMeasure;
+  }
+  public void setUnitMeasure(String unitMeasure) {
+    this.unitMeasure = unitMeasure;
+  }
 
-    public LocalDate getEnd() {
-        return end;
-    }
+  public List<String> getLabels() {
+    return labels;
+  }
+  public void setLabels(List<String> labels) {
+    this.labels = labels;
+  }
 
-    public void setEnd(LocalDate end) {
-        this.end = end;
+  public String getType() {
+    if (type == null && labels != null) {
+      labels.forEach(t -> type = t);
     }
+    return type;
+  }
+  public void setType(String type) {
+    this.type = type;
+  }
 
-    public LocalDate getStart() {
-        return start;
-    }
+  public String getFontIcon() {
+    return fontIcon;
+  }
+  public void setFontIcon(String fontIcon) {
+    this.fontIcon = fontIcon;
+  }
 
-    public void setStart(LocalDate start) {
-        this.start = start;
-    }
+  public BigDecimal getSumPlannedCost() {
+    return sumPlannedCost;
+  }
+  public void setSumPlannedCost(BigDecimal sumPlannedCost) {
+    this.sumPlannedCost = sumPlannedCost;
+  }
 
-    public BigDecimal getSumPlannedWork() {
-        return sumPlannedWork;
-    }
+  public LocalDate getEnd() {
+    return end;
+  }
+  public void setEnd(LocalDate end) {
+    this.end = end;
+  }
 
-    public void setSumPlannedWork(BigDecimal sumPlannedWork) {
-        this.sumPlannedWork = sumPlannedWork;
-    }
+  public LocalDate getStart() {
+    return start;
+  }
+  public void setStart(LocalDate start) {
+    this.start = start;
+  }
 
-    public CategoryEnum getCategory() {
-        return category;
-    }
+  public BigDecimal getSumPlannedWork() {
+    return sumPlannedWork;
+  }
+  public void setSumPlannedWork(BigDecimal sumPlannedWork) {
+    this.sumPlannedWork = sumPlannedWork;
+  }
 
-    public void setCategory(CategoryEnum category) {
-        this.category = category;
-    }
+  public CategoryEnum getCategory() {
+    return category;
+  }
+  public void setCategory(CategoryEnum category) {
+    this.category = category;
+  }
+
+  public BaselineStatus getConstraintStatus() {
+    return constraintStatus;
+  }
+  public void setConstraintStatus(BaselineStatus constraintStatus) {
+    this.constraintStatus = constraintStatus;
+  }
 }
