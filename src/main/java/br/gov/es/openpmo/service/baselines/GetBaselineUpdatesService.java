@@ -1,9 +1,9 @@
 package br.gov.es.openpmo.service.baselines;
 
-import br.gov.es.openpmo.dto.baselines.BaselineUpdateBreakdown;
 import br.gov.es.openpmo.dto.baselines.BaselineConsumesStep;
 import br.gov.es.openpmo.dto.baselines.BaselineResultDto;
 import br.gov.es.openpmo.dto.baselines.BaselineScheduleStep;
+import br.gov.es.openpmo.dto.baselines.BaselineUpdateBreakdown;
 import br.gov.es.openpmo.dto.baselines.BaselineWorkpackDto;
 import br.gov.es.openpmo.dto.baselines.UpdateObject;
 import br.gov.es.openpmo.dto.menu.WorkpackResultDto;
@@ -17,14 +17,13 @@ import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.workpack.WorkpackModelService;
 import br.gov.es.openpmo.utils.ApplicationCacheUtil;
 import br.gov.es.openpmo.utils.ApplicationMessage;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
@@ -83,7 +82,7 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
 
       final List<BaselineWorkpackDto> result = this.baselineServiceUtil.compare(workpacksMaster,
           workpackBaselineCompare);
-      result.removeIf(r -> r.getClassification() == null);
+      // result.removeIf(r -> r.getClassification() == null);
       updatesList.addAll(getBaselineDetailResponse(result));
 
       // O código abaixo foi feito por conta da task #484, onde deveria-se verificar se haviam Entregas inclusas em LBs passadas que não

@@ -1720,5 +1720,9 @@ public class WorkpackService {
       
       return this.workpackRepository.doSearchInAll(parameters.getWorkpackId(), parameters.getTerm(), parameters.getUserId(), parameters.getPlanId(), pageRequest);
   }
+  
+  public Long countTypeByWorkpack(Long workpackId, String type){
+      return this.workpackRepository.countTypeByWorkpack(workpackId, type);
+  }
 
 }
