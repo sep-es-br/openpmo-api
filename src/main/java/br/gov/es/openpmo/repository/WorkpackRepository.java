@@ -916,7 +916,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       public Plan findPlanByWorkpackId(Long idWorkpack);
       
     @Query(
-        "MATCH p=(w:Workpack)<-[:IS_IN*]-(child:Workpack)\n" +
+        "MATCH p=(w:Workpack)<-[:IS_IN*]-(child:Workpack{deleted: false})\n" +
         "where id(w) = $workpackId AND $type IN labels(child)\n" +
         "return count(child)"
     )
