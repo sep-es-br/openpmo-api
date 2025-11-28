@@ -215,6 +215,7 @@ WITH
           frAcum: s.frAcum + item.fisicoRealizado,
           pcfrAcum: s.pcfrAcum + item.prcFisicoRealizado,
 		  // VA(Valor Agregado) = %Concluído(pcfrAcum) * VP(cpAcum)
+          
           va: 
 			CASE WHEN (s.pcfrAcum + item.prcFisicoRealizado) > 1 
 				THEN 1 

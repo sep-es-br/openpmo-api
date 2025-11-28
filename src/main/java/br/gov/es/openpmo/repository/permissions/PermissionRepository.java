@@ -13,12 +13,24 @@ import java.util.List;
 public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, CustomRepository {
 
   @Query(
-    "MATCH (n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO|IS_STRUCTURED_BY|IS_FORSEEN_ON|APPLIES_TO|FEATURES|MITIGATES|IS_TRIGGER_BY|ADDRESSES|IS_REPORTED_FOR|IS_BELONGS_TO|SCOPE_TO|IS_LINKED_TO|COMPOSES|IS_BASELINED_BY*0..]->(m)<-[:CAN_ACCESS_WORKPACK|CAN_ACCESS_PLAN|CAN_ACCESS_OFFICE {permissionLevel:'EDIT'}]-(p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
-    "WHERE id(n) IN $ids " +
-    "with n limit 1 " +
-    "with count(n)>0 as hasEditPermission " +
-    "RETURN hasEditPermission"
-  )
+    "MATCH (n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO*0..]->(m) " +
+    "      <-[rel:CAN_ACCESS_WORKPACK|CAN_ACCESS_PLAN|CAN_ACCESS_OFFICE]-(:Person) " +
+    "      -[:IS_AUTHENTICATED_BY {key:$sub}]-(:AuthService) " +
+    "WHERE id(n) in $ids " +
+
+    "OPTIONAL MATCH (n)-[:IS_IN*0..]->(proj:Project) " +
+    "       <-[:FEATURES]-(prop:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel) " +
+    "WHERE pm.name IN ['Situação','Status'] " +
+
+    "WITH " +
+    "    collect(distinct rel.permissionLevel) AS permissions, " +
+    "    collect(distinct prop.value) AS status " +
+
+    "RETURN ( " +
+    "    'EDIT' IN permissions OR " +
+    "    ( 'UPDATE' IN permissions AND 'Estruturação' IN status ) " +
+    ") AS result"
+)
   boolean hasEditPermission(
     @Param("ids") List<Long> ids,
     @Param("sub") String sub
