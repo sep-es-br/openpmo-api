@@ -120,11 +120,11 @@ public class GetBaselineService implements IGetBaselineService {
   ) {
     final List<BaselineWorkpackDto> workpacksBaseline = this.baselineRepository
         .findAllWorkpacBaselineById(baseLineParam.getIdBaseline());
+    addScheduleAndConsumes(workpacksBaseline);
     if (baselineCompare == null) {
       workpacksBaseline.forEach(w -> w.setClassification(BaselineStatus.NEW));
       return getBaselineDetailResponse(baseline, workpacksBaseline, idWorkpack);
     }
-    addScheduleAndConsumes(workpacksBaseline);
 
     final List<BaselineWorkpackDto> workpackBaselineCompare = this.baselineRepository
         .findAllWorkpacBaselineById(baselineCompare.getIdBaseline());
