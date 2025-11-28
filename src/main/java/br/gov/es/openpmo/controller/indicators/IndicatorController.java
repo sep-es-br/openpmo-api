@@ -15,6 +15,7 @@ import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.indicators.IndicatorService;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.workpack.GetWorkpackPermissions;
+import br.gov.es.openpmo.service.workpack.WorkpackPermissionVerifier;
 import io.swagger.annotations.Api;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,7 +32,7 @@ import java.util.List;
 public class IndicatorController {
 
     private final IndicatorService service;
-    private final GetWorkpackPermissions getWorkpackPermissions;
+    private final WorkpackPermissionVerifier workpackPermissionVerifier;
     private final TokenService tokenService;
     private final ICanAccessService canAccessService;
 
@@ -39,12 +40,12 @@ public class IndicatorController {
         final IndicatorService service,
         final TokenService tokenService,
         final ICanAccessService canAccessService,
-        final GetWorkpackPermissions getWorkpackPermissions
+        final WorkpackPermissionVerifier workpackPermissionVerifier
     ) {
         this.service = service;
         this.tokenService = tokenService;
         this.canAccessService = canAccessService;
-        this.getWorkpackPermissions = getWorkpackPermissions;
+        this.workpackPermissionVerifier = workpackPermissionVerifier;
     }
 
     @GetMapping
@@ -92,10 +93,11 @@ public class IndicatorController {
         
         final Long idUser = this.tokenService.getUserId(authorization);
 
-        final WorkpackPermissionResponse permissionResponse =
-                this.getWorkpackPermissions.execute(idUser, request.getIdWorkpack(), request.getIdPlan());
-
-        Collection<PermissionDto> permissions = permissionResponse.getPermissions();
+        final List<PermissionDto> permissions = this.workpackPermissionVerifier.fetchAccessPermissions(
+            idUser,
+            request.getIdWorkpack(),
+            authorization
+          );
 
         PermissionLevelEnum level = permissions.stream()
             .map(PermissionDto::getLevel) 

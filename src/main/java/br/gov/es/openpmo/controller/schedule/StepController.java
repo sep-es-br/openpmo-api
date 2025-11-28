@@ -21,6 +21,7 @@ import br.gov.es.openpmo.service.schedule.UpdateStatusService;
 import br.gov.es.openpmo.service.schedule.UpdateStep;
 import br.gov.es.openpmo.service.workpack.GetWorkpackPermissions;
 import br.gov.es.openpmo.service.workpack.UpdateCostAccountByStepId;
+import br.gov.es.openpmo.service.workpack.WorkpackPermissionVerifier;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -43,7 +44,7 @@ public class StepController {
 
   private final UpdateStatusService status;
 
-  private final GetWorkpackPermissions getWorkpackPermissions;
+  private final WorkpackPermissionVerifier workpackPermissionVerifier;
 
   private final BatchUpdateStep batchUpdateStep;
 
@@ -63,7 +64,7 @@ public class StepController {
     final UpdateStep updateStep,
     final ICanAccessService canAccessService,
     final UpdateCostAccountByStepId updateCostAccountByStepId,
-    final GetWorkpackPermissions getWorkpackPermissions,
+    final WorkpackPermissionVerifier workpackPermissionVerifier,
     final TokenService tokenService
   ) {
     this.stepService = stepService;
@@ -72,7 +73,7 @@ public class StepController {
     this.updateStep = updateStep;
     this.canAccessService = canAccessService;
     this.updateCostAccountByStepId = updateCostAccountByStepId;
-    this.getWorkpackPermissions = getWorkpackPermissions;
+    this.workpackPermissionVerifier = workpackPermissionVerifier;
     this.tokenService = tokenService;
   }
 
@@ -123,10 +124,11 @@ public class StepController {
 
     final Long idUser = this.tokenService.getUserId(authorization);
 
-    final WorkpackPermissionResponse permissionResponse =
-            this.getWorkpackPermissions.execute(idUser, idWorkpack, idPlan);
-
-    Collection<PermissionDto> permissions = permissionResponse.getPermissions();
+    final List<PermissionDto> permissions = this.workpackPermissionVerifier.fetchAccessPermissions(
+      idUser,
+      idWorkpack,
+      authorization
+    );
 
     PermissionLevelEnum level = permissions.stream()
         .map(PermissionDto::getLevel) 

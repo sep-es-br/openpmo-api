@@ -1,18 +1,12 @@
 package br.gov.es.openpmo.service.baselines;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.stereotype.Service;
-
 import br.gov.es.openpmo.dto.baselines.BaselineConsumesStepSubmitDto;
 import br.gov.es.openpmo.dto.baselines.BaselineScheduleSubmitDto;
 import br.gov.es.openpmo.dto.baselines.BaselineStepSubmitDto;
 import br.gov.es.openpmo.dto.baselines.BaselineWorkpackDto;
 import br.gov.es.openpmo.enumerator.BaselineStatus;
 import br.gov.es.openpmo.enumerator.CategoryEnum;
+import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.relations.Consumes;
 import br.gov.es.openpmo.model.schedule.Schedule;
@@ -26,29 +20,61 @@ import br.gov.es.openpmo.repository.CostAccountRepository;
 import br.gov.es.openpmo.repository.ScheduleRepository;
 import br.gov.es.openpmo.repository.StepRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
+import br.gov.es.openpmo.service.workpack.MilestoneService;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import javax.annotation.PostConstruct;
+import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 @Service
 public class BaselineServiceUtil {
-
+    
+    @Value("${app.minMC}")
+    public Integer appMinMCConfig;
+    
+    @Value("${app.minMCPor}")
+    public String appMinMCPorConfig;
+    
     private final WorkpackRepository workpackRepository;
     private final ScheduleRepository scheduleRepository;
     private final StepRepository stepRepository;
     private final CostAccountRepository costAccountRepository;
     private final ConsumesRepository consumesRepository;
+  private final MilestoneService milestoneSrv;
 
     public BaselineServiceUtil(
         final WorkpackRepository workpackRepository,
         final ScheduleRepository scheduleRepository,
         final CostAccountRepository costAccountRepository,
         final StepRepository stepRepository,
-        final ConsumesRepository consumesRepository
+        final ConsumesRepository consumesRepository,
+        final MilestoneService milestoneSrv
     ) {
         this.workpackRepository = workpackRepository;
         this.scheduleRepository = scheduleRepository;
         this.costAccountRepository = costAccountRepository;
         this.stepRepository = stepRepository;
         this.consumesRepository = consumesRepository;
+        this.milestoneSrv = milestoneSrv;
     }
+  
+  @PostConstruct
+  public void validateProperty() {      
+      
+      if(this.appMinMCConfig == null)
+          throw new NegocioException("Insira um valor minimo de MC(app.minMC) no application.properties");
+      
+      switch (this.appMinMCPorConfig) {
+          case "project":
+          case "deliverable":
+              break;
+          default:
+              throw new NegocioException("Insira um valor valido de base do MC(app.minMCPor) no application.properties");
+      }
+  }
 
     private boolean isChanged(BaselineWorkpackDto principal, BaselineWorkpackDto compare) {
         return principal.isDateChanged(compare) || principal.isScheduleChanged(compare) || principal.isStepChanged(compare) || principal.isConsumesChanged(compare) ;
@@ -76,6 +102,10 @@ public class BaselineServiceUtil {
             if (isChanged(principal, compare)) {
                 principal.setClassification(BaselineStatus.CHANGED);
             }
+            
+            if(principal.getClassification() == null) {
+                principal.setClassification(BaselineStatus.UNCHANGED);
+            }
         }
         final List<BaselineWorkpackDto> workpackBaselineDeleted = listCompare.stream().filter(
             w -> listParam.stream().noneMatch(p -> p.getIdMaster().equals(w.getIdMaster()))).collect(Collectors.toList());
@@ -90,6 +120,26 @@ public class BaselineServiceUtil {
             list.addAll(workpackBaselineDeleted);
         }
         return list;
+    }
+    
+    public Integer checkMinimumMilestoneRequired(Workpack workpack) {
+      Long countMilestones = this.milestoneSrv.countMilestonesByWorkpack(workpack.getId());
+      
+      if(this.appMinMCPorConfig.equals("project") && countMilestones < this.appMinMCConfig){
+          return this.appMinMCConfig;
+      }
+      
+      if(this.appMinMCPorConfig.equals("deliverable")) {
+        Long countDelivable = this.workpackRepository.countTypeByWorkpack(workpack.getId(), "Deliverable");
+      
+        Long requiredMilestoneAmount = this.appMinMCConfig * countDelivable;
+        
+        if(countMilestones < requiredMilestoneAmount) {
+            return requiredMilestoneAmount.intValue();
+        }
+      }
+      
+      return null;
     }
 
     public void createSnapshot(Workpack workpack, Baseline baseline, BaselineScheduleSubmitDto schedule, boolean toCancel) {
