@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
 import br.gov.es.openpmo.enumerator.BaselineStatus;
 
@@ -29,15 +28,12 @@ public class TripleConstraintBreakdown {
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private BaselineStatus workpackStatus;
 
-  @JsonUnwrapped
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private CostDetailItem costDetails;
 
-  @JsonUnwrapped
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private ScheduleDetailItem scheduleDetails;
 
-  @JsonUnwrapped
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private ScopeDetailItem scopeDetails;
 

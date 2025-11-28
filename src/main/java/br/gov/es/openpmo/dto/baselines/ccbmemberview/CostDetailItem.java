@@ -64,11 +64,11 @@ public class CostDetailItem {
       return;
     }
     if(BigDecimal.ZERO.compareTo(this.currentValue) == 0) {
-      this.variation = new BigDecimal(-100);
+      this.variation = new BigDecimal(100);
       return;
     }
-    this.variation = this.currentValue
-      .subtract(this.proposedValue)
+    this.variation = this.proposedValue
+      .subtract(this.currentValue)
       .divide(this.currentValue, 6, RoundingMode.HALF_UP)
       .multiply(ONE_HUNDRED);
   }
