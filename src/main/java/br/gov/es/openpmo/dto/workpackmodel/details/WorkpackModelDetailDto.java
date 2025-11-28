@@ -93,6 +93,18 @@ public abstract class WorkpackModelDetailDto {
 
   private String sortByField;
 
+  private Boolean notificationsSessionActive;
+
+  private Set<String> notificationsSelectedRoles;
+
+  private Boolean notificationsEventCriticalEnabled;
+
+  private Long notificationsEventCriticalDaysBefore;
+
+  private Boolean notificationsEventScheduleEnabled;
+
+  private Long notificationsEventScheduleDayOfMonth;
+
   protected WorkpackModelDetailDto() {
   }
 
@@ -319,6 +331,30 @@ public abstract class WorkpackModelDetailDto {
     );
   }
 
+  public void notificationsConfiguration(final WorkpackModel workpackModel) {
+    if (Objects.isNull(workpackModel)) return;
+
+    this.notificationsSessionActive =
+        Boolean.TRUE.equals(workpackModel.getNotificationsSessionActive());
+
+    this.notificationsSelectedRoles =
+        Optional.ofNullable(workpackModel.getNotificationsSelectedRoles())
+            .map(LinkedHashSet::new)
+            .orElse(new LinkedHashSet<>());
+
+    this.notificationsEventCriticalEnabled =
+        workpackModel.getNotificationsEventCriticalEnabled();
+
+    this.notificationsEventCriticalDaysBefore =
+        workpackModel.getNotificationsEventCriticalDaysBefore();
+
+    this.notificationsEventScheduleEnabled =
+        workpackModel.getNotificationsEventScheduleEnabled();
+
+    this.notificationsEventScheduleDayOfMonth =
+        workpackModel.getNotificationsEventScheduleDayOfMonth();
+  }
+
   public Boolean getJournalManagementSessionActive() {
     return this.journalManagementSessionActive;
   }
@@ -350,4 +386,54 @@ public abstract class WorkpackModelDetailDto {
   public void setSortByField(String sortByField) {
     this.sortByField = sortByField;
   }
+
+  public Boolean getNotificationsSessionActive() {
+    return notificationsSessionActive;
+  }
+
+  public void setNotificationsSessionActive(boolean notificationsSessionActive) {
+    this.notificationsSessionActive = notificationsSessionActive;
+  }
+
+  public Set<String> getNotificationsSelectedRoles() {
+    return notificationsSelectedRoles;
+  }
+
+  public void setNotificationsSelectedRoles(Set<String> notificationsSelectedRoles) {
+    this.notificationsSelectedRoles = notificationsSelectedRoles;
+  }
+
+  public Boolean getNotificationsEventCriticalEnabled() {
+    return notificationsEventCriticalEnabled;
+  }
+
+  public void setNotificationsEventCriticalEnabled(Boolean notificationsEventCriticalEnabled) {
+    this.notificationsEventCriticalEnabled = notificationsEventCriticalEnabled;
+  }
+
+  public Long getNotificationsEventCriticalDaysBefore() {
+    return notificationsEventCriticalDaysBefore;
+  }
+
+  public void setNotificationsEventCriticalDaysBefore(Long notificationsEventCriticalDaysBefore) {
+    this.notificationsEventCriticalDaysBefore = notificationsEventCriticalDaysBefore;
+  }
+
+  public Boolean getNotificationsEventScheduleEnabled() {
+    return notificationsEventScheduleEnabled;
+  }
+
+  public void setNotificationsEventScheduleEnabled(Boolean notificationsEventScheduleEnabled) {
+    this.notificationsEventScheduleEnabled = notificationsEventScheduleEnabled;
+  }
+
+  public Long getNotificationsEventScheduleDayOfMonth() {
+    return notificationsEventScheduleDayOfMonth;
+  }
+
+  public void setNotificationsEventScheduleDayOfMonth(Long notificationsEventScheduleDayOfMonth) {
+    this.notificationsEventScheduleDayOfMonth = notificationsEventScheduleDayOfMonth;
+  }
+
+  
 }

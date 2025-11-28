@@ -60,6 +60,18 @@ public abstract class WorkpackModelParamDto {
 
   private List<String> organizationRoles;
 
+  private Boolean notificationsSessionActive;
+
+  private List<String> notificationsSelectedRoles;
+
+  private Boolean notificationsEventCriticalEnabled;
+
+  private Long notificationsEventCriticalDaysBefore;
+
+  private Boolean notificationsEventScheduleEnabled;
+
+  private Long notificationsEventScheduleDayOfMonth;
+
   @Valid
   private List<? extends PropertyModelDto> properties;
 
@@ -251,6 +263,54 @@ public abstract class WorkpackModelParamDto {
 
   public void setDashboardSessionActive(final Boolean dashboardSessionActive) {
     this.dashboardSessionActive = dashboardSessionActive;
+  }
+
+  public boolean isNotificationsSessionActive() {
+    return notificationsSessionActive;
+  }
+
+  public void setNotificationsSessionActive(boolean notificationsSessionActive) {
+    this.notificationsSessionActive = notificationsSessionActive;
+  }
+
+  public List<String> getNotificationsSelectedRoles() {
+    return notificationsSelectedRoles;
+  }
+
+  public void setNotificationsSelectedRoles(List<String> notificationsSelectedRoles) {
+    this.notificationsSelectedRoles = notificationsSelectedRoles;
+  }
+
+  public Boolean getNotificationsEventCriticalEnabled() {
+    return notificationsEventCriticalEnabled;
+  }
+
+  public void setNotificationsEventCriticalEnabled(Boolean notificationsEventCriticalEnabled) {
+    this.notificationsEventCriticalEnabled = notificationsEventCriticalEnabled;
+  }
+
+  public Long getNotificationsEventCriticalDaysBefore() {
+    return notificationsEventCriticalDaysBefore;
+  }
+
+  public void setNotificationsEventCriticalDaysBefore(Long notificationsEventCriticalDaysBefore) {
+    this.notificationsEventCriticalDaysBefore = notificationsEventCriticalDaysBefore;
+  }
+
+  public Boolean getNotificationsEventScheduleEnabled() {
+    return notificationsEventScheduleEnabled;
+  }
+
+  public void setNotificationsEventScheduleEnabled(Boolean notificationsEventScheduleEnabled) {
+    this.notificationsEventScheduleEnabled = notificationsEventScheduleEnabled;
+  }
+
+  public Long getNotificationsEventScheduleDayOfMonth() {
+    return notificationsEventScheduleDayOfMonth;
+  }
+
+  public void setNotificationsEventScheduleDayOfMonth(Long notificationsEventScheduleDayOfMonth) {
+    this.notificationsEventScheduleDayOfMonth = notificationsEventScheduleDayOfMonth;
   }
 
 }

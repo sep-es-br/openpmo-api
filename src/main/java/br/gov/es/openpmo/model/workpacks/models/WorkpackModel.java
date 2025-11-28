@@ -76,6 +76,18 @@ public abstract class WorkpackModel extends Entity {
 
   private Boolean dashboardSessionActive;
 
+  private Boolean notificationsSessionActive;
+
+  private Set<String> notificationsSelectedRoles;
+
+  private Boolean notificationsEventCriticalEnabled;
+
+  private Long notificationsEventCriticalDaysBefore;
+
+  private Boolean notificationsEventScheduleEnabled;
+
+  private Long notificationsEventScheduleDayOfMonth;
+
   private Long position;
 
   private String sortByField;
@@ -409,6 +421,12 @@ public abstract class WorkpackModel extends Entity {
     this.dashboardSessionActive = workpackModel.dashboardSessionActive;
     this.position = workpackModel.position;
     this.sortByField = workpackModel.sortByField;
+    this.notificationsSessionActive = workpackModel.notificationsSessionActive;
+    this.notificationsSelectedRoles = workpackModel.notificationsSelectedRoles;
+    this.notificationsEventCriticalEnabled = workpackModel.notificationsEventCriticalEnabled;
+    this.notificationsEventCriticalDaysBefore = workpackModel.notificationsEventCriticalDaysBefore;
+    this.notificationsEventScheduleEnabled = workpackModel.notificationsEventScheduleEnabled;
+    this.notificationsEventScheduleDayOfMonth = workpackModel.notificationsEventScheduleDayOfMonth;
   }
 
   public Boolean getDashboardSessionActive() {
@@ -489,4 +507,53 @@ public abstract class WorkpackModel extends Entity {
   public void setSortByField(String sortByField) {
     this.sortByField = sortByField;
   }
+
+  public Boolean getNotificationsSessionActive() {
+    return notificationsSessionActive;
+  }
+
+  public void setNotificationsSessionActive(boolean notificationsSessionActive) {
+    this.notificationsSessionActive = notificationsSessionActive;
+  }
+
+  public Set<String> getNotificationsSelectedRoles() {
+    return notificationsSelectedRoles;
+  }
+
+  public void setNotificationsSelectedRoles(Set<String> notificationsSelectedRoles) {
+    this.notificationsSelectedRoles = notificationsSelectedRoles;
+  }
+
+  public Boolean getNotificationsEventCriticalEnabled() {
+    return notificationsEventCriticalEnabled;
+  }
+
+  public void setNotificationsEventCriticalEnabled(Boolean notificationsEventCriticalEnabled) {
+    this.notificationsEventCriticalEnabled = notificationsEventCriticalEnabled;
+  }
+
+  public Long getNotificationsEventCriticalDaysBefore() {
+    return notificationsEventCriticalDaysBefore;
+  }
+
+  public void setNotificationsEventCriticalDaysBefore(Long notificationsEventCriticalDaysBefore) {
+    this.notificationsEventCriticalDaysBefore = notificationsEventCriticalDaysBefore;
+  }
+
+  public Boolean getNotificationsEventScheduleEnabled() {
+    return notificationsEventScheduleEnabled;
+  }
+
+  public void setNotificationsEventScheduleEnabled(Boolean notificationsEventScheduleEnabled) {
+    this.notificationsEventScheduleEnabled = notificationsEventScheduleEnabled;
+  }
+
+  public Long getNotificationsEventScheduleDayOfMonth() {
+    return notificationsEventScheduleDayOfMonth;
+  }
+
+  public void setNotificationsEventScheduleDayOfMonth(Long notificationsEventScheduleDayOfMonth) {
+    this.notificationsEventScheduleDayOfMonth = notificationsEventScheduleDayOfMonth;
+  }
+
 }
