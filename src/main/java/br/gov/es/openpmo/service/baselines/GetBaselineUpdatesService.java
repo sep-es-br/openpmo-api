@@ -59,7 +59,7 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
     final Baseline baseline = this.baselineRepository.findActiveBaseline(idWorkpack).orElse(null);
     addScheduleAndConsumesMaster(workpacksMaster);
 
-    WorkpackResultDto workpackDto = cacheUtil.getWorkpackBreakdownStructure(idWorkpack, idPlan, true);
+    WorkpackResultDto workpackDto = cacheUtil.getFullWorkpackBreakdownStructure(idWorkpack, idPlan, true);
 
     if (baseline == null) {
       workpacksMaster.forEach(w -> w.setClassification(BaselineStatus.NEW));

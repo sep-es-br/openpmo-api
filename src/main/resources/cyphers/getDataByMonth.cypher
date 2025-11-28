@@ -119,7 +119,7 @@ WITH
 	r.custorealizado			AS custoRealizado,
 	r.custoplanejado      		AS custoPlanejado,
 	r.fisicorealizado			AS fisicoRealizado
-order by wId, anomes
+order by anomes asc
 
 // Agrupa novamente por entrega (wId) os rows mensais existentes, agora para acumular
 WITH wId, wCompleted, bacEntrega, fisicoTotal, fisicoRepTotal, _anomesRef, _sCurve,
@@ -307,11 +307,10 @@ WITH
         else toString(date())
         end
     end as actualEndDate,
-
-    
+   
 	masterEnd as reprogEndDate
 
-WITH mes, mesRef, custoReprogramadoAcumuladoMes, custoPlanejadoAcumuladoMes, custoRealizadoAcumuladoMes, 
+WITH mes, max(mes) as lastMonth, mesRef, custoReprogramadoAcumuladoMes, custoPlanejadoAcumuladoMes, custoRealizadoAcumuladoMes, 
 	fisicoReprogramado, fisicoPlanejado, max([fisicoReprogramado, fisicoPlanejado]) as maxFisicoRepPlan, fisicoRealizadoAcumuladoMes, fisicoVariacao,
 	pcFisicoRealizadoAcumMesMedio, valorAgregado, variacaoPrazo, variacaoCusto, estimadoNaConclusao, 
 	estimadoParaConclusao, idc, idp, plannedStartDate,plannedEndDate, actualStartDate, reprogStartDate, 
@@ -352,6 +351,8 @@ WITH mes, mesRef, custoReprogramadoAcumuladoMes, custoPlanejadoAcumuladoMes, cus
 		END
 	ELSE NULL
 	END AS scheduleForeseenValue
+
+ORDER BY mes ASC
 	
 WITH
 COLLECT({
@@ -373,8 +374,8 @@ COLLECT({
 	idc: idc, 
 	idp: idp
 }) as months,
-max(mesRef) AS refDate,
-max(mes) as lastMonth,
+CASE WHEN max(mesRef) > max(lastMonth) THEN max(lastMonth) ELSE max(mesRef) END AS refDate,
+max(lastMonth) AS lastMonth,
 max(plannedStartDate) AS schedulePlannedStartDate,
 max(plannedEndDate) AS schedulePlannedEndDate,
 max(reprogStartDate) AS scheduleForeseenStartDate,
