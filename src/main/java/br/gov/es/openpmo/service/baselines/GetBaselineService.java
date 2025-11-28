@@ -17,10 +17,7 @@ import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.workpack.WorkpackModelService;
 import br.gov.es.openpmo.utils.ApplicationCacheUtil;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_NOT_FOUND;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -28,8 +25,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_NOT_FOUND;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 public class GetBaselineService implements IGetBaselineService {
@@ -164,7 +161,7 @@ public class GetBaselineService implements IGetBaselineService {
     }
 
     Long idPlan = this.workpackRepository.findPlanByWorkpackId(idWorkpack).getId();
-    WorkpackResultDto workpackDto = cacheUtil.getWorkpackBreakdownStructure(idWorkpack, idPlan, true);
+    WorkpackResultDto workpackDto = cacheUtil.getFullWorkpackBreakdownStructure(idWorkpack, idPlan, true);
 
     List<UpdateObject> updateList = this.assembleListOfUpdates(workpacks);
     List<BaselineUpdateBreakdown> updateBreakdown = this.getBaselineUpdatesService.createBaselineBreakdown(updateList, workpackDto);
