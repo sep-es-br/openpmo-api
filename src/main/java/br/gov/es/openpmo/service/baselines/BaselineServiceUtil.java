@@ -104,7 +104,7 @@ public class BaselineServiceUtil {
             }
             
             if(principal.getClassification() == null) {
-                principal.setClassification(BaselineStatus.NO_CHANGES);
+                principal.setClassification(BaselineStatus.UNCHANGED);
             }
         }
         final List<BaselineWorkpackDto> workpackBaselineDeleted = listCompare.stream().filter(
@@ -122,15 +122,15 @@ public class BaselineServiceUtil {
         return list;
     }
     
-    public Integer checkMinimumMilestoneRequired(Workpack workpack) {
-      Long countMilestones = this.milestoneSrv.countMilestonesByWorkpack(workpack.getId());
+    public Integer checkMinimumMilestoneRequired(Long workpackId) {
+      Long countMilestones = this.milestoneSrv.countMilestonesByWorkpack(workpackId);
       
       if(this.appMinMCPorConfig.equals("project") && countMilestones < this.appMinMCConfig){
           return this.appMinMCConfig;
       }
       
       if(this.appMinMCPorConfig.equals("deliverable")) {
-        Long countDelivable = this.workpackRepository.countTypeByWorkpack(workpack.getId(), "Deliverable");
+        Long countDelivable = this.workpackRepository.countTypeByWorkpack(workpackId, "Deliverable");
       
         Long requiredMilestoneAmount = this.appMinMCConfig * countDelivable;
         

@@ -5,7 +5,6 @@ import br.gov.es.openpmo.dto.Response;
 import br.gov.es.openpmo.dto.baselines.*;
 import br.gov.es.openpmo.dto.baselines.ccbmemberview.BaselineDetailCCBMemberResponse;
 import br.gov.es.openpmo.enumerator.BaselineViewStatus;
-import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.baselines.*;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
@@ -243,10 +242,8 @@ public class BaselineController implements IBaselineController {
 
     @Override
     public Map<String, Object> checkMilestonesRequirement(Long idWorkpack) {
-        
-        Workpack workpack = this.workpackSrv.findById(idWorkpack);
-        
-        Integer requiredAmount = this.baselineSrvUtil.checkMinimumMilestoneRequired(workpack);
+                
+        Integer requiredAmount = this.baselineSrvUtil.checkMinimumMilestoneRequired(idWorkpack);
         
         HashMap<String, Object> result = new HashMap<>(2);
         result.put("valid", requiredAmount == null);

@@ -18,6 +18,7 @@ import org.springframework.scheduling.annotation.Async;
 
 import br.gov.es.openpmo.dto.menu.WorkpackMenuResultDto;
 import br.gov.es.openpmo.dto.menu.WorkpackResultDto;
+import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.workpack.PortifolioService;
 
 public class ApplicationCacheUtil {
@@ -133,6 +134,21 @@ public class ApplicationCacheUtil {
             ? this.mapPlanWorkpackResult.get(idPlan).stream().map(WorkpackResultDto::new).collect(
                 Collectors.toCollection(LinkedHashSet::new))
             : mapPlanWorkpackResult.values().stream().flatMap(Collection::stream).map(WorkpackResultDto::new).collect(
+                Collectors.toCollection(LinkedHashSet::new));
+        if (!allLevels) {
+            WorkpackResultDto workpack = list.stream().filter(w -> w.getId().equals(idWorkpack)).findFirst().orElse(null);
+            if (workpack == null) return null;
+            workpack.getChildren().addAll(list.stream().filter(w -> workpack.getId().equals(w.getIdParent())).collect(
+                Collectors.toList()));
+            return workpack;
+        }
+        return this.getWorkpackResultDto(idWorkpack, list);
+    }
+
+
+    public WorkpackResultDto getFullWorkpackBreakdownStructure(Long idWorkpack, Long idPlan, boolean allLevels) {
+        WorkpackRepository wpRepository = applicationContext.getBean(WorkpackRepository.class);
+        Set<WorkpackResultDto> list = wpRepository.findAllCompleteMenuCustomByIdPlan(idPlan).stream().map(WorkpackResultDto::new).collect(
                 Collectors.toCollection(LinkedHashSet::new));
         if (!allLevels) {
             WorkpackResultDto workpack = list.stream().filter(w -> w.getId().equals(idWorkpack)).findFirst().orElse(null);

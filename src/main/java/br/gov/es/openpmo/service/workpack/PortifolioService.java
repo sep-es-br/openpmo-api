@@ -1,13 +1,10 @@
 package br.gov.es.openpmo.service.workpack;
 
-import java.util.List;
-
-import org.springframework.stereotype.Service;
-
-import br.gov.es.openpmo.dto.menu.WorkpackMenuResultDto;
 import br.gov.es.openpmo.dto.menu.WorkpackResultDto;
 import br.gov.es.openpmo.repository.PlanRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
+import java.util.List;
+import org.springframework.stereotype.Service;
 
 @Service
 public class PortifolioService {
@@ -24,6 +21,10 @@ public class PortifolioService {
         return workpackRepository.findAllMenuCustomByIdPlan(idPlan);
     }
 
+    public List<WorkpackResultDto> findAllCompleteMenuCustomByIdPlan(Long idPlan) {
+        return workpackRepository.findAllCompleteMenuCustomByIdPlan(idPlan);
+    }
+    
     public List<WorkpackResultDto> findAllMenuCustomByIdPlanWithSort(Long idPlan) {
         return workpackRepository.findAllMenuCustomByIdPlanWithSort(idPlan);
     }
