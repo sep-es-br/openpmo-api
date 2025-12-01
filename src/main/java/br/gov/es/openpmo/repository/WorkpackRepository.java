@@ -916,8 +916,10 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       public Plan findPlanByWorkpackId(Long idWorkpack);
       
     @Query(
-        "MATCH p=(w:Workpack)<-[:IS_IN*]-(child:Workpack{deleted: false})\n" +
+        "MATCH (w:Workpack)<-[:IS_IN*]-(child:Workpack{deleted: false})\n" +
         "where id(w) = $workpackId AND $type IN labels(child)\n" +
+        "OPTIONAL MATCH (child)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel {name:'Situação'})\n" +
+        "WHERE 'Deliverable' IN labels(child) AND NOT (p.value IN ['A cancelar', 'Cancelada'])\n" +
         "return count(child)"
     )
     public Long countTypeByWorkpack(Long workpackId, String type);
