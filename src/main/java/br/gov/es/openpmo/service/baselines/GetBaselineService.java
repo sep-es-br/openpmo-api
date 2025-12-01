@@ -12,6 +12,7 @@ import br.gov.es.openpmo.dto.menu.WorkpackResultDto;
 import br.gov.es.openpmo.enumerator.BaselineStatus;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
+import br.gov.es.openpmo.model.baselines.Status;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
@@ -163,7 +164,7 @@ public class GetBaselineService implements IGetBaselineService {
     Long idPlan = this.workpackRepository.findPlanByWorkpackId(idWorkpack).getId();
     WorkpackResultDto workpackDto = cacheUtil.getFullWorkpackBreakdownStructure(idWorkpack, idPlan, true);
 
-    List<UpdateObject> updateList = this.assembleListOfUpdates(workpacks);
+    List<UpdateObject> updateList = this.assembleListOfUpdates(workpacks, baseline.getStatus());
     List<BaselineUpdateBreakdown> updateBreakdown = this.getBaselineUpdatesService.createBaselineBreakdown(updateList, workpackDto);
 
     List<UpdateObject> deletedUpdates = updateList.stream().filter(update -> update.getClassification().equals(BaselineStatus.DELETED)).collect(Collectors.toList());
@@ -214,7 +215,7 @@ public class GetBaselineService implements IGetBaselineService {
     return this.getAllBaselineEvaluations.getEvaluations(idBaseline);
   }
 
-  private List<UpdateObject> assembleListOfUpdates(List<BaselineWorkpackDto> workpacks) {
+  private List<UpdateObject> assembleListOfUpdates(List<BaselineWorkpackDto> workpacks, Status baselineStatus) {
     final List<UpdateObject> resultList = new ArrayList<>(0);
 
     workpacks.forEach(w -> {
@@ -237,7 +238,7 @@ public class GetBaselineService implements IGetBaselineService {
           newUR.setDeliveryModelHasActiveSchedule(false);
         }
 
-        if (w.getClassification() != BaselineStatus.DELETED) {
+        if (w.getClassification() != BaselineStatus.DELETED && baselineStatus != Status.REJECTED) {
           if (w.getSchedule().size() == 0) {
             // Entrega não possui cronograma
             newUR.setClassification(BaselineStatus.NO_SCHEDULE);
