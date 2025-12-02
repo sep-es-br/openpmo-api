@@ -3,6 +3,7 @@ package br.gov.es.openpmo.dto.baselines.ccbmemberview;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -28,6 +29,8 @@ public class ScheduleDetailItem {
   private final LocalDate proposedDate;
 
   private BigDecimal variation;
+
+  private BigInteger variationInDays;
 
   public ScheduleDetailItem(
     final Long idWorkpack,
@@ -78,6 +81,13 @@ public class ScheduleDetailItem {
       .divide(daysBetweenCurrentAndInitialCurrent, 6, RoundingMode.HALF_EVEN)
       .subtract(BigDecimal.ONE)
       .multiply(ONE_HUNDRED);
+
+    final BigInteger daysBetweenProposedEndAndCurrentEnd = daysBetween(
+      currentEndDate,
+      proposedEndDate
+    ).toBigInteger();
+
+    this.variationInDays = daysBetweenProposedEndAndCurrentEnd;
   }
 
   private static LocalDate getEndDate(final ScheduleInterval currentIntervalDate) {
@@ -116,6 +126,10 @@ public class ScheduleDetailItem {
 
   public BigDecimal getVariation() {
     return this.variation;
+  }
+
+  public BigInteger getVariationInDays() {
+    return this.variationInDays;
   }
 
   public void roundData() {

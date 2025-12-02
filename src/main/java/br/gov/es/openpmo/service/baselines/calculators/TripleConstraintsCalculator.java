@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.service.baselines.calculators;
 
+import static br.gov.es.openpmo.utils.ApplicationMessage.OFFICE_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PLAN_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_NOT_FOUND;
 
@@ -29,9 +30,13 @@ import br.gov.es.openpmo.dto.menu.WorkpackResultDto;
 import br.gov.es.openpmo.enumerator.BaselineStatus;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
+import br.gov.es.openpmo.model.office.Office;
+import br.gov.es.openpmo.model.office.UnitMeasure;
 import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.BaselineRepository;
+import br.gov.es.openpmo.repository.OfficeRepository;
+import br.gov.es.openpmo.repository.UnitMeasureRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.utils.ApplicationCacheUtil;
 
@@ -49,17 +54,25 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
 
   private final WorkpackRepository workpackRepository;
 
+  private final OfficeRepository officeRepository;
+
+  private final UnitMeasureRepository unitMeasureRepository;
+
   @Autowired
   public TripleConstraintsCalculator(
     final BaselineRepository repository,
     final ApplicationCacheUtil cacheUtil,
     final BaselineRepository baselineRepository,
-    final WorkpackRepository workpackRepository
+    final WorkpackRepository workpackRepository,
+    final OfficeRepository officeRepository,
+    final UnitMeasureRepository unitMeasureRepository
   ) {
     this.repository = repository;
     this.cacheUtil = cacheUtil;
     this.baselineRepository = baselineRepository;
     this.workpackRepository = workpackRepository;
+    this.officeRepository = officeRepository;
+    this.unitMeasureRepository = unitMeasureRepository;
   }
 
   @Override
@@ -95,7 +108,8 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
 
     Workpack project = this.baselineRepository.findWorkpackByBaselineId(idBaseline).orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
     final Long idProject = project.getId();
-    Plan plan = this.workpackRepository.findPlanByWorkpackId(idProject).orElseThrow(() -> new NegocioException(PLAN_NOT_FOUND));
+    Plan plan = this.workpackRepository.findPlanByWorkpackId(idProject);
+    if (plan == null) throw new NegocioException(PLAN_NOT_FOUND);
     final Long idPlan = plan.getId();
 
     return this.buildCostDetail(unityMeasure, proposed, current, hasPreviousBaseline, idBaseline, idProject, idPlan);
@@ -151,7 +165,13 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
     WorkpackResultDto workpackDto = cacheUtil.getWorkpackBreakdownStructure(idProject, idPlan, true);
     List<TripleConstraintBreakdown> finalList = createTripleConstraintBreakdown(costDetail, scheduleDetail, scopeDetail, workpackDto, idsWorkpacksUnchanged);
 
-    return new TripleConstraintOutput(costDetail, scheduleDetail, scopeDetail, finalList);
+    Office currentOffice = this.officeRepository.findOfficeByPlanId(idPlan).orElse(null);
+    if (currentOffice == null) {
+      throw new NegocioException(OFFICE_NOT_FOUND);
+    }
+
+    List<UnitMeasure> officeUnitMeasures = this.unitMeasureRepository.findByOffice(currentOffice.getId(), null, null);
+    return new TripleConstraintOutput(costDetail, scheduleDetail, scopeDetail, finalList, officeUnitMeasures);
   }
 
   private BaselineCostDetail getBaselineCostDetail(final List<TripleConstraintDto> proposed, final List<TripleConstraintDto> current) {

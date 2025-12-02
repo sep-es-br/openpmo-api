@@ -3,6 +3,7 @@ package br.gov.es.openpmo.dto.baselines.ccbmemberview;
 import br.gov.es.openpmo.dto.baselines.EvaluationItem;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.baselines.Status;
+import br.gov.es.openpmo.model.office.UnitMeasure;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,6 +41,8 @@ public class BaselineDetailCCBMemberResponse {
   private BaselineScopeDetail scope;
 
   private List<TripleConstraintBreakdown> tripleConstraintBreakdown;
+
+  private List<UnitMeasure> officeUnitMeasures;
 
   public BaselineDetailCCBMemberResponse(
     final Long id,
@@ -89,6 +92,7 @@ public class BaselineDetailCCBMemberResponse {
       response.cost = output.getCostDetail();
       response.scope = output.getScopeDetail();
       response.tripleConstraintBreakdown = output.getTripleConstraintBreakdown();
+      response.officeUnitMeasures = output.getOfficeUnitMeasureConfig();
       response.scope.roundData();
       response.cost.roundData();
       response.schedule.roundData();
@@ -177,6 +181,10 @@ public class BaselineDetailCCBMemberResponse {
 
   public List<TripleConstraintBreakdown> getTripleConstraintBreakdown() {
     return this.tripleConstraintBreakdown;
+  }
+
+  public List<UnitMeasure> getOfficeUnitMeasures() {
+    return this.officeUnitMeasures;
   }
 
 }
