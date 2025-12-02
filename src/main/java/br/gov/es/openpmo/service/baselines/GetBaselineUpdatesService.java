@@ -17,14 +17,13 @@ import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.workpack.WorkpackModelService;
 import br.gov.es.openpmo.utils.ApplicationCacheUtil;
 import br.gov.es.openpmo.utils.ApplicationMessage;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
@@ -60,7 +59,7 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
     final Baseline baseline = this.baselineRepository.findActiveBaseline(idWorkpack).orElse(null);
     addScheduleAndConsumesMaster(workpacksMaster);
 
-    WorkpackResultDto workpackDto = cacheUtil.getWorkpackBreakdownStructure(idWorkpack, idPlan, true);
+    WorkpackResultDto workpackDto = cacheUtil.getFullWorkpackBreakdownStructure(idWorkpack, idPlan, true);
 
     if (baseline == null) {
       workpacksMaster.forEach(w -> w.setClassification(BaselineStatus.NEW));

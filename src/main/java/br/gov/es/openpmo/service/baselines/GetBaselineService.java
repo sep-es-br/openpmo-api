@@ -12,15 +12,13 @@ import br.gov.es.openpmo.dto.menu.WorkpackResultDto;
 import br.gov.es.openpmo.enumerator.BaselineStatus;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
+import br.gov.es.openpmo.model.baselines.Status;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.workpack.WorkpackModelService;
 import br.gov.es.openpmo.utils.ApplicationCacheUtil;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_NOT_FOUND;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -28,8 +26,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_NOT_FOUND;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 public class GetBaselineService implements IGetBaselineService {
@@ -123,11 +121,11 @@ public class GetBaselineService implements IGetBaselineService {
   ) {
     final List<BaselineWorkpackDto> workpacksBaseline = this.baselineRepository
         .findAllWorkpacBaselineById(baseLineParam.getIdBaseline());
+    addScheduleAndConsumes(workpacksBaseline);
     if (baselineCompare == null) {
       workpacksBaseline.forEach(w -> w.setClassification(BaselineStatus.NEW));
       return getBaselineDetailResponse(baseline, workpacksBaseline, idWorkpack);
     }
-    addScheduleAndConsumes(workpacksBaseline);
 
     final List<BaselineWorkpackDto> workpackBaselineCompare = this.baselineRepository
         .findAllWorkpacBaselineById(baselineCompare.getIdBaseline());
@@ -164,9 +162,9 @@ public class GetBaselineService implements IGetBaselineService {
     }
 
     Long idPlan = this.workpackRepository.findPlanByWorkpackId(idWorkpack).getId();
-    WorkpackResultDto workpackDto = cacheUtil.getWorkpackBreakdownStructure(idWorkpack, idPlan, true);
+    WorkpackResultDto workpackDto = cacheUtil.getFullWorkpackBreakdownStructure(idWorkpack, idPlan, true);
 
-    List<UpdateObject> updateList = this.assembleListOfUpdates(workpacks);
+    List<UpdateObject> updateList = this.assembleListOfUpdates(workpacks, baseline.getStatus());
     List<BaselineUpdateBreakdown> updateBreakdown = this.getBaselineUpdatesService.createBaselineBreakdown(updateList, workpackDto);
 
     List<UpdateObject> deletedUpdates = updateList.stream().filter(update -> update.getClassification().equals(BaselineStatus.DELETED)).collect(Collectors.toList());
@@ -217,7 +215,7 @@ public class GetBaselineService implements IGetBaselineService {
     return this.getAllBaselineEvaluations.getEvaluations(idBaseline);
   }
 
-  private List<UpdateObject> assembleListOfUpdates(List<BaselineWorkpackDto> workpacks) {
+  private List<UpdateObject> assembleListOfUpdates(List<BaselineWorkpackDto> workpacks, Status baselineStatus) {
     final List<UpdateObject> resultList = new ArrayList<>(0);
 
     workpacks.forEach(w -> {
@@ -240,7 +238,7 @@ public class GetBaselineService implements IGetBaselineService {
           newUR.setDeliveryModelHasActiveSchedule(false);
         }
 
-        if (w.getClassification() != BaselineStatus.DELETED) {
+        if (w.getClassification() != BaselineStatus.DELETED && baselineStatus != Status.REJECTED) {
           if (w.getSchedule().size() == 0) {
             // Entrega não possui cronograma
             newUR.setClassification(BaselineStatus.NO_SCHEDULE);
