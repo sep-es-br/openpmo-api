@@ -356,9 +356,9 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
             child.getName(),
             child.getFullName(),
             child.getFontIcon(),
+            child.getType(),
             child.getModelName(),
-            child.getModelNameInPlural(),
-            child.getType()
+            child.getModelNameInPlural()
           );
 
           for (WorkpackResultDto deliveryOrMilestone : child.getChildren()) {          
