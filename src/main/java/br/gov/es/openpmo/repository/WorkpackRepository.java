@@ -254,8 +254,10 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
           @Param("searchCutOffScore") Double searchCutOffScore
   );
 
-  @Query("MATCH (wm:WorkpackModel)<-[:IS_INSTANCE_BY | IS_LINKED_TO]-(w:Workpack{deleted:false})-[rf:BELONGS_TO]->(p:Plan), "
-      + "(w)-[:IS_IN]->(pw:Workpack) "
+  @Query(
+        "MATCH (wm:WorkpackModel)<-[:IS_INSTANCE_BY | IS_LINKED_TO]-(w:Workpack)-[rf:BELONGS_TO]->(p:Plan),\n" +
+        "      (w)-[:IS_IN]->(pw:Workpack)\n" +
+        "WHERE CASE WHEN NOT ('Milestone' IN labels(w)) THEN NOT w.deleted ELSE true END\n"
       + "WITH *, "
       + "apoc.text.levenshteinSimilarity(apoc.text.clean(w.name), apoc.text.clean($term)) AS nameScore, "
       + "apoc.text.levenshteinSimilarity(apoc.text.clean(w.fullName), apoc.text.clean($term)) AS fullNameScore "
