@@ -80,9 +80,9 @@ public abstract class WorkpackModel extends Entity {
 
   private Set<String> notificationsSelectedRoles;
 
-  private Boolean notificationsEventCriticalEnabled;
+  private Boolean notificationsEventMilestoneEnabled;
 
-  private Long notificationsEventCriticalDaysBefore;
+  private Long notificationsEventMilestoneDaysBefore;
 
   private Boolean notificationsEventScheduleEnabled;
 
@@ -423,8 +423,8 @@ public abstract class WorkpackModel extends Entity {
     this.sortByField = workpackModel.sortByField;
     this.notificationsSessionActive = workpackModel.notificationsSessionActive;
     this.notificationsSelectedRoles = workpackModel.notificationsSelectedRoles;
-    this.notificationsEventCriticalEnabled = workpackModel.notificationsEventCriticalEnabled;
-    this.notificationsEventCriticalDaysBefore = workpackModel.notificationsEventCriticalDaysBefore;
+    this.notificationsEventMilestoneEnabled = workpackModel.notificationsEventMilestoneEnabled;
+    this.notificationsEventMilestoneDaysBefore = workpackModel.notificationsEventMilestoneDaysBefore;
     this.notificationsEventScheduleEnabled = workpackModel.notificationsEventScheduleEnabled;
     this.notificationsEventScheduleDayOfMonth = workpackModel.notificationsEventScheduleDayOfMonth;
   }
@@ -524,20 +524,20 @@ public abstract class WorkpackModel extends Entity {
     this.notificationsSelectedRoles = notificationsSelectedRoles;
   }
 
-  public Boolean getNotificationsEventCriticalEnabled() {
-    return notificationsEventCriticalEnabled;
+  public Boolean getNotificationsEventMilestoneEnabled() {
+    return notificationsEventMilestoneEnabled;
   }
 
-  public void setNotificationsEventCriticalEnabled(Boolean notificationsEventCriticalEnabled) {
-    this.notificationsEventCriticalEnabled = notificationsEventCriticalEnabled;
+  public void setNotificationsEventMilestoneEnabled(Boolean notificationsEventMilestoneEnabled) {
+    this.notificationsEventMilestoneEnabled = notificationsEventMilestoneEnabled;
   }
 
-  public Long getNotificationsEventCriticalDaysBefore() {
-    return notificationsEventCriticalDaysBefore;
+  public Long getNotificationsEventMilestoneDaysBefore() {
+    return notificationsEventMilestoneDaysBefore;
   }
 
-  public void setNotificationsEventCriticalDaysBefore(Long notificationsEventCriticalDaysBefore) {
-    this.notificationsEventCriticalDaysBefore = notificationsEventCriticalDaysBefore;
+  public void setNotificationsEventMilestoneDaysBefore(Long notificationsEventMilestoneDaysBefore) {
+    this.notificationsEventMilestoneDaysBefore = notificationsEventMilestoneDaysBefore;
   }
 
   public Boolean getNotificationsEventScheduleEnabled() {

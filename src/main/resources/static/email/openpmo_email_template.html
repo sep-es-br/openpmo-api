@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notificação OpenPMO</title>
+    <style type="text/css">
+        body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; margin:0; padding:0; }
+        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-collapse: collapse; }
+        img { -ms-interpolation-mode: bicubic; display: block; border:0; max-width:100%; height:auto; }
+        a[x-apple-data-detectors] { color: inherit !important; text-decoration: none !important; font-size: inherit !important; font-family: inherit !important; font-weight: inherit !important; line-height: inherit !important; }
+        body { background-color: #f4f4f4; font-family: Arial, sans-serif; font-size: 16px; line-height: 24px; color: #333333; margin:0; padding:0; }
+        .header, .footer { background-color: #20998a; color: #ffffff; }
+        .header { font-size: 30px; font-weight: bold; text-align: left; padding: 20px; }
+        .footer { font-size: 14px; text-align: left; padding: 15px 20px; }
+        .alert { background-color: #fff8c4; padding: 10px 20px; font-size: 14px; color: #8a6d3b; }
+        .content { padding: 30px 20px; }
+        .project-block { border: 1px solid #e0e0e0; margin-bottom: 20px; }
+        .project-header { background-color: #f9f9f9; padding: 15px 20px; font-weight: bold; color: #20998a; }
+        .project-body { padding: 15px 20px; font-size: 14px; }
+        .deliverables { margin:0; padding-left:20px; }
+
+        /* Estilos para tornar colunas responsivas */
+        @media only screen and (max-width: 768px) {
+            .hide-mobile { display: none !important; }
+            .header td, .footer td { display: block; width: 100% !important; text-align: center !important; }
+            .header .p-mobile, .footer .p-mobile { padding-bottom: 20px; }
+            .header img, .footer img { margin: 0 auto !important; }
+        }
+    </style>
+</head>
+<body>
+    <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+            <td align="center">
+                <!-- TABELA PRINCIPAL OCUPANDO 100% -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#ffffff;">
+                    <!-- Cabeçalho -->
+                    <tr>
+                        <td class="header" style="padding: 20px; background-color: #20998a;">
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <!-- Coluna do brasão (esquerda) -->
+                                    <td class="p-mobile" width="50" align="left">
+                                        <img src="cid:brasao" style="display:block;">
+                                    </td>
+                                    <!-- Coluna central com título -->
+                                    <td width="50" align="center">
+                                        <img width="200" src="cid:pmo_icon" style="display:block;">
+                                    </td>
+                                    <!-- Coluna direita vazia (para alinhamento) -->
+                                    <td class="hide-mobile" width="50">&nbsp;</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                      <!-- Alerta -->
+                        <tr>
+                            <td align="center" style="background-color: #fff8c4; padding: 10px 20px; border-top: 1px solid #e0e0e0;">
+                                <p style="margin: 0; color: #8a6d3b; font-size: 14px;">
+                                    <strong style="color: red">Atenção:</strong> Este é um e-mail automático. Favor não responder.
+                                </p>
+                            </td>
+                        </tr>
+                    
+                    <!-- Conteúdo -->
+                    <tr>
+                        <td class="content">
+                            <p>Gerente de Projeto, atenção:</p>
+                            {{PROJECTS_BLOCK}}
+                            <p style="margin: 30px 0 0 0; font-size: 14px; color: #666666;">
+                                Em caso de dúvidas, estamos à disposição para prestar o suporte necessário.
+                            </p>
+                        </td>
+    
+                    </tr>
+                    <!-- Rodapé -->
+                    <tr>
+                        <td class="footer" style="padding: 20px; background-color: #20998a;">
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td class="p-mobile" width="50" align="left">
+                                         <img src="cid:pmo_logo" width="200" style="display:block;">
+                                    </td>
+                                    <!-- Coluna central com título -->
+                                    <td width="50" align="center">
+                                        Desenvolvido e mantido por SEP - Secretária de Economia e Planejamento
+                                    </td>
+                                    <!-- Coluna direita vazia (para alinhamento) -->
+                                    <td class="hide-mobile" width="50">&nbsp;</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
