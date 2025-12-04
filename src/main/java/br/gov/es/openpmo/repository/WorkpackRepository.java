@@ -726,6 +726,11 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
        "RETURN p.value = 'Cancelada'")
   Boolean isSituationCanceled(Long id);
 
+  @Query("MATCH (snapshot:Workpack) " +
+       "WHERE id(snapshot) = $id" +
+       "RETURN snapshot.canceled")
+  Boolean isCanceled(Long id);
+
   @Query("MATCH (w:Workpack)<-[:FEATURES]-(p:Property) " +
        "WHERE id(p) = $id " +
        "RETURN id(w)")
