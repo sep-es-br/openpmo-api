@@ -84,7 +84,7 @@ public class BaselineServiceUtil {
         List<BaselineWorkpackDto> list = new ArrayList<>(listParam);
         for (BaselineWorkpackDto principal : list) {
             BaselineWorkpackDto compare = listCompare.stream().filter(w -> w.getIdMaster().equals(principal.getIdMaster())).findFirst().orElse(null);
-            if (compare == null) {
+            if (compare == null && !workpackRepository.isCanceled(principal.getId())) {
                 principal.setClassification(BaselineStatus.NEW);
                 continue;
             }
