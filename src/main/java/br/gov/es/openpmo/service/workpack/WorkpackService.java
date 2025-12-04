@@ -1697,6 +1697,7 @@ public class WorkpackService {
     );
     final List<Long> workpackIds = workpacks.stream().map(w -> w.getId()).collect(Collectors.toList());
     this.workpackRepository.setWorkpacksCanceled(workpackIds, false);
+    this.workpackRepository.setWorkpacksDeleted(workpackIds, false);
     this.cacheUtil.loadAllCache();
   }
 

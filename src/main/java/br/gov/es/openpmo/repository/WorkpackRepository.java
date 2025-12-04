@@ -568,10 +568,18 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
 
   @Query("MATCH (w:Workpack) " +
           "WHERE id(w) IN $idsWorkpacks " +
-          "SET w.canceled = $canceled, w.deleted = $canceled")
+          "SET w.canceled = $canceled")
   void setWorkpacksCanceled(
           @Param("idsWorkpacks") List<Long> idsWorkpacks,
           @Param("canceled") Boolean canceled
+  );
+
+  @Query("MATCH (w:Workpack) " +
+          "WHERE id(w) IN $idsWorkpacks " +
+          "SET w.deleted = $deleted")
+    void setWorkpacksDeleted(
+          @Param("idsWorkpacks") List<Long> idsWorkpacks,
+          @Param("deleted") Boolean deleted
   );
 
   @Query("MATCH (w:Workpack), (wm:WorkpackModel) " +
