@@ -415,7 +415,7 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
   List<BaselineConsumesStep> findAllStepConsumesById(final List<Long> ids);
 
   @Query(
-    "MATCH (children:Workpack{deleted:false})-[:IS_IN*]->(parent:Workpack) " +
+    "MATCH (children:Workpack{deleted:false, canceled: false})-[:IS_IN*]->(parent:Workpack) " +
     "WHERE ID(parent) = $id AND (ANY(label IN labels(children) WHERE label IN ['Deliverable']) " +
     "OR ANY(label IN labels(children) WHERE label IN ['Milestone']) ) " +
     "WITH DISTINCT ID(children)  AS ids " +
