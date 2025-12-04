@@ -227,6 +227,8 @@ public class BaselineServiceUtil {
 
     private Workpack getSnapshotOf(Workpack workpack) {
         Workpack snapshot = workpack instanceof Milestone ? new Milestone() : new Deliverable();
+        snapshot.setDeleted(workpack.isDeleted());
+        snapshot.setCanceled(workpack.isCanceled());
         snapshot.setDate(workpack.getDate());
         snapshot.setCategory(CategoryEnum.SNAPSHOT);
         snapshot.setFullName(workpack.getFullName());
