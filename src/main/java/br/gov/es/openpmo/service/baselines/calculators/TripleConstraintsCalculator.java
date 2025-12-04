@@ -129,38 +129,41 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
     BaselineScopeDetail scopeDetail = getBaselineScopeDetail(unityMeasure, proposed, current, hasPreviousBaseline);
 
     // Aqui monta uma lista de Ids de workpacks que não sofreram alterações
-    List<Long> idsWorkpacksUnchanged = current
-      .stream()
-      .filter(item -> {
-          TripleConstraintDto proposedEquivalent = proposed.stream().filter(el -> el.getIdWorkpack().equals(item.getIdWorkpack())).findFirst().orElse(null);
-
-          return (
-            proposedEquivalent != null &&
-            (
-              (item.getSumPlannedCost() != null && proposedEquivalent.getSumPlannedCost() != null)
-              ? item.getSumPlannedCost().equals(proposedEquivalent.getSumPlannedCost())
-              : true
-            ) &&
-            (
-              (item.getSumPlannedWork() != null && proposedEquivalent.getSumPlannedWork() != null)
-              ? item.getSumPlannedWork().equals(proposedEquivalent.getSumPlannedWork())
-              : true
-            ) &&
-            (
-              (item.getStart() != null && proposedEquivalent.getStart() != null)
-              ? item.getStart().equals(proposedEquivalent.getStart())
-              : true
-            ) &&
-            (
-              (item.getEnd() != null && proposedEquivalent.getEnd() != null)
-              ? item.getEnd().equals(proposedEquivalent.getEnd())
-              : true
-            )
-          );
-        }
-      )
-      .map(el -> el.getIdWorkpack())
-      .collect(Collectors.toList());
+    List<Long> idsWorkpacksUnchanged = new ArrayList<Long>();
+    if (current != null && current.size() > 0) {
+      idsWorkpacksUnchanged = current
+        .stream()
+        .filter(item -> {
+            TripleConstraintDto proposedEquivalent = proposed.stream().filter(el -> el.getIdWorkpack().equals(item.getIdWorkpack())).findFirst().orElse(null);
+  
+            return (
+              proposedEquivalent != null &&
+              (
+                (item.getSumPlannedCost() != null && proposedEquivalent.getSumPlannedCost() != null)
+                ? item.getSumPlannedCost().equals(proposedEquivalent.getSumPlannedCost())
+                : true
+              ) &&
+              (
+                (item.getSumPlannedWork() != null && proposedEquivalent.getSumPlannedWork() != null)
+                ? item.getSumPlannedWork().equals(proposedEquivalent.getSumPlannedWork())
+                : true
+              ) &&
+              (
+                (item.getStart() != null && proposedEquivalent.getStart() != null)
+                ? item.getStart().equals(proposedEquivalent.getStart())
+                : true
+              ) &&
+              (
+                (item.getEnd() != null && proposedEquivalent.getEnd() != null)
+                ? item.getEnd().equals(proposedEquivalent.getEnd())
+                : true
+              )
+            );
+          }
+        )
+        .map(el -> el.getIdWorkpack())
+        .collect(Collectors.toList());
+    }
 
     WorkpackResultDto workpackDto = cacheUtil.getWorkpackBreakdownStructure(idProject, idPlan, true);
     List<TripleConstraintBreakdown> finalList = createTripleConstraintBreakdown(costDetail, scheduleDetail, scopeDetail, workpackDto, idsWorkpacksUnchanged);
