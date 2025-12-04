@@ -392,7 +392,10 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
     "WHERE ID(baseline) = $id AND ANY(label IN labels(children) WHERE label IN ['Milestone', 'Deliverable']) " +
     "WITH DISTINCT id(children)  AS ids " +
     "MATCH (snapshot:Workpack)-[:IS_SNAPSHOT_OF]->(master:Workpack)-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
-    "WHERE ID(snapshot) IN [ids] " +
+    "WHERE ID(snapshot) IN [ids]\n" +
+    "OPTIONAL MATCH (master)-[]-(prop:Property)-[:IS_DRIVEN_BY]->(:PropertyModel{name: 'Situação'})\n" +
+    "WITH *\n" +
+    "WHERE prop IS NULL OR NOT (prop.value IN ['Cancelada']) " +
     "RETURN ID(master) AS idMaster, ID(snapshot) AS id, snapshot.name AS name, snapshot.fullName AS fullName " +
     ", snapshot.date AS date, model.fontIcon AS fontIcon, labels(snapshot) AS label"
   )
