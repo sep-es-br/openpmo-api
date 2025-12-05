@@ -29,28 +29,31 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
+    private ClassPathResource brasao = new ClassPathResource("static/email/img/brasao-branco.png");
+
+    private ClassPathResource pmoFullLogo = new ClassPathResource("static/email/img/pmo-logo.png");
+    
+    private ClassPathResource pmoIcon = new ClassPathResource("static/email/img/pmo.png");
+
+    private String email =  "notificacoes@openpmo.gov.br";
+    
+
     public void sendProjectDeliverablesNotification(String to, String subject,
         List<NotificationResultDto.ProjectEntryDto> projects,
         String userName,
         String htmlTemplate) throws MessagingException {
+
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
 
-        helper.setFrom("notificacoes@openpmo.gov.br");
+        helper.setFrom(email);
         helper.setTo(to);
         helper.setSubject(subject);
-
-        ClassPathResource brasao = new ClassPathResource("static/email/img/brasao-branco.png");
+        
         helper.addInline("brasao", brasao);
-
-        ClassPathResource pmoFullLogo = new ClassPathResource("static/email/img/pmo-logo.png");
         helper.addInline("pmo_logo", pmoFullLogo);
-
-        ClassPathResource pmoIcon = new ClassPathResource("static/email/img/pmo.png");
         helper.addInline("pmo_icon", pmoIcon);
-
-        ClassPathResource pmoIcon2 = new ClassPathResource("static/email/img/pmo.png");
-        helper.addInline("pmo_icon2", pmoIcon2);
+        helper.addInline("fix_inline", brasao); // evita bug do último item
 
         LocalDate hoje = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yyyy");
@@ -74,8 +77,8 @@ public class EmailService {
                 .append("<p><strong>Status:</strong> ").append(project.getStatus() != null ? project.getStatus() : "-").append("</p>")
                 .append("<p style='font-weight:bold;'>Entregas:</p><ul>");
 
-                if (project.getDeliverables() != null) {
-                for (NotificationResultDto.DeliverableEntryDto del : project.getDeliverables()) {
+                if (project.getItems() != null) {
+                for (NotificationResultDto.WorkEntryDto del : project.getItems()) {
                 projectsBlock.append("<li>").append(del.getFullName()).append("</li>");
                 }
             }
@@ -89,5 +92,73 @@ public class EmailService {
 
         mailSender.send(message);
     }
+
+    public void sendProjectMilestonesNotification(
+        String to,
+        String subject,
+        List<NotificationResultDto.ProjectEntryDto> projects,
+        String userName,
+        Long daysBefore,
+        String htmlTemplate) throws MessagingException {
+
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
+
+        helper.setFrom(email);
+        helper.setTo(to);
+        helper.setSubject(subject);
+
+        // Imagens inline
+        helper.addInline("brasao", brasao);
+        helper.addInline("pmo_logo", pmoFullLogo);
+        helper.addInline("pmo_icon", pmoIcon);
+        helper.addInline("fix_inline", brasao); // evita bug do último item
+
+        StringBuilder projectsBlock = new StringBuilder();
+
+        projectsBlock
+            .append("Lembrete automático referente ao(s) projeto(s) abaixo!<br>")
+            .append("O sistema identificou que existe(m) <strong>marco(s) crítico(s)</strong> com vencimento nos próximos <strong>")
+            .append(daysBefore)
+            .append(" dia(s)</strong> e que <strong>ainda não possuem registro de conclusão ou reprogramação</strong>.")
+            .append("</p>");
+
+        for (NotificationResultDto.ProjectEntryDto project : projects) {
+
+            projectsBlock.append("<table border='0' cellpadding='0' cellspacing='0' width='100%' ")
+                .append("style='margin-bottom:20px; border:1px solid #e0e0e0; border-radius:4px;'>")
+
+                // Cabeçalho do projeto
+                .append("<tr><td style='padding:15px 20px; background-color:#f9f9f9; ")
+                .append("font-weight:bold; color:#20998a;'>")
+                .append("Projeto: ").append(project.getProjectFullName())
+                .append("</td></tr>")
+
+                // Status e marcos críticos
+                .append("<tr><td style='padding:15px 20px;'>")
+                .append("<p><strong>Status:</strong> ")
+                .append(project.getStatus() != null ? project.getStatus() : "-")
+                .append("</p>")
+                .append("<p style='font-weight:bold;'>Marcos Críticos:</p><ul>");
+
+            if (project.getItems() != null) {
+                for (NotificationResultDto.WorkEntryDto milestone : project.getItems()) {
+                    projectsBlock.append("<li>")
+                        .append(milestone.getFullName())
+                        .append("</li>");
+                }
+            }
+
+            projectsBlock.append("</ul></td></tr></table>");
+        }
+
+        // Substitui o placeholder no template
+        String html = htmlTemplate.replace("{{PROJECTS_BLOCK}}", projectsBlock.toString());
+
+        helper.setText(html, true);
+
+        mailSender.send(message);
+    }
+
 }
 

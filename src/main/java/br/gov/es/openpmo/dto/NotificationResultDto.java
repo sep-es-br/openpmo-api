@@ -55,7 +55,6 @@ public class NotificationResultDto {
         this.projects = projects;
     }
 
-
     public static class ProjectEntryDto {
 
         private String projectName;
@@ -65,7 +64,7 @@ public class NotificationResultDto {
         private String status;
 
         @JsonInclude(JsonInclude.Include.NON_NULL)
-        private List<DeliverableEntryDto> deliverables;
+        private List<WorkEntryDto> items; 
 
         public ProjectEntryDto() {}
 
@@ -73,12 +72,12 @@ public class NotificationResultDto {
             String projectName,
             String projectFullName,
             String status,
-            List<DeliverableEntryDto> deliverables
+            List<WorkEntryDto> items
         ) {
             this.projectName = projectName;
             this.projectFullName = projectFullName;
             this.status = status;
-            this.deliverables = deliverables;
+            this.items = items;
         }
 
         public String getProjectName() {
@@ -105,26 +104,26 @@ public class NotificationResultDto {
             this.status = status;
         }
 
-        public List<DeliverableEntryDto> getDeliverables() {
-            return deliverables;
+        public List<WorkEntryDto> getItems() {
+            return items;
         }
 
-        public void setDeliverables(List<DeliverableEntryDto> deliverables) {
-            this.deliverables = deliverables;
+        public void setItems(List<WorkEntryDto> items) {
+            this.items = items;
         }
     }
 
     // =============================================================
-    // DTO INTERNO PARA ENTREGAS
+    // DTO INTERNO GENÉRICO PARA DELIVERABLE OU MILESTONE
     // =============================================================
-    public static class DeliverableEntryDto {
+    public static class WorkEntryDto {
 
         private String name;
         private String fullName;
 
-        public DeliverableEntryDto() {}
+        public WorkEntryDto() {}
 
-        public DeliverableEntryDto(String name, String fullName) {
+        public WorkEntryDto(String name, String fullName) {
             this.name = name;
             this.fullName = fullName;
         }

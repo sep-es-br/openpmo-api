@@ -1,4 +1,4 @@
-package br.gov.es.openpmo.service.schedule;
+package br.gov.es.openpmo.service.email;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -12,17 +12,16 @@ import org.springframework.stereotype.Service;
 import br.gov.es.openpmo.dto.NotificationResultDto;
 import br.gov.es.openpmo.model.workpacks.models.ProjectModel;
 import br.gov.es.openpmo.repository.ProjectModelRepository;
-import br.gov.es.openpmo.service.email.EmailService;
 
 @Service
-public class NotificationsScheduleService {
+public class NotificationsService {
 
     private final ProjectModelRepository projectModelRepository;
 
     private final EmailService emailService; 
 
     @Autowired
-    public NotificationsScheduleService(
+    public NotificationsService(
         final ProjectModelRepository projectModelRepository,
         final EmailService emailService
     ){
@@ -32,7 +31,7 @@ public class NotificationsScheduleService {
 
     // Em produção provavelmente seria 0 0 8 * * *
     @Scheduled(cron = "0 */2 * * * *")
-    public void checkProjectsSchedules() {
+    public void checkProjectSchedulesAndMilestones() {
 
         System.out.println("Executando verificação de agendas...");
 
@@ -42,10 +41,6 @@ public class NotificationsScheduleService {
             return;
         }
 
-        LocalDate today = LocalDate.now();
-        int todayDay = today.getDayOfMonth();
-        int lastDayOfMonth = today.lengthOfMonth();
-
         for (ProjectModel model : list) {
 
             Boolean scheduleNotificationEnabled = model.getNotificationsEventScheduleEnabled();
@@ -54,12 +49,11 @@ public class NotificationsScheduleService {
 
             if (Boolean.TRUE.equals(scheduleNotificationEnabled)) {
 
-                Long configuredDay = model.getNotificationsEventScheduleDayOfMonth();
+                LocalDate today = LocalDate.now();
+                int todayDay = today.getDayOfMonth();
+                int lastDayOfMonth = today.lengthOfMonth();
 
-                if (configuredDay == null || configuredDay < 1 || configuredDay > 31) {
-                    System.out.println("⚠ Configuração de dia inválida para o projeto: " + model.getId());
-                    continue;
-                }
+                Long configuredDay = model.getNotificationsEventScheduleDayOfMonth();
 
                 boolean shouldTrigger = (configuredDay == todayDay) || // Caso 1 — Dia existe no mês
                                 (configuredDay > lastDayOfMonth && todayDay == lastDayOfMonth); // Caso 2 — Dia NÃO existe no mês → dispara no último dia
@@ -67,7 +61,7 @@ public class NotificationsScheduleService {
                 if (shouldTrigger) {
                 
                     List<NotificationResultDto> results =
-                        projectModelRepository.fetchNotificationData(model.getId());
+                        projectModelRepository.fetchScheduleNotificationData(model.getId());
                 
                     if (!results.isEmpty()) {
                         for (NotificationResultDto dto : results) {
@@ -92,8 +86,28 @@ public class NotificationsScheduleService {
 
             if (Boolean.TRUE.equals(MilestoneEventsNotificationEnabled)) {
 
-                Long configuredDay = model.getNotificationsEventMilestoneDaysBefore();
+                List<NotificationResultDto> results =
+                        projectModelRepository.fetchMilestoneNotificationData(model.getId());
 
+                if (!results.isEmpty()) {
+                    for (NotificationResultDto dto : results) {
+
+                        try {
+                            String htmlTemplate = Files.readString(Paths.get("src/main/resources/static/email/openpmo_email_template.html"));
+                            emailService.sendProjectMilestonesNotification(
+                                dto.getEmail(),
+                                "Atualização de Marcos Críticos",
+                                dto.getProjects(),  
+                                dto.getFullName(),
+                                model.getNotificationsEventMilestoneDaysBefore(),
+                                htmlTemplate
+                            );
+                        } catch (Exception e) {
+                            System.err.println("Erro ao enviar e-mail para " + dto.getEmail() + ": " + e.getMessage());
+                        }
+            
+                    }
+                }
                 
             }
         }
