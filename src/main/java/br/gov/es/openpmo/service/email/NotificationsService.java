@@ -1,11 +1,13 @@
 package br.gov.es.openpmo.service.email;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -67,7 +69,8 @@ public class NotificationsService {
                         for (NotificationResultDto dto : results) {
 
                             try {
-                                String htmlTemplate = Files.readString(Paths.get("src/main/resources/static/email/openpmo_email_template.html"));
+                                ClassPathResource resource = new ClassPathResource("static/email/openpmo_email_template.html");
+                                String htmlTemplate = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
                                 emailService.sendProjectDeliverablesNotification(
                                     dto.getEmail(),
                                     "Atualização de cronograma e Diário da entrega",
