@@ -35,7 +35,7 @@ public class EmailService {
     
     private ClassPathResource pmoIcon = new ClassPathResource("static/email/img/pmo.png");
 
-    private String email =  "notificacoes@openpmo.gov.br";
+    private String email =  "naoresponda@pmo.es.gov.br";
     
 
     public void sendProjectDeliverablesNotification(String to, String subject,
