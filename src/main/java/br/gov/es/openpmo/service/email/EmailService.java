@@ -14,6 +14,8 @@ import br.gov.es.openpmo.dto.NotificationResultDto;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+
+import javax.annotation.PostConstruct;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
@@ -32,11 +34,22 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
-    private String brasaoBase64 = imageToBase64("static/email/img/brasao-branco.png");
-    private String pmoLogoBase64 = imageToBase64("static/email/img/pmo-logo.png");
-    private String pmoIconBase64 = imageToBase64("static/email/img/pmo.png");
+    private String brasaoBase64 = null;
+    private String pmoLogoBase64 = null;
+    private String pmoIconBase64 = null;
 
     private String email =  "naoresponda@pmo.es.gov.br";
+
+    @PostConstruct
+    public void init() {
+        try {
+            brasaoBase64 = imageToBase64("static/email/img/brasao-branco.png");
+            pmoLogoBase64 = imageToBase64("static/email/img/pmo-logo.png");
+            pmoIconBase64 = imageToBase64("static/email/img/pmo.png");
+        } catch (IOException e) {
+            System.err.println("⚠️ Erro ao carregar imagens: " + e.getMessage());
+        }
+    }
     
 
     public void sendProjectDeliverablesNotification(String to, String subject,
