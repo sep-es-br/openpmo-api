@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StreamUtils;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import br.gov.es.openpmo.dto.NotificationResultDto;
@@ -14,17 +13,13 @@ import br.gov.es.openpmo.dto.NotificationResultDto;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
-
-import javax.annotation.PostConstruct;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Base64;
 import java.util.List;
 import java.util.Locale;
 
@@ -34,22 +29,15 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
-    private String brasaoBase64 = null;
-    private String pmoLogoBase64 = null;
-    private String pmoIconBase64 = null;
+    private ClassPathResource brasao = new ClassPathResource("static/email/img/brasao-branco.png");
+
+    private ClassPathResource pmoFullLogo = new ClassPathResource("static/email/img/pmo-logo.png");
+    
+    private ClassPathResource pmoIcon = new ClassPathResource("static/email/img/pmo.png");
+
+    private ClassPathResource fix_inline = new ClassPathResource("static/email/img/transparent.gif");
 
     private String email =  "naoresponda@pmo.es.gov.br";
-
-    @PostConstruct
-    public void init() {
-        try {
-            brasaoBase64 = imageToBase64("static/email/img/brasao-branco.png");
-            pmoLogoBase64 = imageToBase64("static/email/img/pmo-logo.png");
-            pmoIconBase64 = imageToBase64("static/email/img/pmo.png");
-        } catch (IOException e) {
-            System.err.println("⚠️ Erro ao carregar imagens: " + e.getMessage());
-        }
-    }
     
 
     public void sendProjectDeliverablesNotification(String to, String subject,
@@ -64,6 +52,11 @@ public class EmailService {
         helper.setTo(to);
         helper.setSubject(subject);
         
+        helper.addInline("brasao", brasao, "image/png");
+        helper.addInline("pmo_logo", pmoFullLogo, "image/png");
+        helper.addInline("pmo_icon", pmoIcon, "image/png");
+        helper.addInline("fix_inline", fix_inline, "image/gif"); // evita bug do último item
+
         LocalDate hoje = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yyyy");
         String mesAno = hoje.format(formatter);
@@ -97,11 +90,6 @@ public class EmailService {
 
         String html = htmlTemplate.replace("{{PROJECTS_BLOCK}}", projectsBlock.toString());
 
-        html = html.replace("src=\"cid:brasao\"", "src=\"data:image/png;base64," + brasaoBase64 + "\"")
-        .replace("src=\"cid:pmo_logo\"", "src=\"data:image/png;base64," + pmoLogoBase64 + "\"")
-        .replace("src=\"cid:pmo_icon\"", "src=\"data:image/png;base64," + pmoIconBase64 + "\"");
-
-
         helper.setText(html, true);
 
         mailSender.send(message);
@@ -121,7 +109,12 @@ public class EmailService {
         helper.setFrom(email);
         helper.setTo(to);
         helper.setSubject(subject);
- // evita bug do último item
+
+        // Imagens inline
+        helper.addInline("brasao", brasao, "image/png");
+        helper.addInline("pmo_logo", pmoFullLogo, "image/png");
+        helper.addInline("pmo_icon", pmoIcon, "image/png");
+        helper.addInline("fix_inline", fix_inline, "image/gif"); // evita bug do último item
 
         StringBuilder projectsBlock = new StringBuilder();
 
@@ -164,25 +157,9 @@ public class EmailService {
         // Substitui o placeholder no template
         String html = htmlTemplate.replace("{{PROJECTS_BLOCK}}", projectsBlock.toString());
 
-        html = html.replace("src=\"cid:brasao\"", "src=\"data:image/png;base64," + brasaoBase64 + "\"")
-        .replace("src=\"cid:pmo_logo\"", "src=\"data:image/png;base64," + pmoLogoBase64 + "\"")
-        .replace("src=\"cid:pmo_icon\"", "src=\"data:image/png;base64," + pmoIconBase64 + "\"");
-
         helper.setText(html, true);
 
         mailSender.send(message);
-    }
-
-    private String imageToBase64(String imagePath) throws IOException {
-        ClassPathResource resource = new ClassPathResource(imagePath);
-        
-        if (!resource.exists()) {
-            System.err.println("⚠️ Imagem não encontrada: " + imagePath);
-            return "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
-        }
-        
-        byte[] imageBytes = StreamUtils.copyToByteArray(resource.getInputStream());
-        return Base64.getEncoder().encodeToString(imageBytes);
     }
 
 }

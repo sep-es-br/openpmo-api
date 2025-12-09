@@ -96,7 +96,8 @@ public class NotificationsService {
                     for (NotificationResultDto dto : results) {
 
                         try {
-                            String htmlTemplate = Files.readString(Paths.get("src/main/resources/static/email/openpmo_email_template.html"));
+                            ClassPathResource resource = new ClassPathResource("static/email/openpmo_email_template.html");
+                            String htmlTemplate = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
                             emailService.sendProjectMilestonesNotification(
                                 dto.getEmail(),
                                 "Atualização de Marcos Críticos",
