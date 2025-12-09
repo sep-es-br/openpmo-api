@@ -46,7 +46,13 @@ public class EmailService {
         String htmlTemplate) throws MessagingException {
 
         MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
+        MimeMessageHelper helper =
+            new MimeMessageHelper(
+                message,
+                MimeMessageHelper.MULTIPART_MODE_RELATED,
+                StandardCharsets.UTF_8.name()
+            );
+
 
         helper.setFrom(email);
         helper.setTo(to);
@@ -104,7 +110,13 @@ public class EmailService {
         String htmlTemplate) throws MessagingException {
 
         MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
+        MimeMessageHelper helper =
+            new MimeMessageHelper(
+                message,
+                MimeMessageHelper.MULTIPART_MODE_RELATED,
+                StandardCharsets.UTF_8.name()
+            );
+
 
         helper.setFrom(email);
         helper.setTo(to);
