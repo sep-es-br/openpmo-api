@@ -14,9 +14,12 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -46,12 +49,7 @@ public class EmailService {
         String htmlTemplate) throws MessagingException {
 
         MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper =
-            new MimeMessageHelper(
-                message,
-                MimeMessageHelper.MULTIPART_MODE_RELATED,
-                StandardCharsets.UTF_8.name()
-            );
+        MimeMessageHelper helper = createOutlookStrictHelper(message);
 
 
         helper.setFrom(email);
@@ -61,7 +59,7 @@ public class EmailService {
         helper.addInline("brasao", brasao, "image/png");
         helper.addInline("pmo_logo", pmoFullLogo, "image/png");
         helper.addInline("pmo_icon", pmoIcon, "image/png");
-        helper.addInline("fix_inline", fix_inline, "image/gif"); // evita bug do último item
+        // helper.addInline("fix_inline", fix_inline, "image/gif"); // evita bug do último item
 
         LocalDate hoje = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yyyy");
@@ -96,7 +94,7 @@ public class EmailService {
 
         String html = htmlTemplate.replace("{{PROJECTS_BLOCK}}", projectsBlock.toString());
 
-        helper.setText(html, true);
+        setHtml(message, html);
 
         mailSender.send(message);
     }
@@ -110,12 +108,7 @@ public class EmailService {
         String htmlTemplate) throws MessagingException {
 
         MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper =
-            new MimeMessageHelper(
-                message,
-                MimeMessageHelper.MULTIPART_MODE_RELATED,
-                StandardCharsets.UTF_8.name()
-            );
+        MimeMessageHelper helper = createOutlookStrictHelper(message);
 
 
         helper.setFrom(email);
@@ -126,7 +119,7 @@ public class EmailService {
         helper.addInline("brasao", brasao, "image/png");
         helper.addInline("pmo_logo", pmoFullLogo, "image/png");
         helper.addInline("pmo_icon", pmoIcon, "image/png");
-        helper.addInline("fix_inline", fix_inline, "image/gif"); // evita bug do último item
+        // helper.addInline("fix_inline", fix_inline, "image/gif"); // evita bug do último item
 
         StringBuilder projectsBlock = new StringBuilder();
 
@@ -169,9 +162,59 @@ public class EmailService {
         // Substitui o placeholder no template
         String html = htmlTemplate.replace("{{PROJECTS_BLOCK}}", projectsBlock.toString());
 
-        helper.setText(html, true);
+        setHtml(message, html);
 
         mailSender.send(message);
+    }
+
+private MimeMessageHelper createOutlookStrictHelper(MimeMessage message)
+            throws MessagingException {
+
+        MimeMessageHelper helper =
+                new MimeMessageHelper(
+                        message,
+                        MimeMessageHelper.MULTIPART_MODE_RELATED,
+                        StandardCharsets.UTF_8.name()
+                );
+
+        try {
+            MimeMultipart root = (MimeMultipart) message.getContent();
+
+            MimeBodyPart container = new MimeBodyPart();
+            MimeMultipart alternative = new MimeMultipart("alternative");
+
+            MimeBodyPart plain = new MimeBodyPart();
+            plain.setText("", "UTF-8");
+            alternative.addBodyPart(plain);
+
+            MimeBodyPart html = new MimeBodyPart();
+            html.setContent("<html></html>", "text/html; charset=UTF-8");
+            alternative.addBodyPart(html);
+
+            container.setContent(alternative);
+            root.addBodyPart(container);
+
+        } catch (IOException e) {
+            throw new MessagingException("Erro ao montar estrutura MIME", e);
+        }
+
+        return helper;
+    }
+
+    private void setHtml(MimeMessage message, String html)
+            throws MessagingException {
+
+        try {
+            MimeMultipart root = (MimeMultipart) message.getContent();
+            MimeBodyPart container = (MimeBodyPart) root.getBodyPart(0);
+            MimeMultipart alt = (MimeMultipart) container.getContent();
+            MimeBodyPart htmlPart = (MimeBodyPart) alt.getBodyPart(1);
+
+            htmlPart.setContent(html, "text/html; charset=UTF-8");
+
+        } catch (IOException e) {
+            throw new MessagingException("Erro ao definir HTML", e);
+        }
     }
 
 }
