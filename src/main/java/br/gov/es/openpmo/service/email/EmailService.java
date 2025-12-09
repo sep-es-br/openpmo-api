@@ -52,10 +52,10 @@ public class EmailService {
         helper.setTo(to);
         helper.setSubject(subject);
         
-        // helper.addInline("brasao", brasao);
-        // helper.addInline("pmo_logo", pmoFullLogo);
-        // helper.addInline("pmo_icon", pmoIcon);
-        // helper.addInline("fix_inline", fix_inline); // evita bug do último item
+        helper.addInline("brasao", brasao);
+        helper.addInline("pmo_logo", pmoFullLogo);
+        helper.addInline("pmo_icon", pmoIcon);
+        helper.addInline("fix_inline", fix_inline); // evita bug do último item
 
         LocalDate hoje = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yyyy");
