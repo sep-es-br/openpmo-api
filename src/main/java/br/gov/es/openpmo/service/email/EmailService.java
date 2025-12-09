@@ -35,7 +35,7 @@ public class EmailService {
     
     private ClassPathResource pmoIcon = new ClassPathResource("static/email/img/pmo.png");
 
-    private ClassPathResource fix_inline = new ClassPathResource("static/email/img/brasao-branco.png");
+    private ClassPathResource fix_inline = new ClassPathResource("static/email/img/transparent.gif");
 
     private String email =  "naoresponda@pmo.es.gov.br";
     
@@ -52,10 +52,10 @@ public class EmailService {
         helper.setTo(to);
         helper.setSubject(subject);
         
-        helper.addInline("brasao", brasao);
-        helper.addInline("pmo_logo", pmoFullLogo);
-        helper.addInline("pmo_icon", pmoIcon);
-        helper.addInline("fix_inline", fix_inline); // evita bug do último item
+        // helper.addInline("brasao", brasao);
+        // helper.addInline("pmo_logo", pmoFullLogo);
+        // helper.addInline("pmo_icon", pmoIcon);
+        // helper.addInline("fix_inline", fix_inline); // evita bug do último item
 
         LocalDate hoje = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yyyy");
@@ -114,7 +114,7 @@ public class EmailService {
         helper.addInline("brasao", brasao);
         helper.addInline("pmo_logo", pmoFullLogo);
         helper.addInline("pmo_icon", pmoIcon);
-        helper.addInline("fix_inline", brasao); // evita bug do último item
+        helper.addInline("fix_inline", fix_inline); // evita bug do último item
 
         StringBuilder projectsBlock = new StringBuilder();
 
