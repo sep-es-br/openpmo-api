@@ -59,7 +59,7 @@ public class EmailService {
         helper.addInline("brasao", brasao, "image/png");
         helper.addInline("pmo_logo", pmoFullLogo, "image/png");
         helper.addInline("pmo_icon", pmoIcon, "image/png");
-        // helper.addInline("fix_inline", fix_inline, "image/gif"); // evita bug do último item
+        helper.addInline("fix_inline", fix_inline, "image/gif"); // evita bug do último item
 
         LocalDate hoje = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yyyy");
@@ -119,7 +119,7 @@ public class EmailService {
         helper.addInline("brasao", brasao, "image/png");
         helper.addInline("pmo_logo", pmoFullLogo, "image/png");
         helper.addInline("pmo_icon", pmoIcon, "image/png");
-        // helper.addInline("fix_inline", fix_inline, "image/gif"); // evita bug do último item
+        helper.addInline("fix_inline", fix_inline, "image/gif"); // evita bug do último item
 
         StringBuilder projectsBlock = new StringBuilder();
 
