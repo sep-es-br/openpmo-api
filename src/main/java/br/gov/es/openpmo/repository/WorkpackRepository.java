@@ -939,26 +939,38 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
    * @param request
    * @return 
    */
-  @Query( value = doSearchInAll_queryBase +
-            "RETURN planId, id, model, icon, name, fullName, matchDistance, breadcrumbs\n" +
-            "ORDER BY matchDistance ASC", countQuery = doSearchInAll_queryBase +
-            "RETURN count(id)")
-    public Page<UniversalSearchItemQueryResult> doSearchInAll(Long workpackId, String term, Long userId, Long planId, PageRequest request );
+  @Query(
+    value = doSearchInAll_queryBase +
+    "RETURN planId, id, model, icon, name, fullName, matchDistance, breadcrumbs\n" +
+    "ORDER BY matchDistance ASC", countQuery = doSearchInAll_queryBase +
+    "RETURN count(id)"
+  )
+  public Page<UniversalSearchItemQueryResult> doSearchInAll(Long workpackId, String term, Long userId, Long planId, PageRequest request );
     
-      @Query(
-        "MATCH (w:Workpack)-[:BELONGS_TO]->(plan:Plan) " +
-        "WHERE ID(w) = $idWorkpack " +
-        "RETURN plan "
-      )
-      public Plan findPlanByWorkpackId(Long idWorkpack);
+  @Query(
+    "MATCH (w:Workpack)-[:BELONGS_TO]->(plan:Plan) " +
+    "WHERE ID(w) = $idWorkpack " +
+    "RETURN plan "
+  )
+  public Plan findPlanByWorkpackId(Long idWorkpack);
       
-    @Query(
-        "MATCH (w:Workpack)<-[:IS_IN*]-(child:Workpack{deleted: false})\n" +
-        "where id(w) = $workpackId AND $type IN labels(child)\n" +
-        "OPTIONAL MATCH (child)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel {name:'Situação'})\n" +
-        "WHERE 'Deliverable' IN labels(child) AND NOT (p.value IN ['A cancelar', 'Cancelada'])\n" +
-        "return count(child)"
-    )
-    public Long countTypeByWorkpack(Long workpackId, String type);
+  @Query(
+    "MATCH (w:Workpack)<-[:IS_IN*]-(child:Workpack{deleted: false})\n" +
+    "where id(w) = $workpackId AND $type IN labels(child)\n" +
+    "OPTIONAL MATCH (child)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel {name:'Situação'})\n" +
+    "WHERE 'Deliverable' IN labels(child) AND NOT (p.value IN ['A cancelar', 'Cancelada'])\n" +
+    "return count(child)"
+  )
+  public Long countTypeByWorkpack(Long workpackId, String type);
+  
+  @Query(
+    "MATCH (w:Workpack)-[:IS_INSTANCE_BY]->(m:WorkpackModel)\n" +
+    "WHERE ID(w) = $idWorkpack\n" +
+    "RETURN ID(w) as id, w.idWorkpackModel as idWorkpackModel, w.idParent as idParent, " +
+    "   w.name as name, w.fullName as fullName, labels(w) as labels, m.modelName as modelName, " +
+    "   m.modelNameInPlural as modelNameInPlural, HEAD([label IN labels(w) WHERE label <> 'Workpack']) as type, " +
+    "   m.fontIcon as fontIcon"
+  )
+  public WorkpackResultDto getWorkpackResultDtoById(Long idWorkpack);
 }
 
