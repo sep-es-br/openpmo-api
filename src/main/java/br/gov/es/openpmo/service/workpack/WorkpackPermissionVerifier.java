@@ -159,9 +159,11 @@ public class WorkpackPermissionVerifier {
       .filter(p -> !NONE.equals(p.getPermissionLevel()) && idsWorkpakWithParents.contains(p.getIdWorkpack()))
       .collect(Collectors.toList());
 
-    if (!permissionPrent.isEmpty()) {
-      return permissionPrent.stream().map(PermissionDto::of).collect(Collectors.toList());
-    }
+      if (!permissionPrent.isEmpty()) {
+        return permissionPrent.stream()
+            .map(c -> adjustUpdateToEditIfEstruturacao(c, idWorkpack)) 
+            .collect(Collectors.toList());
+      }
 
     List<CanAccessWorkpack> permissionChildren = canAccessWorkpack.stream()
       .filter(p -> !NONE.equals(p.getPermissionLevel()) && idsWorkpakWithChildren.contains(p.getIdWorkpack()))
@@ -182,54 +184,19 @@ public class WorkpackPermissionVerifier {
     return Collections.emptyList();
   }
 
-  public List<PermissionDto> fetchAccessPermissions(
-    final Long idUser,
-    final Long idWorkpack,
-    final String authorization
-  ) {
-    final Person person = this.personService.findById(idUser);
-    if (Boolean.TRUE.equals(person.getAdministrator())) {
-      return new ArrayList<>();
-    }
+  private PermissionDto adjustUpdateToEditIfEstruturacao(CanAccessWorkpack c, Long idWorkpack) {
+      PermissionLevelEnum level = c.getPermissionLevel();
 
-
-     final CanAccessDataResponse access =
-        canAccessData.execute( Arrays.asList(idWorkpack), authorization);
-
-        if (Boolean.TRUE.equals(access.getEdit())) {
-          return Arrays.asList(
-              new PermissionDto(     // pega role do execute
-                  PermissionLevelEnum.EDIT
-              )
-          );
-      }
-  
-      if (Boolean.TRUE.equals(access.getUpdate())) {
-          return Arrays.asList(
-              new PermissionDto(
-                  PermissionLevelEnum.UPDATE
-              )
-          );
-      }
-  
-      if (Boolean.TRUE.equals(access.getRead())) {
-          return Arrays.asList(
-              new PermissionDto(
-                  PermissionLevelEnum.READ
-              )
-          );
-      }
-  
-      if (Boolean.TRUE.equals(access.getBasicRead())) {
-          return Arrays.asList(
-              new PermissionDto(
-                  PermissionLevelEnum.READ // basicRead = READ
-              )
-          );
+      if (level == PermissionLevelEnum.UPDATE) {
+          Boolean isEstruturacao = workpackRepository.isEstruturacao(idWorkpack);
+          if (Boolean.TRUE.equals(isEstruturacao)) {
+              level = PermissionLevelEnum.EDIT;
+          }
       }
 
-      return Collections.emptyList();
-
+      PermissionDto dto = PermissionDto.of(c);
+      dto.setLevel(level);
+      return dto;
   }
 
   private Set<Workpack> getAllWorkpacksUsingPlan(final Long idPlan) {

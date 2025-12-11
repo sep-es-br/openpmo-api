@@ -405,7 +405,7 @@ public class OfficePermissionService {
     return this.personService.savePerson(person, idOffice);
   }
 
-  public Entity store(
+  public void store(
     final OfficePermissionParamDto request,
     final String authorization
   ) {
@@ -417,7 +417,8 @@ public class OfficePermissionService {
       .map(PersonDto::getId)
       .orElse(null);
     if (this.repository.existsByIdWorkpackAndIdPerson(idOffice, idPerson)) {
-      throw new NegocioException(ApplicationMessage.ALREADY_EXISTS_PERMISSION);
+      this.update(request, authorization);
+      return;
     }
     final Person author = this.getPersonByAuthorization(authorization);
     final Person target = this.returnPersonOrCreateIfNotExists(
@@ -439,7 +440,6 @@ public class OfficePermissionService {
       request.getGratherPermissionLevel(),
       JournalAction.CREATED
     );
-    return target;
   }
 
   public Set<CanAccessOffice> findInheritedPermission(
