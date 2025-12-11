@@ -55,39 +55,47 @@ public class ScheduleDetailItem {
       return;
     }
 
-    final LocalDate proposedEndDate = this.proposedIntervalDate.getEndDate();
-    final LocalDate currentEndDate = this.currentIntervalDate.getEndDate();
-    final LocalDate currentInitialDate = this.currentIntervalDate.getInitialDate();
-
-    final BigDecimal daysBetweenProposedAndInitialCurrent = daysBetween(
-      currentInitialDate,
-      proposedEndDate
-    );
-
-    final BigDecimal daysBetweenCurrentAndInitialCurrent = daysBetween(
-      currentInitialDate,
-      currentEndDate
-    );
-
     if (
-      BigDecimal.ZERO.compareTo(daysBetweenCurrentAndInitialCurrent) == 0 ||
-      BigDecimal.ZERO.compareTo(daysBetweenProposedAndInitialCurrent) == 0
+      (
+        this.currentDate != null &&
+        this.proposedDate != null &&
+        this.currentDate.isEqual(this.proposedDate)      
+      ) ||
+      (
+        this.currentIntervalDate != null &&
+        this.proposedIntervalDate != null &&
+        this.currentIntervalDate.getInitialDate().isEqual(this.proposedIntervalDate.getInitialDate()) &&
+        this.currentIntervalDate.getEndDate().isEqual(this.proposedIntervalDate.getEndDate())
+      )
     ) {
       this.variation = null;
       return;
     }
 
-    this.variation = daysBetweenProposedAndInitialCurrent
-      .divide(daysBetweenCurrentAndInitialCurrent, 6, RoundingMode.HALF_EVEN)
-      .subtract(BigDecimal.ONE)
-      .multiply(ONE_HUNDRED);
+    final LocalDate proposedEndDate = this.proposedIntervalDate.getEndDate();
+    final LocalDate currentEndDate = this.currentIntervalDate.getEndDate();
+    final LocalDate currentInitialDate = this.currentIntervalDate.getInitialDate();
 
-    final BigInteger daysBetweenProposedEndAndCurrentEnd = daysBetween(
-      currentEndDate,
+    final BigDecimal daysBetweenCurrentInitialAndProposedEnd = daysBetween(
+      currentInitialDate,
       proposedEndDate
-    ).toBigInteger();
+    );
 
-    this.variationInDays = daysBetweenProposedEndAndCurrentEnd;
+    final BigDecimal daysBetweenCurrentInitialAndCurrentEnd = daysBetween(
+      currentInitialDate,
+      currentEndDate
+    );
+
+    if (daysBetweenCurrentInitialAndCurrentEnd.equals(new BigDecimal(0))) {
+      this.variation = null;
+    } else {
+      this.variation = daysBetweenCurrentInitialAndProposedEnd
+        .divide(daysBetweenCurrentInitialAndCurrentEnd, 6, RoundingMode.HALF_EVEN)
+        .subtract(BigDecimal.ONE)
+        .multiply(ONE_HUNDRED);
+    }
+
+    this.variationInDays = daysBetween(currentEndDate, proposedEndDate).toBigInteger();
   }
 
   private static LocalDate getEndDate(final ScheduleInterval currentIntervalDate) {
