@@ -6,13 +6,12 @@ import br.gov.es.openpmo.enumerator.MilestoneStatus;
 import br.gov.es.openpmo.model.workpacks.Milestone;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.MilestoneRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 public class MilestoneService {
@@ -114,6 +113,10 @@ public class MilestoneService {
       milestoneDetailDto.setDelayInDays(days);
     }
     milestoneDetailDto.setExpirationDate(workpack.getDate().toLocalDate());
+  }
+  
+  public Long countMilestonesByWorkpack(Long workpackId) {
+      return this.milestoneRepository.countMilestonesByWorkpack(workpackId);
   }
 
 }

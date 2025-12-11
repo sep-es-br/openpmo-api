@@ -1697,6 +1697,7 @@ public class WorkpackService {
     );
     final List<Long> workpackIds = workpacks.stream().map(w -> w.getId()).collect(Collectors.toList());
     this.workpackRepository.setWorkpacksCanceled(workpackIds, false);
+    this.workpackRepository.setWorkpacksDeleted(workpackIds, false);
     this.cacheUtil.loadAllCache();
   }
 
@@ -1719,6 +1720,10 @@ public class WorkpackService {
   public Page<UniversalSearchItemQueryResult> doUniversalSearch(UniversalSearchParameters parameters, PageRequest pageRequest) {
       
       return this.workpackRepository.doSearchInAll(parameters.getWorkpackId(), parameters.getTerm(), parameters.getUserId(), parameters.getPlanId(), pageRequest);
+  }
+  
+  public Long countTypeByWorkpack(Long workpackId, String type){
+      return this.workpackRepository.countTypeByWorkpack(workpackId, type);
   }
 
 }

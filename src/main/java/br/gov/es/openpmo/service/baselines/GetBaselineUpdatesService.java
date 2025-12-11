@@ -1,9 +1,9 @@
 package br.gov.es.openpmo.service.baselines;
 
-import br.gov.es.openpmo.dto.baselines.BaselineUpdateBreakdown;
 import br.gov.es.openpmo.dto.baselines.BaselineConsumesStep;
 import br.gov.es.openpmo.dto.baselines.BaselineResultDto;
 import br.gov.es.openpmo.dto.baselines.BaselineScheduleStep;
+import br.gov.es.openpmo.dto.baselines.BaselineUpdateBreakdown;
 import br.gov.es.openpmo.dto.baselines.BaselineWorkpackDto;
 import br.gov.es.openpmo.dto.baselines.UpdateObject;
 import br.gov.es.openpmo.dto.menu.WorkpackResultDto;
@@ -82,7 +82,7 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
 
       final List<BaselineWorkpackDto> result = this.baselineServiceUtil.compare(workpacksMaster,
           workpackBaselineCompare);
-      result.removeIf(r -> r.getClassification() == null);
+      // result.removeIf(r -> r.getClassification() == null);
       updatesList.addAll(getBaselineDetailResponse(result));
 
       // O código abaixo foi feito por conta da task #484, onde deveria-se verificar se haviam Entregas inclusas em LBs passadas que não

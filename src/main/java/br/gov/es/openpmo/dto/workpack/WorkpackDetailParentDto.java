@@ -16,7 +16,6 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.swagger.annotations.ApiModel;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -63,6 +62,9 @@ public abstract class WorkpackDetailParentDto {
 
   @JsonProperty("canceled")
   private boolean isCanceled;
+  
+  @JsonProperty("deleted")
+  private boolean isDeleted;
 
   @JsonProperty("canDeleted")
   private boolean canBeDeleted;
@@ -97,6 +99,7 @@ public abstract class WorkpackDetailParentDto {
     final TYPE instance = instanceSupplier.get();
     instance.setId(workpack.getId());
     instance.setCancelable(workpack.isCancelable());
+    instance.setIsDeleted(workpack.isDeleted());
     instance.setCanceled(workpack.isCanceled());
     instance.setCanBeDeleted(workpack.isDeleted());
     instance.setEndManagementDate(workpack.getEndManagementDate());
@@ -326,4 +329,14 @@ public abstract class WorkpackDetailParentDto {
   public void setJournalInformation(JournalInformationDto journalInformation) {
     this.journalInformation = journalInformation;
   }
+
+    public boolean isIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
+  
+  
 }

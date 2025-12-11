@@ -254,8 +254,10 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
           @Param("searchCutOffScore") Double searchCutOffScore
   );
 
-  @Query("MATCH (wm:WorkpackModel)<-[:IS_INSTANCE_BY | IS_LINKED_TO]-(w:Workpack{deleted:false})-[rf:BELONGS_TO]->(p:Plan), "
-      + "(w)-[:IS_IN]->(pw:Workpack) "
+  @Query(
+        "MATCH (wm:WorkpackModel)<-[:IS_INSTANCE_BY | IS_LINKED_TO]-(w:Workpack)-[rf:BELONGS_TO]->(p:Plan),\n" +
+        "      (w)-[:IS_IN]->(pw:Workpack)\n" +
+        "WHERE CASE WHEN NOT ('Milestone' IN labels(w)) THEN NOT w.deleted ELSE true END\n"
       + "WITH *, "
       + "apoc.text.levenshteinSimilarity(apoc.text.clean(w.name), apoc.text.clean($term)) AS nameScore, "
       + "apoc.text.levenshteinSimilarity(apoc.text.clean(w.fullName), apoc.text.clean($term)) AS fullNameScore "
@@ -572,6 +574,14 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
           @Param("canceled") Boolean canceled
   );
 
+  @Query("MATCH (w:Workpack) " +
+          "WHERE id(w) IN $idsWorkpacks " +
+          "SET w.deleted = $deleted")
+    void setWorkpacksDeleted(
+          @Param("idsWorkpacks") List<Long> idsWorkpacks,
+          @Param("deleted") Boolean deleted
+  );
+
   @Query("MATCH (w:Workpack), (wm:WorkpackModel) " +
          "WHERE id(w)=$workpackId AND id(wm)=$workpackModelId " +
          "CREATE (w)-[:IS_INSTANCE_BY]->(wm)")
@@ -762,6 +772,11 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
        "WHERE id(snapshot) = $id and snapshot.canceled = true " +
        "RETURN p.value = 'Cancelada'")
   Boolean isSituationCanceled(Long id);
+
+  @Query("MATCH (snapshot:Workpack) " +
+       "WHERE id(snapshot) = $id " +
+       "RETURN snapshot.canceled")
+  Boolean isCanceled(Long id);
 
   @Query("MATCH (w:Workpack)<-[:FEATURES]-(p:Property) " +
        "WHERE id(p) = $id " +
@@ -962,6 +977,16 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
         "RETURN plan "
       )
       public Plan findPlanByWorkpackId(Long idWorkpack);
-            
+      
+    @Query(
+        "MATCH (w:Workpack)<-[:IS_IN*]-(child:Workpack{deleted: false})\n" +
+        "WHERE id(w) = $workpackId AND $type IN labels(child)\n" +
+        "OPTIONAL MATCH (child)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel {name:'Situação'})\n" +
+        "WHERE 'Deliverable' IN labels(child) AND NOT (p.value IN ['A cancelar', 'Cancelada'])\n" +
+        "WITH *\n" +
+        "WHERE NOT ('Deliverable' IN labels(child)) OR p IS NOT NULL\n" +
+        "RETURN count(child)"
+    )
+    public Long countTypeByWorkpack(Long workpackId, String type);
 }
 
