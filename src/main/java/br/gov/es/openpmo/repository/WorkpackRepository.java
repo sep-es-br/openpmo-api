@@ -783,6 +783,17 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
        )
   Boolean isSituationCompleted(Long id);
 
+  @Query(
+       "MATCH (w:Workpack) " +
+       "WHERE id(w) = $idWorkpack " +
+       "MATCH (w)-[:IS_IN*0..]->(p:Project) " +
+       "OPTIONAL MATCH (p)<-[:FEATURES]-(prop:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel) " +
+       "WHERE pm.name IN ['Situação','Status'] " +
+       "RETURN prop.value = 'Estruturação' AS isEstruturacao"
+     )
+     Boolean isEstruturacao(@Param("idWorkpack") Long idWorkpack);
+     
+
   // @Query(
   //   "MATCH (organizer:Organizer)-[:IS_IN*]->(project:Project) " +
   //   "WHERE id(organizer) = $idOrganizer " +

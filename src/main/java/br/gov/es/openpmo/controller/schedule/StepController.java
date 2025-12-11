@@ -124,10 +124,10 @@ public class StepController {
 
     final Long idUser = this.tokenService.getUserId(authorization);
 
-    final List<PermissionDto> permissions = this.workpackPermissionVerifier.fetchAccessPermissions(
+    final List<PermissionDto> permissions = this.workpackPermissionVerifier.fetchPermissions(
       idUser,
-      idWorkpack,
-      authorization
+      idPlan,
+      idWorkpack
     );
 
     PermissionLevelEnum level = permissions.stream()

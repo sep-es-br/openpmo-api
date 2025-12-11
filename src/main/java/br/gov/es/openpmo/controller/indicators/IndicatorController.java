@@ -93,10 +93,10 @@ public class IndicatorController {
         
         final Long idUser = this.tokenService.getUserId(authorization);
 
-        final List<PermissionDto> permissions = this.workpackPermissionVerifier.fetchAccessPermissions(
+        final List<PermissionDto> permissions = this.workpackPermissionVerifier.fetchPermissions(
             idUser,
-            request.getIdWorkpack(),
-            authorization
+            request.getIdPlan(),
+            request.getIdWorkpack()
           );
 
         PermissionLevelEnum level = permissions.stream()
