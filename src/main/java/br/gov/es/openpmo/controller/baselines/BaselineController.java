@@ -253,6 +253,16 @@ public class BaselineController implements IBaselineController {
         
         
     }
+    
+    @Override
+    public Map<String, Object> checkPlannedWorkRequirement(Long idWorkpack) {
+        
+        HashMap<String, Object> result = new HashMap<>(2);
+        result.put("valid", this.baselineSrvUtil.checkPlannedWorkRequired(idWorkpack));
+        
+        return result;
+                
+    }
   
   
 
