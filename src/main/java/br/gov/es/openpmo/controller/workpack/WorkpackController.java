@@ -47,6 +47,7 @@ import br.gov.es.openpmo.utils.ApplicationMessage;
 import br.gov.es.openpmo.utils.ResponseHandler;
 import io.swagger.annotations.Api;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -247,10 +248,10 @@ public class WorkpackController {
 
     final WorkpackDetailDto workpackDetailDto = this.workpackService.getWorkpackDetailDto(workpack, idPlan);
 
-    final List<PermissionDto> permissions = this.workpackPermissionVerifier.fetchAccessPermissions(
+    final List<PermissionDto> permissions = this.workpackPermissionVerifier.fetchPermissions(
       idPerson,
-      idWorkpack,
-      authorization
+      idPlan,
+      idWorkpack
     );
 
     final boolean isFavoritedBy = this.isFavoritedByService.isFavoritedBy(
@@ -302,17 +303,17 @@ public class WorkpackController {
 
       final Long idPerson = this.tokenService.getUserId(authorization);
 
-
-      final List<PermissionDto> permissions = this.workpackPermissionVerifier.fetchAccessPermissions(
+      final List<PermissionDto> permissions = this.workpackPermissionVerifier.fetchPermissions(
         idPerson,
-        request.getId(),
-        authorization
+        request.getIdPlan(),
+        request.getId()
       );
 
-      final PermissionLevelEnum level = permissions.stream()
-          .map(PermissionDto::getLevel)
-          .findFirst()
+      PermissionDto highestPermission = permissions.stream()
+          .max(Comparator.comparingInt(p -> p.getLevel().getLevel()))
           .orElse(null);
+
+      PermissionLevelEnum level = (highestPermission != null) ? highestPermission.getLevel() : null;
 
       Workpack workpack;
       if (PermissionLevelEnum.UPDATE.equals(level)) {
