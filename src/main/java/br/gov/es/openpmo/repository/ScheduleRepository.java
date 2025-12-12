@@ -206,8 +206,8 @@ public interface ScheduleRepository extends Neo4jRepository<Schedule, Long> {
   
   @Query(
         "MATCH (w:Workpack)<-[:IS_IN*]-(d:Deliverable{canceled: false})<-[:FEATURES]-(:Schedule)<-[:COMPOSES]-(st:Step),\n" +
-        "(d:Deliverable)-[:IS_SNAPSHOT_OF*0..1]->(:Deliverable{category: \"MASTER\"})-[]-(prop:Property)-[:IS_DRIVEN_BY]->(pmodel:PropertyModel)\n" +
-        "WHERE id(w) = $workpackId AND NOT prop.value = 'A cancelar' AND pmodel.name = 'Situação'\n" +
+        "(d:Deliverable)-[:IS_SNAPSHOT_OF*0..1]->(:Deliverable)-[]-(prop:Property)-[:IS_DRIVEN_BY]->(pmodel:PropertyModel)\n" +
+        "WHERE id(w) = $workpackId AND pmodel.name = 'Situação' AND not prop.value = 'A cancelar'\n" +
         "RETURN toString(sum(toFloat(st.plannedWork)))"
   )
     BigDecimal getPlannedWorkByWorkpack(Long workpackId);
