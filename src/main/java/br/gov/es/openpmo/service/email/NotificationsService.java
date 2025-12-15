@@ -32,10 +32,11 @@ public class NotificationsService {
     }
 
     // Em produção provavelmente seria 0 0 8 * * *
-    @Scheduled(cron = "0 */2 * * * *")
+    // @Scheduled(cron = "0 */2 * * * *")
+    @Scheduled(cron = "${app.scheduler.everyday-at-8am}")
     public void checkProjectSchedulesAndMilestones() {
 
-        System.out.println("Executando verificação de agendas...");
+        System.out.println("Job de verificação de cronogramas e marcos iniciado.");
 
         List<ProjectModel> list = projectModelRepository.findAllWithNotificationsSessionActive();
 
@@ -100,7 +101,6 @@ public class NotificationsService {
                             String htmlTemplate = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
                             emailService.sendProjectMilestonesNotification(
                                 dto.getEmail(),
-                                "Atualização de Marcos Críticos",
                                 dto.getProjects(),  
                                 dto.getFullName(),
                                 model.getNotificationsEventMilestoneDaysBefore(),

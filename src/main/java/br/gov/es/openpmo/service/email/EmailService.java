@@ -96,7 +96,6 @@ public class EmailService {
 
     public void sendProjectMilestonesNotification(
         String to,
-        String subject,
         List<NotificationResultDto.ProjectEntryDto> projects,
         String userName,
         Long daysBefore,
@@ -105,10 +104,21 @@ public class EmailService {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = createOutlookStrictHelper(message);
 
+        String milestoneModelNames = projects.stream()
+            .flatMap(p ->
+                p.getItems() != null
+                    ? p.getItems().stream()
+                    : java.util.stream.Stream.<NotificationResultDto.WorkModelGroupDto>empty()
+            )
+            .map(NotificationResultDto.WorkModelGroupDto::getModelName)
+            .distinct()
+            .collect(java.util.stream.Collectors.joining(", "));
+        
+        String subjectFinal = milestoneModelNames + " próximos do vencimento";
 
         helper.setFrom(email);
         helper.setTo(to);
-        helper.setSubject(subject);
+        helper.setSubject(subjectFinal);
 
         // Imagens inline
         helper.addInline("brasao", brasao, "image/png");
@@ -120,17 +130,7 @@ public class EmailService {
 
         String baseUrl = appHomeURI;
 
-        String milestoneModelNames = projects.stream()
-            .flatMap(p ->
-                p.getItems() != null
-                    ? p.getItems().stream()
-                    : java.util.stream.Stream.<NotificationResultDto.WorkModelGroupDto>empty()
-            )
-            .map(NotificationResultDto.WorkModelGroupDto::getModelName)
-            .distinct()
-            .collect(java.util.stream.Collectors.joining(", "));
-
-            projectsBlock
+        projectsBlock
             .append("<p style='margin-top:20px;'>")
             .append("Esta é uma notificação de cortesia, informando que:<br><br>")
             .append("1. O <strong>")
