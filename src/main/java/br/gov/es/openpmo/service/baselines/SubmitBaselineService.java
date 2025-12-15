@@ -17,7 +17,6 @@ import br.gov.es.openpmo.service.journals.JournalCreator;
 import br.gov.es.openpmo.service.schedule.ScheduleService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_HAS_NO_PLANNED_WORK_ERROR;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -98,9 +97,8 @@ public class SubmitBaselineService implements ISubmitBaselineService {
   }
 
   private void ifWorkpackHasNoPlannedWorkThrowsException(final Long workpackId) {
-      BigDecimal totalPlannedWork = this.scheduleSrv.getPlannedWorkByWorkpack(workpackId);
       
-      if(totalPlannedWork.equals(BigDecimal.valueOf(0))) {
+      if(!this.baselineServiceUtil.checkPlannedWorkRequired(workpackId)) {
           throw new NegocioException(WORKPACK_HAS_NO_PLANNED_WORK_ERROR);
       }
   }

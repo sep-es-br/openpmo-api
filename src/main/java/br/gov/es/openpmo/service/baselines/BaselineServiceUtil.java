@@ -21,6 +21,7 @@ import br.gov.es.openpmo.repository.ScheduleRepository;
 import br.gov.es.openpmo.repository.StepRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.workpack.MilestoneService;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -140,6 +141,13 @@ public class BaselineServiceUtil {
       }
       
       return null;
+    }
+    
+    
+    public boolean checkPlannedWorkRequired(Long workpackId) {
+        BigDecimal totalPlannedWork = this.scheduleRepository.getPlannedWorkByWorkpack(workpackId);
+      
+      return !totalPlannedWork.equals(BigDecimal.valueOf(0));
     }
 
     public void createSnapshot(Workpack workpack, Baseline baseline, BaselineScheduleSubmitDto schedule, boolean toCancel) {
