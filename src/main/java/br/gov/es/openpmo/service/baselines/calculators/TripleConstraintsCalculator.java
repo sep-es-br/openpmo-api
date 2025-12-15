@@ -182,8 +182,19 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
         });
     }
 
-    WorkpackResultDto workpackDto = cacheUtil.getFullWorkpackBreakdownStructure(idProject, idPlan, true);
+    WorkpackResultDto workpackDto = null;
+
+    if (idsWorkpacksDeleted.size() > 0) {
+      workpackDto = cacheUtil.getFullWorkpackBreakdownStructure(idProject, idPlan, true);
+      // Essa função retorna o breakdownStructure completo, incluindo itens excluídos e cancelados
+    } else {
+      workpackDto = cacheUtil.getWorkpackBreakdownStructure(idProject, idPlan, true);
+      // Já essa função retorna o breakdownStructure apenas dos itens não excluídos/cancelados
+    }
+
     List<TripleConstraintBreakdown> finalList = createTripleConstraintBreakdown(
+      proposed,
+      current,
       costDetail,
       scheduleDetail,
       scopeDetail,
@@ -353,6 +364,8 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
   }
 
   public List<TripleConstraintBreakdown> createTripleConstraintBreakdown(
+    List<TripleConstraintDto> proposedLBWorkpacks,
+    List<TripleConstraintDto> currentLBWorkpacks,
     BaselineCostDetail costDetail,
     BaselineScheduleDetail scheduleDetail,
     BaselineScopeDetail scopeDetail,
@@ -391,64 +404,81 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
             child.getModelNameInPlural()
           );
 
-          for (WorkpackResultDto deliveryOrMilestone : child.getChildren()) {          
-            CostDetailItem costItem = costItems
-              .stream()
-              .filter(item -> item.getIdWorkpack().equals(deliveryOrMilestone.getId()))
-              .findFirst()
-              .orElse(null);
-
-            ScheduleDetailItem scheduleItem = scheduleItems
-              .stream()
-              .filter(item -> item.getIdWorkpack().equals(deliveryOrMilestone.getId()))
-              .findFirst()
-              .orElse(null);
-
-            ScopeDetailItem scopeItem = scopeItems
-              .stream()
-              .filter(item -> item.getIdWorkpack().equals(deliveryOrMilestone.getId()))
-              .findFirst()
-              .orElse(null);
-            
-            TripleConstraintBreakdown deliveryOrMilestoneBreakdown = new TripleConstraintBreakdown(
-              deliveryOrMilestone.getId(),
-              deliveryOrMilestone.getIdPlan(),
-              deliveryOrMilestone.getName(),
-              deliveryOrMilestone.getFullName(),
-              deliveryOrMilestone.getFontIcon(),
-              deliveryOrMilestone.getType(),
-              deliveryOrMilestone.getModelName(),
-              deliveryOrMilestone.getModelNameInPlural()
-            );
-
-            if (costItem != null || scheduleItem != null || scopeItem != null) {  
-              if (deliveryOrMilestone.getType().equals(MILESTONE)) {
-                deliveryOrMilestoneBreakdown.setScheduleDetails(scheduleItem);
-              } else if (deliveryOrMilestone.getType().equals(DELIVERABLE)) {
-                deliveryOrMilestoneBreakdown.setCostDetails(costItem);
-                deliveryOrMilestoneBreakdown.setScheduleDetails(scheduleItem);
-                deliveryOrMilestoneBreakdown.setScopeDetails(scopeItem);
+          for (WorkpackResultDto deliveryOrMilestone : child.getChildren()) {
+            if (
+              proposedLBWorkpacks.stream().filter(w -> w.getIdWorkpack().equals(deliveryOrMilestone.getId())).findFirst().isPresent() ||
+              currentLBWorkpacks.stream().filter(w -> w.getIdWorkpack().equals(deliveryOrMilestone.getId())).findFirst().isPresent() ||
+              idsWorkpacksUnchanged.stream().filter(id -> id.equals(deliveryOrMilestone.getId())).findFirst().isPresent() ||
+              idsWorkpacksDeleted.stream().filter(id -> id.equals(deliveryOrMilestone.getId())).findFirst().isPresent() ||
+              idsWorkpacksCanceled.stream().filter(id -> id.equals(deliveryOrMilestone.getId())).findFirst().isPresent()
+            ) {
+              CostDetailItem costItem = costItems
+                .stream()
+                .filter(item -> item.getIdWorkpack().equals(deliveryOrMilestone.getId()))
+                .findFirst()
+                .orElse(null);
+  
+              ScheduleDetailItem scheduleItem = scheduleItems
+                .stream()
+                .filter(item -> item.getIdWorkpack().equals(deliveryOrMilestone.getId()))
+                .findFirst()
+                .orElse(null);
+  
+              ScopeDetailItem scopeItem = scopeItems
+                .stream()
+                .filter(item -> item.getIdWorkpack().equals(deliveryOrMilestone.getId()))
+                .findFirst()
+                .orElse(null);
+              
+              TripleConstraintBreakdown deliveryOrMilestoneBreakdown = new TripleConstraintBreakdown(
+                deliveryOrMilestone.getId(),
+                deliveryOrMilestone.getIdPlan(),
+                deliveryOrMilestone.getName(),
+                deliveryOrMilestone.getFullName(),
+                deliveryOrMilestone.getFontIcon(),
+                deliveryOrMilestone.getType(),
+                deliveryOrMilestone.getModelName(),
+                deliveryOrMilestone.getModelNameInPlural()
+              );
+  
+              if (costItem != null || scheduleItem != null || scopeItem != null) {  
+                if (deliveryOrMilestone.getType().equals(MILESTONE)) {
+                  deliveryOrMilestoneBreakdown.setScheduleDetails(scheduleItem);
+                } else if (deliveryOrMilestone.getType().equals(DELIVERABLE)) {
+                  deliveryOrMilestoneBreakdown.setCostDetails(costItem);
+                  deliveryOrMilestoneBreakdown.setScheduleDetails(scheduleItem);
+                  deliveryOrMilestoneBreakdown.setScopeDetails(scopeItem);
+                }
               }
+              
+              if (idsWorkpacksUnchanged.contains(deliveryOrMilestone.getId())) {
+                deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.UNCHANGED);
+              }
+              if (idsWorkpacksCanceled.contains(deliveryOrMilestone.getId())) {
+                deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.TO_CANCEL);;
+              }
+              if (idsWorkpacksDeleted.contains(deliveryOrMilestone.getId())) {
+                deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.DELETED);
+              }
+              subEtapaBreakdown.addChild(deliveryOrMilestoneBreakdown);
             }
-            
-            if (idsWorkpacksUnchanged.contains(deliveryOrMilestone.getId())) {
-              deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.UNCHANGED);
-            }
-            if (idsWorkpacksCanceled.contains(deliveryOrMilestone.getId())) {
-              deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.TO_CANCEL);;
-            }
-            if (idsWorkpacksDeleted.contains(deliveryOrMilestone.getId())) {
-              deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.DELETED);
-            }
-            subEtapaBreakdown.addChild(deliveryOrMilestoneBreakdown);
           };
 
           if (subEtapaBreakdown.getChildren().size() > 0) {
             etapaBreakdown.addChild(subEtapaBreakdown);
           }
         } else if (
-          (child.getType().equals(DELIVERABLE)) ||
-          (child.getType().equals(MILESTONE))
+          (
+            (child.getType().equals(DELIVERABLE)) ||
+            (child.getType().equals(MILESTONE))
+          ) &&
+          (
+            proposedLBWorkpacks.stream().filter(w -> w.getIdWorkpack().equals(child.getId())).findFirst().isPresent() ||
+            currentLBWorkpacks.stream().filter(w -> w.getIdWorkpack().equals(child.getId())).findFirst().isPresent() ||
+            idsWorkpacksUnchanged.stream().filter(id -> id.equals(child.getId())).findFirst().isPresent() ||
+            idsWorkpacksDeleted.stream().filter(id -> id.equals(child.getId())).findFirst().isPresent() ||
+            idsWorkpacksCanceled.stream().filter(id -> id.equals(child.getId())).findFirst().isPresent()
+          )
         ) {
           CostDetailItem costItem = costItems
             .stream()
