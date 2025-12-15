@@ -166,8 +166,7 @@ public class GetBaselineService implements IGetBaselineService {
 
     Long idPlan = this.workpackRepository.findPlanByWorkpackId(idWorkpack).getId();
     WorkpackResultDto workpackDto = cacheUtil.getFullWorkpackBreakdownStructure(idWorkpack, idPlan, true);
-
-    if (workpackDto == null) {
+    if(workpackDto == null){
       List<WorkpackResultDto> result = workpackRepository.findWorkpackMenuById(idPlan, idWorkpack);
       if (!result.isEmpty()) {
         workpackDto = result.get(0);
