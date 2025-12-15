@@ -17,7 +17,6 @@ public class NotificationResultDto {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<ProjectEntryDto> projects;
 
-
     public NotificationResultDto() {}
 
     public NotificationResultDto(
@@ -29,7 +28,6 @@ public class NotificationResultDto {
         this.email = email;
         this.projects = projects;
     }
-
 
     public String getFullName() {
         return fullName;
@@ -55,8 +53,14 @@ public class NotificationResultDto {
         this.projects = projects;
     }
 
+    // =============================================================
+    // PROJETO
+    // =============================================================
     public static class ProjectEntryDto {
 
+        private String modelName;
+        private Long id;
+        private Long planId;
         private String projectName;
         private String projectFullName;
 
@@ -64,20 +68,46 @@ public class NotificationResultDto {
         private String status;
 
         @JsonInclude(JsonInclude.Include.NON_NULL)
-        private List<WorkEntryDto> items; 
+        private List<WorkModelGroupDto> items;
 
         public ProjectEntryDto() {}
 
         public ProjectEntryDto(
+            String modelName,
             String projectName,
             String projectFullName,
             String status,
-            List<WorkEntryDto> items
+            List<WorkModelGroupDto> items
         ) {
+            this.modelName = modelName;
             this.projectName = projectName;
             this.projectFullName = projectFullName;
             this.status = status;
             this.items = items;
+        }
+
+        public String getModelName() {
+            return modelName;
+        }
+
+        public void setModelName(String modelName) {
+            this.modelName = modelName;
+        }
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public Long getPlanId() {
+            return planId;
+        }
+
+        public void setPlanId(Long planId) {
+            this.planId = planId;
         }
 
         public String getProjectName() {
@@ -104,6 +134,43 @@ public class NotificationResultDto {
             this.status = status;
         }
 
+        public List<WorkModelGroupDto> getItems() {
+            return items;
+        }
+
+        public void setItems(List<WorkModelGroupDto> items) {
+            this.items = items;
+        }
+    }
+
+    // =============================================================
+    // AGRUPADOR POR MODEL NAME (PAI)
+    // =============================================================
+    public static class WorkModelGroupDto {
+
+        private String modelName;
+
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        private List<WorkEntryDto> items;
+
+        public WorkModelGroupDto() {}
+
+        public WorkModelGroupDto(
+            String modelName,
+            List<WorkEntryDto> items
+        ) {
+            this.modelName = modelName;
+            this.items = items;
+        }
+
+        public String getModelName() {
+            return modelName;
+        }
+
+        public void setModelName(String modelName) {
+            this.modelName = modelName;
+        }
+
         public List<WorkEntryDto> getItems() {
             return items;
         }
@@ -114,10 +181,11 @@ public class NotificationResultDto {
     }
 
     // =============================================================
-    // DTO INTERNO GENÉRICO PARA DELIVERABLE OU MILESTONE
+    // ITEM FINAL (DELIVERABLE / MILESTONE)
     // =============================================================
     public static class WorkEntryDto {
 
+        private Long id;
         private String name;
         private String fullName;
 
@@ -142,6 +210,14 @@ public class NotificationResultDto {
 
         public void setFullName(String fullName) {
             this.fullName = fullName;
+        }
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
         }
     }
 }

@@ -73,7 +73,7 @@ public class NotificationsService {
                                 String htmlTemplate = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
                                 emailService.sendProjectDeliverablesNotification(
                                     dto.getEmail(),
-                                    "Atualização de cronograma e Diário da entrega",
+                                    "Atualização de cronogramas e diários",
                                     dto.getProjects(),  
                                     dto.getFullName(),
                                     htmlTemplate
