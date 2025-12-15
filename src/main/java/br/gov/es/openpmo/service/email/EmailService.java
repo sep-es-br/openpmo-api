@@ -41,13 +41,11 @@ public class EmailService {
 
     private ClassPathResource fix_inline = new ClassPathResource("static/email/img/transparent.gif");
 
-    private String email =  "naoresponda@pmo.es.gov.br";
-
     @Value("${app.homeURI}")
     private String appHomeURI;
 
-    // @Value("${spring.mail.username}")
-    // private String email;
+    @Value("${spring.mail.username}")
+    private String email;
     
 
     public void sendProjectDeliverablesNotification(String to, String subject,
