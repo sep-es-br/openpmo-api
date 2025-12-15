@@ -14,7 +14,10 @@ import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.journals.JournalCreator;
+import br.gov.es.openpmo.service.schedule.ScheduleService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
+import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_HAS_NO_PLANNED_WORK_ERROR;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,18 +36,22 @@ public class SubmitBaselineService implements ISubmitBaselineService {
 
   private final WorkpackRepository workpackRepository;
   private final BaselineServiceUtil baselineServiceUtil;
+  
+  private final ScheduleService scheduleSrv;
 
   @Autowired
   public SubmitBaselineService(
     final JournalCreator journalCreator,
     final BaselineRepository baselineRepository,
     final WorkpackRepository workpackRepository,
+    final ScheduleService scheduleSrv,
     final BaselineServiceUtil baselineServiceUtil
   ) {
     this.journalCreator = journalCreator;
     this.baselineRepository = baselineRepository;
     this.workpackRepository = workpackRepository;
     this.baselineServiceUtil = baselineServiceUtil;
+    this.scheduleSrv = scheduleSrv;
   }
 
   private void changeStatusToProposed(final Baseline baseline) {
@@ -60,6 +67,9 @@ public class SubmitBaselineService implements ISubmitBaselineService {
       final Long idPerson
   ) {
     final Baseline baseline = this.getBaselineById(idBaseline);
+    
+    this.ifWorkpackHasNoPlannedWorkThrowsException(baseline.getIdWorkpack());
+    this.ifWorkpackHasLessThenRequiredMilestoneThrowException(baseline.getIdWorkpack());
 
     Long baselineReference = getBaselineIdReference(baseline);
 
@@ -85,6 +95,24 @@ public class SubmitBaselineService implements ISubmitBaselineService {
     this.journalCreator.baseline(baseline, idPerson);
 
 //    this.dashboardService.calculate(baseline.getBaselinedBy().getWorkpack().getId(), true);
+  }
+
+  private void ifWorkpackHasNoPlannedWorkThrowsException(final Long workpackId) {
+      BigDecimal totalPlannedWork = this.scheduleSrv.getPlannedWorkByWorkpack(workpackId);
+      
+      if(totalPlannedWork.equals(BigDecimal.valueOf(0))) {
+          throw new NegocioException(WORKPACK_HAS_NO_PLANNED_WORK_ERROR);
+      }
+  }
+
+  private void ifWorkpackHasLessThenRequiredMilestoneThrowException(final Long workpackId) {
+      
+      Integer requiredAmount = this.baselineServiceUtil.checkMinimumMilestoneRequired(workpackId);
+      
+      if(requiredAmount != null) {
+          throw new NegocioException(ApplicationMessage.WORKPACK_HAS_LESS_THEN_REQUIRED_MILESTONE_AMOUNT_ERROR + ";" + requiredAmount);
+      }
+      
   }
 
   private void addWorkpackWithoutChanges(final SubmitBaselineRequest request, final Baseline baseline) {

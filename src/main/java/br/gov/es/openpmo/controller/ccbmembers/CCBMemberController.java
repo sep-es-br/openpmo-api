@@ -3,7 +3,6 @@ package br.gov.es.openpmo.controller.ccbmembers;
 import br.gov.es.openpmo.dto.Response;
 import br.gov.es.openpmo.dto.ccbmembers.CCBMemberRequest;
 import br.gov.es.openpmo.dto.ccbmembers.CCBMemberResponse;
-import br.gov.es.openpmo.service.baselines.BaselineChangesService;
 import br.gov.es.openpmo.service.baselines.EvaluateBaselineService;
 import br.gov.es.openpmo.service.ccbmembers.ICreateCCBMemberRelationshipService;
 import br.gov.es.openpmo.service.ccbmembers.IDeleteCCBMemberService;
@@ -42,14 +41,15 @@ public class CCBMemberController implements ICCBMemberController {
 
   @Autowired
   public CCBMemberController(
-      final IGetAllCCBMemberService getAllService,
-      final ICreateCCBMemberRelationshipService createRelationshipService,
-      final IUpdateCCBMemberRelationshipService updateCCBMemberRelationshipService,
-      final IGetByIdCCBMemberService getByIdCCBMemberService,
-      final IDeleteCCBMemberService deleteCCBMemberService,
-      final ResponseHandler controllerHelper,
-      final ICanAccessService canAccessService,
-      final EvaluateBaselineService evaluateBaselineService) {
+    final IGetAllCCBMemberService getAllService,
+    final ICreateCCBMemberRelationshipService createRelationshipService,
+    final IUpdateCCBMemberRelationshipService updateCCBMemberRelationshipService,
+    final IGetByIdCCBMemberService getByIdCCBMemberService,
+    final IDeleteCCBMemberService deleteCCBMemberService,
+    final ResponseHandler controllerHelper,
+    final ICanAccessService canAccessService,
+    final EvaluateBaselineService evaluateBaselineService
+  ) {
     this.getAllService = getAllService;
     this.createRelationshipService = createRelationshipService;
     this.updateCCBMemberRelationshipService = updateCCBMemberRelationshipService;
@@ -61,9 +61,10 @@ public class CCBMemberController implements ICCBMemberController {
   }
 
   @Override
-  public Response<List<CCBMemberResponse>> getAll(final Long workpackId,
-                                                  final String authorization) {
-
+  public Response<List<CCBMemberResponse>> getAll(
+    final Long workpackId,
+    final String authorization
+  ) {
     this.canAccessService.ensureCanReadResourceWorkpack(workpackId, authorization);
     final List<CCBMemberResponse> ccbMemberResponses = this.getAllService.getAll(workpackId);
     return this.controllerHelper.success(ccbMemberResponses);
@@ -71,10 +72,10 @@ public class CCBMemberController implements ICCBMemberController {
 
   @Override
   public Response<CCBMemberResponse> getCCBMember(
-      final Long idPerson,
-      final Long idWorkpack,
-      final Long idPlan,
-      final String authorization
+    final Long idPerson,
+    final Long idWorkpack,
+    final Long idPlan,
+    final String authorization
   ) {
     this.canAccessService.ensureCanReadResourceWorkpack(idWorkpack, authorization);
     final CCBMemberResponse ccbMemberResponse = this.getByIdCCBMemberService.getById(idPerson, idWorkpack, idPlan);
@@ -82,18 +83,20 @@ public class CCBMemberController implements ICCBMemberController {
   }
 
   @Override
-  public Response<Void> createRelationship(final CCBMemberRequest request,
-                                           final String authorization) {
-
+  public Response<Void> createRelationship(
+    final CCBMemberRequest request,
+    final String authorization
+  ) {
     this.canAccessService.ensureCanEditResource(request.getIdWorkpack(), authorization);
     this.createRelationshipService.createRelationship(request);
     return this.controllerHelper.success();
   }
 
   @Override
-  public Response<Void> updateRelationship(final CCBMemberRequest request,
-                                           final String authorization) {
-
+  public Response<Void> updateRelationship(
+    final CCBMemberRequest request,
+    final String authorization
+  ) {
     this.canAccessService.ensureCanEditResource(request.getIdWorkpack(), authorization);
     this.updateCCBMemberRelationshipService.updateRelationship(request);
     return this.controllerHelper.success();
@@ -101,10 +104,10 @@ public class CCBMemberController implements ICCBMemberController {
 
   @Override
   public Response<Void> delete(
-      final Long idPerson,
-      final Long idWorkpack,
-      final String authorization) {
-
+    final Long idPerson,
+    final Long idWorkpack,
+    final String authorization
+  ) {
     this.canAccessService.ensureCanEditResource(idWorkpack, authorization);
     this.deleteCCBMemberService.delete(idPerson, idWorkpack);
     this.evaluateBaselineService.handlePostMemberDeletion(idWorkpack);

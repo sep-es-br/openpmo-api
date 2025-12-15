@@ -12,6 +12,9 @@ import br.gov.es.openpmo.dto.baselines.SubmitBaselineRequest;
 import br.gov.es.openpmo.dto.baselines.SubmitCancellingRequest;
 import br.gov.es.openpmo.dto.baselines.ccbmemberview.BaselineDetailCCBMemberResponse;
 import br.gov.es.openpmo.enumerator.BaselineViewStatus;
+import java.util.List;
+import java.util.Map;
+import javax.validation.Valid;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,9 +24,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import javax.validation.Valid;
-import java.util.List;
 
 public interface IBaselineController {
 
@@ -44,6 +44,11 @@ public interface IBaselineController {
   Response<List<BaselineUpdateBreakdown>> getUpdates(
     @RequestParam("id-workpack") Long idWorkpack,
     @RequestParam("idPlan") Long idPlan
+  );
+
+  @GetMapping("/check-milestone-requirement")
+  Map<String, Object> checkMilestonesRequirement(
+    @RequestParam("id-workpack") Long idWorkpack
   );
 
   @Transactional

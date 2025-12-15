@@ -1,6 +1,5 @@
 package br.gov.es.openpmo.service.schedule;
 
-import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.costaccount.CostAccountEntityDto;
 import br.gov.es.openpmo.dto.schedule.ConsumesCostDto;
 import br.gov.es.openpmo.dto.schedule.ConsumesDto;
@@ -22,17 +21,13 @@ import br.gov.es.openpmo.repository.CostAccountRepository;
 import br.gov.es.openpmo.repository.ScheduleRepository;
 import br.gov.es.openpmo.repository.StepRepository;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
+import static br.gov.es.openpmo.utils.ApplicationMessage.SCHEDULE_ALREADY_EXISTS;
+import static br.gov.es.openpmo.utils.ApplicationMessage.SCHEDULE_HAS_ACTIVE_BASELINE;
+import static br.gov.es.openpmo.utils.ApplicationMessage.SCHEDULE_NOT_FOUND;
+import static br.gov.es.openpmo.utils.ApplicationMessage.SCHEDULE_START_DATE_AFTER_DATE_ERROR;
 import br.gov.es.openpmo.utils.MapPair;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.Year;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -46,14 +41,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static br.gov.es.openpmo.utils.ApplicationMessage.SCHEDULE_ALREADY_EXISTS;
-import static br.gov.es.openpmo.utils.ApplicationMessage.SCHEDULE_HAS_ACTIVE_BASELINE;
-import static br.gov.es.openpmo.utils.ApplicationMessage.SCHEDULE_NOT_FOUND;
-import static br.gov.es.openpmo.utils.ApplicationMessage.SCHEDULE_START_DATE_AFTER_DATE_ERROR;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ScheduleService {
@@ -787,5 +779,9 @@ public class ScheduleService {
 
   public Boolean getCurrentBaseline(final Long workpackId) {
     return this.baselineRepository.workpackHasSnapshotOrProjectWithBaseline(workpackId);
+  }
+  
+  public BigDecimal getPlannedWorkByWorkpack(Long workpackId) {
+      return this.scheduleRepository.getPlannedWorkByWorkpack(workpackId);
   }
 }

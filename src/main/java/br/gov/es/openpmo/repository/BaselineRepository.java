@@ -388,11 +388,11 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
   List<BaselineResultDto> findAllInWorkpackByIdWorkpack(Long idWorkpack);
 
   @Query(
-    "MATCH (children:Workpack{deleted:false})-[:COMPOSES]->(baseline:Baseline) " +
+    "MATCH (children:Workpack{deleted:false, canceled: false})-[:COMPOSES]->(baseline:Baseline) " +
     "WHERE ID(baseline) = $id AND ANY(label IN labels(children) WHERE label IN ['Milestone', 'Deliverable']) " +
     "WITH DISTINCT id(children)  AS ids " +
     "MATCH (snapshot:Workpack)-[:IS_SNAPSHOT_OF]->(master:Workpack)-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
-    "WHERE ID(snapshot) IN [ids] " +
+    "WHERE ID(snapshot) IN [ids]\n" +
     "RETURN ID(master) AS idMaster, ID(snapshot) AS id, snapshot.name AS name, snapshot.fullName AS fullName " +
     ", snapshot.date AS date, model.fontIcon AS fontIcon, labels(snapshot) AS label"
   )
@@ -415,7 +415,7 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
   List<BaselineConsumesStep> findAllStepConsumesById(final List<Long> ids);
 
   @Query(
-    "MATCH (children:Workpack{deleted:false})-[:IS_IN*]->(parent:Workpack) " +
+    "MATCH (children:Workpack{deleted:false, canceled: false})-[:IS_IN*]->(parent:Workpack) " +
     "WHERE ID(parent) = $id AND (ANY(label IN labels(children) WHERE label IN ['Deliverable']) " +
     "OR ANY(label IN labels(children) WHERE label IN ['Milestone']) ) " +
     "WITH DISTINCT ID(children)  AS ids " +
@@ -491,7 +491,8 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
     "MATCH (model:WorkpackModel)<-[:IS_INSTANCE_BY]-(master:Workpack)<-[:IS_SNAPSHOT_OF]-(snapshot:Workpack)-[:COMPOSES]->(baseline:Baseline) " +
     "WHERE ID(baseline) = $idBaseline AND ANY(label IN labels(snapshot) WHERE label IN ['Milestone', 'Deliverable']) " +
     "RETURN ID(master) AS idWorkpack, master.name AS name, master.fullName AS fullName " +
-    ", model.fontIcon AS fontIcon, labels(master) AS labels, snapshot.date AS date, snapshot.category AS category "
+    ", model.fontIcon AS fontIcon, labels(master) AS labels, snapshot.date AS date, snapshot.category AS category " +
+    ", snapshot.canceled as isCanceled "
   )
   List<TripleConstraintDto> findAllTripleConstraintSnapshot(Long idBaseline);
 

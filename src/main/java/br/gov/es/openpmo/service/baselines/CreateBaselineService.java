@@ -14,21 +14,20 @@ import br.gov.es.openpmo.repository.IsProposedByRepository;
 import br.gov.es.openpmo.repository.PersonRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.journals.JournalCreator;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.Optional;
-
 import static br.gov.es.openpmo.utils.ApplicationMessage.PERSON_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_HAS_CANCELATION_PROPOSAL_INVALID_STATE_ERROR;
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_HAS_PENDING_BASELINES_INVALID_STATE_ERROR;
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_NOT_FOUND;
+import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 public class CreateBaselineService implements ICreateBaselineService {
+    
 
   private final BaselineRepository baselineRepository;
-
+  
   private final IsBaselinedByRepository isBaselinedByRepository;
 
   private final PersonRepository personRepository;
@@ -38,6 +37,7 @@ public class CreateBaselineService implements ICreateBaselineService {
   private final IsProposedByRepository isProposedByRepository;
 
   private final JournalCreator journalCreator;
+  
 
   @Autowired
   public CreateBaselineService(
@@ -147,5 +147,14 @@ public class CreateBaselineService implements ICreateBaselineService {
     final IsBaselinedBy baselinedBy = new IsBaselinedBy(baseline, workpack);
     this.isBaselinedByRepository.save(baselinedBy, 0);
   }
+  
+//  @Value("${app.minMC}");
+//  public void setAppMinMCConfig(String value) {
+//      if(value.isEmpty()) {
+//          this.appMinMCConfig = null;
+//      }
+//      
+//      this.appMinMCConfig = Integer.valueOf(value);
+//  }
 
 }

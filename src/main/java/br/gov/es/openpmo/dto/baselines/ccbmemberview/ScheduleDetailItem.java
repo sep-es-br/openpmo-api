@@ -1,9 +1,9 @@
 package br.gov.es.openpmo.dto.baselines.ccbmemberview;
 
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -12,23 +12,34 @@ import static br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintUtil
 import static br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintUtils.daysBetween;
 
 public class ScheduleDetailItem {
+  private final Long idWorkpack;
 
   private final String icon;
+
   private final String description;
+
   @JsonIgnore
   private final ScheduleInterval proposedIntervalDate;
+
   @JsonIgnore
   private final ScheduleInterval currentIntervalDate;
+
   private final LocalDate currentDate;
+
   private final LocalDate proposedDate;
+
   private BigDecimal variation;
 
+  private BigInteger variationInDays;
+
   public ScheduleDetailItem(
+    final Long idWorkpack,
     final String icon,
     final String description,
     final ScheduleInterval proposedIntervalDate,
     final ScheduleInterval currentIntervalDate
   ) {
+    this.idWorkpack = idWorkpack;
     this.icon = icon;
     this.description = description;
     this.proposedIntervalDate = proposedIntervalDate;
@@ -39,7 +50,24 @@ public class ScheduleDetailItem {
   }
 
   private void calculateVariation() {
-    if(this.currentDate == null || this.proposedDate == null || this.currentDate.isEqual(this.proposedDate)) {
+    if (this.currentDate == null || this.proposedDate == null || this.currentDate.isEqual(this.proposedDate)) {
+      this.variation = null;
+      return;
+    }
+
+    if (
+      (
+        this.currentDate != null &&
+        this.proposedDate != null &&
+        this.currentDate.isEqual(this.proposedDate)      
+      ) ||
+      (
+        this.currentIntervalDate != null &&
+        this.proposedIntervalDate != null &&
+        this.currentIntervalDate.getInitialDate().isEqual(this.proposedIntervalDate.getInitialDate()) &&
+        this.currentIntervalDate.getEndDate().isEqual(this.proposedIntervalDate.getEndDate())
+      )
+    ) {
       this.variation = null;
       return;
     }
@@ -48,28 +76,27 @@ public class ScheduleDetailItem {
     final LocalDate currentEndDate = this.currentIntervalDate.getEndDate();
     final LocalDate currentInitialDate = this.currentIntervalDate.getInitialDate();
 
-    final BigDecimal daysBetweenProposedAndInitialCurrent = daysBetween(
+    final BigDecimal daysBetweenCurrentInitialAndProposedEnd = daysBetween(
       currentInitialDate,
       proposedEndDate
     );
 
-    final BigDecimal daysBetweenCurrentAndInitialCurrent = daysBetween(
+    final BigDecimal daysBetweenCurrentInitialAndCurrentEnd = daysBetween(
       currentInitialDate,
       currentEndDate
     );
 
-    if(BigDecimal.ZERO.compareTo(daysBetweenCurrentAndInitialCurrent) == 0
-       || BigDecimal.ZERO.compareTo(daysBetweenProposedAndInitialCurrent) == 0) {
+    if (daysBetweenCurrentInitialAndCurrentEnd.equals(new BigDecimal(0))) {
       this.variation = null;
-      return;
+    } else {
+      this.variation = daysBetweenCurrentInitialAndProposedEnd
+        .divide(daysBetweenCurrentInitialAndCurrentEnd, 6, RoundingMode.HALF_EVEN)
+        .subtract(BigDecimal.ONE)
+        .multiply(ONE_HUNDRED);
     }
-    this.variation = daysBetweenProposedAndInitialCurrent
-      .divide(daysBetweenCurrentAndInitialCurrent, 6, RoundingMode.HALF_EVEN)
-      .subtract(BigDecimal.ONE)
-      .multiply(ONE_HUNDRED);
 
+    this.variationInDays = daysBetween(currentEndDate, proposedEndDate).toBigInteger();
   }
-
 
   private static LocalDate getEndDate(final ScheduleInterval currentIntervalDate) {
     return Optional.ofNullable(currentIntervalDate)
@@ -83,6 +110,10 @@ public class ScheduleDetailItem {
 
   public ScheduleInterval getCurrentIntervalDate() {
     return this.currentIntervalDate;
+  }
+
+  public Long getIdWorkpack() {
+    return this.idWorkpack;
   }
 
   public String getIcon() {
@@ -105,8 +136,11 @@ public class ScheduleDetailItem {
     return this.variation;
   }
 
+  public BigInteger getVariationInDays() {
+    return this.variationInDays;
+  }
+
   public void roundData() {
     this.variation = TripleConstraintUtils.roundOneDecimal(this.variation);
   }
-
 }
