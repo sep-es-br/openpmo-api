@@ -51,6 +51,11 @@ public interface IBaselineController {
     @RequestParam("id-workpack") Long idWorkpack
   );
 
+  @GetMapping("/check-plannedWork-requirement")
+  Map<String, Object> checkPlannedWorkRequirement(
+    @RequestParam("id-workpack") Long idWorkpack
+  );
+
   @Transactional
   @PostMapping
   Response<EntityDto> create(
