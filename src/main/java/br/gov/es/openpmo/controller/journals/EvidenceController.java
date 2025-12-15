@@ -9,6 +9,9 @@ import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.utils.ResponseHandler;
 import io.swagger.annotations.Api;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -62,14 +65,22 @@ public class EvidenceController {
 
   @Transactional
   @PostMapping("/{id-journal}")
-  public Response<EvidenceCreatedResponse> create(
+  public Response<List<EvidenceCreatedResponse>> create(
       @PathVariable("id-journal") final Long idJournal,
-      @RequestParam final MultipartFile file,
+      @RequestParam("files") final List<MultipartFile> files,
       @Authorization final String authorization) {
-
+  
     this.canAccessService.ensureCanUpdateResource(idJournal, authorization);
-    final EvidenceCreatedResponse response = this.evidenceCreator.create(idJournal, file);
-    return this.responseHandler.success(response);
-  }
+  
+    List<EvidenceCreatedResponse> responses = new ArrayList<>();
 
+    for (MultipartFile file : files) {
+      EvidenceCreatedResponse response =
+          this.evidenceCreator.create(idJournal, file);
+
+      responses.add(response);
+    }
+  
+    return this.responseHandler.success(responses);
+  }
 }
