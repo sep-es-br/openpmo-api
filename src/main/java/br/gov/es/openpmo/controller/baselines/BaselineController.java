@@ -8,14 +8,16 @@ import br.gov.es.openpmo.enumerator.BaselineViewStatus;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.baselines.*;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
+import br.gov.es.openpmo.service.workpack.WorkpackService;
 import br.gov.es.openpmo.utils.ResponseHandler;
 import io.swagger.annotations.Api;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @Api
 @RestController
@@ -47,6 +49,10 @@ public class BaselineController implements IBaselineController {
   private final TokenService tokenService;
 
   private final ICanAccessService canAccessService;
+  
+  private final BaselineServiceUtil baselineSrvUtil;
+  
+  private final WorkpackService workpackSrv;
 
   @Autowired
   public BaselineController(
@@ -62,7 +68,9 @@ public class BaselineController implements IBaselineController {
     final IEvaluateBaselineService evaluateBaselineService,
     final ResponseHandler responseHandler,
     final TokenService tokenService,
-    final ICanAccessService canAccessService
+    final ICanAccessService canAccessService,
+    final BaselineServiceUtil baselineSrvUtil,
+    final WorkpackService workpackSrv
   ) {
     this.getAllBaselinesService = getAllBaselinesService;
     this.getBaselineUpdatesService = getBaselineUpdatesService;
@@ -77,6 +85,8 @@ public class BaselineController implements IBaselineController {
     this.responseHandler = responseHandler;
     this.tokenService = tokenService;
     this.canAccessService = canAccessService;
+    this.baselineSrvUtil = baselineSrvUtil;
+    this.workpackSrv = workpackSrv;
   }
 
   @Override
@@ -229,5 +239,21 @@ public class BaselineController implements IBaselineController {
     );
     return this.responseHandler.success();
   }
+
+    @Override
+    public Map<String, Object> checkMilestonesRequirement(Long idWorkpack) {
+                
+        Integer requiredAmount = this.baselineSrvUtil.checkMinimumMilestoneRequired(idWorkpack);
+        
+        HashMap<String, Object> result = new HashMap<>(2);
+        result.put("valid", requiredAmount == null);
+        result.put("requiredAmount", requiredAmount);
+        
+        return result;
+        
+        
+    }
+  
+  
 
 }

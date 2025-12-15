@@ -21,6 +21,7 @@ import br.gov.es.openpmo.service.schedule.UpdateStatusService;
 import br.gov.es.openpmo.service.schedule.UpdateStep;
 import br.gov.es.openpmo.service.workpack.GetWorkpackPermissions;
 import br.gov.es.openpmo.service.workpack.UpdateCostAccountByStepId;
+import br.gov.es.openpmo.service.workpack.WorkpackPermissionVerifier;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,7 +45,7 @@ public class StepController {
 
   private final UpdateStatusService status;
 
-  private final GetWorkpackPermissions getWorkpackPermissions;
+  private final WorkpackPermissionVerifier workpackPermissionVerifier;
 
   private final BatchUpdateStep batchUpdateStep;
 
@@ -63,7 +65,7 @@ public class StepController {
     final UpdateStep updateStep,
     final ICanAccessService canAccessService,
     final UpdateCostAccountByStepId updateCostAccountByStepId,
-    final GetWorkpackPermissions getWorkpackPermissions,
+    final WorkpackPermissionVerifier workpackPermissionVerifier,
     final TokenService tokenService
   ) {
     this.stepService = stepService;
@@ -72,7 +74,7 @@ public class StepController {
     this.updateStep = updateStep;
     this.canAccessService = canAccessService;
     this.updateCostAccountByStepId = updateCostAccountByStepId;
-    this.getWorkpackPermissions = getWorkpackPermissions;
+    this.workpackPermissionVerifier = workpackPermissionVerifier;
     this.tokenService = tokenService;
   }
 
@@ -123,23 +125,25 @@ public class StepController {
 
     final Long idUser = this.tokenService.getUserId(authorization);
 
-    final WorkpackPermissionResponse permissionResponse =
-            this.getWorkpackPermissions.execute(idUser, idWorkpack, idPlan);
+    final List<PermissionDto> permissions = this.workpackPermissionVerifier.fetchPermissions(
+      idUser,
+      idPlan,
+      idWorkpack
+    );
 
-    Collection<PermissionDto> permissions = permissionResponse.getPermissions();
+    PermissionDto highestPermission = permissions.stream()
+        .max(Comparator.comparingInt(p -> p.getLevel().getLevel()))
+        .orElse(null);
 
-    PermissionLevelEnum level = permissions.stream()
-        .map(PermissionDto::getLevel) 
-        .findFirst()
-        .orElse(null);  
+    PermissionLevelEnum level = (highestPermission != null) ? highestPermission.getLevel() : null;
 
-        final List<Long> ids;
+    final List<Long> ids;
 
-        if (PermissionLevelEnum.UPDATE.equals(level)) {
-            ids = this.batchUpdateStep.executeRestricted(stepUpdates, idSchedule);
-        } else {
-            ids = this.batchUpdateStep.execute(stepUpdates, idSchedule);
-        }
+    if (PermissionLevelEnum.UPDATE.equals(level)) {
+        ids = this.batchUpdateStep.executeRestricted(stepUpdates, idSchedule);
+    } else {
+        ids = this.batchUpdateStep.execute(stepUpdates, idSchedule);
+    }
 
     return ResponseEntity.ok(ResponseBaseItens.of(ids));
   }

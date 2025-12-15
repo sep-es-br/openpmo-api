@@ -1,12 +1,11 @@
 package br.gov.es.openpmo.repository;
 
 import br.gov.es.openpmo.model.workpacks.Milestone;
+import java.time.LocalDateTime;
+import java.util.Optional;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.stereotype.Repository;
-
-import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Repository
 public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
@@ -25,5 +24,12 @@ public interface MilestoneRepository extends Neo4jRepository<Milestone, Long> {
     Long idMilestone,
     LocalDateTime date
   );
+  
+  @Query(
+        "MATCH p=(w:Workpack)<-[:IS_IN*]-(m:Milestone{deleted: false, canceled: false})\n" +
+        "where id(w) = $workpackId \n" +
+        "return count(m)"
+  )
+  Long countMilestonesByWorkpack(Long workpackId);
 
 }

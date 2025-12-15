@@ -38,10 +38,9 @@ public class BaselineCostDetail {
   }
 
   private void calculateVariation() {
-    final BigDecimal difference = this.currentValue
-      .subtract(this.proposedValue);
+    final BigDecimal difference = this.proposedValue.subtract(this.currentValue);
 
-    if(difference.compareTo(BigDecimal.ZERO) == 0) {
+    if (difference.compareTo(BigDecimal.ZERO) == 0) {
       this.variation = null;
       return;
     }

@@ -2,6 +2,7 @@ package br.gov.es.openpmo.service.workpack;
 
 import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackDetailParentDto;
+import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.office.Office;
@@ -17,6 +18,8 @@ import br.gov.es.openpmo.service.actors.PersonService;
 import br.gov.es.openpmo.service.office.plan.PlanService;
 import br.gov.es.openpmo.service.permissions.OfficePermissionService;
 import br.gov.es.openpmo.service.permissions.PlanPermissionService;
+import br.gov.es.openpmo.service.permissions.canaccess.CanAccessData;
+import br.gov.es.openpmo.service.permissions.canaccess.CanAccessDataResponse;
 import br.gov.es.openpmo.utils.ApplicationCacheUtil;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +39,7 @@ import static br.gov.es.openpmo.enumerator.PermissionLevelEnum.NONE;
 import static br.gov.es.openpmo.enumerator.PermissionLevelEnum.READ;
 import static br.gov.es.openpmo.enumerator.PermissionLevelEnum.UPDATE;
 import static java.lang.Boolean.TRUE;
+import java.util.Arrays;
 
 
 @Component
@@ -49,6 +53,7 @@ public class WorkpackPermissionVerifier {
   private final WorkpackSharedRepository workpackSharedRepository;
   private final WorkpackPermissionRepository workpackPermissionRepository;
   private final ApplicationCacheUtil applicationCacheUtil;
+  private final CanAccessData canAccessData;
 
   @Autowired
   public WorkpackPermissionVerifier(
@@ -59,7 +64,8 @@ public class WorkpackPermissionVerifier {
     final OfficePermissionService officePermissionService,
     final WorkpackPermissionRepository workpackPermissionRepository,
     final ApplicationCacheUtil applicationCacheUtil,
-    final WorkpackSharedRepository workpackSharedRepository
+    final WorkpackSharedRepository workpackSharedRepository,
+    final CanAccessData canAccessData
   ) {
     this.personService = personService;
     this.planService = planService;
@@ -69,6 +75,7 @@ public class WorkpackPermissionVerifier {
     this.workpackSharedRepository = workpackSharedRepository;
     this.workpackPermissionRepository = workpackPermissionRepository;
     this.applicationCacheUtil = applicationCacheUtil;
+    this.canAccessData = canAccessData;
 
   }
 
@@ -152,9 +159,11 @@ public class WorkpackPermissionVerifier {
       .filter(p -> !NONE.equals(p.getPermissionLevel()) && idsWorkpakWithParents.contains(p.getIdWorkpack()))
       .collect(Collectors.toList());
 
-    if (!permissionPrent.isEmpty()) {
-      return permissionPrent.stream().map(PermissionDto::of).collect(Collectors.toList());
-    }
+      if (!permissionPrent.isEmpty()) {
+        return permissionPrent.stream()
+            .map(c -> adjustUpdateToEditIfEstruturacao(c, idWorkpack)) 
+            .collect(Collectors.toList());
+      }
 
     List<CanAccessWorkpack> permissionChildren = canAccessWorkpack.stream()
       .filter(p -> !NONE.equals(p.getPermissionLevel()) && idsWorkpakWithChildren.contains(p.getIdWorkpack()))
@@ -173,6 +182,21 @@ public class WorkpackPermissionVerifier {
     }
 
     return Collections.emptyList();
+  }
+
+  private PermissionDto adjustUpdateToEditIfEstruturacao(CanAccessWorkpack c, Long idWorkpack) {
+      PermissionLevelEnum level = c.getPermissionLevel();
+
+      if (level == PermissionLevelEnum.UPDATE) {
+          Boolean isEstruturacao = workpackRepository.isEstruturacao(idWorkpack);
+          if (Boolean.TRUE.equals(isEstruturacao)) {
+              level = PermissionLevelEnum.EDIT;
+          }
+      }
+
+      PermissionDto dto = PermissionDto.of(c);
+      dto.setLevel(level);
+      return dto;
   }
 
   private Set<Workpack> getAllWorkpacksUsingPlan(final Long idPlan) {

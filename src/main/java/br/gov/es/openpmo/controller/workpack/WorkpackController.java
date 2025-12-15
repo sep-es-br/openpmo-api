@@ -47,6 +47,7 @@ import br.gov.es.openpmo.utils.ApplicationMessage;
 import br.gov.es.openpmo.utils.ResponseHandler;
 import io.swagger.annotations.Api;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -302,14 +303,17 @@ public class WorkpackController {
 
       final Long idPerson = this.tokenService.getUserId(authorization);
 
+      final List<PermissionDto> permissions = this.workpackPermissionVerifier.fetchPermissions(
+        idPerson,
+        request.getIdPlan(),
+        request.getId()
+      );
 
-      final WorkpackPermissionResponse permissionResponse =
-              this.getWorkpackPermissions.execute(idPerson, request.getId(), request.getIdPlan());
-
-      final PermissionLevelEnum level = permissionResponse.getPermissions().stream()
-          .map(PermissionDto::getLevel)
-          .findFirst()
+      PermissionDto highestPermission = permissions.stream()
+          .max(Comparator.comparingInt(p -> p.getLevel().getLevel()))
           .orElse(null);
+
+      PermissionLevelEnum level = (highestPermission != null) ? highestPermission.getLevel() : null;
 
       Workpack workpack;
       if (PermissionLevelEnum.UPDATE.equals(level)) {

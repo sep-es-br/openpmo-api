@@ -7,19 +7,26 @@ import static br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintUtil
 import static br.gov.es.openpmo.dto.baselines.ccbmemberview.TripleConstraintUtils.roundOneDecimal;
 
 public class CostDetailItem {
+  private final Long idWorkpack;
 
   private final String icon;
+
   private final String description;
+
   private final BigDecimal currentValue;
+
   private final BigDecimal proposedValue;
+
   private BigDecimal variation;
 
   public CostDetailItem(
+    final Long idWorkpack,
     final String icon,
     final String description,
     final BigDecimal currentValue,
     final BigDecimal proposedValue
   ) {
+    this.idWorkpack = idWorkpack;
     this.icon = icon;
     this.description = description;
     this.currentValue = currentValue;
@@ -30,6 +37,10 @@ public class CostDetailItem {
   public BigDecimal getVariation() {
     this.calculateVariation();
     return this.variation;
+  }
+
+  public Long getIdWorkpack() {
+    return this.idWorkpack;
   }
 
   public String getIcon() {
@@ -53,11 +64,11 @@ public class CostDetailItem {
       return;
     }
     if(BigDecimal.ZERO.compareTo(this.currentValue) == 0) {
-      this.variation = new BigDecimal(-100);
+      this.variation = new BigDecimal(100);
       return;
     }
-    this.variation = this.currentValue
-      .subtract(this.proposedValue)
+    this.variation = this.proposedValue
+      .subtract(this.currentValue)
       .divide(this.currentValue, 6, RoundingMode.HALF_UP)
       .multiply(ONE_HUNDRED);
   }
