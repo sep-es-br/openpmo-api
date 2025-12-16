@@ -68,7 +68,8 @@ public class EmailService {
 
         LocalDate hoje = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yyyy");
-        String mesAno = hoje.format(formatter);
+        LocalDate mesAnterior = hoje.minusMonths(1);
+        String mesAno = mesAnterior.format(formatter);
 
         StringBuilder projectsBlock = new StringBuilder();
 
