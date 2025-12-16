@@ -966,27 +966,41 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
    * @return 
    */
   @Query( value = doSearchInAll_queryBase +
-            "RETURN planId, id, model, icon, name, fullName, matchDistance, breadcrumbs\n" +
-            "ORDER BY matchDistance ASC", countQuery = doSearchInAll_queryBase +
-            "RETURN count(id)")
-    public Page<UniversalSearchItemQueryResult> doSearchInAll(Long workpackId, String term, Long userId, Long planId, PageRequest request );
+    "RETURN planId, id, model, icon, name, fullName, matchDistance, breadcrumbs\n" +
+    "ORDER BY matchDistance ASC", countQuery = doSearchInAll_queryBase +
+    "RETURN count(id)"
+  )
+  public Page<UniversalSearchItemQueryResult> doSearchInAll(Long workpackId, String term, Long userId, Long planId, PageRequest request );
     
-      @Query(
-        "MATCH (w:Workpack)-[:BELONGS_TO]->(plan:Plan) " +
-        "WHERE ID(w) = $idWorkpack " +
-        "RETURN plan "
-      )
-      public Plan findPlanByWorkpackId(Long idWorkpack);
+  @Query(
+    "MATCH (w:Workpack)-[:BELONGS_TO]->(plan:Plan) " +
+    "WHERE ID(w) = $idWorkpack " +
+    "RETURN plan "
+  )
+  public Plan findPlanByWorkpackId(Long idWorkpack);
       
-    @Query(
-        "MATCH (w:Workpack)<-[:IS_IN*]-(child:Workpack{deleted: false})\n" +
-        "WHERE id(w) = $workpackId AND $type IN labels(child)\n" +
-        "OPTIONAL MATCH (child)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel {name:'Situação'})\n" +
-        "WHERE 'Deliverable' IN labels(child) AND NOT (p.value IN ['A cancelar', 'Cancelada'])\n" +
-        "WITH *\n" +
-        "WHERE NOT ('Deliverable' IN labels(child)) OR p IS NOT NULL\n" +
-        "RETURN count(child)"
-    )
-    public Long countTypeByWorkpack(Long workpackId, String type);
-}
+  @Query(
+    "MATCH (w:Workpack)<-[:IS_IN*]-(child:Workpack{deleted: false})\n" +
+    "WHERE id(w) = $workpackId AND $type IN labels(child)\n" +
+    "OPTIONAL MATCH (child)<-[:FEATURES]-(p:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel {name:'Situação'})\n" +
+    "WHERE 'Deliverable' IN labels(child) AND NOT (p.value IN ['A cancelar', 'Cancelada'])\n" +
+    "WITH *\n" +
+    "WHERE NOT ('Deliverable' IN labels(child)) OR p IS NOT NULL\n" +
+    "RETURN count(child)"
+  )
+  public Long countTypeByWorkpack(Long workpackId, String type);
+    
+  @Query(
+    "MATCH (p:Project)<-[:FEATURES]-(pr:Property)-[:IS_DRIVEN_BY]->(:PropertyModel { name: 'Status' })\n" +
+    "WHERE ID(p) = $idProject\n" +
+    "RETURN pr.value"
+  )
+  public String getProjectStatusByProjectId(Long idProject);
 
+  @Query(
+    "MATCH (d:Deliverable)<-[:FEATURES]-(pr:Property)-[:IS_DRIVEN_BY]->(:PropertyModel { name: 'Situação' })\n" +
+    "WHERE ID(d) = $idDeliverable\n" +
+    "RETURN pr.value"
+  )
+  public String getDeliverableStatusByDeliverableId(Long idDeliverable);
+}
