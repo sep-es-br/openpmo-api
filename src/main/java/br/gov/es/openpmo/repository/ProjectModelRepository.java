@@ -38,9 +38,9 @@ public interface ProjectModelRepository extends Neo4jRepository<ProjectModel, Lo
         "})<-[:FEATURES]-(sc:Schedule) " +
         "WHERE sc IS NOT NULL " +
         "  AND date({ year: date(sc.start).year, month: date(sc.start).month, day: 1 }) " +
-        "      <= date({ year: date().year, month: date().month, day: 1 }) " +
+        "      <= date({ year: (date() - duration('P1M')).year, month: (date() - duration('P1M')).month, day: 1 }) " +
         "  AND date({ year: date(sc.end).year, month: date(sc.end).month, day: 1 }) " +
-        "      >= date({ year: date().year, month: date().month, day: 1 }) " +
+        "      >= date({ year: (date() - duration('P1M')).year, month: (date() - duration('P1M')).month, day: 1 }) " +
         "OPTIONAL MATCH (d)-[:IS_INSTANCE_BY]->(dModel:DeliverableModel) " +
         "WITH person.fullName AS fullName, " +
         "     CASE " +
