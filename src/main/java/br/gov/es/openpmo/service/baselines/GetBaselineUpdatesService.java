@@ -81,7 +81,7 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
       addScheduleAndConsumesSnapshot(workpackBaselineCompare);
 
       final List<BaselineWorkpackDto> result = this.baselineServiceUtil.compare(workpacksMaster,
-          workpackBaselineCompare);
+          workpackBaselineCompare, baseLineParam.getStatus());
       // result.removeIf(r -> r.getClassification() == null);
       updatesList.addAll(getBaselineDetailResponse(result));
 
