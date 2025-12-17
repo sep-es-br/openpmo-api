@@ -988,5 +988,12 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
         "RETURN count(child)"
     )
     public Long countTypeByWorkpack(Long workpackId, String type);
+    
+    @Query (
+            "MATCH p=(wp:Workpack)-[:IS_INSTANCE_BY]->(wpm:WorkpackModel)\n" +
+            "WHERE id(wp) = 1122057\n" +
+            "RETURN exists((wpm)<-[:IS_IN*]-(:MilestoneModel))"
+    )
+    public Boolean requireMilestone(Long workpackId);
 }
 
