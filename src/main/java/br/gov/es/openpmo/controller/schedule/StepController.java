@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -124,24 +125,25 @@ public class StepController {
 
     final Long idUser = this.tokenService.getUserId(authorization);
 
-    final List<PermissionDto> permissions = this.workpackPermissionVerifier.fetchAccessPermissions(
+    final List<PermissionDto> permissions = this.workpackPermissionVerifier.fetchPermissions(
       idUser,
-      idWorkpack,
-      authorization
+      idPlan,
+      idWorkpack
     );
 
-    PermissionLevelEnum level = permissions.stream()
-        .map(PermissionDto::getLevel) 
-        .findFirst()
-        .orElse(null);  
+    PermissionDto highestPermission = permissions.stream()
+        .max(Comparator.comparingInt(p -> p.getLevel().getLevel()))
+        .orElse(null);
 
-        final List<Long> ids;
+    PermissionLevelEnum level = (highestPermission != null) ? highestPermission.getLevel() : null;
 
-        if (PermissionLevelEnum.UPDATE.equals(level)) {
-            ids = this.batchUpdateStep.executeRestricted(stepUpdates, idSchedule);
-        } else {
-            ids = this.batchUpdateStep.execute(stepUpdates, idSchedule);
-        }
+    final List<Long> ids;
+
+    if (PermissionLevelEnum.UPDATE.equals(level)) {
+        ids = this.batchUpdateStep.executeRestricted(stepUpdates, idSchedule);
+    } else {
+        ids = this.batchUpdateStep.execute(stepUpdates, idSchedule);
+    }
 
     return ResponseEntity.ok(ResponseBaseItens.of(ids));
   }

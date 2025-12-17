@@ -133,7 +133,7 @@ public class GetBaselineService implements IGetBaselineService {
         .findAllWorkpacBaselineById(baselineCompare.getIdBaseline());
     addScheduleAndConsumes(workpackBaselineCompare);
 
-    List<BaselineWorkpackDto> result = baselineServiceUtil.compare(workpacksBaseline, workpackBaselineCompare);
+    List<BaselineWorkpackDto> result = baselineServiceUtil.compare(workpacksBaseline, workpackBaselineCompare, baseLineParam.getStatus());
     result.removeIf(b -> b.getClassification() == null);
     return getBaselineDetailResponse(baseline, result, idWorkpack);
   }
@@ -166,7 +166,8 @@ public class GetBaselineService implements IGetBaselineService {
 
     Long idPlan = this.workpackRepository.findPlanByWorkpackId(idWorkpack).getId();
     WorkpackResultDto workpackDto = cacheUtil.getFullWorkpackBreakdownStructure(idWorkpack, idPlan, true);
-    if(workpackDto == null){
+
+    if (workpackDto == null) {
       List<WorkpackResultDto> result = workpackRepository.findWorkpackMenuById(idPlan, idWorkpack);
       if (!result.isEmpty()) {
         workpackDto = result.get(0);

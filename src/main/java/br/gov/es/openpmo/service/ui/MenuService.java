@@ -194,7 +194,9 @@ public class MenuService {
       List<WorkpackMenuResultDto> listWorkpackMenus = applicationCacheUtil.getListWorkpackMenuResultDto(planWorkpack.getIdPlan());
       for (Long idWorkpack : planWorkpack.getWorkpacks()) {
         WorkpackMenuResultDto workpack = this.getWorkpackMenuResultDto(idWorkpack, listWorkpackMenus);
-        result.add(workpack);
+        if(workpack != null){
+          result.add(workpack);
+        }
       }
     }
     return sortMenusChildren(result);

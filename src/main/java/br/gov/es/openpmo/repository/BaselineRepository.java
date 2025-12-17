@@ -388,7 +388,7 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
   List<BaselineResultDto> findAllInWorkpackByIdWorkpack(Long idWorkpack);
 
   @Query(
-    "MATCH (children:Workpack{deleted:false, canceled: false})-[:COMPOSES]->(baseline:Baseline) " +
+    "MATCH (children:Workpack{deleted:false})-[:COMPOSES]->(baseline:Baseline) " +
     "WHERE ID(baseline) = $id AND ANY(label IN labels(children) WHERE label IN ['Milestone', 'Deliverable']) " +
     "WITH DISTINCT id(children)  AS ids " +
     "MATCH (snapshot:Workpack)-[:IS_SNAPSHOT_OF]->(master:Workpack)-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
