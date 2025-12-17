@@ -967,7 +967,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
     
     @Query (
             "MATCH p=(wp:Workpack)-[:IS_INSTANCE_BY]->(wpm:WorkpackModel)\n" +
-            "WHERE id(wp) = 1122057\n" +
+            "WHERE id(wp) = $workpackId\n" +
             "RETURN exists((wpm)<-[:IS_IN*]-(:MilestoneModel))"
     )
     public Boolean requireMilestone(Long workpackId);
