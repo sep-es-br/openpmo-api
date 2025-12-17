@@ -134,6 +134,9 @@ public class BaselineServiceUtil {
     }
     
     public Integer checkMinimumMilestoneRequired(Long workpackId) {
+        
+      if(!this.workpackRepository.requireMilestone(workpackId)) return null;
+        
       Long countMilestones = this.milestoneSrv.countMilestonesByWorkpack(workpackId);
       
       if(this.appMinMCPorConfig.equals("project") && countMilestones < this.appMinMCConfig){
