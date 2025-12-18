@@ -13,7 +13,6 @@ import br.gov.es.openpmo.dto.dashboards.RiskDto;
 import br.gov.es.openpmo.dto.dashboards.RiskResultDto;
 import br.gov.es.openpmo.dto.dashboards.RiskWorkpackDto;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
-import br.gov.es.openpmo.dto.permission.WorkpackPermissionResponse;
 import br.gov.es.openpmo.dto.workpack.EndDeliverableManagementRequest;
 import br.gov.es.openpmo.dto.workpack.ResponseBaseWorkpack;
 import br.gov.es.openpmo.dto.workpack.ResponseBaseWorkpackDetail;
@@ -25,11 +24,11 @@ import br.gov.es.openpmo.dto.workpack.breakdown.structure.JournalInformationDto;
 import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.journals.JournalAction;
+import br.gov.es.openpmo.model.properties.Property;
 import br.gov.es.openpmo.model.risk.Risk;
 import br.gov.es.openpmo.model.workpacks.Milestone;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.RiskRepository;
-import br.gov.es.openpmo.repository.completed.CompletedRepository;
 import br.gov.es.openpmo.repository.dashboards.DashboardMilestoneRepository;
 import br.gov.es.openpmo.service.actors.IsFavoritedByService;
 import br.gov.es.openpmo.service.authentication.TokenService;
@@ -39,7 +38,6 @@ import br.gov.es.openpmo.service.journals.JournalCreator;
 import br.gov.es.openpmo.service.journals.JournalFinder;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessData;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
-import br.gov.es.openpmo.service.workpack.GetWorkpackPermissions;
 import br.gov.es.openpmo.service.workpack.WorkpackHasChildren;
 import br.gov.es.openpmo.service.workpack.WorkpackPermissionVerifier;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
@@ -103,10 +101,6 @@ public class WorkpackController {
 
   private final RiskRepository riskRepository;
 
-  private final GetWorkpackPermissions getWorkpackPermissions;
-
-  private final CompletedRepository completedRepository;
-
   @Autowired
   public WorkpackController(
     final ResponseHandler responseHandler,
@@ -122,9 +116,7 @@ public class WorkpackController {
     final WorkpackHasChildren workpackHasChildren,
     final IsFavoritedByService isFavoritedByService,
     final DashboardMilestoneRepository dashboardMilestoneRepository,
-    final RiskRepository riskRepository,
-    final CompletedRepository completedRepository,
-    final GetWorkpackPermissions getWorkpackPermissions
+    final RiskRepository riskRepository
   ) {
     this.responseHandler = responseHandler;
     this.workpackService = workpackService;
@@ -140,8 +132,6 @@ public class WorkpackController {
     this.isFavoritedByService = isFavoritedByService;
     this.dashboardMilestoneRepository = dashboardMilestoneRepository;
     this.riskRepository = riskRepository;
-    this.completedRepository = completedRepository;
-    this.getWorkpackPermissions = getWorkpackPermissions;
   }
 
   @GetMapping
@@ -464,6 +454,23 @@ public class WorkpackController {
     itemDetail.setRisk(RiskResultDto.of(riskDtos));
     itemDetail.setJournalInformation(
         journals.stream().filter(j -> j.getIdWorkapck().equals(workpack.getId())).findFirst().orElse(null));
+
+    String workpackStatusPropertyName;
+    String workpackType = workpack.getType();
+
+    if (workpackType.equals("Project")) {
+      workpackStatusPropertyName = "Status";
+    } else if (workpackType.equals("Deliverable")) {
+      workpackStatusPropertyName = "Situação";
+    } else {
+      workpackStatusPropertyName = "Status";
+    }
+
+    Property statusProperty = workpack.getProperties().stream().filter(el -> el.getPropertyModelName().equals(workpackStatusPropertyName)).findFirst().orElse(null);
+    if (statusProperty != null) {
+      itemDetail.setStatusProperties(statusProperty.getValue().toString());
+    }
+
     return itemDetail;
   }
 
