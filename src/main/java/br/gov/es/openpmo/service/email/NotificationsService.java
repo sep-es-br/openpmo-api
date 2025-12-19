@@ -1,5 +1,7 @@
 package br.gov.es.openpmo.service.email;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -71,7 +73,22 @@ public class NotificationsService {
 
                             try {
                                 ClassPathResource resource = new ClassPathResource("static/email/openpmo_email_template.html");
-                                String htmlTemplate = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+
+                                //java 8
+                                InputStream is = resource.getInputStream();
+                                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+                                byte[] data = new byte[4096];
+                                int nRead;
+                                while ((nRead = is.read(data)) != -1) {
+                                    buffer.write(data, 0, nRead);
+                                }
+
+                                String htmlTemplate = new String(buffer.toByteArray(), StandardCharsets.UTF_8);
+
+                                //java 11
+                                // String htmlTemplate = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+
                                 emailService.sendProjectDeliverablesNotification(
                                     dto.getEmail(),
                                     "Atualização de cronogramas e diários",
@@ -98,7 +115,20 @@ public class NotificationsService {
 
                         try {
                             ClassPathResource resource = new ClassPathResource("static/email/openpmo_email_template.html");
-                            String htmlTemplate = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+                            // java 8
+                            InputStream is = resource.getInputStream();
+                            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+                            byte[] data = new byte[4096];
+                            int nRead;
+                            while ((nRead = is.read(data)) != -1) {
+                                buffer.write(data, 0, nRead);
+                            }
+
+                            String htmlTemplate = new String(buffer.toByteArray(), StandardCharsets.UTF_8);
+                            //java 11
+                            // String htmlTemplate = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+                                
                             emailService.sendProjectMilestonesNotification(
                                 dto.getEmail(),
                                 dto.getProjects(),  
