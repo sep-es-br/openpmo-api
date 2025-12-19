@@ -133,7 +133,7 @@ public class GetBaselineService implements IGetBaselineService {
         .findAllWorkpacBaselineById(baselineCompare.getIdBaseline());
     addScheduleAndConsumes(workpackBaselineCompare);
 
-    List<BaselineWorkpackDto> result = baselineServiceUtil.compare(workpacksBaseline, workpackBaselineCompare);
+    List<BaselineWorkpackDto> result = baselineServiceUtil.compare(workpacksBaseline, workpackBaselineCompare, baseLineParam.getStatus());
     result.removeIf(b -> b.getClassification() == null);
     return getBaselineDetailResponse(baseline, result, idWorkpack);
   }

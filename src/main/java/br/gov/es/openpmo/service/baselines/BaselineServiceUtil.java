@@ -8,6 +8,7 @@ import br.gov.es.openpmo.enumerator.BaselineStatus;
 import br.gov.es.openpmo.enumerator.CategoryEnum;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
+import br.gov.es.openpmo.model.baselines.Status;
 import br.gov.es.openpmo.model.relations.Consumes;
 import br.gov.es.openpmo.model.schedule.Schedule;
 import br.gov.es.openpmo.model.schedule.Step;
@@ -81,31 +82,40 @@ public class BaselineServiceUtil {
         return principal.isDateChanged(compare) || principal.isScheduleChanged(compare) || principal.isStepChanged(compare) || principal.isConsumesChanged(compare) ;
     }
 
-    public List<BaselineWorkpackDto> compare(List<BaselineWorkpackDto> listParam, List<BaselineWorkpackDto> listCompare) {
+    public List<BaselineWorkpackDto> compare(List<BaselineWorkpackDto> listParam, List<BaselineWorkpackDto> listCompare, Status status) {
         List<BaselineWorkpackDto> list = new ArrayList<>(listParam);
         for (BaselineWorkpackDto principal : list) {
             BaselineWorkpackDto compare = listCompare.stream().filter(w -> w.getIdMaster().equals(principal.getIdMaster())).findFirst().orElse(null);
-            if (compare == null && !workpackRepository.isCanceled(principal.getId())) {
+            if ( ((compare == null || workpackRepository.isCanceled(compare.getId()) ) && !workpackRepository.isCanceled(principal.getId()))) {
                 principal.setClassification(BaselineStatus.NEW);
                 continue;
             }
+            
+            if( workpackRepository.isCanceled(compare.getId()) && workpackRepository.isCanceled(principal.getId()) ){
+                continue;
+            }
 
-            if (Boolean.TRUE.equals(workpackRepository.isSituationToCancel(principal.getId()))) {
+            if (
+                    Boolean.TRUE.equals(workpackRepository.isSituationToCancel(principal.getId()))
+                || (Boolean.FALSE.equals(workpackRepository.isCanceled(compare.getId())) && Boolean.TRUE.equals(workpackRepository.isCanceled(principal.getId())) && status.equals(Status.REJECTED))
+                ) {
                 principal.setClassification(BaselineStatus.TO_CANCEL);
                 continue;
             }
             
-            if (Boolean.TRUE.equals(workpackRepository.isSituationCanceled(principal.getId()))) {
+            if (Boolean.FALSE.equals(workpackRepository.isCanceled(compare.getId())) && Boolean.TRUE.equals(workpackRepository.isCanceled(principal.getId())) && status.equals(Status.APPROVED)) {
                 principal.setClassification(BaselineStatus.CANCELLED);
                 continue;
             }
 
             if (isChanged(principal, compare)) {
                 principal.setClassification(BaselineStatus.CHANGED);
+                continue;
             }
             
-            if(principal.getClassification() == null) {
+            if(principal.getClassification() == null && Boolean.FALSE.equals(workpackRepository.isCanceled(compare.getId()))) {
                 principal.setClassification(BaselineStatus.UNCHANGED);
+                continue;
             }
         }
         final List<BaselineWorkpackDto> workpackBaselineDeleted = listCompare.stream().filter(
