@@ -324,6 +324,7 @@ public class WorkpackModelService {
     final WorkpackModelDetailDto detailDto = this.convertWorkpackModelDetailDto(workpackModel);
     if (detailDto != null) {
       detailDto.dashboardConfiguration(workpackModel);
+      detailDto.notificationsConfiguration(workpackModel); 
       detailDto.setChildren(children);
       detailDto.setParent(parent);
       detailDto.setProperties(properties);
