@@ -566,7 +566,7 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
   Optional<Long> findProposedBaselineByWorkpack(Long workpackId);
 
   @Query(
-    "MATCH (b:Baseline)<-[:COMPOSES]-(w:Workpack) " +
+    "MATCH (b:Baseline)<-[:COMPOSES]-(w:Workpack)-[:IS_SNAPSHOT_OF]->(m:Workpack {canceled: false}) " +
     "WHERE id(b) = $baselineId AND w.canceled = true " +
     "RETURN w"
   )

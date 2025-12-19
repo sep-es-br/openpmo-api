@@ -141,7 +141,7 @@ public interface JournalRepository extends Neo4jRepository<JournalEntry, Long> {
         "AND id(baseline) = $baseLineId " +
         "AND rel.decision = 'APPROVED' " +
         "RETURN id(p) AS personId, rel.when AS evaluationDate")
-  List<Map<String, Object>> getApprovedPersons(Long workpackId, Long baseLineId);
+  List<ApprovedPersonDto> getApprovedPersons(Long workpackId, Long baseLineId);
 
 
   @Query("MATCH (o:Office) where id(o) = $officeId " +

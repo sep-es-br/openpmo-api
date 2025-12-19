@@ -156,15 +156,7 @@ public class JournalCreator {
         final Long workpackId,
         final Long baselineId
 ) {
-    List<Map<String, Object>> rawResults = journalRepository.getApprovedPersons(workpackId, baselineId);
-
-    List<ApprovedPersonDto> approvedPersons = rawResults.stream()
-    .map(record -> {
-        Long personId = ((Number) record.get("personId")).longValue();
-        String evaluationDate = (String) record.get("evaluationDate");
-        return new ApprovedPersonDto(personId, evaluationDate);
-    })
-    .collect(Collectors.toList());
+    List<ApprovedPersonDto> approvedPersons = journalRepository.getApprovedPersons(workpackId, baselineId);
 
     for (ApprovedPersonDto person : approvedPersons) {
       DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;

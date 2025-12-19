@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.service.baselines;
 
 import br.gov.es.openpmo.dto.baselines.BaselineEvaluationRequest;
+import br.gov.es.openpmo.dto.person.ApprovedPersonDto;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.baselines.Baseline;
@@ -14,6 +15,7 @@ import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.IsCCBMemberRepository;
 import br.gov.es.openpmo.repository.IsEvaluatedByRepository;
+import br.gov.es.openpmo.repository.JournalRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.journals.JournalCreator;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
@@ -22,8 +24,13 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.CCB_MEMBER_ALREADY_EVALUATED;
 import static br.gov.es.openpmo.utils.ApplicationMessage.NOT_VALID_CCB_MEMBER;
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_NOT_FOUND;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -32,6 +39,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class EvaluateBaselineService implements IEvaluateBaselineService {
+
+    private final JournalRepository journalRepository;
 
   private final BaselineRepository repository;
 
@@ -53,7 +62,8 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     final WorkpackRepository workpackRepository,
     final IsCCBMemberRepository ccbMemberRepository,
     final IsEvaluatedByRepository evaluatedByRepository,
-    final JournalCreator journalCreator
+    final JournalCreator journalCreator,
+    final JournalRepository journalRepository
     
   ) {
     this.repository = repository;
@@ -62,6 +72,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     this.ccbMemberRepository = ccbMemberRepository;
     this.evaluatedByRepository = evaluatedByRepository;
     this.journalCreator = journalCreator;
+    this.journalRepository = journalRepository;
   }
 
   private static void throwExceptionIfBaselineIsNotProposedOrReject(final Baseline baseline) {
@@ -111,7 +122,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     final boolean alreadyRejected = this.isAlreadyRejected(idBaseline);
     if(alreadyRejected) return;
 
-    this.updateBaselineStatus(baseline, idPerson);
+    this.updateBaselineStatus(baseline);
     this.journalCreator.baselineForAllApprovedPersons(baseline);
 
     if (baseline.getStatus() != Status.APPROVED || baseline.isCancelation()) {
@@ -142,11 +153,10 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
 
 
   private void updateBaselineStatus(
-    final Baseline baseline,
-    final Long idPerson
+    final Baseline baseline
   ) {
     this.inactivateBaselineIfHasPrevious(baseline);
-    this.approveBaseline(baseline, idPerson);
+    this.approveBaseline(baseline);
 
   }
 
@@ -164,19 +174,18 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
   }
 
   private void approveBaseline(
-    final Baseline baseline,
-    final Long idPerson
+    final Baseline baseline
   ) {
     baseline.approve();
     this.saveBaseline(baseline);
     workpackRepository.resetSituationOrStatusToDefault(baseline.getIdWorkpack());
-    this.cancelWorkpacksFromSnapshots(baseline, idPerson);
+    this.cancelWorkpacksFromSnapshots(baseline);
     if(baseline.isCancelation()) {
-      this.cancelWorkpackByBaseline(baseline, idPerson);
+      this.cancelWorkpackByBaseline(baseline);
     }
   }
 
-  private void cancelWorkpacksFromSnapshots(final Baseline baseline, final Long idPerson) {
+  private void cancelWorkpacksFromSnapshots(final Baseline baseline) {
     List<Workpack> canceledSnapshots = this.repository.findSnapshotsByBaselineIdAndCanceledTrue(baseline.getId());
 
     List<Long> masterIds = canceledSnapshots.stream()
@@ -191,20 +200,38 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
       masterIds.forEach(id -> {
           Optional<Workpack> masterOpt = workpackRepository.findById(id);
           workpackRepository.updateSituationValue(id, "Cancelada");
-          masterOpt.ifPresent(master -> journalCreator.edition(master, JournalAction.CANCELLED, idPerson));
-      });
-    }
-  }
+          masterOpt.ifPresent(master -> {
+
+            List<ApprovedPersonDto> approvedPersons = journalRepository.getApprovedPersons(master.getId(), baseline.getId());
+
+            for (ApprovedPersonDto approvedPerson : approvedPersons) {
+              journalCreator.edition(
+                  master,
+                  JournalAction.CANCELLED,
+                  approvedPerson.getPersonId()
+              );
+          }
+        });
+    });
+  }}
 
   private void cancelWorkpackByBaseline(
-    final Baseline baseline,
-    final Long idPerson
+    final Baseline baseline
   ) {
     final Workpack workpack = this.repository.findWorkpackByBaselineId(baseline.getId())
       .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
     this.workpackService.cancel(workpack.getId());
     workpackRepository.updateSituationValue(workpack.getId(), "Cancelado");
-    this.journalCreator.edition(workpack, JournalAction.CANCELLED, idPerson);
+    List<ApprovedPersonDto> approvedPersons =
+    journalRepository.getApprovedPersons(workpack.getId(), baseline.getId());
+
+    for (ApprovedPersonDto approvedPerson : approvedPersons) {
+        journalCreator.edition(
+            workpack,
+            JournalAction.CANCELLED,
+            approvedPerson.getPersonId()
+        );
+    }
   }
 
   private void verifyAlreadyEvaluationOfMember(
@@ -260,7 +287,8 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     if (!hasEvaluationsRemain) {
         final boolean alreadyRejected = this.isAlreadyRejected(idBaseline);
         if (!alreadyRejected) {
-            this.updateBaselineStatus(baseline, null);
+          
+            this.updateBaselineStatus(baseline);
             this.journalCreator.baselineForAllApprovedPersons(baseline);
 
         }
