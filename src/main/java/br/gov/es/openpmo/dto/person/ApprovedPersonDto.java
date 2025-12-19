@@ -1,5 +1,8 @@
 package br.gov.es.openpmo.dto.person;
 
+import org.springframework.data.neo4j.annotation.QueryResult;
+
+@QueryResult
 public class ApprovedPersonDto {
     private Long personId;
     private String evaluationDate;

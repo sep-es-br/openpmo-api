@@ -50,6 +50,7 @@ public class CreateCCBMemberRelationshipService implements ICreateCCBMemberRelat
   public void createRelationship(final CCBMemberRequest request) {
     final Person person = this.createOrUpdatePersonAndRelationships(request);
     final Workpack workpack = this.findWorkpackById(request.getIdWorkpack());
+    this.repository.deleteAllByPersonIdAndWorkpackId(person.getId(), workpack.getId());
 
     for(final MemberAs memberAs : request.getMemberAs()) {
       this.saveCCBMember(person, workpack, memberAs);
