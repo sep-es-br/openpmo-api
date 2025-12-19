@@ -25,18 +25,18 @@ import br.gov.es.openpmo.model.schedule.Schedule;
 import br.gov.es.openpmo.model.workpacks.models.ProjectModel;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.utils.ApplicationMessage;
+import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_DELIVERABLE;
+import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_MILESTONE;
+import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_ORGANIZER;
+import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_PORTFOLIO;
+import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_PROGRAM;
+import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_PROJECT;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.swagger.annotations.ApiModel;
-import org.apache.commons.collections.CollectionUtils;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
-import org.springframework.data.annotation.Transient;
-import org.springframework.util.ObjectUtils;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -45,14 +45,12 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-
-import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_DELIVERABLE;
-import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_MILESTONE;
-import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_ORGANIZER;
-import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_PORTFOLIO;
-import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_PROGRAM;
-import static br.gov.es.openpmo.utils.WorkpackInstanceType.TYPE_MODEL_NAME_PROJECT;
+import org.apache.commons.collections.CollectionUtils;
+import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Relationship;
 import static org.neo4j.ogm.annotation.Relationship.INCOMING;
+import org.springframework.data.annotation.Transient;
+import org.springframework.util.ObjectUtils;
 
 @JsonTypeInfo(use = Id.NAME, property = "type")
 @JsonSubTypes({
@@ -406,7 +404,8 @@ public class Workpack extends Entity implements Snapshotable<Workpack> {
 
   @Transient
   public boolean isRestaurable() {
-    return !this.isProject() && this.isCanceled;
+    return !this.isProject() && (this.isCanceled || this.deleted);
+    
   }
 
   @Transient

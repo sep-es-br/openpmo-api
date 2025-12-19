@@ -392,7 +392,7 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
     "WHERE ID(baseline) = $id AND ANY(label IN labels(children) WHERE label IN ['Milestone', 'Deliverable']) " +
     "WITH DISTINCT id(children)  AS ids " +
     "MATCH (snapshot:Workpack)-[:IS_SNAPSHOT_OF]->(master:Workpack)-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
-    "WHERE ID(snapshot) IN [ids] " +
+    "WHERE ID(snapshot) IN [ids]\n" +
     "RETURN ID(master) AS idMaster, ID(snapshot) AS id, snapshot.name AS name, snapshot.fullName AS fullName " +
     ", snapshot.date AS date, model.fontIcon AS fontIcon, labels(snapshot) AS label"
   )
@@ -415,7 +415,7 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
   List<BaselineConsumesStep> findAllStepConsumesById(final List<Long> ids);
 
   @Query(
-    "MATCH (children:Workpack{deleted:false})-[:IS_IN*]->(parent:Workpack) " +
+    "MATCH (children:Workpack{deleted:false, canceled: false})-[:IS_IN*]->(parent:Workpack) " +
     "WHERE ID(parent) = $id AND (ANY(label IN labels(children) WHERE label IN ['Deliverable']) " +
     "OR ANY(label IN labels(children) WHERE label IN ['Milestone']) ) " +
     "WITH DISTINCT ID(children)  AS ids " +
