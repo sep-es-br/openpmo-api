@@ -205,7 +205,7 @@ public interface ScheduleRepository extends Neo4jRepository<Schedule, Long> {
   List<StepAggregateDto>findCombinedStepData(@Param("idWorkpack") Long idWorkpack);
   
   @Query(
-        "MATCH (w:Workpack)<-[:IS_IN*]-(d:Deliverable{canceled: false})<-[:FEATURES]-(:Schedule)<-[:COMPOSES]-(st:Step),\n" +
+        "MATCH (w:Workpack)<-[:IS_IN*]-(d:Deliverable{deleted: false, canceled: false})<-[:FEATURES]-(:Schedule)<-[:COMPOSES]-(st:Step),\n" +
         "(d:Deliverable)-[:IS_SNAPSHOT_OF*0..1]->(:Deliverable)-[]-(prop:Property)-[:IS_DRIVEN_BY]->(pmodel:PropertyModel)\n" +
         "WHERE id(w) = $workpackId AND pmodel.name = 'Situação' AND not prop.value = 'A cancelar'\n" +
         "RETURN toString(sum(toFloat(st.plannedWork)))"
