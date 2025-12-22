@@ -179,10 +179,14 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
     baselineSnapshots.forEach(snapshot -> {
       Workpack master = snapshot.getWorkpackMaster();
 
-      if (master.isDeleted() || master.isCanceled()) {
-        idsWorkpacksDeleted.add(snapshot.getId());
-      } else if (snapshot.isCanceled()) {
-        idsWorkpacksToBeCanceled.add(snapshot.getId());
+      if (master != null) {
+        if (master.isDeleted() || master.isCanceled()) {
+          idsWorkpacksDeleted.add(snapshot.getId());
+          idsWorkpacksDeleted.add(master.getId());
+        } else if (snapshot.isCanceled()) {
+          idsWorkpacksToBeCanceled.add(snapshot.getId());
+          idsWorkpacksToBeCanceled.add(master.getId());
+        }
       }
     });
 
@@ -458,9 +462,9 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
               if (idsWorkpacksToBeCanceled.contains(deliveryOrMilestone.getId())) {
                 deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.TO_CANCEL);;
               }
-              // if (idsWorkpacksDeleted.contains(deliveryOrMilestone.getId())) {
-              //   deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.DELETED);
-              // }
+              if (idsWorkpacksDeleted.contains(deliveryOrMilestone.getId())) {
+                deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.DELETED);
+              }
               subEtapaBreakdown.addChild(deliveryOrMilestoneBreakdown);
             }
           };
@@ -525,11 +529,11 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
             deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.UNCHANGED);
           }
           if (idsWorkpacksToBeCanceled.contains(child.getId())) {
-              deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.TO_CANCEL);;
-            }
-          // if (idsWorkpacksDeleted.contains(child.getId())) {
-          //   deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.DELETED);
-          // }
+            deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.TO_CANCEL);;
+          }
+          if (idsWorkpacksDeleted.contains(child.getId())) {
+            deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.DELETED);
+          }
           etapaBreakdown.addChild(deliveryOrMilestoneBreakdown);
         }
       }
