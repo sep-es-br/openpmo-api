@@ -68,7 +68,7 @@ public class GetBaselineService implements IGetBaselineService {
   }
 
   @Override
-  public BaselineDetailResponse getById(final Long idBaseline, final Long idWorkpack) {
+  public BaselineDetailResponse getById(final Long idBaseline, final Long idWorkpack, final Long idPlan) {
     BaselineDetailResponse result = null;
 
     final Baseline baseline = this.getBaselineById(idBaseline);
@@ -111,7 +111,7 @@ public class GetBaselineService implements IGetBaselineService {
           break;
       }
 
-      result = this.compareBaseline(baseline, baseLineParam, baselineCompare, idWorkpack);
+      result = this.compareBaseline(baseline, baseLineParam, baselineCompare, idWorkpack, idPlan);
     }
     return result;
   }
@@ -120,13 +120,14 @@ public class GetBaselineService implements IGetBaselineService {
       Baseline baseline,
       BaselineResultDto baseLineParam,
       BaselineResultDto baselineCompare,
-      Long idWorkpack) {
+      Long idWorkpack,
+      Long idPlan) {
     final List<BaselineWorkpackDto> workpacksBaseline = this.baselineRepository
         .findAllWorkpacBaselineById(baseLineParam.getIdBaseline());
     addScheduleAndConsumes(workpacksBaseline);
     if (baselineCompare == null) {
       workpacksBaseline.forEach(w -> w.setClassification(BaselineStatus.NEW));
-      return getBaselineDetailResponse(baseline, workpacksBaseline, idWorkpack);
+      return getBaselineDetailResponse(baseline, workpacksBaseline, idWorkpack, idPlan);
     }
 
     final List<BaselineWorkpackDto> workpackBaselineCompare = this.baselineRepository
@@ -135,7 +136,7 @@ public class GetBaselineService implements IGetBaselineService {
 
     List<BaselineWorkpackDto> result = baselineServiceUtil.compare(workpacksBaseline, workpackBaselineCompare);
     result.removeIf(b -> b.getClassification() == null);
-    return getBaselineDetailResponse(baseline, result, idWorkpack);
+    return getBaselineDetailResponse(baseline, result, idWorkpack, idPlan);
   }
 
   private void addScheduleAndConsumes(final List<BaselineWorkpackDto> workpacks) {
@@ -154,7 +155,7 @@ public class GetBaselineService implements IGetBaselineService {
   }
 
   private BaselineDetailResponse getBaselineDetailResponse(Baseline baseline, List<BaselineWorkpackDto> workpacks,
-      Long idWorkpack) {
+      Long idWorkpack, Long idPlan) {
     final BaselineDetailResponse response = BaselineDetailResponse.of(baseline);
     final List<EvaluationItem> items = this.getEvaluationItems(baseline.getId());
     response.setEvaluations(items);
@@ -164,7 +165,10 @@ public class GetBaselineService implements IGetBaselineService {
       idWorkpack = this.baselineRepository.findProjectByBaselineId(baseline.getId()).getId();
     }
 
-    Long idPlan = this.workpackRepository.findPlanByWorkpackId(idWorkpack).getId();
+    if (Objects.isNull(idPlan)) {
+      idPlan = this.workpackRepository.findPlanByWorkpackId(idWorkpack).getId();
+    }
+
     WorkpackResultDto workpackDto = cacheUtil.getFullWorkpackBreakdownStructure(idWorkpack, idPlan, true);
 
     if (workpackDto == null) {

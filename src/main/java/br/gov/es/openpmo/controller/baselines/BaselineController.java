@@ -17,6 +17,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Api
@@ -197,7 +198,7 @@ public class BaselineController implements IBaselineController {
       idBaseline,
       authorization
     );
-    final BaselineDetailResponse response = this.getBaselineService.getById(idBaseline, null);
+    final BaselineDetailResponse response = this.getBaselineService.getById(idBaseline, null, null);
     return this.responseHandler.success(response);
   }
 
@@ -205,10 +206,11 @@ public class BaselineController implements IBaselineController {
   public Response<BaselineDetailResponse> getByWorkpackId(
     final Long idWorkpack,
     final Long idBaseline,
+    @RequestParam(name = "idPlan", required = false) final Long idPlan,
     @RequestHeader(name = "Authorization") final String authorization
   ) {
     this.canAccessService.ensureCanReadResourceWorkpack(idWorkpack, authorization);
-    final BaselineDetailResponse response = this.getBaselineService.getById(idBaseline, idWorkpack);
+    final BaselineDetailResponse response = this.getBaselineService.getById(idBaseline, idWorkpack, idPlan);
     return this.responseHandler.success(response);
   }
 
