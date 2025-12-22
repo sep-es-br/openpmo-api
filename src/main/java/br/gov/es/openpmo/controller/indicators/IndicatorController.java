@@ -66,6 +66,7 @@ public class IndicatorController {
     public ResponseEntity<ResponseBase<IndicatorDetailDto>> findById(
         @PathVariable final Long idWorkpack,
         @PathVariable final Long idIndicator,
+        @RequestParam(required = false) final Long idPlan,
         @Authorization final String authorization
     ) {
         this.canAccessService.ensureCanReadResourceWorkpack(idWorkpack, authorization);

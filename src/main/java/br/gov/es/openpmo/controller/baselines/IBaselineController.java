@@ -103,6 +103,7 @@ public interface IBaselineController {
   Response<BaselineDetailResponse> getByWorkpackId(
     @PathVariable("id-workpack") Long idWorkpack,
     @PathVariable("id-baseline") Long idBaseline,
+    @RequestParam(name = "idPlan", required = false) Long idPlan,
     @RequestHeader(name = "Authorization") String authorization
   );
 
