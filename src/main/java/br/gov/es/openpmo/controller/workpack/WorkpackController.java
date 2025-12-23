@@ -437,23 +437,43 @@ public class WorkpackController {
     return ResponseEntity.ok(ResponseBase.of(response));
   }
 
-  private WorkpackDetailParentDto mapToWorkpackDetailParentDto(final Workpack workpack, final Long idWorkpackModel
-      , List<MilestoneDateDto> milestoneDates, List<RiskWorkpackDto> risks
-      , final List<JournalInformationDto> journals, final Long idPlan) {
+  private WorkpackDetailParentDto mapToWorkpackDetailParentDto(
+    final Workpack workpack,
+    final Long idWorkpackModel,
+    List<MilestoneDateDto> milestoneDates,
+    List<RiskWorkpackDto> risks,
+    final List<JournalInformationDto> journals,
+    final Long idPlan
+  ) {
     final WorkpackDetailParentDto itemDetail = this.workpackService.getWorkpackDetailParentDto(workpack, idWorkpackModel);
     itemDetail.applyLinkedStatus(workpack, idWorkpackModel);
+
     DashboardMonthDto monthDto = workpackService.getDashboardMonthDto(workpack, idPlan);
     itemDetail.setDashboard(monthDto);
-    final List<MilestoneDateDto> milestones = milestoneDates.stream()
-          .filter(m -> m.getIdWorkpack().equals(workpack.getId())).collect(Collectors.toList());
+
+    final List<MilestoneDateDto> milestones = milestoneDates
+      .stream()
+      .filter(m -> m.getIdWorkpack().equals(workpack.getId()))
+      .collect(Collectors.toList());
+
     final List<MilestoneDto> milestoneDtos = MilestoneDto.setMilestonesOfMiletonesDate(milestones);
     itemDetail.setMilestone(MilestoneResultDto.of(milestoneDtos));
-    final List<Risk> risksWorkpack = risks.stream().filter(r -> workpack.getId().equals(r.getIdWorkpack()))
-                                          .map(RiskWorkpackDto::getRisk).collect(Collectors.toList());
+
+    final List<Risk> risksWorkpack = risks
+      .stream()
+      .filter(r -> workpack.getId().equals(r.getIdWorkpack()))
+      .map(RiskWorkpackDto::getRisk)
+      .collect(Collectors.toList());
+
     final List<RiskDto> riskDtos = RiskDto.of(risksWorkpack);
     itemDetail.setRisk(RiskResultDto.of(riskDtos));
     itemDetail.setJournalInformation(
-        journals.stream().filter(j -> j.getIdWorkapck().equals(workpack.getId())).findFirst().orElse(null));
+      journals
+        .stream()
+        .filter(j -> j.getIdWorkapck().equals(workpack.getId()))
+        .findFirst()
+        .orElse(null)
+    );
 
     String workpackStatusPropertyName;
     String workpackType = workpack.getType();
@@ -466,7 +486,12 @@ public class WorkpackController {
       workpackStatusPropertyName = "Status";
     }
 
-    Property statusProperty = workpack.getProperties().stream().filter(el -> el.getPropertyModelName().equals(workpackStatusPropertyName)).findFirst().orElse(null);
+    Property statusProperty = workpack
+      .getProperties()
+      .stream()
+      .filter(el -> el.getPropertyModelName().equals(workpackStatusPropertyName))
+      .findFirst()
+      .orElse(null);
     if (statusProperty != null) {
       itemDetail.setStatusProperties(statusProperty.getValue().toString());
     }
