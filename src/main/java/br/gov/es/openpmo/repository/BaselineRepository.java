@@ -491,7 +491,8 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
     "MATCH (model:WorkpackModel)<-[:IS_INSTANCE_BY]-(master:Workpack)<-[:IS_SNAPSHOT_OF]-(snapshot:Workpack)-[:COMPOSES]->(baseline:Baseline) " +
     "WHERE ID(baseline) = $idBaseline AND ANY(label IN labels(snapshot) WHERE label IN ['Milestone', 'Deliverable']) " +
     "RETURN ID(master) AS idWorkpack, master.name AS name, master.fullName AS fullName " +
-    ", model.fontIcon AS fontIcon, labels(master) AS labels, snapshot.date AS date, snapshot.category AS category "
+    ", model.fontIcon AS fontIcon, labels(master) AS labels, snapshot.date AS date, snapshot.category AS category " +
+    ", snapshot.canceled as isCanceled "
   )
   List<TripleConstraintDto> findAllTripleConstraintSnapshot(Long idBaseline);
 
