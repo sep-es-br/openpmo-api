@@ -986,4 +986,17 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       "WHERE ID(d) = $idDeliverable\n" +
       "RETURN pr.value")
   public String getDeliverableStatusByDeliverableId(Long idDeliverable);
+
+  @Query("MATCH p=(wp:Workpack)-[:IS_INSTANCE_BY]->(wpm:WorkpackModel)\n" +
+      "WHERE id(wp) = $workpackId\n" +
+      "RETURN exists((wpm)<-[:IS_IN*]-(:MilestoneModel))")
+  public Boolean requireMilestone(Long workpackId);
+
+  @Query("MATCH (w:Workpack)-[:IS_INSTANCE_BY]->(m:WorkpackModel)\n" +
+      "WHERE ID(w) = $idWorkpack\n" +
+      "RETURN ID(w) as id, w.idWorkpackModel as idWorkpackModel, w.idParent as idParent, " +
+      "   w.name as name, w.fullName as fullName, labels(w) as labels, m.modelName as modelName, " +
+      "   m.modelNameInPlural as modelNameInPlural, HEAD([label IN labels(w) WHERE label <> 'Workpack']) as type, " +
+      "   m.fontIcon as fontIcon")
+  public WorkpackResultDto getWorkpackResultDtoById(Long idWorkpack);
 }

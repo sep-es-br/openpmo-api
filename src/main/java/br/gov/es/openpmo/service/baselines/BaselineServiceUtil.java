@@ -85,38 +85,55 @@ public class BaselineServiceUtil {
     public List<BaselineWorkpackDto> compare(List<BaselineWorkpackDto> listParam, List<BaselineWorkpackDto> listCompare, Status status) {
         List<BaselineWorkpackDto> list = new ArrayList<>(listParam);
         for (BaselineWorkpackDto principal : list) {
-            BaselineWorkpackDto compare = listCompare.stream().filter(w -> w.getIdMaster().equals(principal.getIdMaster())).findFirst().orElse(null);
-            if ( ((compare == null || workpackRepository.isCanceled(compare.getId()) ) && !workpackRepository.isCanceled(principal.getId()))) {
-                principal.setClassification(BaselineStatus.NEW);
-                continue;
-            }
-            
-            if( workpackRepository.isCanceled(compare.getId()) && workpackRepository.isCanceled(principal.getId()) ){
-                continue;
-            }
+          BaselineWorkpackDto compare = listCompare.stream().filter(w -> w.getIdMaster().equals(principal.getIdMaster())).findFirst().orElse(null);
+          if (
+            (compare == null || (compare != null && workpackRepository.isCanceled(compare.getId()))) &&
+            !workpackRepository.isCanceled(principal.getId())
+          ) {
+            principal.setClassification(BaselineStatus.NEW);
+            continue;
+          }
+          
+          if (compare != null && workpackRepository.isCanceled(compare.getId()) && workpackRepository.isCanceled(principal.getId())){
+            continue;
+          }
 
-            if (
-                    Boolean.TRUE.equals(workpackRepository.isSituationToCancel(principal.getId()))
-                || (Boolean.FALSE.equals(workpackRepository.isCanceled(compare.getId())) && Boolean.TRUE.equals(workpackRepository.isCanceled(principal.getId())) && status.equals(Status.REJECTED))
-                ) {
-                principal.setClassification(BaselineStatus.TO_CANCEL);
-                continue;
-            }
-            
-            if (Boolean.FALSE.equals(workpackRepository.isCanceled(compare.getId())) && Boolean.TRUE.equals(workpackRepository.isCanceled(principal.getId())) && status.equals(Status.APPROVED)) {
-                principal.setClassification(BaselineStatus.CANCELLED);
-                continue;
-            }
+          if (
+            Boolean.TRUE.equals(workpackRepository.isSituationToCancel(principal.getId())) ||
+            (
+              compare != null &&
+              Boolean.FALSE.equals(workpackRepository.isCanceled(compare.getId())) &&
+              Boolean.TRUE.equals(workpackRepository.isCanceled(principal.getId())) &&
+              status.equals(Status.REJECTED)
+            )
+          ) {
+            principal.setClassification(BaselineStatus.TO_CANCEL);
+            continue;
+          }
+          
+          if (
+            compare != null &&
+            Boolean.FALSE.equals(workpackRepository.isCanceled(compare.getId())) &&
+            Boolean.TRUE.equals(workpackRepository.isCanceled(principal.getId())) &&
+            status.equals(Status.APPROVED)
+          ) {
+            principal.setClassification(BaselineStatus.CANCELLED);
+            continue;
+          }
 
-            if (isChanged(principal, compare)) {
-                principal.setClassification(BaselineStatus.CHANGED);
-                continue;
-            }
-            
-            if(principal.getClassification() == null && Boolean.FALSE.equals(workpackRepository.isCanceled(compare.getId()))) {
-                principal.setClassification(BaselineStatus.UNCHANGED);
-                continue;
-            }
+          if (compare != null && isChanged(principal, compare)) {
+            principal.setClassification(BaselineStatus.CHANGED);
+            continue;
+          }
+          
+          if (
+            principal.getClassification() == null &&
+            compare != null &&
+            Boolean.FALSE.equals(workpackRepository.isCanceled(compare.getId()))
+          ) {
+            principal.setClassification(BaselineStatus.UNCHANGED);
+            continue;
+          }
         }
         final List<BaselineWorkpackDto> workpackBaselineDeleted = listCompare.stream().filter(
             w -> listParam.stream().noneMatch(p -> p.getIdMaster().equals(w.getIdMaster()))).collect(Collectors.toList());
@@ -134,6 +151,9 @@ public class BaselineServiceUtil {
     }
     
     public Integer checkMinimumMilestoneRequired(Long workpackId) {
+        
+      if(!this.workpackRepository.requireMilestone(workpackId)) return null;
+        
       Long countMilestones = this.milestoneSrv.countMilestonesByWorkpack(workpackId);
       
       if(this.appMinMCPorConfig.equals("project") && countMilestones < this.appMinMCConfig){

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Notificação OpenPMO</title>
+    <style type="text/css">
+        @media only screen and (max-width: 768px) {
+            .hide-mobile { display: none !important; }
+            .header td, .footer td { display: block !important; width: 100% !important; text-align: center !important; }
+            .p-mobile { padding-bottom: 20px !important; }
+            .header img, .footer img { margin: 0 auto !important; }
+        }
+    </style>
+</head>
+<body style="margin:0; padding:0; background-color:#f4f4f4; font-family: Arial, sans-serif; font-size:16px; line-height:24px; color:#333333;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td align="center">
+                <!-- TABELA PRINCIPAL -->
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#ffffff;">
+                    <!-- Cabeçalho -->
+                    <tr>
+                        <td class="header" style="padding:20px; background-color:#44b39b;">
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <!-- Coluna esquerda -->
+                                    <td class="p-mobile" width="33%" align="left">
+                                        <img src="cid:brasao" width="50" height="50">
+                                    </td>
+                                    <!-- Coluna central -->
+                                    <td width="34%" align="center">
+                                        <img src="cid:pmo_icon" width="200">
+                                    </td>
+                                    <!-- Coluna direita -->
+                                    <td class="hide-mobile" width="33%" align="right">&nbsp;</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Alerta -->
+                    <tr>
+                        <td align="center" style="background-color:#fff8c4; padding:10px 20px; border-top:1px solid #e0e0e0;">
+                            <p style="margin:0; color:#8a6d3b; font-size:14px;">
+                                Este é um e-mail automático. Favor não responder.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Conteúdo -->
+                    <tr>
+                        <td style="padding:30px 20px;">
+                            {{PROJECTS_BLOCK}}
+                        </td>
+                    </tr>
+
+                    <!-- Rodapé -->
+                    <tr>
+                        <td class="footer" style="padding:20px; background-color:#44b39b; color:#ffffff; font-size:14px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <td class="p-mobile" width="33%" align="left">
+                                        <img src="cid:pmo_logo" width="200">
+                                    </td>
+                                    <td width="34%" align="center">
+                                        Desenvolvido e mantido por SEP - Secretária de Economia e Planejamento
+                                    </td>
+                                    <td class="hide-mobile" width="33%" align="right">&nbsp;</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

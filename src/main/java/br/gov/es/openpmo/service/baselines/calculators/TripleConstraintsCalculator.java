@@ -46,6 +46,8 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
 
   private static final String MILESTONE = "Milestone";
 
+  private static final String ORGANIZER = "Organizer";
+
   private final BaselineRepository repository;
 
   private final ApplicationCacheUtil cacheUtil;
@@ -117,56 +119,92 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
 
   private TripleConstraintOutput buildCostDetail(
     final List<EntityDto> unityMeasure,
-    final List<TripleConstraintDto> proposed,
-    final List<TripleConstraintDto> current,
+    final List<TripleConstraintDto> proposedWorkpacksConstraint,
+    final List<TripleConstraintDto> currentWorkpacksConstraint,
     final boolean hasPreviousBaseline,
     final Long idProposedBaseline,
     final Long idProject,
     final Long idPlan
   ) {
-    BaselineCostDetail costDetail = getBaselineCostDetail(proposed, current);
-    BaselineScheduleDetail scheduleDetail = getBaselineScheduleDetail(proposed, current);
-    BaselineScopeDetail scopeDetail = getBaselineScopeDetail(unityMeasure, proposed, current, hasPreviousBaseline);
+    BaselineCostDetail costDetail = getBaselineCostDetail(proposedWorkpacksConstraint, currentWorkpacksConstraint);
+    BaselineScheduleDetail scheduleDetail = getBaselineScheduleDetail(proposedWorkpacksConstraint, currentWorkpacksConstraint);
+    BaselineScopeDetail scopeDetail = getBaselineScopeDetail(unityMeasure, proposedWorkpacksConstraint, currentWorkpacksConstraint, hasPreviousBaseline);
 
     // Aqui monta uma lista de Ids de workpacks que não sofreram alterações
     List<Long> idsWorkpacksUnchanged = new ArrayList<Long>();
-    if (current != null && current.size() > 0) {
-      idsWorkpacksUnchanged = current
+    if (currentWorkpacksConstraint != null && currentWorkpacksConstraint.size() > 0) {
+      currentWorkpacksConstraint
         .stream()
-        .filter(item -> {
-            TripleConstraintDto proposedEquivalent = proposed.stream().filter(el -> el.getIdWorkpack().equals(item.getIdWorkpack())).findFirst().orElse(null);
-  
-            return (
-              proposedEquivalent != null &&
-              (
-                (item.getSumPlannedCost() != null && proposedEquivalent.getSumPlannedCost() != null)
-                ? item.getSumPlannedCost().equals(proposedEquivalent.getSumPlannedCost())
-                : true
-              ) &&
-              (
-                (item.getSumPlannedWork() != null && proposedEquivalent.getSumPlannedWork() != null)
-                ? item.getSumPlannedWork().equals(proposedEquivalent.getSumPlannedWork())
-                : true
-              ) &&
-              (
-                (item.getStart() != null && proposedEquivalent.getStart() != null)
-                ? item.getStart().equals(proposedEquivalent.getStart())
-                : true
-              ) &&
-              (
-                (item.getEnd() != null && proposedEquivalent.getEnd() != null)
-                ? item.getEnd().equals(proposedEquivalent.getEnd())
-                : true
-              )
-            );
+        .forEach(item -> {
+          TripleConstraintDto proposedEquivalent = proposedWorkpacksConstraint.stream().filter(el -> el.getIdWorkpack().equals(item.getIdWorkpack())).findFirst().orElse(null);
+
+          if (
+            proposedEquivalent != null &&
+            (
+              (item.getSumPlannedCost() != null && proposedEquivalent.getSumPlannedCost() != null)
+              ? item.getSumPlannedCost().equals(proposedEquivalent.getSumPlannedCost())
+              : true
+            ) &&
+            (
+              (item.getSumPlannedWork() != null && proposedEquivalent.getSumPlannedWork() != null)
+              ? item.getSumPlannedWork().equals(proposedEquivalent.getSumPlannedWork())
+              : true
+            ) &&
+            (
+              (item.getStart() != null && proposedEquivalent.getStart() != null)
+              ? item.getStart().equals(proposedEquivalent.getStart())
+              : true
+            ) &&
+            (
+              (item.getEnd() != null && proposedEquivalent.getEnd() != null)
+              ? item.getEnd().equals(proposedEquivalent.getEnd())
+              : true
+            ) &&
+            (
+              (item.getDate() != null && proposedEquivalent.getDate() != null)
+              ? item.getDate().equals(proposedEquivalent.getDate())
+              : true
+            )
+          ) {
+            idsWorkpacksUnchanged.add(item.getIdWorkpack());
           }
-        )
-        .map(el -> el.getIdWorkpack())
-        .collect(Collectors.toList());
+        });
     }
 
-    WorkpackResultDto workpackDto = cacheUtil.getWorkpackBreakdownStructure(idProject, idPlan, true);
-    List<TripleConstraintBreakdown> finalList = createTripleConstraintBreakdown(costDetail, scheduleDetail, scopeDetail, workpackDto, idsWorkpacksUnchanged);
+    // Aqui percorre todos os workpacks associados à LB proposta, comparando os snapshots com seus masters, e definindo os excluídos e os à cancelar
+    List<Long> idsWorkpacksDeleted = new ArrayList<Long>();
+    List<Long> idsWorkpacksToBeCanceled = new ArrayList<Long>();
+    List<Workpack> baselineSnapshots = this.baselineRepository.getBaselineWorkpacks(idProposedBaseline);
+
+    baselineSnapshots.forEach(snapshot -> {
+      Workpack master = snapshot.getWorkpackMaster();
+
+      if (master != null) {
+        if (master.isDeleted() || master.isCanceled()) {
+          idsWorkpacksDeleted.add(snapshot.getId());
+          idsWorkpacksDeleted.add(master.getId());
+        } else if (snapshot.isCanceled()) {
+          idsWorkpacksToBeCanceled.add(snapshot.getId());
+          idsWorkpacksToBeCanceled.add(master.getId());
+        }
+      }
+    });
+
+    WorkpackResultDto workpackDto = null;
+
+    workpackDto = cacheUtil.getWorkpackBreakdownStructure(idProject, idPlan, true);
+
+    List<TripleConstraintBreakdown> finalList = createTripleConstraintBreakdown(
+      proposedWorkpacksConstraint,
+      currentWorkpacksConstraint,
+      costDetail,
+      scheduleDetail,
+      scopeDetail,
+      workpackDto,
+      idsWorkpacksUnchanged,
+      idsWorkpacksDeleted,
+      idsWorkpacksToBeCanceled
+    );
 
     Office currentOffice = this.officeRepository.findOfficeByPlanId(idPlan).orElse(null);
     if (currentOffice == null) {
@@ -328,11 +366,15 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
   }
 
   public List<TripleConstraintBreakdown> createTripleConstraintBreakdown(
+    List<TripleConstraintDto> proposedLBWorkpacks,
+    List<TripleConstraintDto> currentLBWorkpacks,
     BaselineCostDetail costDetail,
     BaselineScheduleDetail scheduleDetail,
     BaselineScopeDetail scopeDetail,
     WorkpackResultDto workpackDto,
-    List<Long> idsWorkpacksUnchanged
+    List<Long> idsWorkpacksUnchanged,
+    List<Long> idsWorkpacksDeleted,
+    List<Long> idsWorkpacksToBeCanceled
   ) {
     List<CostDetailItem> costItems = costDetail.getCostDetails();
     List<ScheduleDetailItem> scheduleItems = scheduleDetail.getScheduleDetails();
@@ -352,7 +394,7 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
       );
 
       for (WorkpackResultDto child : etapa.getChildren()) {
-        if (child.getType().equals("Organizer") && child.getModelName().equals("Subetapa")) {
+        if (child.getType().equals(ORGANIZER)) {
           TripleConstraintBreakdown subEtapaBreakdown = new TripleConstraintBreakdown(
             child.getId(),
             child.getIdPlan(),
@@ -364,26 +406,35 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
             child.getModelNameInPlural()
           );
 
-          for (WorkpackResultDto deliveryOrMilestone : child.getChildren()) {          
-            CostDetailItem costItem = costItems
-              .stream()
-              .filter(item -> item.getIdWorkpack().equals(deliveryOrMilestone.getId()))
-              .findFirst()
-              .orElse(null);
-
-            ScheduleDetailItem scheduleItem = scheduleItems
-              .stream()
-              .filter(item -> item.getIdWorkpack().equals(deliveryOrMilestone.getId()))
-              .findFirst()
-              .orElse(null);
-
-            ScopeDetailItem scopeItem = scopeItems
-              .stream()
-              .filter(item -> item.getIdWorkpack().equals(deliveryOrMilestone.getId()))
-              .findFirst()
-              .orElse(null);
-
-            if (costItem != null || scheduleItem != null || scopeItem != null) {
+          for (WorkpackResultDto deliveryOrMilestone : child.getChildren()) {
+            if (
+              !idsWorkpacksDeleted.contains(deliveryOrMilestone.getId()) &&
+              (              
+                proposedLBWorkpacks.stream().filter(w -> w.getIdWorkpack().equals(deliveryOrMilestone.getId())).findFirst().isPresent() ||
+                currentLBWorkpacks.stream().filter(w -> w.getIdWorkpack().equals(deliveryOrMilestone.getId())).findFirst().isPresent() ||
+                idsWorkpacksUnchanged.stream().filter(id -> id.equals(deliveryOrMilestone.getId())).findFirst().isPresent() ||
+                idsWorkpacksDeleted.stream().filter(id -> id.equals(deliveryOrMilestone.getId())).findFirst().isPresent() ||
+                idsWorkpacksToBeCanceled.stream().filter(id -> id.equals(deliveryOrMilestone.getId())).findFirst().isPresent()
+              )
+            ) {
+              CostDetailItem costItem = costItems
+                .stream()
+                .filter(item -> item.getIdWorkpack().equals(deliveryOrMilestone.getId()))
+                .findFirst()
+                .orElse(null);
+  
+              ScheduleDetailItem scheduleItem = scheduleItems
+                .stream()
+                .filter(item -> item.getIdWorkpack().equals(deliveryOrMilestone.getId()))
+                .findFirst()
+                .orElse(null);
+  
+              ScopeDetailItem scopeItem = scopeItems
+                .stream()
+                .filter(item -> item.getIdWorkpack().equals(deliveryOrMilestone.getId()))
+                .findFirst()
+                .orElse(null);
+              
               TripleConstraintBreakdown deliveryOrMilestoneBreakdown = new TripleConstraintBreakdown(
                 deliveryOrMilestone.getId(),
                 deliveryOrMilestone.getIdPlan(),
@@ -394,17 +445,25 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
                 deliveryOrMilestone.getModelName(),
                 deliveryOrMilestone.getModelNameInPlural()
               );
-              
-              if (deliveryOrMilestone.getType().equals(MILESTONE)) {
-                deliveryOrMilestoneBreakdown.setScheduleDetails(scheduleItem);
-              } else if (deliveryOrMilestone.getType().equals(DELIVERABLE)) {
-                deliveryOrMilestoneBreakdown.setCostDetails(costItem);
-                deliveryOrMilestoneBreakdown.setScheduleDetails(scheduleItem);
-                deliveryOrMilestoneBreakdown.setScopeDetails(scopeItem);
+  
+              if (costItem != null || scheduleItem != null || scopeItem != null) {  
+                if (deliveryOrMilestone.getType().equals(MILESTONE)) {
+                  deliveryOrMilestoneBreakdown.setScheduleDetails(scheduleItem);
+                } else if (deliveryOrMilestone.getType().equals(DELIVERABLE)) {
+                  deliveryOrMilestoneBreakdown.setCostDetails(costItem);
+                  deliveryOrMilestoneBreakdown.setScheduleDetails(scheduleItem);
+                  deliveryOrMilestoneBreakdown.setScopeDetails(scopeItem);
+                }
               }
-
+              
               if (idsWorkpacksUnchanged.contains(deliveryOrMilestone.getId())) {
                 deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.UNCHANGED);
+              }
+              if (idsWorkpacksToBeCanceled.contains(deliveryOrMilestone.getId())) {
+                deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.TO_CANCEL);;
+              }
+              if (idsWorkpacksDeleted.contains(deliveryOrMilestone.getId())) {
+                deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.DELETED);
               }
               subEtapaBreakdown.addChild(deliveryOrMilestoneBreakdown);
             }
@@ -414,8 +473,18 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
             etapaBreakdown.addChild(subEtapaBreakdown);
           }
         } else if (
-          (child.getType().equals(DELIVERABLE) && child.getModelName().equals("Entrega")) ||
-          (child.getType().equals(MILESTONE) && child.getModelName().equals("Marco crítico"))
+          (
+            (child.getType().equals(DELIVERABLE)) ||
+            (child.getType().equals(MILESTONE))
+          ) &&
+          !idsWorkpacksDeleted.contains(child.getId()) &&
+          (
+            proposedLBWorkpacks.stream().filter(w -> w.getIdWorkpack().equals(child.getId())).findFirst().isPresent() ||
+            currentLBWorkpacks.stream().filter(w -> w.getIdWorkpack().equals(child.getId())).findFirst().isPresent() ||
+            idsWorkpacksUnchanged.stream().filter(id -> id.equals(child.getId())).findFirst().isPresent() ||
+            idsWorkpacksDeleted.stream().filter(id -> id.equals(child.getId())).findFirst().isPresent() ||
+            idsWorkpacksToBeCanceled.stream().filter(id -> id.equals(child.getId())).findFirst().isPresent()
+          )
         ) {
           CostDetailItem costItem = costItems
             .stream()
@@ -435,18 +504,18 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
             .findFirst()
             .orElse(null);
 
+          TripleConstraintBreakdown deliveryOrMilestoneBreakdown = new TripleConstraintBreakdown(
+            child.getId(),
+            child.getIdPlan(),
+            child.getName(),
+            child.getFullName(),
+            child.getFontIcon(),
+            child.getType(),
+            child.getModelName(),
+            child.getModelNameInPlural()
+          );
+
           if (costItem != null || scheduleItem != null || scopeItem != null) {
-            TripleConstraintBreakdown deliveryOrMilestoneBreakdown = new TripleConstraintBreakdown(
-              child.getId(),
-              child.getIdPlan(),
-              child.getName(),
-              child.getFullName(),
-              child.getFontIcon(),
-              child.getType(),
-              child.getModelName(),
-              child.getModelNameInPlural()
-            );
-            
             if (child.getType().equals(MILESTONE)) {
               deliveryOrMilestoneBreakdown.setScheduleDetails(scheduleItem);
             } else if (child.getType().equals(DELIVERABLE)) {
@@ -454,12 +523,18 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
               deliveryOrMilestoneBreakdown.setScheduleDetails(scheduleItem);
               deliveryOrMilestoneBreakdown.setScopeDetails(scopeItem);
             }
-
-            if (idsWorkpacksUnchanged.contains(child.getId())) {
-              deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.UNCHANGED);
-            }
-            etapaBreakdown.addChild(deliveryOrMilestoneBreakdown);
           }
+
+          if (idsWorkpacksUnchanged.contains(child.getId())) {
+            deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.UNCHANGED);
+          }
+          if (idsWorkpacksToBeCanceled.contains(child.getId())) {
+            deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.TO_CANCEL);;
+          }
+          if (idsWorkpacksDeleted.contains(child.getId())) {
+            deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.DELETED);
+          }
+          etapaBreakdown.addChild(deliveryOrMilestoneBreakdown);
         }
       }
 
