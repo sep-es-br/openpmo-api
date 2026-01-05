@@ -486,17 +486,19 @@ public class WorkpackController {
       workpackStatusPropertyName = "Status";
     }
 
-    Property statusProperty = workpack
-      .getProperties()
-      .stream()
-      .filter(el -> el.getPropertyModelName().equals(workpackStatusPropertyName))
-      .findFirst()
-      .orElse(null);
-    if (statusProperty != null) {
-      itemDetail.setStatusProperties(statusProperty.getValue().toString());
+    if (workpack.getProperties() != null ) {
+      Property statusProperty = workpack
+        .getProperties()
+        .stream()
+        .filter(el -> el.getPropertyModelName().equals(workpackStatusPropertyName))
+        .findFirst()
+        .orElse(null);
+
+      if (statusProperty != null) {
+        itemDetail.setStatusProperties(statusProperty.getValue().toString());
+      }
     }
 
     return itemDetail;
   }
-
 }
