@@ -24,15 +24,15 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 @JsonTypeInfo(use = Id.NAME, property = "type")
-@JsonSubTypes({@Type(value = PortfolioDetailParentDto.class, name = "Portfolio"),
-  @Type(value = ProgramDetailParentDto.class, name = "Program"),
-  @Type(value = OrganizerDetailParentDto.class, name = "Organizer"),
-  @Type(value = DeliverableDetailParentDto.class, name = "Deliverable"),
-  @Type(value = ProjectDetailParentDto.class, name = "Project"),
-  @Type(value = MilestoneDetailParentDto.class, name = "Milestone")})
-@ApiModel(subTypes = {PortfolioDetailParentDto.class, ProgramDetailParentDto.class, OrganizerDetailParentDto.class,
-  DeliverableDetailParentDto.class, ProjectDetailParentDto.class,
-  MilestoneDetailParentDto.class}, discriminator = "type", description = "Supertype of all Workpack.")
+@JsonSubTypes({ @Type(value = PortfolioDetailParentDto.class, name = "Portfolio"),
+    @Type(value = ProgramDetailParentDto.class, name = "Program"),
+    @Type(value = OrganizerDetailParentDto.class, name = "Organizer"),
+    @Type(value = DeliverableDetailParentDto.class, name = "Deliverable"),
+    @Type(value = ProjectDetailParentDto.class, name = "Project"),
+    @Type(value = MilestoneDetailParentDto.class, name = "Milestone") })
+@ApiModel(subTypes = { PortfolioDetailParentDto.class, ProgramDetailParentDto.class, OrganizerDetailParentDto.class,
+    DeliverableDetailParentDto.class, ProjectDetailParentDto.class,
+    MilestoneDetailParentDto.class }, discriminator = "type", description = "Supertype of all Workpack.")
 public abstract class WorkpackDetailParentDto {
 
   private Long id;
@@ -62,7 +62,7 @@ public abstract class WorkpackDetailParentDto {
 
   @JsonProperty("canceled")
   private boolean isCanceled;
-  
+
   @JsonProperty("deleted")
   private boolean isDeleted;
 
@@ -92,10 +92,11 @@ public abstract class WorkpackDetailParentDto {
 
   private JournalInformationDto journalInformation;
 
+  private String statusProperty;
+
   public static <TYPE extends WorkpackDetailParentDto> WorkpackDetailParentDto of(
-    final Workpack workpack,
-    final Supplier<TYPE> instanceSupplier
-  ) {
+      final Workpack workpack,
+      final Supplier<TYPE> instanceSupplier) {
     final TYPE instance = instanceSupplier.get();
     instance.setId(workpack.getId());
     instance.setCancelable(workpack.isCancelable());
@@ -109,15 +110,14 @@ public abstract class WorkpackDetailParentDto {
   }
 
   public void applyLinkedStatus(
-    final Workpack workpack,
-    final Long idWorkpackModel
-  ) {
+      final Workpack workpack,
+      final Long idWorkpackModel) {
     this.linkedModel = Optional.ofNullable(workpack.getLinkedTo())
-      .flatMap(linkeds -> linkeds.stream()
-        .map(IsLinkedTo::getWorkpackModelId)
-        .filter(id -> Objects.equals(id, idWorkpackModel))
-        .findFirst())
-      .orElse(null);
+        .flatMap(linkeds -> linkeds.stream()
+            .map(IsLinkedTo::getWorkpackModelId)
+            .filter(id -> Objects.equals(id, idWorkpackModel))
+            .findFirst())
+        .orElse(null);
     this.linked = this.linkedModel != null;
   }
 
@@ -330,13 +330,19 @@ public abstract class WorkpackDetailParentDto {
     this.journalInformation = journalInformation;
   }
 
-    public boolean isIsDeleted() {
-        return isDeleted;
-    }
+  public boolean isIsDeleted() {
+    return isDeleted;
+  }
 
-    public void setIsDeleted(boolean isDeleted) {
-        this.isDeleted = isDeleted;
-    }
-  
-  
+  public void setIsDeleted(boolean isDeleted) {
+    this.isDeleted = isDeleted;
+  }
+
+  public String getStatusProperty() {
+    return this.statusProperty;
+  }
+
+  public void setStatusProperties(String statusProperty) {
+    this.statusProperty = statusProperty;
+  }
 }

@@ -24,6 +24,8 @@ import br.gov.es.openpmo.dto.workpack.breakdown.structure.JournalInformationDto;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.ScheduleMeasureUnit;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.WorkpackBreakdownClassificationDto;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.WorkpackRepresentation;
+import br.gov.es.openpmo.enumerator.DeliverableStatus;
+import br.gov.es.openpmo.enumerator.ProjectStatus;
 import br.gov.es.openpmo.model.office.UnitMeasure;
 import br.gov.es.openpmo.model.properties.Property;
 import br.gov.es.openpmo.model.properties.UnitSelection;
@@ -35,7 +37,6 @@ import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.baselines.GetBaselineUpdatesService;
 import br.gov.es.openpmo.service.dashboards.v2.ASyncDashboardService;
-import br.gov.es.openpmo.utils.DashboardCacheUtil;
 
 @Component
 public class GetWorkpackRepresentation {
@@ -140,6 +141,20 @@ public class GetWorkpackRepresentation {
       if (deliverable != null) {
         final ScheduleMeasureUnit unitMeasure = this.buildUnitMeasure((Deliverable) deliverable);
         workpackRepresentation.setUnitMeasure(unitMeasure);
+      }
+    }
+    
+    if ("Project".equals(workpackType)) {
+      String projectStatus = workpackRepository.getProjectStatusByProjectId(workpackId);
+      if (projectStatus != null) {
+        ProjectStatus status = ProjectStatus.fromValue(projectStatus);
+        workpackRepresentation.setProjectStatus(status);
+      }
+    } else if ("Deliverable".equals(workpackType)) {
+      String deliverableStatus = workpackRepository.getDeliverableStatusByDeliverableId(workpackId);
+      if (deliverableStatus != null) {
+        DeliverableStatus status = DeliverableStatus.fromValue(deliverableStatus);
+        workpackRepresentation.setDeliverableStatus(status);
       }
     }
 
