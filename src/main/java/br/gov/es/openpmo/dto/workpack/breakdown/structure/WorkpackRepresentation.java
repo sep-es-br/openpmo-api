@@ -4,8 +4,6 @@ import br.gov.es.openpmo.dto.MilestoneResultDto;
 import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
 import br.gov.es.openpmo.dto.dashboards.MilestoneDto;
 import br.gov.es.openpmo.dto.dashboards.RiskResultDto;
-import br.gov.es.openpmo.enumerator.DeliverableStatus;
-import br.gov.es.openpmo.enumerator.ProjectStatus;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
@@ -41,10 +39,10 @@ public class WorkpackRepresentation {
   private WorkpackBreakdownClassificationDto classifications;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private ProjectStatus projectStatus;
+  private String projectStatus;
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
-  private DeliverableStatus deliverableStatus;
+  private String deliverableStatus;
 
   /* Getters and Setters */
 
@@ -125,17 +123,17 @@ public class WorkpackRepresentation {
     this.classifications = classifications;
   }
 
-  public ProjectStatus getProjectStatus() {
+  public String getProjectStatus() {
     return projectStatus;
   }
-  public void setProjectStatus(ProjectStatus projectStatus) {
+  public void setProjectStatus(String projectStatus) {
     this.projectStatus = projectStatus;
   }
 
-  public DeliverableStatus getDeliverableStatus() {
+  public String getDeliverableStatus() {
     return deliverableStatus;
   }
-  public void setDeliverableStatus(DeliverableStatus deliverableStatus) {
+  public void setDeliverableStatus(String deliverableStatus) {
     this.deliverableStatus = deliverableStatus;
   }
 }

@@ -24,8 +24,6 @@ import br.gov.es.openpmo.dto.workpack.breakdown.structure.JournalInformationDto;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.ScheduleMeasureUnit;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.WorkpackBreakdownClassificationDto;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.WorkpackRepresentation;
-import br.gov.es.openpmo.enumerator.DeliverableStatus;
-import br.gov.es.openpmo.enumerator.ProjectStatus;
 import br.gov.es.openpmo.model.office.UnitMeasure;
 import br.gov.es.openpmo.model.properties.Property;
 import br.gov.es.openpmo.model.properties.UnitSelection;
@@ -147,14 +145,12 @@ public class GetWorkpackRepresentation {
     if ("Project".equals(workpackType)) {
       String projectStatus = workpackRepository.getProjectStatusByProjectId(workpackId);
       if (projectStatus != null) {
-        ProjectStatus status = ProjectStatus.fromValue(projectStatus);
-        workpackRepresentation.setProjectStatus(status);
+        workpackRepresentation.setProjectStatus(projectStatus);
       }
     } else if ("Deliverable".equals(workpackType)) {
       String deliverableStatus = workpackRepository.getDeliverableStatusByDeliverableId(workpackId);
       if (deliverableStatus != null) {
-        DeliverableStatus status = DeliverableStatus.fromValue(deliverableStatus);
-        workpackRepresentation.setDeliverableStatus(status);
+        workpackRepresentation.setDeliverableStatus(deliverableStatus);
       }
     }
 
