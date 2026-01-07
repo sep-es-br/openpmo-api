@@ -586,4 +586,11 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
     "RETURN project "
   )
   Project findProjectByBaselineId(Long idBaseline);
+
+  @Query(
+    "MATCH (b:Baseline)<-[:COMPOSES]-(w:Workpack)-[r:IS_SNAPSHOT_OF]->(master:Workpack)\n" +
+    "WHERE ID(b) = $idBaseline\n" +
+    "RETURN w, r"
+  )
+  List<Workpack> getBaselineWorkpacks(Long idBaseline);
 }

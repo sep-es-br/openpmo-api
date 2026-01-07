@@ -119,27 +119,24 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
 
   private TripleConstraintOutput buildCostDetail(
     final List<EntityDto> unityMeasure,
-    final List<TripleConstraintDto> proposed,
-    final List<TripleConstraintDto> current,
+    final List<TripleConstraintDto> proposedWorkpacksConstraint,
+    final List<TripleConstraintDto> currentWorkpacksConstraint,
     final boolean hasPreviousBaseline,
     final Long idProposedBaseline,
     final Long idProject,
     final Long idPlan
   ) {
-    BaselineCostDetail costDetail = getBaselineCostDetail(proposed, current);
-    BaselineScheduleDetail scheduleDetail = getBaselineScheduleDetail(proposed, current);
-    BaselineScopeDetail scopeDetail = getBaselineScopeDetail(unityMeasure, proposed, current, hasPreviousBaseline);
+    BaselineCostDetail costDetail = getBaselineCostDetail(proposedWorkpacksConstraint, currentWorkpacksConstraint);
+    BaselineScheduleDetail scheduleDetail = getBaselineScheduleDetail(proposedWorkpacksConstraint, currentWorkpacksConstraint);
+    BaselineScopeDetail scopeDetail = getBaselineScopeDetail(unityMeasure, proposedWorkpacksConstraint, currentWorkpacksConstraint, hasPreviousBaseline);
 
     // Aqui monta uma lista de Ids de workpacks que não sofreram alterações
     List<Long> idsWorkpacksUnchanged = new ArrayList<Long>();
-    List<Long> idsWorkpacksDeleted = new ArrayList<Long>();
-    List<Long> idsWorkpacksCanceled = new ArrayList<Long>();
-
-    if (current != null && current.size() > 0) {
-      current
+    if (currentWorkpacksConstraint != null && currentWorkpacksConstraint.size() > 0) {
+      currentWorkpacksConstraint
         .stream()
         .forEach(item -> {
-          TripleConstraintDto proposedEquivalent = proposed.stream().filter(el -> el.getIdWorkpack().equals(item.getIdWorkpack())).findFirst().orElse(null);
+          TripleConstraintDto proposedEquivalent = proposedWorkpacksConstraint.stream().filter(el -> el.getIdWorkpack().equals(item.getIdWorkpack())).findFirst().orElse(null);
 
           if (
             proposedEquivalent != null &&
@@ -171,37 +168,42 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
           ) {
             idsWorkpacksUnchanged.add(item.getIdWorkpack());
           }
-
-          if (proposedEquivalent == null) {
-            // Se não achou um workpack equivalente na lista de propostos, é porque o workpack foi excluído nessa LB proposta.
-            idsWorkpacksDeleted.add(item.getIdWorkpack());
-          } else if (proposedEquivalent.getIsCanceled()) {
-            // Se achou um workpack equivalente na lista de propostos, e o mesmo for "a cancelar"
-            idsWorkpacksCanceled.add(item.getIdWorkpack());
-          }
         });
     }
 
+    // Aqui percorre todos os workpacks associados à LB proposta, comparando os snapshots com seus masters, e definindo os excluídos e os à cancelar
+    List<Long> idsWorkpacksDeleted = new ArrayList<Long>();
+    List<Long> idsWorkpacksToBeCanceled = new ArrayList<Long>();
+    List<Workpack> baselineSnapshots = this.baselineRepository.getBaselineWorkpacks(idProposedBaseline);
+
+    baselineSnapshots.forEach(snapshot -> {
+      Workpack master = snapshot.getWorkpackMaster();
+
+      if (master != null) {
+        if (master.isDeleted() || master.isCanceled()) {
+          idsWorkpacksDeleted.add(snapshot.getId());
+          idsWorkpacksDeleted.add(master.getId());
+        } else if (snapshot.isCanceled()) {
+          idsWorkpacksToBeCanceled.add(snapshot.getId());
+          idsWorkpacksToBeCanceled.add(master.getId());
+        }
+      }
+    });
+
     WorkpackResultDto workpackDto = null;
 
-    if (idsWorkpacksDeleted.size() > 0) {
-      workpackDto = cacheUtil.getFullWorkpackBreakdownStructure(idProject, idPlan, true);
-      // Essa função retorna o breakdownStructure completo, incluindo itens excluídos e cancelados
-    } else {
-      workpackDto = cacheUtil.getWorkpackBreakdownStructure(idProject, idPlan, true);
-      // Já essa função retorna o breakdownStructure apenas dos itens não excluídos/cancelados
-    }
+    workpackDto = cacheUtil.getWorkpackBreakdownStructure(idProject, idPlan, true);
 
     List<TripleConstraintBreakdown> finalList = createTripleConstraintBreakdown(
-      proposed,
-      current,
+      proposedWorkpacksConstraint,
+      currentWorkpacksConstraint,
       costDetail,
       scheduleDetail,
       scopeDetail,
       workpackDto,
       idsWorkpacksUnchanged,
       idsWorkpacksDeleted,
-      idsWorkpacksCanceled
+      idsWorkpacksToBeCanceled
     );
 
     Office currentOffice = this.officeRepository.findOfficeByPlanId(idPlan).orElse(null);
@@ -372,7 +374,7 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
     WorkpackResultDto workpackDto,
     List<Long> idsWorkpacksUnchanged,
     List<Long> idsWorkpacksDeleted,
-    List<Long> idsWorkpacksCanceled
+    List<Long> idsWorkpacksToBeCanceled
   ) {
     List<CostDetailItem> costItems = costDetail.getCostDetails();
     List<ScheduleDetailItem> scheduleItems = scheduleDetail.getScheduleDetails();
@@ -406,11 +408,14 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
 
           for (WorkpackResultDto deliveryOrMilestone : child.getChildren()) {
             if (
-              proposedLBWorkpacks.stream().filter(w -> w.getIdWorkpack().equals(deliveryOrMilestone.getId())).findFirst().isPresent() ||
-              currentLBWorkpacks.stream().filter(w -> w.getIdWorkpack().equals(deliveryOrMilestone.getId())).findFirst().isPresent() ||
-              idsWorkpacksUnchanged.stream().filter(id -> id.equals(deliveryOrMilestone.getId())).findFirst().isPresent() ||
-              idsWorkpacksDeleted.stream().filter(id -> id.equals(deliveryOrMilestone.getId())).findFirst().isPresent() ||
-              idsWorkpacksCanceled.stream().filter(id -> id.equals(deliveryOrMilestone.getId())).findFirst().isPresent()
+              !idsWorkpacksDeleted.contains(deliveryOrMilestone.getId()) &&
+              (              
+                proposedLBWorkpacks.stream().filter(w -> w.getIdWorkpack().equals(deliveryOrMilestone.getId())).findFirst().isPresent() ||
+                currentLBWorkpacks.stream().filter(w -> w.getIdWorkpack().equals(deliveryOrMilestone.getId())).findFirst().isPresent() ||
+                idsWorkpacksUnchanged.stream().filter(id -> id.equals(deliveryOrMilestone.getId())).findFirst().isPresent() ||
+                idsWorkpacksDeleted.stream().filter(id -> id.equals(deliveryOrMilestone.getId())).findFirst().isPresent() ||
+                idsWorkpacksToBeCanceled.stream().filter(id -> id.equals(deliveryOrMilestone.getId())).findFirst().isPresent()
+              )
             ) {
               CostDetailItem costItem = costItems
                 .stream()
@@ -454,7 +459,7 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
               if (idsWorkpacksUnchanged.contains(deliveryOrMilestone.getId())) {
                 deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.UNCHANGED);
               }
-              if (idsWorkpacksCanceled.contains(deliveryOrMilestone.getId())) {
+              if (idsWorkpacksToBeCanceled.contains(deliveryOrMilestone.getId())) {
                 deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.TO_CANCEL);;
               }
               if (idsWorkpacksDeleted.contains(deliveryOrMilestone.getId())) {
@@ -472,12 +477,13 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
             (child.getType().equals(DELIVERABLE)) ||
             (child.getType().equals(MILESTONE))
           ) &&
+          !idsWorkpacksDeleted.contains(child.getId()) &&
           (
             proposedLBWorkpacks.stream().filter(w -> w.getIdWorkpack().equals(child.getId())).findFirst().isPresent() ||
             currentLBWorkpacks.stream().filter(w -> w.getIdWorkpack().equals(child.getId())).findFirst().isPresent() ||
             idsWorkpacksUnchanged.stream().filter(id -> id.equals(child.getId())).findFirst().isPresent() ||
             idsWorkpacksDeleted.stream().filter(id -> id.equals(child.getId())).findFirst().isPresent() ||
-            idsWorkpacksCanceled.stream().filter(id -> id.equals(child.getId())).findFirst().isPresent()
+            idsWorkpacksToBeCanceled.stream().filter(id -> id.equals(child.getId())).findFirst().isPresent()
           )
         ) {
           CostDetailItem costItem = costItems
@@ -522,9 +528,9 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
           if (idsWorkpacksUnchanged.contains(child.getId())) {
             deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.UNCHANGED);
           }
-          if (idsWorkpacksCanceled.contains(child.getId())) {
-              deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.TO_CANCEL);;
-            }
+          if (idsWorkpacksToBeCanceled.contains(child.getId())) {
+            deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.TO_CANCEL);;
+          }
           if (idsWorkpacksDeleted.contains(child.getId())) {
             deliveryOrMilestoneBreakdown.setWorkpackStatus(BaselineStatus.DELETED);
           }

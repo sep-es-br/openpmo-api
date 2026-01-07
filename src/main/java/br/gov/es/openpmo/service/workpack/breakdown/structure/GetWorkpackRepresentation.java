@@ -35,7 +35,6 @@ import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.baselines.GetBaselineUpdatesService;
 import br.gov.es.openpmo.service.dashboards.v2.ASyncDashboardService;
-import br.gov.es.openpmo.utils.DashboardCacheUtil;
 
 @Component
 public class GetWorkpackRepresentation {
@@ -140,6 +139,18 @@ public class GetWorkpackRepresentation {
       if (deliverable != null) {
         final ScheduleMeasureUnit unitMeasure = this.buildUnitMeasure((Deliverable) deliverable);
         workpackRepresentation.setUnitMeasure(unitMeasure);
+      }
+    }
+    
+    if ("Project".equals(workpackType)) {
+      String projectStatus = workpackRepository.getProjectStatusByProjectId(workpackId);
+      if (projectStatus != null) {
+        workpackRepresentation.setProjectStatus(projectStatus);
+      }
+    } else if ("Deliverable".equals(workpackType)) {
+      String deliverableStatus = workpackRepository.getDeliverableStatusByDeliverableId(workpackId);
+      if (deliverableStatus != null) {
+        workpackRepresentation.setDeliverableStatus(deliverableStatus);
       }
     }
 
