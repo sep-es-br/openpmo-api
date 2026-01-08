@@ -716,7 +716,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       Long baselineId,
       Long snapshotId);
 
-  @Query("MATCH (project:Workpack{deleted:false})<-[:IS_IN*]-(children:Workpack{deleted:false})  " +
+  @Query("MATCH (project:Workpack{deleted:false})<-[:IS_IN*]-(children:Workpack{deleted:false, canceled:false})  " +
       "WHERE id(project) = $id AND ((ANY(label IN labels(children) WHERE label IN ['Deliverable']) AND (children)<-[:FEATURES]-(:Schedule)) OR ANY(label IN labels(children) WHERE label IN ['Milestone'])) "
       +
       "RETURN ID(children) ")

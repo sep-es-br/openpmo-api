@@ -383,9 +383,20 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
     "RETURN ID(workpack) AS idWorkpack, id(baseline) AS idBaseline " +
     ", baseline.activationDate AS activationDate, baseline.proposalDate AS proposalDate " +
     ", baseline.status AS status, baseline.name AS name, baseline.description AS description " +
-    ", baseline.message AS message, baseline.active AS active "
+    ", baseline.message AS message, baseline.active AS active, baseline.cancelation AS cancelation"
   )
   List<BaselineResultDto> findAllInWorkpackByIdWorkpack(Long idWorkpack);
+
+  @Query(
+    "MATCH (children:Workpack{deleted:false})-[:COMPOSES]->(baseline:Baseline) " +
+    "WHERE ID(baseline) = $id AND ANY(label IN labels(children) WHERE label IN ['Milestone', 'Deliverable']) " +
+    "WITH DISTINCT id(children)  AS ids " +
+    "MATCH (snapshot:Workpack)-[:IS_SNAPSHOT_OF]->(master:Workpack {canceled: false})-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) " +
+    "WHERE ID(snapshot) IN [ids]\n" +
+    "RETURN ID(master) AS idMaster, ID(snapshot) AS id, snapshot.name AS name, snapshot.fullName AS fullName " +
+    ", snapshot.date AS date, model.fontIcon AS fontIcon, labels(snapshot) AS label"
+  )
+  List<BaselineWorkpackDto> findUncanceledWorkpacBaselineById(final Long id);
 
   @Query(
     "MATCH (children:Workpack{deleted:false})-[:COMPOSES]->(baseline:Baseline) " +
@@ -396,7 +407,7 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
     "RETURN ID(master) AS idMaster, ID(snapshot) AS id, snapshot.name AS name, snapshot.fullName AS fullName " +
     ", snapshot.date AS date, model.fontIcon AS fontIcon, labels(snapshot) AS label"
   )
-  List<BaselineWorkpackDto> findAllWorkpacBaselineById(final Long id);
+  List<BaselineWorkpackDto> findAllWorkpackBaselineById(final Long id);
 
   @Query(
     "MATCH (master:Workpack)<-[:IS_SNAPSHOT_OF]-(workpack:Deliverable)<-[:FEATURES]-(schedule:Schedule)<-[:COMPOSES]-(step:Step) " +
