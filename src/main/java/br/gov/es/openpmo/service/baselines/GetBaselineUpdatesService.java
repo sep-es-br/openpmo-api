@@ -78,11 +78,11 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
 
     if (baseLineParam != null) {
       final List<BaselineWorkpackDto> workpackBaselineCompare = this.baselineRepository
-          .findAllWorkpacBaselineById(baseLineParam.getIdBaseline());
+          .findUncanceledWorkpacBaselineById(baseLineParam.getIdBaseline());
       addScheduleAndConsumesSnapshot(workpackBaselineCompare);
 
       final List<BaselineWorkpackDto> result = this.baselineServiceUtil.compare(workpacksMaster,
-          workpackBaselineCompare, baseLineParam.getStatus());
+          workpackBaselineCompare, baseLineParam.getStatus(), true);
       // result.removeIf(r -> r.getClassification() == null);
       updatesList.addAll(getBaselineDetailResponse(result));
 
