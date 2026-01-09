@@ -40,6 +40,8 @@ public class TripleConstraintDto {
 
   private BaselineStatus constraintStatus;
 
+  private Boolean isCanceled;
+
   public Long getIdWorkpack() {
     return idWorkpack;
   }
@@ -139,5 +141,12 @@ public class TripleConstraintDto {
   }
   public void setConstraintStatus(BaselineStatus constraintStatus) {
     this.constraintStatus = constraintStatus;
+  }
+
+  public Boolean getIsCanceled() {
+    return this.isCanceled;
+  }
+  public void setIsCanceled(Boolean isCanceled) {
+    this.isCanceled = isCanceled;
   }
 }

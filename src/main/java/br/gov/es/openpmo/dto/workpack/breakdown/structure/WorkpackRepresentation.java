@@ -38,6 +38,12 @@ public class WorkpackRepresentation {
   @JsonInclude(JsonInclude.Include.NON_NULL)
   private WorkpackBreakdownClassificationDto classifications;
 
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private String projectStatus;
+
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private String deliverableStatus;
+
   /* Getters and Setters */
 
   public Long getIdWorkpack() {
@@ -115,5 +121,19 @@ public class WorkpackRepresentation {
   }
   public void setClassifications(WorkpackBreakdownClassificationDto classifications) {
     this.classifications = classifications;
+  }
+
+  public String getProjectStatus() {
+    return projectStatus;
+  }
+  public void setProjectStatus(String projectStatus) {
+    this.projectStatus = projectStatus;
+  }
+
+  public String getDeliverableStatus() {
+    return deliverableStatus;
+  }
+  public void setDeliverableStatus(String deliverableStatus) {
+    this.deliverableStatus = deliverableStatus;
   }
 }

@@ -18,6 +18,7 @@ public class BaselineResultDto {
     private String description;
     private String message;
     private boolean active;
+    private boolean cancelation;
 
     public Long getIdWorkpack() {
         return idWorkpack;
@@ -89,6 +90,14 @@ public class BaselineResultDto {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public boolean isCancelation() {
+        return cancelation;
+    }
+
+    public void setCancelation(boolean cancelation) {
+        this.cancelation = cancelation;
     }
 
 }

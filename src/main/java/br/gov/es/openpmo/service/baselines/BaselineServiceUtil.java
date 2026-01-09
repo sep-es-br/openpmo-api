@@ -8,6 +8,7 @@ import br.gov.es.openpmo.enumerator.BaselineStatus;
 import br.gov.es.openpmo.enumerator.CategoryEnum;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.baselines.Baseline;
+import br.gov.es.openpmo.model.baselines.Status;
 import br.gov.es.openpmo.model.relations.Consumes;
 import br.gov.es.openpmo.model.schedule.Schedule;
 import br.gov.es.openpmo.model.schedule.Step;
@@ -81,39 +82,71 @@ public class BaselineServiceUtil {
         return principal.isDateChanged(compare) || principal.isScheduleChanged(compare) || principal.isStepChanged(compare) || principal.isConsumesChanged(compare) ;
     }
 
-    public List<BaselineWorkpackDto> compare(List<BaselineWorkpackDto> listParam, List<BaselineWorkpackDto> listCompare) {
+    public List<BaselineWorkpackDto> compare(List<BaselineWorkpackDto> listParam, List<BaselineWorkpackDto> listCompare, Status status, Boolean isNewBaseline) {
         List<BaselineWorkpackDto> list = new ArrayList<>(listParam);
         for (BaselineWorkpackDto principal : list) {
-            BaselineWorkpackDto compare = listCompare.stream().filter(w -> w.getIdMaster().equals(principal.getIdMaster())).findFirst().orElse(null);
-            if (compare == null && !workpackRepository.isCanceled(principal.getId())) {
-                principal.setClassification(BaselineStatus.NEW);
-                continue;
-            }
+          BaselineWorkpackDto compare = listCompare.stream().filter(w -> w.getIdMaster().equals(principal.getIdMaster())).findFirst().orElse(null);
+          if (
+            (compare == null || (compare != null && workpackRepository.isCanceled(compare.getId()))) &&
+            !workpackRepository.isCanceled(principal.getId())
+          ) {
+            principal.setClassification(BaselineStatus.NEW);
+            continue;
+          }
+          
+          if (compare != null && workpackRepository.isCanceled(compare.getId()) && workpackRepository.isCanceled(principal.getId())){
+            continue;
+          }
 
-            if (Boolean.TRUE.equals(workpackRepository.isSituationToCancel(principal.getId()))) {
-                principal.setClassification(BaselineStatus.TO_CANCEL);
-                continue;
-            }
-            
-            if (Boolean.TRUE.equals(workpackRepository.isSituationCanceled(principal.getId()))) {
-                principal.setClassification(BaselineStatus.CANCELLED);
-                continue;
-            }
+          if (
+            (Boolean.TRUE.equals(workpackRepository.isSituationToCancel(principal.getId())) && isNewBaseline) ||
+            (
+              compare != null &&
+              Boolean.FALSE.equals(workpackRepository.isCanceled(compare.getId())) &&
+              Boolean.TRUE.equals(workpackRepository.isCanceled(principal.getId())) &&
+              status.equals(Status.REJECTED)
+            ) ||
+            (
+              compare != null &&
+              Boolean.FALSE.equals(workpackRepository.isCanceled(compare.getId())) &&
+              Boolean.TRUE.equals(workpackRepository.isCanceled(principal.getId())) &&
+              status.equals(Status.PROPOSED)
+            )
+          ) {
+            principal.setClassification(BaselineStatus.TO_CANCEL);
+            continue;
+          }
+          
+          if (
+            compare != null &&
+            Boolean.FALSE.equals(workpackRepository.isCanceled(compare.getId())) &&
+            Boolean.TRUE.equals(workpackRepository.isCanceled(principal.getId())) &&
+            status.equals(Status.APPROVED)
+          ) {
+            principal.setClassification(BaselineStatus.CANCELLED);
+            continue;
+          }
 
-            if (isChanged(principal, compare)) {
-                principal.setClassification(BaselineStatus.CHANGED);
-            }
-            
-            if(principal.getClassification() == null) {
-                principal.setClassification(BaselineStatus.UNCHANGED);
-            }
+          if (compare != null && isChanged(principal, compare)) {
+            principal.setClassification(BaselineStatus.CHANGED);
+            continue;
+          }
+          
+          if (
+            principal.getClassification() == null &&
+            compare != null &&
+            Boolean.FALSE.equals(workpackRepository.isCanceled(compare.getId()))
+          ) {
+            principal.setClassification(BaselineStatus.UNCHANGED);
+            continue;
+          }
         }
         final List<BaselineWorkpackDto> workpackBaselineDeleted = listCompare.stream().filter(
             w -> listParam.stream().noneMatch(p -> p.getIdMaster().equals(w.getIdMaster()))).collect(Collectors.toList());
         if (CollectionUtils.isNotEmpty(workpackBaselineDeleted)) {
             workpackBaselineDeleted.forEach(d -> {
-                if (Boolean.TRUE.equals(workpackRepository.isSituationCanceled(d.getIdMaster()))) {
-                    d.setClassification(BaselineStatus.TO_CANCEL);
+                if (Boolean.TRUE.equals(workpackRepository.isSituationCanceled(d.getId()))) {
+                    d.setClassification(BaselineStatus.CANCELLED);
                 } else {
                     d.setClassification(BaselineStatus.DELETED);
                 }
@@ -124,6 +157,9 @@ public class BaselineServiceUtil {
     }
     
     public Integer checkMinimumMilestoneRequired(Long workpackId) {
+        
+      if(!this.workpackRepository.requireMilestone(workpackId)) return null;
+        
       Long countMilestones = this.milestoneSrv.countMilestonesByWorkpack(workpackId);
       
       if(this.appMinMCPorConfig.equals("project") && countMilestones < this.appMinMCConfig){

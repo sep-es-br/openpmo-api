@@ -19,6 +19,7 @@ import br.gov.es.openpmo.utils.ApplicationCacheUtil;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -77,11 +78,11 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
 
     if (baseLineParam != null) {
       final List<BaselineWorkpackDto> workpackBaselineCompare = this.baselineRepository
-          .findAllWorkpacBaselineById(baseLineParam.getIdBaseline());
+          .findUncanceledWorkpacBaselineById(baseLineParam.getIdBaseline());
       addScheduleAndConsumesSnapshot(workpackBaselineCompare);
 
       final List<BaselineWorkpackDto> result = this.baselineServiceUtil.compare(workpacksMaster,
-          workpackBaselineCompare);
+          workpackBaselineCompare, baseLineParam.getStatus(), true);
       // result.removeIf(r -> r.getClassification() == null);
       updatesList.addAll(getBaselineDetailResponse(result));
 
@@ -232,108 +233,97 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
   }
 
   public List<BaselineUpdateBreakdown> createBaselineBreakdown(
-    List<UpdateObject> updates,
-    WorkpackResultDto workpackDto
+      List<UpdateObject> updates,
+      WorkpackResultDto workpackDto
   ) {
-    List<BaselineUpdateBreakdown> listEtapas = new ArrayList<>(0);
+      List<BaselineUpdateBreakdown> listEtapas = new ArrayList<>();
 
-    for (WorkpackResultDto etapa : workpackDto.getChildren()) {
-      BaselineUpdateBreakdown etapaBreakdown = new BaselineUpdateBreakdown(
-        etapa.getId(),
-        etapa.getIdWorkpackModel(),
-        etapa.getIdPlan(),
-        etapa.getName(),
-        etapa.getFullName(),
-        etapa.getFontIcon(),
-        etapa.getModelName(),
-        etapa.getModelNameInPlural(),
-        etapa.getType()
+      // Processa cada filho do root (cada "etapa")
+      for (WorkpackResultDto etapaNode : workpackDto.getChildren()) {
+          List<BaselineUpdateBreakdown> resultado = processNodeRecursive(etapaNode, updates);
+          // processNodeRecursive retorna lista: para um nó composto retorna 1 elemento (o nó com filhos),
+          // para Deliverable/Milestone retorna 0..N elementos (um por UpdateObject).
+          listEtapas.addAll(resultado);
+      }
+
+      return listEtapas;
+  }
+
+  /**
+   * Processa um nó (etapa / organizer / deliverable / milestone) recursivamente.
+   * Retorna uma lista de BaselineUpdateBreakdown:
+   *  - Se o nó é Deliverable/Milestone: retorna um elemento por UpdateObject relevante (pode ser vazio).
+   *  - Se o nó é outro tipo (ex: Organizer / Etapa): tenta agregar resultados dos filhos.
+   *    Se houver filhos válidos, retorna uma lista com 1 elemento: o breakdown do nó contendo os filhos.
+   *    Se não houver filhos válidos, retorna lista vazia.
+   */
+  private List<BaselineUpdateBreakdown> processNodeRecursive(
+      WorkpackResultDto node,
+      List<UpdateObject> updates
+  ) {
+      // Null-safe check do tipo
+      String type = node.getType();
+
+      // Caso Deliverable ou Milestone: criar um Breakdown por UpdateObject relevante
+      if ("Deliverable".equals(type) || "Milestone".equals(type)) {
+          List<UpdateObject> relevant = updates.stream()
+              .filter(u -> Objects.equals(u.getIdWorkpack(), node.getId()) ||
+                          Objects.equals(u.getIdMaster(), node.getId()))
+              .collect(Collectors.toList()); 
+
+          List<BaselineUpdateBreakdown> results = new ArrayList<>();
+          for (UpdateObject u : relevant) {
+              BaselineUpdateBreakdown bd = new BaselineUpdateBreakdown(
+                  node.getId(),
+                  node.getIdWorkpackModel(),
+                  node.getIdPlan(),
+                  node.getName(),
+                  node.getFullName(),
+                  node.getFontIcon(),
+                  node.getModelName(),
+                  node.getModelNameInPlural(),
+                  node.getType(),
+                  u.getClassification()
+              );
+              if ("Deliverable".equals(type)) {
+                  bd.setDeliveryModelHasActiveSchedule(u.getDeliveryModelHasActiveSchedule());
+                  if (u.getIsFromAnOldBaseline()) bd.setIsFromAnOldBaseline(true);
+              }
+              results.add(bd);
+          }
+          return results; // pode ser vazio
+      }
+
+      // Para outros tipos (Organizer, Etapa, etc.) -> montar um nó agregador
+      BaselineUpdateBreakdown aggregator = new BaselineUpdateBreakdown(
+          node.getId(),
+          node.getIdWorkpackModel(),
+          node.getIdPlan(),
+          node.getName(),
+          node.getFullName(),
+          node.getFontIcon(),
+          node.getModelName(),
+          node.getModelNameInPlural(),
+          node.getType()
       );
 
-      for (WorkpackResultDto child : etapa.getChildren()) {
-        if (child.getType().equals("Organizer") && child.getModelName().equals("Subetapa")) {
-          BaselineUpdateBreakdown subEtapaBreakdown = new BaselineUpdateBreakdown(
-            child.getId(),
-            child.getIdWorkpackModel(),
-            child.getIdPlan(),
-            child.getName(),
-            child.getFullName(),
-            child.getFontIcon(),
-            child.getModelName(),
-            child.getModelNameInPlural(),
-            child.getType()
-          );
-
-          for (WorkpackResultDto entrega : child.getChildren()) {          
-            List<UpdateObject> entregaObjects = updates
-              .stream()
-              .filter(item -> item.getIdWorkpack().equals(entrega.getId()) || item.getIdMaster().equals(entrega.getId()))
-              .collect(Collectors.toList());
-
-            if (entregaObjects != null) {
-              for (UpdateObject entregaObject : entregaObjects) {
-                BaselineUpdateBreakdown entregaBreakdown = new BaselineUpdateBreakdown(
-                  entrega.getId(),
-                  entrega.getIdWorkpackModel(),
-                  entrega.getIdPlan(),
-                  entrega.getName(),
-                  entrega.getFullName(),
-                  entrega.getFontIcon(),
-                  entrega.getModelName(),
-                  entrega.getModelNameInPlural(),
-                  entrega.getType(),
-                  entregaObject.getClassification()
-                );
-  
-                entregaBreakdown.setDeliveryModelHasActiveSchedule(entregaObject.getDeliveryModelHasActiveSchedule());
-                if (entregaObject.getIsFromAnOldBaseline()) entregaBreakdown.setIsFromAnOldBaseline(true);
-                subEtapaBreakdown.addChild(entregaBreakdown);
+      // Percorre filhos recursivamente e agrega os breakdowns retornados
+      if (node.getChildren() != null) {
+          for (WorkpackResultDto child : node.getChildren()) {
+              List<BaselineUpdateBreakdown> childResults = processNodeRecursive(child, updates);
+              for (BaselineUpdateBreakdown cr : childResults) {
+                  aggregator.addChild(cr); // addChild deve anexar o breakdown filho corretamente
               }
-            }
-          };
-
-          if (subEtapaBreakdown.getChildren().size() > 0) {
-            etapaBreakdown.addChild(subEtapaBreakdown);
           }
-        } else if (
-          (child.getType().equals("Deliverable") && child.getModelName().equals("Entrega")) ||
-          (child.getType().equals("Milestone") && child.getModelName().equals("Marco crítico"))
-        ) {
-          List<UpdateObject> deliveryOrMilestoneObjects = updates
-            .stream()
-            .filter(item -> item.getIdWorkpack().equals(child.getId()) || item.getIdMaster().equals(child.getId()))
-            .collect(Collectors.toList());
-
-          if (deliveryOrMilestoneObjects != null) {
-            for (UpdateObject deliveryOrMilestoneObject : deliveryOrMilestoneObjects) {
-              BaselineUpdateBreakdown entregaBreakdown = new BaselineUpdateBreakdown(
-                child.getId(),
-                child.getIdWorkpackModel(),
-                child.getIdPlan(),
-                child.getName(),
-                child.getFullName(),
-                child.getFontIcon(),
-                child.getModelName(),
-                child.getModelNameInPlural(),
-                child.getType(),
-                deliveryOrMilestoneObject.getClassification()
-              );
-              
-              if (child.getType().equals("Deliverable")) {
-                entregaBreakdown.setDeliveryModelHasActiveSchedule(deliveryOrMilestoneObject.getDeliveryModelHasActiveSchedule());
-                if (deliveryOrMilestoneObject.getIsFromAnOldBaseline()) entregaBreakdown.setIsFromAnOldBaseline(true);
-              }
-              etapaBreakdown.addChild(entregaBreakdown);
-            }
-          }
-        }
       }
 
-      if (etapaBreakdown.getChildren().size() > 0) {
-        listEtapas.add(etapaBreakdown);
+      // só retorna o aggregator se tiver filhos válidos
+      if (aggregator.getChildren() != null && aggregator.getChildren().size() > 0) {
+          List<BaselineUpdateBreakdown> out = new ArrayList<>(1);
+          out.add(aggregator);
+          return out;
+      } else {
+          return new ArrayList<>(); // vazio: nada relevante sob esse nó
       }
-    }
-
-    return listEtapas;
-  };
+  }
 }

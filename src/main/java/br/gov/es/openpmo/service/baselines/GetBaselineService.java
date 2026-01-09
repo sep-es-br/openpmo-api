@@ -123,18 +123,27 @@ public class GetBaselineService implements IGetBaselineService {
       Long idWorkpack,
       Long idPlan) {
     final List<BaselineWorkpackDto> workpacksBaseline = this.baselineRepository
-        .findAllWorkpacBaselineById(baseLineParam.getIdBaseline());
+        .findAllWorkpackBaselineById(baseLineParam.getIdBaseline());
     addScheduleAndConsumes(workpacksBaseline);
     if (baselineCompare == null) {
       workpacksBaseline.forEach(w -> w.setClassification(BaselineStatus.NEW));
       return getBaselineDetailResponse(baseline, workpacksBaseline, idWorkpack, idPlan);
     }
 
-    final List<BaselineWorkpackDto> workpackBaselineCompare = this.baselineRepository
-        .findAllWorkpacBaselineById(baselineCompare.getIdBaseline());
-    addScheduleAndConsumes(workpackBaselineCompare);
+    final List<BaselineWorkpackDto> workpackBaselineCompare;
 
-    List<BaselineWorkpackDto> result = baselineServiceUtil.compare(workpacksBaseline, workpackBaselineCompare);
+    if(baseLineParam.isCancelation()){
+      workpackBaselineCompare = this.baselineRepository
+          .findUncanceledWorkpacBaselineById(baselineCompare.getIdBaseline());
+      addScheduleAndConsumes(workpackBaselineCompare);
+    }else{
+      workpackBaselineCompare = this.baselineRepository
+      .findAllWorkpackBaselineById(baselineCompare.getIdBaseline());
+      addScheduleAndConsumes(workpackBaselineCompare);
+    }
+
+
+    List<BaselineWorkpackDto> result = baselineServiceUtil.compare(workpacksBaseline, workpackBaselineCompare, baseLineParam.getStatus(), false);
     result.removeIf(b -> b.getClassification() == null);
     return getBaselineDetailResponse(baseline, result, idWorkpack, idPlan);
   }

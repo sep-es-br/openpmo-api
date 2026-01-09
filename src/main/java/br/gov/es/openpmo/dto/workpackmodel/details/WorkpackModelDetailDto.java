@@ -93,6 +93,18 @@ public abstract class WorkpackModelDetailDto {
 
   private String sortByField;
 
+  private Boolean notificationsSessionActive;
+
+  private Set<String> notificationsSelectedRoles;
+
+  private Boolean notificationsEventMilestoneEnabled;
+
+  private Long notificationsEventMilestoneDaysBefore;
+
+  private Boolean notificationsEventScheduleEnabled;
+
+  private Long notificationsEventScheduleDayOfMonth;
+
   protected WorkpackModelDetailDto() {
   }
 
@@ -319,6 +331,30 @@ public abstract class WorkpackModelDetailDto {
     );
   }
 
+  public void notificationsConfiguration(final WorkpackModel workpackModel) {
+    if (Objects.isNull(workpackModel)) return;
+
+    this.notificationsSessionActive =
+        Boolean.TRUE.equals(workpackModel.getNotificationsSessionActive());
+
+    this.notificationsSelectedRoles =
+        Optional.ofNullable(workpackModel.getNotificationsSelectedRoles())
+            .map(LinkedHashSet::new)
+            .orElse(new LinkedHashSet<>());
+
+    this.notificationsEventMilestoneEnabled =
+        workpackModel.getNotificationsEventMilestoneEnabled();
+
+    this.notificationsEventMilestoneDaysBefore =
+        workpackModel.getNotificationsEventMilestoneDaysBefore();
+
+    this.notificationsEventScheduleEnabled =
+        workpackModel.getNotificationsEventScheduleEnabled();
+
+    this.notificationsEventScheduleDayOfMonth =
+        workpackModel.getNotificationsEventScheduleDayOfMonth();
+  }
+
   public Boolean getJournalManagementSessionActive() {
     return this.journalManagementSessionActive;
   }
@@ -350,4 +386,54 @@ public abstract class WorkpackModelDetailDto {
   public void setSortByField(String sortByField) {
     this.sortByField = sortByField;
   }
+
+  public Boolean getNotificationsSessionActive() {
+    return notificationsSessionActive;
+  }
+
+  public void setNotificationsSessionActive(boolean notificationsSessionActive) {
+    this.notificationsSessionActive = notificationsSessionActive;
+  }
+
+  public Set<String> getNotificationsSelectedRoles() {
+    return notificationsSelectedRoles;
+  }
+
+  public void setNotificationsSelectedRoles(Set<String> notificationsSelectedRoles) {
+    this.notificationsSelectedRoles = notificationsSelectedRoles;
+  }
+
+  public Boolean getNotificationsEventMilestoneEnabled() {
+    return notificationsEventMilestoneEnabled;
+  }
+
+  public void setNotificationsEventMilestoneEnabled(Boolean notificationsEventMilestoneEnabled) {
+    this.notificationsEventMilestoneEnabled = notificationsEventMilestoneEnabled;
+  }
+
+  public Long getNotificationsEventMilestoneDaysBefore() {
+    return notificationsEventMilestoneDaysBefore;
+  }
+
+  public void setNotificationsEventMilestoneDaysBefore(Long notificationsEventMilestoneDaysBefore) {
+    this.notificationsEventMilestoneDaysBefore = notificationsEventMilestoneDaysBefore;
+  }
+
+  public Boolean getNotificationsEventScheduleEnabled() {
+    return notificationsEventScheduleEnabled;
+  }
+
+  public void setNotificationsEventScheduleEnabled(Boolean notificationsEventScheduleEnabled) {
+    this.notificationsEventScheduleEnabled = notificationsEventScheduleEnabled;
+  }
+
+  public Long getNotificationsEventScheduleDayOfMonth() {
+    return notificationsEventScheduleDayOfMonth;
+  }
+
+  public void setNotificationsEventScheduleDayOfMonth(Long notificationsEventScheduleDayOfMonth) {
+    this.notificationsEventScheduleDayOfMonth = notificationsEventScheduleDayOfMonth;
+  }
+
+  
 }
