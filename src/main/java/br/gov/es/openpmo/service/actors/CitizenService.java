@@ -233,7 +233,7 @@ public class CitizenService {
       .build();
   }
 
-  private PublicAgentEmailResponse findAgentEmail(
+  public PublicAgentEmailResponse findAgentEmail(
     final String sub,
     final Long idPerson
   ) {

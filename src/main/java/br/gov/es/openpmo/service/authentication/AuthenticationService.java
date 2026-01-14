@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.service.authentication;
 
+import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentEmailResponse;
 import br.gov.es.openpmo.dto.AcessoDto;
 import br.gov.es.openpmo.dto.person.queries.PersonQuery;
 import br.gov.es.openpmo.enumerator.TokenType;
@@ -7,6 +8,7 @@ import br.gov.es.openpmo.exception.AutenticacaoException;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
+import br.gov.es.openpmo.service.actors.CitizenService;
 import br.gov.es.openpmo.service.actors.IsAuthenticatedByService;
 import br.gov.es.openpmo.service.actors.PersonService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
@@ -28,18 +30,25 @@ import java.util.*;
 
 @Service
 public class AuthenticationService {
-
   private static final String SUB = "sub";
+
   private static final String SUB_NOVO = "subNovo";
+
   private static final String EMAIL = "email";
+
   private static final String APELIDO = "apelido";
 
   private static final String AUTHORIZATION = "Authorization";
+
   private static final String BEARER = "Bearer ";
 
   private final TokenService tokenService;
+
   private final PersonService personService;
+
   private final IsAuthenticatedByService isAuthenticatedByService;
+
+  private final CitizenService citizenService;
 
   @Value("${users.administrators}")
   private List<String> administrators;
@@ -51,28 +60,42 @@ public class AuthenticationService {
   public AuthenticationService(
     final TokenService tokenService,
     final PersonService personService,
-    final IsAuthenticatedByService isAuthenticatedByService
+    final IsAuthenticatedByService isAuthenticatedByService,
+    final CitizenService citizenService
   ) {
     this.tokenService = tokenService;
     this.personService = personService;
     this.isAuthenticatedByService = isAuthenticatedByService;
+    this.citizenService = citizenService;
   }
 
   public AcessoDto authenticate(final String token) throws IOException {
     final JSONObject personInfo = this.getUserInfo(token);
     final String sub = Optional.ofNullable(personInfo.optString(SUB_NOVO)).orElse(personInfo.optString(SUB));
-    final String email = personInfo.getString(EMAIL);
+    String email = personInfo.getString(EMAIL);
     final String key = Optional.ofNullable(sub).orElse(email);
 
     final Optional<Person> person = this.personService.findByKey(key);
 
-    if(person.isPresent()) {
+    if (person.isPresent()) {
       final Person user = person.get();
+      final PublicAgentEmailResponse userEmails = this.citizenService.findAgentEmail(sub, user.getId());
+
+      if (userEmails != null && userEmails.getCorporateEmail() != null) {
+        email = userEmails.getCorporateEmail();
+        IsAuthenticatedBy authRelationship = user.getAuthentications().stream().findFirst().orElse(null);
+
+        if (authRelationship != null) {
+          authRelationship.setEmail(email);
+          this.personService.save(user);
+        }
+      }
+
       final String authenticationToken = this.tokenService.generateToken(user, key, email, TokenType.AUTHENTICATION);
       final String refreshToken = this.tokenService.generateToken(user, key, email, TokenType.REFRESH);
       return new AcessoDto(authenticationToken, refreshToken);
     }
-    if(this.administrators.contains(email)) {
+    if (this.administrators.contains(email)) {
       final Person user = this.createPerson(personInfo);
       final String authenticationToken = this.tokenService.generateToken(user, key, email, TokenType.AUTHENTICATION);
       final String refreshToken = this.tokenService.generateToken(user, key, email, TokenType.REFRESH);
