@@ -261,10 +261,10 @@ public class GetBaselineService implements IGetBaselineService {
         }
 
         if (w.getClassification() != BaselineStatus.DELETED && baselineStatus != Status.REJECTED) {
-          if (w.getSchedule().size() == 0) {
+          if (w.getSchedule().size() == 0 && w.getClassification() != BaselineStatus.TO_CANCEL) {
             // Entrega não possui cronograma
             newUR.setClassification(BaselineStatus.NO_SCHEDULE);
-          } else if (!this.workpackModelService.deliveryHasValidScope(w.getId())) {
+          } else if (!this.workpackModelService.deliveryHasValidScope(w.getId()) && w.getClassification() != BaselineStatus.TO_CANCEL) {
             // Entrega não possui cronograma com escopo válido
             newUR.setClassification(BaselineStatus.UNDEFINED_SCOPE);
           }
