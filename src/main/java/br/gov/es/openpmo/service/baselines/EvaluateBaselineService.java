@@ -17,6 +17,7 @@ import br.gov.es.openpmo.repository.IsCCBMemberRepository;
 import br.gov.es.openpmo.repository.IsEvaluatedByRepository;
 import br.gov.es.openpmo.repository.JournalRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
+import br.gov.es.openpmo.service.completed.ICompleteWorkpackService;
 import br.gov.es.openpmo.service.journals.JournalCreator;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
 import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_IS_NOT_PROPOSED_INVALID_STATE_ERROR;
@@ -54,6 +55,8 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
 
   private final JournalCreator journalCreator;
 
+  private final ICompleteWorkpackService completeDeliverableService;
+
 
   @Autowired
   public EvaluateBaselineService(
@@ -63,7 +66,8 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     final IsCCBMemberRepository ccbMemberRepository,
     final IsEvaluatedByRepository evaluatedByRepository,
     final JournalCreator journalCreator,
-    final JournalRepository journalRepository
+    final JournalRepository journalRepository,
+    final ICompleteWorkpackService completeDeliverableService
     
   ) {
     this.repository = repository;
@@ -73,6 +77,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     this.evaluatedByRepository = evaluatedByRepository;
     this.journalCreator = journalCreator;
     this.journalRepository = journalRepository;
+    this.completeDeliverableService = completeDeliverableService;
   }
 
   private static void throwExceptionIfBaselineIsNotProposedOrReject(final Baseline baseline) {
@@ -201,6 +206,8 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
           Optional<Workpack> masterOpt = workpackRepository.findById(id);
           workpackRepository.updateSituationValue(id, "Cancelada");
           masterOpt.ifPresent(master -> {
+
+            completeDeliverableService.onWorkpackDeleted(master);
 
             List<ApprovedPersonDto> approvedPersons = journalRepository.getApprovedPersons(master.getId(), baseline.getId());
 
