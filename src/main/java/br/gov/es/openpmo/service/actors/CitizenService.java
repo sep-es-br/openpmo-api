@@ -170,6 +170,7 @@ public class CitizenService {
     return this.buildDtoFromCitizenAlreadyRegistered(
       roles,
       person,
+      publicAgentEmailResponse,
       idOffice
     );
   }
@@ -177,6 +178,7 @@ public class CitizenService {
   private CitizenDto buildDtoFromCitizenAlreadyRegistered(
     final List<RoleResource> roles,
     final Person person,
+    final PublicAgentEmailResponse publicAgentEmailResponse,
     final Long idOffice
   ) {
     final CitizenDtoBuilder builder = CitizenDtoBuilder.aCitizenDto()
@@ -184,18 +186,20 @@ public class CitizenService {
       .withName(person.getName())
       .withFullName(person.getFullName())
       .withRoles(roles)
-      .withAdministrator(person.getAdministrator());
+      .withAdministrator(person.getAdministrator())
+      .withContactEmail(publicAgentEmailResponse.getCorporateEmail());    
 
-    if(idOffice != null) {
+    if (idOffice != null) {
       final Optional<IsInContactBookOf> maybeContactInformation =
         this.contactService.findContactInformationUsingPersonIdAndOffice(
         person.getId(),
         idOffice
       );
       maybeContactInformation.ifPresent(contact ->
-                                          builder.withContactEmail(contact.getEmail())
-                                            .withAddress(contact.getAddress())
-                                            .withPhoneNumber(contact.getPhoneNumber()));
+        builder
+          .withAddress(contact.getAddress())
+          .withPhoneNumber(contact.getPhoneNumber())
+      );
     }
 
     person.findAuthenticationDataBy(this.serverName)
@@ -217,8 +221,8 @@ public class CitizenService {
 
     final List<RoleResource> roles = this.roleService.getRolesBySub(idPerson, sub);
 
-    if(maybePerson.isPresent()) {
-      return this.buildDtoFromCitizenAlreadyRegistered(roles, maybePerson.get(), idOffice);
+    if (maybePerson.isPresent()) {
+      return this.buildDtoFromCitizenAlreadyRegistered(roles, maybePerson.get(), agentEmail, idOffice);
     }
 
     final String[] parsedName = agentEmail.getEmail().split("@");
