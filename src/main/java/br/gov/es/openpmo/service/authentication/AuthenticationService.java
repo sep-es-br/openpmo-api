@@ -58,11 +58,10 @@ public class AuthenticationService {
 
   @Autowired
   public AuthenticationService(
-    final TokenService tokenService,
-    final PersonService personService,
-    final IsAuthenticatedByService isAuthenticatedByService,
-    final CitizenService citizenService
-  ) {
+      final TokenService tokenService,
+      final PersonService personService,
+      final IsAuthenticatedByService isAuthenticatedByService,
+      final CitizenService citizenService) {
     this.tokenService = tokenService;
     this.personService = personService;
     this.isAuthenticatedByService = isAuthenticatedByService;
@@ -81,7 +80,8 @@ public class AuthenticationService {
       final Person user = person.get();
       final PublicAgentEmailResponse userEmails = this.citizenService.findAgentEmail(sub, user.getId());
 
-      if (userEmails != null && userEmails.getCorporateEmail() != null) {
+      if (userEmails != null && userEmails.getCorporateEmail() != null && userEmails.getCorporateEmail().trim().length() > 0) {
+        // Pode existir o caso onde o Acesso Cidadão retorna uma string vazia, por isso essa terceira verificação
         email = userEmails.getCorporateEmail();
         IsAuthenticatedBy authRelationship = user.getAuthentications().stream().findFirst().orElse(null);
 
@@ -109,9 +109,9 @@ public class AuthenticationService {
     final HttpUriRequest postRequest = new HttpPost(personInfoUri);
     postRequest.addHeader(AUTHORIZATION, BEARER + token);
 
-    try(final CloseableHttpClient httpClient = HttpClients.createDefault();
+    try (final CloseableHttpClient httpClient = HttpClients.createDefault();
         final CloseableHttpResponse response = httpClient.execute(postRequest)) {
-      if(response.getStatusLine().getStatusCode() == 200) {
+      if (response.getStatusLine().getStatusCode() == 200) {
         return new JSONObject(EntityUtils.toString(response.getEntity()));
       }
     }
@@ -144,39 +144,37 @@ public class AuthenticationService {
   }
 
   public void signOut(
-    final String authorizationHeader,
-    final HttpServletResponse response
-  ) throws IOException {
+      final String authorizationHeader,
+      final HttpServletResponse response) throws IOException {
     final String personInfoUri = this.issuerUri + "/connect/endsession";
     final HttpUriRequest postRequest = new HttpPost(personInfoUri);
     postRequest.addHeader(AUTHORIZATION, authorizationHeader);
 
-    try(final CloseableHttpClient httpClient = HttpClients.createDefault();
+    try (final CloseableHttpClient httpClient = HttpClients.createDefault();
         final CloseableHttpResponse closeResponse = httpClient.execute(postRequest)) {
       final int status = closeResponse.getStatusLine().getStatusCode();
-      if(status == 302 || status == 200) {
+      if (status == 302 || status == 200) {
         Arrays.asList(closeResponse.getAllHeaders())
-          .forEach(header -> response.addHeader(header.getName(), header.getValue()));
+            .forEach(header -> response.addHeader(header.getName(), header.getValue()));
         response.setHeader("Access-Control-Allow-Origin", "*");
         response.setHeader("Location", personInfoUri);
         response.setStatus(200);
         response.sendRedirect(personInfoUri);
-      }
-      else {
+      } else {
         throw new NegocioException();
       }
     }
   }
 
   public AcessoDto refresh(final String refreshToken) {
-    if(this.tokenService.isValidToken(refreshToken, TokenType.REFRESH)) {
+    if (this.tokenService.isValidToken(refreshToken, TokenType.REFRESH)) {
       final Claims claims = this.tokenService.getUser(refreshToken, TokenType.REFRESH);
 
       final PersonQuery user = this.personService
-        .findByIdPersonWithRelationshipAuthServiceAcessoCidadao(Long.parseLong(claims.getSubject()));
+          .findByIdPersonWithRelationshipAuthServiceAcessoCidadao(Long.parseLong(claims.getSubject()));
 
-      final String authenticationToken =
-        this.tokenService.generateToken(user.getPerson(), user.getKey(), user.getEmail(), TokenType.AUTHENTICATION);
+      final String authenticationToken = this.tokenService.generateToken(user.getPerson(), user.getKey(),
+          user.getEmail(), TokenType.AUTHENTICATION);
 
       return new AcessoDto(authenticationToken, refreshToken);
     }
