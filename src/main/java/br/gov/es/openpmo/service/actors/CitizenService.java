@@ -1,6 +1,6 @@
 package br.gov.es.openpmo.service.actors;
 
-import br.gov.es.openpmo.apis.acessocidadao.AcessoCidadaoApi;
+import br.gov.es.openpmo.apis.acessocidadao.IAcessoCidadaoApi;
 import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentEmailResponse;
 import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentResponse;
 import br.gov.es.openpmo.dto.person.CitizenByNameQuery;
@@ -28,7 +28,7 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.CITIZEN_NOT_FOUND;
 @Service
 public class CitizenService {
 
-  private final AcessoCidadaoApi acessoCidadaoApi;
+  private final IAcessoCidadaoApi acessoCidadaoApi;
 
   private final PersonService personService;
 
@@ -41,7 +41,7 @@ public class CitizenService {
 
   @Autowired
   public CitizenService(
-    final AcessoCidadaoApi acessoCidadaoApi,
+    final IAcessoCidadaoApi acessoCidadaoApi,
     final PersonService personService,
     final IsInContactBookOfService contactService,
     final RoleService roleService

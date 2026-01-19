@@ -1,5 +1,7 @@
 package br.gov.es.openpmo.service.actors;
 
+import br.gov.es.openpmo.apis.acessocidadao.AcessoCidadaoApi;
+import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentEmailResponse;
 import br.gov.es.openpmo.dto.ComboDto;
 import br.gov.es.openpmo.dto.actor.PreferencesDto;
 import br.gov.es.openpmo.dto.person.LocalWorkRequest;
@@ -57,7 +59,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 public class PersonService {
-
   private final IsAuthenticatedByService isAuthenticatedByService;
 
   private final OfficeRepository officeRepository;
@@ -68,8 +69,9 @@ public class PersonService {
 
   private final PersonRepository repository;
 
-
   private final IsCCBMemberRepository ccbMemberRepository;
+
+  private final AcessoCidadaoApi acessoCidadaoApi;
 
   @Autowired
   public PersonService(
@@ -78,7 +80,8 @@ public class PersonService {
     final OfficeRepository officeRepository,
     final PlanRepository planRepository,
     final IsInContactBookOfService isInContactBookOfService,
-    final IsCCBMemberRepository ccbMemberRepository
+    final IsCCBMemberRepository ccbMemberRepository,
+    final AcessoCidadaoApi acessoCidadaoApi
   ) {
     this.repository = repository;
     this.isAuthenticatedByService = isAuthenticatedByService;
@@ -86,6 +89,7 @@ public class PersonService {
     this.planRepository = planRepository;
     this.isInContactBookOfService = isInContactBookOfService;
     this.ccbMemberRepository = ccbMemberRepository;
+    this.acessoCidadaoApi = acessoCidadaoApi;
   }
 
   public Person findById(final Long id) {
@@ -223,6 +227,13 @@ public class PersonService {
     }
 
     final PersonDetailDto personDetailDto = new PersonDetailDto(maybeQuery.get(), uriComponentsBuilder);
+
+    String personAcessoCidadaoSub = personDetailDto.getKey();
+    Optional<PublicAgentEmailResponse> personEmails = this.acessoCidadaoApi.findAgentEmail(personAcessoCidadaoSub, personId);
+
+    if (personEmails.isPresent()) {
+      personDetailDto.setContactEmail(personEmails.get().getCorporateEmail());
+    }
 
     final List<CanAccessOffice> canAccessOffice = officeRepository.findAllCanAccessOfficeByIdPerson(personId, officeId);
     final List<PlanResultDto> listPlans = planRepository.findAllPlanResultByIdOffice(officeId);
