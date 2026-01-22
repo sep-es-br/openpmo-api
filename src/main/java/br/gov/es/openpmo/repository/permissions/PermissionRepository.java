@@ -13,9 +13,8 @@ import java.util.List;
 public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, CustomRepository {
 
   @Query(
-      "MATCH (n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO*0..]->(m) " +
-      "      <-[rel:CAN_ACCESS_WORKPACK|CAN_ACCESS_PLAN|CAN_ACCESS_OFFICE]-(:Person) " +
-      "      -[:IS_AUTHENTICATED_BY {key:$sub}]-(:AuthService) " +
+      "MATCH (n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO|IS_STRUCTURED_BY|IS_FORSEEN_ON|APPLIES_TO|FEATURES|MITIGATES|IS_TRIGGER_BY|ADDRESSES|IS_REPORTED_FOR|IS_BELONGS_TO|SCOPE_TO|IS_LINKED_TO|COMPOSES|IS_BASELINED_BY*0..]->(m) " +
+      " <-[rel:CAN_ACCESS_WORKPACK|CAN_ACCESS_PLAN|CAN_ACCESS_OFFICE]-(p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
       "WHERE id(n) in $ids " +
 
       "OPTIONAL MATCH (n)-[:IS_IN*0..]->(proj:Project) " +
