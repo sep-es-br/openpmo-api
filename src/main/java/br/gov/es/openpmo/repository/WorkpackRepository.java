@@ -475,12 +475,12 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       "RETURN count(snapshotOf)>0 ")
   boolean hasSnapshot(Long idWorkpack);
 
-  @Query("MATCH (workpack:Workpack)-[:IS_BASELINED_BY]->(baseline:Baseline{active:true,cancelation:false}) " +
-      "WHERE id(workpack)=$idWorkpack " +
+  @Query("MATCH (deliverable:Deliverable)<-[:FEATURES]-(schedule:Schedule)<-[:IS_SNAPSHOT_OF]-(scheduleSnapshot:Schedule)-[:COMPOSES]->(baseline:Baseline {active: true, cancelation: false}) " +
+      "WHERE id(deliverable)=$idDeliverable " +
       "RETURN count(baseline)>0 ")
-  boolean hasActiveBaseline(Long idWorkpack);
+  boolean hasActiveBaseline(Long idDeliverable);
 
-  @Query("MATCH (w:Workpack)<-[:IS_IN*]-(:Project{deleted:false,canceled:false})-[:IS_BASELINED_BY]->" +
+  @Query("MATCH (w:Workpack)-[:IS_IN*]->(:Project{deleted:false,canceled:false})-[:IS_BASELINED_BY]->" +
       "(b:Baseline{active: true})" +
       " " +
       "WHERE id(w)=$idWorkpack " +

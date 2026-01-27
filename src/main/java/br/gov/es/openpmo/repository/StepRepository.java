@@ -59,15 +59,20 @@ public interface StepRepository extends Neo4jRepository<Step, Long> {
   boolean hasWorkToCompleteComparingWithMaster(Long idDeliverable);
 
 
-  @Query("MATCH (deliverable:Deliverable)<-[:FEATURES]-(:Schedule)<-[:COMPOSES]-(step:Step) " +
-       "MATCH (step)<-[:IS_SNAPSHOT_OF]-(snapshot:Step)-[:COMPOSES]->(baseline:Baseline{active:true}) " +
-       "WITH sum(toFloat(step.actualWork)) AS actualWork, " +
-       "     sum(toFloat(snapshot.plannedWork)) AS plannedWork " +
+  @Query(
+       "MATCH (deliverable:Deliverable)<-[:FEATURES]-(schedule:Schedule) " +
+       "WHERE id(deliverable)=$idDeliverable " +
+       "MATCH (schedule)<-[:COMPOSES]-(step:Step) " +
+       "WITH schedule, sum(coalesce(toFloat(step.actualWork),0)) AS actualWork " +
+       "MATCH (schedule)<-[:IS_SNAPSHOT_OF]-(scheduleSnapshot:Schedule)-[:COMPOSES]->(baseline:Baseline{active:true}) " +
+       "MATCH (scheduleSnapshot)<-[:COMPOSES]-(snapshot:Step) " +
+       "WITH actualWork, sum(toFloat(snapshot.plannedWork)) AS plannedWork " +
        "RETURN CASE " +
        "         WHEN plannedWork = 0 THEN true " +
        "         ELSE actualWork < plannedWork " +
-       "       END")
-  boolean hasWorkToCompleteComparingWithActiveBaseline(Long idDeliverable);
+       "       END"
+       )
+       boolean hasWorkToCompleteComparingWithActiveBaseline(Long idDeliverable);
 
 
   @Query("match (s:Step)-[:COMPOSES]->(:Schedule)-[:FEATURES]->(d:Deliverable) " +
