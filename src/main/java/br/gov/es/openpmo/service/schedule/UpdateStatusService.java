@@ -110,7 +110,7 @@ public class UpdateStatusService {
   }
 
   private boolean hasBaselineActive(final Long idDeliverable) {
-    return this.workpackRepository.hasActiveBaseline(idDeliverable);
+    return this.workpackRepository.hasActiveBaselineForDeliverable(idDeliverable);
   }
 
   private boolean hasWorkToCompleteComparingWithActiveBaseline(final Long idDeliverable) {
