@@ -267,6 +267,8 @@ public class WorkpackController {
 
     final Workpack workpack = this.workpackService.criarWorkpack(request);
 
+    this.completeDeliverableService.onWorkpackCreated(workpack);
+
     final EntityDto response = EntityDto.of(workpack);
 
     final Long idPerson = this.tokenService.getUserId(authorization);
@@ -368,6 +370,9 @@ public class WorkpackController {
       authorization
     );
     this.workpackService.restore(idWorkpack);
+
+    this.completeDeliverableService.onWorkpackRestore(idWorkpack);
+
     return ResponseEntity.ok().build();
   }
 
@@ -383,6 +388,7 @@ public class WorkpackController {
     final Workpack workpack = this.workpackService.findById(idWorkpack);
     this.workpackService.delete(workpack);
     
+    this.completeDeliverableService.onWorkpackDeleted(workpack);
 
     return ResponseEntity.ok().build();
   }

@@ -53,7 +53,7 @@ public class CompleteWorkpackService implements ICompleteWorkpackService {
       request
     );
     if (request.getCompleted()) {
-      this.testHierarchyAndSetCompleted(workpackId);
+      this.testHierarchyAndSetCompleted(workpackId, false);
     } else {
       this.setAllIncomplete(workpackId);
     }
@@ -93,8 +93,12 @@ public class CompleteWorkpackService implements ICompleteWorkpackService {
       .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
   }
 
-  private void testHierarchyAndSetCompleted(final Long workpackId) {
-    final Long parentId = this.repository.getParentId(workpackId);
+  private void testHierarchyAndSetCompleted(final Long workpackId,  boolean startFromSelf) {
+
+    Long parentId = startFromSelf 
+      ? workpackId 
+      : repository.getParentId(workpackId);
+
     if (parentId == null) {
       return;
     }
@@ -106,7 +110,43 @@ public class CompleteWorkpackService implements ICompleteWorkpackService {
       if(workpackRepository.isProject(parentId)){
         this.workpackRepository.updateSituationValue(parentId, "Concluído");
       }
-      this.testHierarchyAndSetCompleted(parentId);
+      this.testHierarchyAndSetCompleted(parentId, false);
+    }
+  }
+
+  public void onWorkpackCreated(Workpack workpack) {
+
+    if (workpack.isDeliverable() || workpack.isMilestone() || workpack.isProject()) {
+      this.setAllIncomplete(workpack.getId());
+    } else {
+      this.testHierarchyAndSetCompleted(workpack.getId(), true);
+    }
+
+  }
+
+  public void onWorkpackDeleted(Workpack workpack) {
+    Long parentId = repository.getParentId(workpack.getId());
+    if (parentId == null) {
+      return;
+    }
+    
+    boolean allCompleted = repository.allSonsAreCompleted(parentId);
+
+    if(allCompleted){
+      this.testHierarchyAndSetCompleted(workpack.getId(), false);
+    }else{
+      this.setAllIncomplete(workpack.getId());
+    }
+  }
+
+  public void onWorkpackRestore(Long workpackId){
+    Workpack workpack = workpackRepository.findById(workpackId)
+    .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
+
+    if(Boolean.TRUE.equals(workpack.getCompleted())){
+      this.testHierarchyAndSetCompleted(workpackId, false);
+    }else{
+      this.setAllIncomplete(workpackId);
     }
   }
 
