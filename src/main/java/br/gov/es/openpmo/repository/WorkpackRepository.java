@@ -485,7 +485,7 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       "RETURN count(baseline)>0 ")
   boolean hasActiveBaseline(Long idWorkpack);
 
-  @Query("MATCH (w:Workpack)-[:IS_IN*]-(:Project{deleted:false,canceled:false})-[:IS_BASELINED_BY]->" +
+  @Query("MATCH (w:Workpack)<-[:IS_IN*]-(:Project{deleted:false,canceled:false})-[:IS_BASELINED_BY]->" +
       "(b:Baseline{active: true})" +
       " " +
       "WHERE id(w)=$idWorkpack " +
