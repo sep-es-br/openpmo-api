@@ -14,6 +14,6 @@ public interface ICompleteWorkpackService {
 
   void onWorkpackDeleted(Workpack workpack);
 
-  void onWorkpackRestore(Long workpackId);
+  void recalculateCompletionStatus(Long workpackId);
 
 }
