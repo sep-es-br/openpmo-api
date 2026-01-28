@@ -6,6 +6,7 @@ import br.gov.es.openpmo.dto.universalSearch.UniversalSearchItemQueryResult;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.WorkpackBreakdownClassificationDto;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.office.plan.Plan;
+import br.gov.es.openpmo.model.workpacks.Deliverable;
 import br.gov.es.openpmo.model.workpacks.Program;
 import br.gov.es.openpmo.model.workpacks.Project;
 import br.gov.es.openpmo.model.workpacks.Workpack;
@@ -1004,4 +1005,13 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       "   m.modelNameInPlural as modelNameInPlural, HEAD([label IN labels(w) WHERE label <> 'Workpack']) as type, " +
       "   m.fontIcon as fontIcon")
   public WorkpackResultDto getWorkpackResultDtoById(Long idWorkpack);
+
+
+  @Query(
+    "MATCH (b:Baseline)<-[:COMPOSES]-(d:Deliverable {canceled:false})-[:IS_SNAPSHOT_OF]->(dMaster:Deliverable) " +
+    "WHERE ID(b) = $idBaseline " +
+    "RETURN dMaster"
+    )
+  public List<Deliverable> findMasterDeliverablesFromBaseline(Long idBaseline);
+
 }

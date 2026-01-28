@@ -103,7 +103,7 @@ public class UpdateStatusService {
     return this.workpackRepository.hasScheduleRelated(deliverable.getId());
   }
 
-  private boolean hasWorkToComplete(final Long idDeliverable) {
+  public boolean hasWorkToComplete(final Long idDeliverable) {
     return this.hasBaselineActive(idDeliverable)
       ? this.hasWorkToCompleteComparingWithActiveBaseline(idDeliverable)
       : this.hasWorkToCompleteComparingWithMaster(idDeliverable);
