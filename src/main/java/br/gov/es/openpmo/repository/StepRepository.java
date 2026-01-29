@@ -47,32 +47,46 @@ public interface StepRepository extends Neo4jRepository<Step, Long> {
          "]")
   Optional<Step> findSnapshotOfActiveBaseline(Long idStep);
 
-  @Query("MATCH (deliverable:Deliverable) " +
-       "WHERE id(deliverable)=$idDeliverable " +
+  @Query(
+       "MATCH (deliverable:Deliverable) " +
+       "WHERE id(deliverable) = $idDeliverable " +
+       "MATCH (unitM:UnitMeasure)<-[:VALUES]-(:UnitSelection)-[:FEATURES]->(deliverable) " +
        "MATCH (deliverable)<-[:FEATURES]-(:Schedule)<-[:COMPOSES]-(step:Step) " +
-       "WITH sum(toFloat(step.plannedWork)) AS estimedWork, " +
-       "     sum(toFloat(step.actualWork)) AS actualWork " +
+       "WITH " +
+       "  sum(round(coalesce(toFloat(step.plannedWork), 0), unitM.precision + 1)) AS rawPlanned, " +
+       "  sum(round(coalesce(toFloat(step.actualWork), 0), unitM.precision + 1)) AS rawActual, " +
+       "  unitM.precision AS precision " +
        "RETURN CASE " +
-       "         WHEN estimedWork = 0 THEN true " +
-       "         ELSE actualWork < estimedWork " +
-       "       END")
-  boolean hasWorkToCompleteComparingWithMaster(Long idDeliverable);
+       "  WHEN rawPlanned = 0 THEN true " +
+       "  ELSE round(rawActual, precision) < round(rawPlanned, precision) " +
+       "END"
+     )
+     boolean hasWorkToCompleteComparingWithMaster(Long idDeliverable);
+     
 
 
   @Query(
        "MATCH (deliverable:Deliverable)<-[:FEATURES]-(schedule:Schedule) " +
-       "WHERE id(deliverable)=$idDeliverable " +
+       "WHERE id(deliverable) = $idDeliverable " +
+       "MATCH (unitM:UnitMeasure)<-[:VALUES]-(:UnitSelection)-[:FEATURES]->(deliverable) " +
        "MATCH (schedule)<-[:COMPOSES]-(step:Step) " +
-       "WITH schedule, sum(coalesce(toFloat(step.actualWork),0)) AS actualWork " +
-       "MATCH (schedule)<-[:IS_SNAPSHOT_OF]-(scheduleSnapshot:Schedule)-[:COMPOSES]->(baseline:Baseline{active:true}) " +
+       "WITH " +
+       "  schedule, " +
+       "  unitM.precision AS precision, " +
+       "  sum(round(coalesce(toFloat(step.actualWork), 0), unitM.precision + 1)) AS rawActual " +
+       "MATCH (schedule)<-[:IS_SNAPSHOT_OF]-(scheduleSnapshot:Schedule)-[:COMPOSES]->(baseline:Baseline {active: true}) " +
        "MATCH (scheduleSnapshot)<-[:COMPOSES]-(snapshot:Step) " +
-       "WITH actualWork, sum(toFloat(snapshot.plannedWork)) AS plannedWork " +
+       "WITH " +
+       "  precision, " +
+       "  rawActual, " +
+       "  sum(round(coalesce(toFloat(snapshot.plannedWork), 0), precision + 1)) AS rawPlanned " +
        "RETURN CASE " +
-       "         WHEN plannedWork = 0 THEN true " +
-       "         ELSE actualWork < plannedWork " +
-       "       END"
+       "  WHEN rawPlanned = 0 THEN true " +
+       "  ELSE round(rawActual, precision) < round(rawPlanned, precision) " +
+       "END"
        )
-       boolean hasWorkToCompleteComparingWithActiveBaseline(Long idDeliverable);
+  boolean hasWorkToCompleteComparingWithActiveBaseline(Long idDeliverable);
+     
 
 
   @Query("match (s:Step)-[:COMPOSES]->(:Schedule)-[:FEATURES]->(d:Deliverable) " +
