@@ -194,6 +194,10 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
 
     workpackDto = cacheUtil.getWorkpackBreakdownStructure(idProject, idPlan, true);
 
+    if(workpackDto == null){
+      workpackDto = cacheUtil.getFullWorkpackBreakdownStructure(idProject, idPlan, true);
+    }
+
     List<TripleConstraintBreakdown> finalList = createTripleConstraintBreakdown(
       proposedWorkpacksConstraint,
       currentWorkpacksConstraint,
