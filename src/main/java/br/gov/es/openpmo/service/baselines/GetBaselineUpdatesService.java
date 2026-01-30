@@ -202,7 +202,7 @@ public class GetBaselineUpdatesService implements IGetBaselineUpdatesService {
       );
       newUR.setWorkpackType(w.getType());
 
-      if (w.getType().equals("Deliverable")) {
+      if (w.getType().equals("Deliverable") && w.getClassification() != BaselineStatus.DELETED) {
         try {
           Optional<WorkpackModel> deliveryModel = this.workpackModelService.getWorkpackModelByWorkpackId(w.getId());
           newUR.setDeliveryModelHasActiveSchedule(
