@@ -2,10 +2,15 @@ package br.gov.es.openpmo.model.process;
 
 import br.gov.es.openpmo.apis.edocs.response.ProcessResponse;
 import br.gov.es.openpmo.dto.process.ProcessCreateDto;
+import br.gov.es.openpmo.dto.process.ProcessFromEDocsDto;
+import br.gov.es.openpmo.dto.process.ProcessReadonlyDetailDto;
 import br.gov.es.openpmo.dto.process.ProcessUpdateDto;
 import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.utils.ObjectUtils;
+
+import java.time.LocalDateTime;
+
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -20,6 +25,12 @@ public class Process extends Entity {
   private String note;
   private Boolean priority;
   private String status;
+
+  private String actingOrganization;
+  private String actingSector;
+  private LocalDateTime actingDate;
+  private LocalDateTime lastDispatchDate;
+  private Long lengthOfStayOnSector;
 
   @Relationship("IS_BELONGS_TO")
   private Workpack workpack;
@@ -36,6 +47,13 @@ public class Process extends Entity {
     final String note,
     final Boolean priority,
     final String status,
+
+    final String actingOrganization,
+    final String actingSector,
+    final LocalDateTime actingDate,
+    final LocalDateTime lastDispatchDate,
+    final Long lengthOfStayOnSector,
+
     final Workpack workpack
   ) {
     this.name = name;
@@ -46,6 +64,13 @@ public class Process extends Entity {
     this.note = note;
     this.priority = priority;
     this.status = status;
+
+    this.actingOrganization = actingOrganization;
+    this.actingSector = actingSector;
+    this.actingDate = actingDate;
+    this.lastDispatchDate = lastDispatchDate;
+    this.lengthOfStayOnSector = lengthOfStayOnSector;
+
     this.workpack = workpack;
   }
 
@@ -53,18 +78,28 @@ public class Process extends Entity {
     final ProcessCreateDto request,
     final Workpack workpack
   ) {
+    final ProcessReadonlyDetailDto d = request.getReadonlyDetail();
+  
     return new Process(
       request.getName(),
-      request.getReadonlyDetail().getSubject(),
-      request.getReadonlyDetail().getCurrentOrganization(),
-      request.getReadonlyDetail().getProcessNumber(),
-      request.getReadonlyDetail().getLengthOfStayOn(),
+      d.getSubject(),
+      d.getCurrentOrganization(),
+      d.getProcessNumber(),
+      d.getLengthOfStayOn(),
       request.getNote(),
-      request.getReadonlyDetail().getPriority(),
-      request.getReadonlyDetail().getStatus(),
+      d.getPriority(),
+      d.getStatus(),
+  
+      d.getActingOrganization(),
+      d.getActingSector(),
+      d.getActingDate(),
+      d.getLastDispatchDate(),
+      d.getLengthOfStayOnSector(),
+  
       workpack
     );
   }
+  
 
   public Long getIdWorkpack() {
     return this.workpack.getId();
@@ -142,21 +177,68 @@ public class Process extends Entity {
     this.status = status;
   }
 
+  public String getActingOrganization() {
+    return actingOrganization;
+  }
+
+  public void setActingOrganization(String actingOrganization) {
+    this.actingOrganization = actingOrganization;
+  }
+
+  public String getActingSector() {
+    return actingSector;
+  }
+
+  public void setActingSector(String actingSector) {
+    this.actingSector = actingSector;
+  }
+
+  public LocalDateTime getActingDate() {
+    return actingDate;
+  }
+
+  public void setActingDate(LocalDateTime actingDate) {
+    this.actingDate = actingDate;
+  }
+
+  public LocalDateTime getLastDispatchDate() {
+    return lastDispatchDate;
+  }
+
+  public void setLastDispatchDate(LocalDateTime lastDispatchDate) {
+    this.lastDispatchDate = lastDispatchDate;
+  }
+
+  public Long getLengthOfStayOnSector() {
+    return lengthOfStayOnSector;
+  }
+
+  public void setLengthOfStayOnSector(Long lengthOfStayOnSector) {
+    this.lengthOfStayOnSector = lengthOfStayOnSector;
+  }
+
   public void update(
     final ProcessUpdateDto request,
-    final ProcessResponse processByProtocol
+    final ProcessFromEDocsDto fromEDocs
   ) {
     ObjectUtils.updateIfPresent(request::getName, this::setName);
     ObjectUtils.updateIfPresent(request::getNote, this::setNote);
-    this.updateUsingEDocsData(processByProtocol);
+
+    this.updateUsingEDocsData(fromEDocs);
   }
 
-  public void updateUsingEDocsData(final ProcessResponse process) {
-    ObjectUtils.updateIfPresent(process::getSubject, this::setSubject);
-    ObjectUtils.updateIfPresent(process::getCurrentOrganizationAbbreviation, this::setCurrentOrganization);
-    ObjectUtils.updateIfPresent(process::lengthOfStayOn, this::setLengthOfStayOn);
-    ObjectUtils.updateIfPresent(process::getPriority, this::setPriority);
-    ObjectUtils.updateIfPresent(process::getStatus, this::setStatus);
+  public void updateUsingEDocsData(final ProcessFromEDocsDto dto) {
+    ObjectUtils.updateIfPresent(dto::getSubject, this::setSubject);
+    ObjectUtils.updateIfPresent(dto::getCurrentOrganization, this::setCurrentOrganization);
+    ObjectUtils.updateIfPresent(dto::getLengthOfStayOn, this::setLengthOfStayOn);
+    ObjectUtils.updateIfPresent(dto::getPriority, this::setPriority);
+    ObjectUtils.updateIfPresent(dto::getStatus, this::setStatus);
+  
+    ObjectUtils.updateIfPresent(dto::getActingOrganization, this::setActingOrganization);
+    ObjectUtils.updateIfPresent(dto::getActingSector, this::setActingSector);
+    ObjectUtils.updateIfPresent(dto::getActingDate, this::setActingDate);
+    ObjectUtils.updateIfPresent(dto::getLastDispatchDate, this::setLastDispatchDate);
+    ObjectUtils.updateIfPresent(dto::getLengthOfStayOnSector, this::setLengthOfStayOnSector);
   }
 
 }

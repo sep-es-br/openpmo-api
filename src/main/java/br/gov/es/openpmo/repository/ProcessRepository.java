@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.repository;
 
+import br.gov.es.openpmo.apis.edocs.dto.ProcessNumberWithIds;
 import br.gov.es.openpmo.model.process.Process;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
 import org.springframework.data.neo4j.annotation.Query;
@@ -25,6 +26,11 @@ public interface ProcessRepository extends Neo4jRepository<Process, Long>, Custo
           String term,
           Double searchCutOffScore
   );
+
+@Query("MATCH (process:Process)-[:IS_BELONGS_TO]->(workpack:Workpack {deleted:false}) " +
+       "WITH process.processNumber AS processNumber, collect(id(process)) AS processIds " +
+       "RETURN processNumber, processIds")
+List<ProcessNumberWithIds> findProcessNumbersWithIdsFromActiveWorkpacks();
 
 
 
