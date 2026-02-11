@@ -58,6 +58,14 @@ public enum ModelType {
     final Optional<JSONObject> destino = Optional.of(json)
       .map(j -> j.optJSONObject("destino"));
 
+    final Optional<String> destinoCidadao = destino
+    .map(d -> d.optJSONObject("cidadao"))
+    .map(c -> c.optString("nome"));
+
+    if (destinoCidadao.isPresent()) {
+      return destinoCidadao;
+    }
+
     final Optional<String> destinoPapelSigla = destino
       .map(d -> d.optJSONObject("papel"))
       .map(p -> p.optJSONObject("setor"))

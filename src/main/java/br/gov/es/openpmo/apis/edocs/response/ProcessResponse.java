@@ -34,6 +34,12 @@ public class ProcessResponse {
     this.processTimeline = new ArrayList<>();
   }
 
+  public String getCurrentSectorName() {
+    return Optional.ofNullable(this.currentOrganization())
+      .map(ProcessHistoryResponse::getName)
+      .orElse(null);
+  }
+
   public String getCurrentOrganizationAbbreviation() {
     return Optional.ofNullable(this.currentOrganization())
       .map(ProcessHistoryResponse::getAbbreviation)
@@ -75,6 +81,8 @@ public class ProcessResponse {
   }
 
   public List<ProcessTimeline> timeline() {
+    this.processTimeline.clear();
+
     if(this.history.isEmpty()) {
       return Collections.emptyList();
     }

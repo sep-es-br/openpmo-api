@@ -3,6 +3,8 @@ package br.gov.es.openpmo.dto.process;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
+import java.time.LocalDateTime;
+
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -31,7 +33,13 @@ public class ProcessCreateDto {
     final String subject,
     final String currentOrganization,
     final long lengthOfStayOn,
-    final boolean priority
+    final boolean priority,
+
+    final String actingOrganization,
+    final String actingSector,
+    final LocalDateTime actingDate,
+    final LocalDateTime lastDispatchDate,
+    final Long lengthOfStayOnSector
   ) {
     this.idWorkpack = idWorkpack;
     this.name = name;
@@ -42,7 +50,12 @@ public class ProcessCreateDto {
       subject,
       currentOrganization,
       lengthOfStayOn,
-      priority
+      priority,
+      actingOrganization,
+      actingSector,
+      actingDate,
+      lastDispatchDate,
+      lengthOfStayOnSector
     );
   }
 
