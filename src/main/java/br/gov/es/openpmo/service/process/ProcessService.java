@@ -1,7 +1,9 @@
 package br.gov.es.openpmo.service.process;
 
 import br.gov.es.openpmo.apis.edocs.EDocsApi;
+import br.gov.es.openpmo.apis.edocs.dto.ProcessNumberWithIds;
 import br.gov.es.openpmo.apis.edocs.response.ProcessResponse;
+import br.gov.es.openpmo.apis.organograma.OrganogramaApi;
 import br.gov.es.openpmo.configuration.properties.AppProperties;
 import br.gov.es.openpmo.dto.process.ProcessCardDto;
 import br.gov.es.openpmo.dto.process.ProcessCreateDto;
@@ -48,6 +50,8 @@ public class ProcessService {
 
   private final AppProperties appProperties;
 
+  private final OrganogramaApi organogramaApi;
+
   @Autowired
   public ProcessService(
     final ProcessRepository repository,
@@ -55,7 +59,8 @@ public class ProcessService {
     final WorkpackService workpackService,
     final FindAllProcessUsingCustomFilter findAllProcess,
     final CustomFilterService customFilterService,
-    final AppProperties appProperties
+    final AppProperties appProperties,
+    final OrganogramaApi organogramaApi
   ) {
     this.repository = repository;
     this.eDocsApi = eDocsApi;
@@ -63,6 +68,7 @@ public class ProcessService {
     this.findAllProcess = findAllProcess;
     this.customFilterService = customFilterService;
     this.appProperties = appProperties;
+    this.organogramaApi = organogramaApi;
   }
 
   public ProcessFromEDocsDto findProcessByProtocol(
@@ -95,7 +101,9 @@ public class ProcessService {
 
     final ProcessResponse processResponse = this.eDocsApi.findProcessByProtocol(process.getProcessNumber(), idPerson);
 
-    process.update(request, processResponse);
+    final ProcessFromEDocsDto fromEDocs = ProcessFromEDocsDto.of(processResponse);
+
+    process.update(request, fromEDocs);
     this.repository.save(process, 1);
 
     return ProcessDetailDto.of(processResponse, process);
@@ -119,16 +127,18 @@ public class ProcessService {
     final Process process = this.repository.findById(idProcess)
       .orElseThrow(() -> new RegistroNaoEncontradoException(PROCESS_NOT_FOUND));
     final ProcessResponse processResponse = this.eDocsApi.findProcessByProtocol(process.getProcessNumber(), idPerson);
-    this.updateProcessState(process, processResponse);
+    
+    final ProcessFromEDocsDto fromEDocs = ProcessFromEDocsDto.of(processResponse);
+    this.updateProcessState(process, fromEDocs);
 
     return ProcessDetailDto.of(processResponse, process);
   }
 
   private void updateProcessState(
     final Process process,
-    final ProcessResponse processResponse
+    final ProcessFromEDocsDto fromEDocs
   ) {
-    process.updateUsingEDocsData(processResponse);
+    process.updateUsingEDocsData(fromEDocs);
     this.repository.save(process, 0);
   }
 
@@ -178,5 +188,42 @@ public class ProcessService {
       .map(ProcessCardDto::of)
       .collect(Collectors.toList());
   }
+
+  @Transactional
+  public void updateAllProcesses() {
+
+    List<ProcessNumberWithIds> allProcesses = this.repository.findProcessNumbersWithIdsFromActiveWorkpacks();
+
+    if (allProcesses.isEmpty()) {
+        return;
+    }
+
+    List<String> processNumbers = allProcesses.stream()
+      .map(ProcessNumberWithIds::getProcessNumber)
+      .collect(Collectors.toList());
+    
+    this.organogramaApi.clearCache();
+    
+    List<ProcessResponse> processes = this.eDocsApi.findProcessesByProtocolsAsSystem(processNumbers);
+
+    for (ProcessResponse processResponse : processes) {
+
+      ProcessFromEDocsDto fromEDocs = ProcessFromEDocsDto.of(processResponse);
+
+      ProcessNumberWithIds dbProcess = allProcesses.stream()
+          .filter(p -> p.getProcessNumber().equals(processResponse.getProcessNumber()))
+          .findFirst()
+          .orElseThrow(() -> new RegistroNaoEncontradoException("Processo não encontrado no banco: " + processResponse.getProcessNumber()));
+
+      List<Long> ids = dbProcess.getProcessIds();
+
+      for (Long id : ids) {
+          Process process = this.repository.findById(id)
+              .orElseThrow(() -> new RegistroNaoEncontradoException("Processo não encontrado pelo ID: " + id));
+
+          updateProcessState(process, fromEDocs);
+      }
+    }
+  }  
 
 }

@@ -28,11 +28,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 @Component
 public class OrganogramaApiImpl implements OrganogramaApi {
 
-  static final Map<String, Optional<String>> cacheUnidadeSigla = new HashMap<>();
+   private final ConcurrentMap<String, Optional<String>> cacheUnidadeSigla = new ConcurrentHashMap<>();
   private static final String AUTHORIZATION = "Authorization";
   private static final String BEARER = "Bearer ";
   private static final int HTTP_OK = 200;
@@ -64,20 +66,13 @@ public class OrganogramaApiImpl implements OrganogramaApi {
 
   @Override
   public Optional<String> findSiglaByUnidade(final String idUnidade) {
-    final boolean containsKey = cacheUnidadeSigla.containsKey(idUnidade);
-    if(containsKey) {
-      return cacheUnidadeSigla.get(idUnidade);
-    }
-    try {
-      final Optional<String> stringOptional = this.getOrgaoByUnidade(idUnidade)
-        .map(orgao -> orgao.optJSONObject("organizacao"))
-        .map(organizacao -> organizacao.optString("sigla"));
-      cacheUnidadeSigla.put(idUnidade, stringOptional);
-      return stringOptional;
-    }
-    catch(final IllegalStateException e) {
-      return Optional.empty();
-    }
+  
+      return cacheUnidadeSigla.computeIfAbsent(idUnidade, id -> 
+          this.getOrgaoByUnidade(id)
+              .map(orgao -> orgao.optJSONObject("organizacao"))
+              .map(organizacao -> organizacao.optString("sigla"))
+              .filter(sigla -> sigla != null && !sigla.trim().isEmpty())
+      );
   }
 
   private Optional<JSONObject> getOrgaoByUnidade(final String idUnidade) {
@@ -89,9 +84,9 @@ public class OrganogramaApiImpl implements OrganogramaApi {
         final CloseableHttpResponse response = httpClient.execute(getRequest)) {
       final StatusLine statusLine = response.getStatusLine();
       if(statusLine.getStatusCode() != HTTP_OK) {
-        statusLine.getReasonPhrase();
-        throw new IllegalStateException(ApplicationMessage.FAILED_FETCH_STATUS_NOT_OK);
-      }
+        logger.warn("Organograma retornou {}", statusLine.getStatusCode());
+        return Optional.empty();
+    }
       final JSONObject json = new JSONObject(EntityUtils.toString(response.getEntity()));
       return Optional.of(json);
     }
@@ -129,6 +124,12 @@ public class OrganogramaApiImpl implements OrganogramaApi {
   private String getAuthorizationValue() {
     final String basicToken = MessageFormat.format("{0}:{1}", this.clientId, this.clientSecret);
     return MessageFormat.format("Basic {0}", Base64.getEncoder().encodeToString(basicToken.getBytes()));
+  }
+
+  @Override
+  public void clearCache() {
+    cacheUnidadeSigla.clear();
+    accessToken = null;
   }
 
 }
