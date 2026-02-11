@@ -3,6 +3,7 @@ package br.gov.es.openpmo.service.process;
 import br.gov.es.openpmo.apis.edocs.EDocsApi;
 import br.gov.es.openpmo.apis.edocs.dto.ProcessNumberWithIds;
 import br.gov.es.openpmo.apis.edocs.response.ProcessResponse;
+import br.gov.es.openpmo.apis.organograma.OrganogramaApi;
 import br.gov.es.openpmo.configuration.properties.AppProperties;
 import br.gov.es.openpmo.dto.process.ProcessCardDto;
 import br.gov.es.openpmo.dto.process.ProcessCreateDto;
@@ -49,6 +50,8 @@ public class ProcessService {
 
   private final AppProperties appProperties;
 
+  private final OrganogramaApi organogramaApi;
+
   @Autowired
   public ProcessService(
     final ProcessRepository repository,
@@ -56,7 +59,8 @@ public class ProcessService {
     final WorkpackService workpackService,
     final FindAllProcessUsingCustomFilter findAllProcess,
     final CustomFilterService customFilterService,
-    final AppProperties appProperties
+    final AppProperties appProperties,
+    final OrganogramaApi organogramaApi
   ) {
     this.repository = repository;
     this.eDocsApi = eDocsApi;
@@ -64,6 +68,7 @@ public class ProcessService {
     this.findAllProcess = findAllProcess;
     this.customFilterService = customFilterService;
     this.appProperties = appProperties;
+    this.organogramaApi = organogramaApi;
   }
 
   public ProcessFromEDocsDto findProcessByProtocol(
@@ -196,6 +201,9 @@ public class ProcessService {
     List<String> processNumbers = allProcesses.stream()
       .map(ProcessNumberWithIds::getProcessNumber)
       .collect(Collectors.toList());
+    
+    this.organogramaApi.clearCache();
+    
     List<ProcessResponse> processes = this.eDocsApi.findProcessesByProtocolsAsSystem(processNumbers);
 
     for (ProcessResponse processResponse : processes) {

@@ -31,14 +31,18 @@ public class ProcessController {
 
   private final ICanAccessService canAccessService;
 
+  private final OrganogramaApi organogramaApi;
+
   @Autowired
   public ProcessController(
       final ProcessService service,
       final TokenService tokenService,
-      final ICanAccessService canAccessService) {
+      final ICanAccessService canAccessService,
+      final OrganogramaApi organogramaApi) {
     this.service = service;
     this.tokenService = tokenService;
     this.canAccessService = canAccessService;
+    this.organogramaApi = organogramaApi;
   }
 
   @GetMapping
@@ -61,7 +65,7 @@ public class ProcessController {
       @RequestHeader(name = "Authorization") final String authorization) {
 
     // this.canAccessService.ensureIsAdministrator(authorization);
-    OrganogramaApi.clearCache();
+    this.organogramaApi.clearCache();
     final Long idPerson = this.tokenService.getUserId(authorization);
     final ProcessFromEDocsDto processByProtocol = this.service.findProcessByProtocol(protocol, idPerson);
     final ResponseBase<ProcessFromEDocsDto> response = ResponseBase.of(processByProtocol);
