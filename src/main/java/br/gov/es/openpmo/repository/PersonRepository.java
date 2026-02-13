@@ -215,7 +215,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   boolean existsByKey(@Param("key") String key);
 
   @Query (
-      "MATCH (person:Person)-[canAccessWorkpack:CAN_ACCESS_WORKPACK]->(workpack:Workpack)-[:IS_INSTANCE_BY]->(model:WorkpackModel) " +
+      "MATCH (person:Person)-[canAccessWorkpack:CAN_ACCESS_WORKPACK]->(workpack:Workpack {deleted: false})-[:IS_INSTANCE_BY]->(model:WorkpackModel) " +
       ", (workpack)-[belongsTo:BELONGS_TO]->(plan:Plan)-[:IS_ADOPTED_BY]->(office:Office) " +
       "WHERE id(person)=$personId AND ID(office) = $idOffice AND canAccessWorkpack.permissionLevel <> 'NONE' " +
       "RETURN ID(workpack) AS id, workpack.name AS name, canAccessWorkpack.permissionLevel AS accessLevel " +
@@ -234,7 +234,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
 
 
   @Query (
-      "MATCH (person:Person)-[isStakeholderIn:IS_STAKEHOLDER_IN{active: true}]->(workpack:Workpack) " +
+      "MATCH (person:Person)-[isStakeholderIn:IS_STAKEHOLDER_IN{active: true}]->(workpack:Workpack {deleted: false}) " +
           ", (workpack)-[belongsTo:BELONGS_TO]->(plan:Plan)-[:IS_ADOPTED_BY]->(office:Office) " +
           "WHERE id(person)=$personId AND ID(office) = $idOffice " +
           "RETURN person, isStakeholderIn, workpack "
