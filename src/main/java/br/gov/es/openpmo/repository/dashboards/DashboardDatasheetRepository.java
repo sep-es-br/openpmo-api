@@ -12,39 +12,51 @@ import java.util.List;
 @Repository
 public interface DashboardDatasheetRepository extends Neo4jRepository<Workpack, Long> {
 
-  @Query("MATCH p=(current:Workpack{deleted:false,canceled:false})<-[:IS_IN*]-(child:Workpack{deleted:false,canceled:false})\n"
-      +
-      "WHERE id(current)=$workpackId\n" +
-      "MATCH (current)-[:IS_INSTANCE_BY|IS_LINKED_TO]->(n:WorkpackModel)\n" +
-      "WHERE id(n)=$workpackModelId\n" +
-      "MATCH (child)-[:IS_INSTANCE_BY|IS_LINKED_TO]->(m:WorkpackModel)-[:IS_IN*]->(n)\n" +
-      "MATCH (child)-[:BELONGS_TO]->(pl:Plan)\n" +
-      "OPTIONAL MATCH (child)<-[:IS_SNAPSHOT_OF]-(b_mc:Milestone{deleted:false , canceled:false})-[:COMPOSES]->(bl:Baseline {active: TRUE})\n"
-      +
-      "WITH id(m) AS idWorkpackModel,\n" +
-      "     child,\n" +
-      "     m.modelName AS singularName,\n" +
-      "     m.modelNameInPlural AS pluralName,\n" +
-      "     m.fontIcon AS icon,\n" +
-      "     p,\n" +
-      "     pl,\n" +
-      "     b_mc IS NOT NULL AS baselined,\n" +
-      "     left(b_mc.date, 10) AS baselineDate,\n" +
-      "     left(child.date, 10) AS actualDate\n" +
-      "WHERE CASE \n" +
-      "        WHEN ('Milestone' IN labels(child)) THEN (\n" +
-      "          (baselined AND baselineDate >= pl.start AND baselineDate <= pl.finish) \n" +
-      "        )\n" +
-      "        WHEN ('Deliverable' IN labels(child)) THEN (\n" +
-      "          EXISTS((child)<-[:IS_SNAPSHOT_OF]-()-[]-(:Baseline{active: true}))\n" +
-      "        ) ELSE true END\n" +
-      "RETURN idWorkpackModel,\n" +
-      "        count(DISTINCT child) AS quantity,\n" +
-      "       singularName,\n" +
-      "       pluralName,\n" +
-      "       icon,\n" +
-      "       length(p) AS level")
-  List<WorkpackByModelQueryResult> workpackByModel(Long workpackId, Long workpackModelId);
+    @Query("MATCH p=(current:Workpack{deleted:false,canceled:false})<-[:IS_IN*]-(child:Workpack{deleted:false,canceled:false})\n" +
+       "WHERE id(current)=$workpackId\n" +
+       "MATCH (current)-[:IS_INSTANCE_BY|IS_LINKED_TO]->(n:WorkpackModel)\n" +
+       "WHERE id(n)=$workpackModelId\n" +
+       "MATCH (child)-[:IS_INSTANCE_BY|IS_LINKED_TO]->(m:WorkpackModel)-[:IS_IN*]->(n)\n" +
+       "MATCH (child)-[:BELONGS_TO]->(pl:Plan)\n" +
+
+       "// baseline direta do próprio child\n" +
+       "OPTIONAL MATCH (child)<-[:IS_SNAPSHOT_OF]-(b_mc:Milestone{deleted:false,canceled:false})-[:COMPOSES]->(bl:Baseline{active:true})\n" +
+
+       "// procura descendentes com baseline válida\n" +
+       "OPTIONAL MATCH (child)<-[:IS_IN*]-(desc:Workpack{deleted:false,canceled:false})\n" +
+       "OPTIONAL MATCH (desc)<-[:IS_SNAPSHOT_OF]-(s)-[:COMPOSES]->(d_bl:Baseline{active:true})\n" +
+       "WHERE (s:Milestone OR s:Deliverable)\n" +
+       "  AND s.deleted=false\n" +
+       "  AND s.canceled=false\n" +
+
+       "WITH id(m) AS idWorkpackModel,\n" +
+       "     child,\n" +
+       "     m.modelName AS singularName,\n" +
+       "     m.modelNameInPlural AS pluralName,\n" +
+       "     m.fontIcon AS icon,\n" +
+       "     p,\n" +
+       "     pl,\n" +
+       "     b_mc IS NOT NULL AS baselined,\n" +
+       "     left(b_mc.date,10) AS baselineDate,\n" +
+       "     COUNT(DISTINCT d_bl) > 0 AS hasDescendantBaseline\n" +
+
+       "WHERE CASE\n" +
+       "        WHEN ('Milestone' IN labels(child)) THEN (\n" +
+       "          baselined AND baselineDate >= pl.start AND baselineDate <= pl.finish\n" +
+       "        )\n" +
+       "        WHEN ('Deliverable' IN labels(child)) THEN (\n" +
+       "          EXISTS((child)<-[:IS_SNAPSHOT_OF]-()-[]-(:Baseline{active:true}))\n" +
+       "        )\n" +
+       "        ELSE hasDescendantBaseline\n" +
+       "      END\n" +
+
+       "RETURN idWorkpackModel,\n" +
+       "       count(DISTINCT child) AS quantity,\n" +
+       "       singularName,\n" +
+       "       pluralName,\n" +
+       "       icon,\n" +
+       "       length(p) AS level")
+List<WorkpackByModelQueryResult> workpackByModel(Long workpackId, Long workpackModelId);
 
   @Query("MATCH (a:Actor)-[s:IS_STAKEHOLDER_IN{active: true }]->(w:Workpack{deleted: false , canceled: false })\n" +
       "WHERE id(w)=$workpackId AND (a)-[s]->(w)\n" +
