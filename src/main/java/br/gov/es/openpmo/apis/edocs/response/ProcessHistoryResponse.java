@@ -16,6 +16,9 @@ public class ProcessHistoryResponse {
   private final String descricaoTipo;
   private final OrganogramaApi api;
 
+  private static String lastName;
+  private static String lastAbbreviation;
+
   public ProcessHistoryResponse(
     final JSONObject json,
     final OrganogramaApi api
@@ -31,13 +34,23 @@ public class ProcessHistoryResponse {
       .map(d -> LocalDateTime.parse(d, DateTimeFormatter.ISO_OFFSET_DATE_TIME))
       .orElse(null);
 
-    this.name = Optional.ofNullable(this.descricaoTipo)
-      .flatMap(descricao -> Model.getSetor(descricao, this.api, json))
-      .orElse(null);
+    if (shouldEnterGet(this.descricaoTipo)) {
 
-    this.abbreviation = Optional.ofNullable(this.descricaoTipo)
-      .flatMap(descricao -> Model.getSigla(descricao, this.api, json))
-      .orElse(null);
+        this.name = Optional.ofNullable(this.descricaoTipo)
+          .flatMap(descricao -> Model.getSetor(descricao, this.api, json))
+          .orElse(null);
+    
+        this.abbreviation = Optional.ofNullable(this.descricaoTipo)
+          .flatMap(descricao -> Model.getSigla(descricao, this.api, json))
+          .orElse(null);
+    
+        lastName = this.name;
+        lastAbbreviation = this.abbreviation;
+    
+      } else {
+        this.name = lastName;
+        this.abbreviation = lastAbbreviation;
+      }
   }
 
   public LocalDateTime getDate() {
@@ -54,6 +67,25 @@ public class ProcessHistoryResponse {
 
   public String getDescricaoTipo() {
     return this.descricaoTipo;
+  }
+
+  private boolean shouldEnterGet(String descricaoTipo) {
+    if (descricaoTipo == null) {
+      return false;
+    }
+  
+    switch (descricaoTipo) {
+      case "Autuacao":
+      case "Encerramento":
+      case "AjusteCustodia":
+      case "Despacho":
+      case "Reabertura":
+      case "Avocamento":
+        return true;
+  
+      default:
+        return false; // Edicao, Entranhamento, Desentranhamento
+    }
   }
 
 }

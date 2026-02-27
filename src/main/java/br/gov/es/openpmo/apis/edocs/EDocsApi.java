@@ -15,12 +15,16 @@ public interface EDocsApi {
 
   List<ProcessHistoryResponse> findProcessHistoryById(
     String id,
-    Long idPerson
+    Long idPerson,
+    String token
   );
 
   boolean isProcessPriority(
     String processId,
-    Long personId
+    Long personId,
+    String token
   ) throws IOException;
+
+  List<ProcessResponse> findProcessesByProtocolsAsSystem(final List<String> protocols);
 
 }

@@ -42,6 +42,19 @@ public class ProcessDetailDto {
       .sorted(Comparator.comparing(ProcessDetailDto::getDate).reversed())
       .collect(Collectors.toList());
 
+    final String currentSectorName = processResponse.getCurrentSectorName();
+
+    LocalDateTime dateSector = LocalDateTime.now();
+    for (final ProcessTimeline processTimeline : timeline) {
+      if (!Objects.equals(
+            processTimeline.detail().getName(),
+            currentSectorName
+      )) {
+        break;
+      }
+      dateSector = processTimeline.detail().getDate();
+    }
+
     final String currentOrganization = processResponse.getCurrentOrganizationAbbreviation();
 
     LocalDateTime date = LocalDateTime.now();
@@ -53,17 +66,29 @@ public class ProcessDetailDto {
     }
     List<ProcessTimelineDto> timelineDtos = ProcessTimelineDto.of(timeline);
     LocalDateTime until = LocalDateTime.now();
+    LocalDateTime sectorUntil = LocalDateTime.now();
+
     if (Objects.equals(process.getStatus(), "Encerrado")) {
-      final Optional<ProcessTimelineDto> encerramento = timelineDtos.stream()
-        .filter(dto -> Objects.equals(dto.getDescricaoTipo(), "Encerramento"))
-        .max(Comparator.comparing(ProcessTimelineDto::getUpdateDate));
-      until = date;
-      date = encerramento
+
+      final Optional<ProcessTimelineDto> encerramento =
+        timelineDtos.stream()
+          .filter(dto -> Objects.equals(dto.getDescricaoTipo(), "Encerramento"))
+          .max(Comparator.comparing(ProcessTimelineDto::getUpdateDate));
+
+      LocalDateTime encerramentoDate = encerramento
         .map(ProcessTimelineDto::getUpdateDate)
-        .orElse(until);
+        .orElse(LocalDateTime.now());
+
+      until = encerramentoDate;
+      sectorUntil = encerramentoDate;
+
       encerramento.ifPresent(ProcessTimelineDto::clearDaysDuration);
     }
-    final long lengthOfStayOn = Duration.between(date, until).abs().toDays();
+    final long lengthOfStayOn =
+      Duration.between(date, until).abs().toDays();
+
+    final long lengthOfStayOnSector =
+      Duration.between(dateSector, sectorUntil).abs().toDays();
 
     return new ProcessDetailDto(
       process.getId(),
@@ -75,7 +100,12 @@ public class ProcessDetailDto {
         process.getSubject(),
         currentOrganization,
         lengthOfStayOn,
-        process.getPriority()
+        process.getPriority(),
+        process.getActingOrganization(),
+        process.getActingSector(),
+        process.getActingDate(),
+        process.getLastDispatchDate(),
+        lengthOfStayOnSector
       ),
       timelineDtos
     );
