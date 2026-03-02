@@ -73,7 +73,8 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
    ") " +
    "with distinct p " +
    "OPTIONAL MATCH (p)<-[isPortraitOf:IS_A_PORTRAIT_OF]-(avatar:File) " +
-   "return distinct p, avatar " +
+   "Optional MATCH (p)-[isAut:IS_AUTHENTICATED_BY]->(auth:AuthService) " +
+   "return distinct p, avatar , isAut, auth " +
    "order by apoc.text.clean(p.name)")
   Streamable<Person> findAllFilteringBy(
     StakeholderFilterEnum stakeholderFilter,

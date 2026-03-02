@@ -16,18 +16,23 @@ public class PersonListDto {
 
   private AvatarDto avatar;
 
+  private Boolean isUser;
+
 
   public static PersonListDto of(
     final Person person,
     final UriComponentsBuilder uriComponentsBuilder
   ) {
+    boolean isUser = person.getAuthentications() != null &&
+                      !person.getAuthentications().isEmpty();
     return new PersonListDto(
       person.getId(),
       person.getName(),
       person.getFullName(),
       person.getIsInContactBookOf().stream().findAny().map(IsInContactBookOf::getEmail).orElse(null),
       person.getAvatar(),
-      uriComponentsBuilder
+      uriComponentsBuilder,
+      isUser
     );
   }
 
@@ -37,7 +42,8 @@ public class PersonListDto {
     final String fullName,
     final String email,
     final File avatar,
-    final UriComponentsBuilder uriComponentsBuilder
+    final UriComponentsBuilder uriComponentsBuilder,
+    final boolean isUser
   ) {
     this.id = id;
     this.name = name;
@@ -47,6 +53,7 @@ public class PersonListDto {
     if (avatar != null) {
       this.avatar = new AvatarDto(avatar, uriComponentsBuilder);
     }
+    this.isUser = isUser;
   }
 
   public Long getId() {
@@ -88,4 +95,14 @@ public class PersonListDto {
   public void setFullName(final String fullName) {
     this.fullName = fullName;
   }
+
+  public Boolean getIsUser() {
+    return isUser;
+  }
+
+  public void setIsUser(Boolean isUser) {
+    this.isUser = isUser;
+  }
+
+  
 }
