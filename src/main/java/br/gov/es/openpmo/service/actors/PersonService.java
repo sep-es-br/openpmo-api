@@ -228,11 +228,8 @@ public class PersonService {
 
     final PersonDetailDto personDetailDto = new PersonDetailDto(maybeQuery.get(), uriComponentsBuilder);
 
-    String personAcessoCidadaoSub = personDetailDto.getKey();
-    Optional<PublicAgentEmailResponse> personEmails = this.acessoCidadaoApi.findAgentEmail(personAcessoCidadaoSub, personId);
-
-    if (personEmails.isPresent()) {
-      personDetailDto.setContactEmail(personEmails.get().getCorporateEmail());
+    if (personDetailDto.getContactEmail() == null || personDetailDto.getContactEmail().isEmpty()) {
+      personDetailDto.setContactEmail(personDetailDto.getEmail());
     }
 
     final List<CanAccessOffice> canAccessOffice = officeRepository.findAllCanAccessOfficeByIdPerson(personId, officeId);

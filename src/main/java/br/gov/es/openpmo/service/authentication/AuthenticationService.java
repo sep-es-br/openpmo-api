@@ -89,6 +89,14 @@ public class AuthenticationService {
           authRelationship.setEmail(email);
           this.personService.save(user);
         }
+      }else if (userEmails != null && userEmails.getEmail() != null && userEmails.getEmail().trim().length() > 0) {
+        IsAuthenticatedBy authRelationship = user.getAuthentications().stream().findFirst().orElse(null);
+
+        email = userEmails.getEmail();
+        if (authRelationship != null) {
+          authRelationship.setEmail(email);
+          this.personService.save(user);
+        }
       }
 
       final String authenticationToken = this.tokenService.generateToken(user, key, email, TokenType.AUTHENTICATION);
