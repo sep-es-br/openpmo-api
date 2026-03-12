@@ -51,13 +51,12 @@ public class DomainController {
 
   @GetMapping
   public ResponseEntity<ResponseBase<List<DomainDto>>> indexBase(
-      @RequestParam(value = "id-office", required = false) final Long idOffice,
       @RequestParam(value = "idFilter", required = false) final Long idFilter,
       @RequestParam(required = false) final String term,
       @Authorization final String authorization) {
 
-//    this.canAccessService.ensureCanReadResource(idOffice, authorization);
-    final List<DomainDto> domains = this.domainService.findAll(idOffice, idFilter, term)
+//   this.canAccessService.ensureIsAdministrator(authorization);
+    final List<DomainDto> domains = this.domainService.findAll(idFilter, term)
         .stream()
         .map(o -> this.modelMapper.map(o, DomainDto.class))
         .collect(Collectors.toList());
@@ -84,7 +83,7 @@ public class DomainController {
   public ResponseEntity<ResponseBase<EntityDto>> save(@Valid @RequestBody final DomainStoreDto domainStoreDto,
       @Authorization final String authorization) {
 
-//    this.canAccessService.ensureCanEditResource(domainStoreDto.getIdOffice(), authorization);
+    this.canAccessService.ensureIsAdministrator(authorization);
 
     final Domain domain = this.domainService.save(domainStoreDto);
 
@@ -99,7 +98,7 @@ public class DomainController {
   public ResponseEntity<ResponseBase<EntityDto>> update(@RequestBody @Valid final DomainUpdateDto domainUpdateDto,
       @Authorization final String authorization) {
 
-//    this.canAccessService.ensureCanEditResource(domainUpdateDto.getId(), authorization);
+    this.canAccessService.ensureIsAdministrator(authorization);
 
     final Domain domain = this.domainService.update(this.getDomain(domainUpdateDto));
 
