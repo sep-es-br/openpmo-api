@@ -1,6 +1,6 @@
 package br.gov.es.openpmo.controller.actor;
 
-import br.gov.es.openpmo.apis.acessocidadao.AcessoCidadaoApi;
+import br.gov.es.openpmo.apis.acessocidadao.IAcessoCidadaoApi;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.person.CitizenByNameQuery;
 import br.gov.es.openpmo.dto.person.CitizenDto;
@@ -26,7 +26,7 @@ public class CitizenController {
 
   private final CitizenService service;
 
-  private final AcessoCidadaoApi acessoCidadaoApi;
+  private final IAcessoCidadaoApi acessoCidadaoApi;
 
   private final TokenService tokenService;
 
@@ -35,7 +35,7 @@ public class CitizenController {
   @Autowired
   public CitizenController(
       final CitizenService service,
-      final AcessoCidadaoApi acessoCidadaoApi,
+      final IAcessoCidadaoApi acessoCidadaoApi,
       final TokenService tokenService,
       final ICanAccessService canAccessService) {
     this.service = service;
