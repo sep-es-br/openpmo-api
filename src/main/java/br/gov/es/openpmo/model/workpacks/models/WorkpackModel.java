@@ -512,7 +512,7 @@ public abstract class WorkpackModel extends Entity {
     return notificationsSessionActive;
   }
 
-  public void setNotificationsSessionActive(boolean notificationsSessionActive) {
+  public void setNotificationsSessionActive(Boolean notificationsSessionActive) {
     this.notificationsSessionActive = notificationsSessionActive;
   }
 
