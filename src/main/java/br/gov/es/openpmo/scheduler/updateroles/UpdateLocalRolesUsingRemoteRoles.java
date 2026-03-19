@@ -1,6 +1,6 @@
 package br.gov.es.openpmo.scheduler.updateroles;
 
-import br.gov.es.openpmo.apis.acessocidadao.AcessoCidadaoApi;
+import br.gov.es.openpmo.apis.acessocidadao.IAcessoCidadaoApi;
 import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentRoleResponse;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.relations.CanAccessOffice;
@@ -32,7 +32,7 @@ public class UpdateLocalRolesUsingRemoteRoles {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(UpdateLocalRolesUsingRemoteRoles.class);
 
-  private final AcessoCidadaoApi acessoCidadaoApi;
+  private final IAcessoCidadaoApi acessoCidadaoApi;
 
   private final IsAuthenticatedByRepository isAuthenticatedByRepository;
 
@@ -46,7 +46,7 @@ public class UpdateLocalRolesUsingRemoteRoles {
 
   @Autowired
   public UpdateLocalRolesUsingRemoteRoles(
-    final AcessoCidadaoApi acessoCidadaoApi,
+    final IAcessoCidadaoApi acessoCidadaoApi,
     final IsAuthenticatedByRepository isAuthenticatedByRepository,
     final PlanPermissionRepository planPermissionRepository,
     final WorkpackPermissionRepository workpackPermissionRepository,
