@@ -1,6 +1,6 @@
 package br.gov.es.openpmo.service.permissions;
 
-import br.gov.es.openpmo.apis.acessocidadao.AcessoCidadaoApi;
+import br.gov.es.openpmo.apis.acessocidadao.IAcessoCidadaoApi;
 import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentResponse;
 import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentRoleResponse;
 import br.gov.es.openpmo.dto.person.RoleResource;
@@ -34,7 +34,7 @@ public class RoleService {
   private static final String CITIZEN = "citizen";
   private static final Logger LOGGER = LoggerFactory.getLogger(RoleService.class);
 
-  private final AcessoCidadaoApi acessoCidadaoApi;
+  private final IAcessoCidadaoApi acessoCidadaoApi;
 
   private final PersonService personService;
 
@@ -46,7 +46,7 @@ public class RoleService {
 
   @Autowired
   public RoleService(
-    final AcessoCidadaoApi acessoCidadaoApi,
+    final IAcessoCidadaoApi acessoCidadaoApi,
     final PersonService personService,
     final OfficePermissionRepository officePermissionRepository,
     final PlanPermissionRepository planPermissionRepository,

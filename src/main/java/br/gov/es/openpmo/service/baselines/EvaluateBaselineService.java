@@ -11,6 +11,8 @@ import static br.gov.es.openpmo.model.baselines.Status.PROPOSED;
 import br.gov.es.openpmo.model.journals.JournalAction;
 import br.gov.es.openpmo.model.relations.IsEvaluatedBy;
 import static br.gov.es.openpmo.model.relations.IsEvaluatedBy.fromMemberEvaluation;
+
+import br.gov.es.openpmo.model.workpacks.Deliverable;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.BaselineRepository;
 import br.gov.es.openpmo.repository.IsCCBMemberRepository;
@@ -19,7 +21,10 @@ import br.gov.es.openpmo.repository.JournalRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.completed.ICompleteWorkpackService;
 import br.gov.es.openpmo.service.journals.JournalCreator;
+import br.gov.es.openpmo.service.schedule.UpdateStatusService;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
+import java.util.HashSet;
+
 import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_IS_NOT_PROPOSED_INVALID_STATE_ERROR;
 import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.CCB_MEMBER_ALREADY_EVALUATED;
@@ -57,6 +62,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
 
   private final ICompleteWorkpackService completeDeliverableService;
 
+  private final UpdateStatusService updateStatusService;
 
   @Autowired
   public EvaluateBaselineService(
@@ -67,7 +73,8 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     final IsEvaluatedByRepository evaluatedByRepository,
     final JournalCreator journalCreator,
     final JournalRepository journalRepository,
-    final ICompleteWorkpackService completeDeliverableService
+    final ICompleteWorkpackService completeDeliverableService,
+    final UpdateStatusService updateStatusService
     
   ) {
     this.repository = repository;
@@ -78,6 +85,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     this.journalCreator = journalCreator;
     this.journalRepository = journalRepository;
     this.completeDeliverableService = completeDeliverableService;
+    this.updateStatusService = updateStatusService;
   }
 
   private static void throwExceptionIfBaselineIsNotProposedOrReject(final Baseline baseline) {
@@ -185,6 +193,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     this.saveBaseline(baseline);
     workpackRepository.resetSituationOrStatusToDefault(baseline.getIdWorkpack());
     this.cancelWorkpacksFromSnapshots(baseline);
+    this.recalculateDeliverableCompletion(baseline);
     if(baseline.isCancelation()) {
       this.cancelWorkpackByBaseline(baseline);
     }
@@ -240,6 +249,54 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
         );
     }
   }
+
+  private void recalculateDeliverableCompletion(final Baseline baseline) {
+
+    final List<Deliverable> deliverables =
+      this.workpackRepository.findMasterDeliverablesFromBaseline(baseline.getId());
+
+    final Set<Long> affectedWorkpacks = new HashSet<>();
+
+    for (Deliverable deliverable : deliverables) {
+
+      final boolean hasScheduleRelated = this.workpackRepository.hasScheduleRelated(deliverable.getId());
+      if (!hasScheduleRelated) {
+        continue;
+      }
+
+      final boolean hasWorkToComplete =
+        this.updateStatusService.hasWorkToComplete(deliverable.getId());
+
+      if (!hasWorkToComplete) {
+        deliverable.setCompleted(true);
+        this.workpackRepository.updateSituationValue(
+          deliverable.getId(),
+          "Concluída"
+        );
+      } else {
+        final boolean isSituationConcluded =
+          this.workpackRepository.isSituationConcluded(deliverable.getId());
+  
+        if (isSituationConcluded) {
+          this.workpackRepository.updateSituationValue(
+            deliverable.getId(),
+            "Em execução"
+          );
+        }
+        
+        deliverable.setCompleted(false);
+      }
+
+      affectedWorkpacks.add(deliverable.getId());
+
+    }
+
+    for (Long workpackId : affectedWorkpacks) {
+      this.completeDeliverableService
+        .recalculateCompletionStatus(workpackId);
+    }
+  }
+
 
   private void verifyAlreadyEvaluationOfMember(
     final Long idPerson,

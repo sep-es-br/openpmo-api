@@ -142,7 +142,7 @@ private void testHierarchyAndSetCompleted(final Long workpackId, boolean startFr
     }
   }
 
-  public void onWorkpackRestore(Long workpackId){
+  public void recalculateCompletionStatus(Long workpackId){
     Workpack workpack = workpackRepository.findById(workpackId)
     .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
 

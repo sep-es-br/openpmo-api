@@ -371,7 +371,7 @@ public class WorkpackController {
     );
     this.workpackService.restore(idWorkpack);
 
-    this.completeDeliverableService.onWorkpackRestore(idWorkpack);
+    this.completeDeliverableService.recalculateCompletionStatus(idWorkpack);
 
     return ResponseEntity.ok().build();
   }
