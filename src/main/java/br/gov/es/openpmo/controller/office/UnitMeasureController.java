@@ -44,14 +44,13 @@ public class UnitMeasureController {
 
   @GetMapping
   public ResponseEntity<ResponseBase<List<UnitMeasureDto>>> indexBase(
-      @RequestParam final Long idOffice,
       @RequestParam(required = false) final Long idFilter,
       @RequestParam(required = false) final String term,
       @Authorization final String authorization
   ) {
-//    this.canAccessService.ensureCanReadResource(idOffice, authorization);
+//    this.canAccessService.ensureIsAdministrator(authorization);
     final List<UnitMeasureDto> unitMeasures = new ArrayList<>();
-    this.unitMeasureService.findAll(idOffice, term, idFilter)
+    this.unitMeasureService.findAll(term, idFilter)
         .forEach(registro -> unitMeasures.add(new UnitMeasureDto(registro)));
     final ResponseBase<List<UnitMeasureDto>> response = new ResponseBase<List<UnitMeasureDto>>().setData(unitMeasures)
         .setMessage(OPERATION_SUCCESS).setSuccess(true);
@@ -76,8 +75,6 @@ public class UnitMeasureController {
     this.canAccessService.ensureCanEditResource(unitMeasureStoreDto.getIdOffice(), authorization);
 
     UnitMeasure unitMeasure = this.modelMapper.map(unitMeasureStoreDto, UnitMeasure.class);
-    unitMeasure.setOffice(new Office());
-    unitMeasure.getOffice().setId(unitMeasureStoreDto.getIdOffice());
     unitMeasure = this.unitMeasureService.save(unitMeasure);
     final ResponseBase<EntityDto> entity = new ResponseBase<EntityDto>().setMessage(OPERATION_SUCCESS)
         .setData(new EntityDto(

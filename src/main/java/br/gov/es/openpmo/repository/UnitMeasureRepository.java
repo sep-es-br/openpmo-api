@@ -11,17 +11,15 @@ import java.util.Optional;
 
 public interface UnitMeasureRepository extends Neo4jRepository<UnitMeasure, Long>, CustomRepository {
   @Query(
-    "MATCH (u:UnitMeasure)-[a:AVAILABLE_IN]->(o:Office) " +
+    "MATCH (u:UnitMeasure) " +
     "WITH *, " +
     "apoc.text.levenshteinSimilarity(apoc.text.clean(u.name), apoc.text.clean($term)) AS nameScore, " +
     "apoc.text.levenshteinSimilarity(apoc.text.clean(u.fullName), apoc.text.clean($term)) AS fullNameScore " +
     "WITH *, CASE WHEN nameScore > fullNameScore THEN nameScore ELSE fullNameScore END AS score " +
-    "WHERE id(o) = $idOffice AND ($term IS NULL OR $term = '' OR score > $searchCutOffScore) " +
-    "RETURN u, a, o " +
+    "RETURN u " +
     "ORDER BY score DESC"
   )
   List<UnitMeasure> findByOffice(
-    @Param("idOffice") Long idOffice,
     @Param("term") String term,
     @Param("searchCutOffScore") Double searchCutOffScore
   );
