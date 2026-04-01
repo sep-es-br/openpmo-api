@@ -8,7 +8,6 @@ public class UnitMeasureDto {
   private String name;
   private String fullName;
   private Long precision;
-  private Long idOffice;
 
   public UnitMeasureDto() {
 
@@ -18,7 +17,6 @@ public class UnitMeasureDto {
     this.id = unitMeasure.getId();
     this.name = unitMeasure.getName();
     this.fullName = unitMeasure.getFullName();
-    this.idOffice = unitMeasure.getOffice().getId();
     this.precision = unitMeasure.getPrecision();
   }
 
@@ -44,14 +42,6 @@ public class UnitMeasureDto {
 
   public void setFullName(final String fullName) {
     this.fullName = fullName;
-  }
-
-  public Long getIdOffice() {
-    return this.idOffice;
-  }
-
-  public void setIdOffice(final Long idOffice) {
-    this.idOffice = idOffice;
   }
 
   public Long getPrecision() {
