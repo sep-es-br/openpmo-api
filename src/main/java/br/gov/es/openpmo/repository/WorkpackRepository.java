@@ -28,6 +28,13 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       "RETURN w, f, p, v, u ")
   List<Workpack> findAllDeliverable(List<Long> ids);
 
+  @Query("MATCH (d:Deliverable)<-[:FEATURES]-(schedule:Schedule) " +
+       "WHERE d.canceled = false " +
+       "AND d.deleted = false " +
+       "AND (d.category IS NULL OR d.category = 'MASTER') " +
+       "RETURN d")
+  List<Deliverable> findAllDeliverables();
+
   @Query("MATCH (o:Office)<-[r:IS_ADOPTED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO]-(workpack:Workpack)<-[permission:CAN_ACCESS_WORKPACK]-(person:Person) "
       +
       " WHERE id(o) = $idOffice " +
