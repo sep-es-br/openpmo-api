@@ -12,10 +12,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UpdateStatusService {
+
+  private final Logger logger;
 
   private final WorkpackRepository workpackRepository;
 
@@ -27,11 +30,12 @@ public class UpdateStatusService {
   public UpdateStatusService(
     final WorkpackRepository workpackRepository,
     final StepRepository stepRepository,
-    final ICompleteWorkpackService completeWorkpackService
+    final ICompleteWorkpackService completeWorkpackService, Logger logger
   ) {
     this.workpackRepository = workpackRepository;
     this.stepRepository = stepRepository;
     this.completeWorkpackService = completeWorkpackService;
+    this.logger = logger;
   }
 
   public List<Deliverable> getDeliverablesByStepId(final Long stepId) {
@@ -45,6 +49,7 @@ public class UpdateStatusService {
   public void updateAllDeliverables() {
     final List<Deliverable> deliverables = this.workpackRepository.findAllDeliverables();
     this.update(deliverables);
+    logger.info(">>> Finalizou update de todos os deliverables");
   }
 
 
