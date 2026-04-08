@@ -6,6 +6,16 @@ import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentResponse;
 import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentRoleResponse;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.service.journals.JournalCreator;
+import static br.gov.es.openpmo.utils.ApplicationMessage.FAILED_FETCH_TOKEN_ACESSO_CIDADAO;
+import java.io.IOException;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import org.apache.http.Consts;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -21,22 +31,11 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-
-import static br.gov.es.openpmo.utils.ApplicationMessage.FAILED_FETCH_TOKEN_ACESSO_CIDADAO;
 
 @Component
 @Scope("singleton")
@@ -46,7 +45,7 @@ public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
   private static final String AUTHORIZATION = "Authorization";
   private static final String BEARER = "Bearer ";
   private static final int HTTP_OK = 200;
-  private final Logger logger;
+  private final Logger logger = LoggerFactory.getLogger(AcessoCidadaoApiImpl.class);
 
   private final JournalCreator journalCreator;
 
@@ -71,10 +70,8 @@ public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
   private List<PublicAgentResponse> allPublicAgentResponses;
 
   public AcessoCidadaoApiImpl(
-    final Logger logger,
     final JournalCreator journalCreator
   ) {
-    this.logger = logger;
     this.journalCreator = journalCreator;
   }
 

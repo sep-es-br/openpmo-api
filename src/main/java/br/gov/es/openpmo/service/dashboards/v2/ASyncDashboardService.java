@@ -61,8 +61,6 @@ public class ASyncDashboardService {
     
     DashboardDataByMonth dataByMonth = dashboardRepository.getDataByMonth(scopeId, baselineId, Integer.valueOf(yearMonthAsStr), sCurve);
     
-    Logger.getGlobal().log(Level.INFO, "data by month concluido em: {0}ms", System.currentTimeMillis() - agora);
-
     return CompletableFuture.completedFuture(dataByMonth);
   }
   
