@@ -1,6 +1,6 @@
 package br.gov.es.openpmo.service.permissions;
 
-import br.gov.es.openpmo.apis.acessocidadao.AcessoCidadaoApi;
+import br.gov.es.openpmo.apis.acessocidadao.IAcessoCidadaoApi;
 import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentRoleResponse;
 import br.gov.es.openpmo.dto.person.RoleResource;
 import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
@@ -18,7 +18,7 @@ public class RemoteRolesFetcher implements IRemoteRolesFetcher {
 
   private final IsAuthenticatedByRepository authenticationRepository;
 
-  private final AcessoCidadaoApi acessoCidadaoApi;
+  private final IAcessoCidadaoApi acessoCidadaoApi;
 
   @Value("${app.login.server.name}")
   private String serverName;
@@ -26,7 +26,7 @@ public class RemoteRolesFetcher implements IRemoteRolesFetcher {
   @Autowired
   public RemoteRolesFetcher(
     final IsAuthenticatedByRepository authenticationRepository,
-    final AcessoCidadaoApi acessoCidadaoApi
+    final IAcessoCidadaoApi acessoCidadaoApi
   ) {
     this.authenticationRepository = authenticationRepository;
     this.acessoCidadaoApi = acessoCidadaoApi;

@@ -93,26 +93,29 @@ public class CompleteWorkpackService implements ICompleteWorkpackService {
       .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
   }
 
-  private void testHierarchyAndSetCompleted(final Long workpackId,  boolean startFromSelf) {
+private void testHierarchyAndSetCompleted(final Long workpackId, boolean startFromSelf) {
 
-    Long parentId = startFromSelf 
-      ? workpackId 
-      : repository.getParentId(workpackId);
+  List<Long> parentIds = startFromSelf
+    ? List.of(workpackId)
+    : repository.getParentIds(workpackId);
 
-    if (parentId == null) {
-      return;
-    }
+  if (parentIds == null || parentIds.isEmpty()) {
+    return;
+  }
+
+  for (Long parentId : parentIds) {
+
     if (this.repository.allSonsAreCompleted(parentId)) {
-      this.repository.setCompleted(
-        parentId,
-        true
-      );
-      if(workpackRepository.isProject(parentId)){
+
+      this.repository.setCompleted(parentId, true);
+
+      if (workpackRepository.isProject(parentId)) {
         this.workpackRepository.updateSituationValue(parentId, "Concluído");
       }
       this.testHierarchyAndSetCompleted(parentId, false);
     }
   }
+}
 
   public void onWorkpackCreated(Workpack workpack) {
 
@@ -139,7 +142,7 @@ public class CompleteWorkpackService implements ICompleteWorkpackService {
     }
   }
 
-  public void onWorkpackRestore(Long workpackId){
+  public void recalculateCompletionStatus(Long workpackId){
     Workpack workpack = workpackRepository.findById(workpackId)
     .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
 

@@ -13,9 +13,6 @@ public class UnitMeasure extends Entity {
 
   private Long precision;
 
-  @Relationship(type = "AVAILABLE_IN")
-  private Office office;
-
   public String getName() {
     return this.name;
   }
@@ -30,14 +27,6 @@ public class UnitMeasure extends Entity {
 
   public void setFullName(final String fullName) {
     this.fullName = fullName;
-  }
-
-  public Office getOffice() {
-    return this.office;
-  }
-
-  public void setOffice(final Office office) {
-    this.office = office;
   }
 
   public Long getPrecision() {

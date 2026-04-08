@@ -16,9 +16,6 @@ public class Domain extends Entity {
   @Relationship(type = "IS_ROOT_OF", direction = Relationship.INCOMING)
   private Locality localityRoot;
 
-  @Relationship(type = "APPLIES_TO")
-  private Office office;
-
   @Relationship(type = "BELONGS_TO", direction = Relationship.INCOMING)
   private Set<Locality> localities;
 
@@ -28,14 +25,6 @@ public class Domain extends Entity {
 
   public void setLocalities(final Set<Locality> localities) {
     this.localities = localities;
-  }
-
-  public Office getOffice() {
-    return this.office;
-  }
-
-  public void setOffice(final Office office) {
-    this.office = office;
   }
 
   public Locality getLocalityRoot() {

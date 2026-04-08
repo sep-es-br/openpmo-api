@@ -53,14 +53,13 @@ public class DomainService {
   }
 
   public List<Domain> findAll(
-    final Long idOffice,
     final Long idFilter,
     final String term
   ) {
 
     if(idFilter == null) {
-    	if (StringUtils.isBlank(term)) return this.findAll(idOffice);
-    	else return this.findAllByTerm(idOffice, term);
+    	if (StringUtils.isBlank(term)) return this.findAll();
+    	else return this.findAllByTerm(term);
     }
 
     final CustomFilter filter = this.customFilterRepository
@@ -68,7 +67,6 @@ public class DomainService {
       .orElseThrow(() -> new NegocioException(CUSTOM_FILTER_NOT_FOUND));
 
     final Map<String, Object> params = new HashMap<>();
-    params.put("idOffice", idOffice);
     params.put("term", term);
     params.put("searchCutOffScore", appProperties.getSearchCutOffScore());
     
@@ -77,12 +75,12 @@ public class DomainService {
     return this.findAllDomain.execute(filter, params);
   }
 
-  public List<Domain> findAll(final Long idOffice) {
-    return new ArrayList<>(this.domainRepository.findAll(idOffice));
+  public List<Domain> findAll() {
+    return new ArrayList<>(this.domainRepository.findAll());
   }
   
-  public List<Domain> findAllByTerm(final Long idOffice, final String term) {
-    return new ArrayList<>(this.domainRepository.findAllByTerm(idOffice, term, this.appProperties.getSearchCutOffScore()));
+  public List<Domain> findAllByTerm(final String term) {
+    return new ArrayList<>(this.domainRepository.findAllByTerm(term, this.appProperties.getSearchCutOffScore()));
   }
 
   public Domain save(final DomainStoreDto domainDto) {
@@ -93,7 +91,6 @@ public class DomainService {
       Locality.class
     );
     domain.setLocalityRoot(localityRoot);
-    domain.setOffice(this.officeService.findById(domainDto.getIdOffice()));
     return this.domainRepository.save(domain);
   }
 

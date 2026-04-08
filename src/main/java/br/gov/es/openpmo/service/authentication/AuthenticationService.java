@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.service.authentication;
 
+import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentEmailResponse;
 import br.gov.es.openpmo.dto.AcessoDto;
 import br.gov.es.openpmo.dto.person.queries.PersonQuery;
 import br.gov.es.openpmo.enumerator.TokenType;
@@ -7,6 +8,7 @@ import br.gov.es.openpmo.exception.AutenticacaoException;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
+import br.gov.es.openpmo.service.actors.CitizenService;
 import br.gov.es.openpmo.service.actors.IsAuthenticatedByService;
 import br.gov.es.openpmo.service.actors.PersonService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
@@ -28,18 +30,25 @@ import java.util.*;
 
 @Service
 public class AuthenticationService {
-
   private static final String SUB = "sub";
+
   private static final String SUB_NOVO = "subNovo";
+
   private static final String EMAIL = "email";
+
   private static final String APELIDO = "apelido";
 
   private static final String AUTHORIZATION = "Authorization";
+
   private static final String BEARER = "Bearer ";
 
   private final TokenService tokenService;
+
   private final PersonService personService;
+
   private final IsAuthenticatedByService isAuthenticatedByService;
+
+  private final CitizenService citizenService;
 
   @Value("${users.administrators}")
   private List<String> administrators;
@@ -49,30 +58,52 @@ public class AuthenticationService {
 
   @Autowired
   public AuthenticationService(
-    final TokenService tokenService,
-    final PersonService personService,
-    final IsAuthenticatedByService isAuthenticatedByService
-  ) {
+      final TokenService tokenService,
+      final PersonService personService,
+      final IsAuthenticatedByService isAuthenticatedByService,
+      final CitizenService citizenService) {
     this.tokenService = tokenService;
     this.personService = personService;
     this.isAuthenticatedByService = isAuthenticatedByService;
+    this.citizenService = citizenService;
   }
 
   public AcessoDto authenticate(final String token) throws IOException {
     final JSONObject personInfo = this.getUserInfo(token);
     final String sub = Optional.ofNullable(personInfo.optString(SUB_NOVO)).orElse(personInfo.optString(SUB));
-    final String email = personInfo.getString(EMAIL);
+    String email = personInfo.getString(EMAIL);
     final String key = Optional.ofNullable(sub).orElse(email);
 
     final Optional<Person> person = this.personService.findByKey(key);
 
-    if(person.isPresent()) {
+    if (person.isPresent()) {
       final Person user = person.get();
+      final PublicAgentEmailResponse userEmails = this.citizenService.findAgentEmail(sub, user.getId());
+
+      if (userEmails != null && userEmails.getCorporateEmail() != null && userEmails.getCorporateEmail().trim().length() > 0) {
+        // Pode existir o caso onde o Acesso Cidadão retorna uma string vazia, por isso essa terceira verificação
+        email = userEmails.getCorporateEmail();
+        IsAuthenticatedBy authRelationship = user.getAuthentications().stream().findFirst().orElse(null);
+
+        if (authRelationship != null) {
+          authRelationship.setEmail(email);
+          this.personService.save(user);
+        }
+      }else if (userEmails != null && userEmails.getEmail() != null && userEmails.getEmail().trim().length() > 0) {
+        IsAuthenticatedBy authRelationship = user.getAuthentications().stream().findFirst().orElse(null);
+
+        email = userEmails.getEmail();
+        if (authRelationship != null) {
+          authRelationship.setEmail(email);
+          this.personService.save(user);
+        }
+      }
+
       final String authenticationToken = this.tokenService.generateToken(user, key, email, TokenType.AUTHENTICATION);
       final String refreshToken = this.tokenService.generateToken(user, key, email, TokenType.REFRESH);
       return new AcessoDto(authenticationToken, refreshToken);
     }
-    if(this.administrators.contains(email)) {
+    if (this.administrators.contains(email)) {
       final Person user = this.createPerson(personInfo);
       final String authenticationToken = this.tokenService.generateToken(user, key, email, TokenType.AUTHENTICATION);
       final String refreshToken = this.tokenService.generateToken(user, key, email, TokenType.REFRESH);
@@ -86,9 +117,9 @@ public class AuthenticationService {
     final HttpUriRequest postRequest = new HttpPost(personInfoUri);
     postRequest.addHeader(AUTHORIZATION, BEARER + token);
 
-    try(final CloseableHttpClient httpClient = HttpClients.createDefault();
+    try (final CloseableHttpClient httpClient = HttpClients.createDefault();
         final CloseableHttpResponse response = httpClient.execute(postRequest)) {
-      if(response.getStatusLine().getStatusCode() == 200) {
+      if (response.getStatusLine().getStatusCode() == 200) {
         return new JSONObject(EntityUtils.toString(response.getEntity()));
       }
     }
@@ -121,39 +152,37 @@ public class AuthenticationService {
   }
 
   public void signOut(
-    final String authorizationHeader,
-    final HttpServletResponse response
-  ) throws IOException {
+      final String authorizationHeader,
+      final HttpServletResponse response) throws IOException {
     final String personInfoUri = this.issuerUri + "/connect/endsession";
     final HttpUriRequest postRequest = new HttpPost(personInfoUri);
     postRequest.addHeader(AUTHORIZATION, authorizationHeader);
 
-    try(final CloseableHttpClient httpClient = HttpClients.createDefault();
+    try (final CloseableHttpClient httpClient = HttpClients.createDefault();
         final CloseableHttpResponse closeResponse = httpClient.execute(postRequest)) {
       final int status = closeResponse.getStatusLine().getStatusCode();
-      if(status == 302 || status == 200) {
+      if (status == 302 || status == 200) {
         Arrays.asList(closeResponse.getAllHeaders())
-          .forEach(header -> response.addHeader(header.getName(), header.getValue()));
+            .forEach(header -> response.addHeader(header.getName(), header.getValue()));
         response.setHeader("Access-Control-Allow-Origin", "*");
         response.setHeader("Location", personInfoUri);
         response.setStatus(200);
         response.sendRedirect(personInfoUri);
-      }
-      else {
+      } else {
         throw new NegocioException();
       }
     }
   }
 
   public AcessoDto refresh(final String refreshToken) {
-    if(this.tokenService.isValidToken(refreshToken, TokenType.REFRESH)) {
+    if (this.tokenService.isValidToken(refreshToken, TokenType.REFRESH)) {
       final Claims claims = this.tokenService.getUser(refreshToken, TokenType.REFRESH);
 
       final PersonQuery user = this.personService
-        .findByIdPersonWithRelationshipAuthServiceAcessoCidadao(Long.parseLong(claims.getSubject()));
+          .findByIdPersonWithRelationshipAuthServiceAcessoCidadao(Long.parseLong(claims.getSubject()));
 
-      final String authenticationToken =
-        this.tokenService.generateToken(user.getPerson(), user.getKey(), user.getEmail(), TokenType.AUTHENTICATION);
+      final String authenticationToken = this.tokenService.generateToken(user.getPerson(), user.getKey(),
+          user.getEmail(), TokenType.AUTHENTICATION);
 
       return new AcessoDto(authenticationToken, refreshToken);
     }

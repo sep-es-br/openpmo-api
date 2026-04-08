@@ -182,8 +182,7 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
     "MATCH (m:Workpack {deleted:false}) " +
     "WHERE id(m) = $idWorkpack " +
     "OPTIONAL MATCH (m)<-[:IS_SNAPSHOT_OF]-(s:Workpack)-[:COMPOSES]->(b1:Baseline {active:true}) " +
-    "OPTIONAL MATCH (m)-[:IS_IN]->(p:Project)-[:IS_BASELINED_BY]->(b2:Baseline {active:true}) " +
-    "RETURN (count(s) > 0 OR count(b2) > 0) AS hasAnyConditionMet"
+    "RETURN count(s) > 0  AS hasAnyConditionMet"
   )
   boolean workpackHasSnapshotOrProjectWithBaseline(Long idWorkpack);
 

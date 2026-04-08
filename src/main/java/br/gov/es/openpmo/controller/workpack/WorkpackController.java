@@ -38,6 +38,7 @@ import br.gov.es.openpmo.service.journals.JournalCreator;
 import br.gov.es.openpmo.service.journals.JournalFinder;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessData;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
+import br.gov.es.openpmo.service.schedule.UpdateStatusService;
 import br.gov.es.openpmo.service.workpack.WorkpackHasChildren;
 import br.gov.es.openpmo.service.workpack.WorkpackPermissionVerifier;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
@@ -101,6 +102,8 @@ public class WorkpackController {
 
   private final RiskRepository riskRepository;
 
+  private final UpdateStatusService updateStatusService;
+
   @Autowired
   public WorkpackController(
     final ResponseHandler responseHandler,
@@ -116,7 +119,8 @@ public class WorkpackController {
     final WorkpackHasChildren workpackHasChildren,
     final IsFavoritedByService isFavoritedByService,
     final DashboardMilestoneRepository dashboardMilestoneRepository,
-    final RiskRepository riskRepository
+    final RiskRepository riskRepository,
+    final UpdateStatusService updateStatusService
   ) {
     this.responseHandler = responseHandler;
     this.workpackService = workpackService;
@@ -132,6 +136,7 @@ public class WorkpackController {
     this.isFavoritedByService = isFavoritedByService;
     this.dashboardMilestoneRepository = dashboardMilestoneRepository;
     this.riskRepository = riskRepository;
+    this.updateStatusService = updateStatusService;
   }
 
   @GetMapping
@@ -255,6 +260,15 @@ public class WorkpackController {
     return ResponseEntity.ok(ResponseBaseWorkpackDetail.of(workpackDetailDto));
   }
 
+  @PostMapping("/update-deliverables")
+  public ResponseEntity<String> updateAllDeliverables(@Authorization final String authorization) {
+
+    this.canAccessService.ensureIsAdministrator(authorization);
+
+    this.updateStatusService.updateAllDeliverables();
+    return ResponseEntity.ok("Update de todos os deliverables executado com sucesso");
+  }
+
   @PostMapping
   public ResponseEntity<ResponseBase<EntityDto>> save(
     @RequestBody @Valid final WorkpackParamDto request,
@@ -371,7 +385,7 @@ public class WorkpackController {
     );
     this.workpackService.restore(idWorkpack);
 
-    this.completeDeliverableService.onWorkpackRestore(idWorkpack);
+    this.completeDeliverableService.recalculateCompletionStatus(idWorkpack);
 
     return ResponseEntity.ok().build();
   }

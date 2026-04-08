@@ -48,14 +48,12 @@ public class UnitMeasureService {
   }
 
   public List<UnitMeasure> findAll(
-    final Long idOffice,
     final String term,
     final Long idFilter
   ) {
 
     if (idFilter == null) {
       return this.findAll(
-        idOffice,
         term
       );
     }
@@ -65,10 +63,6 @@ public class UnitMeasureService {
       .orElseThrow(() -> new NegocioException(CUSTOM_FILTER_NOT_FOUND));
 
     final Map<String, Object> params = new HashMap<>();
-    params.put(
-      "idOffice",
-      idOffice
-    );
     params.put(
       "term",
       term
@@ -85,18 +79,15 @@ public class UnitMeasureService {
   }
 
   public List<UnitMeasure> findAll(
-    final Long idOffice,
     final String term
   ) {
     return this.repository.findByOffice(
-      idOffice,
       term,
       this.appProperties.getSearchCutOffScore()
     );
   }
 
   public UnitMeasure save(final UnitMeasure unitMeasure) {
-    unitMeasure.setOffice(this.getOfficeById(unitMeasure.getOffice().getId()));
     return this.repository.save(unitMeasure);
   }
 
