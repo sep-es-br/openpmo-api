@@ -27,7 +27,8 @@ public interface CompletedRepository extends Neo4jRepository<Workpack, Long> {
   @Query("MATCH (parent:Workpack)<-[:IS_IN]-(sons:Workpack{deleted:false, canceled:false}) " +
          "WHERE id(parent)=$parentId " +
          "WITH collect(sons) AS allSons " +
-         "RETURN ALL(son IN allSons WHERE son.completed IS NOT NULL AND son.completed=true)")
+         "RETURN size(allSons) > 0 " +
+         "AND ALL(son IN allSons WHERE son.completed IS NOT NULL AND son.completed=true)")
   boolean allSonsAreCompleted(Long parentId);
 
   @Query("MATCH (w:Workpack) WHERE id(w)=$workpackId SET w.endManagementDate=$endManagementDate")
