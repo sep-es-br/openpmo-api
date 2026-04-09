@@ -46,8 +46,6 @@ public class DashboardRepositoryCustomImpl implements DashboardRepositoryCustom 
 
             String query = reader.lines().collect(Collectors.joining(System.lineSeparator()));
             
-            Logger.getGlobal().log(Level.INFO, "Data By Month: leitura do cypher a partir do arquivo feita em " + (System.currentTimeMillis() - startOfTask) + "ms");
-            startOfTask = System.currentTimeMillis();
             
             Map<String, Object> parameters = new HashMap<>();
             parameters.put("scope", scope);
@@ -59,8 +57,6 @@ public class DashboardRepositoryCustomImpl implements DashboardRepositoryCustom 
                 Record record = session.readTransaction(tx ->
                         tx.run(query, parameters).single()
                 );
-                Logger.getGlobal().log(Level.INFO, "Data By Month: consulta ao banco feita em " + (System.currentTimeMillis() - startOfTask) + "ms");
-                startOfTask = System.currentTimeMillis();
                 
                 Object node = record.values().get(0).asObject();
 
@@ -71,8 +67,6 @@ public class DashboardRepositoryCustomImpl implements DashboardRepositoryCustom 
                 DashboardDataByMonth dto = mapper.convertValue(node, DashboardDataByMonth.class);
                 
                 
-                Logger.getGlobal().log(Level.INFO, "Data By Month: parse do JSON para Objeto DTO feita em " + (System.currentTimeMillis() - startOfTask) + "ms");
-
                 return dto;
                 
             }

@@ -215,8 +215,8 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
       throw new NegocioException(OFFICE_NOT_FOUND);
     }
 
-    List<UnitMeasure> officeUnitMeasures = this.unitMeasureRepository.findByOffice(currentOffice.getId(), null, null);
-    return new TripleConstraintOutput(costDetail, scheduleDetail, scopeDetail, finalList, officeUnitMeasures);
+    List<UnitMeasure> unitMeasures = this.unitMeasureRepository.findByOffice(null, null);
+    return new TripleConstraintOutput(costDetail, scheduleDetail, scopeDetail, finalList, unitMeasures);
   }
 
   private BaselineCostDetail getBaselineCostDetail(final List<TripleConstraintDto> proposed, final List<TripleConstraintDto> current) {
