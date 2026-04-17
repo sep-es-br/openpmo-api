@@ -50,22 +50,22 @@ public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
 
   private final JournalCreator journalCreator;
 
-  @Value("${api.acessocidadao.grant_type}")
+  @Value("${spring.security.oauth2.client.registration.idsvr-client.authorization-grant-type}")
   private String grantType;
 
-  @Value("${api.acessocidadao.scope}")
+  @Value("${spring.security.oauth2.client.registration.idsvr-client.scope}")
   private String scopes;
 
-  @Value("${api.acessocidadao.client-id}")
+  @Value("${spring.security.oauth2.client.registration.idsvr-client.client-id}")
   private String clientId;
 
-  @Value("${api.acessocidadao.client-secret}")
+  @Value("${spring.security.oauth2.client.registration.idsvr-client.client-secret}")
   private String clientSecret;
 
-  @Value("${api.acessocidadao.uri.webapi}")
+  @Value("${spring.security.oauth2.client.provider.idsvr-client.webapi}")
   private String acessocidadaoUriWebApi;
 
-  @Value("${api.acessocidadao.uri.token}")
+  @Value("${spring.security.oauth2.client.provider.idsvr-client.token-uri}")
   private String acessocidadaoUriToken;
 
   private List<PublicAgentResponse> allPublicAgentResponses;

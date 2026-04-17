@@ -1,19 +1,20 @@
 package br.gov.es.openpmo.configuration.security;
 
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
+import org.json.JSONObject;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 
-import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
-import java.util.Map;
-
 public class AuthorizationRequestResolver implements OAuth2AuthorizationRequestResolver {
 
   private final OAuth2AuthorizationRequestResolver delegatedRequestResolver;
-
+  
   public AuthorizationRequestResolver(
     final ClientRegistrationRepository clientRegistrationRepository,
     final String authorizeUri
@@ -26,6 +27,7 @@ public class AuthorizationRequestResolver implements OAuth2AuthorizationRequestR
 
   @Override
   public OAuth2AuthorizationRequest resolve(final HttpServletRequest request) {
+            
     final OAuth2AuthorizationRequest req = this.delegatedRequestResolver.resolve(request);
     return this.customizeRequest(req);
   }
@@ -39,12 +41,27 @@ public class AuthorizationRequestResolver implements OAuth2AuthorizationRequestR
     return this.customizeRequest(req);
   }
 
-  private OAuth2AuthorizationRequest customizeRequest(final OAuth2AuthorizationRequest request) {
-    if(request != null) {
-      return OAuth2AuthorizationRequest.from(request).additionalParameters(this.additionalParams(request)).build();
+  private OAuth2AuthorizationRequest customizeRequest(OAuth2AuthorizationRequest request) {
+    if(request == null) return null;
+      
+    String registrationId = (String) request.getAttributes().get(OAuth2ParameterNames.REGISTRATION_ID);
+    
+    Map<String, Object> wrapper = new HashMap();
+    wrapper.put("s", request.getState());
+    wrapper.put("rid", registrationId);
+    
+    String newState = Base64.getUrlEncoder().withoutPadding().encodeToString(JSONObject.valueToString(wrapper).getBytes());
+    
+    request = OAuth2AuthorizationRequest.from(request).state(newState).build();
+         
+    if("idsvr".equals(registrationId)){
+        return OAuth2AuthorizationRequest.from(request).additionalParameters(this.additionalParams(request)).build();
+    
     }
+    
+    return request;
+    
 
-    return null;
   }
 
   private Map<String, Object> additionalParams(final OAuth2AuthorizationRequest request) {
