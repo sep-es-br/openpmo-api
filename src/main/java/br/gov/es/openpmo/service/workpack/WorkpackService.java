@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.service.workpack;
 
 import br.gov.es.openpmo.configuration.properties.AppProperties;
+import br.gov.es.openpmo.dto.ccbmembers.CanUseCCBProjection;
 import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
 import br.gov.es.openpmo.dto.menu.PlanWorkpackDto;
 import br.gov.es.openpmo.dto.plan.PlanDto;
@@ -134,6 +135,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1725,5 +1727,19 @@ public class WorkpackService {
   public Long countTypeByWorkpack(Long workpackId, String type){
       return this.workpackRepository.countTypeByWorkpack(workpackId, type);
   }
+
+  public Map<Long, Boolean> getCanUseCCBMap(List<Long> ids) {
+
+    if (ids == null || ids.isEmpty()) {
+        return Collections.emptyMap();
+    }
+
+    return workpackRepository.findCanUseCCBByIds(ids)
+      .stream()
+      .collect(Collectors.toMap(
+          CanUseCCBProjection::getIdWorkpack,
+          CanUseCCBProjection::isCanUseCCB
+      ));
+}
 
 }
