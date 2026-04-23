@@ -57,8 +57,7 @@ public interface IndicatorRepository extends Neo4jRepository<Indicator, Long>, C
             "RETURN o.name")
     List<String> findAllOrganizationFromOffice(Long idOffice);
 
-    @Query("MATCH(u:UnitMeasure)-[:AVAILABLE_IN]->(office:Office) " +
-            "WHERE id(office) = $idOffice " +
+    @Query("MATCH(u:UnitMeasure) " +
             "RETURN u.name")
-    List<String> findAllUnitMeasureFromOffice(Long idOffice);
+    List<String> findAllUnitMeasure();
 }
