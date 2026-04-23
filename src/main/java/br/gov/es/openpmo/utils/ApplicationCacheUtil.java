@@ -45,7 +45,6 @@ public class ApplicationCacheUtil {
         return !mapHashCode.get(idPlan).equals(hashCode);
     }
 
-    @Async
     public void loadAllCache() {
         loadingAll = true;
         PortifolioService portifolioService = applicationContext.getBean(PortifolioService.class);
