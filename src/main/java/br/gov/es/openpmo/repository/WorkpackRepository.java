@@ -1021,14 +1021,4 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
     )
   public List<Deliverable> findMasterDeliverablesFromBaseline(Long idBaseline);
 
-  @Query(
-    "MATCH (w:Workpack) " +
-    "WHERE id(w) = $idWorkpack " +
-    "OPTIONAL MATCH (w)-[:IS_IN*]->(parent:Workpack) " +
-    "WITH collect(DISTINCT id(w)) + collect(DISTINCT id(parent)) AS ids " +
-    "UNWIND ids AS id " +
-    "RETURN DISTINCT id"
-    )
-  List<Long> findParentsFromDB(@Param("idWorkpack") Long idWorkpack);
-
 }
