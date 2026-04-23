@@ -1330,7 +1330,7 @@ public class WorkpackService {
       }
       this.workpackRepository.createIsInRelationship(workpack.getId(), idParent);
     }
-    this.cacheUtil.loadAllCache();
+    this.cacheUtil.loadAllCacheSync();
     return workpack;
   }
 

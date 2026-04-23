@@ -45,7 +45,18 @@ public class ApplicationCacheUtil {
         return !mapHashCode.get(idPlan).equals(hashCode);
     }
 
+    @Async
     public void loadAllCache() {
+        loadingAll = true;
+        PortifolioService portifolioService = applicationContext.getBean(PortifolioService.class);
+        List<Long> planIds = portifolioService.findAllPlanIds();
+        for (Long planId : planIds) {
+            loadCachePlan(portifolioService, planId);
+        }
+        loadingAll = false;
+    }
+
+    public void loadAllCacheSync() {
         loadingAll = true;
         PortifolioService portifolioService = applicationContext.getBean(PortifolioService.class);
         List<Long> planIds = portifolioService.findAllPlanIds();
