@@ -204,7 +204,7 @@ public class IndicatorService {
         return this.repository.findAllOrganizationFromOffice(idOffice);
     }
 
-    public List<String> findAllUnitMeasureFromOffice(final Long idOffice) {
-        return this.repository.findAllUnitMeasureFromOffice(idOffice);
+    public List<String> findAllUnitMeasure() {
+        return this.repository.findAllUnitMeasure();
     }
 }

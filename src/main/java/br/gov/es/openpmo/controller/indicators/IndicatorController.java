@@ -147,11 +147,9 @@ public class IndicatorController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/unitMeasure/{idOffice}")
-    public ResponseEntity<ResponseBase<List<String>>> findAllUnitMeasureFromOffice(
-            @PathVariable Long idOffice
-    ) {
-        final List<String> unitMeasures = this.service.findAllUnitMeasureFromOffice(idOffice);
+    @GetMapping("/unitMeasure")
+    public ResponseEntity<ResponseBase<List<String>>> findAllUnitMeasure() {
+        final List<String> unitMeasures = this.service.findAllUnitMeasure();
         final ResponseBase<List<String>> response = ResponseBase.of(unitMeasures);
 
         return ResponseEntity.ok(response);
