@@ -56,6 +56,16 @@ public class ApplicationCacheUtil {
         loadingAll = false;
     }
 
+    public void loadAllCacheSync() {
+        loadingAll = true;
+        PortifolioService portifolioService = applicationContext.getBean(PortifolioService.class);
+        List<Long> planIds = portifolioService.findAllPlanIds();
+        for (Long planId : planIds) {
+            loadCachePlan(portifolioService, planId);
+        }
+        loadingAll = false;
+    }
+
     private void loadCachePlan(PortifolioService portifolioService, Long planId) {
         String hashCode = portifolioService.getHashCodeMenuCustomByIdPlan(planId);
         String hash = mapHashCode.get(planId);
