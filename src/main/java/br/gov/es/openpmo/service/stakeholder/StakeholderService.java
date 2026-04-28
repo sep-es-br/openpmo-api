@@ -46,16 +46,12 @@ import br.gov.es.openpmo.service.permissions.PlanPermissionService;
 import br.gov.es.openpmo.service.permissions.RoleService;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
+import static br.gov.es.openpmo.utils.ApplicationMessage.CUSTOM_FILTER_NOT_FOUND;
+import static br.gov.es.openpmo.utils.ApplicationMessage.EMAIL_NOT_NULL;
+import static br.gov.es.openpmo.utils.ApplicationMessage.OFFICE_NOT_FOUND;
 import br.gov.es.openpmo.utils.NameFormatter;
 import br.gov.es.openpmo.utils.TextSimilarityScore;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
-import javax.validation.Valid;
+import static java.lang.Boolean.TRUE;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -69,11 +65,13 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static br.gov.es.openpmo.utils.ApplicationMessage.CUSTOM_FILTER_NOT_FOUND;
-import static br.gov.es.openpmo.utils.ApplicationMessage.EMAIL_NOT_NULL;
-import static br.gov.es.openpmo.utils.ApplicationMessage.OFFICE_NOT_FOUND;
-import static java.lang.Boolean.TRUE;
+import javax.validation.Valid;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Service
 public class StakeholderService {
@@ -112,7 +110,7 @@ public class StakeholderService {
 
   private final TokenService tokenService;
 
-  @Value("${app.login.server.name}")
+  @Value("${app.login.server.idsvr.name}")
   private String authenticationServer;
 
   @Autowired

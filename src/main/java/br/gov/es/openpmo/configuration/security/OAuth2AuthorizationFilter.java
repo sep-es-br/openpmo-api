@@ -19,8 +19,7 @@ public class OAuth2AuthorizationFilter extends OncePerRequestFilter {
   private CookieService cookieService;
   @Autowired
   private ConverterStringUtils converterUtil;
-
-
+  
   @Override
   public void destroy() {
     //Método não implementado por não haver necessidade.
@@ -45,7 +44,7 @@ public class OAuth2AuthorizationFilter extends OncePerRequestFilter {
                     response,
                     FRONT_CALLBACK_URL,
                     frontCallback,
-                    "/openpmo"
+                    "/"
                 );
             }
 

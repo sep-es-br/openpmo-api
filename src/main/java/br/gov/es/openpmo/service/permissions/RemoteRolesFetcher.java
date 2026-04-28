@@ -5,13 +5,12 @@ import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentRoleResponse;
 import br.gov.es.openpmo.dto.person.RoleResource;
 import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
 import br.gov.es.openpmo.repository.IsAuthenticatedByRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 @Component
 public class RemoteRolesFetcher implements IRemoteRolesFetcher {
@@ -20,7 +19,7 @@ public class RemoteRolesFetcher implements IRemoteRolesFetcher {
 
   private final AcessoCidadaoApi acessoCidadaoApi;
 
-  @Value("${app.login.server.name}")
+  @Value("${app.login.server.idsvr.name}")
   private String serverName;
 
   @Autowired

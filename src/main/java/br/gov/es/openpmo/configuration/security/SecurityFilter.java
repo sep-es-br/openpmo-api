@@ -6,7 +6,6 @@ import br.gov.es.openpmo.exception.AutenticacaoException;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.FilterChain;
@@ -17,10 +16,6 @@ import org.apache.http.HttpStatus;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -115,13 +110,14 @@ public class SecurityFilter extends OncePerRequestFilter {
   private void validateToken(final HttpServletRequest request) {
     final String token = getToken(request).split(" ")[1];
     if(this.tokenService.isValidToken(token, TokenType.AUTHENTICATION)) {
-      final String user = this.tokenService.getUser(token, TokenType.AUTHENTICATION).getSubject();
-      final UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(user, null, Collections.EMPTY_LIST);
-      
-      authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-      final SecurityContext securityContext = SecurityContextHolder.getContext();
-      securityContext.setAuthentication(authentication);
+//      final String user = this.tokenService.getUser(token, TokenType.AUTHENTICATION).getSubject();
+//      
+//      final UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(user, null, Collections.EMPTY_LIST);
+//      
+//      authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+//
+//      final SecurityContext securityContext = SecurityContextHolder.getContext();
+//      securityContext.setAuthentication(authentication);
       return;
     }
     throw new AutenticacaoException(ApplicationMessage.INVALID_TOKEN);

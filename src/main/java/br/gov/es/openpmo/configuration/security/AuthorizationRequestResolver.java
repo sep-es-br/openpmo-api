@@ -1,8 +1,10 @@
 package br.gov.es.openpmo.configuration.security;
 
+import br.gov.es.openpmo.configuration.properties.SpringSecurityProperties;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import org.json.JSONObject;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
@@ -15,14 +17,18 @@ public class AuthorizationRequestResolver implements OAuth2AuthorizationRequestR
 
   private final OAuth2AuthorizationRequestResolver delegatedRequestResolver;
   
+  private final SpringSecurityProperties springSecurityProperties;
+  
   public AuthorizationRequestResolver(
     final ClientRegistrationRepository clientRegistrationRepository,
+    final SpringSecurityProperties springSecurityProperties,
     final String authorizeUri
   ) {
     this.delegatedRequestResolver = new DefaultOAuth2AuthorizationRequestResolver(
       clientRegistrationRepository,
       authorizeUri
     );
+    this.springSecurityProperties = springSecurityProperties;
   }
 
   @Override
@@ -53,9 +59,15 @@ public class AuthorizationRequestResolver implements OAuth2AuthorizationRequestR
     String newState = Base64.getUrlEncoder().withoutPadding().encodeToString(JSONObject.valueToString(wrapper).getBytes());
     
     request = OAuth2AuthorizationRequest.from(request).state(newState).build();
-         
-    if("idsvr".equals(registrationId)){
-        return OAuth2AuthorizationRequest.from(request).additionalParameters(this.additionalParams(request)).build();
+       
+    String extraParam = Optional.ofNullable(springSecurityProperties.getRegistration(registrationId))
+                            .map(SpringSecurityProperties.Registration::getExtraResponseType).orElse(null);
+    
+    if(
+        extraParam != null 
+        && !extraParam.isEmpty()
+    ){
+        return OAuth2AuthorizationRequest.from(request).additionalParameters(this.additionalParams(request, extraParam)).build();
     
     }
     
@@ -64,9 +76,9 @@ public class AuthorizationRequestResolver implements OAuth2AuthorizationRequestR
 
   }
 
-  private Map<String, Object> additionalParams(final OAuth2AuthorizationRequest request) {
+  private Map<String, Object> additionalParams(final OAuth2AuthorizationRequest request, String extraParam) {
     final Map<String, Object> params = new HashMap<>(request.getAdditionalParameters());
-    params.put(OAuth2ParameterNames.RESPONSE_TYPE, request.getResponseType().getValue() + " id_token token");
+    params.put(OAuth2ParameterNames.RESPONSE_TYPE, request.getResponseType().getValue() + " " + extraParam);
     return params;
   }
 

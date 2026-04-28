@@ -10,6 +10,7 @@ import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
 import br.gov.es.openpmo.service.actors.IsAuthenticatedByService;
 import br.gov.es.openpmo.service.actors.PersonService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
+import br.gov.es.pmo.identity_parser.pmo_base.service.ProviderService;
 import io.jsonwebtoken.Claims;
 import java.io.IOException;
 import java.util.*;

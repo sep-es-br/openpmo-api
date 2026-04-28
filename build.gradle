@@ -18,6 +18,9 @@ repositories {
     maven {
         url "https://jasperreports.sourceforge.net/maven2/"
     }
+    maven { 
+        url 'https://jitpack.io' 
+    }
 }
 
 dependencies {
@@ -50,6 +53,12 @@ dependencies {
     implementation 'io.springfox:springfox-swagger2:2.9.2'
     implementation 'io.springfox:springfox-swagger-ui:2.9.2'
     implementation 'io.springfox:springfox-bean-validators:2.9.2'
+
+    implementation 'com.github.sep-es-br:pmo-core-identity-parser:75678c1'
+    implementation 'com.github.sep-es-br:google-identity-parser:469dcb4'
+    //implementation 'com.github.sep-es-br:acesso-cidadao-identity-parser:f92a8db'
+
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
 }

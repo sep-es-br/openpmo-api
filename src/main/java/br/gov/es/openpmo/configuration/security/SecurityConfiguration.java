@@ -1,7 +1,9 @@
 package br.gov.es.openpmo.configuration.security;
 
+import br.gov.es.openpmo.configuration.properties.SpringSecurityProperties;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import java.util.Arrays;
+import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -38,6 +40,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
   
   @Autowired
   private OAuth2LoginSuccessHandler auth2LoginSuccessHandler;
+  
+  @Autowired
+  private SpringSecurityProperties springSecurityProperties;
     
   private final ClientRegistrationRepository clientRegistrationRepository;
     
@@ -75,10 +80,19 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         .and()
         .oauth2Login(oauth -> oauth
             .successHandler(this.auth2LoginSuccessHandler)
-            .authorizationEndpoint().authorizationRequestResolver( new AuthorizationRequestResolver( this.clientRegistrationRepository, "/oauth2/authorization" ))
-        );
+            .authorizationEndpoint().authorizationRequestResolver( new AuthorizationRequestResolver( this.clientRegistrationRepository, springSecurityProperties, "/oauth2/authorization" ))
+        )
+        .logout(logout -> logout
+                            .logoutUrl("/logout")
+                            .invalidateHttpSession(true)
+                            .deleteCookies("JSESSIONID")
+                            .logoutSuccessUrl(this.frontendUrl + "/login"))
         
-        //.exceptionHandling().authenticationEntryPoint((req, res, ex) -> res.setStatus(401));
+        .exceptionHandling().authenticationEntryPoint((req, res, ex) -> {
+            res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            res.setContentType("application/json");
+            res.getWriter().write("{\"error\":\"unauthorized\"}");
+        });
 
       http.addFilterBefore(this.securityFilter, UsernamePasswordAuthenticationFilter.class);
       http.addFilterBefore(this.oAuth2AuthorizationFilter, OAuth2AuthorizationRequestRedirectFilter.class);

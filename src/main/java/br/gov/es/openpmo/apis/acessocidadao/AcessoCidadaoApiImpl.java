@@ -4,8 +4,19 @@ import br.gov.es.openpmo.apis.acessocidadao.response.OperationalOrganizationResp
 import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentEmailResponse;
 import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentResponse;
 import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentRoleResponse;
+import br.gov.es.openpmo.configuration.properties.SpringSecurityProperties;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.service.journals.JournalCreator;
+import static br.gov.es.openpmo.utils.ApplicationMessage.FAILED_FETCH_TOKEN_ACESSO_CIDADAO;
+import java.io.IOException;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import org.apache.http.Consts;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -21,22 +32,11 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Scope;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-
-import static br.gov.es.openpmo.utils.ApplicationMessage.FAILED_FETCH_TOKEN_ACESSO_CIDADAO;
 
 @Component
 @Scope("singleton")
@@ -49,33 +49,19 @@ public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
   private final Logger logger;
 
   private final JournalCreator journalCreator;
-
-  @Value("${spring.security.oauth2.client.registration.idsvr-client.authorization-grant-type}")
-  private String grantType;
-
-  @Value("${spring.security.oauth2.client.registration.idsvr-client.scope}")
-  private String scopes;
-
-  @Value("${spring.security.oauth2.client.registration.idsvr-client.client-id}")
-  private String clientId;
-
-  @Value("${spring.security.oauth2.client.registration.idsvr-client.client-secret}")
-  private String clientSecret;
-
-  @Value("${spring.security.oauth2.client.provider.idsvr-client.webapi}")
-  private String acessocidadaoUriWebApi;
-
-  @Value("${spring.security.oauth2.client.provider.idsvr-client.token-uri}")
-  private String acessocidadaoUriToken;
+  
+  private final SpringSecurityProperties springSecurityProperties;
 
   private List<PublicAgentResponse> allPublicAgentResponses;
 
   public AcessoCidadaoApiImpl(
     final Logger logger,
-    final JournalCreator journalCreator
+    final JournalCreator journalCreator,
+    final SpringSecurityProperties springSecurityProperties
   ) {
     this.logger = logger;
     this.journalCreator = journalCreator;
+    this.springSecurityProperties = springSecurityProperties;
   }
 
   private static boolean notEmpty(final String sigla) {
@@ -223,8 +209,10 @@ public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
     if(token == null) {
       return data;
     }
+    
+    OAuth2AuthenticationToken authToken = (OAuth2AuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
 
-    final String uri = MessageFormat.format("{0}{1}", this.acessocidadaoUriWebApi, url);
+    final String uri = MessageFormat.format("{0}{1}", this.springSecurityProperties.getRegistration(authToken.getAuthorizedClientRegistrationId()).getWebapi(), url);
     this.logger.info("Executing GET in {}", uri);
 
     final HttpUriRequest get = new HttpGet(uri);
@@ -246,15 +234,22 @@ public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
   }
 
   private String fetchClientToken(final Long idPerson) {
-    final String basicToken = this.clientId + ":" + this.clientSecret;
+      
+    OAuth2AuthenticationToken token = (OAuth2AuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+    
+      SpringSecurityProperties.Registration registration = springSecurityProperties.getRegistration(token.getAuthorizedClientRegistrationId());
+      
+      if(registration.getTokenUri() == null) return null;
+      
+    final String basicToken = registration.getClientId() + ":" + registration.getClientSecret();
 
-    this.logger.info("Executing POST in {}", this.acessocidadaoUriToken);
-    final HttpPost postRequest = new HttpPost(this.acessocidadaoUriToken);
+    this.logger.info("Executing POST in {}", registration.getTokenUri());
+    final HttpPost postRequest = new HttpPost(registration.getTokenUri());
 
     final List<NameValuePair> urlParameters = new ArrayList<>();
-
-    urlParameters.add(new BasicNameValuePair("grant_type", this.grantType));
-    urlParameters.add(new BasicNameValuePair("scope", this.scopes));
+    
+    urlParameters.add(new BasicNameValuePair("grant_type", registration.getExtraResponseType()));
+    urlParameters.add(new BasicNameValuePair("scope", registration.getScope()));
 
     postRequest.addHeader(
       AUTHORIZATION,
@@ -285,8 +280,12 @@ public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
     final Long idPerson
   ) {
     final String token = this.fetchClientToken(idPerson);
+    
+    OAuth2AuthenticationToken authToken = (OAuth2AuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+    
+    
     if(token != null) {
-      final String uri = this.acessocidadaoUriWebApi.concat(url);
+      final String uri = this.springSecurityProperties.getRegistration(authToken.getAuthorizedClientRegistrationId()).getWebapi().concat(url);
       this.logger.info("Executing GET in {}", uri);
       final HttpUriRequest get = new HttpGet(uri);
       get.addHeader(AUTHORIZATION, BEARER + token);
@@ -310,8 +309,11 @@ public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
     final Long idPerson
   ) {
     final String token = this.fetchClientToken(idPerson);
+    
+    OAuth2AuthenticationToken authToken = (OAuth2AuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+    
     if(token != null) {
-      final String uri = this.acessocidadaoUriWebApi.concat(url);
+      final String uri = springSecurityProperties.getRegistration(authToken.getAuthorizedClientRegistrationId()).getWebapi().concat(url);
       final HttpUriRequest put = new HttpPut(uri);
       put.addHeader(AUTHORIZATION, BEARER + token);
       try(final CloseableHttpClient httpClient = HttpClients.createDefault();

@@ -47,6 +47,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -68,9 +69,10 @@ public class PersonService {
 
   private final PersonRepository repository;
 
-
   private final IsCCBMemberRepository ccbMemberRepository;
-
+  
+  private final String authName;
+  
   @Autowired
   public PersonService(
     final PersonRepository repository,
@@ -78,7 +80,8 @@ public class PersonService {
     final OfficeRepository officeRepository,
     final PlanRepository planRepository,
     final IsInContactBookOfService isInContactBookOfService,
-    final IsCCBMemberRepository ccbMemberRepository
+    final IsCCBMemberRepository ccbMemberRepository,
+    @Value("${app.login.server.idsvr.name}") final String authName
   ) {
     this.repository = repository;
     this.isAuthenticatedByService = isAuthenticatedByService;
@@ -86,6 +89,7 @@ public class PersonService {
     this.planRepository = planRepository;
     this.isInContactBookOfService = isInContactBookOfService;
     this.ccbMemberRepository = ccbMemberRepository;
+    this.authName = authName;
   }
 
   public Person findById(final Long id) {
@@ -381,8 +385,15 @@ public class PersonService {
     final Long idOffice,
     final UriComponentsBuilder uriComponentsBuilder
   ) {
-    return this.repository.findByKey(key)
-      .map(person -> this.getPersonGetByIdDto(idOffice, uriComponentsBuilder, person));
+      
+      Optional<Person> maybePerson = this.repository.findByKey(key, authName);
+      
+      if(!maybePerson.isPresent()) {
+          maybePerson = this.repository.findByEmail(key, authName);
+      }
+      
+    return maybePerson
+            .map(person -> this.getPersonGetByIdDto(idOffice, uriComponentsBuilder, person));
   }
 
   public List<ComboDto> findOfficesByPersonId(final Long personId) {
@@ -425,7 +436,7 @@ public class PersonService {
   }
 
   public Optional<Person> findByKey(final String key) {
-    return this.repository.findByKey(key);
+    return this.repository.findByKey(key, authName);
   }
 
   public boolean existsByKey(final String key) {
@@ -507,7 +518,7 @@ public class PersonService {
     final Optional<IsInContactBookOf> maybeContact =
       this.isInContactBookOfService.findContactInformationUsingPersonIdAndOffice(person.getId(), idOffice);
 
-    final PersonGetByIdDto personGetByIdDto = PersonGetByIdDto.from(person, maybeContact, uriComponentsBuilder);
+    final PersonGetByIdDto personGetByIdDto = PersonGetByIdDto.from(person, maybeContact, uriComponentsBuilder, authName);
     personGetByIdDto.setCcbMember(this.ccbMemberRepository.isActive(person.getId()));
     return personGetByIdDto;
   }
