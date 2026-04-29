@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.repository;
 
+import br.gov.es.openpmo.dto.ccbmembers.CanUseCCBProjection;
 import br.gov.es.openpmo.dto.menu.PlanWorkpackDto;
 import br.gov.es.openpmo.dto.menu.WorkpackResultDto;
 import br.gov.es.openpmo.dto.universalSearch.UniversalSearchItemQueryResult;
@@ -13,6 +14,7 @@ import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.springframework.data.domain.Page;
@@ -1020,5 +1022,23 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
     "RETURN dMaster"
     )
   public List<Deliverable> findMasterDeliverablesFromBaseline(Long idBaseline);
+
+  @Query(
+        "MATCH (w:Workpack) " +
+        "WHERE id(w) IN $ids " +
+
+        "OPTIONAL MATCH (w)<-[:IS_IN*]-(child:Project) " +
+
+        "WITH w, COUNT(child) AS totalProjects " +
+
+        "RETURN " +
+        "id(w) AS idWorkpack, " +
+        "CASE " +
+        "WHEN w:Project THEN true " +
+        "WHEN totalProjects > 0 THEN true " +
+        "ELSE false " +
+        "END AS canUseCCB "
+    )
+    List<CanUseCCBProjection> findCanUseCCBByIds(@Param("ids") List<Long> ids);
 
 }

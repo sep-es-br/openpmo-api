@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.service.permissions;
 
 import br.gov.es.openpmo.configuration.properties.AppProperties;
+import br.gov.es.openpmo.dto.ccbmembers.MemberAs;
 import br.gov.es.openpmo.dto.officepermission.OfficePermissionDto;
 import br.gov.es.openpmo.dto.officepermission.OfficePermissionParamDto;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
@@ -16,8 +17,10 @@ import br.gov.es.openpmo.model.journals.JournalAction;
 import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.relations.CanAccessOffice;
 import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
+import br.gov.es.openpmo.model.relations.IsCCBMemberFor;
 import br.gov.es.openpmo.model.relations.IsInContactBookOf;
 import br.gov.es.openpmo.repository.CustomFilterRepository;
+import br.gov.es.openpmo.repository.IsCCBMemberRepository;
 import br.gov.es.openpmo.repository.OfficePermissionRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllOfficePermissionByIdPersonUsingCustomFilter;
 import br.gov.es.openpmo.repository.custom.filters.FindAllOfficePermissionUsingCustomFilter;
@@ -29,14 +32,17 @@ import br.gov.es.openpmo.service.journals.JournalCreator;
 import br.gov.es.openpmo.service.office.OfficeService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import br.gov.es.openpmo.utils.TextSimilarityScore;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -78,6 +84,8 @@ public class OfficePermissionService {
 
   private final TokenService tokenService;
 
+  private final IsCCBMemberRepository isCCBMemberRepository;
+
   @Autowired
   public OfficePermissionService(
     final OfficePermissionRepository repository,
@@ -93,7 +101,8 @@ public class OfficePermissionService {
     final AppProperties appProperties,
     final TextSimilarityScore textSimilarityScore,
     final JournalCreator journalCreator,
-    final TokenService tokenService
+    final TokenService tokenService,
+    final IsCCBMemberRepository isCCBMemberRepository
   ) {
     this.repository = repository;
     this.customFilterRepository = customFilterRepository;
@@ -109,6 +118,7 @@ public class OfficePermissionService {
     this.textSimilarityScore = textSimilarityScore;
     this.journalCreator = journalCreator;
     this.tokenService = tokenService;
+    this.isCCBMemberRepository = isCCBMemberRepository;
   }
 
   public void delete(
@@ -129,6 +139,7 @@ public class OfficePermissionService {
       this.getGratherPermissionLevel(permissionsToDelete),
       JournalAction.REMOVED
     );
+    this.isCCBMemberRepository.deleteAllByPersonIdAndOfficeId(author.getId(), idOffice);
   }
 
   private Person getPersonByAuthorization(final String authorization) {
@@ -257,10 +268,32 @@ public class OfficePermissionService {
     final OfficePermissionDto officePermissionItem,
     final Collection<CanAccessOffice> permissionsFilteredByPerson
   ) {
+  
+    if (permissionsFilteredByPerson.isEmpty()) {
+      officePermissionItem.setPermissions(Collections.emptyList());
+      return;
+    }
+  
+    CanAccessOffice any = permissionsFilteredByPerson.iterator().next();
+  
+    Long idPerson = any.getPerson().getId();
+    Long idOffice = any.getOffice().getId();
+  
+    List<String> ccbRoles = isCCBMemberRepository.findCcbRolesByPersonAndOffice(idPerson, idOffice);
+    Set<String> ccbRolesSet = new HashSet<>(ccbRoles);
+  
     final List<PermissionDto> permissions = permissionsFilteredByPerson.stream()
-      .map(PermissionDto::of)
+      .map(permission -> {
+        PermissionDto dto = PermissionDto.of(permission);
+  
+        boolean isCcm = ccbRolesSet.contains(permission.getRole());
+  
+        dto.setCcmMember(isCcm);
+  
+        return dto;
+      })
       .collect(Collectors.toList());
-
+  
     officePermissionItem.setPermissions(permissions);
   }
 
@@ -356,6 +389,22 @@ public class OfficePermissionService {
       );
     }
 
+    this.isCCBMemberRepository.deleteAllByPersonIdAndOfficeId(request.getPerson().getId(), request.getIdOffice());
+
+    for (final PermissionDto permission : request.getPermissions()) {
+
+      if (!permission.isCcmMember()) {
+        continue;
+      }
+    
+      this.isCCBMemberRepository.createIsCCBMemberForByOffice(
+          request.getPerson().getId(),
+          request.getIdOffice(),
+          permission.getRole(),
+          permission.isCcmMember()
+      );
+    }
+
   }
 
   private Person returnPersonOrCreateIfNotExists(
@@ -440,6 +489,20 @@ public class OfficePermissionService {
       request.getGratherPermissionLevel(),
       JournalAction.CREATED
     );
+
+    for (final PermissionDto permission : request.getPermissions()) {
+
+      if (!permission.isCcmMember()) {
+        continue;
+      }
+    
+      this.isCCBMemberRepository.createIsCCBMemberForByOffice(
+          request.getPerson().getId(),
+          request.getIdOffice(),
+          permission.getRole(),
+          permission.isCcmMember()
+      );
+    }
   }
 
   public Set<CanAccessOffice> findInheritedPermission(
