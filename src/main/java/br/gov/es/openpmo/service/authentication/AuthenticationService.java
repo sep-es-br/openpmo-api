@@ -62,19 +62,18 @@ public class AuthenticationService {
     final String email = providerService.getEmail();
     final String key = Optional.ofNullable(sub).map(String::valueOf).orElse(email);
     
-
     final Optional<Person> person = this.personService.findByKey(key);
 
     if(person.isPresent()) {
       final Person user = person.get();
-      final String authenticationToken = this.tokenService.generateToken(user, key, email, TokenType.AUTHENTICATION);
-      final String refreshToken = this.tokenService.generateToken(user, key, email, TokenType.REFRESH);
+      final String authenticationToken = this.tokenService.generateToken(user, key, email, rid, TokenType.AUTHENTICATION);
+      final String refreshToken = this.tokenService.generateToken(user, key, email, rid, TokenType.REFRESH);
       return new AcessoDto(authenticationToken, refreshToken);
     }
     if(this.administrators.contains(email)) {
       final Person user = this.createPerson();
-      final String authenticationToken = this.tokenService.generateToken(user, key, email, TokenType.AUTHENTICATION);
-      final String refreshToken = this.tokenService.generateToken(user, key, email, TokenType.REFRESH);
+      final String authenticationToken = this.tokenService.generateToken(user, key, email, rid, TokenType.AUTHENTICATION);
+      final String refreshToken = this.tokenService.generateToken(user, key, email, rid, TokenType.REFRESH);
       return new AcessoDto(authenticationToken, refreshToken);
     }
     return null;
@@ -137,7 +136,7 @@ public class AuthenticationService {
         .findByIdPersonWithRelationshipAuthServiceAcessoCidadao(Long.parseLong(claims.getSubject()));
 
       final String authenticationToken =
-        this.tokenService.generateToken(user.getPerson(), user.getKey(), user.getEmail(), TokenType.AUTHENTICATION);
+        this.tokenService.generateToken(user.getPerson(), user.getKey(), user.getEmail(), claims.get("authId", String.class), TokenType.AUTHENTICATION);
 
       return new AcessoDto(authenticationToken, refreshToken);
     }

@@ -12,18 +12,17 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import io.swagger.annotations.ApiModel;
-import org.apache.commons.collections.CollectionUtils;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
-import org.springframework.data.annotation.Transient;
-import org.springframework.util.ObjectUtils;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import org.apache.commons.collections.CollectionUtils;
+import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Relationship;
+import org.springframework.data.annotation.Transient;
+import org.springframework.util.ObjectUtils;
 
 @JsonTypeInfo(use = Id.NAME, property = "type")
 @JsonSubTypes({
@@ -512,7 +511,7 @@ public abstract class WorkpackModel extends Entity {
     return notificationsSessionActive;
   }
 
-  public void setNotificationsSessionActive(boolean notificationsSessionActive) {
+  public void setNotificationsSessionActive(Boolean notificationsSessionActive) {
     this.notificationsSessionActive = notificationsSessionActive;
   }
 
