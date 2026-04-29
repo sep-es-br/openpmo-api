@@ -52,7 +52,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
   public SecurityConfiguration(
     final TokenService tokenService,
     final ClientRegistrationRepository clientRegistrationRepository,
-    @Value("${app.frontend}") final String frontendUrl
+    @Value("${app.homeURI}") final String frontendUrl
   ) {
     this.tokenService = tokenService;
     this.clientRegistrationRepository = clientRegistrationRepository;
