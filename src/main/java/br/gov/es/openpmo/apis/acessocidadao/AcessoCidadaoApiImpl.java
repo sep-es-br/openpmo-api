@@ -212,7 +212,7 @@ public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
     
     OAuth2AuthenticationToken authToken = (OAuth2AuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
 
-    final String uri = MessageFormat.format("{0}{1}", this.springSecurityProperties.getProvider(authToken.getAuthorizedClientRegistrationId()).getWebapi(), url);
+    final String uri = MessageFormat.format("{0}{1}", this.springSecurityProperties.getProvider(authToken.getAuthorizedClientRegistrationId() + "-client").getWebapi(), url);
     this.logger.info("Executing GET in {}", uri);
 
     final HttpUriRequest get = new HttpGet(uri);
@@ -249,8 +249,8 @@ public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
 
     final List<NameValuePair> urlParameters = new ArrayList<>();
     
-    urlParameters.add(new BasicNameValuePair("grant_type", registration.getExtraResponseType()));
-    urlParameters.add(new BasicNameValuePair("scope", registration.getScope()));
+    urlParameters.add(new BasicNameValuePair("grant_type", registration.getAuthorizationGrantType()));
+    urlParameters.add(new BasicNameValuePair("scope", registration.getScope().replace(",", " ")));
 
     postRequest.addHeader(
       AUTHORIZATION,
@@ -286,7 +286,7 @@ public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
     
     
     if(token != null) {
-      final String uri = this.springSecurityProperties.getProvider(authToken.getAuthorizedClientRegistrationId()).getWebapi().concat(url);
+      final String uri = this.springSecurityProperties.getProvider(authToken.getAuthorizedClientRegistrationId() + "-client").getWebapi().concat(url);
       this.logger.info("Executing GET in {}", uri);
       final HttpUriRequest get = new HttpGet(uri);
       get.addHeader(AUTHORIZATION, BEARER + token);
@@ -314,7 +314,7 @@ public class AcessoCidadaoApiImpl implements AcessoCidadaoApi {
     OAuth2AuthenticationToken authToken = (OAuth2AuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
     
     if(token != null) {
-      final String uri = springSecurityProperties.getProvider(authToken.getAuthorizedClientRegistrationId()).getWebapi().concat(url);
+      final String uri = springSecurityProperties.getProvider(authToken.getAuthorizedClientRegistrationId() + "-client").getWebapi().concat(url);
       final HttpUriRequest put = new HttpPut(uri);
       put.addHeader(AUTHORIZATION, BEARER + token);
       try(final CloseableHttpClient httpClient = HttpClients.createDefault();

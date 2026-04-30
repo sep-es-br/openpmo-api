@@ -49,6 +49,15 @@ public class SpringSecurityProperties {
        private String clientId;
        private String scope;
        private String clientSecret;
+       private String AuthorizationGrantType;
+
+        public String getAuthorizationGrantType() {
+            return AuthorizationGrantType;
+        }
+
+        public void setAuthorizationGrantType(String AuthorizationGrantType) {
+            this.AuthorizationGrantType = AuthorizationGrantType;
+        }
 
         public String getScope() {
             return scope;
