@@ -15,6 +15,20 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SpringSecurityProperties {
     
     private Map<String, Registration> registration;
+    
+    private Map<String, Provider> provider;
+
+    public Map<String, Provider> getProvider() {
+        return provider;
+    }
+
+    public void setProvider(Map<String, Provider> provider) {
+        this.provider = provider;
+    }
+    
+    public Provider getProvider(String registrationId) {
+        return provider.get(registrationId);
+    }
 
 
     public Map<String, Registration> getRegistration() {
@@ -35,8 +49,6 @@ public class SpringSecurityProperties {
        private String clientId;
        private String scope;
        private String clientSecret;
-       private String webapi;
-       private String tokenUri;
 
         public String getScope() {
             return scope;
@@ -53,23 +65,6 @@ public class SpringSecurityProperties {
         public void setClientSecret(String clientSecret) {
             this.clientSecret = clientSecret;
         }
-
-        public String getWebapi() {
-            return webapi;
-        }
-
-        public void setWebapi(String webapi) {
-            this.webapi = webapi;
-        }
-
-        public String getTokenUri() {
-            return tokenUri;
-        }
-
-        public void setTokenUri(String tokenUri) {
-            this.tokenUri = tokenUri;
-        }
-       
        
 
         public String getClientId() {
@@ -91,6 +86,32 @@ public class SpringSecurityProperties {
         public String getExtraResponseType() {
             return extraResponseType;
         }
+       
+       
+   }
+   
+   public static class Provider {
+       
+       private String webapi;
+       private String tokenUri;
+
+
+        public String getWebapi() {
+            return webapi;
+        }
+
+        public void setWebapi(String webapi) {
+            this.webapi = webapi;
+        }
+
+        public String getTokenUri() {
+            return tokenUri;
+        }
+
+        public void setTokenUri(String tokenUri) {
+            this.tokenUri = tokenUri;
+        }
+       
        
        
    }
