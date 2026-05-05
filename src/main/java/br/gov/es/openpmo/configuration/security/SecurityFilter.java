@@ -3,6 +3,7 @@ package br.gov.es.openpmo.configuration.security;
 import br.gov.es.openpmo.dto.ErroDto;
 import br.gov.es.openpmo.enumerator.TokenType;
 import br.gov.es.openpmo.exception.AutenticacaoException;
+import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
 import br.gov.es.openpmo.service.actors.PersonService;
@@ -14,6 +15,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.FilterChain;
@@ -141,9 +143,15 @@ public class SecurityFilter extends OncePerRequestFilter {
     final String token = getToken(request).split(" ")[1];
     if(this.tokenService.isValidToken(token, TokenType.AUTHENTICATION)) {
       final String userKey = this.tokenService.getUser(token, TokenType.AUTHENTICATION).get("key", String.class);
+      final String userEmail = this.tokenService.getUser(token, TokenType.AUTHENTICATION).get("email", String.class);
       
-        Person userModel = this.personService.findPersonByKey(userKey);
+        Optional<Person> optUserModel = this.personService.findByKey(userKey);
+        
+        if(!optUserModel.isPresent())
+            optUserModel = this.personService.findByEmail(userEmail);
       
+        Person userModel = optUserModel.orElseThrow(() -> new NegocioException(ApplicationMessage.PERSON_NOT_FOUND));
+        
         Map<String, Object> attrs = new HashMap<>();
         
         IsAuthenticatedBy authBy = userModel.findAuthenticationDataBy(this.authName).orElseThrow(() -> new IllegalStateException("autenticação não encontrada"));
