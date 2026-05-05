@@ -1,6 +1,5 @@
 package br.gov.es.openpmo.service.authentication;
 
-import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentEmailResponse;
 import br.gov.es.openpmo.dto.AcessoDto;
 import br.gov.es.openpmo.dto.person.queries.PersonQuery;
 import br.gov.es.openpmo.enumerator.TokenType;
@@ -79,35 +78,21 @@ public class AuthenticationService {
 
     if (person.isPresent()) {
       final Person user = person.get();
-      final PublicAgentEmailResponse userEmails = this.citizenService.findAgentEmail(sub, user.getId());
 
-      if (userEmails != null && userEmails.getCorporateEmail() != null && userEmails.getCorporateEmail().trim().length() > 0) {
-        // Pode existir o caso onde o Acesso Cidadão retorna uma string vazia, por isso essa terceira verificação
-        email = userEmails.getCorporateEmail();
-        IsAuthenticatedBy authRelationship = user.getAuthentications().stream().findFirst().orElse(null);
+    IsAuthenticatedBy authRelationship = user.getAuthentications().stream().findFirst().orElse(null);
+    if (authRelationship != null) {
+      authRelationship.setEmail(email);
+      this.personService.save(user);
+    }
 
-        if (authRelationship != null) {
-          authRelationship.setEmail(email);
-          this.personService.save(user);
-        }
-      }else if (userEmails != null && userEmails.getEmail() != null && userEmails.getEmail().trim().length() > 0) {
-        IsAuthenticatedBy authRelationship = user.getAuthentications().stream().findFirst().orElse(null);
-
-        email = userEmails.getEmail();
-        if (authRelationship != null) {
-          authRelationship.setEmail(email);
-          this.personService.save(user);
-        }
-      }
-
-      final String authenticationToken = this.tokenService.generateToken(user, key, email, TokenType.AUTHENTICATION);
-      final String refreshToken = this.tokenService.generateToken(user, key, email, TokenType.REFRESH);
+      final String authenticationToken = this.tokenService.generateToken(user, key, email, rid, TokenType.AUTHENTICATION);
+      final String refreshToken = this.tokenService.generateToken(user, key, email, rid, TokenType.REFRESH);
       return new AcessoDto(authenticationToken, refreshToken);
     }
     if (this.administrators.contains(email)) {
-      final Person user = this.createPerson(personInfo);
-      final String authenticationToken = this.tokenService.generateToken(user, key, email, TokenType.AUTHENTICATION);
-      final String refreshToken = this.tokenService.generateToken(user, key, email, TokenType.REFRESH);
+      final Person user = this.createPerson();
+      final String authenticationToken = this.tokenService.generateToken(user, key, email, rid, TokenType.AUTHENTICATION);
+      final String refreshToken = this.tokenService.generateToken(user, key, email, rid, TokenType.REFRESH);
       return new AcessoDto(authenticationToken, refreshToken);
     }
     return null;
