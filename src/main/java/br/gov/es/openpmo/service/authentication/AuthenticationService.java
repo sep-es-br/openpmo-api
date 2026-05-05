@@ -62,7 +62,10 @@ public class AuthenticationService {
     final String email = providerService.getEmail();
     final String key = Optional.ofNullable(sub).map(String::valueOf).orElse(email);
     
-    final Optional<Person> person = this.personService.findByKey(key);
+    Optional<Person> person = this.personService.findByKey(key);
+    
+    if(!person.isPresent())
+        person = this.personService.findByEmail(key);
 
     if(person.isPresent()) {
       final Person user = person.get();

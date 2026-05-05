@@ -439,6 +439,10 @@ public class PersonService {
     return this.repository.findByKey(key, authName);
   }
 
+  public Optional<Person> findByEmail(final String email) {
+    return this.repository.findByEmail(email, authName);
+  }
+
   public boolean existsByKey(final String key) {
     return this.repository.existsByKey(key);
   }
