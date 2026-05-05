@@ -13,9 +13,6 @@ public class DomainStoreDto {
   @NotEmpty(message = ApplicationMessage.FULLNAME_NOT_BLANK)
   private String fullName;
 
-  @NotNull(message = ApplicationMessage.OFFICE_NOT_NULL)
-  private Long idOffice;
-
   @NotNull(message = ApplicationMessage.LOCALITY_ROOT_NOT_NULL)
   private LocalityStoreDto localityRoot;
 
@@ -33,14 +30,6 @@ public class DomainStoreDto {
 
   public void setFullName(final String fullName) {
     this.fullName = fullName;
-  }
-
-  public Long getIdOffice() {
-    return this.idOffice;
-  }
-
-  public void setIdOffice(final Long idOffice) {
-    this.idOffice = idOffice;
   }
 
   public LocalityStoreDto getLocalityRoot() {

@@ -10,10 +10,9 @@ WHERE (id(w) = _scope OR id(Wp) = _scope OR id(p) = _scope)
   AND (NOT w.deleted AND NOT w.canceled)
 
 WITH DISTINCT w, _baselineId, _anomesRef, p, _sCurve,
-  toInteger(apoc.date.field(datetime(p.start).epochMillis, "year"))*100 +
-  toInteger(apoc.date.field(datetime(p.start).epochMillis, "month")) AS planoStart,
-  toInteger(apoc.date.field(datetime(p.finish).epochMillis, "year"))*100 +
-  toInteger(apoc.date.field(datetime(p.finish).epochMillis, "month")) AS planoFinish
+  
+  date(p.start).year*100  + date(p.start).month  AS planoStart,
+  date(p.finish).year*100 + date(p.finish).month AS planoFinish
 
 // Relacionamentos principais
 MATCH 
@@ -30,8 +29,7 @@ CALL {
 	MATCH (sc)<-[:COMPOSES]-(st:Step)
 	OPTIONAL MATCH (st)-[co:CONSUMES]->(:CostAccount)
 	WITH sc, st, co, _anomesRef,
-		(toInteger((apoc.date.field(datetime(sc.start).epochMillis,"month")-1+st.periodFromStart)/12) + apoc.date.field(datetime(sc.start).epochMillis,"year"))*100 +
-		(toInteger((apoc.date.field(datetime(sc.start).epochMillis,"month")-1+st.periodFromStart)%12)+1) AS anomes
+                (date(sc.start)+duration({months: st.periodFromStart})).year * 100 + (date(sc.start)+duration({months: st.periodFromStart})).month AS anomes
 	RETURN anomes,
 		toFloat(st.plannedWork) AS fisicoreprogramado,
 		CASE WHEN anomes <= _anomesRef THEN toFloat(st.actualWork) ELSE 0 END AS fisicorealizado,
@@ -46,8 +44,7 @@ UNION ALL
 	MATCH (sn_sc)<-[:COMPOSES]-(sn_st:Step)
 	OPTIONAL MATCH (sn_st)-[sn_co:CONSUMES]->(:CostAccount)
 	WITH sn_st, sn_co,
-		(toInteger((apoc.date.field(datetime(sn_sc.start).epochMillis,"month")-1+sn_st.periodFromStart)/12) + apoc.date.field(datetime(sn_sc.start).epochMillis,"year"))*100 +
-		(toInteger((apoc.date.field(datetime(sn_sc.start).epochMillis,"month")-1+sn_st.periodFromStart)%12)+1) AS anomes
+                (date(sn_sc.start) + duration({months: sn_st.periodFromStart})).year*100 + (date(sn_sc.start) + duration({months: sn_st.periodFromStart})).month AS anomes
 	RETURN anomes,
 		0.0 AS fisicoreprogramado,
 		0.0 AS fisicorealizado,

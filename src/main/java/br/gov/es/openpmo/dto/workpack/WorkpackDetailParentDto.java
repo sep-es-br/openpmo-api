@@ -94,6 +94,9 @@ public abstract class WorkpackDetailParentDto {
 
   private String statusProperty;
 
+  @JsonProperty("canUseCCB")
+  private boolean canUseCCB;
+
   public static <TYPE extends WorkpackDetailParentDto> WorkpackDetailParentDto of(
       final Workpack workpack,
       final Supplier<TYPE> instanceSupplier) {
@@ -344,5 +347,13 @@ public abstract class WorkpackDetailParentDto {
 
   public void setStatusProperties(String statusProperty) {
     this.statusProperty = statusProperty;
+  }
+
+  public boolean isCanUseCCB() {
+    return this.canUseCCB;
+  }
+
+  public void setCanUseCCB(boolean canUseCCB) {
+    this.canUseCCB = canUseCCB;
   }
 }

@@ -18,6 +18,7 @@ import br.gov.es.openpmo.model.relations.CanAccessPlan;
 import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
 import br.gov.es.openpmo.model.relations.IsInContactBookOf;
 import br.gov.es.openpmo.repository.CustomFilterRepository;
+import br.gov.es.openpmo.repository.IsCCBMemberRepository;
 import br.gov.es.openpmo.repository.PlanPermissionRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllPlanPermissionByIdPersonUsingCustomFilter;
 import br.gov.es.openpmo.repository.custom.filters.FindAllPlanPermissionUsingCustomFilter;
@@ -36,10 +37,12 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.CUSTOM_FILTER_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.OFFICE_NOT_FOUND;
@@ -76,6 +79,8 @@ public class PlanPermissionService {
 
   private final FindAllPlanPermissionByIdPersonUsingCustomFilter findAllPlanPermissionByIdPerson;
 
+  private final IsCCBMemberRepository isCCBMemberRepository;
+
   @Autowired
   public PlanPermissionService(
     final PlanPermissionRepository repository,
@@ -91,7 +96,8 @@ public class PlanPermissionService {
     final JournalCreator journalCreator,
     final TokenService tokenService,
     final FindAllPlanPermissionUsingCustomFilter findAllPlanPermission,
-    final FindAllPlanPermissionByIdPersonUsingCustomFilter findAllPlanPermissionByIdPerson
+    final FindAllPlanPermissionByIdPersonUsingCustomFilter findAllPlanPermissionByIdPerson,
+    final IsCCBMemberRepository isCCBMemberRepository
   ) {
     this.repository = repository;
     this.customFilterRepository = customFilterRepository;
@@ -107,6 +113,7 @@ public class PlanPermissionService {
     this.tokenService = tokenService;
     this.findAllPlanPermission = findAllPlanPermission;
     this.findAllPlanPermissionByIdPerson = findAllPlanPermissionByIdPerson;
+    this.isCCBMemberRepository = isCCBMemberRepository;
   }
 
   public void delete(
@@ -166,9 +173,20 @@ public class PlanPermissionService {
       mapPermission.get(p.getPerson()).add(dto);
     });
     mapPermission.keySet().forEach(person -> {
+      List<String> ccbRoles = isCCBMemberRepository.findCcbRolesByPersonAndPlan(person.getId(), idPlan);
+      Set<String> ccbRolesSet = new HashSet<>(ccbRoles);
+      List<PermissionDto> permissions = mapPermission.get(person)
+        .stream()
+        .map(dto -> {
+          boolean isCcm = ccbRolesSet.contains(dto.getRole());
+          dto.setCcmMember(isCcm);
+          return dto;
+        })
+        .collect(Collectors.toList());
+      
       final PlanPermissionDto planPermissionDto = new PlanPermissionDto();
       planPermissionDto.setIdPlan(idPlan);
-      planPermissionDto.setPermissions(mapPermission.get(person));
+      planPermissionDto.setPermissions(permissions);
       final Optional<IsAuthenticatedBy> maybeAuthenticatedBy =
         this.isAuthenticatedByService.findAuthenticatedBy(person.getId());
       planPermissionDto.setPerson(PersonDto.from(
@@ -185,6 +203,7 @@ public class PlanPermissionService {
       dto.getPerson().getName() + dto.getPerson().getFullName(),
       term
     ) <= this.appProperties.getSearchCutOffScore());
+
 
     return plansPermissionDto;
   }
@@ -294,6 +313,21 @@ public class PlanPermissionService {
         author,
         request.getGratherPermissionLevel(),
         JournalAction.EDITED
+      );
+    }
+    this.isCCBMemberRepository.deleteAllByPersonIdAndPlanId(request.getPerson().getId(), request.getIdPlan());
+
+    for (final PermissionDto permission : request.getPermissions()) {
+
+      if (!permission.isCcmMember()) {
+        continue;
+      }
+    
+      this.isCCBMemberRepository.createIsCCBMemberForByPlan(
+          request.getPerson().getId(),
+          request.getIdPlan(),
+          permission.getRole(),
+          permission.isCcmMember()
       );
     }
   }

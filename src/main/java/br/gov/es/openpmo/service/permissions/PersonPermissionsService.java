@@ -26,7 +26,7 @@ public class PersonPermissionsService {
     final Long idPerson,
     final Long idOffice
   ) {
-    this.ccbMemberRepository.deleteAllByPersonIdAndOfficeId(idPerson, idOffice);
+    this.ccbMemberRepository.deleteAllByPersonIdAndOfficeIdViaWorkpack(idPerson, idOffice);
     this.personRepository.deleteAllPermissionsBy(idPerson, idOffice);
   }
 

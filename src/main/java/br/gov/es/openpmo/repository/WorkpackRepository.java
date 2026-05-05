@@ -1,17 +1,20 @@
 package br.gov.es.openpmo.repository;
 
+import br.gov.es.openpmo.dto.ccbmembers.CanUseCCBProjection;
 import br.gov.es.openpmo.dto.menu.PlanWorkpackDto;
 import br.gov.es.openpmo.dto.menu.WorkpackResultDto;
 import br.gov.es.openpmo.dto.universalSearch.UniversalSearchItemQueryResult;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.WorkpackBreakdownClassificationDto;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.office.plan.Plan;
+import br.gov.es.openpmo.model.workpacks.Deliverable;
 import br.gov.es.openpmo.model.workpacks.Program;
 import br.gov.es.openpmo.model.workpacks.Project;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.springframework.data.domain.Page;
@@ -26,6 +29,13 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       "WHERE id(w) IN $ids " +
       "RETURN w, f, p, v, u ")
   List<Workpack> findAllDeliverable(List<Long> ids);
+
+  @Query("MATCH (d:Deliverable)<-[:FEATURES]-(schedule:Schedule) " +
+       "WHERE d.canceled = false " +
+       "AND d.deleted = false " +
+       "AND (d.category IS NULL OR d.category = 'MASTER') " +
+       "RETURN d")
+  List<Deliverable> findAllDeliverables();
 
   @Query("MATCH (o:Office)<-[r:IS_ADOPTED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO]-(workpack:Workpack)<-[permission:CAN_ACCESS_WORKPACK]-(person:Person) "
       +
@@ -474,6 +484,11 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       "WHERE id(workpack)=$idWorkpack " +
       "RETURN count(snapshotOf)>0 ")
   boolean hasSnapshot(Long idWorkpack);
+
+  @Query("MATCH (deliverable:Deliverable)<-[:FEATURES]-(schedule:Schedule)<-[:IS_SNAPSHOT_OF]-(scheduleSnapshot:Schedule)-[:COMPOSES]->(baseline:Baseline {active: true, cancelation: false}) " +
+      "WHERE id(deliverable)=$idDeliverable " +
+      "RETURN count(baseline)>0 ")
+  boolean hasActiveBaselineForDeliverable(Long idDeliverable);
 
   @Query("MATCH (workpack:Workpack)-[:IS_BASELINED_BY]->(baseline:Baseline{active:true,cancelation:false}) " +
       "WHERE id(workpack)=$idWorkpack " +
@@ -999,4 +1014,31 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       "   m.modelNameInPlural as modelNameInPlural, HEAD([label IN labels(w) WHERE label <> 'Workpack']) as type, " +
       "   m.fontIcon as fontIcon")
   public WorkpackResultDto getWorkpackResultDtoById(Long idWorkpack);
+
+
+  @Query(
+    "MATCH (b:Baseline)<-[:COMPOSES]-(d:Deliverable {canceled:false})-[:IS_SNAPSHOT_OF]->(dMaster:Deliverable) " +
+    "WHERE ID(b) = $idBaseline " +
+    "RETURN dMaster"
+    )
+  public List<Deliverable> findMasterDeliverablesFromBaseline(Long idBaseline);
+
+  @Query(
+        "MATCH (w:Workpack) " +
+        "WHERE id(w) IN $ids " +
+
+        "OPTIONAL MATCH (w)<-[:IS_IN*]-(child:Project) " +
+
+        "WITH w, COUNT(child) AS totalProjects " +
+
+        "RETURN " +
+        "id(w) AS idWorkpack, " +
+        "CASE " +
+        "WHEN w:Project THEN true " +
+        "WHEN totalProjects > 0 THEN true " +
+        "ELSE false " +
+        "END AS canUseCCB "
+    )
+    List<CanUseCCBProjection> findCanUseCCBByIds(@Param("ids") List<Long> ids);
+
 }

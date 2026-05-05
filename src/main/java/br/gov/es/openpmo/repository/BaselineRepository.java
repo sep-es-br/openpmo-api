@@ -182,8 +182,7 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
     "MATCH (m:Workpack {deleted:false}) " +
     "WHERE id(m) = $idWorkpack " +
     "OPTIONAL MATCH (m)<-[:IS_SNAPSHOT_OF]-(s:Workpack)-[:COMPOSES]->(b1:Baseline {active:true}) " +
-    "OPTIONAL MATCH (m)-[:IS_IN]->(p:Project)-[:IS_BASELINED_BY]->(b2:Baseline {active:true}) " +
-    "RETURN (count(s) > 0 OR count(b2) > 0) AS hasAnyConditionMet"
+    "RETURN count(s) > 0  AS hasAnyConditionMet"
   )
   boolean workpackHasSnapshotOrProjectWithBaseline(Long idWorkpack);
 
@@ -322,56 +321,104 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
   void createComposesRelationshipWithProperty(Long baselineId, Long propertyId);
 
   @Query(
-    "MATCH (w:Workpack{deleted: false})-[ii:IS_BASELINED_BY]->(b:Baseline), " +
-    "(p:Person)-[c:IS_CCB_MEMBER_FOR{active:true}]->(w) " +
-    "WITH *, " +
+    "MATCH (w:Workpack{deleted: false})-[ii:IS_BASELINED_BY]->(b:Baseline) " +
+    "MATCH (p:Person) WHERE id(p)=$personId " +
+  
+    "MATCH (w)-[:BELONGS_TO {linked:false}]->(plan:Plan) " +
+    "OPTIONAL MATCH (w)-[:IS_IN*0..]->(parent:Workpack)-[:BELONGS_TO {linked:false}]->(plan) " +
+    "WITH w, b, ii, p, plan, collect(DISTINCT parent) + w AS workpacks " +
+  
+    "MATCH (p)-[c:IS_CCB_MEMBER_FOR{active:true}]->(target) " +
+    "WHERE target IN workpacks " +
+    "   OR target = plan " +
+    "   OR (target:Office AND (target)<-[:IS_ADOPTED_BY]-(plan)) " +
+  
+    "WITH DISTINCT w, b, ii, p, c, " +
     "apoc.text.levenshteinSimilarity(apoc.text.clean(b.name), apoc.text.clean($term)) AS nameScore, " +
     "apoc.text.levenshteinSimilarity(apoc.text.clean(b.description), apoc.text.clean($term)) AS descriptionScore " +
+  
     "WITH *, CASE WHEN nameScore > descriptionScore THEN nameScore ELSE descriptionScore END AS score " +
-    "WHERE id(p)=$personId AND b.status='APPROVED' " +
-    "AND ($term IS NULL OR $term = '' OR nameScore > $searchCutOffScore) " +
+    "WHERE b.status='APPROVED' " +
+    "AND ($term IS NULL OR $term = '' OR score > $searchCutOffScore) " +
+  
     "RETURN b, w, ii, p, c " +
     "ORDER BY b.proposalDate"
   )
   List<Baseline> findAllApprovedByPersonId(Long personId, String term, Double searchCutOffScore);
 
   @Query(
-    "MATCH (w:Workpack{deleted: false})-[ii:IS_BASELINED_BY]->(b:Baseline), " +
-    "(p:Person)-[c:IS_CCB_MEMBER_FOR{active:true}]->(w) " +
-    "WITH *, " +
+    "MATCH (w:Workpack{deleted: false})-[ii:IS_BASELINED_BY]->(b:Baseline) " +
+    "MATCH (p:Person) WHERE id(p)=$personId " +
+  
+    "MATCH (w)-[:BELONGS_TO {linked:false}]->(plan:Plan) " +
+    "OPTIONAL MATCH (w)-[:IS_IN*0..]->(parent:Workpack)-[:BELONGS_TO {linked:false}]->(plan) " +
+    "WITH w, b, ii, p, plan, collect(DISTINCT parent) + w AS workpacks " +
+  
+    "MATCH (p)-[c:IS_CCB_MEMBER_FOR{active:true}]->(target) " +
+    "WHERE target IN workpacks " +
+    "   OR target = plan " +
+    "   OR (target:Office AND (target)<-[:IS_ADOPTED_BY]-(plan)) " +
+  
+    "WITH DISTINCT w, b, ii, p, c, " +
     "apoc.text.levenshteinSimilarity(apoc.text.clean(b.name), apoc.text.clean($term)) AS nameScore, " +
     "apoc.text.levenshteinSimilarity(apoc.text.clean(b.description), apoc.text.clean($term)) AS descriptionScore " +
+  
     "WITH *, CASE WHEN nameScore > descriptionScore THEN nameScore ELSE descriptionScore END AS score " +
-    "WHERE id(p)=$personId AND b.status='REJECTED' " +
+    "WHERE b.status='REJECTED' " +
     "AND ($term IS NULL OR $term = '' OR score > $searchCutOffScore) " +
+  
     "RETURN b, w, ii, p, c " +
     "ORDER BY b.proposalDate"
   )
   List<Baseline> findAllRejectedByPersonId(Long personId, String term, Double searchCutOffScore);
 
   @Query(
-    "MATCH (w:Workpack{deleted: false})-[ii:IS_BASELINED_BY]->(b:Baseline), " +
-    "(p:Person)-[c:IS_CCB_MEMBER_FOR{active:true}]->(w) " +
-    "WITH *, " +
+    "MATCH (w:Workpack{deleted: false})-[ii:IS_BASELINED_BY]->(b:Baseline) " +
+    "MATCH (p:Person) WHERE id(p)=$personId " +
+  
+    "MATCH (w)-[:BELONGS_TO {linked:false}]->(plan:Plan) " +
+    "OPTIONAL MATCH (w)-[:IS_IN*0..]->(parent:Workpack)-[:BELONGS_TO {linked:false}]->(plan) " +
+    "WITH w, b, ii, p, plan, collect(DISTINCT parent) + w AS workpacks " +
+  
+    "MATCH (p)-[c:IS_CCB_MEMBER_FOR{active:true}]->(target) " +
+    "WHERE target IN workpacks " +
+    "   OR target = plan " +
+    "   OR (target:Office AND (target)<-[:IS_ADOPTED_BY]-(plan)) " +
+  
+    "WITH DISTINCT w, b, ii, p, c, " +
     "apoc.text.levenshteinSimilarity(apoc.text.clean(b.name), apoc.text.clean($term)) AS nameScore, " +
     "apoc.text.levenshteinSimilarity(apoc.text.clean(b.description), apoc.text.clean($term)) AS descriptionScore " +
+  
     "WITH *, CASE WHEN nameScore > descriptionScore THEN nameScore ELSE descriptionScore END AS score " +
-    "WHERE id(p)=$personId AND b.status='PROPOSED' AND NOT (b)-[:IS_EVALUATED_BY]->(p) " +
+    "WHERE b.status='PROPOSED' AND NOT (b)-[:IS_EVALUATED_BY]->(p) " +
     "AND ($term IS NULL OR $term = '' OR score > $searchCutOffScore) " +
+  
     "RETURN b, w, ii, p, c " +
     "ORDER BY b.proposalDate"
   )
   List<Baseline> findAllWaitingMyEvaluationByPersonId(Long personId, String term, Double searchCutOffScore);
 
   @Query(
-    "MATCH (w:Workpack{deleted: false})-[ii:IS_BASELINED_BY]->(b:Baseline), " +
-    "(p:Person)-[c:IS_CCB_MEMBER_FOR{active:true}]->(w) " +
-    "WITH *, " +
+    "MATCH (w:Workpack{deleted: false})-[ii:IS_BASELINED_BY]->(b:Baseline) " +
+    "MATCH (p:Person) WHERE id(p)=$personId " +
+  
+    "MATCH (w)-[:BELONGS_TO {linked:false}]->(plan:Plan) " +
+    "OPTIONAL MATCH (w)-[:IS_IN*0..]->(parent:Workpack)-[:BELONGS_TO {linked:false}]->(plan) " +
+    "WITH w, b, ii, p, plan, collect(DISTINCT parent) + w AS workpacks " +
+  
+    "MATCH (p)-[c:IS_CCB_MEMBER_FOR{active:true}]->(target) " +
+    "WHERE target IN workpacks " +
+    "   OR target = plan " +
+    "   OR (target:Office AND (target)<-[:IS_ADOPTED_BY]-(plan)) " +
+  
+    "WITH DISTINCT w, b, ii, p, c, " +
     "apoc.text.levenshteinSimilarity(apoc.text.clean(b.name), apoc.text.clean($term)) AS nameScore, " +
     "apoc.text.levenshteinSimilarity(apoc.text.clean(b.description), apoc.text.clean($term)) AS descriptionScore " +
+  
     "WITH *, CASE WHEN nameScore > descriptionScore THEN nameScore ELSE descriptionScore END AS score " +
-    "WHERE id(p)=$personId AND b.status='PROPOSED' AND (b)-[:IS_EVALUATED_BY]->(p) " +
+    "WHERE b.status='PROPOSED' AND (b)-[:IS_EVALUATED_BY]->(p) " +
     "AND ($term IS NULL OR $term = '' OR score > $searchCutOffScore) " +
+  
     "RETURN b, w, ii, p, c " +
     "ORDER BY b.proposalDate"
   )

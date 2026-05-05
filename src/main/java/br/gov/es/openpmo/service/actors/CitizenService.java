@@ -1,6 +1,6 @@
 package br.gov.es.openpmo.service.actors;
 
-import br.gov.es.openpmo.apis.acessocidadao.AcessoCidadaoApi;
+import br.gov.es.openpmo.apis.acessocidadao.IAcessoCidadaoApi;
 import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentEmailResponse;
 import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentResponse;
 import br.gov.es.openpmo.dto.person.CitizenByNameQuery;
@@ -26,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class CitizenService {
 
-  private final AcessoCidadaoApi acessoCidadaoApi;
+  private final IAcessoCidadaoApi acessoCidadaoApi;
 
   private final PersonService personService;
 
@@ -39,7 +39,7 @@ public class CitizenService {
 
   @Autowired
   public CitizenService(
-    final AcessoCidadaoApi acessoCidadaoApi,
+    final IAcessoCidadaoApi acessoCidadaoApi,
     final PersonService personService,
     final IsInContactBookOfService contactService,
     final RoleService roleService
@@ -168,6 +168,7 @@ public class CitizenService {
     return this.buildDtoFromCitizenAlreadyRegistered(
       roles,
       person,
+      publicAgentEmailResponse,
       idOffice
     );
   }
@@ -175,6 +176,7 @@ public class CitizenService {
   private CitizenDto buildDtoFromCitizenAlreadyRegistered(
     final List<RoleResource> roles,
     final Person person,
+    final PublicAgentEmailResponse publicAgentEmailResponse,
     final Long idOffice
   ) {
     final CitizenDtoBuilder builder = CitizenDtoBuilder.aCitizenDto()
@@ -182,18 +184,20 @@ public class CitizenService {
       .withName(person.getName())
       .withFullName(person.getFullName())
       .withRoles(roles)
-      .withAdministrator(person.getAdministrator());
+      .withAdministrator(person.getAdministrator())
+      .withContactEmail(publicAgentEmailResponse.getCorporateEmail());    
 
-    if(idOffice != null) {
+    if (idOffice != null) {
       final Optional<IsInContactBookOf> maybeContactInformation =
         this.contactService.findContactInformationUsingPersonIdAndOffice(
         person.getId(),
         idOffice
       );
       maybeContactInformation.ifPresent(contact ->
-                                          builder.withContactEmail(contact.getEmail())
-                                            .withAddress(contact.getAddress())
-                                            .withPhoneNumber(contact.getPhoneNumber()));
+        builder
+          .withAddress(contact.getAddress())
+          .withPhoneNumber(contact.getPhoneNumber())
+      );
     }
 
     person.findAuthenticationDataBy(this.serverName)
@@ -215,8 +219,8 @@ public class CitizenService {
 
     final List<RoleResource> roles = this.roleService.getRolesBySub(idPerson, sub);
 
-    if(maybePerson.isPresent()) {
-      return this.buildDtoFromCitizenAlreadyRegistered(roles, maybePerson.get(), idOffice);
+    if (maybePerson.isPresent()) {
+      return this.buildDtoFromCitizenAlreadyRegistered(roles, maybePerson.get(), agentEmail, idOffice);
     }
 
     final String[] parsedName = agentEmail.getEmail().split("@");
@@ -231,7 +235,7 @@ public class CitizenService {
       .build();
   }
 
-  private PublicAgentEmailResponse findAgentEmail(
+  public PublicAgentEmailResponse findAgentEmail(
     final String sub,
     final Long idPerson
   ) {

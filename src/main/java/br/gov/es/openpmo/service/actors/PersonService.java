@@ -1,5 +1,7 @@
 package br.gov.es.openpmo.service.actors;
 
+import br.gov.es.openpmo.apis.acessocidadao.AcessoCidadaoApi;
+import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentEmailResponse;
 import br.gov.es.openpmo.dto.ComboDto;
 import br.gov.es.openpmo.dto.actor.PreferencesDto;
 import br.gov.es.openpmo.dto.person.LocalWorkRequest;
@@ -58,7 +60,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 public class PersonService {
-
   private final IsAuthenticatedByService isAuthenticatedByService;
 
   private final OfficeRepository officeRepository;
@@ -70,9 +71,11 @@ public class PersonService {
   private final PersonRepository repository;
 
   private final IsCCBMemberRepository ccbMemberRepository;
-  
+
   private final String authName;
-  
+
+  private final AcessoCidadaoApi acessoCidadaoApi;
+
   @Autowired
   public PersonService(
     final PersonRepository repository,
@@ -81,7 +84,8 @@ public class PersonService {
     final PlanRepository planRepository,
     final IsInContactBookOfService isInContactBookOfService,
     final IsCCBMemberRepository ccbMemberRepository,
-    @Value("${app.login.server.idsvr.name}") final String authName
+    @Value("${app.login.server.idsvr.name}") final String authName,
+    final AcessoCidadaoApi acessoCidadaoApi
   ) {
     this.repository = repository;
     this.isAuthenticatedByService = isAuthenticatedByService;
@@ -90,6 +94,7 @@ public class PersonService {
     this.isInContactBookOfService = isInContactBookOfService;
     this.ccbMemberRepository = ccbMemberRepository;
     this.authName = authName;
+    this.acessoCidadaoApi = acessoCidadaoApi;
   }
 
   public Person findById(final Long id) {
@@ -227,6 +232,10 @@ public class PersonService {
     }
 
     final PersonDetailDto personDetailDto = new PersonDetailDto(maybeQuery.get(), uriComponentsBuilder);
+
+    if (personDetailDto.getContactEmail() == null || personDetailDto.getContactEmail().isEmpty()) {
+      personDetailDto.setContactEmail(personDetailDto.getEmail());
+    }
 
     final List<CanAccessOffice> canAccessOffice = officeRepository.findAllCanAccessOfficeByIdPerson(personId, officeId);
     final List<PlanResultDto> listPlans = planRepository.findAllPlanResultByIdOffice(officeId);

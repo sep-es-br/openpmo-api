@@ -12,10 +12,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UpdateStatusService {
+
+  private final Logger logger;
 
   private final WorkpackRepository workpackRepository;
 
@@ -27,11 +30,12 @@ public class UpdateStatusService {
   public UpdateStatusService(
     final WorkpackRepository workpackRepository,
     final StepRepository stepRepository,
-    final ICompleteWorkpackService completeWorkpackService
+    final ICompleteWorkpackService completeWorkpackService, Logger logger
   ) {
     this.workpackRepository = workpackRepository;
     this.stepRepository = stepRepository;
     this.completeWorkpackService = completeWorkpackService;
+    this.logger = logger;
   }
 
   public List<Deliverable> getDeliverablesByStepId(final Long stepId) {
@@ -40,6 +44,17 @@ public class UpdateStatusService {
 
   public List<Deliverable> getDeliverablesByScheduleId(final Long scheduleId) {
     return this.stepRepository.findDeliverablesByScheduleId(scheduleId);
+  }
+
+  public void updateAllDeliverables() {
+    final List<Deliverable> deliverables = this.workpackRepository.findAllDeliverables();
+    this.update(deliverables);
+    logger.info(">>> Finalizou update de todos os deliverables");
+  }
+
+
+  public List<Deliverable> getAllDeliverables() {
+    return workpackRepository.findAllDeliverables();
   }
 
   public boolean checkHasWorkToComplete(final Long idProperty) {
@@ -103,14 +118,14 @@ public class UpdateStatusService {
     return this.workpackRepository.hasScheduleRelated(deliverable.getId());
   }
 
-  private boolean hasWorkToComplete(final Long idDeliverable) {
+  public boolean hasWorkToComplete(final Long idDeliverable) {
     return this.hasBaselineActive(idDeliverable)
       ? this.hasWorkToCompleteComparingWithActiveBaseline(idDeliverable)
       : this.hasWorkToCompleteComparingWithMaster(idDeliverable);
   }
 
   private boolean hasBaselineActive(final Long idDeliverable) {
-    return this.workpackRepository.hasActiveBaseline(idDeliverable);
+    return this.workpackRepository.hasActiveBaselineForDeliverable(idDeliverable);
   }
 
   private boolean hasWorkToCompleteComparingWithActiveBaseline(final Long idDeliverable) {
