@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.service.schedule;
 
+import br.gov.es.openpmo.dto.schedule.StepDeliveryUpdateDto;
 import br.gov.es.openpmo.dto.schedule.StepUpdateDto;
 import br.gov.es.openpmo.model.schedule.Step;
 import br.gov.es.openpmo.model.workpacks.Deliverable;
@@ -8,6 +9,9 @@ import org.springframework.validation.annotation.Validated;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 @Validated

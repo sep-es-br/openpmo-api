@@ -6,6 +6,8 @@ import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.ResponseBaseItens;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.dto.permission.WorkpackPermissionResponse;
+import br.gov.es.openpmo.dto.schedule.DeliveryStepsUpdateDto;
+import br.gov.es.openpmo.dto.schedule.StepDeliveryUpdateDto;
 import br.gov.es.openpmo.dto.schedule.StepDto;
 import br.gov.es.openpmo.dto.schedule.StepStoreParamDto;
 import br.gov.es.openpmo.dto.schedule.StepUpdateDto;
@@ -13,6 +15,7 @@ import br.gov.es.openpmo.dto.schedule.UpdateCostAccountByStepIdRequest;
 import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.model.schedule.Step;
 import br.gov.es.openpmo.model.workpacks.Deliverable;
+import br.gov.es.openpmo.repository.StepRepository;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.schedule.BatchUpdateStep;
@@ -41,6 +44,8 @@ import java.util.stream.Collectors;
 @RequestMapping("/schedules/step")
 public class StepController {
 
+  private final StepRepository stepRepository;
+
   private final StepService stepService;
 
   private final UpdateStatusService status;
@@ -66,7 +71,8 @@ public class StepController {
     final ICanAccessService canAccessService,
     final UpdateCostAccountByStepId updateCostAccountByStepId,
     final WorkpackPermissionVerifier workpackPermissionVerifier,
-    final TokenService tokenService
+    final TokenService tokenService, 
+    final StepRepository stepRepository
   ) {
     this.stepService = stepService;
     this.status = status;
@@ -76,6 +82,7 @@ public class StepController {
     this.updateCostAccountByStepId = updateCostAccountByStepId;
     this.workpackPermissionVerifier = workpackPermissionVerifier;
     this.tokenService = tokenService;
+    this.stepRepository = stepRepository;
   }
 
   @GetMapping("/{id}")
@@ -104,6 +111,20 @@ public class StepController {
 
     return ResponseEntity.ok(ResponseBase.of(new EntityDto(step.getId())));
   }
+
+  // @Transactional
+  // @PutMapping("/step/update/{idDelivery}")
+  // public ResponseEntity<?> updateByDelivery(
+  //     @PathVariable Long idDelivery,
+  //     @RequestBody @Valid List<StepDeliveryUpdateDto> stepDeliveryUpdateDtos
+  // ) {
+
+  //   DeliveryStepsUpdateDto deliveryStepsUpdateDto = this.stepRepository.findStepsByWorkpack(idDelivery);
+
+  //   this.batchUpdateStep.updateStepsByDelivery(idDelivery, stepDeliveryUpdateDtos);
+
+  //   return ResponseEntity.ok().build();
+  // }
 
   @Transactional
   @PutMapping("/batch/{idSchedule}")

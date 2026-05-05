@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.repository;
 
+import br.gov.es.openpmo.dto.schedule.DeliveryStepsUpdateDto;
 import br.gov.es.openpmo.dto.schedule.StepDto;
 import br.gov.es.openpmo.model.schedule.Step;
 import br.gov.es.openpmo.model.workpacks.Deliverable;
@@ -156,5 +157,17 @@ public interface StepRepository extends Neo4jRepository<Step, Long> {
        "   OR (stepDate.year = date().year AND stepDate.month <= date().month) AS canSave"
      )
   Boolean canSaveStep(Long stepId);
+
+  @Query(
+       "MATCH (w:Workpack)<-[:FEATURES]-(s:Schedule {category:'MASTER'})<-[:COMPOSES]-(step:Step) " +
+       "WHERE id(w) = $idWorkpack " +
+       "WITH s, step " +
+       "ORDER BY step.periodFromStart " +
+       "RETURN " +
+       "s.start AS scheduleStart, " +
+       "s.end AS scheduleEnd, " +
+       "collect(step) AS steps"
+       )
+  DeliveryStepsUpdateDto findStepsByWorkpack(Long idWorkpack);
 
 }
