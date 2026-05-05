@@ -73,7 +73,7 @@ public class AuthenticationService {
     Optional<Person> person = this.personService.findByKey(key);
     
     if(!person.isPresent())
-        person = this.personService.findByEmail(key);
+        person = this.personService.findByEmail(email);
 
 
     if (person.isPresent()) {
