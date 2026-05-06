@@ -255,7 +255,7 @@ public class AcessoCidadaoApi implements IAcessoCidadaoApi {
 
         final List<NameValuePair> urlParameters = new ArrayList<>();
 
-        urlParameters.add(new BasicNameValuePair("grant_type", registration.getAuthorizationGrantType() + " " + registration.getExtraResponseType()));
+        urlParameters.add(new BasicNameValuePair("grant_type", registration.getAuthorizationGrantType() + Optional.ofNullable(registration.getExtraResponseType()).map(extra -> " " + extra).orElse("") ));
         urlParameters.add(new BasicNameValuePair("scope", registration.getScope().replace(",", " ")));
 
         postRequest.addHeader(
