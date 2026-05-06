@@ -6,6 +6,7 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_NOT_FOUND;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -384,6 +385,7 @@ public class TripleConstraintsCalculator implements ITripleConstraintsCalculator
     List<ScheduleDetailItem> scheduleItems = scheduleDetail.getScheduleDetails();
     List<ScopeDetailItem> scopeItems = scopeDetail.getScopeDetails();
     List<TripleConstraintBreakdown> listEtapas = new ArrayList<>(0);
+    currentLBWorkpacks = currentLBWorkpacks != null ? currentLBWorkpacks : Collections.emptyList();
 
     for (WorkpackResultDto etapa : workpackDto.getChildren()) {
       TripleConstraintBreakdown etapaBreakdown = new TripleConstraintBreakdown(
