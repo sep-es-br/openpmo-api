@@ -5,21 +5,19 @@ import br.gov.es.openpmo.dto.administrator.AdministratorStatusRequest;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.repository.PersonRepository;
+import static br.gov.es.openpmo.utils.ApplicationMessage.PERSON_NOT_FOUND;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static br.gov.es.openpmo.utils.ApplicationMessage.PERSON_NOT_FOUND;
 
 @Service
 public class AdministratorService {
 
   private final PersonRepository personRepository;
 
-  @Value("${app.login.server.name}")
+  @Value("${app.login.server.idsvr.name}")
   private String serverName;
 
   @Autowired

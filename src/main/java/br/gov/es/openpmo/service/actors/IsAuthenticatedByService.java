@@ -7,11 +7,10 @@ import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
 import br.gov.es.openpmo.repository.AuthServiceRepository;
 import br.gov.es.openpmo.repository.IsAuthenticatedByRepository;
 import br.gov.es.openpmo.utils.ApplicationMessage;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 @Service
 public class IsAuthenticatedByService {
@@ -19,7 +18,7 @@ public class IsAuthenticatedByService {
   private final IsAuthenticatedByRepository repository;
   private final AuthServiceRepository authServiceRepository;
 
-  @Value("${app.login.server.name}")
+  @Value("${app.login.server.idsvr.name}")
   private String authenticationServiceName;
 
   @Autowired

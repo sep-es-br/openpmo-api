@@ -10,21 +10,34 @@
   <body>
   </body>
   <script type="text/javascript">
+      
+      function base64UrlDecode(str) {
+        str = str.replace(/-/g, '+').replace(/_/g, '/');
+        while (str.length % 4) str += '=';
+        return atob(str);
+      }
     const protocol = window.location.protocol;
     const host = window.location.host;
     const hash = window.location.hash;
 
-    let access_token = '';
+    let code = '';
+    let rid = '';
+    let state = '';
     if (hash) {
-      const hashItems = hash.split('&');
-      const hashAccessToken = hashItems.find(hashItem => hashItem.startsWith('access_token'));
+      const hashItems = hash.substring(1).split('&');
+      const hashCode = hashItems.find(hashItem => hashItem.startsWith('code='));
+      const hashState = hashItems.find(hashItem => hashItem.startsWith('state='));
 
-      if (hashAccessToken) {
-        access_token = hashAccessToken.split('=')[1];
+      if (hashCode) {
+        code = hashCode.split('=', 2)[1];
+      }
+      if(hashState){
+          state = hashState.split('=', 2)[1];
+          rid = JSON.parse(base64UrlDecode(state)).rid;
       }
     }
-
-    const url = protocol + '//' + host + '/openpmo/signin/acesso-cidadao-response?access_token=' + access_token;
+    
+    const url = protocol + '//' + host + '/openpmo/login/oauth2/code/' + rid + '?code=' + encodeURIComponent(code) + '&state=' + encodeURIComponent(state);
     window.location.href = url;
   </script>
 </html>

@@ -1,31 +1,42 @@
 package br.gov.es.openpmo.utils;
 
-import org.springframework.stereotype.Component;
-
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.stereotype.Component;
 
 @Component
 public class ConverterStringUtils {
 
-  public Map<String, String> convertQueryStringToHashMap(final String source) {
-    final Map<String, String> data = new HashMap<>();
-    final String[] arrParameters = source.split("&");
+  public Map<String, String> convertQueryStringToHashMap(String source) {
+        Map<String, String> data = new HashMap<>();
 
-    for(final String tempParameterString : arrParameters) {
-      final String[] arrTempParameter = tempParameterString.split("=");
-      final String parameterKey = arrTempParameter[0];
+        if (source == null || source.isEmpty()) {
+            return data;
+        }
 
-      if(arrTempParameter.length >= 2) {
-        final String parameterValue = arrTempParameter[1];
-        data.put(parameterKey, parameterValue);
-      }
-      else {
-        data.put(parameterKey, "");
-      }
+        String[] arrParameters = source.split("&");
+
+        for (String param : arrParameters) {
+
+            String[] pair = param.split("=", 2); // 👈 LIMITADOR IMPORTANTE
+
+            try {
+                String key = URLDecoder.decode(pair[0], StandardCharsets.UTF_8.name());
+
+                String value = pair.length > 1
+                    ? URLDecoder.decode(pair[1], StandardCharsets.UTF_8.name())
+                    : "";
+                
+                data.put(key, value);
+            } catch (UnsupportedEncodingException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+
+        return data;
     }
-
-    return data;
-  }
 
 }
