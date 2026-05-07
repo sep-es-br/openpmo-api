@@ -45,7 +45,8 @@ public class SecurityFilter extends OncePerRequestFilter {
            || url.endsWith("/acesso-cidadao-response.html")
            || url.endsWith("/acesso-cidadao-response")
            || url.contains("/evidence/image")
-           || url.contains("/pentaho");
+           || url.contains("/pentaho")
+           || url.contains("/schedules/step/update");
   }
 
   private static boolean isSwaggerUrl(final String url) {

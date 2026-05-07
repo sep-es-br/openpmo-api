@@ -8,16 +8,21 @@ import org.springframework.data.neo4j.annotation.QueryResult;
 import br.gov.es.openpmo.model.schedule.Step;
 
 @QueryResult
-public class DeliveryStepsUpdateDto {
+public class ScheduleWithStepsDto {
     
+    private Long idSchedule;
     private LocalDate scheduleStart;
     private LocalDate scheduleEnd;
     private List<Step> steps;
     
-    public DeliveryStepsUpdateDto(LocalDate scheduleStart, LocalDate scheduleEnd, List<Step> steps) {
-        this.scheduleStart = scheduleStart;
-        this.scheduleEnd = scheduleEnd;
-        this.steps = steps;
+    public ScheduleWithStepsDto() {}
+
+    public Long getIdSchedule() {
+        return idSchedule;
+    }
+    
+    public void setIdSchedule(Long idSchedule) {
+        this.idSchedule = idSchedule;
     }
 
     public LocalDate getScheduleStart() {

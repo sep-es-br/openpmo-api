@@ -6,7 +6,7 @@ import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.ResponseBaseItens;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.dto.permission.WorkpackPermissionResponse;
-import br.gov.es.openpmo.dto.schedule.DeliveryStepsUpdateDto;
+import br.gov.es.openpmo.dto.schedule.ScheduleWithStepsDto;
 import br.gov.es.openpmo.dto.schedule.StepDeliveryUpdateDto;
 import br.gov.es.openpmo.dto.schedule.StepDto;
 import br.gov.es.openpmo.dto.schedule.StepStoreParamDto;
@@ -33,6 +33,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -112,19 +115,56 @@ public class StepController {
     return ResponseEntity.ok(ResponseBase.of(new EntityDto(step.getId())));
   }
 
-  // @Transactional
-  // @PutMapping("/step/update/{idDelivery}")
-  // public ResponseEntity<?> updateByDelivery(
-  //     @PathVariable Long idDelivery,
-  //     @RequestBody @Valid List<StepDeliveryUpdateDto> stepDeliveryUpdateDtos
-  // ) {
+@Transactional
+@PutMapping("/update/{idDelivery}")
+public ResponseEntity<?> updateByDelivery(
+    @PathVariable Long idDelivery,
+    @RequestBody @Valid List<StepDeliveryUpdateDto> stepDeliveryUpdateDtos
+) {
 
-  //   DeliveryStepsUpdateDto deliveryStepsUpdateDto = this.stepRepository.findStepsByWorkpack(idDelivery);
+    ScheduleWithStepsDto scheduleWithStepsDto =
+        this.stepRepository.findStepsByWorkpack(idDelivery);
 
-  //   this.batchUpdateStep.updateStepsByDelivery(idDelivery, stepDeliveryUpdateDtos);
+    LocalDate scheduleStart = scheduleWithStepsDto.getScheduleStart();
+    List<Step> steps = scheduleWithStepsDto.getSteps();
 
-  //   return ResponseEntity.ok().build();
-  // }
+    YearMonth start = YearMonth.from(scheduleStart);
+
+    List<StepUpdateDto> stepUpdates = new ArrayList<>();
+
+    for (StepDeliveryUpdateDto dto : stepDeliveryUpdateDtos) {
+
+        int stepDate = dto.getStepDate();
+        int year = stepDate / 100;
+        int month = stepDate % 100;
+
+        YearMonth target = YearMonth.of(year, month);
+
+        Step found = steps.stream()
+            .filter(step -> {
+                YearMonth stepMonth = start.plusMonths(step.getPeriodFromStart());
+                return stepMonth.equals(target);
+            })
+            .findFirst()
+            .orElse(null);
+
+        if (found == null) {
+            throw new IllegalArgumentException("Step não encontrado para " + target);
+        }
+
+        StepUpdateDto updateDto = new StepUpdateDto();
+        updateDto.setId(found.getId());
+        updateDto.setActualWork(dto.getActualWork());
+
+        updateDto.setConsumes(dto.getConsumes());
+
+        stepUpdates.add(updateDto);
+    }
+
+    final List<Long> ids = this.batchUpdateStep.execute(stepUpdates, scheduleWithStepsDto.getIdSchedule());
+
+    return ResponseEntity.ok(ResponseBaseItens.of(ids));
+}
 
   @Transactional
   @PutMapping("/batch/{idSchedule}")
