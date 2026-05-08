@@ -11,19 +11,17 @@ import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.relations.IsInContactBookOf;
 import br.gov.es.openpmo.service.permissions.RoleService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import static br.gov.es.openpmo.utils.ApplicationMessage.CITIZEN_EMAIL_NOT_FOUND;
+import static br.gov.es.openpmo.utils.ApplicationMessage.CITIZEN_NOT_FOUND;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import static br.gov.es.openpmo.utils.ApplicationMessage.CITIZEN_EMAIL_NOT_FOUND;
-import static br.gov.es.openpmo.utils.ApplicationMessage.CITIZEN_NOT_FOUND;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CitizenService {
@@ -36,7 +34,7 @@ public class CitizenService {
 
   private final RoleService roleService;
 
-  @Value("${app.login.server.name}")
+  @Value("${app.login.server.idsvr.name}")
   private String serverName;
 
   @Autowired

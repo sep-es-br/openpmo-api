@@ -2,14 +2,14 @@ package br.gov.es.openpmo.dto.person;
 
 import br.gov.es.openpmo.dto.file.AvatarDto;
 import br.gov.es.openpmo.model.actors.Person;
+import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
 import br.gov.es.openpmo.model.relations.IsInContactBookOf;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.springframework.web.util.UriComponentsBuilder;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.web.util.UriComponentsBuilder;
 
 public class PersonGetByIdDto {
 
@@ -36,13 +36,16 @@ public class PersonGetByIdDto {
   private Boolean isCcbMember;
 
   private List<String> roles = Collections.singletonList("citizen");
+  
+  private String key;
 
   public static PersonGetByIdDto from(
     final Person person,
     final Optional<IsInContactBookOf> maybeContact,
-    final UriComponentsBuilder uriComponentsBuilder
+    final UriComponentsBuilder uriComponentsBuilder,
+    final String serverName
   ) {
-    final PersonGetByIdDto dto = from(person);
+    final PersonGetByIdDto dto = from(person, serverName);
     maybeSetContact(maybeContact, dto);
     if (person.getAvatar() != null) {
       dto.setAvatar(new AvatarDto(person.getAvatar(), uriComponentsBuilder));
@@ -73,13 +76,16 @@ public class PersonGetByIdDto {
     this.address = address;
   }
 
-  private static PersonGetByIdDto from(final Person person) {
+  private static PersonGetByIdDto from(final Person person, final String serverName) {
     final PersonGetByIdDto dto = new PersonGetByIdDto();
     dto.setId(person.getId());
     dto.setName(person.getName());
     dto.setFullName(person.getFullName());
     dto.setAdministrator(person.getAdministrator());
     dto.setWorkLocal(WorkLocalResponse.from(person).orNull());
+    dto.setKey(person.findAuthenticationDataBy(serverName).map(IsAuthenticatedBy::getKey).orElse(null));
+    
+    
     return dto;
   }
 
@@ -158,4 +164,14 @@ public class PersonGetByIdDto {
   public void setWorkLocal(WorkLocalResponse workLocal) {
     this.workLocal = workLocal;
   }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
+  
+  
 }
