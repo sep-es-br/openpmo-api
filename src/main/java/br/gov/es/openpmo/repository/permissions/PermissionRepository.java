@@ -2,33 +2,49 @@ package br.gov.es.openpmo.repository.permissions;
 
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
+import java.util.List;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
 @Repository
 public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, CustomRepository {
 
   @Query(
-      "MATCH (n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO|IS_STRUCTURED_BY|IS_FORSEEN_ON|APPLIES_TO|FEATURES|MITIGATES|IS_TRIGGER_BY|ADDRESSES|IS_REPORTED_FOR|IS_BELONGS_TO|SCOPE_TO|IS_LINKED_TO|COMPOSES|IS_BASELINED_BY*0..]->(m) " +
-      " <-[rel:CAN_ACCESS_WORKPACK|CAN_ACCESS_PLAN|CAN_ACCESS_OFFICE]-(p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
-      "WHERE id(n) in $ids " +
-
-      "OPTIONAL MATCH (n)-[:IS_IN*0..]->(proj:Project) " +
-      "       <-[:FEATURES]-(prop:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel) " +
-      "WHERE pm.name IN ['Situação','Status'] " +
-
-      "WITH " +
-      "    collect(distinct rel.permissionLevel) AS permissions, " +
-      "    collect(distinct prop.value) AS status " +
-
-      "RETURN ( " +
-      "    'EDIT' IN permissions OR " +
-      "    ( 'UPDATE' IN permissions AND 'Estruturação' IN status ) " +
-      ") AS result"
+     "MATCH (p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-()\n" +
+    "WITH p, $ids AS ids\n" +
+    "\n" +
+    "// Subquery para verificar permissão EDIT\n" +
+    "CALL {\n" +
+    "  WITH p, ids\n" +
+    "  MATCH (n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO|IS_STRUCTURED_BY|IS_FORSEEN_ON|\n" +
+    "             APPLIES_TO|FEATURES|MITIGATES|IS_TRIGGER_BY|ADDRESSES|IS_REPORTED_FOR|\n" +
+    "             IS_BELONGS_TO|SCOPE_TO|IS_LINKED_TO|COMPOSES|IS_BASELINED_BY*0..]->(m)\n" +
+    "        <-[rel:CAN_ACCESS_WORKPACK|CAN_ACCESS_PLAN|CAN_ACCESS_OFFICE]-(p)\n" +
+    "  WHERE id(n) IN ids AND rel.permissionLevel = 'EDIT'\n" +
+    "  RETURN true AS hasEdit\n" +
+    "  UNION\n" +
+    "  RETURN false AS hasEdit\n" +
+    "}\n" +
+    "\n" +
+    "// Subquery para verificar permissão UPDATE + Estruturação\n" +
+    "CALL {\n" +
+    "  WITH p, ids\n" +
+    "  MATCH (n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO|IS_STRUCTURED_BY|IS_FORSEEN_ON|\n" +
+    "             APPLIES_TO|FEATURES|MITIGATES|IS_TRIGGER_BY|ADDRESSES|IS_REPORTED_FOR|\n" +
+    "             IS_BELONGS_TO|SCOPE_TO|IS_LINKED_TO|COMPOSES|IS_BASELINED_BY*0..]->(m)\n" +
+    "        <-[rel:CAN_ACCESS_WORKPACK|CAN_ACCESS_PLAN|CAN_ACCESS_OFFICE]-(p)\n" +
+    "  WHERE id(n) IN ids AND rel.permissionLevel = 'UPDATE'\n" +
+    "  MATCH (n)-[:IS_IN*0..]->(proj:Project)\n" +
+    "        <-[:FEATURES]-(prop:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel)\n" +
+    "  WHERE pm.name IN ['Situação','Status'] AND prop.value = 'Estruturação'\n" +
+    "  RETURN true AS hasUpdateStruct\n" +
+    "  UNION\n" +
+    "  RETURN false AS hasUpdateStruct\n" +
+    "}\n" +
+    "\n" +
+    "RETURN (hasEdit OR hasUpdateStruct) AS result"
   )
   boolean hasEditPermission(
     @Param("ids") List<Long> ids,
@@ -69,11 +85,20 @@ public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, C
   );
 
   @Query(
-    "MATCH (n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO|IS_STRUCTURED_BY|IS_FORSEEN_ON|APPLIES_TO|FEATURES|MITIGATES|IS_TRIGGER_BY|ADDRESSES|IS_REPORTED_FOR|IS_BELONGS_TO|SCOPE_TO|IS_LINKED_TO|COMPOSES|IS_BASELINED_BY*0..]->(m)<-[r:CAN_ACCESS_WORKPACK|CAN_ACCESS_PLAN|CAN_ACCESS_OFFICE]-(p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
-    "WHERE id(n) IN $ids " +
-    "AND r.permissionLevel IN ['READ', 'EDIT'] " +
-    "with n limit 1 " +
-    "with count(n)>0 as hasEditPermission " +
+    "MATCH (p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-()\n" +
+    "WITH p, $ids AS ids\n" +
+    "\n" +
+    "CALL {\n" +
+    "  WITH p, ids\n" +
+    "  MATCH (n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO|IS_STRUCTURED_BY|IS_FORSEEN_ON|\n" +
+    "             APPLIES_TO|FEATURES|MITIGATES|IS_TRIGGER_BY|ADDRESSES|IS_REPORTED_FOR|\n" +
+    "             IS_BELONGS_TO|SCOPE_TO|IS_LINKED_TO|COMPOSES|IS_BASELINED_BY*0..]->(m)\n" +
+    "        <-[r:CAN_ACCESS_WORKPACK|CAN_ACCESS_PLAN|CAN_ACCESS_OFFICE]-(p)\n" +
+    "  WHERE id(n) IN ids\n" +
+    "    AND r.permissionLevel IN ['READ','EDIT']\n" +
+    "  RETURN count(n) > 0 AS hasEditPermission\n" +
+    "}\n" +
+    "\n" +
     "RETURN hasEditPermission"
   )
   boolean hasReadPermission(
@@ -82,11 +107,20 @@ public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, C
   );
 
   @Query(
-    "MATCH (n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO|IS_STRUCTURED_BY|IS_FORSEEN_ON|APPLIES_TO|FEATURES|MITIGATES|IS_TRIGGER_BY|ADDRESSES|IS_REPORTED_FOR|IS_BELONGS_TO|SCOPE_TO|IS_LINKED_TO|COMPOSES|IS_BASELINED_BY*0..]->(m)<-[r:CAN_ACCESS_WORKPACK|CAN_ACCESS_PLAN|CAN_ACCESS_OFFICE]-(p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
-    "WHERE id(n) IN $ids " +
-    "AND r.permissionLevel IN ['UPDATE', 'EDIT'] " +
-    "with n limit 1 " +
-    "with count(n)>0 as hasEditPermission " +
+    "MATCH (p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-()\n" +
+    "WITH p, $ids AS ids\n" +
+    "\n" +
+    "CALL {\n" +
+    "  WITH p, ids\n" +
+    "  MATCH (n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO|IS_STRUCTURED_BY|IS_FORSEEN_ON|\n" +
+    "             APPLIES_TO|FEATURES|MITIGATES|IS_TRIGGER_BY|ADDRESSES|IS_REPORTED_FOR|\n" +
+    "             IS_BELONGS_TO|SCOPE_TO|IS_LINKED_TO|COMPOSES|IS_BASELINED_BY*0..]->(m)\n" +
+    "        <-[r:CAN_ACCESS_WORKPACK|CAN_ACCESS_PLAN|CAN_ACCESS_OFFICE]-(p)\n" +
+    "  WHERE id(n) IN ids\n" +
+    "    AND r.permissionLevel IN ['UPDATE','EDIT']\n" +
+    "  RETURN count(n) > 0 AS hasEditPermission\n" +
+    "}\n" +
+    "\n" +
     "RETURN hasEditPermission"
   )
   boolean hasUpdatePermission(
