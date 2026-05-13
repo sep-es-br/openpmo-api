@@ -2,6 +2,8 @@ package br.gov.es.openpmo.model.actors;
 
 
 import br.gov.es.openpmo.model.office.Office;
+import br.gov.es.openpmo.model.relations.OrganizationOfficeRelationship;
+
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 
@@ -11,11 +13,9 @@ public class Organization extends Actor {
   private String website;
   private OrganizationEnum sector;
   private String address;
-  private String phoneNumber;
-  private String contactEmail;
 
   @Relationship(type = "IS_REGISTERED_IN")
-  private Office office;
+  private OrganizationOfficeRelationship organizationOffice;
 
   public String getWebsite() {
     return this.website;
@@ -25,12 +25,12 @@ public class Organization extends Actor {
     this.website = website;
   }
 
-  public Office getOffice() {
-    return this.office;
+  public OrganizationOfficeRelationship getOrganizationOffice() {
+    return this.organizationOffice;
   }
 
-  public void setOffice(final Office office) {
-    this.office = office;
+  public void setOrganizationOffice(final OrganizationOfficeRelationship organizationOffice) {
+    this.organizationOffice = organizationOffice;
   }
 
   public OrganizationEnum getSector() {
@@ -47,22 +47,6 @@ public class Organization extends Actor {
 
   public void setAddress(final String address) {
     this.address = address;
-  }
-
-  public String getPhoneNumber() {
-    return this.phoneNumber;
-  }
-
-  public void setPhoneNumber(final String phoneNumber) {
-    this.phoneNumber = phoneNumber;
-  }
-
-  public String getContactEmail() {
-    return this.contactEmail;
-  }
-
-  public void setContactEmail(final String contactEmail) {
-    this.contactEmail = contactEmail;
   }
 
 }

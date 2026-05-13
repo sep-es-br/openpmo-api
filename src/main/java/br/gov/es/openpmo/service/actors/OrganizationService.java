@@ -6,6 +6,7 @@ import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Organization;
 import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.model.office.Office;
+import br.gov.es.openpmo.model.relations.OrganizationOfficeRelationship;
 import br.gov.es.openpmo.repository.CustomFilterRepository;
 import br.gov.es.openpmo.repository.OrganizationRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllOrganizationUsingCustomFilter;
@@ -82,13 +83,23 @@ public class OrganizationService {
     return this.repository.save(organization);
   }
 
-  public Organization save(
+public Organization save(
     final Organization organization,
     final Long idOffice
-  ) {
-    organization.setOffice(this.getOfficeById(idOffice));
+) {
+
+    final Office office = this.getOfficeById(idOffice);
+
+    OrganizationOfficeRelationship relationship =
+        new OrganizationOfficeRelationship();
+
+    relationship.setOrganization(organization);
+    relationship.setOffice(office);
+
+    organization.setOrganizationOffice(relationship);
+
     return this.repository.save(organization);
-  }
+}
 
   private Office getOfficeById(final Long idOffice) {
     return this.officeService.findById(idOffice);
@@ -98,17 +109,47 @@ public class OrganizationService {
     this.repository.delete(organization);
   }
 
-  public Organization getOrganization(final OrganizationUpdateDto organizationUpdateDto) {
-    final Organization organization = this.findById(organizationUpdateDto.getId());
+  public Organization getOrganization(
+    final OrganizationUpdateDto organizationUpdateDto
+) {
+
+    final Organization organization =
+        this.findById(organizationUpdateDto.getId());
+
     organization.setSector(organizationUpdateDto.getSector());
     organization.setWebsite(organizationUpdateDto.getWebsite());
     organization.setAddress(organizationUpdateDto.getAddress());
-    organization.setContactEmail(organizationUpdateDto.getContactEmail());
     organization.setName(organizationUpdateDto.getName());
     organization.setFullName(organizationUpdateDto.getFullName());
-    organization.setPhoneNumber(organizationUpdateDto.getPhoneNumber());
+
+    OrganizationOfficeRelationship relationship =
+        organization.getOrganizationOffice();
+
+    if (relationship == null) {
+
+        relationship = new OrganizationOfficeRelationship();
+
+        relationship.setOrganization(organization);
+
+        if (organization.getOrganizationOffice() != null) {
+            relationship.setOffice(
+                organization.getOrganizationOffice().getOffice()
+            );
+        }
+
+        organization.setOrganizationOffice(relationship);
+    }
+
+    relationship.setPhoneNumber(
+        organizationUpdateDto.getPhoneNumber()
+    );
+
+    relationship.setContactEmail(
+        organizationUpdateDto.getContactEmail()
+    );
+
     return organization;
-  }
+}
 
   public Organization findById(final Long id) {
     return this.repository.findById(id)

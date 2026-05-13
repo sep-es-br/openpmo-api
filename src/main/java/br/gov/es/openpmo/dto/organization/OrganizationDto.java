@@ -24,10 +24,17 @@ public class OrganizationDto {
     this.name = organization.getName();
     this.fullName = organization.getFullName();
     this.address = organization.getAddress();
-    this.phoneNumber = organization.getPhoneNumber();
-    this.contactEmail = organization.getContactEmail();
     this.sector = organization.getSector();
     this.website = organization.getWebsite();
+
+    if (organization.getOrganizationOffice() != null) {
+
+      this.phoneNumber =
+          organization.getOrganizationOffice().getPhoneNumber();
+
+      this.contactEmail =
+          organization.getOrganizationOffice().getContactEmail();
+    }
   }
 
   public Long getId() {
