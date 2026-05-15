@@ -23,9 +23,7 @@ public class OrganizationDto {
     this.id = organization.getId();
     this.name = organization.getName();
     this.fullName = organization.getFullName();
-    this.address = organization.getAddress();
     this.sector = organization.getSector();
-    this.website = organization.getWebsite();
 
     if (organization.getOrganizationOffice() != null) {
 
@@ -34,6 +32,12 @@ public class OrganizationDto {
 
       this.contactEmail =
           organization.getOrganizationOffice().getContactEmail();
+
+      this.address =
+          organization.getOrganizationOffice().getAddress();
+      
+      this.website =
+          organization.getOrganizationOffice().getWebsite();
     }
   }
 

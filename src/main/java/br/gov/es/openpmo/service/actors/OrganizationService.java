@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.service.actors;
 
 import br.gov.es.openpmo.configuration.properties.AppProperties;
+import br.gov.es.openpmo.dto.organization.OrganizationStoreDto;
 import br.gov.es.openpmo.dto.organization.OrganizationUpdateDto;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Organization;
@@ -83,31 +84,32 @@ public class OrganizationService {
     return this.repository.save(organization);
   }
 
-public Organization save(
-    final Organization organization,
-    final Long idOffice
-) {
-
-    final Office office = this.getOfficeById(idOffice);
-
-    OrganizationOfficeRelationship relationship =
-        new OrganizationOfficeRelationship();
-
-    relationship.setOrganization(organization);
-    relationship.setOffice(office);
-
-    organization.setOrganizationOffice(relationship);
-
-    return this.repository.save(organization);
-}
-
-  private Office getOfficeById(final Long idOffice) {
-    return this.officeService.findById(idOffice);
-  }
 
   public void delete(final Organization organization) {
     this.repository.delete(organization);
   }
+
+  public Organization buildOrganizationFromCreate (final OrganizationStoreDto organizationStoreDto) {
+    
+    final Organization organization = new Organization();
+    organization.setName(organizationStoreDto.getName());
+    organization.setFullName(organizationStoreDto.getFullName());
+    organization.setSector(organizationStoreDto.getSector());
+    
+    final Office office = this.officeService.findById(organizationStoreDto.getIdOffice());
+    
+    final OrganizationOfficeRelationship relationship = new OrganizationOfficeRelationship();
+    relationship.setOrganization(organization);
+    relationship.setOffice(office);
+    relationship.setPhoneNumber(organizationStoreDto.getPhoneNumber());
+    relationship.setContactEmail(organizationStoreDto.getContactEmail());
+    relationship.setAddress(organizationStoreDto.getAddress());
+    relationship.setWebsite(organizationStoreDto.getWebsite());
+    
+    organization.setOrganizationOffice(relationship);
+    
+    return organization;
+}
 
   public Organization getOrganization(
     final OrganizationUpdateDto organizationUpdateDto
@@ -117,8 +119,6 @@ public Organization save(
         this.findById(organizationUpdateDto.getId());
 
     organization.setSector(organizationUpdateDto.getSector());
-    organization.setWebsite(organizationUpdateDto.getWebsite());
-    organization.setAddress(organizationUpdateDto.getAddress());
     organization.setName(organizationUpdateDto.getName());
     organization.setFullName(organizationUpdateDto.getFullName());
 
@@ -148,11 +148,24 @@ public Organization save(
         organizationUpdateDto.getContactEmail()
     );
 
+    relationship.setAddress(
+      organizationUpdateDto.getAddress()
+    );
+
+    relationship.setWebsite(
+        organizationUpdateDto.getWebsite()
+    );
+
     return organization;
 }
 
   public Organization findById(final Long id) {
     return this.repository.findById(id)
+      .orElseThrow(() -> new NegocioException(ApplicationMessage.ORGANIZATION_NOT_FOUND));
+  }
+
+  public Organization findByIdAndOffice(final Long id, final Long idOffice) {
+    return this.repository.findByIdAndIdOffice(id, idOffice)
       .orElseThrow(() -> new NegocioException(ApplicationMessage.ORGANIZATION_NOT_FOUND));
   }
 

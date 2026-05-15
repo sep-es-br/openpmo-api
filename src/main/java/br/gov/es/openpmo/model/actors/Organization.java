@@ -10,20 +10,10 @@ import org.neo4j.ogm.annotation.Relationship;
 @NodeEntity
 public class Organization extends Actor {
 
-  private String website;
   private OrganizationEnum sector;
-  private String address;
 
   @Relationship(type = "IS_REGISTERED_IN")
   private OrganizationOfficeRelationship organizationOffice;
-
-  public String getWebsite() {
-    return this.website;
-  }
-
-  public void setWebsite(final String website) {
-    this.website = website;
-  }
 
   public OrganizationOfficeRelationship getOrganizationOffice() {
     return this.organizationOffice;
@@ -39,14 +29,6 @@ public class Organization extends Actor {
 
   public void setSector(final OrganizationEnum sector) {
     this.sector = sector;
-  }
-
-  public String getAddress() {
-    return this.address;
-  }
-
-  public void setAddress(final String address) {
-    this.address = address;
   }
 
 }

@@ -22,6 +22,10 @@ public class OrganizationOfficeRelationship {
 
     private String contactEmail;
 
+    private String address;
+
+    private String website;
+
     public Long getId() {
         return id;
     }
@@ -57,4 +61,21 @@ public class OrganizationOfficeRelationship {
     public void setContactEmail(String contactEmail) {
         this.contactEmail = contactEmail;
     }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getWebsite() {
+        return website;
+    }
+
+    public void setWebsite(String website) {
+        this.website = website;
+    }
+    
 }

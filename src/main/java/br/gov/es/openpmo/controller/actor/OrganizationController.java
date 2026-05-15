@@ -63,11 +63,12 @@ public class OrganizationController {
 
   @GetMapping("{id}")
   public ResponseEntity<ResponseBase<OrganizationDto>> findById(@PathVariable final Long id,
+      @RequestParam("id-office") final Long idOffice,
       @Authorization final String authorization) {
 
 //    this.canAccessService.ensureCanReadResource(id, authorization);
 
-    final OrganizationDto officeDto = new OrganizationDto(this.organizationService.findById(id));
+    final OrganizationDto officeDto = new OrganizationDto(this.organizationService.findByIdAndOffice(id, idOffice));
     final ResponseBase<OrganizationDto> response = new ResponseBase<OrganizationDto>().setData(officeDto)
         .setSuccess(true);
     return ResponseEntity.ok(response);
@@ -80,9 +81,7 @@ public class OrganizationController {
 
     this.canAccessService.ensureCanEditResource(organizationStoreDto.getIdOffice(), authorization);
 
-    final Organization organization = this.organizationService.save(
-        this.modelMapper.map(organizationStoreDto, Organization.class),
-        organizationStoreDto.getIdOffice());
+    final Organization organization = this.organizationService.save(this.organizationService.buildOrganizationFromCreate(organizationStoreDto));
     final ResponseBase<EntityDto> entity = new ResponseBase<EntityDto>().setMessage(OPERATION_SUCCESS)
         .setData(new EntityDto(
             organization.getId()))
