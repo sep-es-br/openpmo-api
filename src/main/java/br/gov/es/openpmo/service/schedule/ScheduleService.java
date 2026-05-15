@@ -433,9 +433,20 @@ public class ScheduleService {
     if (aggregate.getConsumeCostBaseLine() != null) {
       for (ConsumesCostDto baselineCost : aggregate.getConsumeCostBaseLine()) {
         Optional<ConsumesDto> existing = consumes.stream()
-          .filter(c -> c.getStepDate() != null &&
-                       c.getStepDate().equals(baselineCost.getStepDate()))
-          .findFirst();
+        .filter(c ->
+            c.getStepDate() != null &&
+            baselineCost.getStepDate() != null &&
+            c.getStepDate().equals(baselineCost.getStepDate()) &&
+
+            c.getCostAccount() != null &&
+            baselineCost.getCostAccount() != null &&
+
+            Objects.equals(
+                c.getCostAccount().getId(),
+                baselineCost.getCostAccount().getId()
+            )
+        )
+        .findFirst();
   
         if (existing.isPresent()) {
           existing.get().setBaselinePlannedCost(baselineCost.getPlannedCost());
