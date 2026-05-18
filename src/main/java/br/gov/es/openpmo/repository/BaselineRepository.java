@@ -618,11 +618,23 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
   void setStatusBaseline(Long baselineId, String status);
 
   @Query(
-    "MATCH (workpack:Workpack)-[:IS_BASELINED_BY]->(baseline:Baseline) " +
-    "WHERE id(workpack) = $workpackId AND baseline.status = 'PROPOSED' " +
-    "RETURN id(baseline)"
+    "MATCH (n) WHERE id(n) = $id " +
+  
+    "OPTIONAL MATCH (project:Project) WHERE project = n " +
+    "OPTIONAL MATCH (n)<-[:IS_IN*0..]-(project2:Project {canceled:false, deleted:false}) " +
+    "OPTIONAL MATCH (n)<-[:BELONGS_TO {linked:false}]-(project3:Project {canceled:false, deleted:false}) " +
+    "OPTIONAL MATCH (n)<-[:IS_ADOPTED_BY]-(plan:Plan)<-[:BELONGS_TO {linked:false}]-(project4:Project {canceled:false, deleted:false}) " +
+  
+    "WITH [project, project2, project3, project4] AS all " +
+    "UNWIND all AS p " +
+    "WITH DISTINCT p WHERE p IS NOT NULL " +
+  
+    "MATCH (p)-[:IS_BASELINED_BY]->(b:Baseline) " +
+    "WHERE b.status = 'PROPOSED' " +
+  
+    "RETURN id(b)"
   )
-  Optional<Long> findProposedBaselineByWorkpack(Long workpackId);
+  List<Long> findProposedBaselineByWorkpackId(Long id);
 
   @Query(
     "MATCH (b:Baseline)<-[:COMPOSES]-(w:Workpack)-[:IS_SNAPSHOT_OF]->(m:Workpack {canceled: false}) " +
