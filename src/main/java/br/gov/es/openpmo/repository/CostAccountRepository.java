@@ -85,26 +85,34 @@ public interface CostAccountRepository extends Neo4jRepository<CostAccount, Long
   )
   List<ConsumesDto> findAllConsumesByStepIds(List<Long> snapshotStepIds);
 
-    @Query(
-      "MATCH (st:Step)-[consume:CONSUMES]->(ca:CostAccount) \n"
-      + "WHERE id(st) = $stepId \n"
-      + "OPTIONAL MATCH (ca)<-[:FEATURES]-(capName:Property)-[:IS_DRIVEN_BY]->(:PropertyModel {name:'name'}) \n"
-      + "OPTIONAL MATCH (ca)<-[:ASSIGNED]-(po:PlanoOrcamentario)<-[:CONTROLS]-(uo:UnidadeOrcamentaria) \n"
-      + "RETURN \n"
-      + "  id(consume) AS id, \n"
-      + "  consume.actualCost AS actualCost, \n"
-      + "  consume.plannedCost AS plannedCost, \n"
-      + "  id(ca) AS costAccountId, \n"
-      + "  { \n"
-      + "    id: id(ca), \n"
-      + "    name: capName.value, \n"
-      + "    codUo: uo.code, \n"
-      + "    unidadeOrcamentaria: uo.name, \n"
-      + "    codPo: po.code, \n"
-      + "    planoOrcamentario: po.fullName \n"
-      + "  } AS costAccount"
-    )
-    List<ConsumesCostDto> findCostConsumptionsByStepId(@Param("stepId") Long stepId);
+  @Query(
+      "MATCH (st:Step)-[consume:CONSUMES]->(ca:CostAccount) \n" +
+      "WHERE id(st) = $stepId \n" +
+
+      "OPTIONAL MATCH (ca)-[:IS_SNAPSHOT_OF]->(mca:CostAccount) \n" +
+
+      "WITH consume, ca, coalesce(mca, ca) AS realCa \n" +
+
+      "OPTIONAL MATCH (realCa)<-[:FEATURES]-(capName:Property)-[:IS_DRIVEN_BY]->(:PropertyModel {name:'name'}) \n" +
+      "OPTIONAL MATCH (realCa)<-[:ASSIGNED]-(po:PlanoOrcamentario)<-[:CONTROLS]-(uo:UnidadeOrcamentaria) \n" +
+
+      "RETURN \n" +
+      "  id(consume) AS id, \n" +
+      "  consume.actualCost AS actualCost, \n" +
+      "  consume.plannedCost AS plannedCost, \n" +
+      "  id(ca) AS costAccountId, \n" +
+      "  { \n" +
+      "    id: id(realCa), \n" +
+      "    name: capName.value, \n" +
+      "    codUo: uo.code, \n" +
+      "    unidadeOrcamentaria: uo.name, \n" +
+      "    codPo: po.code, \n" +
+      "    planoOrcamentario: po.fullName \n" +
+      "  } AS costAccount"
+  )
+  List<ConsumesCostDto> findCostConsumptionsByStepId(
+      @Param("stepId") Long stepId
+  );
 
   @Query("MATCH (s:Schedule)<-[c1:COMPOSES]-(st1:Step)-[cs1:CONSUMES]->(c:CostAccount)<-[:FEATURES]-(name:Property)-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'name'}), "
           + "(c)<-[:ASSIGNED]-(po:PlanoOrcamentario)<-[:CONTROLS]-(uo:UnidadeOrcamentaria) "
