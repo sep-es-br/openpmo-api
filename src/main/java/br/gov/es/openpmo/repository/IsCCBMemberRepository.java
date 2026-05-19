@@ -53,6 +53,13 @@ public interface IsCCBMemberRepository extends Neo4jRepository<IsCCBMemberFor, L
        Long idPlan
        );
 
+  @Query(
+          "MATCH (p:Person)-[:IS_CCB_MEMBER_FOR]->(n) " +
+          "WHERE id(p) = $idPerson AND id(n) = $idTarget " +
+          "RETURN count(p) > 0"
+        )
+  boolean existsCCMForPersonAndTarget(Long idPerson, Long idTarget);
+
   @Query("MATCH (p:Person)-[c:IS_CCB_MEMBER_FOR]->(w:Workpack) " +
          "WHERE id(w)=$idWorkpack AND id(p)=$idPerson " +
          "RETURN p,c,w")

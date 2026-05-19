@@ -336,26 +336,33 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
   }
 
   public void handlePostMemberDeletion(Long idWorkpack) {
-    final Long idBaseline = this.repository.findProposedBaselineByWorkpack(idWorkpack)
-            .orElse(null);
 
-    if (idBaseline == null) {
-        return; 
+    final List<Long> idBaselines =
+            this.repository.findProposedBaselineByWorkpackId(idWorkpack);
+
+    if (idBaselines.isEmpty()) {
+        return;
     }
 
-    final Baseline baseline = this.findBaselineById(idBaseline);
-    throwExceptionIfBaselineIsNotProposedOrReject(baseline);
+    for (Long idBaseline : idBaselines) {
 
-    final boolean hasEvaluationsRemain = !this.evaluatedByRepository.wasEvaluatedByAllMembers(idBaseline);
+      final Baseline baseline = this.findBaselineById(idBaseline);
 
-    if (!hasEvaluationsRemain) {
-        final boolean alreadyRejected = this.isAlreadyRejected(idBaseline);
-        if (!alreadyRejected) {
-          
-            this.updateBaselineStatus(baseline);
-            this.journalCreator.baselineForAllApprovedPersons(baseline);
+      throwExceptionIfBaselineIsNotProposedOrReject(baseline);
 
-        }
+      final boolean allEvaluated  =
+              this.evaluatedByRepository.wasEvaluatedByAllMembers(idBaseline);
+
+      if (!allEvaluated) {
+          continue;
+      }
+
+      if (this.isAlreadyRejected(idBaseline)) {
+          continue;
+      }
+
+      this.updateBaselineStatus(baseline);
+      this.journalCreator.baselineForAllApprovedPersons(baseline);   
     }
   }
 

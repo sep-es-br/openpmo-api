@@ -26,6 +26,7 @@ import br.gov.es.openpmo.service.actors.IsAuthenticatedByService;
 import br.gov.es.openpmo.service.actors.IsInContactBookOfService;
 import br.gov.es.openpmo.service.actors.PersonService;
 import br.gov.es.openpmo.service.authentication.TokenService;
+import br.gov.es.openpmo.service.baselines.EvaluateBaselineService;
 import br.gov.es.openpmo.service.journals.JournalCreator;
 import br.gov.es.openpmo.service.office.OfficeService;
 import br.gov.es.openpmo.service.office.plan.PlanService;
@@ -81,6 +82,8 @@ public class PlanPermissionService {
 
   private final IsCCBMemberRepository isCCBMemberRepository;
 
+  private final EvaluateBaselineService evaluateBaselineService;
+
   @Autowired
   public PlanPermissionService(
     final PlanPermissionRepository repository,
@@ -97,7 +100,8 @@ public class PlanPermissionService {
     final TokenService tokenService,
     final FindAllPlanPermissionUsingCustomFilter findAllPlanPermission,
     final FindAllPlanPermissionByIdPersonUsingCustomFilter findAllPlanPermissionByIdPerson,
-    final IsCCBMemberRepository isCCBMemberRepository
+    final IsCCBMemberRepository isCCBMemberRepository,
+    final EvaluateBaselineService evaluateBaselineService
   ) {
     this.repository = repository;
     this.customFilterRepository = customFilterRepository;
@@ -114,6 +118,7 @@ public class PlanPermissionService {
     this.findAllPlanPermission = findAllPlanPermission;
     this.findAllPlanPermissionByIdPerson = findAllPlanPermissionByIdPerson;
     this.isCCBMemberRepository = isCCBMemberRepository;
+    this.evaluateBaselineService = evaluateBaselineService;
   }
 
   public void delete(
@@ -130,6 +135,8 @@ public class PlanPermissionService {
     final Person target = personOptional.get();
     final List<CanAccessPlan> permissions = this.repository.findByIdPlanAndIdPerson(idPlan, target.getId());
     this.repository.deleteAll(permissions);
+    this.isCCBMemberRepository.deleteAllByPersonIdAndPlanId(target.getId(), idPlan);
+    this.evaluateBaselineService.handlePostMemberDeletion(idPlan);
     this.journalCreator.planPermission(
       plan,
       target,
@@ -329,6 +336,10 @@ public class PlanPermissionService {
           permission.getRole(),
           permission.isCcmMember()
       );
+    }
+
+    if(!this.isCCBMemberRepository.existsCCMForPersonAndTarget(request.getPerson().getId(), request.getIdPlan())){
+      this.evaluateBaselineService.handlePostMemberDeletion(request.getIdPlan());
     }
   }
 

@@ -28,6 +28,7 @@ import br.gov.es.openpmo.service.actors.IsAuthenticatedByService;
 import br.gov.es.openpmo.service.actors.IsInContactBookOfService;
 import br.gov.es.openpmo.service.actors.PersonService;
 import br.gov.es.openpmo.service.authentication.TokenService;
+import br.gov.es.openpmo.service.baselines.EvaluateBaselineService;
 import br.gov.es.openpmo.service.journals.JournalCreator;
 import br.gov.es.openpmo.service.office.OfficeService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
@@ -35,6 +36,7 @@ import br.gov.es.openpmo.utils.TextSimilarityScore;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -86,6 +88,8 @@ public class OfficePermissionService {
 
   private final IsCCBMemberRepository isCCBMemberRepository;
 
+  private final EvaluateBaselineService evaluateBaselineService;
+
   @Autowired
   public OfficePermissionService(
     final OfficePermissionRepository repository,
@@ -102,7 +106,8 @@ public class OfficePermissionService {
     final TextSimilarityScore textSimilarityScore,
     final JournalCreator journalCreator,
     final TokenService tokenService,
-    final IsCCBMemberRepository isCCBMemberRepository
+    final IsCCBMemberRepository isCCBMemberRepository,
+    @Lazy final EvaluateBaselineService evaluateBaselineService
   ) {
     this.repository = repository;
     this.customFilterRepository = customFilterRepository;
@@ -119,6 +124,7 @@ public class OfficePermissionService {
     this.journalCreator = journalCreator;
     this.tokenService = tokenService;
     this.isCCBMemberRepository = isCCBMemberRepository;
+    this.evaluateBaselineService = evaluateBaselineService;
   }
 
   public void delete(
@@ -139,7 +145,8 @@ public class OfficePermissionService {
       this.getGratherPermissionLevel(permissionsToDelete),
       JournalAction.REMOVED
     );
-    this.isCCBMemberRepository.deleteAllByPersonIdAndOfficeId(author.getId(), idOffice);
+    this.isCCBMemberRepository.deleteAllByPersonIdAndOfficeId(target.getId(), idOffice);
+    this.evaluateBaselineService.handlePostMemberDeletion(idOffice);
   }
 
   private Person getPersonByAuthorization(final String authorization) {
@@ -403,6 +410,10 @@ public class OfficePermissionService {
           permission.getRole(),
           permission.isCcmMember()
       );
+    }
+
+    if(!this.isCCBMemberRepository.existsCCMForPersonAndTarget(request.getPerson().getId(), request.getIdOffice())){
+      this.evaluateBaselineService.handlePostMemberDeletion(request.getIdOffice());
     }
 
   }
