@@ -11,6 +11,7 @@ import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.IsCCBMemberRepository;
 import br.gov.es.openpmo.repository.IsInContactBookOfRepository;
 import br.gov.es.openpmo.service.actors.PersonService;
+import br.gov.es.openpmo.service.baselines.EvaluateBaselineService;
 import br.gov.es.openpmo.service.office.OfficeService;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,19 +32,23 @@ public class CreateCCBMemberRelationshipService implements ICreateCCBMemberRelat
 
   private final OfficeService officeService;
 
+  private final EvaluateBaselineService evaluateBaselineService;
+
   @Autowired
   public CreateCCBMemberRelationshipService(
     final IsCCBMemberRepository repository,
     final IsInContactBookOfRepository isInContactBookOfRepository,
     final WorkpackService workpackService,
     final PersonService personService,
-    final OfficeService officeService
+    final OfficeService officeService,
+    final EvaluateBaselineService evaluateBaselineService
   ) {
     this.repository = repository;
     this.isInContactBookOfRepository = isInContactBookOfRepository;
     this.workpackService = workpackService;
     this.personService = personService;
     this.officeService = officeService;
+    this.evaluateBaselineService = evaluateBaselineService;
   }
 
   @Override
@@ -54,6 +59,10 @@ public class CreateCCBMemberRelationshipService implements ICreateCCBMemberRelat
 
     for(final MemberAs memberAs : request.getMemberAs()) {
       this.saveCCBMember(person, workpack, memberAs);
+    }
+
+    if(!this.repository.existsCCMForPersonAndTarget(person.getId(), workpack.getId())){
+      this.evaluateBaselineService.handlePostMemberDeletion(workpack.getId());
     }
   }
 

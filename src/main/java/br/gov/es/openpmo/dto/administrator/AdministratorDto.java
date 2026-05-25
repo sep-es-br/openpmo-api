@@ -4,7 +4,6 @@ package br.gov.es.openpmo.dto.administrator;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
 
-import static br.gov.es.openpmo.utils.ApplicationMessage.AUTH_SERVICE_NOT_FOUND;
 
 public class AdministratorDto {
 
@@ -37,7 +36,8 @@ public class AdministratorDto {
     this.fullName = person.getFullName();
     this.administrator = person.getAdministrator();
     final IsAuthenticatedBy isAuthenticatedBy = person.findAuthenticationDataBy(serverName)
-      .orElseThrow(() -> new IllegalStateException(AUTH_SERVICE_NOT_FOUND));
+            .orElse(new IsAuthenticatedBy()); // apenas para funcionar com autenticação hibrida, considerar usar o de baixo de verdade
+      //.orElseThrow(() -> new IllegalStateException(AUTH_SERVICE_NOT_FOUND));
     this.email = isAuthenticatedBy.getEmail();
   }
 

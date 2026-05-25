@@ -29,7 +29,7 @@ public class FindAllUnitMeasureUsingCustomFilter extends FindAllUsingCustomFilte
           final StringBuilder query
   ) {
     query.append("MATCH (").append(this.nodeName)
-            .append(":UnitMeasure)-[a:AVAILABLE_IN]->(o:Office) ")
+            .append(":UnitMeasure) ")
             .append("WITH *, apoc.text.levenshteinSimilarity(")
             .append("apoc.text.clean(")
             .append(this.nodeName)

@@ -4,8 +4,19 @@ import br.gov.es.openpmo.apis.acessocidadao.response.OperationalOrganizationResp
 import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentEmailResponse;
 import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentResponse;
 import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentRoleResponse;
+import br.gov.es.openpmo.configuration.properties.SpringSecurityProperties;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.service.journals.JournalCreator;
+import static br.gov.es.openpmo.utils.ApplicationMessage.FAILED_FETCH_TOKEN_ACESSO_CIDADAO;
+import java.io.IOException;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import org.apache.http.Consts;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -21,22 +32,11 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Scope;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-
-import static br.gov.es.openpmo.utils.ApplicationMessage.FAILED_FETCH_TOKEN_ACESSO_CIDADAO;
 
 @Component
 @Scope("singleton")
@@ -53,32 +53,19 @@ public class AcessoCidadaoApi implements IAcessoCidadaoApi {
 
   private final JournalCreator journalCreator;
 
-  @Value("${api.acessocidadao.grant_type}")
-  private String grantType;
-
-  @Value("${api.acessocidadao.scope}")
-  private String scopes;
-
-  @Value("${api.acessocidadao.client-id}")
-  private String clientId;
-
-  @Value("${api.acessocidadao.client-secret}")
-  private String clientSecret;
-
-  @Value("${api.acessocidadao.uri.webapi}")
-  private String acessocidadaoUriWebApi;
-
-  @Value("${api.acessocidadao.uri.token}")
-  private String acessocidadaoUriToken;
-
   private List<PublicAgentResponse> allPublicAgentResponses;
+  
+  private final SpringSecurityProperties springSecurityProperties;
+          
 
   public AcessoCidadaoApi(
     final Logger logger,
-    final JournalCreator journalCreator
+    final JournalCreator journalCreator,
+    final SpringSecurityProperties springSecurityProperties
   ) {
     this.logger = logger;
     this.journalCreator = journalCreator;
+    this.springSecurityProperties = springSecurityProperties;
   }
 
   private static boolean notEmpty(final String sigla) {
@@ -226,8 +213,12 @@ public class AcessoCidadaoApi implements IAcessoCidadaoApi {
     if(token == null) {
       return data;
     }
+    
+    OAuth2AuthenticationToken authToken = (OAuth2AuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+      
+    String rid = authToken.getAuthorizedClientRegistrationId() + "-client";
 
-    final String uri = MessageFormat.format("{0}{1}", this.acessocidadaoUriWebApi, url);
+    final String uri = MessageFormat.format("{0}{1}", springSecurityProperties.getProvider(rid).getWebapi(), url);
     this.logger.info("Executing GET in {}", uri);
 
     final HttpUriRequest get = new HttpGet(uri);
@@ -248,48 +239,61 @@ public class AcessoCidadaoApi implements IAcessoCidadaoApi {
     return data;
   }
 
-  private String fetchClientToken(final Long idPerson) {
-    final String basicToken = this.clientId + ":" + this.clientSecret;
+    private String fetchClientToken(final Long idPerson) {
+      
+    
+        OAuth2AuthenticationToken authToken = (OAuth2AuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+        
+        SpringSecurityProperties.Registration registration = springSecurityProperties.getRegistration(authToken.getAuthorizedClientRegistrationId() + "-client");
+        SpringSecurityProperties.Provider provider = springSecurityProperties.getProvider(authToken.getAuthorizedClientRegistrationId() + "-client");
+      
+      
+        final String basicToken = registration.getClientId() + ":" + registration.getClientSecret();
 
-    this.logger.info("Executing POST in {}", this.acessocidadaoUriToken);
-    final HttpPost postRequest = new HttpPost(this.acessocidadaoUriToken);
+        this.logger.info("Executing POST in {}", provider.getTokenUri());
+        final HttpPost postRequest = new HttpPost(provider.getTokenUri());
 
-    final List<NameValuePair> urlParameters = new ArrayList<>();
+        final List<NameValuePair> urlParameters = new ArrayList<>();
 
-    urlParameters.add(new BasicNameValuePair("grant_type", this.grantType));
-    urlParameters.add(new BasicNameValuePair("scope", this.scopes));
+        urlParameters.add(new BasicNameValuePair("grant_type", registration.getAuthorizationGrantType() + Optional.ofNullable(registration.getExtraResponseType()).map(extra -> " " + extra).orElse("") ));
+        urlParameters.add(new BasicNameValuePair("scope", registration.getScope().replace(",", " ")));
 
-    postRequest.addHeader(
-      AUTHORIZATION,
-      BASIC + Base64.getEncoder().encodeToString(basicToken.getBytes())
-    );
+        postRequest.addHeader(
+          AUTHORIZATION,
+          BASIC + Base64.getEncoder().encodeToString(basicToken.getBytes())
+        );
 
-    postRequest.setEntity(new UrlEncodedFormEntity(urlParameters, Consts.UTF_8));
+        postRequest.setEntity(new UrlEncodedFormEntity(urlParameters, Consts.UTF_8));
 
-    try(final CloseableHttpClient httpClient = HttpClients.createDefault();
-        final CloseableHttpResponse response = httpClient.execute(postRequest)) {
-      if(response.getStatusLine().getStatusCode() == HTTP_OK) {
-        final JSONObject result = new JSONObject(EntityUtils.toString(response.getEntity()));
-        this.logger.info("Token received successfully");
-        return result.getString("access_token");
-      }
+        try(final CloseableHttpClient httpClient = HttpClients.createDefault();
+            final CloseableHttpResponse response = httpClient.execute(postRequest)) {
+          if(response.getStatusLine().getStatusCode() == HTTP_OK) {
+            final JSONObject result = new JSONObject(EntityUtils.toString(response.getEntity()));
+            this.logger.info("Token received successfully");
+            return result.getString("access_token");
+          }
+        }
+        catch(final IOException e) {
+          this.journalCreator.failure(idPerson);
+          e.printStackTrace();
+          throw new NegocioException(FAILED_FETCH_TOKEN_ACESSO_CIDADAO);
+        }
+        return null;
     }
-    catch(final IOException e) {
-      this.journalCreator.failure(idPerson);
-      e.printStackTrace();
-      throw new NegocioException(FAILED_FETCH_TOKEN_ACESSO_CIDADAO);
-    }
-    return null;
-  }
 
   private <T> T getEntity(
     final String url,
     final Function<? super JSONObject, T> mapper,
     final Long idPerson
   ) {
+      
+      OAuth2AuthenticationToken authToken = (OAuth2AuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+      
+      String rid = authToken.getAuthorizedClientRegistrationId() + "-client";
+            
     final String token = this.fetchClientToken(idPerson);
     if(token != null) {
-      final String uri = this.acessocidadaoUriWebApi.concat(url);
+      final String uri = springSecurityProperties.getProvider(rid).getWebapi().concat(url);
       this.logger.info("Executing GET in {}", uri);
       final HttpUriRequest get = new HttpGet(uri);
       get.addHeader(AUTHORIZATION, BEARER + token);
@@ -312,9 +316,15 @@ public class AcessoCidadaoApi implements IAcessoCidadaoApi {
     final String url,
     final Long idPerson
   ) {
+      
+      
+      OAuth2AuthenticationToken authToken = (OAuth2AuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+      
+      String rid = authToken.getAuthorizedClientRegistrationId() + "-client";
+      
     final String token = this.fetchClientToken(idPerson);
     if(token != null) {
-      final String uri = this.acessocidadaoUriWebApi.concat(url);
+      final String uri = springSecurityProperties.getProvider(rid).getWebapi().concat(url);
       final HttpUriRequest put = new HttpPut(uri);
       put.addHeader(AUTHORIZATION, BEARER + token);
       try(final CloseableHttpClient httpClient = HttpClients.createDefault();

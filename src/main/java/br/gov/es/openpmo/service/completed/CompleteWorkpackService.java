@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.*;
+import java.util.Collections;
 
 @Service
 public class CompleteWorkpackService implements ICompleteWorkpackService {
@@ -96,7 +97,7 @@ public class CompleteWorkpackService implements ICompleteWorkpackService {
 private void testHierarchyAndSetCompleted(final Long workpackId, boolean startFromSelf) {
 
   List<Long> parentIds = startFromSelf
-    ? List.of(workpackId)
+    ? Collections.singletonList(workpackId)
     : repository.getParentIds(workpackId);
 
   if (parentIds == null || parentIds.isEmpty()) {

@@ -12,6 +12,7 @@ public class PermissionDto {
   private Long id;
   private String role;
   private PermissionLevelEnum level;
+  private boolean ccmMember;
   private String inheritedFrom;
 
   private Long idPlan;
@@ -33,6 +34,18 @@ public class PermissionDto {
     this.id = id;
     this.role = role;
     this.level = level;
+  }
+
+  public PermissionDto(
+    final Long id,
+    final String role,
+    final PermissionLevelEnum level,
+    final boolean ccmMember
+  ) {
+    this.id = id;
+    this.role = role;
+    this.level = level;
+    this.ccmMember = ccmMember;
   }
 
   public static PermissionDto of(final CanAccessWorkpack canAccessWorkpack) {
@@ -126,6 +139,14 @@ public class PermissionDto {
 
   public void setInheritedFrom(final String inheritedFrom) {
     this.inheritedFrom = inheritedFrom;
+  }
+
+  public boolean isCcmMember() {
+    return ccmMember;
+  }
+
+  public void setCcmMember(boolean ccmMember) {
+    this.ccmMember = ccmMember;
   }
 
 }

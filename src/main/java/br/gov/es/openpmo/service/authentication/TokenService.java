@@ -5,10 +5,9 @@ import br.gov.es.openpmo.model.actors.Person;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import java.util.Date;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import java.util.Date;
 
 @Service
 public class TokenService {
@@ -32,6 +31,7 @@ public class TokenService {
     final Person person,
     final String key,
     final String email,
+    final String rid,
     final TokenType tokenType
   ) {
     final String expirationValue = this.getExpirationValue(tokenType);
@@ -41,6 +41,7 @@ public class TokenService {
     claims.put("key", key);
     claims.put("email", email);
     claims.put("administrator", person.getAdministrator());
+    claims.put("authId", rid);
 
     final Date today = new Date();
     final Date expirationDate = new Date(today.getTime() + Long.parseLong(expirationValue));

@@ -5,6 +5,7 @@ import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.MilestoneResultDto;
 import br.gov.es.openpmo.dto.Response;
 import br.gov.es.openpmo.dto.ResponseBase;
+import br.gov.es.openpmo.dto.ccbmembers.CanUseCCBProjection;
 import br.gov.es.openpmo.dto.completed.CompleteWorkpackRequest;
 import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
 import br.gov.es.openpmo.dto.dashboards.MilestoneDateDto;
@@ -38,6 +39,7 @@ import br.gov.es.openpmo.service.journals.JournalCreator;
 import br.gov.es.openpmo.service.journals.JournalFinder;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessData;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
+import br.gov.es.openpmo.service.schedule.UpdateStatusService;
 import br.gov.es.openpmo.service.workpack.WorkpackHasChildren;
 import br.gov.es.openpmo.service.workpack.WorkpackPermissionVerifier;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
@@ -47,6 +49,7 @@ import io.swagger.annotations.Api;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
@@ -101,6 +104,8 @@ public class WorkpackController {
 
   private final RiskRepository riskRepository;
 
+  private final UpdateStatusService updateStatusService;
+
   @Autowired
   public WorkpackController(
     final ResponseHandler responseHandler,
@@ -116,7 +121,8 @@ public class WorkpackController {
     final WorkpackHasChildren workpackHasChildren,
     final IsFavoritedByService isFavoritedByService,
     final DashboardMilestoneRepository dashboardMilestoneRepository,
-    final RiskRepository riskRepository
+    final RiskRepository riskRepository,
+    final UpdateStatusService updateStatusService
   ) {
     this.responseHandler = responseHandler;
     this.workpackService = workpackService;
@@ -132,6 +138,7 @@ public class WorkpackController {
     this.isFavoritedByService = isFavoritedByService;
     this.dashboardMilestoneRepository = dashboardMilestoneRepository;
     this.riskRepository = riskRepository;
+    this.updateStatusService = updateStatusService;
   }
 
   @GetMapping
@@ -171,9 +178,10 @@ public class WorkpackController {
     final List<MilestoneDateDto> milestoneDates = this.dashboardMilestoneRepository.findByParentIds(ids, idPlan);
     final List<RiskWorkpackDto> risks = this.riskRepository.findByWorkpackIds(ids);
     final List<JournalInformationDto> journals = journalFinder.findAllJournalInformationDto(ids);
+    final Map<Long, Boolean> mapCanUseCCB = this.workpackService.getCanUseCCBMap(ids);
     return  workpacks.stream()
                      .filter(workpack -> this.canAccessData.execute(workpack.getId(), authorization).canReadResource())
-                     .map(workpack -> this.mapToWorkpackDetailParentDto(workpack, idWorkpackModel, milestoneDates, risks, journals, idPlan))
+                     .map(workpack -> this.mapToWorkpackDetailParentDto(workpack, idWorkpackModel, milestoneDates, risks, journals, idPlan, mapCanUseCCB))
                      .collect(Collectors.toList());
   }
 
@@ -253,6 +261,15 @@ public class WorkpackController {
     workpackDetailDto.setPermissions(permissions);
     workpackDetailDto.setFavoritedBy(isFavoritedBy);
     return ResponseEntity.ok(ResponseBaseWorkpackDetail.of(workpackDetailDto));
+  }
+
+  @PostMapping("/update-deliverables")
+  public ResponseEntity<String> updateAllDeliverables(@Authorization final String authorization) {
+
+    this.canAccessService.ensureIsAdministrator(authorization);
+
+    this.updateStatusService.updateAllDeliverables();
+    return ResponseEntity.ok("Update de todos os deliverables executado com sucesso");
   }
 
   @PostMapping
@@ -449,7 +466,8 @@ public class WorkpackController {
     List<MilestoneDateDto> milestoneDates,
     List<RiskWorkpackDto> risks,
     final List<JournalInformationDto> journals,
-    final Long idPlan
+    final Long idPlan,
+    Map<Long, Boolean> mapCanUseCCB
   ) {
     final WorkpackDetailParentDto itemDetail = this.workpackService.getWorkpackDetailParentDto(workpack, idWorkpackModel);
     itemDetail.applyLinkedStatus(workpack, idWorkpackModel);
@@ -504,6 +522,10 @@ public class WorkpackController {
         itemDetail.setStatusProperties(statusProperty.getValue().toString());
       }
     }
+
+    itemDetail.setCanUseCCB(
+      Boolean.TRUE.equals(mapCanUseCCB.get(workpack.getId()))
+  );
 
     return itemDetail;
   }

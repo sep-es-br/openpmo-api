@@ -75,11 +75,11 @@ public interface StepRepository extends Neo4jRepository<Step, Long> {
        "  unitM.precision AS precision, " +
        "  sum(round(coalesce(toFloat(step.actualWork), 0), unitM.precision + 1)) AS rawActual " +
        "MATCH (schedule)<-[:IS_SNAPSHOT_OF]-(scheduleSnapshot:Schedule)-[:COMPOSES]->(baseline:Baseline {active: true}) " +
-       "MATCH (scheduleSnapshot)<-[:COMPOSES]-(snapshot:Step) " +
+       "OPTIONAL MATCH (scheduleSnapshot)<-[:COMPOSES]-(snapshot:Step) " +
        "WITH " +
        "  precision, " +
        "  rawActual, " +
-       "  sum(round(coalesce(toFloat(snapshot.plannedWork), 0), precision + 1)) AS rawPlanned " +
+       "  coalesce(sum(round(coalesce(toFloat(snapshot.plannedWork), 0), precision + 1)), 0) AS rawPlanned " +
        "RETURN CASE " +
        "  WHEN rawPlanned = 0 THEN true " +
        "  ELSE round(rawActual, precision) < round(rawPlanned, precision) " +

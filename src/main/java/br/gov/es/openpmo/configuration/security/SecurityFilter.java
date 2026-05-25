@@ -3,38 +3,62 @@ package br.gov.es.openpmo.configuration.security;
 import br.gov.es.openpmo.dto.ErroDto;
 import br.gov.es.openpmo.enumerator.TokenType;
 import br.gov.es.openpmo.exception.AutenticacaoException;
+import br.gov.es.openpmo.exception.NegocioException;
+import br.gov.es.openpmo.model.actors.Person;
+import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
+import br.gov.es.openpmo.service.actors.PersonService;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
-import org.apache.http.HttpStatus;
-import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.annotation.Order;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
-import org.springframework.web.filter.OncePerRequestFilter;
-
+import io.jsonwebtoken.Claims;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.http.HttpStatus;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
 
+@Component
 @Order(1)
 public class SecurityFilter extends OncePerRequestFilter {
 
   private static final Logger log = Logger.getLogger(SecurityFilter.class.getName());
 
   private final TokenService tokenService;
+  
+  private final PersonService personService;
+  
+  private final String authName;
 
   @Autowired
-  public SecurityFilter(final TokenService tokenService) {
+  public SecurityFilter(
+          final TokenService tokenService,
+          final PersonService personService,
+          @Value("${app.login.server.idsvr.name}") final String authName
+  ) {
     this.tokenService = tokenService;
+    this.personService = personService;
+    this.authName = authName;
   }
 
   private static boolean isPublicUrl(final String url) {
@@ -95,6 +119,9 @@ public class SecurityFilter extends OncePerRequestFilter {
     else {
       try {
         this.validateToken(request);
+                        
+                  
+        
       }
       catch(final AutenticacaoException a) {
         response.setStatus(HttpStatus.SC_UNAUTHORIZED);
@@ -115,16 +142,36 @@ public class SecurityFilter extends OncePerRequestFilter {
   private void validateToken(final HttpServletRequest request) {
     final String token = getToken(request).split(" ")[1];
     if(this.tokenService.isValidToken(token, TokenType.AUTHENTICATION)) {
-      final String user = this.tokenService.getUser(token, TokenType.AUTHENTICATION).getSubject();
-      final Authentication authentication = new UsernamePasswordAuthenticationToken(user, "");
+      final String userKey = this.tokenService.getUser(token, TokenType.AUTHENTICATION).get("key", String.class);
+      final String userEmail = this.tokenService.getUser(token, TokenType.AUTHENTICATION).get("email", String.class);
+      
+        Optional<Person> optUserModel = this.personService.findByKey(userKey);
+        
+        if(!optUserModel.isPresent())
+            optUserModel = this.personService.findByEmail(userEmail);
+      
+        Person userModel = optUserModel.orElseThrow(() -> new NegocioException(ApplicationMessage.PERSON_NOT_FOUND));
+        
+        Map<String, Object> attrs = new HashMap<>();
+        
+        IsAuthenticatedBy authBy = userModel.findAuthenticationDataBy(this.authName).orElseThrow(() -> new IllegalStateException("autenticação não encontrada"));
+                
+        attrs.put("sub", authBy.getKey());
+        attrs.put("nome", userModel.getName());
+        attrs.put("email", authBy.getEmail());
+        
+        List<GrantedAuthority> authority = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+      
+        OAuth2User oAuth2User = new DefaultOAuth2User(authority, attrs, "nome");
+        
+        Claims claims = this.tokenService.getUser(token, TokenType.AUTHENTICATION);
+      
+      final OAuth2AuthenticationToken authentication = new OAuth2AuthenticationToken(oAuth2User, Collections.EMPTY_LIST, claims.get("authId", String.class));
+      
+      authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
       final SecurityContext securityContext = SecurityContextHolder.getContext();
       securityContext.setAuthentication(authentication);
-      final HttpSession session = request.getSession(true);
-      session.setAttribute(
-        HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
-        securityContext
-      );
       return;
     }
     throw new AutenticacaoException(ApplicationMessage.INVALID_TOKEN);
