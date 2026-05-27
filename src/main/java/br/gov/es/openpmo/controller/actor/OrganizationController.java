@@ -74,6 +74,22 @@ public class OrganizationController {
     return ResponseEntity.ok(response);
   }
 
+  @GetMapping("/exists-integrated-name")
+  public ResponseEntity<ResponseBase<Boolean>> existsIntegratedOrganizationByName(
+      @RequestParam("name") final String name
+  ) {
+
+      final boolean exists =
+          this.organizationService.existsIntegratedOrganizationByName(name);
+
+      final ResponseBase<Boolean> response =
+          new ResponseBase<Boolean>()
+              .setData(exists)
+              .setSuccess(true);
+
+      return ResponseEntity.ok(response);
+  }
+
   @PostMapping
   public ResponseEntity<ResponseBase<EntityDto>> save(
       @Valid @RequestBody final OrganizationStoreDto organizationStoreDto,

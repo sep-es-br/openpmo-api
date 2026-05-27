@@ -1,26 +1,33 @@
 package br.gov.es.openpmo.model.actors;
 
-
-import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.relations.OrganizationOfficeRelationship;
 
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @NodeEntity
 public class Organization extends Actor {
 
   private OrganizationEnum sector;
 
-  @Relationship(type = "IS_REGISTERED_IN")
-  private OrganizationOfficeRelationship organizationOffice;
+  private String integration;
 
-  public OrganizationOfficeRelationship getOrganizationOffice() {
-    return this.organizationOffice;
+  private String suffix;
+
+  private String guid;
+
+  @Relationship(type = "IS_REGISTERED_IN")
+  private List<OrganizationOfficeRelationship> organizationOffices = new ArrayList<>();
+
+  public List<OrganizationOfficeRelationship> getOrganizationOffices() {
+    return organizationOffices;
   }
 
-  public void setOrganizationOffice(final OrganizationOfficeRelationship organizationOffice) {
-    this.organizationOffice = organizationOffice;
+  public void setOrganizationOffices(List<OrganizationOfficeRelationship> organizationOffices) {
+    this.organizationOffices = organizationOffices;
   }
 
   public OrganizationEnum getSector() {
@@ -30,5 +37,27 @@ public class Organization extends Actor {
   public void setSector(final OrganizationEnum sector) {
     this.sector = sector;
   }
+
+  public String getIntegration() {
+    return this.integration;
+  }
+
+  public void setIntegration(final String integration) {
+    this.integration = integration;
+  }
+
+  public String getSuffix() {
+    return this.suffix;
+  }
+
+  public void setSuffix(final String suffix) {
+    this.suffix = suffix;
+  }
+
+  public String getGuid() {
+    return this.guid;
+  }
+
+  public void setGuid(final String guid){ this.guid = guid; }
 
 }

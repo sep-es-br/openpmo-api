@@ -14,6 +14,8 @@ public class OrganizationUpdateDto {
   private String name;
   @NotBlank(message = ApplicationMessage.FULLNAME_NOT_BLANK)
   private String fullName;
+  @NotNull(message = ApplicationMessage.OFFICE_NOT_FOUND)
+  private Long idOffice;
   private String phoneNumber;
   private String address;
   private String email;
@@ -93,4 +95,11 @@ public class OrganizationUpdateDto {
     this.sector = sector;
   }
 
+  public Long getIdOffice() {
+    return idOffice;
+  }
+
+  public void setIdOffice(Long idOffice) {
+    this.idOffice = idOffice;
+  }
 }

@@ -50,4 +50,20 @@ public interface OrganizationRepository extends CrudRepository<Organization, Lon
                                                @Param("term") String term,
                                                @Param("searchCutOffScore") double searchCutOffScore);
 
+    @Query(
+        "MATCH (o:Organization) " +
+        "WHERE o.integration IS NOT NULL " +
+        "AND toLower(o.name) = toLower($name) " +
+        "RETURN count(o) > 0"
+    )
+    boolean existsIntegratedOrganizationByName(String name);
+
+    @Query(
+            "MATCH (o:Organization) " +
+            "WHERE o.guid IN $guids " +
+            "OPTIONAL MATCH (o)-[r:IS_REGISTERED_IN]->(office:Office) " +
+            "RETURN o, r, office"
+    )
+    List<Organization> findByGuidIn(List<String> guids);
+
 }

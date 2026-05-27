@@ -2,6 +2,7 @@ package br.gov.es.openpmo.dto.organization;
 
 import br.gov.es.openpmo.model.actors.Organization;
 import br.gov.es.openpmo.model.actors.OrganizationEnum;
+import br.gov.es.openpmo.model.relations.OrganizationOfficeRelationship;
 
 public class OrganizationDto {
 
@@ -14,6 +15,9 @@ public class OrganizationDto {
   private String contactEmail;
   private OrganizationEnum sector;
   private String website;
+  private String integration;
+  private String suffix;
+  private String guid;
 
   public OrganizationDto() {
 
@@ -24,20 +28,20 @@ public class OrganizationDto {
     this.name = organization.getName();
     this.fullName = organization.getFullName();
     this.sector = organization.getSector();
+    this.integration = organization.getIntegration();
+    this.suffix = organization.getSuffix();
+    this.guid = organization.getGuid();
 
-    if (organization.getOrganizationOffice() != null) {
+    if (organization.getOrganizationOffices() != null
+            && !organization.getOrganizationOffices().isEmpty()) {
 
-      this.phoneNumber =
-          organization.getOrganizationOffice().getPhoneNumber();
+      OrganizationOfficeRelationship relationship =
+              organization.getOrganizationOffices().get(0);
 
-      this.contactEmail =
-          organization.getOrganizationOffice().getContactEmail();
-
-      this.address =
-          organization.getOrganizationOffice().getAddress();
-      
-      this.website =
-          organization.getOrganizationOffice().getWebsite();
+      this.phoneNumber = relationship.getPhoneNumber();
+      this.contactEmail = relationship.getContactEmail();
+      this.address = relationship.getAddress();
+      this.website = relationship.getWebsite();
     }
   }
 
@@ -111,6 +115,30 @@ public class OrganizationDto {
 
   public void setWebsite(final String website) {
     this.website = website;
+  }
+
+  public String getIntegration() {
+    return this.integration;
+  }
+
+  public void setIntegration(final String integration) {
+    this.integration = integration;
+  }
+
+  public String getSuffix() {
+    return this.suffix;
+  }
+
+  public void setSuffix(final String suffix) {
+    this.suffix = suffix;
+  }
+
+  public String getGuid() {
+    return this.guid;
+  }
+
+  public void setGuid(final String guid) {
+    this.guid = guid;
   }
 
 }
