@@ -193,7 +193,6 @@ public class OrganizationService {
   }
 
   public boolean existsIntegratedOrganizationByName(String name){
-      this.organizationSyncService.syncOrganizations();
       return this.repository.existsIntegratedOrganizationByName(name);
   }
 
