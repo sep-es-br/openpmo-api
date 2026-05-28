@@ -38,6 +38,7 @@ efeito de histórico e consultas posteriores diretamente ao banco de dados.
 
 Para habilitar a autenticação via Google no OpenPMO, é necessário adicionar as propriedades abaixo no arquivo `application.properties`.
 
+```properties
 app.parser.repository=com.github.sep-es-br:google-identity-parser:1.0.1
 app.login.server.idsvr.name=Google
 
@@ -50,6 +51,7 @@ spring.security.oauth2.client.registration.idsvr.scope=email,profile,openid
 spring.security.oauth2.client.registration.idsvr.provider=idsvr
 
 spring.security.oauth2.client.provider.idsvr.issuer-uri=https://accounts.google.com
+```
 
 Também será necessário configurar um **Client ID** e **Client Secret** no Google Cloud Console para autenticação OAuth2.
 
