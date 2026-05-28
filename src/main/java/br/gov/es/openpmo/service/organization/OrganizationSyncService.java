@@ -42,9 +42,6 @@ public class OrganizationSyncService {
                     "Iniciando sincronização de organizações..."
             );
 
-            String token =
-                    organizationTokenService.fetchSystemToken();
-
             IOrganizationParser<String> parser =
                     organizationParser.getIfAvailable();
 
@@ -54,6 +51,9 @@ public class OrganizationSyncService {
                 );
                 return;
             }
+
+            String token =
+                    organizationTokenService.fetchSystemToken();
 
             List<OrganizationDto> orgDtos =
                     parser.getOrganizations(token);

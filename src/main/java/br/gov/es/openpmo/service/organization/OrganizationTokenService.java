@@ -30,15 +30,15 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.FAILED_FETCH_TOKEN_ACES
 @Service
 public class OrganizationTokenService {
 
-    @Value("${spring.security.oauth2.client.registration.org-client.client-id}")
+    @Value("${spring.security.oauth2.client.registration.org-client.client-id:}")
     private String clientId;
-    @Value("${spring.security.oauth2.client.registration.org-client.client-secret}")
+    @Value("${spring.security.oauth2.client.registration.org-client.client-secret:}")
     private String clientSecret;
-    @Value("${spring.security.oauth2.client.provider.org-client.token-uri}")
+    @Value("${spring.security.oauth2.client.provider.org-client.token-uri:}")
     private String tokenUri;
-    @Value("${spring.security.oauth2.client.registration.org-client.scope}")
+    @Value("${spring.security.oauth2.client.registration.org-client.scope:}")
     private String scope;
-    @Value("${spring.security.oauth2.client.registration.org-client.authorization-grant-type}")
+    @Value("${spring.security.oauth2.client.registration.org-client.authorization-grant-type:}")
     private String grantType;
     private static final String AUTHORIZATION = "Authorization";
     private static final int HTTP_OK = 200;
