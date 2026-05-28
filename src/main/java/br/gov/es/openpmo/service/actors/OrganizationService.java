@@ -12,7 +12,6 @@ import br.gov.es.openpmo.repository.CustomFilterRepository;
 import br.gov.es.openpmo.repository.OrganizationRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllOrganizationUsingCustomFilter;
 import br.gov.es.openpmo.service.office.OfficeService;
-import br.gov.es.openpmo.service.organization.OrganizationSyncService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 
 import org.apache.commons.lang3.StringUtils;
@@ -35,23 +34,19 @@ public class OrganizationService {
   private final FindAllOrganizationUsingCustomFilter findAllOrganization;
   private final AppProperties appProperties;
 
-  private final OrganizationSyncService organizationSyncService;
-
   @Autowired
   public OrganizationService(
     final OrganizationRepository repository,
     final OfficeService officeService,
     final CustomFilterRepository customFilterRepository,
     final FindAllOrganizationUsingCustomFilter findAllOrganization,
-    final AppProperties appProperties,
-    final OrganizationSyncService organizationSyncService
+    final AppProperties appProperties
   ) {
     this.repository = repository;
     this.officeService = officeService;
     this.customFilterRepository = customFilterRepository;
     this.findAllOrganization = findAllOrganization;
     this.appProperties = appProperties;
-    this.organizationSyncService = organizationSyncService;
   }
 
   public List<Organization> findAll(final Long idOffice) {
