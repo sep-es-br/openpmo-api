@@ -30,8 +30,13 @@ public class FindAllOrganizationUsingCustomFilter extends FindAllUsingCustomFilt
     final CustomFilter filter,
     final StringBuilder query
   ) {
-    query.append("MATCH (").append(this.nodeName)
-      .append(":Organization)-[is:IS_REGISTERED_IN]->(office:Office) ");
+    query.append("MATCH (")
+      .append(this.nodeName)
+      .append(":Organization) ");
+  
+    query.append("OPTIONAL MATCH (")
+      .append(this.nodeName)
+      .append(")-[r:IS_REGISTERED_IN]->(office:Office) ");
   }
 
   @Override
@@ -40,13 +45,25 @@ public class FindAllOrganizationUsingCustomFilter extends FindAllUsingCustomFilt
     final StringBuilder query
   ) {
     query.append("WHERE ID(office) = $idOffice ");
-    String complementWITH = ", office ";
-    buildFilterBySimilarity(filter, query, complementWITH);
+    String complementWITH = ", r, office ";
+    if(filter.isSimilarityFilter()){
+      buildFilterBySimilarity(filter, query, complementWITH);
+      query.append(" AND (")
+      .append(this.nodeName).append(".integration IS NOT NULL OR r IS NOT NULL) ");
+    }else{
+      query.append("WITH ")
+      .append(this.nodeName).append(complementWITH);
+
+      query.append("WHERE (")
+      .append(this.nodeName)
+      .append(".integration IS NOT NULL OR r IS NOT NULL) ");
+    }
+
   }
 
   @Override
   public void buildReturnClause(final StringBuilder query) {
-    query.append("RETURN ").append(this.nodeName).append(", office");
+    query.append("RETURN ").append(this.nodeName).append(" , r, office");
   }
 
   @Override

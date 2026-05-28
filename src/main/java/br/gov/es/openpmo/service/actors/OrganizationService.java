@@ -1,11 +1,13 @@
 package br.gov.es.openpmo.service.actors;
 
 import br.gov.es.openpmo.configuration.properties.AppProperties;
+import br.gov.es.openpmo.dto.organization.OrganizationStoreDto;
 import br.gov.es.openpmo.dto.organization.OrganizationUpdateDto;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Organization;
 import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.model.office.Office;
+import br.gov.es.openpmo.model.relations.OrganizationOfficeRelationship;
 import br.gov.es.openpmo.repository.CustomFilterRepository;
 import br.gov.es.openpmo.repository.OrganizationRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllOrganizationUsingCustomFilter;
@@ -16,6 +18,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,32 +85,92 @@ public class OrganizationService {
     return this.repository.save(organization);
   }
 
-  public Organization save(
-    final Organization organization,
-    final Long idOffice
-  ) {
-    organization.setOffice(this.getOfficeById(idOffice));
-    return this.repository.save(organization);
-  }
-
-  private Office getOfficeById(final Long idOffice) {
-    return this.officeService.findById(idOffice);
-  }
 
   public void delete(final Organization organization) {
     this.repository.delete(organization);
   }
 
-  public Organization getOrganization(final OrganizationUpdateDto organizationUpdateDto) {
-    final Organization organization = this.findById(organizationUpdateDto.getId());
+  public Organization buildOrganizationFromCreate (final OrganizationStoreDto organizationStoreDto) {
+    
+    final Organization organization = new Organization();
+    organization.setName(organizationStoreDto.getName());
+    organization.setFullName(organizationStoreDto.getFullName());
+    organization.setSector(organizationStoreDto.getSector());
+    
+    final Office office = this.officeService.findById(organizationStoreDto.getIdOffice());
+    
+    final OrganizationOfficeRelationship relationship = new OrganizationOfficeRelationship();
+    relationship.setOrganization(organization);
+    relationship.setOffice(office);
+    relationship.setPhoneNumber(organizationStoreDto.getPhoneNumber());
+    relationship.setContactEmail(organizationStoreDto.getContactEmail());
+    relationship.setAddress(organizationStoreDto.getAddress());
+    relationship.setWebsite(organizationStoreDto.getWebsite());
+
+    if (organization.getOrganizationOffices() == null) {
+      organization.setOrganizationOffices(new ArrayList<>());
+    }
+
+    organization.getOrganizationOffices().add(relationship);
+    
+    return organization;
+}
+
+  public Organization getOrganization(
+    final OrganizationUpdateDto organizationUpdateDto
+) {
+
+    final Organization organization =
+        this.findById(organizationUpdateDto.getId());
+
     organization.setSector(organizationUpdateDto.getSector());
-    organization.setWebsite(organizationUpdateDto.getWebsite());
-    organization.setAddress(organizationUpdateDto.getAddress());
-    organization.setContactEmail(organizationUpdateDto.getContactEmail());
     organization.setName(organizationUpdateDto.getName());
     organization.setFullName(organizationUpdateDto.getFullName());
-    organization.setPhoneNumber(organizationUpdateDto.getPhoneNumber());
-    return organization;
+
+      OrganizationOfficeRelationship relationship =
+              organization.getOrganizationOffices()
+                      .stream()
+                      .filter(r ->
+                              r.getOffice() != null &&
+                                      r.getOffice().getId()
+                                              .equals(organizationUpdateDto.getIdOffice())
+                      )
+                      .findFirst()
+                      .orElse(null);
+
+      if (relationship == null) {
+
+          relationship = new OrganizationOfficeRelationship();
+
+          relationship.setOrganization(organization);
+
+          relationship.setOffice(
+                  officeService.findById(
+                          organizationUpdateDto.getIdOffice()
+                  )
+          );
+
+          organization.getOrganizationOffices()
+                  .add(relationship);
+      }
+
+      relationship.setPhoneNumber(
+              organizationUpdateDto.getPhoneNumber()
+      );
+
+      relationship.setContactEmail(
+              organizationUpdateDto.getContactEmail()
+      );
+
+      relationship.setAddress(
+              organizationUpdateDto.getAddress()
+      );
+
+      relationship.setWebsite(
+              organizationUpdateDto.getWebsite()
+      );
+
+      return organization;
   }
 
   public Organization findById(final Long id) {
@@ -115,8 +178,17 @@ public class OrganizationService {
       .orElseThrow(() -> new NegocioException(ApplicationMessage.ORGANIZATION_NOT_FOUND));
   }
 
+  public Organization findByIdAndOffice(final Long id, final Long idOffice) {
+    return this.repository.findByIdAndIdOffice(id, idOffice)
+      .orElseThrow(() -> new NegocioException(ApplicationMessage.ORGANIZATION_NOT_FOUND));
+  }
+
   public List<Organization> organizationInIsStakeholderIn(final Long idWorkpack) {
     return this.repository.findByIdWorkpackReturnDistinctOrganization(idWorkpack);
+  }
+
+  public boolean existsIntegratedOrganizationByName(String name){
+      return this.repository.existsIntegratedOrganizationByName(name);
   }
 
 }

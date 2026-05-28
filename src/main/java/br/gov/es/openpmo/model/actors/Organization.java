@@ -1,36 +1,33 @@
 package br.gov.es.openpmo.model.actors;
 
+import br.gov.es.openpmo.model.relations.OrganizationOfficeRelationship;
 
-import br.gov.es.openpmo.model.office.Office;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @NodeEntity
 public class Organization extends Actor {
 
-  private String website;
   private OrganizationEnum sector;
-  private String address;
-  private String phoneNumber;
-  private String contactEmail;
+
+  private String integration;
+
+  private String suffix;
+
+  private String guid;
 
   @Relationship(type = "IS_REGISTERED_IN")
-  private Office office;
+  private List<OrganizationOfficeRelationship> organizationOffices = new ArrayList<>();
 
-  public String getWebsite() {
-    return this.website;
+  public List<OrganizationOfficeRelationship> getOrganizationOffices() {
+    return organizationOffices;
   }
 
-  public void setWebsite(final String website) {
-    this.website = website;
-  }
-
-  public Office getOffice() {
-    return this.office;
-  }
-
-  public void setOffice(final Office office) {
-    this.office = office;
+  public void setOrganizationOffices(List<OrganizationOfficeRelationship> organizationOffices) {
+    this.organizationOffices = organizationOffices;
   }
 
   public OrganizationEnum getSector() {
@@ -41,28 +38,26 @@ public class Organization extends Actor {
     this.sector = sector;
   }
 
-  public String getAddress() {
-    return this.address;
+  public String getIntegration() {
+    return this.integration;
   }
 
-  public void setAddress(final String address) {
-    this.address = address;
+  public void setIntegration(final String integration) {
+    this.integration = integration;
   }
 
-  public String getPhoneNumber() {
-    return this.phoneNumber;
+  public String getSuffix() {
+    return this.suffix;
   }
 
-  public void setPhoneNumber(final String phoneNumber) {
-    this.phoneNumber = phoneNumber;
+  public void setSuffix(final String suffix) {
+    this.suffix = suffix;
   }
 
-  public String getContactEmail() {
-    return this.contactEmail;
+  public String getGuid() {
+    return this.guid;
   }
 
-  public void setContactEmail(final String contactEmail) {
-    this.contactEmail = contactEmail;
-  }
+  public void setGuid(final String guid){ this.guid = guid; }
 
 }

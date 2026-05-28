@@ -16,6 +16,7 @@ import java.util.TimeZone;
 @SpringBootApplication
 @ConfigurationPropertiesScan
 @EnableNeo4jRepositories("br.gov.es.openpmo.repository")
+
 public class OpenPmoApplication {
 
   @Value("${app.default-timezone}")
