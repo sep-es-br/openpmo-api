@@ -34,6 +34,29 @@ efeito de histórico e consultas posteriores diretamente ao banco de dados.
 
 ### Instalação
 
+## Login Google
+
+Para habilitar a autenticação via Google no OpenPMO, é necessário adicionar as propriedades abaixo no arquivo `application.properties`.
+
+app.parser.repository=com.github.sep-es-br:google-identity-parser:1.0.1
+app.login.server.idsvr.name=Google
+
+spring.security.oauth2.client.registration.idsvr.client-name=open-pmo
+spring.security.oauth2.client.registration.idsvr.client-id=
+spring.security.oauth2.client.registration.idsvr.client-secret=
+spring.security.oauth2.client.registration.idsvr.authorization-grant-type=authorization_code
+spring.security.oauth2.client.registration.idsvr.redirect-uri={baseUrl}/login/oauth2/code/{registrationId}
+spring.security.oauth2.client.registration.idsvr.scope=email,profile,openid
+spring.security.oauth2.client.registration.idsvr.provider=idsvr
+
+spring.security.oauth2.client.provider.idsvr.issuer-uri=https://accounts.google.com
+
+Também será necessário configurar um **Client ID** e **Client Secret** no Google Cloud Console para autenticação OAuth2.
+
+### Dependência do parser
+
+Define o parser responsável pela autenticação Google.
+
 A API do OpenPMO espera que já exista o nó do serviço de autenticação criado no banco de dados Neo4j, para isso crie o nó utilizado o comando abaixo:
 
 ```cypher
@@ -51,9 +74,9 @@ segue a explicação e exemplo de cada propriedade necessária para o correto fu
 - `app.version`
   - Define a versão atual da aplicação, essa versão irá aparecer no frontend.
   - Exemplo: `app.version=1.0.0`
-- `app.login.server.name`
+- `app.login.server.idsvr.name`
   - Define o nome do serviço de autenticação. Deve possuir o mesmo nome do nó inicial adicionado manualmente.
-  - Exemplo: `app.login.server.name=AcessoCidadao`
+  - Exemplo: `app.login.server.idsvr.name=Google`
 - `app.pathImagens`
   - Define o diretório do servidor onde será armazenado as imagens. Esse diretório deve ser criado antes de iniciar a aplicação e deve possuir e o
     OpenPMO deve possuir permissões leitura e escrita no diretório.
