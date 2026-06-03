@@ -97,7 +97,12 @@ public class OrganizationSyncService {
                 OrganizationEnum organizationEnum = OrganizationEnum.valueOf(dto.getSector());
                 organization.setSector(organizationEnum);
                 organization.setName(dto.getName());
-                organization.setFullName(dto.getFullName());
+                String fullName = dto.getFullName();
+                organization.setFullName(
+                fullName == null || "null".equalsIgnoreCase(fullName.trim())
+                        ? dto.getName()
+                        : fullName
+                );
                 organization.setIntegration(dto.getIntegration());
                 organization.setSuffix(dto.getSuffix());
 
