@@ -61,8 +61,17 @@ dependencies {
     implementation 'io.springfox:springfox-swagger-ui:2.9.2'
     implementation 'io.springfox:springfox-bean-validators:2.9.2'
 
+
+
     implementation 'com.github.sep-es-br:pmo-core-identity-parser:1.0.6'
     implementation props['app.parser.repository']
+    if (props.containsKey('app.organization.parser.repository') && 
+        props['app.organization.parser.repository'] != null &&
+        !props['app.organization.parser.repository'].trim().isEmpty()) {
+        implementation props['app.organization.parser.repository']
+    }
+    implementation 'com.github.sep-es-br:pmo-core-organization-parser:1.0.5'
+
     //implementation 'com.github.sep-es-br:acesso-cidadao-identity-parser:f92a8db'
 
 
