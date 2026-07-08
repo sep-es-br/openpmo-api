@@ -79,9 +79,11 @@ import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_
 import br.gov.es.openpmo.utils.RestTemplateUtils;
 import br.gov.es.openpmo.utils.factory.CostAccountFactory;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
@@ -148,8 +150,14 @@ public class CostAccountService {
 
   @Value("${pentahoBI.password}")
   private String pentahoPassword;
-  
-  
+
+  @Value("${app.uo.source:pentaho}")
+  private String uoSource;
+
+  @Value("${app.uo.localPath:}")
+  private String uoLocalPath;
+
+
   private final RestTemplateUtils restTemplateUtils = new RestTemplateUtils();
 
   @Autowired
@@ -669,7 +677,11 @@ public class CostAccountService {
     }
   
   public JsonNode getUOFromPentaho(java.lang.Integer codPo) throws Exception {
-      
+
+    if ("local".equalsIgnoreCase(uoSource)) {
+      return loadUoFromLocalFile();
+    }
+
     RestTemplate restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();;
     
     restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
@@ -705,10 +717,24 @@ public class CostAccountService {
     }
 
     return response;
-    
+
   }
-  
-  
+
+  private JsonNode loadUoFromLocalFile() throws Exception {
+    if (uoLocalPath == null || uoLocalPath.trim().isEmpty()) {
+      throw new IllegalStateException(
+          "app.uo.source=local esta configurado, mas app.uo.localPath nao foi definido.");
+    }
+
+    File file = new File(uoLocalPath);
+    if (!file.isFile()) {
+      throw new IllegalStateException("Arquivo local de UO nao encontrado: " + uoLocalPath);
+    }
+
+    return new ObjectMapper().readTree(file);
+  }
+
+
   public JsonNode getPOFromPentaho(String codUo) throws Exception {
       RestTemplate restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
     
