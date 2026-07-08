@@ -5,6 +5,7 @@ import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentRoleResponse;
 import br.gov.es.openpmo.dto.person.RoleResource;
 import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
 import br.gov.es.openpmo.repository.IsAuthenticatedByRepository;
+import br.gov.es.openpmo.service.actors.IsAuthenticatedByService;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,19 +20,27 @@ public class RemoteRolesFetcher implements IRemoteRolesFetcher {
 
   private final IAcessoCidadaoApi acessoCidadaoApi;
 
+  private final IsAuthenticatedByService isAuthenticatedByService;
+
   @Value("${app.login.server.idsvr.name}")
   private String serverName;
 
   @Autowired
   public RemoteRolesFetcher(
     final IsAuthenticatedByRepository authenticationRepository,
-    final IAcessoCidadaoApi acessoCidadaoApi
+    final IAcessoCidadaoApi acessoCidadaoApi,
+    final IsAuthenticatedByService isAuthenticatedByService
   ) {
     this.authenticationRepository = authenticationRepository;
     this.acessoCidadaoApi = acessoCidadaoApi;
+    this.isAuthenticatedByService = isAuthenticatedByService;
   }
 
   public List<RoleResource> fetch(final Long idPerson) {
+    if(!this.isAuthenticatedByService.isCitizenServerAuthentication()) {
+      return Collections.emptyList();
+    }
+
     final IsAuthenticatedBy authentication = this.findAuthenticatedByUsingPersonAndDefaultServerName(idPerson);
 
     if(authentication == null) {

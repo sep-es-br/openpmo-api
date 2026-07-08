@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class IsAuthenticatedByService {
 
+  public static final String ACESSO_CIDADAO_SERVER_NAME = "AcessoCidadao";
+
   private final IsAuthenticatedByRepository repository;
   private final AuthServiceRepository authServiceRepository;
 
@@ -51,9 +53,7 @@ public class IsAuthenticatedByService {
   }
 
   public boolean isCitizenServerAuthentication() {
-    return this.findDefaultAuthenticationServer()
-      .getServer()
-      .equalsIgnoreCase("AcessoCidadao");
+    return ACESSO_CIDADAO_SERVER_NAME.equalsIgnoreCase(this.authenticationServiceName);
   }
 
   public AuthService findDefaultAuthenticationServer() {

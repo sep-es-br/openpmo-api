@@ -12,6 +12,7 @@ import br.gov.es.openpmo.repository.OfficePermissionRepository;
 import br.gov.es.openpmo.repository.PlanPermissionRepository;
 import br.gov.es.openpmo.repository.WorkpackPermissionRepository;
 import br.gov.es.openpmo.scheduler.updateroles.HasRole;
+import br.gov.es.openpmo.service.actors.IsAuthenticatedByService;
 import br.gov.es.openpmo.service.actors.PersonService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,19 +45,23 @@ public class RoleService {
 
   private final WorkpackPermissionRepository workpackPermissionRepository;
 
+  private final IsAuthenticatedByService isAuthenticatedByService;
+
   @Autowired
   public RoleService(
     final IAcessoCidadaoApi acessoCidadaoApi,
     final PersonService personService,
     final OfficePermissionRepository officePermissionRepository,
     final PlanPermissionRepository planPermissionRepository,
-    final WorkpackPermissionRepository workpackPermissionRepository
+    final WorkpackPermissionRepository workpackPermissionRepository,
+    final IsAuthenticatedByService isAuthenticatedByService
   ) {
     this.acessoCidadaoApi = acessoCidadaoApi;
     this.personService = personService;
     this.officePermissionRepository = officePermissionRepository;
     this.planPermissionRepository = planPermissionRepository;
     this.workpackPermissionRepository = workpackPermissionRepository;
+    this.isAuthenticatedByService = isAuthenticatedByService;
   }
 
   private static int sortByRoleIgnoreCase(
@@ -86,6 +91,10 @@ public class RoleService {
     final Long idPerson,
     final String key
   ) {
+    if(!this.isAuthenticatedByService.isCitizenServerAuthentication()) {
+      return Collections.emptyList();
+    }
+
     final List<RoleResource> roles = this.getRolesSorted(idPerson, key);
     final Person person = this.getPersonByEmail(key);
     if(person != null) {
