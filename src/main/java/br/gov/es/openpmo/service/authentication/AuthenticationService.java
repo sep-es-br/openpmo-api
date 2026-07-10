@@ -82,6 +82,9 @@ public class AuthenticationService {
     IsAuthenticatedBy authRelationship = user.getAuthentications().stream().findFirst().orElse(null);
     if (authRelationship != null) {
       authRelationship.setEmail(email);
+      if (sub != null) {
+        authRelationship.setKey(key);
+      }
       this.personService.save(user);
     }
 
