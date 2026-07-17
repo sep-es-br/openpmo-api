@@ -91,7 +91,7 @@ public abstract class WorkpackModel extends Entity {
 
   private String sortByField;
 
-  private boolean commitmentsSessionActive;
+  private boolean obligationsSessionActive;
 
   private boolean procurementsSessionActive;
 
@@ -405,12 +405,12 @@ public abstract class WorkpackModel extends Entity {
     this.journalManagementSessionActive = journalManagementSessionActive;
   }
 
-  public boolean getCommitmentsSessionActive() {
-    return commitmentsSessionActive;
+  public boolean getObligationsSessionActive() {
+    return obligationsSessionActive;
   }
 
-  public void setCommitmentsSessionActive(boolean commitmentsSessionActive) {
-    this.commitmentsSessionActive = commitmentsSessionActive;
+  public void setObligationsSessionActive(boolean obligationsSessionActive) {
+    this.obligationsSessionActive = obligationsSessionActive;
   }
 
   public boolean getProcurementsSessionActive() {
@@ -441,7 +441,7 @@ public abstract class WorkpackModel extends Entity {
     this.stakeholderSessionActive = workpackModel.stakeholderSessionActive;
     this.scheduleSessionActive = workpackModel.scheduleSessionActive;
     this.procurementsSessionActive = workpackModel.procurementsSessionActive;
-    this.commitmentsSessionActive = workpackModel.commitmentsSessionActive; 
+    this.obligationsSessionActive = workpackModel.obligationsSessionActive; 
     this.agreementsSessionActive = workpackModel.agreementsSessionActive;
     this.riskAndIssueManagementSessionActive = workpackModel.riskAndIssueManagementSessionActive;
     this.processesManagementSessionActive = workpackModel.processesManagementSessionActive;

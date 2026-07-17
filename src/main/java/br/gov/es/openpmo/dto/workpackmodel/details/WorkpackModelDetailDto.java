@@ -58,7 +58,7 @@ public abstract class WorkpackModelDetailDto {
 
   private Boolean scheduleSessionActive;
 
-  private Boolean commitmentsSessionActive;
+  private Boolean obligationsSessionActive;
 
   private Boolean procurementsSessionActive;
 
@@ -125,7 +125,7 @@ public abstract class WorkpackModelDetailDto {
     instance.setModelNameInPlural(workpackModel.getModelNameInPlural());
     instance.setCostSessionActive(workpackModel.getCostSessionActive());
     instance.setScheduleSessionActive(workpackModel.getScheduleSessionActive());
-    instance.setCommitmentsSessionActive(workpackModel.getCommitmentsSessionActive());
+    instance.setObligationsSessionActive(workpackModel.getObligationsSessionActive());
     instance.setProcurementsSessionActive(workpackModel.getProcurementsSessionActive());
     instance.setAgreementsSessionActive(workpackModel.getAgreementsSessionActive());
     instance.setStakeholderSessionActive(workpackModel.getStakeholderSessionActive());
@@ -268,16 +268,16 @@ public abstract class WorkpackModelDetailDto {
     this.scheduleSessionActive = scheduleSessionActive;
   }
 
-  public Boolean getCommitmentsSessionActive() {
-    return this.commitmentsSessionActive;
+  public Boolean getObligationsSessionActive() {
+    return this.obligationsSessionActive;
   }
   
-  public void setCommitmentsSessionActive(final boolean commitmentsSessionActive) {
-    this.commitmentsSessionActive = commitmentsSessionActive;
+  public void setObligationsSessionActive(final boolean obligationsSessionActive) {
+    this.obligationsSessionActive = obligationsSessionActive;
   }
   
-  public void setCommitmentsSessionActive(final Boolean commitmentsSessionActive) {
-    this.commitmentsSessionActive = commitmentsSessionActive;
+  public void setObligationsSessionActive(final Boolean obligationsSessionActive) {
+    this.obligationsSessionActive = obligationsSessionActive;
   }
 
   public Boolean getProcurementsSessionActive() {

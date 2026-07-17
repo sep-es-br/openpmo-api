@@ -48,7 +48,7 @@ public abstract class WorkpackModelParamDto {
 
   private boolean scheduleSessionActive;
 
-  private boolean commitmentsSessionActive;
+  private boolean obligationsSessionActive;
 
   private boolean procurementsSessionActive;
   
@@ -159,12 +159,12 @@ public abstract class WorkpackModelParamDto {
     this.scheduleSessionActive = scheduleSessionActive;
   }
 
-  public boolean getCommitmentsSessionActive() {
-    return commitmentsSessionActive;
+  public boolean getObligationsSessionActive() {
+    return obligationsSessionActive;
   }
 
-  public void setCommitmentsSessionActive(boolean commitmentsSessionActive) {
-    this.commitmentsSessionActive = commitmentsSessionActive;
+  public void setObligationsSessionActive(boolean obligationsSessionActive) {
+    this.obligationsSessionActive = obligationsSessionActive;
   }
 
   public boolean getProcurementsSessionActive() {
