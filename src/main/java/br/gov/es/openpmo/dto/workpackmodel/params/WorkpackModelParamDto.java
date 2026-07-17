@@ -48,6 +48,12 @@ public abstract class WorkpackModelParamDto {
 
   private boolean scheduleSessionActive;
 
+  private boolean commitmentsSessionActive;
+
+  private boolean procurementsSessionActive;
+  
+  private boolean agreementsSessionActive;
+
   private boolean riskAndIssueManagementSessionActive;
 
   private boolean processesManagementSessionActive;
@@ -151,6 +157,30 @@ public abstract class WorkpackModelParamDto {
 
   public void setScheduleSessionActive(final boolean scheduleSessionActive) {
     this.scheduleSessionActive = scheduleSessionActive;
+  }
+
+  public boolean getCommitmentsSessionActive() {
+    return commitmentsSessionActive;
+  }
+
+  public void setCommitmentsSessionActive(boolean commitmentsSessionActive) {
+    this.commitmentsSessionActive = commitmentsSessionActive;
+  }
+
+  public boolean getProcurementsSessionActive() {
+    return procurementsSessionActive;
+  }
+
+  public void setProcurementsSessionActive(boolean procurementsSessionActive) {
+    this.procurementsSessionActive = procurementsSessionActive;
+  }
+
+  public boolean getAgreementsSessionActive() {
+    return agreementsSessionActive;
+  }
+
+  public void setAgreementsSessionActive(boolean agreementsSessionActive) {
+    this.agreementsSessionActive = agreementsSessionActive;
   }
 
   public List<String> getPersonRoles() {

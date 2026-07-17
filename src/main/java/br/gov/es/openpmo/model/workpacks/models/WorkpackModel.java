@@ -91,6 +91,12 @@ public abstract class WorkpackModel extends Entity {
 
   private String sortByField;
 
+  private boolean commitmentsSessionActive;
+
+  private boolean procurementsSessionActive;
+
+  private boolean agreementsSessionActive;
+
   @Relationship(type = "IS_SORTED_BY")
   private PropertyModel sortBy;
 
@@ -399,6 +405,30 @@ public abstract class WorkpackModel extends Entity {
     this.journalManagementSessionActive = journalManagementSessionActive;
   }
 
+  public boolean getCommitmentsSessionActive() {
+    return commitmentsSessionActive;
+  }
+
+  public void setCommitmentsSessionActive(boolean commitmentsSessionActive) {
+    this.commitmentsSessionActive = commitmentsSessionActive;
+  }
+
+  public boolean getProcurementsSessionActive() {
+    return procurementsSessionActive;
+  }
+
+  public void setProcurementsSessionActive(boolean procurementsSessionActive) {
+    this.procurementsSessionActive = procurementsSessionActive;
+  }
+
+  public boolean getAgreementsSessionActive() {
+    return agreementsSessionActive;
+  }
+
+  public void setAgreementsSessionActive(boolean agreementsSessionActive) {
+    this.agreementsSessionActive = agreementsSessionActive;
+  }
+
   public void updateFields(final WorkpackModel workpackModel) {
     this.modelName = workpackModel.modelName;
     this.personRoles = workpackModel.personRoles;
@@ -410,6 +440,9 @@ public abstract class WorkpackModel extends Entity {
     this.childWorkpackModelSessionActive = workpackModel.childWorkpackModelSessionActive;
     this.stakeholderSessionActive = workpackModel.stakeholderSessionActive;
     this.scheduleSessionActive = workpackModel.scheduleSessionActive;
+    this.procurementsSessionActive = workpackModel.procurementsSessionActive;
+    this.commitmentsSessionActive = workpackModel.commitmentsSessionActive; 
+    this.agreementsSessionActive = workpackModel.agreementsSessionActive;
     this.riskAndIssueManagementSessionActive = workpackModel.riskAndIssueManagementSessionActive;
     this.processesManagementSessionActive = workpackModel.processesManagementSessionActive;
     this.journalManagementSessionActive = workpackModel.journalManagementSessionActive;
