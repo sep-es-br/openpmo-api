@@ -12,7 +12,7 @@ import java.util.List;
 public interface AgreementRepository extends Neo4jRepository<Agreement, Long> {
 
     @Query(
-        "MATCH (agreement:Agreement)-[r:RELATED_TO]->(workpack:Workpack) " +
+        "MATCH (agreement:Agreement)-[r:SIGNED_FOR]->(workpack:Workpack) " +
         "WHERE id(workpack) = $idWorkpack " +
         "RETURN agreement, r, workpack " +
         "ORDER BY agreement.processNumber"

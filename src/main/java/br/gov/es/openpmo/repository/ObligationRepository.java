@@ -13,7 +13,7 @@ import java.util.List;
 public interface ObligationRepository extends Neo4jRepository<Obligation, Long> {
 
     @Query(
-        "MATCH (obligation:Obligation)-[r:RELATED_TO]->(workpack:Workpack) " +
+        "MATCH (obligation:Obligation)-[r:ISSUED_FOR]->(workpack:Workpack) " +
         "WHERE id(workpack) = $idWorkpack " +
         "RETURN obligation, r, workpack " +
         "ORDER BY obligation.obligationNumber"
