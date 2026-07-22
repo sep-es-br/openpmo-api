@@ -3,6 +3,7 @@ package br.gov.es.openpmo.service.agreements;
 import br.gov.es.openpmo.dto.agreements.AgreementCreateDto;
 import br.gov.es.openpmo.dto.agreements.AgreementDto;
 import br.gov.es.openpmo.dto.agreements.AgreementUpdateDto;
+import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.agreements.Agreement;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.AgreementRepository;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.AGREEMENT_NOT_FOUND;
+import static br.gov.es.openpmo.utils.ApplicationMessage.AGREEMENT_ALREADY_EXISTS;
 import static br.gov.es.openpmo.utils.ApplicationMessage.ID_WORKPACK_NOT_NULL;
 
 @Service
@@ -33,6 +35,13 @@ public class AgreementService {
     public Agreement create(final AgreementCreateDto request) {
         if (request.getIdWorkpack() == null) {
             throw new IllegalArgumentException(ID_WORKPACK_NOT_NULL);
+        }
+        if (this.repository.existsByWorkpackAndProcessIdAndType(
+            request.getIdWorkpack(),
+            request.getProcessId(),
+            request.getType().name()
+        )) {
+            throw new NegocioException(AGREEMENT_ALREADY_EXISTS);
         }
         final Workpack workpack = this.workpackService.findByIdDefault(request.getIdWorkpack());
         return this.repository.save(Agreement.of(request, workpack));

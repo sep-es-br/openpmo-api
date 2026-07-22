@@ -13,8 +13,8 @@ public class AgreementCreateDto {
     @NotNull(message = "O tipo do instrumento é obrigatório")
     private AgreementType type;
 
-    @NotBlank(message = "O número do processo é obrigatório")
-    private String processNumber;
+    @NotNull(message = "O id do processo é obrigatório")
+    private Long processId;
 
     @NotBlank(message = "O objeto é obrigatório")
     private String object;
@@ -23,8 +23,8 @@ public class AgreementCreateDto {
     public void setIdWorkpack(final Long idWorkpack) { this.idWorkpack = idWorkpack; }
     public AgreementType getType() { return this.type; }
     public void setType(final AgreementType type) { this.type = type; }
-    public String getProcessNumber() { return this.processNumber; }
-    public void setProcessNumber(final String processNumber) { this.processNumber = processNumber; }
+    public Long getProcessId() { return this.processId; }
+    public void setProcessId(final Long processId) { this.processId = processId; }
     public String getObject() { return this.object; }
     public void setObject(final String object) { this.object = object; }
 }

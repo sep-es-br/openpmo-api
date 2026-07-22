@@ -14,7 +14,7 @@ import java.util.Optional;
 @NodeEntity
 public abstract class Agreement extends Entity {
 
-    private String processNumber;
+    private Long processId;
     private String object;
 
     @Relationship(type = "SIGNED_FOR")
@@ -24,11 +24,11 @@ public abstract class Agreement extends Entity {
     }
 
     protected Agreement(
-        final String processNumber,
+        final Long processId,
         final String object,
         final Workpack workpack
     ) {
-        this.processNumber = processNumber;
+        this.processId = processId;
         this.object = object;
         this.workpack = workpack;
     }
@@ -36,9 +36,9 @@ public abstract class Agreement extends Entity {
     public static Agreement of(final AgreementCreateDto request, final Workpack workpack) {
         switch (request.getType()) {
             case CONTRACT:
-                return new Contract(request.getProcessNumber(), request.getObject(), workpack);
+                return new Contract(request.getProcessId(), request.getObject(), workpack);
             case COOPERATION:
-                return new Cooperation(request.getProcessNumber(), request.getObject(), workpack);
+                return new Cooperation(request.getProcessId(), request.getObject(), workpack);
             default:
                 throw new IllegalArgumentException("agreement.type.invalid");
         }
@@ -48,7 +48,7 @@ public abstract class Agreement extends Entity {
         if (this.getType() != request.getType()) {
             throw new IllegalArgumentException("agreement.type.cannot.change");
         }
-        ObjectUtils.updateIfPresent(request::getProcessNumber, this::setProcessNumber);
+        ObjectUtils.updateIfPresent(request::getProcessId, this::setProcessId);
         ObjectUtils.updateIfPresent(request::getObject, this::setObject);
     }
 
@@ -59,8 +59,8 @@ public abstract class Agreement extends Entity {
         return Optional.ofNullable(this.workpack).map(Entity::getId).orElse(null);
     }
 
-    public String getProcessNumber() { return this.processNumber; }
-    public void setProcessNumber(final String processNumber) { this.processNumber = processNumber; }
+    public Long getProcessId() { return this.processId; }
+    public void setProcessId(final Long processId) { this.processId = processId; }
     public String getObject() { return this.object; }
     public void setObject(final String object) { this.object = object; }
     public Workpack getWorkpack() { return this.workpack; }

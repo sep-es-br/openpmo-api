@@ -62,6 +62,7 @@ public class ApplicationMessage {
   public static final String OBLIGATION_NOT_FOUND = "obligation.not.found";
   public static final String PROCUREMENT_NOT_FOUND = "procurement.not.found";
   public static final String AGREEMENT_NOT_FOUND = "agreement.not.found";
+  public static final String AGREEMENT_ALREADY_EXISTS = "agreement.already.exists";
   public static final String ID_COST_ACCOUNT_MODEL_NOT_NULL = "id.costAccountModel.not.null";
   public static final String OFFICE_NOT_NULL = "office.not.null";
   public static final String PLANMODEL_NOT_NULL = "planModel.not.null";

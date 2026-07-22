@@ -9,8 +9,8 @@ public class Contract extends Agreement {
     public Contract() {
     }
 
-    public Contract(final String processNumber, final String object, final Workpack workpack) {
-        super(processNumber, object, workpack);
+    public Contract(final Long processId, final String object, final Workpack workpack) {
+        super(processId, object, workpack);
     }
 
     @Override

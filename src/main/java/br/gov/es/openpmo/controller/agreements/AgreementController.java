@@ -7,7 +7,10 @@ import br.gov.es.openpmo.dto.agreements.AgreementDto;
 import br.gov.es.openpmo.dto.agreements.AgreementUpdateDto;
 import br.gov.es.openpmo.model.agreements.Agreement;
 import br.gov.es.openpmo.service.agreements.AgreementService;
+import br.gov.es.openpmo.service.agreements.AgreementProviderService;
 import br.gov.es.openpmo.service.permissions.canaccess.CanAccessService;
+import br.gov.es.pmo.agreement_core.model.AgreementOrganizationDto;
+import br.gov.es.pmo.agreement_core.model.AgreementType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,14 +22,83 @@ import java.util.List;
 public class AgreementController {
 
     private final AgreementService agreementService;
+    private final AgreementProviderService agreementProviderService;
     private final CanAccessService canAccessService;
 
     public AgreementController(
         final AgreementService agreementService,
+        final AgreementProviderService agreementProviderService,
         final CanAccessService canAccessService
     ) {
         this.agreementService = agreementService;
+        this.agreementProviderService = agreementProviderService;
         this.canAccessService = canAccessService;
+    }
+
+    @GetMapping("/years")
+    public ResponseEntity<ResponseBase<List<Long>>> getProviderYears(
+        @RequestParam("type") final AgreementType type
+    ) {
+        return ResponseEntity.ok(
+            ResponseBase.of(
+                this.agreementProviderService.getYears(type)
+            )
+        );
+    }
+
+    @GetMapping("/organizations")
+    public ResponseEntity<ResponseBase<List<AgreementOrganizationDto>>>
+        getProviderOrganizations(
+            @RequestParam("type") final AgreementType type,
+            @RequestParam("year") final Long year
+        ) {
+        return ResponseEntity.ok(
+            ResponseBase.of(
+                this.agreementProviderService.getOrganizations(
+                    type,
+                    year
+                )
+            )
+        );
+    }
+
+    @GetMapping("/processes")
+    public ResponseEntity<
+        ResponseBase<
+            List<br.gov.es.pmo.agreement_core.model.AgreementDto>
+        >
+    > getProviderAgreements(
+        @RequestParam("type") final AgreementType type,
+        @RequestParam("year") final Long year,
+        @RequestParam("organization-identifier")
+        final String organizationIdentifier,
+        @RequestParam("organization-name")
+        final String organizationName
+    ) {
+        return ResponseEntity.ok(
+            ResponseBase.of(
+                this.agreementProviderService.getAgreements(
+                    type,
+                    year,
+                    organizationIdentifier,
+                    organizationName
+                )
+            )
+        );
+    }
+
+    @GetMapping("/processes/{processId}")
+    public ResponseEntity<
+        ResponseBase<br.gov.es.pmo.agreement_core.model.AgreementDto>
+    > getProviderAgreement(
+        @RequestParam("type") final AgreementType type,
+        @PathVariable("processId") final Long processId
+    ) {
+        return ResponseEntity.ok(
+            ResponseBase.of(
+                this.agreementProviderService.getAgreement(type, processId)
+            )
+        );
     }
 
     @PostMapping

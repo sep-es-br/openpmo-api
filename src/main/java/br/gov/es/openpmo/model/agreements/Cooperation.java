@@ -9,8 +9,8 @@ public class Cooperation extends Agreement {
     public Cooperation() {
     }
 
-    public Cooperation(final String processNumber, final String object, final Workpack workpack) {
-        super(processNumber, object, workpack);
+    public Cooperation(final Long processId, final String object, final Workpack workpack) {
+        super(processId, object, workpack);
     }
 
     @Override

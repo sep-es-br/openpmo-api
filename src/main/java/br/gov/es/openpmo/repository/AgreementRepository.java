@@ -12,10 +12,24 @@ import java.util.List;
 public interface AgreementRepository extends Neo4jRepository<Agreement, Long> {
 
     @Query(
+        "MATCH (agreement:Agreement)-[:SIGNED_FOR]->(workpack:Workpack) " +
+        "WHERE id(workpack) = $idWorkpack " +
+        "AND agreement.processId = $processId " +
+        "AND (($agreementType = 'CONTRACT' AND agreement:Contract) " +
+        "OR ($agreementType = 'COOPERATION' AND agreement:Cooperation)) " +
+        "RETURN count(agreement) > 0"
+    )
+    boolean existsByWorkpackAndProcessIdAndType(
+        @Param("idWorkpack") Long idWorkpack,
+        @Param("processId") Long processId,
+        @Param("agreementType") String agreementType
+    );
+
+    @Query(
         "MATCH (agreement:Agreement)-[r:SIGNED_FOR]->(workpack:Workpack) " +
         "WHERE id(workpack) = $idWorkpack " +
         "RETURN agreement, r, workpack " +
-        "ORDER BY agreement.processNumber"
+        "ORDER BY agreement.processId"
     )
     List<Agreement> findAllByIdWorkpack(@Param("idWorkpack") Long idWorkpack);
 }
