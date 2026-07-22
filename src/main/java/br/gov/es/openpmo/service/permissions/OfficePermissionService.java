@@ -262,8 +262,12 @@ public class OfficePermissionService {
       maybeAuthenticatedBy
     );
     if (Objects.nonNull(term)) {
-      final double nameScore = this.textSimilarityScore.execute(person.getName(), term);
-      final double fullNameScore = this.textSimilarityScore.execute(person.getFullName(), term);
+      final double nameScore = person.getName() == null
+        ? 0.0
+        : this.textSimilarityScore.execute(person.getName(), term);
+      final double fullNameScore = person.getFullName() == null
+        ? 0.0
+        : this.textSimilarityScore.execute(person.getFullName(), term);
       final double score = Math.max(nameScore, fullNameScore);
       personDto.setScore(score);
     }
