@@ -5,6 +5,7 @@ import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.person.CitizenByNameQuery;
 import br.gov.es.openpmo.dto.person.CitizenDto;
 import br.gov.es.openpmo.service.actors.CitizenService;
+import br.gov.es.openpmo.service.actors.IsAuthenticatedByService;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import io.swagger.annotations.Api;
@@ -32,16 +33,20 @@ public class CitizenController {
 
   private final ICanAccessService canAccessService;
 
+  private final IsAuthenticatedByService isAuthenticatedByService;
+
   @Autowired
   public CitizenController(
       final CitizenService service,
       final IAcessoCidadaoApi acessoCidadaoApi,
       final TokenService tokenService,
-      final ICanAccessService canAccessService) {
+      final ICanAccessService canAccessService,
+      final IsAuthenticatedByService isAuthenticatedByService) {
     this.service = service;
     this.acessoCidadaoApi = acessoCidadaoApi;
     this.tokenService = tokenService;
     this.canAccessService = canAccessService;
+    this.isAuthenticatedByService = isAuthenticatedByService;
   }
 
   @GetMapping("/name")
@@ -91,6 +96,9 @@ public class CitizenController {
   @GetMapping("/load")
   public ResponseEntity<Void> load(
       @RequestHeader(name = "Authorization") final String authorization) {
+    if (!this.isAuthenticatedByService.isCitizenServerAuthentication()) {
+      return ResponseEntity.ok().build();
+    }
     final Long idPerson = this.tokenService.getUserId(authorization);
     this.acessoCidadaoApi.load(idPerson);
     return ResponseEntity.ok().build();
@@ -98,6 +106,9 @@ public class CitizenController {
 
   @GetMapping("/unload")
   public ResponseEntity<Void> unload() {
+    if (!this.isAuthenticatedByService.isCitizenServerAuthentication()) {
+      return ResponseEntity.ok().build();
+    }
     this.acessoCidadaoApi.unload();
     return ResponseEntity.ok().build();
   }

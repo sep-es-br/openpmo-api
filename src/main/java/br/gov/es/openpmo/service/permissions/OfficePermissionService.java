@@ -176,7 +176,9 @@ public class OfficePermissionService {
     final Long idPerson,
     final String term
   ) {
-    final List<RoleResource> roles = this.roleService.getRolesByKey(idPerson, key);
+    final List<RoleResource> roles = this.isAuthenticatedByService.isCitizenServerAuthentication()
+      ? this.roleService.getRolesByKey(idPerson, key)
+      : Collections.emptyList();
 
     final Office office = this.officeService.findById(idOffice);
 
@@ -536,7 +538,9 @@ public class OfficePermissionService {
     final Person person = this.personService.findPersonByKey(key);
     final List<CanAccessOffice> permissions = this.findByOfficeAndPerson(idOffice, person.getId());
 
-    final List<RoleResource> roles = this.roleService.getRolesByKey(idPerson, key);
+    final List<RoleResource> roles = this.isAuthenticatedByService.isCitizenServerAuthentication()
+      ? this.roleService.getRolesByKey(idPerson, key)
+      : Collections.emptyList();
     this.fillPersonDto(idOffice, person, officePermissionDto, roles, null);
     this.fillPermissions(officePermissionDto, permissions);
     this.fillPersonRoles(officePermissionDto, person.getId());
