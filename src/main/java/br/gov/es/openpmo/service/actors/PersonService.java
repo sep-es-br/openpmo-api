@@ -177,7 +177,7 @@ public class PersonService {
     final Person person = new Person();
 
     final String name = dto.getName() == null ? this.extractName(dto.getEmail()) : dto.getName();
-    final String fullName = dto.getName() == null ? this.extractName(dto.getEmail()) : dto.getFullName();
+    final String fullName = dto.getFullName() == null ? name : dto.getFullName();
 
     person.setName(name);
     person.setFullName(fullName);
