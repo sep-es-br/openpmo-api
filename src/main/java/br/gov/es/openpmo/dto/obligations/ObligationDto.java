@@ -9,6 +9,7 @@ public class ObligationDto {
     private Long idWorkpack;
 
     private String managementUnitName;
+    private String managementUnitCode;
 
     private Long year;
 
@@ -30,6 +31,7 @@ public class ObligationDto {
         this.idWorkpack = obligation.getIdWorkpack();
         this.obligationNumber = obligation.getObligationNumber();
         this.description = obligation.getDescription();
+        this.managementUnitCode = obligation.getManagementUnitCode();
     }
 
     public static ObligationDto of(final Obligation obligation) {
@@ -55,6 +57,8 @@ public class ObligationDto {
     public String getManagementUnitName() {
         return this.managementUnitName;
     }
+    public String getManagementUnitCode() { return managementUnitCode; }
+    public void setManagementUnitCode(String value) { managementUnitCode = value; }
 
     public void setManagementUnitName(
         final String managementUnitName

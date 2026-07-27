@@ -25,13 +25,15 @@ public class ObligationService {
     private final ObligationRepository repository;
 
     private final WorkpackService workpackService;
+    private final ObligationProviderService providerService;
 
     public ObligationService(
         final ObligationRepository repository,
-        final WorkpackService workpackService
+        final WorkpackService workpackService, final ObligationProviderService providerService
     ) {
         this.repository = repository;
         this.workpackService = workpackService;
+        this.providerService = providerService;
     }
 
     public Obligation create(
@@ -101,14 +103,9 @@ public class ObligationService {
             obligation.getDescription()
         );
     
-        /*
-         * Mock da API externa
-         */
-        dto.setManagementUnitName("SECULT");
-        dto.setYear(2026L);
-        dto.setSupplierCnpj("14.530.067/0001-42");
-        dto.setAmount("1.000.000,00");
-        dto.setProtocol("2026/000458");
+        dto.setManagementUnitCode(obligation.getManagementUnitCode());
+        br.gov.es.pmo.obligation_core.model.ObligationDto detail = providerService.detail(obligation.getObligationNumber(), obligation.getManagementUnitCode());
+        if (detail != null) { dto.setManagementUnitName(detail.getManagementUnitName()); dto.setYear(detail.getYear()); dto.setSupplierCnpj(detail.getSupplierCnpj()); dto.setAmount(detail.getAmount()); dto.setProtocol(detail.getProtocol()); dto.setDescription(detail.getDescription()); }
     
         return dto;
     }

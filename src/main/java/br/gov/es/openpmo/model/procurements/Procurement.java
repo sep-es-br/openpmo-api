@@ -14,7 +14,7 @@ import java.util.Optional;
 @NodeEntity
 public class Procurement extends Entity {
 
-    private String processNumber;
+    private Long processId;
     private String object;
 
     @Relationship(type = "RELATED_TO")
@@ -24,11 +24,11 @@ public class Procurement extends Entity {
     }
 
     public Procurement(
-        final String processNumber,
+        final Long processId,
         final String object,
         final Workpack workpack
     ) {
-        this.processNumber = processNumber;
+        this.processId = processId;
         this.object = object;
         this.workpack = workpack;
     }
@@ -37,11 +37,11 @@ public class Procurement extends Entity {
         final ProcurementCreateDto request,
         final Workpack workpack
     ) {
-        return new Procurement(request.getProcessNumber(), request.getObject(), workpack);
+        return new Procurement(request.getProcessId(), request.getObject(), workpack);
     }
 
     public void update(final ProcurementUpdateDto request) {
-        ObjectUtils.updateIfPresent(request::getProcessNumber, this::setProcessNumber);
+        ObjectUtils.updateIfPresent(request::getProcessId, this::setProcessId);
         ObjectUtils.updateIfPresent(request::getObject, this::setObject);
     }
 
@@ -50,8 +50,8 @@ public class Procurement extends Entity {
         return Optional.ofNullable(this.workpack).map(Entity::getId).orElse(null);
     }
 
-    public String getProcessNumber() { return this.processNumber; }
-    public void setProcessNumber(final String processNumber) { this.processNumber = processNumber; }
+    public Long getProcessId() { return this.processId; }
+    public void setProcessId(final Long processId) { this.processId = processId; }
     public String getObject() { return this.object; }
     public void setObject(final String object) { this.object = object; }
     public Workpack getWorkpack() { return this.workpack; }

@@ -7,6 +7,7 @@ import br.gov.es.openpmo.dto.obligations.ObligationDto;
 import br.gov.es.openpmo.dto.obligations.ObligationUpdateDto;
 import br.gov.es.openpmo.model.obligations.Obligation;
 import br.gov.es.openpmo.service.obligations.ObligationService;
+import br.gov.es.openpmo.service.obligations.ObligationProviderService;
 import br.gov.es.openpmo.service.permissions.canaccess.CanAccessService;
 
 import org.springframework.http.ResponseEntity;
@@ -22,14 +23,20 @@ public class ObligationController {
     private final ObligationService obligationService;
 
     private final CanAccessService canAccessService;
+    private final ObligationProviderService providerService;
 
     public ObligationController(
         final ObligationService obligationService,
-        final CanAccessService canAccessService
+        final CanAccessService canAccessService, final ObligationProviderService providerService
     ) {
         this.obligationService = obligationService;
         this.canAccessService = canAccessService;
+        this.providerService = providerService;
     }
+    @GetMapping("/years") public ResponseEntity<ResponseBase<List<Long>>> years(){return ResponseEntity.ok(ResponseBase.of(providerService.years()));}
+    @GetMapping("/management-units") public ResponseEntity<ResponseBase<?>> units(@RequestParam Long year){return ResponseEntity.ok(ResponseBase.of(providerService.units(year)));}
+    @GetMapping("/processes") public ResponseEntity<ResponseBase<?>> processes(@RequestParam Long year,@RequestParam("management-unit-code") String code){return ResponseEntity.ok(ResponseBase.of(providerService.processes(year,code)));}
+    @GetMapping("/processes/{processId}") public ResponseEntity<ResponseBase<?>> detail(@PathVariable String processId,@RequestParam("management-unit-code") String code){return ResponseEntity.ok(ResponseBase.of(providerService.detail(processId,code)));}
 
     @PostMapping
     public ResponseEntity<ResponseBase<EntityDto>> create(

@@ -11,8 +11,8 @@ public class ProcurementUpdateDto {
     @NotNull(message = "O id do workpack é obrigatório")
     private Long idWorkpack;
 
-    @NotBlank(message = "O número do processo é obrigatório")
-    private String processNumber;
+    @NotNull(message = "O identificador do processo é obrigatório")
+    private Long processId;
 
     @NotBlank(message = "O objeto é obrigatório")
     private String object;
@@ -33,12 +33,12 @@ public class ProcurementUpdateDto {
         this.idWorkpack = idWorkpack;
     }
 
-    public String getProcessNumber() {
-        return this.processNumber;
+    public Long getProcessId() {
+        return this.processId;
     }
 
-    public void setProcessNumber(final String processNumber) {
-        this.processNumber = processNumber;
+    public void setProcessId(final Long processId) {
+        this.processId = processId;
     }
 
     public String getObject() {

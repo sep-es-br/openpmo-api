@@ -8,6 +8,7 @@ import br.gov.es.openpmo.dto.procurements.ProcurementUpdateDto;
 import br.gov.es.openpmo.model.procurements.Procurement;
 import br.gov.es.openpmo.service.permissions.canaccess.CanAccessService;
 import br.gov.es.openpmo.service.procurements.ProcurementService;
+import br.gov.es.openpmo.service.procurements.ProcurementProviderService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,14 +21,20 @@ public class ProcurementController {
 
     private final ProcurementService procurementService;
     private final CanAccessService canAccessService;
+    private final ProcurementProviderService providerService;
 
     public ProcurementController(
         final ProcurementService procurementService,
-        final CanAccessService canAccessService
+        final CanAccessService canAccessService, final ProcurementProviderService providerService
     ) {
         this.procurementService = procurementService;
         this.canAccessService = canAccessService;
+        this.providerService = providerService;
     }
+    @GetMapping("/years") public ResponseEntity<ResponseBase<List<Long>>> years(){return ResponseEntity.ok(ResponseBase.of(providerService.years()));}
+    @GetMapping("/organizations") public ResponseEntity<ResponseBase<?>> organizations(@RequestParam Long year){return ResponseEntity.ok(ResponseBase.of(providerService.organizations(year)));}
+    @GetMapping("/processes") public ResponseEntity<ResponseBase<?>> processes(@RequestParam Long year,@RequestParam("organization-identifier") String id,@RequestParam("organization-name") String name){return ResponseEntity.ok(ResponseBase.of(providerService.processes(year,id,name)));}
+    @GetMapping("/processes/{processId}") public ResponseEntity<ResponseBase<?>> detail(@PathVariable Long processId){return ResponseEntity.ok(ResponseBase.of(providerService.detail(processId)));}
 
     @PostMapping
     public ResponseEntity<ResponseBase<EntityDto>> create(

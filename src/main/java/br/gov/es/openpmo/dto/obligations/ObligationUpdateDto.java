@@ -16,6 +16,7 @@ public class ObligationUpdateDto {
 
     @NotBlank(message = "A descrição é obrigatória")
     private String description;
+    private String managementUnitCode;
 
     public Long getId() {
         return this.id;
@@ -52,4 +53,6 @@ public class ObligationUpdateDto {
     ) {
         this.description = description;
     }
+    public String getManagementUnitCode() { return managementUnitCode; }
+    public void setManagementUnitCode(String value) { managementUnitCode = value; }
 }

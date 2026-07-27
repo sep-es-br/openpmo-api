@@ -17,6 +17,7 @@ public class Obligation extends Entity {
     private String obligationNumber;
 
     private String description;
+    private String managementUnitCode;
 
     @Relationship(type = "ISSUED_FOR")
     private Workpack workpack;
@@ -27,10 +28,12 @@ public class Obligation extends Entity {
     public Obligation(
         final String obligationNumber,
         final String description,
+        final String managementUnitCode,
         final Workpack workpack
     ) {
         this.obligationNumber = obligationNumber;
         this.description = description;
+        this.managementUnitCode = managementUnitCode;
         this.workpack = workpack;
     }
 
@@ -41,6 +44,7 @@ public class Obligation extends Entity {
         return new Obligation(
             request.getObligationNumber(),
             request.getDescription(),
+            request.getManagementUnitCode(),
             workpack
         );
     }
@@ -55,6 +59,7 @@ public class Obligation extends Entity {
             request::getDescription,
             this::setDescription
         );
+        ObjectUtils.updateIfPresent(request::getManagementUnitCode, this::setManagementUnitCode);
     }
 
     @Transient
@@ -87,6 +92,8 @@ public class Obligation extends Entity {
     public Workpack getWorkpack() {
         return this.workpack;
     }
+    public String getManagementUnitCode() { return managementUnitCode; }
+    public void setManagementUnitCode(String value) { managementUnitCode = value; }
 
     public void setWorkpack(final Workpack workpack) {
         this.workpack = workpack;

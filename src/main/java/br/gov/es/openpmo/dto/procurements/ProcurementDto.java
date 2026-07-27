@@ -22,7 +22,7 @@ public class ProcurementDto {
     public ProcurementDto(final Procurement procurement) {
         this.id = procurement.getId();
         this.idWorkpack = procurement.getIdWorkpack();
-        this.processNumber = procurement.getProcessNumber();
+        this.processId = procurement.getProcessId();
         this.object = procurement.getObject();
     }
 

@@ -21,13 +21,15 @@ public class ProcurementService {
 
     private final ProcurementRepository repository;
     private final WorkpackService workpackService;
+    private final ProcurementProviderService providerService;
 
     public ProcurementService(
         final ProcurementRepository repository,
-        final WorkpackService workpackService
+        final WorkpackService workpackService, final ProcurementProviderService providerService
     ) {
         this.repository = repository;
         this.workpackService = workpackService;
+        this.providerService = providerService;
     }
 
     public Procurement create(final ProcurementCreateDto request) {
@@ -47,7 +49,10 @@ public class ProcurementService {
     }
 
     public ProcurementDto findById(final Long id) {
-        return ProcurementDto.of(this.findByIdDefault(id));
+        ProcurementDto dto = ProcurementDto.of(this.findByIdDefault(id));
+        br.gov.es.pmo.procurement_core.model.ProcurementDto detail = providerService.detail(dto.getProcessId());
+        if (detail != null) { dto.setProcessNumber(detail.getProcessNumber()); dto.setOrganizationName(detail.getOrganizationName()); dto.setYear(detail.getYear()); dto.setObject(detail.getObject()); dto.setModality(detail.getModality()); dto.setStatus(detail.getStatus()); dto.setProtocol(detail.getProtocol()); }
+        return dto;
     }
 
     public List<ProcurementDto> findAllAsCardDto(final Long idWorkpack) {

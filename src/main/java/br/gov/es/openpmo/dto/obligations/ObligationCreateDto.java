@@ -13,6 +13,8 @@ public class ObligationCreateDto {
 
     @NotBlank(message = "A descrição é obrigatória")
     private String description;
+    @NotBlank
+    private String managementUnitCode;
 
     public Long getIdWorkpack() {
         return this.idWorkpack;
@@ -41,4 +43,6 @@ public class ObligationCreateDto {
     ) {
         this.description = description;
     }
+    public String getManagementUnitCode() { return managementUnitCode; }
+    public void setManagementUnitCode(String value) { managementUnitCode = value; }
 }
