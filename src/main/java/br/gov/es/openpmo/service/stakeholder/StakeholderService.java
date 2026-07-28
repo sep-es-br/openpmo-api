@@ -273,6 +273,7 @@ public class StakeholderService {
       if (maybePerson.isPresent()) {
         final Person person = this.buildPerson(maybePerson.get(), request);
         this.createOrUpdateContactInformation(request, personId, workpackId, person);
+        this.personService.save(person); 
         return person;
       }
     }
@@ -349,8 +350,7 @@ public class StakeholderService {
       planId
     );
   }
-
-  private Person buildPerson(
+private Person buildPerson(
     final Person person,
     final StakeholderParamDto request
   ) {
@@ -360,6 +360,13 @@ public class StakeholderService {
 
     final String name = personDto.getName() != null ? personDto.getName() : personDto.getFullName();
     person.setName(name);
+
+    if (personDto.getOrganization() != null && personDto.getOrganization().getId() != null) {
+      final Organization organization = this.serviceOrganization.findById(personDto.getOrganization().getId());
+      person.setOrganization(organization);
+    } else {
+      person.setOrganization(null);
+    }
 
     return person;
   }
