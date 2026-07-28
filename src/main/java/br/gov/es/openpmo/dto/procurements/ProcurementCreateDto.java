@@ -14,6 +14,9 @@ public class ProcurementCreateDto {
     @NotBlank(message = "O objeto é obrigatório")
     private String object;
 
+    @NotBlank(message = "O identificador do órgão é obrigatório")
+    private String organizationIdentifier;
+
     public Long getIdWorkpack() {
         return this.idWorkpack;
     }
@@ -36,5 +39,13 @@ public class ProcurementCreateDto {
 
     public void setObject(final String object) {
         this.object = object;
+    }
+
+    public String getOrganizationIdentifier() {
+        return this.organizationIdentifier;
+    }
+
+    public void setOrganizationIdentifier(final String organizationIdentifier) {
+        this.organizationIdentifier = organizationIdentifier;
     }
 }

@@ -16,6 +16,7 @@ public class Procurement extends Entity {
 
     private Long processId;
     private String object;
+    private String organizationIdentifier;
 
     @Relationship(type = "RELATED_TO")
     private Workpack workpack;
@@ -26,10 +27,12 @@ public class Procurement extends Entity {
     public Procurement(
         final Long processId,
         final String object,
+        final String organizationIdentifier,
         final Workpack workpack
     ) {
         this.processId = processId;
         this.object = object;
+        this.organizationIdentifier = organizationIdentifier;
         this.workpack = workpack;
     }
 
@@ -37,7 +40,7 @@ public class Procurement extends Entity {
         final ProcurementCreateDto request,
         final Workpack workpack
     ) {
-        return new Procurement(request.getProcessId(), request.getObject(), workpack);
+        return new Procurement(request.getProcessId(), request.getObject(), request.getOrganizationIdentifier(), workpack);
     }
 
     public void update(final ProcurementUpdateDto request) {
@@ -54,6 +57,8 @@ public class Procurement extends Entity {
     public void setProcessId(final Long processId) { this.processId = processId; }
     public String getObject() { return this.object; }
     public void setObject(final String object) { this.object = object; }
+    public String getOrganizationIdentifier() { return this.organizationIdentifier; }
+    public void setOrganizationIdentifier(final String organizationIdentifier) { this.organizationIdentifier = organizationIdentifier; }
     public Workpack getWorkpack() { return this.workpack; }
     public void setWorkpack(final Workpack workpack) { this.workpack = workpack; }
 }
