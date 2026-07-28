@@ -13,6 +13,7 @@ import br.gov.es.openpmo.repository.IsCCBMemberRepository;
 import br.gov.es.openpmo.repository.OfficePermissionRepository;
 import br.gov.es.openpmo.repository.PlanPermissionRepository;
 import br.gov.es.openpmo.repository.WorkpackPermissionRepository;
+import br.gov.es.openpmo.service.actors.IsAuthenticatedByService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +45,8 @@ public class UpdateLocalRolesUsingRemoteRoles {
 
   private final IsCCBMemberRepository ccbMemberRepository;
 
+  private final IsAuthenticatedByService isAuthenticatedByService;
+
   @Autowired
   public UpdateLocalRolesUsingRemoteRoles(
     final IAcessoCidadaoApi acessoCidadaoApi,
@@ -51,7 +54,8 @@ public class UpdateLocalRolesUsingRemoteRoles {
     final PlanPermissionRepository planPermissionRepository,
     final WorkpackPermissionRepository workpackPermissionRepository,
     final OfficePermissionRepository officePermissionRepository,
-    final IsCCBMemberRepository ccbMemberRepository
+    final IsCCBMemberRepository ccbMemberRepository,
+    final IsAuthenticatedByService isAuthenticatedByService
   ) {
     this.acessoCidadaoApi = acessoCidadaoApi;
     this.isAuthenticatedByRepository = isAuthenticatedByRepository;
@@ -59,10 +63,16 @@ public class UpdateLocalRolesUsingRemoteRoles {
     this.workpackPermissionRepository = workpackPermissionRepository;
     this.officePermissionRepository = officePermissionRepository;
     this.ccbMemberRepository = ccbMemberRepository;
+    this.isAuthenticatedByService = isAuthenticatedByService;
   }
 
   @Transactional
   public void updatePersonRoles() {
+
+    if(!this.isAuthenticatedByService.isCitizenServerAuthentication()) {
+      LOGGER.info("Servidor de identidade nao e' o Acesso Cidadao; sincronizacao de papeis ignorada.");
+      return;
+    }
 
     LOGGER.info("Initializing search for remote roles");
 

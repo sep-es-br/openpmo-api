@@ -34,6 +34,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Scope;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Component;
@@ -240,14 +241,30 @@ public class AcessoCidadaoApi implements IAcessoCidadaoApi {
   }
 
     private String fetchClientToken(final Long idPerson) {
-      
-    
-        OAuth2AuthenticationToken authToken = (OAuth2AuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-        
-        SpringSecurityProperties.Registration registration = springSecurityProperties.getRegistration(authToken.getAuthorizedClientRegistrationId() + "-client");
-        SpringSecurityProperties.Provider provider = springSecurityProperties.getProvider(authToken.getAuthorizedClientRegistrationId() + "-client");
-      
-      
+
+        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if(!(authentication instanceof OAuth2AuthenticationToken)) {
+          throw new IllegalStateException(
+            "Chamada ao Acesso Cidadao sem OAuth2AuthenticationToken no contexto de seguranca."
+          );
+        }
+
+        OAuth2AuthenticationToken authToken = (OAuth2AuthenticationToken) authentication;
+
+        final String clientRegistrationId = authToken.getAuthorizedClientRegistrationId() + "-client";
+
+        SpringSecurityProperties.Registration registration = springSecurityProperties.getRegistration(clientRegistrationId);
+        SpringSecurityProperties.Provider provider = springSecurityProperties.getProvider(clientRegistrationId);
+
+        if(registration == null || provider == null) {
+          this.logger.warn(
+            "OAuth2 client '{}' nao configurado; ignorando chamada ao Acesso Cidadao.",
+            clientRegistrationId
+          );
+          return null;
+        }
+
         final String basicToken = registration.getClientId() + ":" + registration.getClientSecret();
 
         this.logger.info("Executing POST in {}", provider.getTokenUri());
@@ -286,13 +303,12 @@ public class AcessoCidadaoApi implements IAcessoCidadaoApi {
     final Function<? super JSONObject, T> mapper,
     final Long idPerson
   ) {
-      
-      OAuth2AuthenticationToken authToken = (OAuth2AuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-      
-      String rid = authToken.getAuthorizedClientRegistrationId() + "-client";
-            
     final String token = this.fetchClientToken(idPerson);
     if(token != null) {
+      final OAuth2AuthenticationToken authToken =
+        (OAuth2AuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+      final String rid = authToken.getAuthorizedClientRegistrationId() + "-client";
+
       final String uri = springSecurityProperties.getProvider(rid).getWebapi().concat(url);
       this.logger.info("Executing GET in {}", uri);
       final HttpUriRequest get = new HttpGet(uri);
@@ -316,14 +332,12 @@ public class AcessoCidadaoApi implements IAcessoCidadaoApi {
     final String url,
     final Long idPerson
   ) {
-      
-      
-      OAuth2AuthenticationToken authToken = (OAuth2AuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-      
-      String rid = authToken.getAuthorizedClientRegistrationId() + "-client";
-      
     final String token = this.fetchClientToken(idPerson);
     if(token != null) {
+      final OAuth2AuthenticationToken authToken =
+        (OAuth2AuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+      final String rid = authToken.getAuthorizedClientRegistrationId() + "-client";
+
       final String uri = springSecurityProperties.getProvider(rid).getWebapi().concat(url);
       final HttpUriRequest put = new HttpPut(uri);
       put.addHeader(AUTHORIZATION, BEARER + token);

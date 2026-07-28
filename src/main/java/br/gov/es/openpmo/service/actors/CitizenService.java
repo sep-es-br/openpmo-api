@@ -103,7 +103,11 @@ public class CitizenService {
     final Long idOffice,
     final Long idPerson
   ) {
-    final String sub = this.findSubByCpf(cpf, idPerson);
+    String sub = this.findSubByCpf(cpf, idPerson, false);
+    
+    if(sub == null) {
+        sub = this.findSubByCpf(cpf, idPerson);
+    }
 
     final Optional<PublicAgentResponse> maybeAgent = this.acessoCidadaoApi.findPublicAgentBySub(sub, idPerson);
 
@@ -116,8 +120,21 @@ public class CitizenService {
     final String cpf,
     final Long idPerson
   ) {
-    return this.acessoCidadaoApi.findSubByCpf(cpf, idPerson)
-      .orElseThrow(() -> new NegocioException(CITIZEN_NOT_FOUND));
+    return findSubByCpf(cpf, idPerson, true);
+  }
+
+  private String findSubByCpf(
+    final String cpf,
+    final Long idPerson,
+    final Boolean throwException
+  ) {
+      
+      
+    return throwException ?
+            this.acessoCidadaoApi.findSubByCpf(cpf, idPerson)
+      .orElseThrow(() -> new NegocioException(CITIZEN_NOT_FOUND)) :
+            this.acessoCidadaoApi.findSubByCpf(cpf, idPerson)
+            .orElse(null);
   }
 
   private CitizenDto processPublicAgent(
@@ -223,7 +240,7 @@ public class CitizenService {
       return this.buildDtoFromCitizenAlreadyRegistered(roles, maybePerson.get(), agentEmail, idOffice);
     }
 
-    final String[] parsedName = agentEmail.getEmail().split("@");
+    final String[] parsedName = agentEmail.getEmail() != null ? agentEmail.getEmail().split("@") : new String[]{null} ;
     return CitizenDtoBuilder.aCitizenDto()
       .withName(parsedName.length == 0 ? agentEmail.getEmail() : parsedName[0])
       .withFullName(parsedName.length == 0 ? agentEmail.getEmail() : parsedName[0])

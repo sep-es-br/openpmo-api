@@ -176,7 +176,9 @@ public class OfficePermissionService {
     final Long idPerson,
     final String term
   ) {
-    final List<RoleResource> roles = this.roleService.getRolesByKey(idPerson, key);
+    final List<RoleResource> roles = this.isAuthenticatedByService.isCitizenServerAuthentication()
+      ? this.roleService.getRolesByKey(idPerson, key)
+      : Collections.emptyList();
 
     final Office office = this.officeService.findById(idOffice);
 
@@ -262,8 +264,12 @@ public class OfficePermissionService {
       maybeAuthenticatedBy
     );
     if (Objects.nonNull(term)) {
-      final double nameScore = this.textSimilarityScore.execute(person.getName(), term);
-      final double fullNameScore = this.textSimilarityScore.execute(person.getFullName(), term);
+      final double nameScore = person.getName() == null
+        ? 0.0
+        : this.textSimilarityScore.execute(person.getName(), term);
+      final double fullNameScore = person.getFullName() == null
+        ? 0.0
+        : this.textSimilarityScore.execute(person.getFullName(), term);
       final double score = Math.max(nameScore, fullNameScore);
       personDto.setScore(score);
     }
@@ -532,7 +538,9 @@ public class OfficePermissionService {
     final Person person = this.personService.findPersonByKey(key);
     final List<CanAccessOffice> permissions = this.findByOfficeAndPerson(idOffice, person.getId());
 
-    final List<RoleResource> roles = this.roleService.getRolesByKey(idPerson, key);
+    final List<RoleResource> roles = this.isAuthenticatedByService.isCitizenServerAuthentication()
+      ? this.roleService.getRolesByKey(idPerson, key)
+      : Collections.emptyList();
     this.fillPersonDto(idOffice, person, officePermissionDto, roles, null);
     this.fillPermissions(officePermissionDto, permissions);
     this.fillPersonRoles(officePermissionDto, person.getId());
