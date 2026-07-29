@@ -6,6 +6,7 @@ import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.utils.ObjectUtils;
 import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Property;
 import org.neo4j.ogm.annotation.Relationship;
 import org.springframework.data.annotation.Transient;
 
@@ -17,6 +18,7 @@ public class Obligation extends Entity {
     private String obligationNumber;
 
     private String description;
+    @Property("organizationIdentifier")
     private String managementUnitCode;
 
     @Relationship(type = "ISSUED_FOR")
