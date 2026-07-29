@@ -9,6 +9,7 @@ import br.gov.es.openpmo.model.agreements.Agreement;
 import br.gov.es.openpmo.service.agreements.AgreementService;
 import br.gov.es.openpmo.service.agreements.AgreementProviderService;
 import br.gov.es.openpmo.service.permissions.canaccess.CanAccessService;
+import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.pmo.agreement_core.model.AgreementOrganizationDto;
 import br.gov.es.pmo.agreement_core.model.AgreementType;
 import org.springframework.http.ResponseEntity;
@@ -24,15 +25,18 @@ public class AgreementController {
     private final AgreementService agreementService;
     private final AgreementProviderService agreementProviderService;
     private final CanAccessService canAccessService;
+    private final TokenService tokenService;
 
     public AgreementController(
         final AgreementService agreementService,
         final AgreementProviderService agreementProviderService,
-        final CanAccessService canAccessService
+        final CanAccessService canAccessService,
+        final TokenService tokenService
     ) {
         this.agreementService = agreementService;
         this.agreementProviderService = agreementProviderService;
         this.canAccessService = canAccessService;
+        this.tokenService = tokenService;
     }
 
     @GetMapping("/years")
@@ -130,9 +134,15 @@ public class AgreementController {
 
     @GetMapping
     public ResponseEntity<ResponseBase<List<AgreementDto>>> findAll(
-        @RequestParam("id-workpack") final Long idWorkpack
+        @RequestParam("id-workpack") final Long idWorkpack,
+        @RequestParam(value = "idFilter", required = false) final Long idFilter,
+        @RequestParam(required = false) final String term,
+        @RequestHeader("Authorization") final String authorization
     ) {
-        return ResponseEntity.ok(ResponseBase.of(this.agreementService.findAllAsCardDto(idWorkpack)));
+        final Long idPerson = this.tokenService.getUserId(authorization);
+        return ResponseEntity.ok(ResponseBase.of(
+            this.agreementService.findAllAsCardDto(idWorkpack, idFilter, idPerson, term)
+        ));
     }
 
     @DeleteMapping("/{id}")

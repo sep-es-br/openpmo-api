@@ -9,6 +9,7 @@ import br.gov.es.openpmo.model.obligations.Obligation;
 import br.gov.es.openpmo.service.obligations.ObligationService;
 import br.gov.es.openpmo.service.obligations.ObligationProviderService;
 import br.gov.es.openpmo.service.permissions.canaccess.CanAccessService;
+import br.gov.es.openpmo.service.authentication.TokenService;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,14 +25,18 @@ public class ObligationController {
 
     private final CanAccessService canAccessService;
     private final ObligationProviderService providerService;
+    private final TokenService tokenService;
 
     public ObligationController(
         final ObligationService obligationService,
-        final CanAccessService canAccessService, final ObligationProviderService providerService
+        final CanAccessService canAccessService,
+        final ObligationProviderService providerService,
+        final TokenService tokenService
     ) {
         this.obligationService = obligationService;
         this.canAccessService = canAccessService;
         this.providerService = providerService;
+        this.tokenService = tokenService;
     }
     @GetMapping("/years") public ResponseEntity<ResponseBase<List<Long>>> years(){return ResponseEntity.ok(ResponseBase.of(providerService.years()));}
     @GetMapping("/management-units") public ResponseEntity<ResponseBase<?>> units(@RequestParam Long year){return ResponseEntity.ok(ResponseBase.of(providerService.units(year)));}
@@ -100,11 +105,19 @@ public class ObligationController {
     @GetMapping
     public ResponseEntity<ResponseBase<List<ObligationDto>>> findAll(
         @RequestParam("id-workpack")
-        final Long idWorkpack
+        final Long idWorkpack,
+        @RequestParam(value = "idFilter", required = false) final Long idFilter,
+        @RequestParam(required = false) final String term,
+        @RequestHeader("Authorization") final String authorization
     ) {
         final List<ObligationDto> obligations =
             this.obligationService
-                .findAllAsCardDto(idWorkpack);
+                .findAllAsCardDto(
+                    idWorkpack,
+                    idFilter,
+                    this.tokenService.getUserId(authorization),
+                    term
+                );
 
         return ResponseEntity.ok(
             ResponseBase.of(obligations)

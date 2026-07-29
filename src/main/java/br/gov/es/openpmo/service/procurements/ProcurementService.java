@@ -4,13 +4,18 @@ import br.gov.es.openpmo.dto.procurements.ProcurementCreateDto;
 import br.gov.es.openpmo.dto.procurements.ProcurementDto;
 import br.gov.es.openpmo.dto.procurements.ProcurementUpdateDto;
 import br.gov.es.openpmo.model.procurements.Procurement;
+import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.ProcurementRepository;
+import br.gov.es.openpmo.repository.custom.filters.FindAllProcurementUsingCustomFilter;
+import br.gov.es.openpmo.service.filters.CustomFilterService;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.ID_WORKPACK_NOT_NULL;
@@ -22,14 +27,21 @@ public class ProcurementService {
     private final ProcurementRepository repository;
     private final WorkpackService workpackService;
     private final ProcurementProviderService providerService;
+    private final CustomFilterService customFilterService;
+    private final FindAllProcurementUsingCustomFilter findAllUsingCustomFilter;
 
     public ProcurementService(
         final ProcurementRepository repository,
-        final WorkpackService workpackService, final ProcurementProviderService providerService
+        final WorkpackService workpackService,
+        final ProcurementProviderService providerService,
+        final CustomFilterService customFilterService,
+        final FindAllProcurementUsingCustomFilter findAllUsingCustomFilter
     ) {
         this.repository = repository;
         this.workpackService = workpackService;
         this.providerService = providerService;
+        this.customFilterService = customFilterService;
+        this.findAllUsingCustomFilter = findAllUsingCustomFilter;
     }
 
     public Procurement create(final ProcurementCreateDto request) {
@@ -64,6 +76,18 @@ public class ProcurementService {
             .stream()
             .map(ProcurementDto::of)
             .collect(Collectors.toList());
+    }
+
+    public List<ProcurementDto> findAllAsCardDto(
+        final Long idWorkpack, final Long idFilter, final Long idPerson, final String term
+    ) {
+        if (idFilter == null) return this.findAllAsCardDto(idWorkpack);
+        final CustomFilter filter = this.customFilterService.findById(idFilter, idPerson);
+        final Map<String, Object> params = new HashMap<>();
+        params.put("idWorkpack", idWorkpack);
+        params.put("term", term);
+        return this.findAllUsingCustomFilter.<Procurement>execute(filter, params).stream()
+            .map(ProcurementDto::of).collect(Collectors.toList());
     }
 
     @Transactional

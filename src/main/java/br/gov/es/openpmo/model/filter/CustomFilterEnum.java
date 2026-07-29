@@ -2,6 +2,7 @@ package br.gov.es.openpmo.model.filter;
 
 import br.gov.es.openpmo.dto.stakeholder.StakeholderAndPermissionQuery;
 import br.gov.es.openpmo.model.actors.Organization;
+import br.gov.es.openpmo.model.agreements.Agreement;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.indicators.Indicator;
 import br.gov.es.openpmo.model.issue.Issue;
@@ -12,6 +13,8 @@ import br.gov.es.openpmo.model.office.UnitMeasure;
 import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.office.plan.PlanModel;
 import br.gov.es.openpmo.model.process.Process;
+import br.gov.es.openpmo.model.procurements.Procurement;
+import br.gov.es.openpmo.model.obligations.Obligation;
 import br.gov.es.openpmo.model.relations.CanAccessOffice;
 import br.gov.es.openpmo.model.relations.CanAccessPlan;
 import br.gov.es.openpmo.model.risk.Risk;
@@ -33,6 +36,9 @@ public enum CustomFilterEnum {
   STAKEHOLDER("IsStakeholderIn", StakeholderAndPermissionQuery.class),
   ISSUE("Issue", Issue.class),
   PROCESS("Process", Process.class),
+  AGREEMENT("Agreement", Agreement.class),
+  PROCUREMENT("Procurement", Procurement.class),
+  OBLIGATION("Obligation", Obligation.class),
   BASELINE("Baseline", Baseline.class),
   INDICATOR("Indicator", Indicator.class);
 

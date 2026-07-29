@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.repository;
 
 import br.gov.es.openpmo.model.procurements.Procurement;
+import br.gov.es.openpmo.repository.custom.CustomRepository;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
@@ -9,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface ProcurementRepository extends Neo4jRepository<Procurement, Long> {
+public interface ProcurementRepository extends Neo4jRepository<Procurement, Long>, CustomRepository {
 
     @Query(
         "MATCH (procurement:Procurement)-[r:RELATED_TO]->(workpack:Workpack) " +

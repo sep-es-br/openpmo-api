@@ -5,13 +5,18 @@ import br.gov.es.openpmo.dto.agreements.AgreementDto;
 import br.gov.es.openpmo.dto.agreements.AgreementUpdateDto;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.agreements.Agreement;
+import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.AgreementRepository;
+import br.gov.es.openpmo.repository.custom.filters.FindAllAgreementUsingCustomFilter;
+import br.gov.es.openpmo.service.filters.CustomFilterService;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.AGREEMENT_NOT_FOUND;
@@ -23,13 +28,19 @@ public class AgreementService {
 
     private final AgreementRepository repository;
     private final WorkpackService workpackService;
+    private final CustomFilterService customFilterService;
+    private final FindAllAgreementUsingCustomFilter findAllUsingCustomFilter;
 
     public AgreementService(
         final AgreementRepository repository,
-        final WorkpackService workpackService
+        final WorkpackService workpackService,
+        final CustomFilterService customFilterService,
+        final FindAllAgreementUsingCustomFilter findAllUsingCustomFilter
     ) {
         this.repository = repository;
         this.workpackService = workpackService;
+        this.customFilterService = customFilterService;
+        this.findAllUsingCustomFilter = findAllUsingCustomFilter;
     }
 
     public Agreement create(final AgreementCreateDto request) {
@@ -62,6 +73,18 @@ public class AgreementService {
         }
         return this.repository.findAllByIdWorkpack(idWorkpack)
             .stream().map(AgreementDto::of).collect(Collectors.toList());
+    }
+
+    public List<AgreementDto> findAllAsCardDto(
+        final Long idWorkpack, final Long idFilter, final Long idPerson, final String term
+    ) {
+        if (idFilter == null) return this.findAllAsCardDto(idWorkpack);
+        final CustomFilter filter = this.customFilterService.findById(idFilter, idPerson);
+        final Map<String, Object> params = new HashMap<>();
+        params.put("idWorkpack", idWorkpack);
+        params.put("term", term);
+        return this.findAllUsingCustomFilter.<Agreement>execute(filter, params).stream()
+            .map(AgreementDto::of).collect(Collectors.toList());
     }
 
     @Transactional

@@ -4,8 +4,11 @@ import br.gov.es.openpmo.dto.obligations.ObligationCreateDto;
 import br.gov.es.openpmo.dto.obligations.ObligationDto;
 import br.gov.es.openpmo.dto.obligations.ObligationUpdateDto;
 import br.gov.es.openpmo.model.obligations.Obligation;
+import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.ObligationRepository;
+import br.gov.es.openpmo.repository.custom.filters.FindAllObligationUsingCustomFilter;
+import br.gov.es.openpmo.service.filters.CustomFilterService;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +19,8 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.OBLIGATION_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.ID_WORKPACK_NOT_NULL;
 
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -26,14 +31,21 @@ public class ObligationService {
 
     private final WorkpackService workpackService;
     private final ObligationProviderService providerService;
+    private final CustomFilterService customFilterService;
+    private final FindAllObligationUsingCustomFilter findAllUsingCustomFilter;
 
     public ObligationService(
         final ObligationRepository repository,
-        final WorkpackService workpackService, final ObligationProviderService providerService
+        final WorkpackService workpackService,
+        final ObligationProviderService providerService,
+        final CustomFilterService customFilterService,
+        final FindAllObligationUsingCustomFilter findAllUsingCustomFilter
     ) {
         this.repository = repository;
         this.workpackService = workpackService;
         this.providerService = providerService;
+        this.customFilterService = customFilterService;
+        this.findAllUsingCustomFilter = findAllUsingCustomFilter;
     }
 
     public Obligation create(
@@ -124,6 +136,18 @@ public class ObligationService {
             .stream()
             .map(ObligationDto::of)
             .collect(Collectors.toList());
+    }
+
+    public List<ObligationDto> findAllAsCardDto(
+        final Long idWorkpack, final Long idFilter, final Long idPerson, final String term
+    ) {
+        if (idFilter == null) return this.findAllAsCardDto(idWorkpack);
+        final CustomFilter filter = this.customFilterService.findById(idFilter, idPerson);
+        final Map<String, Object> params = new HashMap<>();
+        params.put("idWorkpack", idWorkpack);
+        params.put("term", term);
+        return this.findAllUsingCustomFilter.<Obligation>execute(filter, params).stream()
+            .map(ObligationDto::of).collect(Collectors.toList());
     }
 
     @Transactional

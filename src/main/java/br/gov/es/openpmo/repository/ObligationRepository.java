@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.repository;
 
 import br.gov.es.openpmo.model.obligations.Obligation;
+import br.gov.es.openpmo.repository.custom.CustomRepository;
 
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
@@ -10,7 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface ObligationRepository extends Neo4jRepository<Obligation, Long> {
+public interface ObligationRepository extends Neo4jRepository<Obligation, Long>, CustomRepository {
 
     @Query(
         "MATCH (obligation:Obligation)-[r:ISSUED_FOR]->(workpack:Workpack) " +
