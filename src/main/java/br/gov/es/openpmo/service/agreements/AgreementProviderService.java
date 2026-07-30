@@ -76,4 +76,8 @@ public class AgreementProviderService {
     private IAgreementProvider getProvider() {
         return this.agreementProvider.getIfAvailable();
     }
+
+    public boolean isAvailable() {
+        return this.getProvider() != null;
+    }
 }
