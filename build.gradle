@@ -15,18 +15,25 @@ file('src/main/resources/application.properties').withInputStream {
 
 group = 'br.gov.es'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '1.8'
+sourceCompatibility = '11'
 
 repositories {
     mavenCentral()
+    exclusiveContent {
+        forRepository {
+            maven {
+                url 'https://jitpack.io'
+            }
+        }
+        filter {
+            includeGroup 'com.github.sep-es-br'
+        }
+    }
     maven {
         url "https://repo.spring.io/plugins-release/"
     }
     maven {
         url "https://jasperreports.sourceforge.net/maven2/"
-    }
-    maven { 
-        url 'https://jitpack.io' 
     }
 }
 
@@ -71,6 +78,26 @@ dependencies {
         implementation props['app.organization.parser.repository']
     }
     implementation 'com.github.sep-es-br:pmo-core-organization-parser:1.0.5'
+    implementation 'com.github.sep-es-br:openpmo-plugin-agreement-interface:1.0.5'
+    implementation 'com.github.sep-es-br:openpmo-plugin-procurement-interface:1.0.0'
+    implementation 'com.github.sep-es-br:openpmo-plugin-obligation-interface:1.0.0'
+    if (props.containsKey('app.agreement.parser.repository') &&
+        props['app.agreement.parser.repository'] != null &&
+        !props['app.agreement.parser.repository'].trim().isEmpty()) {
+        implementation props['app.agreement.parser.repository']
+    }
+
+    if (props.containsKey('app.procurement.parser.repository') &&
+        props['app.procurement.parser.repository'] != null &&
+        !props['app.procurement.parser.repository'].trim().isEmpty()) {
+        implementation props['app.procurement.parser.repository']
+    }
+
+    if (props.containsKey('app.obligation.parser.repository') &&
+        props['app.obligation.parser.repository'] != null &&
+        !props['app.obligation.parser.repository'].trim().isEmpty()) {
+        implementation props['app.obligation.parser.repository']
+    }
 
     //implementation 'com.github.sep-es-br:acesso-cidadao-identity-parser:f92a8db'
 
