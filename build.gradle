@@ -20,11 +20,12 @@ sourceCompatibility = '11'
 repositories {
     mavenCentral()
     exclusiveContent {
-        forRepository {
+        forRepositories(
+            mavenLocal(),
             maven {
                 url 'https://jitpack.io'
             }
-        }
+        )
         filter {
             includeGroup 'com.github.sep-es-br'
         }
@@ -81,6 +82,8 @@ dependencies {
     implementation 'com.github.sep-es-br:openpmo-plugin-agreement-interface:1.0.5'
     implementation 'com.github.sep-es-br:openpmo-plugin-procurement-interface:1.0.0'
     implementation 'com.github.sep-es-br:openpmo-plugin-obligation-interface:1.0.0'
+    implementation 'com.github.sep-es-br:openpmo-plugin-user-a-identify-goves:v2.0.0'
+
     if (props.containsKey('app.agreement.parser.repository') &&
         props['app.agreement.parser.repository'] != null &&
         !props['app.agreement.parser.repository'].trim().isEmpty()) {
@@ -97,6 +100,13 @@ dependencies {
         props['app.obligation.parser.repository'] != null &&
         !props['app.obligation.parser.repository'].trim().isEmpty()) {
         implementation props['app.obligation.parser.repository']
+    }
+
+
+    if(props.containsKey('app.plugin.user.a.identify.goves.repository') &&
+        props['app.plugin.user.a.identify.goves.repository'] != null &&
+        !props['app.plugin.user.a.identify.goves.repository'].trim().isEmpty()) {
+        implementation props['app.plugin.user.a.identify.goves.repository']
     }
 
     //implementation 'com.github.sep-es-br:acesso-cidadao-identity-parser:f92a8db'

@@ -2,6 +2,7 @@ package br.gov.es.openpmo.dto.planpermission;
 
 import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.dto.person.PersonDto;
+import br.gov.es.openpmo.dto.publicidentity.PublicIdentityValidationDto;
 import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -18,6 +19,7 @@ public class PlanPermissionParamDto {
   private String key;
   private PersonDto person;
   private List<PermissionDto> permissions;
+  private PublicIdentityValidationDto identityValidation;
 
   public PersonDto getPerson() {
     return this.person;
@@ -51,6 +53,14 @@ public class PlanPermissionParamDto {
 
   public void setPermissions(final List<PermissionDto> permissions) {
     this.permissions = permissions;
+  }
+
+  public PublicIdentityValidationDto getIdentityValidation() {
+    return this.identityValidation;
+  }
+
+  public void setIdentityValidation(final PublicIdentityValidationDto identityValidation) {
+    this.identityValidation = identityValidation;
   }
 
   @JsonIgnore

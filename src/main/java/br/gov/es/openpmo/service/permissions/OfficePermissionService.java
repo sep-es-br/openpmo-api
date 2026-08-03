@@ -31,6 +31,7 @@ import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.baselines.EvaluateBaselineService;
 import br.gov.es.openpmo.service.journals.JournalCreator;
 import br.gov.es.openpmo.service.office.OfficeService;
+import br.gov.es.openpmo.service.publicidentity.PublicIdentityValidationService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import br.gov.es.openpmo.utils.TextSimilarityScore;
 
@@ -90,6 +91,8 @@ public class OfficePermissionService {
 
   private final EvaluateBaselineService evaluateBaselineService;
 
+  private final PublicIdentityValidationService publicIdentityValidationService;
+
   @Autowired
   public OfficePermissionService(
     final OfficePermissionRepository repository,
@@ -107,7 +110,8 @@ public class OfficePermissionService {
     final JournalCreator journalCreator,
     final TokenService tokenService,
     final IsCCBMemberRepository isCCBMemberRepository,
-    @Lazy final EvaluateBaselineService evaluateBaselineService
+    @Lazy final EvaluateBaselineService evaluateBaselineService,
+    final PublicIdentityValidationService publicIdentityValidationService
   ) {
     this.repository = repository;
     this.customFilterRepository = customFilterRepository;
@@ -125,6 +129,7 @@ public class OfficePermissionService {
     this.tokenService = tokenService;
     this.isCCBMemberRepository = isCCBMemberRepository;
     this.evaluateBaselineService = evaluateBaselineService;
+    this.publicIdentityValidationService = publicIdentityValidationService;
   }
 
   public void delete(
@@ -475,6 +480,10 @@ public class OfficePermissionService {
     final OfficePermissionParamDto request,
     final String authorization
   ) {
+    this.publicIdentityValidationService.validate(
+      request.getIdentityValidation(),
+      request.getKey()
+    );
     final Long idOffice = Optional.of(request)
       .map(OfficePermissionParamDto::getIdOffice)
       .orElse(null);
