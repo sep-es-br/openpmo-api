@@ -2,38 +2,35 @@ package br.gov.es.openpmo.repository.permissions;
 
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
+import java.util.List;
+import java.util.Map;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
 @Repository
 public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, CustomRepository {
 
-  @Query(
-      "MATCH (n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO|IS_STRUCTURED_BY|IS_FORSEEN_ON|APPLIES_TO|FEATURES|MITIGATES|IS_TRIGGER_BY|ADDRESSES|IS_REPORTED_FOR|IS_BELONGS_TO|SCOPE_TO|IS_LINKED_TO|COMPOSES|IS_BASELINED_BY*0..]->(m) " +
-      " <-[rel:CAN_ACCESS_WORKPACK|CAN_ACCESS_PLAN|CAN_ACCESS_OFFICE]-(p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
-      "WHERE id(n) in $ids " +
+    
+    @Query(
+        "MATCH (n) WHERE id(n) IN $ids " +
+        "OPTIONAL MATCH (n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO|IS_STRUCTURED_BY|IS_FORSEEN_ON|APPLIES_TO|FEATURES|MITIGATES|IS_TRIGGER_BY|ADDRESSES|IS_REPORTED_FOR|IS_BELONGS_TO|SCOPE_TO|IS_LINKED_TO|COMPOSES|IS_BASELINED_BY*0..]->(m) " +
+        "   <-[rel:CAN_ACCESS_WORKPACK|CAN_ACCESS_PLAN|CAN_ACCESS_OFFICE]-(p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
 
-      "OPTIONAL MATCH (n)-[:IS_IN*0..]->(proj:Project) " +
-      "       <-[:FEATURES]-(prop:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel) " +
-      "WHERE pm.name IN ['Situação','Status'] " +
+        "OPTIONAL MATCH (n)-[:IS_IN*0..]->(proj:Project) " +
+        "OPTIONAL MATCH (proj)<-[:FEATURES]-(prop:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel) " +
+        "WHERE pm.name IN ['Situação','Status'] " +
 
-      "WITH " +
-      "    collect(distinct rel.permissionLevel) AS permissions, " +
-      "    collect(distinct prop.value) AS status " +
-
-      "RETURN ( " +
-      "    'EDIT' IN permissions OR " +
-      "    ( 'UPDATE' IN permissions AND 'Estruturação' IN status ) " +
-      ") AS result"
-  )
-  boolean hasEditPermission(
-    @Param("ids") List<Long> ids,
-    @Param("sub") String sub
-  );
+        "WITH n, collect(distinct rel.permissionLevel) AS permissions, " +
+        "     collect(distinct prop.value) AS statusList " +
+        "RETURN { permissions: permissions, statusList: statusList } AS result"
+    )
+    Map<String, Object> fetchAccessInfo(
+        @Param("ids") List<Long> ids,
+        @Param("sub") String sub
+    );
+    
 
   @Query(
     " CALL {  " +
@@ -67,32 +64,6 @@ public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, C
     @Param("ids") List<Long> ids,
     @Param("sub") String sub
   );
-
-  @Query(
-    "MATCH (n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO|IS_STRUCTURED_BY|IS_FORSEEN_ON|APPLIES_TO|FEATURES|MITIGATES|IS_TRIGGER_BY|ADDRESSES|IS_REPORTED_FOR|IS_BELONGS_TO|SCOPE_TO|IS_LINKED_TO|COMPOSES|IS_BASELINED_BY*0..]->(m)<-[r:CAN_ACCESS_WORKPACK|CAN_ACCESS_PLAN|CAN_ACCESS_OFFICE]-(p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
-    "WHERE id(n) IN $ids " +
-    "AND r.permissionLevel IN ['READ', 'EDIT'] " +
-    "with n limit 1 " +
-    "with count(n)>0 as hasEditPermission " +
-    "RETURN hasEditPermission"
-  )
-  boolean hasReadPermission(
-    @Param("ids") List<Long> ids,
-    @Param("sub") String sub
-  );
-
-  @Query(
-    "MATCH (n)-[:IS_IN|IS_ADOPTED_BY|BELONGS_TO|IS_STRUCTURED_BY|IS_FORSEEN_ON|APPLIES_TO|FEATURES|MITIGATES|IS_TRIGGER_BY|ADDRESSES|IS_REPORTED_FOR|IS_BELONGS_TO|SCOPE_TO|IS_LINKED_TO|COMPOSES|IS_BASELINED_BY*0..]->(m)<-[r:CAN_ACCESS_WORKPACK|CAN_ACCESS_PLAN|CAN_ACCESS_OFFICE]-(p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
-    "WHERE id(n) IN $ids " +
-    "AND r.permissionLevel IN ['UPDATE', 'EDIT'] " +
-    "with n limit 1 " +
-    "with count(n)>0 as hasEditPermission " +
-    "RETURN hasEditPermission"
-  )
-  boolean hasUpdatePermission(
-    @Param("ids") List<Long> ids,
-    @Param("sub") String sub
- );
 
   @Query(
     "MATCH " +

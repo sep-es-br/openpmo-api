@@ -5,7 +5,6 @@ import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.MilestoneResultDto;
 import br.gov.es.openpmo.dto.Response;
 import br.gov.es.openpmo.dto.ResponseBase;
-import br.gov.es.openpmo.dto.ccbmembers.CanUseCCBProjection;
 import br.gov.es.openpmo.dto.completed.CompleteWorkpackRequest;
 import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
 import br.gov.es.openpmo.dto.dashboards.MilestoneDateDto;
@@ -53,6 +52,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -105,7 +106,9 @@ public class WorkpackController {
   private final RiskRepository riskRepository;
 
   private final UpdateStatusService updateStatusService;
-
+  
+  private final Logger log = LoggerFactory.getLogger(WorkpackController.class);
+  
   @Autowired
   public WorkpackController(
     final ResponseHandler responseHandler,
@@ -179,6 +182,7 @@ public class WorkpackController {
     final List<RiskWorkpackDto> risks = this.riskRepository.findByWorkpackIds(ids);
     final List<JournalInformationDto> journals = journalFinder.findAllJournalInformationDto(ids);
     final Map<Long, Boolean> mapCanUseCCB = this.workpackService.getCanUseCCBMap(ids);
+            
     return  workpacks.stream()
                      .filter(workpack -> this.canAccessData.execute(workpack.getId(), authorization).canReadResource())
                      .map(workpack -> this.mapToWorkpackDetailParentDto(workpack, idWorkpackModel, milestoneDates, risks, journals, idPlan, mapCanUseCCB))
@@ -200,6 +204,7 @@ public class WorkpackController {
       idPlan,
       authorization
     );
+    
     final List<Workpack> workpacks = this.workpackService.findAllUsingParent(
       idPlan,
       idPlanModel,
@@ -209,9 +214,9 @@ public class WorkpackController {
       term,
       workpackLinked
     );
-
+    
     final List<WorkpackDetailParentDto> verify = getResponseWorkpackDetailParentDto(workpacks, authorization, idWorkpackModel, idPlan);
-
+    
     if (verify.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
@@ -470,9 +475,12 @@ public class WorkpackController {
     Map<Long, Boolean> mapCanUseCCB
   ) {
     final WorkpackDetailParentDto itemDetail = this.workpackService.getWorkpackDetailParentDto(workpack, idWorkpackModel);
+    
     itemDetail.applyLinkedStatus(workpack, idWorkpackModel);
 
     DashboardMonthDto monthDto = workpackService.getDashboardMonthDto(workpack, idPlan);
+    
+    
     itemDetail.setDashboard(monthDto);
 
     final List<MilestoneDateDto> milestones = milestoneDates
@@ -524,9 +532,9 @@ public class WorkpackController {
     }
 
     itemDetail.setCanUseCCB(
-      Boolean.TRUE.equals(mapCanUseCCB.get(workpack.getId()))
-  );
-
+        Boolean.TRUE.equals(mapCanUseCCB.get(workpack.getId()))
+    );
+        
     return itemDetail;
   }
 }
