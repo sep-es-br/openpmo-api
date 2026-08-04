@@ -3,13 +3,15 @@ package br.gov.es.openpmo.service.permissions.canaccess;
 import br.gov.es.openpmo.repository.permissions.PermissionRepository;
 import br.gov.es.openpmo.service.actors.IGetPersonFromAuthorization;
 import br.gov.es.openpmo.service.actors.IGetPersonFromAuthorization.PersonDataResponse;
-import org.springframework.stereotype.Component;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiPredicate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 @Component
 public class CanAccessData implements ICanAccessData {
@@ -17,7 +19,8 @@ public class CanAccessData implements ICanAccessData {
   private final IGetPersonFromAuthorization getPersonFromAuthorization;
   private final PermissionRepository permissionRepository;
 
-
+  private final Logger logger = LoggerFactory.getLogger(CanAccessData.class);
+  
   public CanAccessData(
     final IGetPersonFromAuthorization getPersonFromAuthorization,
     final PermissionRepository permissionRepository
@@ -35,6 +38,7 @@ public class CanAccessData implements ICanAccessData {
     final String key,
     final BiPredicate<? super List<Long>, ? super String> permissionFunction
   ) {
+      
     return permissionFunction.test(ids, key);
   }
 
@@ -105,7 +109,7 @@ public class CanAccessData implements ICanAccessData {
     if (isAdministrator) {
       return CanAccessDataResponse.administrator(personData.getKey(), self);
     }
-
+    
     final boolean editManagement = hasPermission(
       ids,
       personData.getKey(),
@@ -115,20 +119,44 @@ public class CanAccessData implements ICanAccessData {
     if (editManagement) {
       return CanAccessDataResponse.edit(personData.getKey(), true, self);
     }
+        
+    
+    // 1. Faz UMA ÚNICA travessia no grafo
+      Map<String, Object> accessInfo = this.permissionRepository.fetchAccessInfo(ids, personData.getKey());
+     
+    List<String> permissions = accessInfo != null && accessInfo.get("permissions") != null 
+        ? ((List) accessInfo.get("permissions"))
+        : Collections.emptyList();
 
-    final boolean edit = hasPermission(ids, personData.getKey(), this.permissionRepository::hasEditPermission);
-    if (edit) {
-      return CanAccessDataResponse.edit(personData.getKey(), false, self);
-    }
-    final boolean update = hasPermission(ids, personData.getKey(), this.permissionRepository::hasUpdatePermission);
-    if (update) {
-      return CanAccessDataResponse.update(personData.getKey(), false, self);
-    }
-    final boolean read = hasPermission(ids, personData.getKey(), this.permissionRepository::hasReadPermission);
-    if (read) {
-      return CanAccessDataResponse.read(personData.getKey(), false, self);
+    List<String> statusList = accessInfo != null && accessInfo.get("statusList") != null 
+        ? ((List) accessInfo.get("statusList"))
+        : Collections.emptyList();
+
+    // 2. Resolve as regras de negócio puramente em memória (ordem de prioridade)
+
+    // Regra EDIT
+    boolean hasEdit = permissions.contains("EDIT") || 
+                     (permissions.contains("UPDATE") && statusList.contains("Estruturação"));
+
+    if (hasEdit) {
+        return CanAccessDataResponse.edit(personData.getKey(), false, self);
     }
 
+    // Regra UPDATE
+    boolean hasUpdate = permissions.contains("UPDATE") || permissions.contains("EDIT");
+
+    if (hasUpdate) {
+        return CanAccessDataResponse.update(personData.getKey(), false, self);
+    }
+
+    // Regra READ
+    boolean hasRead = permissions.contains("READ") || permissions.contains("EDIT");
+
+    if (hasRead) {
+        return CanAccessDataResponse.read(personData.getKey(), false, self);
+    }
+    
+    
     return new CanAccessDataResponse(
       false,
       false,

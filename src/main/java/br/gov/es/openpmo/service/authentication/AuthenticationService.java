@@ -78,8 +78,6 @@ public class AuthenticationService {
 
     if (person.isPresent()) {
         final Person user = person.get();
-        
-        user.setName(providerService.getNome());
 
         IsAuthenticatedBy authRelationship = user.getAuthentications().stream().findFirst().orElse(null);
         if (authRelationship != null) {

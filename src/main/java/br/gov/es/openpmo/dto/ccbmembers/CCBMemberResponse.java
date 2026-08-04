@@ -2,13 +2,15 @@ package br.gov.es.openpmo.dto.ccbmembers;
 
 import br.gov.es.openpmo.dto.person.RoleResource;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 public class CCBMemberResponse {
+    
+    private final Long idWorkpack;
+
 
   private final PersonResponse person;
 
@@ -17,10 +19,12 @@ public class CCBMemberResponse {
   private Boolean active;
 
   public CCBMemberResponse(
+    final Long idWorkpack,
     final PersonResponse person,
     final List<? extends MemberAs> memberAs,
     final Boolean active
   ) {
+      this.idWorkpack = idWorkpack;
     this.person = person;
     this.memberAs = memberAs;
     this.active = active;
@@ -50,5 +54,9 @@ public class CCBMemberResponse {
   public void addAllRoles(final Collection<? extends RoleResource> roles) {
     this.person.addAllRoles(roles);
   }
+  
+    public Long getIdWorkpack() {
+        return idWorkpack;
+    }
 
 }

@@ -4,15 +4,15 @@ import br.gov.es.openpmo.dto.ccbmembers.CCBMemberResponse;
 import br.gov.es.openpmo.dto.ccbmembers.MemberAs;
 import br.gov.es.openpmo.model.relations.IsCCBMemberFor;
 import br.gov.es.openpmo.repository.IsCCBMemberRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 public class GetAllCCBMemberService implements IGetAllCCBMemberService {
@@ -29,8 +29,23 @@ public class GetAllCCBMemberService implements IGetAllCCBMemberService {
     return this.findAllCCBMmembersByWorkpackId(workpackId)
       .stream()
       .map(this::getCCBMemberResponse)
-      .filter(distinctByKey(CCBMemberResponse::getPersonId))
+      .filter(distinctByKeyAndWorkpack(CCBMemberResponse::getPersonId, CCBMemberResponse::getIdWorkpack))
       .collect(Collectors.toList());
+  }
+
+  private static <T> Predicate<T> distinctByKeyAndWorkpack(final Function<? super T, ?> keyExtractor, final Function<? super T, ?> workpackExtractor) {
+   
+      final Set<Object> seen = ConcurrentHashMap.newKeySet();
+      
+      return t -> {
+          
+          Object key = keyExtractor.apply(t);
+          Object workpack = workpackExtractor.apply(t);
+          
+          Object compositeKey = Arrays.asList(key, workpack);
+         
+      return seen.add(compositeKey);
+    };
   }
 
   private static <T> Predicate<T> distinctByKey(final Function<? super T, ?> keyExtractor) {
@@ -44,9 +59,10 @@ public class GetAllCCBMemberService implements IGetAllCCBMemberService {
 
   private CCBMemberResponse getCCBMemberResponse(final IsCCBMemberFor ccbMember) {
     final List<MemberAs> memberAs = this.getMemberAs(ccbMember);
-
+    
     return new CCBMemberResponse(
-      ccbMember.getPersonResponse(),
+        ccbMember.getWorkpackId(),
+        ccbMember.getPersonResponse(),
       memberAs,
       memberAs.stream().anyMatch(MemberAs::getActive)
     );
