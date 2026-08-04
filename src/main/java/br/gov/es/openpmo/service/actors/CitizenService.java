@@ -4,6 +4,7 @@ import br.gov.es.openpmo.dto.person.CitizenByNameQuery;
 import br.gov.es.openpmo.dto.person.CitizenDto;
 import br.gov.es.openpmo.dto.person.CitizenDtoBuilder;
 import br.gov.es.openpmo.dto.person.RoleResource;
+import br.gov.es.openpmo.dto.organization.OrganizationDto;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.actors.Organization;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.CITIZEN_NOT_FOUND;
 
@@ -100,8 +102,17 @@ public class CitizenService {
     final PublicIdentityResult identity,
     final Long idOffice
   ) {
-    final List<RoleResource> roles = identity.getAssignments().stream()
-      .map(this::toRoleResource)
+    final List<PublicAgentAssignment> assignments = identity.getAssignments();
+    final List<Optional<Organization>> localOrganizations = assignments.stream()
+      .map(assignment -> this.workPlaceService.resolveOrganizationByWorkLocationGuid(
+        assignment.getWorkLocationGuid()
+      ))
+      .collect(Collectors.toList());
+    final List<RoleResource> roles = IntStream.range(0, assignments.size())
+      .mapToObj(index -> this.toRoleResource(
+        assignments.get(index),
+        localOrganizations.get(index)
+      ))
       .collect(Collectors.toList());
     final Optional<Person> maybePerson = this.personService.findByKey(identity.getSub());
     final CitizenDtoBuilder builder = CitizenDtoBuilder.aCitizenDto()
@@ -112,6 +123,12 @@ public class CitizenService {
       .withContactEmail(identity.getCorporateEmail())
       .withIsUser(maybePerson.isPresent())
       .withRoles(roles);
+
+    localOrganizations.stream()
+      .filter(Optional::isPresent)
+      .map(Optional::get)
+      .findFirst()
+      .ifPresent(organization -> builder.withOrganization(new OrganizationDto(organization)));
 
     maybePerson.ifPresent(person -> {
       builder.withId(person.getId());
@@ -131,10 +148,13 @@ public class CitizenService {
     return builder.build();
   }
 
-  private RoleResource toRoleResource(final PublicAgentAssignment assignment) {
+  private RoleResource toRoleResource(
+    final PublicAgentAssignment assignment,
+    final Optional<Organization> localOrganization
+  ) {
     final OrganizationInfo organizationInfo = assignment.getOrganization();
     final String organization = organizationInfo == null
-      ? this.workPlaceService.resolveOrganizationByWorkLocationGuid(assignment.getWorkLocationGuid())
+      ? localOrganization
         .map(this::organizationName)
         .orElse(assignment.getWorkLocationGuid())
       : firstNotBlank(
