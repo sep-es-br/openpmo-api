@@ -119,9 +119,7 @@ public class CanAccessData implements ICanAccessData {
     if (editManagement) {
       return CanAccessDataResponse.edit(personData.getKey(), true, self);
     }
-    
-    long tm = System.currentTimeMillis();
-    
+        
     
     // 1. Faz UMA ÚNICA travessia no grafo
       Map<String, Object> accessInfo = this.permissionRepository.fetchAccessInfo(ids, personData.getKey());
@@ -155,7 +153,6 @@ public class CanAccessData implements ICanAccessData {
     boolean hasRead = permissions.contains("READ") || permissions.contains("EDIT");
 
     if (hasRead) {
-        logger.info("tm: " + (System.currentTimeMillis() - tm));
         return CanAccessDataResponse.read(personData.getKey(), false, self);
     }
     
