@@ -3,6 +3,7 @@ package br.gov.es.openpmo.dto.person.detail;
 import br.gov.es.openpmo.dto.file.AvatarDto;
 import br.gov.es.openpmo.dto.person.detail.permissions.OfficePermissionDetailDto;
 import br.gov.es.openpmo.dto.person.queries.PersonDetailQuery;
+import br.gov.es.openpmo.dto.organization.OrganizationDto;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
 import br.gov.es.openpmo.model.relations.IsInContactBookOf;
@@ -27,6 +28,7 @@ public class PersonDetailDto {
   private Boolean isUser;
   private AvatarDto avatar;
   private OfficePermissionDetailDto officePermission;
+  private OrganizationDto organization;
 
   public PersonDetailDto() {
   }
@@ -37,8 +39,15 @@ public class PersonDetailDto {
   ) {
     this.setPersonData(query);
     this.setContactData(query);
+    this.setOrganizationData(query);
     this.setUserAuthenticationData(query);
     this.setUserAvatar(query, uriComponentsBuilder);
+  }
+
+  private void setOrganizationData(final PersonDetailQuery query) {
+    if(query.getOrganization() != null) {
+      this.organization = new OrganizationDto(query.getOrganization());
+    }
   }
 
   private void setUserAvatar(
@@ -162,6 +171,14 @@ public class PersonDetailDto {
 
   public void setAvatar(final AvatarDto avatar) {
     this.avatar = avatar;
+  }
+
+  public OrganizationDto getOrganization() {
+    return this.organization;
+  }
+
+  public void setOrganization(final OrganizationDto organization) {
+    this.organization = organization;
   }
 
 }

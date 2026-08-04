@@ -3,6 +3,7 @@ package br.gov.es.openpmo.model.relations;
 import br.gov.es.openpmo.dto.person.PersonDto;
 import br.gov.es.openpmo.dto.person.PersonUpdateDto;
 import br.gov.es.openpmo.model.actors.Person;
+import br.gov.es.openpmo.model.actors.WorkPlace;
 import br.gov.es.openpmo.model.office.Office;
 import org.neo4j.ogm.annotation.EndNode;
 import org.neo4j.ogm.annotation.GeneratedValue;
@@ -30,7 +31,7 @@ public class IsInContactBookOf {
   private Person person;
 
   @EndNode
-  private Office office;
+  private WorkPlace workPlace;
 
   public IsInContactBookOf() {
   }
@@ -47,7 +48,7 @@ public class IsInContactBookOf {
     final Person person
   ) {
     this.person = person;
-    this.office = office;
+    this.setOffice(office);
     this.address = personDto.getAddress();
     this.email = personDto.getContactEmail();
     this.phoneNumber = personDto.getPhoneNumber();
@@ -58,7 +59,10 @@ public class IsInContactBookOf {
   }
 
   public void setOffice(final Office office) {
-    this.office = office;
+    if(this.workPlace == null) {
+      this.workPlace = new WorkPlace();
+    }
+    this.workPlace.setOffice(office);
   }
 
   @Transient
@@ -72,11 +76,19 @@ public class IsInContactBookOf {
 
   @Transient
   public Long getOfficeId() {
-    return this.office.getId();
+    return this.getOffice().getId();
   }
 
   public Office getOffice() {
-    return this.office;
+    return this.workPlace == null ? null : this.workPlace.getOffice();
+  }
+
+  public WorkPlace getWorkPlace() {
+    return this.workPlace;
+  }
+
+  public void setWorkPlace(final WorkPlace workPlace) {
+    this.workPlace = workPlace;
   }
 
   public Long getId() {

@@ -36,9 +36,6 @@ public class Person extends Actor {
   @Relationship(type = "IS_FAVORITED_BY")
   private Set<IsFavoritedBy> isFavoritedBy;
 
-    @Relationship(type = "WORKS_IN")
-  private Organization organization; //add
-
   @Transient
   public Optional<IsAuthenticatedBy> findAuthenticationDataBy(final String serverName) {
     if (this.authentications == null) return Optional.empty();
@@ -199,16 +196,6 @@ public class Person extends Actor {
     if (this.isFavoritedBy == null) return false;
     return this.isFavoritedBy.stream()
       .anyMatch(fav -> fav.isEqual(workpack.getId(), idPlan));
-  }
-
-
-  //add
-    public Organization getOrganization() {
-    return this.organization;
-  }
-
-  public void setOrganization(final Organization organization) {
-    this.organization = organization;
   }
 
 }

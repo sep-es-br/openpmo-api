@@ -41,6 +41,7 @@ import br.gov.es.openpmo.service.actors.PersonService;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.journals.JournalCreator;
 import br.gov.es.openpmo.service.office.OfficeService;
+import br.gov.es.openpmo.service.organization.WorkPlaceService;
 import br.gov.es.openpmo.service.permissions.OfficePermissionService;
 import br.gov.es.openpmo.service.permissions.PlanPermissionService;
 import br.gov.es.openpmo.service.permissions.RoleService;
@@ -110,6 +111,8 @@ public class StakeholderService {
 
   private final TokenService tokenService;
 
+  private final WorkPlaceService workPlaceService;
+
   @Value("${app.login.server.idsvr.name}")
   private String authenticationServer;
 
@@ -131,7 +134,8 @@ public class StakeholderService {
     final AppProperties appProperties,
     final TextSimilarityScore textSimilarityScore,
     final JournalCreator journalCreator,
-    final TokenService tokenService
+    final TokenService tokenService,
+    final WorkPlaceService workPlaceService
   ) {
     this.personService = personService;
     this.serviceOrganization = serviceOrganization;
@@ -150,6 +154,7 @@ public class StakeholderService {
     this.textSimilarityScore = textSimilarityScore;
     this.journalCreator = journalCreator;
     this.tokenService = tokenService;
+    this.workPlaceService = workPlaceService;
   }
 
   private static void orderByScore(final List<? extends StakeholderDto> dto) {
@@ -331,6 +336,7 @@ public class StakeholderService {
       isInContactBookOf.setOffice(office);
       this.isInContactBookOfService.save(isInContactBookOf);
     }
+    this.assignOrganization(person, office, request.getPerson());
   }
 
   private CanAccessWorkpack buildCanAccessWorkpack(
@@ -360,13 +366,6 @@ private Person buildPerson(
 
     final String name = personDto.getName() != null ? personDto.getName() : personDto.getFullName();
     person.setName(name);
-
-    if (personDto.getOrganization() != null && personDto.getOrganization().getId() != null) {
-      final Organization organization = this.serviceOrganization.findById(personDto.getOrganization().getId());
-      person.setOrganization(organization);
-    } else {
-      person.setOrganization(null);
-    }
 
     return person;
   }
@@ -417,6 +416,7 @@ private Person buildPerson(
     isInContactBookOf.setOffice(officeByWorkpack);
 
     this.isInContactBookOfService.save(isInContactBookOf);
+    this.assignOrganization(person, officeByWorkpack, dto);
   }
 
   private void updateContactRelationshipWithOffice(
@@ -437,6 +437,7 @@ private Person buildPerson(
     isInContactBookOf.setOffice(officeByWorkpack);
 
     this.isInContactBookOfService.update(isInContactBookOf);
+    this.assignOrganization(person, officeByWorkpack, dto);
   }
 
   @Transactional
@@ -763,12 +764,30 @@ private Person buildPerson(
       maybeContactInformation,
       maybeAuthentication
     );
+    this.officeService.findOfficeByPlan(idPlan)
+      .flatMap(office -> this.workPlaceService.findOrganization(person.getId(), office.getId()))
+      .ifPresent(organization -> personDto.setOrganization(new OrganizationDto(organization)));
     final List<RoleResource> roles = this.roleService.getRolesByKey(
       idPerson,
       personDto.getKey()
     );
     personDto.addAllRoles(roles);
     stakeholderPersonDto.setPerson(personDto);
+  }
+
+  private void assignOrganization(
+    final Person person,
+    final Office office,
+    final PersonStakeholderParamDto personDto
+  ) {
+    if(personDto.getOrganization() == null || personDto.getOrganization().getId() == null) {
+      return;
+    }
+    this.workPlaceService.selectOrganization(
+      person.getId(),
+      office.getId(),
+      personDto.getOrganization().getId()
+    );
   }
 
   private void fillRoles(

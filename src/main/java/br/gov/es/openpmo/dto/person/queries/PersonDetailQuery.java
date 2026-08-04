@@ -3,6 +3,7 @@ package br.gov.es.openpmo.dto.person.queries;
 
 import br.gov.es.openpmo.model.actors.File;
 import br.gov.es.openpmo.model.actors.Person;
+import br.gov.es.openpmo.model.actors.Organization;
 import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.relations.CanAccessPlan;
 import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
@@ -18,6 +19,7 @@ public class PersonDetailQuery {
   private final Office office;
   private final IsAuthenticatedBy authentication;
   private final IsInContactBookOf contact;
+  private final Organization organization;
   private final File avatar;
   private final Set<CanAccessPlan> canAccessPlans;
 
@@ -26,6 +28,7 @@ public class PersonDetailQuery {
     final Office office,
     final IsAuthenticatedBy authentication,
     final IsInContactBookOf contact,
+    final Organization organization,
     final Set<CanAccessPlan> canAccessPlans,
     final File avatar
   ) {
@@ -33,6 +36,7 @@ public class PersonDetailQuery {
     this.office = office;
     this.authentication = authentication;
     this.contact = contact;
+    this.organization = organization;
     this.canAccessPlans = canAccessPlans;
     this.avatar = avatar;
   }
@@ -55,6 +59,10 @@ public class PersonDetailQuery {
 
   public IsInContactBookOf getContact() {
     return this.contact;
+  }
+
+  public Organization getOrganization() {
+    return this.organization;
   }
 
   public Long getIdPerson() {

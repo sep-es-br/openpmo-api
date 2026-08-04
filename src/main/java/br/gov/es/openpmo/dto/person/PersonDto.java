@@ -77,9 +77,6 @@ public class PersonDto {
     dto.setName(person.getName());
     dto.setFullName(person.getFullName());
     dto.setAdministrator(person.getAdministrator());
-    if (person.getOrganization() != null) {
-      dto.setOrganization(new OrganizationDto(person.getOrganization()));
-    }
     return dto;
 }
 

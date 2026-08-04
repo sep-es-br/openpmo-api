@@ -32,7 +32,7 @@ public class FindStakeholderAndPermissionUsingCustomFilter extends FindStakehold
       .append("OPTIONAL MATCH (actor)-[isStakeholderIn:IS_STAKEHOLDER_IN]->(workpack) ")
       .append("OPTIONAL MATCH (actor)-[canAccessWorkpack:CAN_ACCESS_WORKPACK]->(workpack) ")
       .append("OPTIONAL MATCH (workpack)-[belongsTo:BELONGS_TO]->(plan:Plan) ")
-      .append("OPTIONAL MATCH (person)-[contact:IS_IN_CONTACT_BOOK_OF]->(office:Office) ")
+      .append("OPTIONAL MATCH (person)-[contact:IS_IN_CONTACT_BOOK_OF]->(:WorkPlace)-[:`FOR`]->(office:Office) ")
       .append("OPTIONAL MATCH (office)<-[adoptedBy:IS_ADOPTED_BY]-(plan)")
       .append(" ");
   }

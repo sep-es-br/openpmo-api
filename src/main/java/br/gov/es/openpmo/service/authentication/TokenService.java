@@ -115,4 +115,10 @@ public class TokenService {
     return this.getPersonId(token, TokenType.AUTHENTICATION);
   }
 
+  public String getExternalIdentityKey(final String authorization) {
+    final String token = authorization.substring(BEARER.length());
+    final Object key = this.getUser(token, TokenType.AUTHENTICATION).get("key");
+    return key == null ? null : key.toString();
+  }
+
 }
