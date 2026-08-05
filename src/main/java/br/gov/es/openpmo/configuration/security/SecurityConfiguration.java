@@ -74,6 +74,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
               
         .authorizeRequests()
           .antMatchers("/signout").permitAll()
+          .antMatchers("/configuration").permitAll()
           .antMatchers("/acesso-cidadao-response.html", "/signin/**").permitAll()
           .anyRequest().authenticated()
 

@@ -66,6 +66,7 @@ public class SecurityFilter extends OncePerRequestFilter {
            || url.endsWith("/signout")
            || (url.contains("/avatar") && url.endsWith("/person"))
            || url.endsWith("/versions")
+           || url.endsWith("/configuration")
            || url.endsWith("/acesso-cidadao-response.html")
            || url.endsWith("/acesso-cidadao-response")
            || url.contains("/evidence/image")
