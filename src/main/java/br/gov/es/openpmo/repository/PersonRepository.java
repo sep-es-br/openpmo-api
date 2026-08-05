@@ -13,6 +13,7 @@ import br.gov.es.openpmo.model.relations.IsCCBMemberFor;
 import br.gov.es.openpmo.model.relations.IsInContactBookOf;
 import br.gov.es.openpmo.model.relations.IsStakeholderIn;
 import br.gov.es.openpmo.model.workpacks.Workpack;
+import br.gov.es.openpmo.utils.DisplayModeEnum;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -83,16 +84,17 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
     Long[] list
   );
 
-  @Query("MATCH (person:Person)-[isInContactBookOf:IS_IN_CONTACT_BOOK_OF]->(workPlace:WorkPlace)" +
-         "-[forOffice:`FOR`]->(office:Office) " +
-         "OPTIONAL MATCH (workPlace)-[isOrganization:`IS`]->(organization:Organization) " +
+  @Query("MATCH (person:Person)-[isInContactBookOf:IS_IN_CONTACT_BOOK_OF]->(office:Office) " +
+         "OPTIONAL MATCH (workPlace:WorkPlace)-[ofPerson:OF]->(person) " +
+         "WHERE (workPlace)-[:`FOR`]->(office) " +
+         "OPTIONAL MATCH (organization:Organization)-[isOrganization:`IS`]->(workPlace) " +
          "OPTIONAL MATCH (person)-[isAuthenticatedBy:IS_AUTHENTICATED_BY]->(authService:AuthService) " +
          "OPTIONAL MATCH (person)<-[isPortraitOf:IS_A_PORTRAIT_OF]-(avatar:File)" +
          "OPTIONAL MATCH (person)-[canAccessPlan:CAN_ACCESS_PLAN]->(plan:Plan)-[isAdoptedBy:IS_ADOPTED_BY]->(office) " +
-         "WITH person, workPlace, forOffice, office, organization, isOrganization, canAccessPlan, plan, isInContactBookOf, " +
+         "WITH person, workPlace, ofPerson, office, organization, isOrganization, canAccessPlan, plan, isInContactBookOf, " +
          "isAdoptedBy, isAuthenticatedBy, authService, isPortraitOf, avatar " +
          "WHERE id(person)=$personId AND id(office)=$officeId " +
-         "RETURN person, workPlace, forOffice, office, organization, isOrganization, authService, " +
+         "RETURN person, workPlace, ofPerson, office, organization, isOrganization, authService, " +
          "isInContactBookOf AS contact, " +
          "isAuthenticatedBy AS authentication, " +
          "avatar AS avatar, " +
@@ -105,10 +107,9 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
     Long officeId
   );
 
-  @Query("MATCH (person:Person)-[isInContactBookOf:IS_IN_CONTACT_BOOK_OF]->(workPlace:WorkPlace)" +
-         "-[forOffice:`FOR`]->(office:Office) " +
+  @Query("MATCH (person:Person)-[isInContactBookOf:IS_IN_CONTACT_BOOK_OF]->(office:Office) " +
          "WHERE id(person)=$idPerson AND id(office)=$idOffice " +
-         "RETURN person, workPlace, forOffice, office, isInContactBookOf")
+         "RETURN person, office, isInContactBookOf")
   Optional<IsInContactBookOf> findContactBookBy(
     Long idPerson,
     Long idOffice
@@ -126,18 +127,17 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
     Long idOffice
   );
 
-  @Query("MATCH (p:Person)-[i:IS_IN_CONTACT_BOOK_OF]->(wp:WorkPlace)-[forOffice:`FOR`]->(o:Office)" +
+  @Query("MATCH (p:Person)-[i:IS_IN_CONTACT_BOOK_OF]->(o:Office)" +
          "<-[]-(:Plan)<-[]-(w:Workpack) " +
          "WHERE id(w)=$idWorkpack AND toLower(p.fullName) CONTAINS toLower($partialName) " +
          "AND NOT (p)-[:IS_AUTHENTICATED_BY]->(:AuthService) " +
-         "RETURN collect(DISTINCT p) AS persons, collect(i) AS contacts, collect(wp) AS workPlaces, " +
-         "collect(forOffice) AS workPlaceOffices, o AS office")
+         "RETURN collect(DISTINCT p) AS persons, collect(i) AS contacts, o AS office")
   Optional<PersonByFullNameQuery> findPersonsInOfficeByFullName(
     String partialName,
     Long idWorkpack
   );
 
-  @Query("MATCH (person:Person)-[isInContactBookOf:IS_IN_CONTACT_BOOK_OF]->(:WorkPlace)-[:`FOR`]->(office:Office) " +
+  @Query("MATCH (person:Person)-[isInContactBookOf:IS_IN_CONTACT_BOOK_OF]->(office:Office) " +
          "OPTIONAL MATCH (person)-[canAccessOffice:CAN_ACCESS_OFFICE]->(office) " +
          "OPTIONAL MATCH (person)-[canAccessPlan:CAN_ACCESS_PLAN]->(plan:Plan)-[isAdoptedBy:IS_ADOPTED_BY]->(office) " +
          "OPTIONAL MATCH (person)-[canAccessWorkpack:CAN_ACCESS_WORKPACK]->(workpack:Workpack)" +
@@ -152,7 +152,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
     Long idWorkpack
   );
 
-  @Query("MATCH (person:Person {fullName: $fullName})-[:IS_IN_CONTACT_BOOK_OF]->(:WorkPlace)-[:`FOR`]->(office:Office) " +
+  @Query("MATCH (person:Person {fullName: $fullName})-[:IS_IN_CONTACT_BOOK_OF]->(office:Office) " +
     "OPTIONAL MATCH (person)-[:CAN_ACCESS_WORKPACK]->(workpack:Workpack)-[:BELONGS_TO]->(:Plan)-[:IS_ADOPTED_BY]->(office) " +
     "WITH * " +
     "WHERE id(workpack)=$idWorkpack " +
@@ -163,13 +163,13 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   );
 
   @Query("MATCH (person:Person) " +
-         "OPTIONAL MATCH (person)-[contact:IS_IN_CONTACT_BOOK_OF]->(workPlace:WorkPlace)-[forOffice:`FOR`]->(office:Office) " +
-         "WITH person, contact, workPlace, forOffice, office " +
+         "OPTIONAL MATCH (person)-[contact:IS_IN_CONTACT_BOOK_OF]->(office:Office) " +
+         "WITH person, contact, office " +
          "WHERE id(person)=$personId " +
-         "RETURN contact, person, workPlace, forOffice, office")
+         "RETURN contact, person, office")
   Set<IsInContactBookOf> findAllContactInformationByPersonId(Long personId);
 
-  @Query("MATCH (person:Person)-[:IS_IN_CONTACT_BOOK_OF]->(:WorkPlace)-[:`FOR`]->(office:Office) " +
+  @Query("MATCH (person:Person)-[:IS_IN_CONTACT_BOOK_OF]->(office:Office) " +
          "WHERE id(person)=$personId " +
          "RETURN office")
   Set<Office> findOfficesByPersonId(Long personId);
@@ -189,19 +189,19 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   );
 
   @Query("MATCH (person:Person)-[isAuthenticatedBy:IS_AUTHENTICATED_BY]->(authService:AuthService{server: $authName}) " +
-         "OPTIONAL MATCH (person)-[isInContactBookOf:IS_IN_CONTACT_BOOK_OF]->(workPlace:WorkPlace)-[forOffice:`FOR`]->(office:Office) " +
+         "OPTIONAL MATCH (person)-[isInContactBookOf:IS_IN_CONTACT_BOOK_OF]->(office:Office) " +
          "OPTIONAL MATCH (person)<-[isPortraitOf:IS_A_PORTRAIT_OF]-(avatar:File) " +
-         "WITH person, isAuthenticatedBy, authService, isInContactBookOf, workPlace, forOffice, office, isPortraitOf, avatar " +
+         "WITH person, isAuthenticatedBy, authService, isInContactBookOf, office, isPortraitOf, avatar " +
          "WHERE isAuthenticatedBy.key=$key " +
-         "RETURN person, isAuthenticatedBy, authService, isInContactBookOf, workPlace, forOffice, office, isPortraitOf, avatar")
+         "RETURN person, isAuthenticatedBy, authService, isInContactBookOf, office, isPortraitOf, avatar")
   Optional<Person> findByKey(@Param("key") String key, @Param("authName") String authName);
 
   @Query("MATCH (person:Person)-[isAuthenticatedBy:IS_AUTHENTICATED_BY]->(authService:AuthService{server: $authName}) " +
-         "OPTIONAL MATCH (person)-[isInContactBookOf:IS_IN_CONTACT_BOOK_OF]->(workPlace:WorkPlace)-[forOffice:`FOR`]->(office:Office) " +
+         "OPTIONAL MATCH (person)-[isInContactBookOf:IS_IN_CONTACT_BOOK_OF]->(office:Office) " +
          "OPTIONAL MATCH (person)<-[isPortraitOf:IS_A_PORTRAIT_OF]-(avatar:File) " +
-         "WITH person, isAuthenticatedBy, authService, isInContactBookOf, workPlace, forOffice, office, isPortraitOf, avatar " +
+         "WITH person, isAuthenticatedBy, authService, isInContactBookOf, office, isPortraitOf, avatar " +
          "WHERE isAuthenticatedBy.email=$email " +
-         "RETURN person, isAuthenticatedBy, authService, isInContactBookOf, workPlace, forOffice, office, isPortraitOf, avatar")
+         "RETURN person, isAuthenticatedBy, authService, isInContactBookOf, office, isPortraitOf, avatar")
   Optional<Person> findByEmail(@Param("email") String email, @Param("authName") String authName);
 
   @Query("MATCH (person:Person)<-[:IS_FAVORITED_BY]-(workpack:Workpack) " +
@@ -286,6 +286,26 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
                   "RETURN p "
   )
   Person updateLocalWork(Long personId, Long idOffice, Long idPlan, Long idWorkpack, Long idWorkpackModelLinked);
+
+  @Query(
+    "MATCH (p:Person) WHERE id(p) = $personId " +
+    "SET p.idOffice = $idOffice, " +
+    "p.idWorkpack = $idWorkpack, " +
+    "p.idWorkpackModelLinked = $idWorkpackModelLinked, " +
+    "p.pageSize = $pageSize, " +
+    "p.fixedMenu = $fixedMenu, " +
+    "p.displayMode = $displayMode " +
+    "RETURN p"
+  )
+  Person updatePreferences(
+    Long personId,
+    Long idOffice,
+    Long idWorkpack,
+    Long idWorkpackModelLinked,
+    Integer pageSize,
+    Boolean fixedMenu,
+    DisplayModeEnum displayMode
+  );
 
   @Query (
           "MATCH (p:Person) WHERE id(p) = $personId " +

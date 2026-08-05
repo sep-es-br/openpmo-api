@@ -25,13 +25,24 @@ public class WorkPlaceMigrationService implements ApplicationRunner {
   @Override
   @Transactional
   public void run(final ApplicationArguments args) {
-    final Long migrated = this.repository.migrateLegacyContacts();
-    if(migrated != null && migrated > 0L) {
-      LOGGER.info("Migrated {} contact-book relationships to WorkPlace nodes with legacy backups.", migrated);
-    }
-    final Long migratedOrganizations = this.repository.migrateLegacyOrganizations();
-    if(migratedOrganizations != null && migratedOrganizations > 0L) {
-      LOGGER.info("Migrated {} person-organization relationships to WorkPlace nodes with legacy backups.", migratedOrganizations);
+    log("Repaired contact relationships that incorrectly targeted WorkPlace nodes",
+      this.repository.repairIncorrectContactTargets());
+    log("Restored direct contact relationships and removed accidental legacy relationships",
+      this.repository.removeAccidentalLegacyContacts());
+    log("Repaired Organization-IS-WorkPlace relationship directions",
+      this.repository.repairOrganizationDirection());
+    log("Removed WorkPlace nodes without OF-Person or FOR-Office",
+      this.repository.removeInvalidWorkPlaces());
+    log("Created missing WorkPlace nodes", this.repository.createMissingWorkPlaces());
+    log("Migrated Person-WORKS_IN-Organization relationships",
+      this.repository.migratePersonOrganizations());
+    log("Removed accidental legacy organization relationships",
+      this.repository.removeAccidentalLegacyOrganizations());
+  }
+
+  private static void log(final String operation, final Long affected) {
+    if(affected != null && affected > 0L) {
+      LOGGER.info("{}: {}.", operation, affected);
     }
   }
 }

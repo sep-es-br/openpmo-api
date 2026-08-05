@@ -2,12 +2,14 @@ package br.gov.es.openpmo.service.organization;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import br.gov.es.openpmo.model.actors.Organization;
+import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.repository.OrganizationRepository;
 import br.gov.es.openpmo.repository.WorkPlaceRepository;
 import br.gov.es.openpmo.service.authentication.TokenService;
@@ -137,6 +139,34 @@ public class WorkPlaceServiceTest {
       org.mockito.ArgumentMatchers.anyString(),
       org.mockito.ArgumentMatchers.anyString()
     );
+  }
+
+  @Test
+  public void shouldFailWhenThePersonHasNoWorkPlaceForTheOffice() {
+    final Organization organization = organization(20L, "organization-guid");
+    when(this.organizationRepository.findById(20L)).thenReturn(Optional.of(organization));
+    when(this.repository.replaceOrganization(1L, 2L, 20L)).thenReturn(0L);
+
+    try {
+      this.service.selectOrganization(1L, 2L, 20L);
+      fail("Expected the missing contact data to prevent a false successful update.");
+    }
+    catch(final NegocioException expected) {
+      assertEquals("contact-data.not.found", expected.getMessage());
+    }
+  }
+
+  @Test
+  public void shouldCreateTheMissingWorkPlaceBeforeSelectingTheOrganization() {
+    final Organization organization = organization(20L, "organization-guid");
+    when(this.organizationRepository.findById(20L)).thenReturn(Optional.of(organization));
+    when(this.repository.replaceOrganization(1L, 2L, 20L)).thenReturn(1L);
+
+    assertEquals(organization, this.service.selectOrganization(1L, 2L, 20L));
+
+    verify(this.repository).createWorkPlaceWithOrganizationIfMissing(1L, 2L, 20L);
+    verify(this.repository).removeDuplicateWorkPlaces(1L, 2L);
+    verify(this.repository).replaceOrganization(1L, 2L, 20L);
   }
 
   private static Organization organization(final Long id, final String guid) {

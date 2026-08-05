@@ -29,7 +29,7 @@ public interface ProjectModelRepository extends Neo4jRepository<ProjectModel, Lo
         "  AND any(role IN model.notificationsSelectedRoles " +
         "          WHERE toLower(role) = toLower(rel.role)) " +
         "OPTIONAL MATCH (p)-[:BELONGS_TO]->(plan:Plan)-[:IS_ADOPTED_BY]->(office:Office) " +
-        "OPTIONAL MATCH (person)-[c:IS_IN_CONTACT_BOOK_OF]->(:WorkPlace)-[:`FOR`]->(office) " +
+        "OPTIONAL MATCH (person)-[c:IS_IN_CONTACT_BOOK_OF]->(office) " +
         "OPTIONAL MATCH (person)-[auth:IS_AUTHENTICATED_BY]->(:AuthService) " +
         "OPTIONAL MATCH (p)<-[:FEATURES]-(pProp:Property)-[:IS_DRIVEN_BY]->(pPM:PropertyModel) " +
         "WHERE pPM.name IN ['Status', 'Situação'] " +
@@ -100,7 +100,7 @@ public interface ProjectModelRepository extends Neo4jRepository<ProjectModel, Lo
         "  AND any(role IN model.notificationsSelectedRoles " +
         "          WHERE toLower(role) = toLower(rel.role)) " +
         "OPTIONAL MATCH (p)-[:BELONGS_TO]->(plan:Plan)-[:IS_ADOPTED_BY]->(office:Office) " +
-        "OPTIONAL MATCH (person)-[c:IS_IN_CONTACT_BOOK_OF]->(:WorkPlace)-[:`FOR`]->(office) " +
+        "OPTIONAL MATCH (person)-[c:IS_IN_CONTACT_BOOK_OF]->(office) " +
         "OPTIONAL MATCH (person)-[auth:IS_AUTHENTICATED_BY]->(:AuthService) " +
         "OPTIONAL MATCH (p)<-[:FEATURES]-(pProp:Property)-[:IS_DRIVEN_BY]->(pPM:PropertyModel) " +
         "WHERE pPM.name IN ['Status', 'Situação'] " +

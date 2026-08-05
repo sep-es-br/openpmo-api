@@ -3,7 +3,6 @@ package br.gov.es.openpmo.model.relations;
 import br.gov.es.openpmo.dto.person.PersonDto;
 import br.gov.es.openpmo.dto.person.PersonUpdateDto;
 import br.gov.es.openpmo.model.actors.Person;
-import br.gov.es.openpmo.model.actors.WorkPlace;
 import br.gov.es.openpmo.model.office.Office;
 import org.neo4j.ogm.annotation.EndNode;
 import org.neo4j.ogm.annotation.GeneratedValue;
@@ -31,7 +30,7 @@ public class IsInContactBookOf {
   private Person person;
 
   @EndNode
-  private WorkPlace workPlace;
+  private Office office;
 
   public IsInContactBookOf() {
   }
@@ -59,10 +58,7 @@ public class IsInContactBookOf {
   }
 
   public void setOffice(final Office office) {
-    if(this.workPlace == null) {
-      this.workPlace = new WorkPlace();
-    }
-    this.workPlace.setOffice(office);
+    this.office = office;
   }
 
   @Transient
@@ -80,15 +76,7 @@ public class IsInContactBookOf {
   }
 
   public Office getOffice() {
-    return this.workPlace == null ? null : this.workPlace.getOffice();
-  }
-
-  public WorkPlace getWorkPlace() {
-    return this.workPlace;
-  }
-
-  public void setWorkPlace(final WorkPlace workPlace) {
-    this.workPlace = workPlace;
+    return this.office;
   }
 
   public Long getId() {

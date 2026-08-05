@@ -582,7 +582,17 @@ public class PersonService {
         Optional.ofNullable(newPreferences.getDisplayMode())
             .ifPresent(person::setDisplayMode);
         
-        repository.save(person);
+        // Persist only preference properties. Saving a partially loaded Person
+        // graph can recreate contact WorkPlaces without their FOR relationship.
+        this.repository.updatePreferences(
+          person.getId(),
+          person.getIdOffice(),
+          person.getIdWorkpack(),
+          person.getIdWorkpackModelLinked(),
+          person.getPageSize(),
+          person.getFixedMenu(),
+          person.getDisplayMode()
+        );
       
   }
 }

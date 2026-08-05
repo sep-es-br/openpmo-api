@@ -77,20 +77,7 @@ public class WorkPlaceService {
     }
 
     try {
-      final PublicIdentityResult identityResult = identity.findPublicAgentBySub(externalSub);
-      if(!PublicIdentityStatus.FOUND.equals(identityResult.getStatus()) || identityResult.getAssignments().isEmpty()) {
-        return Optional.empty();
-      }
-
-      final PublicAgentAssignment assignment = identityResult.getAssignments().get(0);
-      final String workLocationGuid = assignment.getWorkLocationGuid();
-      if(isBlank(workLocationGuid)) {
-        return Optional.empty();
-      }
-
-      final Optional<Organization> localOrganization = this.resolveOrganizationByWorkLocationGuid(
-        workLocationGuid
-      );
+      final Optional<Organization> localOrganization = this.resolveOrganizationByExternalSub(externalSub);
       localOrganization.ifPresent(value -> this.repository.replaceOrganization(
         personId,
         officeId,
@@ -100,6 +87,29 @@ public class WorkPlaceService {
     }
     catch(final RuntimeException exception) {
       LOGGER.warn("Unable to resolve the authenticated user's organization.", exception);
+      return Optional.empty();
+    }
+  }
+
+  public Optional<Organization> resolveOrganizationByExternalSub(final String externalSub) {
+    if(isBlank(externalSub)) {
+      return Optional.empty();
+    }
+    final IPublicIdentityProvider identity = this.identityProvider.getIfAvailable();
+    if(identity == null) {
+      return Optional.empty();
+    }
+
+    try {
+      final PublicIdentityResult identityResult = identity.findPublicAgentBySub(externalSub);
+      if(!PublicIdentityStatus.FOUND.equals(identityResult.getStatus()) || identityResult.getAssignments().isEmpty()) {
+        return Optional.empty();
+      }
+      final PublicAgentAssignment assignment = identityResult.getAssignments().get(0);
+      return this.resolveOrganizationByWorkLocationGuid(assignment.getWorkLocationGuid());
+    }
+    catch(final RuntimeException exception) {
+      LOGGER.warn("Unable to resolve organization for external identity {}.", externalSub, exception);
       return Optional.empty();
     }
   }
@@ -136,9 +146,19 @@ public class WorkPlaceService {
     final Long officeId,
     final Long organizationId
   ) {
-    this.organizationRepository.findById(organizationId)
+    final Organization organization = this.organizationRepository.findById(organizationId)
       .orElseThrow(() -> new NegocioException(ApplicationMessage.ORGANIZATION_NOT_FOUND));
-    return this.repository.replaceOrganization(personId, officeId, organizationId);
+
+    // There must be only one structural WorkPlace for a person in an office.
+    // Consolidate old duplicates before changing the selected organization.
+    this.repository.removeDuplicateWorkPlaces(personId, officeId);
+    this.repository.createWorkPlaceWithOrganizationIfMissing(personId, officeId, organizationId);
+
+    final Long updated = this.repository.replaceOrganization(personId, officeId, organizationId);
+    if(updated == null || updated == 0L) {
+      throw new NegocioException(ApplicationMessage.CONTACT_DATA_NOT_FOUND);
+    }
+    return organization;
   }
 
   private static boolean isBlank(final String value) {

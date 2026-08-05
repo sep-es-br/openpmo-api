@@ -7,6 +7,8 @@ import org.neo4j.ogm.annotation.Relationship;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 @NodeEntity
 public class Organization extends Actor {
@@ -22,12 +24,23 @@ public class Organization extends Actor {
   @Relationship(type = "IS_REGISTERED_IN")
   private List<OrganizationOfficeRelationship> organizationOffices = new ArrayList<>();
 
+  @Relationship(type = "IS")
+  private Set<WorkPlace> workPlaces = new HashSet<>();
+
   public List<OrganizationOfficeRelationship> getOrganizationOffices() {
     return organizationOffices;
   }
 
   public void setOrganizationOffices(List<OrganizationOfficeRelationship> organizationOffices) {
     this.organizationOffices = organizationOffices;
+  }
+
+  public Set<WorkPlace> getWorkPlaces() {
+    return this.workPlaces;
+  }
+
+  public void setWorkPlaces(final Set<WorkPlace> workPlaces) {
+    this.workPlaces = workPlaces;
   }
 
   public OrganizationEnum getSector() {

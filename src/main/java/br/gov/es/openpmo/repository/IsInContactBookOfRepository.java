@@ -9,30 +9,28 @@ import java.util.Optional;
 
 public interface IsInContactBookOfRepository extends Neo4jRepository<IsInContactBookOf, Long> {
 
-  @Query("MATCH (person:Person)-[isInContactBookOf:IS_IN_CONTACT_BOOK_OF]->(workPlace:WorkPlace)" +
-         "-[forOffice:`FOR`]->(office:Office)," +
+  @Query("MATCH (person:Person)-[isInContactBookOf:IS_IN_CONTACT_BOOK_OF]->(office:Office)," +
          "(office)<-[isAdoptedBy:IS_ADOPTED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO]-(workpack:Workpack) " +
          "WHERE id(person)=$personId " +
          "AND id(workpack)=$workpackId " +
          "AND id(plan)=$planId " +
-         "RETURN person, isInContactBookOf, workPlace, forOffice, office ")
+         "RETURN person, isInContactBookOf, office ")
   Optional<IsInContactBookOf> findIsInContactBookOfUsingPersonIdAndWorkpackId(
     Long personId,
     Long workpackId,
     Long planId
   );
 
-  @Query("MATCH (person:Person)-[isInContactBookOf:IS_IN_CONTACT_BOOK_OF]->(workPlace:WorkPlace)" +
-         "-[forOffice:`FOR`]->(office:Office) " +
+  @Query("MATCH (person:Person)-[isInContactBookOf:IS_IN_CONTACT_BOOK_OF]->(office:Office) " +
          "WHERE id(person)=$personId " +
          "AND id(office)=$idOffice " +
-         "RETURN person, isInContactBookOf, workPlace, forOffice, office ")
+         "RETURN person, isInContactBookOf, office ")
   Optional<IsInContactBookOf> findIsInContactBookOfByPersonIdAndOfficeId(
     @Param("personId") Long personId,
     @Param("idOffice") Long idOffice
   );
 
-  @Query("MATCH (p:Person)-[i:IS_IN_CONTACT_BOOK_OF]->(:WorkPlace)-[:`FOR`]->(o:Office) " +
+  @Query("MATCH (p:Person)-[i:IS_IN_CONTACT_BOOK_OF]->(o:Office) " +
          "where id(p)=$personId and id(o)=$officeId " +
          "return count(i)>0")
   boolean existsByPersonIdAndOfficeId(
@@ -42,24 +40,25 @@ public interface IsInContactBookOfRepository extends Neo4jRepository<IsInContact
 
   @Query("MATCH (p:Person) where id(p) = $personId " +
           "MATCH (o:Office) where id(o) = $officeId " +
-          "CREATE (wp:WorkPlace) " +
           "CREATE (p)-[r:IS_IN_CONTACT_BOOK_OF { " +
           "  email: $email, " +
           "  address: $address, " +
           "  phoneNumber: $phoneNumber " +
-          "}]->(wp) " +
-          "CREATE (wp)-[forOffice:`FOR`]->(o) " +
-          "RETURN p, r, wp, forOffice, o")
+          "}]->(o) " +
+          "CREATE (wp:WorkPlace) " +
+          "CREATE (wp)-[:OF]->(p) " +
+          "CREATE (wp)-[:`FOR`]->(o) " +
+          "RETURN p, r, o")
   IsInContactBookOf createIsInContactBookOf(Long personId, Long officeId,
                                        String email, String address,
                                        String phoneNumber);
 
-  @Query("MATCH (p:Person)-[r:IS_IN_CONTACT_BOOK_OF]->(wp:WorkPlace)-[forOffice:`FOR`]->(o:Office) WHERE " +
+  @Query("MATCH (p:Person)-[r:IS_IN_CONTACT_BOOK_OF]->(o:Office) WHERE " +
           "id(p) = $personId and id(o) = $officeId " +
           "SET r.email = $email, " +
           "    r.address = $address, " +
           "    r.phoneNumber = $phoneNumber " +
-          "RETURN p, r, wp, forOffice, o")
+          "RETURN p, r, o")
   IsInContactBookOf updateIsInContactBookOf(Long personId, Long officeId,
                                       String email, String address,
                                       String phoneNumber);

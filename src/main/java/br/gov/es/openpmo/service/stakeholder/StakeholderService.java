@@ -278,7 +278,9 @@ public class StakeholderService {
       if (maybePerson.isPresent()) {
         final Person person = this.buildPerson(maybePerson.get(), request);
         this.createOrUpdateContactInformation(request, personId, workpackId, person);
-        this.personService.save(person); 
+        // Update only the Person node. Saving the partially loaded entity graph here
+        // may recreate WorkPlace/contact relationships without their Office link.
+        this.personService.updatePerson(person);
         return person;
       }
     }
@@ -780,14 +782,20 @@ private Person buildPerson(
     final Office office,
     final PersonStakeholderParamDto personDto
   ) {
-    if(personDto.getOrganization() == null || personDto.getOrganization().getId() == null) {
+    if(personDto.getOrganization() != null && personDto.getOrganization().getId() != null) {
+      this.workPlaceService.selectOrganization(
+        person.getId(),
+        office.getId(),
+        personDto.getOrganization().getId()
+      );
       return;
     }
-    this.workPlaceService.selectOrganization(
-      person.getId(),
-      office.getId(),
-      personDto.getOrganization().getId()
-    );
+    this.workPlaceService.resolveOrganizationByExternalSub(personDto.getKey())
+      .ifPresent(organization -> this.workPlaceService.selectOrganization(
+        person.getId(),
+        office.getId(),
+        organization.getId()
+      ));
   }
 
   private void fillRoles(

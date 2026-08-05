@@ -34,7 +34,7 @@ public class FindAllOfficePermissionUsingCustomFilter extends FindAllUsingCustom
   ) {
     query.append("MATCH (person:Person)-[").append(this.nodeName).append(":CAN_ACCESS_OFFICE]->")
       .append("(office:Office)").append(" ")
-      .append("OPTIONAL MATCH (person)-[contact:IS_IN_CONTACT_BOOK_OF]->(:WorkPlace)-[:`FOR`]->(office)").append(" ")
+      .append("OPTIONAL MATCH (person)-[contact:IS_IN_CONTACT_BOOK_OF]->(office)").append(" ")
       .append("OPTIONAL MATCH (person)-[auth:IS_AUTHENTICATED_BY]->(:AuthService)").append(" ")
       .append("WITH *").append(" ");
   }
