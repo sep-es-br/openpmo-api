@@ -26,110 +26,109 @@ import java.util.List;
 @RequestMapping("/organizations")
 public class OrganizationController {
 
-  private static final String OPERATION_SUCCESS = ApplicationMessage.OPERATION_SUCCESS;
+    private static final String OPERATION_SUCCESS = ApplicationMessage.OPERATION_SUCCESS;
 
-  private final OrganizationService organizationService;
-  private final ModelMapper modelMapper;
-  private final ICanAccessService canAccessService;
+    private final OrganizationService organizationService;
+    private final ModelMapper modelMapper;
+    private final ICanAccessService canAccessService;
 
-  @Autowired
-  public OrganizationController(
-      final OrganizationService organizationService,
-      final ModelMapper modelMapper,
-      final ICanAccessService canAccessService) {
-    this.organizationService = organizationService;
-    this.modelMapper = modelMapper;
-    this.canAccessService = canAccessService;
-  }
+    @Autowired
+    public OrganizationController(
+            final OrganizationService organizationService,
+            final ModelMapper modelMapper,
+            final ICanAccessService canAccessService) {
+        this.organizationService = organizationService;
+        this.modelMapper = modelMapper;
+        this.canAccessService = canAccessService;
+    }
 
-  @GetMapping
-  public ResponseEntity<ResponseBase<List<OrganizationDto>>> indexBase(
-      @RequestParam("id-office") final Long idOffice,
-      @RequestParam(required = false) final Long idFilter,
-      @RequestParam(required = false) final String term,
-      @Authorization final String authorization) {
+    @GetMapping
+    public ResponseEntity<ResponseBase<List<OrganizationDto>>> indexBase(
+            @RequestParam("id-office") final Long idOffice,
+            @RequestParam(required = false) final Long idFilter,
+            @RequestParam(required = false) final String term,
+            @Authorization final String authorization) {
 
 //    this.canAccessService.ensureCanReadResource(idOffice, authorization);
+        final List<OrganizationDto> organizations = new ArrayList<>();
+        this.organizationService.findAll(idOffice, idFilter, term)
+                .forEach(registro -> organizations.add(
+                        new OrganizationDto(registro)));
+        final ResponseBase<List<OrganizationDto>> response = new ResponseBase<List<OrganizationDto>>()
+                .setData(organizations)
+                .setMessage(OPERATION_SUCCESS).setSuccess(true);
+        return ResponseEntity.ok(response);
+    }
 
-    final List<OrganizationDto> organizations = new ArrayList<>();
-    this.organizationService.findAll(idOffice, idFilter, term)
-        .forEach(registro -> organizations.add(
-            new OrganizationDto(registro)));
-    final ResponseBase<List<OrganizationDto>> response = new ResponseBase<List<OrganizationDto>>()
-        .setData(organizations)
-        .setMessage(OPERATION_SUCCESS).setSuccess(true);
-    return ResponseEntity.ok(response);
-  }
-
-  @GetMapping("{id}")
-  public ResponseEntity<ResponseBase<OrganizationDto>> findById(@PathVariable final Long id,
-      @RequestParam("id-office") final Long idOffice,
-      @Authorization final String authorization) {
+    @GetMapping("{id}")
+    public ResponseEntity<ResponseBase<OrganizationDto>> findById(@PathVariable final Long id,
+                                                                  @RequestParam("id-office") final Long idOffice,
+                                                                  @Authorization final String authorization) {
 
 //    this.canAccessService.ensureCanReadResource(id, authorization);
 
-    final OrganizationDto officeDto = new OrganizationDto(this.organizationService.findByIdAndOffice(id, idOffice));
-    final ResponseBase<OrganizationDto> response = new ResponseBase<OrganizationDto>().setData(officeDto)
-        .setSuccess(true);
-    return ResponseEntity.ok(response);
-  }
+        final OrganizationDto officeDto = new OrganizationDto(this.organizationService.findByIdAndOffice(id, idOffice));
+        final ResponseBase<OrganizationDto> response = new ResponseBase<OrganizationDto>().setData(officeDto)
+                .setSuccess(true);
+        return ResponseEntity.ok(response);
+    }
 
-  @GetMapping("/exists-integrated-name")
-  public ResponseEntity<ResponseBase<Boolean>> existsIntegratedOrganizationByName(
-      @RequestParam("name") final String name
-  ) {
+    @GetMapping("/exists-integrated-name")
+    public ResponseEntity<ResponseBase<Boolean>> existsIntegratedOrganizationByName(
+            @RequestParam("name") final String name
+    ) {
 
-      final boolean exists =
-          this.organizationService.existsIntegratedOrganizationByName(name);
+        final boolean exists =
+                this.organizationService.existsIntegratedOrganizationByName(name);
 
-      final ResponseBase<Boolean> response =
-          new ResponseBase<Boolean>()
-              .setData(exists)
-              .setSuccess(true);
+        final ResponseBase<Boolean> response =
+                new ResponseBase<Boolean>()
+                        .setData(exists)
+                        .setSuccess(true);
 
-      return ResponseEntity.ok(response);
-  }
+        return ResponseEntity.ok(response);
+    }
 
-  @PostMapping
-  public ResponseEntity<ResponseBase<EntityDto>> save(
-      @Valid @RequestBody final OrganizationStoreDto organizationStoreDto,
-      @Authorization final String authorization) {
+    @PostMapping
+    public ResponseEntity<ResponseBase<EntityDto>> save(
+            @Valid @RequestBody final OrganizationStoreDto organizationStoreDto,
+            @Authorization final String authorization) {
 
-    this.canAccessService.ensureCanEditResource(organizationStoreDto.getIdOffice(), authorization);
+        this.canAccessService.ensureCanEditResource(organizationStoreDto.getIdOffice(), authorization);
 
-    final Organization organization = this.organizationService.save(this.organizationService.buildOrganizationFromCreate(organizationStoreDto));
-    final ResponseBase<EntityDto> entity = new ResponseBase<EntityDto>().setMessage(OPERATION_SUCCESS)
-        .setData(new EntityDto(
-            organization.getId()))
-        .setSuccess(true);
-    return ResponseEntity.ok(entity);
-  }
+        final Organization organization = this.organizationService.save(this.organizationService.buildOrganizationFromCreate(organizationStoreDto));
+        final ResponseBase<EntityDto> entity = new ResponseBase<EntityDto>().setMessage(OPERATION_SUCCESS)
+                .setData(new EntityDto(
+                        organization.getId()))
+                .setSuccess(true);
+        return ResponseEntity.ok(entity);
+    }
 
-  @PutMapping
-  public ResponseEntity<ResponseBase<EntityDto>> update(
-      @Valid @RequestBody final OrganizationUpdateDto organizationUpdateDto,
-      @Authorization final String authorization) {
+    @PutMapping
+    public ResponseEntity<ResponseBase<EntityDto>> update(
+            @Valid @RequestBody final OrganizationUpdateDto organizationUpdateDto,
+            @Authorization final String authorization) {
 
-    this.canAccessService.ensureCanEditResource(organizationUpdateDto.getId(), authorization);
+        this.canAccessService.ensureCanEditResource(organizationUpdateDto.getId(), authorization);
 
-    final Organization organization = this.organizationService
-        .save(this.organizationService.getOrganization(organizationUpdateDto));
-    final ResponseBase<EntityDto> entity = new ResponseBase<EntityDto>().setMessage(OPERATION_SUCCESS)
-        .setData(new EntityDto(
-            organization.getId()))
-        .setSuccess(true);
-    return ResponseEntity.ok(entity);
-  }
+        final Organization organization = this.organizationService
+                .save(this.organizationService.getOrganization(organizationUpdateDto));
+        final ResponseBase<EntityDto> entity = new ResponseBase<EntityDto>().setMessage(OPERATION_SUCCESS)
+                .setData(new EntityDto(
+                        organization.getId()))
+                .setSuccess(true);
+        return ResponseEntity.ok(entity);
+    }
 
-  @DeleteMapping("{id}")
-  public ResponseEntity<Void> delete(@PathVariable final Long id,
-      @Authorization final String authorization) {
+    @DeleteMapping("{id}")
+    public ResponseEntity<Void> delete(@PathVariable final Long id,
+                                       @Authorization final String authorization) {
 
-    this.canAccessService.ensureCanEditResource(id, authorization);
+        this.canAccessService.ensureCanEditResource(id, authorization);
 
-    final Organization organization = this.organizationService.findById(id);
-    this.organizationService.delete(organization);
-    return ResponseEntity.ok().build();
-  }
+        final Organization organization = this.organizationService.findById(id);
+        this.organizationService.delete(organization);
+        return ResponseEntity.ok().build();
+    }
 
 }
