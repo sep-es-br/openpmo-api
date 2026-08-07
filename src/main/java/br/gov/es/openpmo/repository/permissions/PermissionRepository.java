@@ -21,10 +21,10 @@ public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, C
         "OPTIONAL MATCH (n)-[:IS_IN*0..]->(proj:Project) " +
         "OPTIONAL MATCH (proj)<-[:FEATURES]-(prop:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel) " +
         "WHERE pm.name IN ['Situação','Status'] " +
-
         "WITH collect(distinct rel.permissionLevel) AS permissions, " +
         "     collect(distinct prop.value) AS statusList " +
         "RETURN DISTINCT { permissions: permissions, statusList: statusList } AS result LIMIT 1"
+
     )
     Map<String, Object> fetchAccessInfo(
         @Param("ids") List<Long> ids,

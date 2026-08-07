@@ -30,6 +30,7 @@ import br.gov.es.openpmo.service.baselines.EvaluateBaselineService;
 import br.gov.es.openpmo.service.journals.JournalCreator;
 import br.gov.es.openpmo.service.office.OfficeService;
 import br.gov.es.openpmo.service.office.plan.PlanService;
+import br.gov.es.openpmo.service.publicidentity.PublicIdentityValidationService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import br.gov.es.openpmo.utils.TextSimilarityScore;
 import org.apache.commons.lang3.StringUtils;
@@ -84,6 +85,8 @@ public class PlanPermissionService {
 
   private final EvaluateBaselineService evaluateBaselineService;
 
+  private final PublicIdentityValidationService publicIdentityValidationService;
+
   @Autowired
   public PlanPermissionService(
     final PlanPermissionRepository repository,
@@ -101,7 +104,8 @@ public class PlanPermissionService {
     final FindAllPlanPermissionUsingCustomFilter findAllPlanPermission,
     final FindAllPlanPermissionByIdPersonUsingCustomFilter findAllPlanPermissionByIdPerson,
     final IsCCBMemberRepository isCCBMemberRepository,
-    final EvaluateBaselineService evaluateBaselineService
+    final EvaluateBaselineService evaluateBaselineService,
+    final PublicIdentityValidationService publicIdentityValidationService
   ) {
     this.repository = repository;
     this.customFilterRepository = customFilterRepository;
@@ -119,6 +123,7 @@ public class PlanPermissionService {
     this.findAllPlanPermissionByIdPerson = findAllPlanPermissionByIdPerson;
     this.isCCBMemberRepository = isCCBMemberRepository;
     this.evaluateBaselineService = evaluateBaselineService;
+    this.publicIdentityValidationService = publicIdentityValidationService;
   }
 
   public void delete(
@@ -403,6 +408,10 @@ public class PlanPermissionService {
     final PlanPermissionParamDto request,
     final String authorization
   ) {
+    this.publicIdentityValidationService.validate(
+      request.getIdentityValidation(),
+      request.getKey()
+    );
     final Long idPlan = Optional.of(request)
       .map(PlanPermissionParamDto::getIdPlan)
       .orElse(null);

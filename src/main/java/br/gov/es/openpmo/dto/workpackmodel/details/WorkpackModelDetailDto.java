@@ -58,6 +58,12 @@ public abstract class WorkpackModelDetailDto {
 
   private Boolean scheduleSessionActive;
 
+  private Boolean obligationsSessionActive;
+
+  private Boolean procurementsSessionActive;
+
+  private Boolean agreementsSessionActive;
+
   private Boolean stakeholderSessionActive;
 
   private Boolean childWorkpackModelSessionActive;
@@ -119,6 +125,9 @@ public abstract class WorkpackModelDetailDto {
     instance.setModelNameInPlural(workpackModel.getModelNameInPlural());
     instance.setCostSessionActive(workpackModel.getCostSessionActive());
     instance.setScheduleSessionActive(workpackModel.getScheduleSessionActive());
+    instance.setObligationsSessionActive(workpackModel.getObligationsSessionActive());
+    instance.setProcurementsSessionActive(workpackModel.getProcurementsSessionActive());
+    instance.setAgreementsSessionActive(workpackModel.getAgreementsSessionActive());
     instance.setStakeholderSessionActive(workpackModel.getStakeholderSessionActive());
     instance.setChildWorkpackModelSessionActive(workpackModel.getChildWorkpackModelSessionActive());
     instance.setRiskAndIssueManagementSessionActive(workpackModel.getRiskAndIssueManagementSessionActive());
@@ -257,6 +266,42 @@ public abstract class WorkpackModelDetailDto {
 
   public void setScheduleSessionActive(final Boolean scheduleSessionActive) {
     this.scheduleSessionActive = scheduleSessionActive;
+  }
+
+  public Boolean getObligationsSessionActive() {
+    return this.obligationsSessionActive;
+  }
+  
+  public void setObligationsSessionActive(final boolean obligationsSessionActive) {
+    this.obligationsSessionActive = obligationsSessionActive;
+  }
+  
+  public void setObligationsSessionActive(final Boolean obligationsSessionActive) {
+    this.obligationsSessionActive = obligationsSessionActive;
+  }
+
+  public Boolean getProcurementsSessionActive() {
+    return this.procurementsSessionActive;
+  }
+  
+  public void setProcurementsSessionActive(final boolean procurementsSessionActive) {
+    this.procurementsSessionActive = procurementsSessionActive;
+  }
+  
+  public void setProcurementsSessionActive(final Boolean procurementsSessionActive) {
+    this.procurementsSessionActive = procurementsSessionActive;
+  }
+
+  public Boolean getAgreementsSessionActive() {
+    return this.agreementsSessionActive;
+  }
+  
+  public void setAgreementsSessionActive(final boolean agreementsSessionActive) {
+    this.agreementsSessionActive = agreementsSessionActive;
+  }
+  
+  public void setAgreementsSessionActive(final Boolean agreementsSessionActive) {
+    this.agreementsSessionActive = agreementsSessionActive;
   }
 
   public Boolean getStakeholderSessionActive() {

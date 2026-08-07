@@ -11,13 +11,12 @@ import br.gov.es.openpmo.repository.IsCCBMemberRepository;
 import br.gov.es.openpmo.service.permissions.IRemoteRolesFetcher;
 import br.gov.es.openpmo.service.permissions.RoleService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 public class GetByldCCBMemberService implements IGetByIdCCBMemberService {
@@ -62,6 +61,7 @@ public class GetByldCCBMemberService implements IGetByIdCCBMemberService {
     final List<MemberAs> memberAs = this.getMemberAs(ccbMember);
 
     final CCBMemberResponse ccbMemberResponse = new CCBMemberResponse(
+        ccbMember.getWorkpackId(),
       ccbMember.getPersonResponse(),
       memberAs,
       memberAs.stream().anyMatch(MemberAs::getActive)
