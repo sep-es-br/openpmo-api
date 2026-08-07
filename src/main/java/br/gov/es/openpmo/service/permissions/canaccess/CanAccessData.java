@@ -119,7 +119,6 @@ public class CanAccessData implements ICanAccessData {
     if (editManagement) {
       return CanAccessDataResponse.edit(personData.getKey(), true, self);
     }
-        
     
     // 1. Faz UMA ÚNICA travessia no grafo
       Map<String, Object> accessInfo = this.permissionRepository.fetchAccessInfo(ids, personData.getKey());
