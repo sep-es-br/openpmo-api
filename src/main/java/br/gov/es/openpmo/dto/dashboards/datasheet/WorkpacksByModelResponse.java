@@ -12,6 +12,8 @@ public class WorkpacksByModelResponse {
 
   private Long level;
 
+  private Long position;
+
   public static WorkpacksByModelResponse from(final WorkpackByModelQueryResult from) {
     final WorkpacksByModelResponse to = new WorkpacksByModelResponse();
     to.setIdWorkpackModel(from.getIdWorkpackModel());
@@ -19,6 +21,7 @@ public class WorkpacksByModelResponse {
     to.setModelName(from.getWorkpackName());
     to.setIcon(from.getIcon());
     to.setLevel(from.getLevel());
+    to.setPosition(from.getPosition());
     return to;
   }
 
@@ -60,6 +63,14 @@ public class WorkpacksByModelResponse {
 
   public void setLevel(Long level) {
     this.level = level;
+  }
+
+  public Long getPosition() {
+    return position;
+  }
+
+  public void setPosition(final Long position) {
+    this.position = position;
   }
 
 }

@@ -19,6 +19,8 @@ public class WorkpackByModelQueryResult {
 
   private Long level;
 
+  private Long position;
+
   public Long getIdWorkpackModel() {
     return this.idWorkpackModel;
   }
@@ -77,5 +79,13 @@ public class WorkpackByModelQueryResult {
 
   public void setLevel(Long level) {
     this.level = level;
+  }
+
+  public Long getPosition() {
+    return position;
+  }
+
+  public void setPosition(final Long position) {
+    this.position = position;
   }
 }

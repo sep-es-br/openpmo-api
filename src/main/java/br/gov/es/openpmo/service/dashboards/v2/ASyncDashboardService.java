@@ -83,8 +83,14 @@ public class ASyncDashboardService {
   @Transactional
   @Async
   public CompletableFuture<DashboardStatusData> buildStatusData(final DashboardParameters parameters, Long agora) {
-    
-    DashboardStatusData dashDataStatus = dashboardRepository.getStatusAmmountData(parameters.getWorkpackId(), parameters.getBaselineId()).orElse(null);
+    final Long workpackId = parameters.getWorkpackId();
+    final Long planId = workpackId == null ? parameters.getPlanId() : null;
+    final Long baselineId = workpackId == null ? null : parameters.getBaselineId();
+    DashboardStatusData dashDataStatus = dashboardRepository.getStatusAmountData(
+      planId,
+      workpackId,
+      baselineId
+    ).orElse(null);
 
     Logger.getGlobal().log(Level.INFO, "status data concluido em: {0}ms", System.currentTimeMillis() - agora);
     

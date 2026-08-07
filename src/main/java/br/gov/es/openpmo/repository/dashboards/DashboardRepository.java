@@ -40,9 +40,14 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long>, D
 
 
         
-        @Query("MATCH (w:Workpack)<-[:IS_IN*]-(d:Deliverable{canceled: FALSE})<-[:IS_SNAPSHOT_OF]-(:Deliverable {category: 'SNAPSHOT'})-[]-(bl:Baseline)\n" +
+        @Query("OPTIONAL MATCH (plan:Plan)<-[:BELONGS_TO]-(deliverableByPlan:Deliverable{deleted:false,canceled:false})\n" +
+                "WHERE id(plan) = $planId\n" +
+                "OPTIONAL MATCH (w:Workpack)<-[:IS_IN*]-(deliverableByWorkpack:Deliverable{deleted:false,canceled:false})\n" +
                 "WHERE id(w) = $workpackId\n" +
-                "  AND CASE \n" +
+                "WITH coalesce(deliverableByPlan, deliverableByWorkpack) AS d\n" +
+                "WHERE d IS NOT NULL\n" +
+                "MATCH (d)<-[:IS_SNAPSHOT_OF]-(:Deliverable {category: 'SNAPSHOT'})-[]-(bl:Baseline)\n" +
+                "WHERE CASE \n" +
                 "        WHEN $baselineId IS NULL THEN bl.active\n" +
                 "        ELSE id(bl) = $baselineId \n" +
                 "  END\n" +
@@ -62,7 +67,7 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long>, D
                 "    count(DISTINCT propParalisada) as statusParalisada,\n" +
                 "    count(DISTINCT d) as totalDeliverable\n" +
                 "LIMIT 1")
-        Optional<DashboardStatusData> getStatusAmmountData(Long workpackId, Long baselineId);
+        Optional<DashboardStatusData> getStatusAmountData(Long planId, Long workpackId, Long baselineId);
         
         
 }
