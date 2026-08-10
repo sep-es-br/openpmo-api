@@ -1,6 +1,5 @@
 package br.gov.es.openpmo.model.process;
 
-import br.gov.es.openpmo.apis.edocs.response.ProcessResponse;
 import br.gov.es.openpmo.dto.process.ProcessCreateDto;
 import br.gov.es.openpmo.dto.process.ProcessFromEDocsDto;
 import br.gov.es.openpmo.dto.process.ProcessReadonlyDetailDto;
