@@ -82,7 +82,7 @@ dependencies {
     implementation 'com.github.sep-es-br:openpmo-plugin-agreement-interface:1.0.5'
     implementation 'com.github.sep-es-br:openpmo-plugin-procurement-interface:1.0.0'
     implementation 'com.github.sep-es-br:openpmo-plugin-obligation-interface:1.0.0'
-    implementation 'com.github.sep-es-br:openpmo-plugin-user-a-identify-goves:v2.0.0'
+    implementation 'com.github.sep-es-br:openpmo-plugin-user-a-identify-interface:v2.2.0'
 
     if (props.containsKey('app.agreement.parser.repository') &&
         props['app.agreement.parser.repository'] != null &&
@@ -103,10 +103,10 @@ dependencies {
     }
 
 
-    if(props.containsKey('app.plugin.user.a.identify.goves.repository') &&
-        props['app.plugin.user.a.identify.goves.repository'] != null &&
-        !props['app.plugin.user.a.identify.goves.repository'].trim().isEmpty()) {
-        implementation props['app.plugin.user.a.identify.goves.repository']
+    if(props.containsKey('app.plugin.user.a.identify.parse.repository') &&
+        props['app.plugin.user.a.identify.parse.repository'] != null &&
+        !props['app.plugin.user.a.identify.parse.repository'].trim().isEmpty()) {
+        implementation props['app.plugin.user.a.parse.repository']
     }
 
     //implementation 'com.github.sep-es-br:acesso-cidadao-identity-parser:f92a8db'
