@@ -41,6 +41,7 @@ import br.gov.es.openpmo.service.actors.PersonService;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.journals.JournalCreator;
 import br.gov.es.openpmo.service.office.OfficeService;
+import br.gov.es.openpmo.service.organization.WorkPlaceService;
 import br.gov.es.openpmo.service.permissions.OfficePermissionService;
 import br.gov.es.openpmo.service.permissions.PlanPermissionService;
 import br.gov.es.openpmo.service.permissions.RoleService;
@@ -110,6 +111,8 @@ public class StakeholderService {
 
   private final TokenService tokenService;
 
+  private final WorkPlaceService workPlaceService;
+
   @Value("${app.login.server.idsvr.name}")
   private String authenticationServer;
 
@@ -131,7 +134,8 @@ public class StakeholderService {
     final AppProperties appProperties,
     final TextSimilarityScore textSimilarityScore,
     final JournalCreator journalCreator,
-    final TokenService tokenService
+    final TokenService tokenService,
+    final WorkPlaceService workPlaceService
   ) {
     this.personService = personService;
     this.serviceOrganization = serviceOrganization;
@@ -150,6 +154,7 @@ public class StakeholderService {
     this.textSimilarityScore = textSimilarityScore;
     this.journalCreator = journalCreator;
     this.tokenService = tokenService;
+    this.workPlaceService = workPlaceService;
   }
 
   private static void orderByScore(final List<? extends StakeholderDto> dto) {
@@ -273,6 +278,9 @@ public class StakeholderService {
       if (maybePerson.isPresent()) {
         final Person person = this.buildPerson(maybePerson.get(), request);
         this.createOrUpdateContactInformation(request, personId, workpackId, person);
+        // Update only the Person node. Saving the partially loaded entity graph here
+        // may recreate WorkPlace/contact relationships without their Office link.
+        this.personService.updatePerson(person);
         return person;
       }
     }
@@ -330,6 +338,7 @@ public class StakeholderService {
       isInContactBookOf.setOffice(office);
       this.isInContactBookOfService.save(isInContactBookOf);
     }
+    this.assignOrganization(person, office, request.getPerson());
   }
 
   private CanAccessWorkpack buildCanAccessWorkpack(
@@ -349,8 +358,7 @@ public class StakeholderService {
       planId
     );
   }
-
-  private Person buildPerson(
+private Person buildPerson(
     final Person person,
     final StakeholderParamDto request
   ) {
@@ -410,6 +418,7 @@ public class StakeholderService {
     isInContactBookOf.setOffice(officeByWorkpack);
 
     this.isInContactBookOfService.save(isInContactBookOf);
+    this.assignOrganization(person, officeByWorkpack, dto);
   }
 
   private void updateContactRelationshipWithOffice(
@@ -430,6 +439,7 @@ public class StakeholderService {
     isInContactBookOf.setOffice(officeByWorkpack);
 
     this.isInContactBookOfService.update(isInContactBookOf);
+    this.assignOrganization(person, officeByWorkpack, dto);
   }
 
   @Transactional
@@ -756,12 +766,36 @@ public class StakeholderService {
       maybeContactInformation,
       maybeAuthentication
     );
+    this.officeService.findOfficeByPlan(idPlan)
+      .flatMap(office -> this.workPlaceService.findOrganization(person.getId(), office.getId()))
+      .ifPresent(organization -> personDto.setOrganization(new OrganizationDto(organization)));
     final List<RoleResource> roles = this.roleService.getRolesByKey(
       idPerson,
       personDto.getKey()
     );
     personDto.addAllRoles(roles);
     stakeholderPersonDto.setPerson(personDto);
+  }
+
+  private void assignOrganization(
+    final Person person,
+    final Office office,
+    final PersonStakeholderParamDto personDto
+  ) {
+    if(personDto.getOrganization() != null && personDto.getOrganization().getId() != null) {
+      this.workPlaceService.selectOrganization(
+        person.getId(),
+        office.getId(),
+        personDto.getOrganization().getId()
+      );
+      return;
+    }
+    this.workPlaceService.resolveOrganizationByExternalSub(personDto.getKey())
+      .ifPresent(organization -> this.workPlaceService.selectOrganization(
+        person.getId(),
+        office.getId(),
+        organization.getId()
+      ));
   }
 
   private void fillRoles(

@@ -81,10 +81,11 @@ public class AuthenticationService {
 
         IsAuthenticatedBy authRelationship = user.getAuthentications().stream().findFirst().orElse(null);
         if (authRelationship != null) {
-            authRelationship.setEmail(email);
-            authRelationship.setKey(key);
-          
-            this.personService.save(user);
+            this.isAuthenticatedByService.updateCredentials(
+              authRelationship.getId(),
+              email,
+              key
+            );
         }
 
         final String authenticationToken = this.tokenService.generateToken(user, key, email, rid, TokenType.AUTHENTICATION);

@@ -13,6 +13,7 @@ import br.gov.es.openpmo.model.relations.IsCCBMemberFor;
 import br.gov.es.openpmo.model.relations.IsInContactBookOf;
 import br.gov.es.openpmo.model.relations.IsStakeholderIn;
 import br.gov.es.openpmo.model.workpacks.Workpack;
+import br.gov.es.openpmo.utils.DisplayModeEnum;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -46,7 +47,7 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   )
   List<Person> findByIdOfficeReturnDistinctPerson(@Param("idOffice") Long idOffice);
 
-  @Query("MATCH (p:Person)-[:IS_IN_CONTACT_BOOK_OF| CAN_ACCESS_OFFICE|CAN_ACCESS_PLAN|CAN_ACCESS_WORKPACK|IS_STAKEHOLDER_IN|IS_CCB_MEMBER_FOR]->()-[:IS_IN|BELONGS_TO|IS_ADOPTED_BY*0..]->(e) " +
+  @Query("MATCH (p:Person)-[:IS_IN_CONTACT_BOOK_OF| CAN_ACCESS_OFFICE|CAN_ACCESS_PLAN|CAN_ACCESS_WORKPACK|IS_STAKEHOLDER_IN|IS_CCB_MEMBER_FOR]->()-[:`FOR`|IS_IN|BELONGS_TO|IS_ADOPTED_BY*0..]->(e) " +
    "WHERE id(e) in $list " +
    "and ($name is null or " +
    " (apoc.text.clean(p.name) contains apoc.text.clean($name) or apoc.text.clean(p.fullName) contains apoc.text.clean($name)) " +
@@ -84,13 +85,16 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   );
 
   @Query("MATCH (person:Person)-[isInContactBookOf:IS_IN_CONTACT_BOOK_OF]->(office:Office) " +
+         "OPTIONAL MATCH (workPlace:WorkPlace)-[ofPerson:OF]->(person) " +
+         "WHERE (workPlace)-[:`FOR`]->(office) " +
+         "OPTIONAL MATCH (organization:Organization)-[isOrganization:`IS`]->(workPlace) " +
          "OPTIONAL MATCH (person)-[isAuthenticatedBy:IS_AUTHENTICATED_BY]->(authService:AuthService) " +
          "OPTIONAL MATCH (person)<-[isPortraitOf:IS_A_PORTRAIT_OF]-(avatar:File)" +
          "OPTIONAL MATCH (person)-[canAccessPlan:CAN_ACCESS_PLAN]->(plan:Plan)-[isAdoptedBy:IS_ADOPTED_BY]->(office) " +
-         "WITH person, office, canAccessPlan, plan, isInContactBookOf, " +
+         "WITH person, workPlace, ofPerson, office, organization, isOrganization, canAccessPlan, plan, isInContactBookOf, " +
          "isAdoptedBy, isAuthenticatedBy, authService, isPortraitOf, avatar " +
          "WHERE id(person)=$personId AND id(office)=$officeId " +
-         "RETURN person, office, authService, " +
+         "RETURN person, workPlace, ofPerson, office, organization, isOrganization, authService, " +
          "isInContactBookOf AS contact, " +
          "isAuthenticatedBy AS authentication, " +
          "avatar AS avatar, " +
@@ -123,7 +127,8 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
     Long idOffice
   );
 
-  @Query("MATCH (p:Person)-[i:IS_IN_CONTACT_BOOK_OF]->(o:Office)<-[]-(:Plan)<-[]-(w:Workpack) " +
+  @Query("MATCH (p:Person)-[i:IS_IN_CONTACT_BOOK_OF]->(o:Office)" +
+         "<-[]-(:Plan)<-[]-(w:Workpack) " +
          "WHERE id(w)=$idWorkpack AND toLower(p.fullName) CONTAINS toLower($partialName) " +
          "AND NOT (p)-[:IS_AUTHENTICATED_BY]->(:AuthService) " +
          "RETURN collect(DISTINCT p) AS persons, collect(i) AS contacts, o AS office")
@@ -281,6 +286,26 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
                   "RETURN p "
   )
   Person updateLocalWork(Long personId, Long idOffice, Long idPlan, Long idWorkpack, Long idWorkpackModelLinked);
+
+  @Query(
+    "MATCH (p:Person) WHERE id(p) = $personId " +
+    "SET p.idOffice = $idOffice, " +
+    "p.idWorkpack = $idWorkpack, " +
+    "p.idWorkpackModelLinked = $idWorkpackModelLinked, " +
+    "p.pageSize = $pageSize, " +
+    "p.fixedMenu = $fixedMenu, " +
+    "p.displayMode = $displayMode " +
+    "RETURN p"
+  )
+  Person updatePreferences(
+    Long personId,
+    Long idOffice,
+    Long idWorkpack,
+    Long idWorkpackModelLinked,
+    Integer pageSize,
+    Boolean fixedMenu,
+    DisplayModeEnum displayMode
+  );
 
   @Query (
           "MATCH (p:Person) WHERE id(p) = $personId " +

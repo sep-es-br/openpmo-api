@@ -2,6 +2,7 @@ package br.gov.es.openpmo.dto.stakeholder;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import br.gov.es.openpmo.dto.organization.OrganizationDto; 
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.CONTACT_EMAIL_NOT_NULL;
 
@@ -25,6 +26,8 @@ public class PersonStakeholderParamDto {
   private String guid;
 
   private Boolean administrator;
+
+  private OrganizationDto organization; //add
 
   public PersonStakeholderParamDto() {
   }
@@ -136,5 +139,13 @@ public class PersonStakeholderParamDto {
   public void setAdministrator(final Boolean administrator) {
     this.administrator = administrator;
   }
+
+  public OrganizationDto getOrganization() {
+  return this.organization;
+}
+
+public void setOrganization(final OrganizationDto organization) {
+  this.organization = organization;
+}
 
 }

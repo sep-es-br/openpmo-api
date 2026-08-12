@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.dto.person;
 
+import br.gov.es.openpmo.dto.organization.OrganizationDto;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
 import br.gov.es.openpmo.model.relations.IsInContactBookOf;
@@ -22,6 +23,7 @@ public class CitizenDto {
   private boolean administrator;
   private Boolean isUser;
   private List<RoleResource> roles;
+  private OrganizationDto organization;
 
   public CitizenDto() {
     this.roles = new ArrayList<>();
@@ -155,6 +157,14 @@ public class CitizenDto {
 
   public void setRoles(final List<RoleResource> roles) {
     this.roles = roles;
+  }
+
+  public OrganizationDto getOrganization() {
+    return this.organization;
+  }
+
+  public void setOrganization(final OrganizationDto organization) {
+    this.organization = organization;
   }
 
   public boolean haveAnyContactInformationData() {

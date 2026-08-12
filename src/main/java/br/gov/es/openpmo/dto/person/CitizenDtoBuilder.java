@@ -1,5 +1,7 @@
 package br.gov.es.openpmo.dto.person;
 
+import br.gov.es.openpmo.dto.organization.OrganizationDto;
+
 import java.util.List;
 
 public final class CitizenDtoBuilder {
@@ -15,6 +17,7 @@ public final class CitizenDtoBuilder {
   private boolean administrator;
   private Boolean isUser;
   private List<RoleResource> roles;
+  private OrganizationDto organization;
 
   private CitizenDtoBuilder() {
   }
@@ -78,6 +81,11 @@ public final class CitizenDtoBuilder {
     return this;
   }
 
+  public CitizenDtoBuilder withOrganization(final OrganizationDto organization) {
+    this.organization = organization;
+    return this;
+  }
+
   public CitizenDto build() {
     final CitizenDto personDto = new CitizenDto();
     personDto.setId(this.id);
@@ -90,6 +98,7 @@ public final class CitizenDtoBuilder {
     personDto.setContactEmail(this.contactEmail);
     personDto.setAdministrator(this.administrator);
     personDto.setIsUser(this.isUser);
+    personDto.setOrganization(this.organization);
     personDto.getRoles().addAll(this.roles);
     return personDto;
   }

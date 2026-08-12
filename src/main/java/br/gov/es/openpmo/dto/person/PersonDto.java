@@ -3,6 +3,7 @@ package br.gov.es.openpmo.dto.person;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
 import br.gov.es.openpmo.model.relations.IsInContactBookOf;
+import br.gov.es.openpmo.dto.organization.OrganizationDto; 
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,6 +27,7 @@ public class PersonDto {
   private Boolean isUser;
   private String guid;
   private double score;
+  private OrganizationDto organization; 
 
   public PersonDto() {
     this.roles.add(RoleResource.citizen());
@@ -69,14 +71,14 @@ public class PersonDto {
     return dto;
   }
 
-  private static PersonDto from(final Person person) {
+ private static PersonDto from(final Person person) {
     final PersonDto dto = new PersonDto();
     dto.setId(person.getId());
     dto.setName(person.getName());
     dto.setFullName(person.getFullName());
     dto.setAdministrator(person.getAdministrator());
     return dto;
-  }
+}
 
   public static PersonDto from(
     final Person person,
@@ -205,4 +207,12 @@ public class PersonDto {
   public void setScore(final double score) {
     this.score = score;
   }
+
+  public OrganizationDto getOrganization() {
+  return this.organization;
+}
+
+public void setOrganization(final OrganizationDto organization) {
+  this.organization = organization;
+}
 }
