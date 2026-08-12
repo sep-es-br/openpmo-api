@@ -89,6 +89,32 @@ public class DashboardController implements IDashboardController {
     return this.responseHandler.success(response);
   }
 
+  @Override
+  public Response<DashboardResponse> getPlanDashboard(
+      final Boolean showHeader,
+      final Long planId,
+      final YearMonth yearMonth,
+      final UriComponentsBuilder uriComponentsBuilder,
+      @Authorization final String authorization
+  ) {
+    this.canAccessService.ensureCanReadResource(planId, authorization);
+
+    final DashboardParameters parameters = new DashboardParameters(
+      showHeader,
+      null,
+      null,
+      null,
+      planId,
+      null,
+      yearMonth,
+      false,
+      this.tokenService.getUserId(authorization),
+      uriComponentsBuilder
+    );
+
+    return this.responseHandler.success(this.dashboardService.build(parameters));
+  }
+
     @Override
     public Map<String, Boolean> isItemInBeingBuild(Long workpackId) {
         HashMap<String, Boolean> result = new HashMap<>();

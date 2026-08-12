@@ -92,12 +92,17 @@ public interface RiskRepository extends Neo4jRepository<Risk, Long>, CustomRepos
          "return count(distinct risks)")
   Long countClosedRisksOfWorkpack(@Param("workpackId") Long workpackId);
 
-  @Query("MATCH (w:Workpack{deleted: false , canceled: false }) " +
-          "WHERE id(w)=$workpackId " +
-          "OPTIONAL MATCH (w)<-[:IS_FORSEEN_ON]-(r1:Risk) " +
-          "WITH w, r1 " +
-          "OPTIONAL MATCH (w)<-[:IS_IN*]-(v:Workpack{deleted: false , canceled: false })<-[:IS_FORSEEN_ON]-(r2:Risk) " +
-          "WITH collect(r1) + collect(r2) AS riskList UNWIND riskList AS risks " +
-          "RETURN count( DISTINCT risks) AS count, risks.status AS status, risks.importance AS importance")
-  List<RiskDataChartDto> countRisksOfWorkpack(@Param("workpackId") Long workpackId);
+  @Query("OPTIONAL MATCH (plan:Plan)<-[:BELONGS_TO]-(workpackByPlan:Workpack{deleted:false,canceled:false}) " +
+      "WHERE id(plan)=$planId " +
+      "OPTIONAL MATCH (root:Workpack{deleted:false,canceled:false}) " +
+      "WHERE id(root)=$workpackId " +
+      "OPTIONAL MATCH (root)<-[:IS_IN*0..]-(workpackByRoot:Workpack{deleted:false,canceled:false}) " +
+      "WITH collect(DISTINCT workpackByPlan) + collect(DISTINCT workpackByRoot) AS workpacks " +
+      "UNWIND workpacks AS workpack " +
+      "MATCH (workpack)<-[:IS_FORSEEN_ON]-(risk:Risk) " +
+      "RETURN count(DISTINCT risk) AS count, risk.status AS status, risk.importance AS importance")
+  List<RiskDataChartDto> countRisksForDashboard(
+    @Param("planId") Long planId,
+    @Param("workpackId") Long workpackId
+  );
 }

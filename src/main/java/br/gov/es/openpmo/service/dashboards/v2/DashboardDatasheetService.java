@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -36,7 +37,7 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
     final UriComponentsBuilder uriComponentsBuilder = parameters.getUriComponentsBuilder();
 
     return new DatasheetResponse(
-      this.getDatasheetTotalizers(workpackId, workpackModelId),
+      this.getDatasheetTotalizers(parameters.getPlanId(), workpackId, workpackModelId),
       this.getDatasheetStakeholders(workpackId, uriComponentsBuilder)
     );
   }
@@ -48,8 +49,24 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
     return parameters.getWorkpackModelId();
   }
 
-  private DatasheetTotalizers getDatasheetTotalizers(final Long workpackId, Long workpackModelId) {
-    return new DatasheetTotalizers(this.getWorkpackByModel(workpackId, workpackModelId));
+  private DatasheetTotalizers getDatasheetTotalizers(
+    final Long planId,
+    final Long workpackId,
+    final Long workpackModelId
+  ) {
+    final List<WorkpacksByModelResponse> workpacksByModel = workpackId == null
+      ? this.getWorkpackByModelForPlan(planId)
+      : this.getWorkpackByModel(workpackId, workpackModelId);
+    return new DatasheetTotalizers(workpacksByModel);
+  }
+
+  private List<WorkpacksByModelResponse> getWorkpackByModelForPlan(final Long planId) {
+    if (planId == null) {
+      return Collections.emptyList();
+    }
+    return this.repository.workpackByModelForPlan(planId).stream()
+      .map(WorkpacksByModelResponse::from)
+      .collect(Collectors.toList());
   }
 
   private List<WorkpacksByModelResponse> getWorkpackByModel(final Long workpackId, Long workpackModelId) {
@@ -69,7 +86,11 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
     final Long workpackId,
     final UriComponentsBuilder uriComponentsBuilder
   ) {
-    return this.getStakeholders(workpackId).stream()
+    if (workpackId == null) {
+      return Collections.emptySet();
+    }
+    final Collection<DatasheetStakeholderQueryResult> stakeholders = this.getStakeholders(workpackId);
+    return stakeholders.stream()
       .map(stakeholder -> stakeholder.mapToResponse(uriComponentsBuilder))
       .collect(Collectors.toCollection(LinkedHashSet::new));
   }

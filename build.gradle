@@ -103,6 +103,12 @@ dependencies {
         implementation props['app.obligation.parser.repository']
     }
 
+    if (props.containsKey('app.edocs.plugin.repository') &&
+        props['app.edocs.plugin.repository'] != null &&
+        !props['app.edocs.plugin.repository'].trim().isEmpty()) {
+        implementation props['app.edocs.plugin.repository']
+    }
+
 
     if(props.containsKey('app.plugin.user.a.identify.goves.repository') &&
         props['app.plugin.user.a.identify.goves.repository'] != null &&
