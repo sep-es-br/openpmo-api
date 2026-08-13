@@ -111,10 +111,10 @@ dependencies {
     }
 
 
-    if(props.containsKey('app.plugin.user.a.identify.goves.repository') &&
-        props['app.plugin.user.a.identify.goves.repository'] != null &&
-        !props['app.plugin.user.a.identify.goves.repository'].trim().isEmpty()) {
-        implementation props['app.plugin.user.a.identify.goves.repository']
+    if(props.containsKey('app.plugin.user.a.identify.parse.repository') &&
+        props['app.plugin.user.a.identify.parse.repository'] != null &&
+        !props['app.plugin.user.a.identify.parse.repository'].trim().isEmpty()) {
+        implementation props['app.plugin.user.a.identify.parse.repository']
     }
 
     //implementation 'com.github.sep-es-br:acesso-cidadao-identity-parser:f92a8db'
