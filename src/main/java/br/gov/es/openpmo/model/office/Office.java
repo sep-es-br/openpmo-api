@@ -4,7 +4,7 @@ import br.gov.es.openpmo.dto.office.OfficeDto;
 import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.office.plan.PlanModel;
-import br.gov.es.openpmo.model.relations.IsInContactBookOf;
+import br.gov.es.openpmo.model.actors.WorkPlace;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
@@ -29,8 +29,8 @@ public class Office extends Entity {
   private Set<PlanModel> plansModel;
 
   @JsonIgnoreProperties("office")
-  @Relationship(type = "IS_IN_CONTACT_BOOK_OF", direction = INCOMING)
-  private Set<IsInContactBookOf> contactBooks;
+  @Relationship(type = "FOR", direction = INCOMING)
+  private Set<WorkPlace> workPlaces;
 
   public String getName() {
     return this.name;
@@ -64,12 +64,12 @@ public class Office extends Entity {
     this.plansModel = plansModel;
   }
 
-  public Set<IsInContactBookOf> getContactBooks() {
-    return this.contactBooks;
+  public Set<WorkPlace> getWorkPlaces() {
+    return this.workPlaces;
   }
 
-  public void setContactBooks(final Set<IsInContactBookOf> contactBooks) {
-    this.contactBooks = contactBooks;
+  public void setWorkPlaces(final Set<WorkPlace> workPlaces) {
+    this.workPlaces = workPlaces;
   }
 
   @Transient

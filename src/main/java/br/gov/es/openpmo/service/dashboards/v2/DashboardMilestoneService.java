@@ -24,8 +24,13 @@ public class DashboardMilestoneService implements IDashboardMilestoneService {
     final Long idBaseline = parameters.getBaselineId();
     final Long idWorkpack = parameters.getWorkpackId();
 
-    final List<MilestoneDateDto> milestones = idBaseline == null ? this.repository.findByParentId(idWorkpack)
-            : this.repository.findByParentAndBaselineId(idWorkpack, idBaseline);
+    final Long planId = idWorkpack == null ? parameters.getPlanId() : null;
+    final Long baselineId = idWorkpack == null ? null : idBaseline;
+    final List<MilestoneDateDto> milestones = this.repository.findForDashboard(
+      planId,
+      idWorkpack,
+      baselineId
+    );
     return MilestoneDto.setMilestonesOfMiletonesDate(milestones);
   }
 

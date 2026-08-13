@@ -1,6 +1,6 @@
 package br.gov.es.openpmo.repository;
 
-import br.gov.es.openpmo.apis.edocs.dto.ProcessNumberWithIds;
+import br.gov.es.openpmo.dto.process.ProcessNumberWithIds;
 import br.gov.es.openpmo.model.process.Process;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
 import org.springframework.data.neo4j.annotation.Query;

@@ -1,14 +1,12 @@
 package br.gov.es.openpmo.dto.process;
 
-import br.gov.es.openpmo.apis.edocs.ProcessTimeline;
-import br.gov.es.openpmo.apis.edocs.response.ProcessResponse;
 import br.gov.es.openpmo.model.process.Process;
+import br.gov.es.pmo.administrative_process_core.model.AdministrativeProcessDto;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 public class ProcessDetailDto {
 
@@ -19,7 +17,7 @@ public class ProcessDetailDto {
   private final ProcessReadonlyDetailDto readonlyDetail;
   private final List<ProcessTimelineDto> history;
 
-  public ProcessDetailDto(
+  private ProcessDetailDto(
     final Long id,
     final String name,
     final String note,
@@ -30,109 +28,38 @@ public class ProcessDetailDto {
     this.name = name;
     this.note = note;
     this.readonlyDetail = readonlyDetail;
-    this.history = Collections.unmodifiableList(history);
-    history.sort(Comparator.comparing(ProcessTimelineDto::getUpdateDate).reversed());
+    this.history = history;
+    this.history.sort(Comparator.comparing(ProcessTimelineDto::getUpdateDate).reversed());
   }
 
   public static ProcessDetailDto of(
-    final ProcessResponse processResponse,
+    final AdministrativeProcessDto externalProcess,
     final Process process
   ) {
-    final List<ProcessTimeline> timeline = processResponse.timeline().stream()
-      .sorted(Comparator.comparing(ProcessDetailDto::getDate).reversed())
-      .collect(Collectors.toList());
-
-    final String currentSectorName = processResponse.getCurrentSectorName();
-
-    LocalDateTime dateSector = LocalDateTime.now();
-    for (final ProcessTimeline processTimeline : timeline) {
-      if (!Objects.equals(
-            processTimeline.detail().getName(),
-            currentSectorName
-      )) {
-        break;
-      }
-      dateSector = processTimeline.detail().getDate();
-    }
-
-    final String currentOrganization = processResponse.getCurrentOrganizationAbbreviation();
-
-    LocalDateTime date = LocalDateTime.now();
-    for (final ProcessTimeline processTimeline : timeline) {
-      if (!Objects.equals(processTimeline.detail().getAbbreviation(), currentOrganization)) {
-        break;
-      }
-      date = processTimeline.detail().getDate();
-    }
-    List<ProcessTimelineDto> timelineDtos = ProcessTimelineDto.of(timeline);
-    LocalDateTime until = LocalDateTime.now();
-    LocalDateTime sectorUntil = LocalDateTime.now();
-
-    if (Objects.equals(process.getStatus(), "Encerrado")) {
-
-      final Optional<ProcessTimelineDto> encerramento =
-        timelineDtos.stream()
-          .filter(dto -> Objects.equals(dto.getDescricaoTipo(), "Encerramento"))
-          .max(Comparator.comparing(ProcessTimelineDto::getUpdateDate));
-
-      LocalDateTime encerramentoDate = encerramento
-        .map(ProcessTimelineDto::getUpdateDate)
-        .orElse(LocalDateTime.now());
-
-      until = encerramentoDate;
-      sectorUntil = encerramentoDate;
-
-      encerramento.ifPresent(ProcessTimelineDto::clearDaysDuration);
-    }
-    final long lengthOfStayOn =
-      Duration.between(date, until).abs().toDays();
-
-    final long lengthOfStayOnSector =
-      Duration.between(dateSector, sectorUntil).abs().toDays();
-
     return new ProcessDetailDto(
       process.getId(),
       process.getName(),
       process.getNote(),
       new ProcessReadonlyDetailDto(
         process.getProcessNumber(),
-        processResponse.getStatus(),
+        externalProcess.getStatus(),
         process.getSubject(),
-        currentOrganization,
-        lengthOfStayOn,
+        externalProcess.getCurrentOrganization(),
+        externalProcess.getLengthOfStayOn(),
         process.getPriority(),
         process.getActingOrganization(),
         process.getActingSector(),
         process.getActingDate(),
         process.getLastDispatchDate(),
-        lengthOfStayOnSector
+        externalProcess.getLengthOfStayOnSector()
       ),
-      timelineDtos
+      ProcessTimelineDto.of(externalProcess.getHistory())
     );
   }
 
-  private static LocalDateTime getDate(final ProcessTimeline processTimeline) {
-    return processTimeline.detail().getDate();
-  }
-
-  public Long getId() {
-    return this.id;
-  }
-
-  public String getName() {
-    return this.name;
-  }
-
-  public String getNote() {
-    return this.note;
-  }
-
-  public ProcessReadonlyDetailDto getReadonlyDetail() {
-    return this.readonlyDetail;
-  }
-
-  public List<ProcessTimelineDto> getHistory() {
-    return this.history;
-  }
-
+  public Long getId() { return this.id; }
+  public String getName() { return this.name; }
+  public String getNote() { return this.note; }
+  public ProcessReadonlyDetailDto getReadonlyDetail() { return this.readonlyDetail; }
+  public List<ProcessTimelineDto> getHistory() { return Collections.unmodifiableList(this.history); }
 }

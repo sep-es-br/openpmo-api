@@ -78,11 +78,13 @@ dependencies {
         !props['app.organization.parser.repository'].trim().isEmpty()) {
         implementation props['app.organization.parser.repository']
     }
-    implementation 'com.github.sep-es-br:pmo-core-organization-parser:1.0.5'
+    implementation 'com.github.sep-es-br:pmo-core-organization-parser:1.1.1'
+    implementation 'com.github.sep-es-br:organization-parser-goves:1.1.0'
     implementation 'com.github.sep-es-br:openpmo-plugin-agreement-interface:1.0.5'
     implementation 'com.github.sep-es-br:openpmo-plugin-procurement-interface:1.0.0'
     implementation 'com.github.sep-es-br:openpmo-plugin-obligation-interface:1.0.0'
-    implementation 'com.github.sep-es-br:openpmo-plugin-user-a-identify-interface:v2.2.0'
+    implementation 'com.github.sep-es-br:openpmo-plugin-administrative-process-interface:1.0.0'
+    implementation 'com.github.sep-es-br:openpmo-plugin-user-a-identify-goves:v2.2.0'
 
     if (props.containsKey('app.agreement.parser.repository') &&
         props['app.agreement.parser.repository'] != null &&
@@ -100,6 +102,12 @@ dependencies {
         props['app.obligation.parser.repository'] != null &&
         !props['app.obligation.parser.repository'].trim().isEmpty()) {
         implementation props['app.obligation.parser.repository']
+    }
+
+    if (props.containsKey('app.edocs.plugin.repository') &&
+        props['app.edocs.plugin.repository'] != null &&
+        !props['app.edocs.plugin.repository'].trim().isEmpty()) {
+        implementation props['app.edocs.plugin.repository']
     }
 
 

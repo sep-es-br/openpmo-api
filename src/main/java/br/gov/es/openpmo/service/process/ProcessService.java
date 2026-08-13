@@ -1,14 +1,11 @@
 package br.gov.es.openpmo.service.process;
 
-import br.gov.es.openpmo.apis.edocs.EDocsApi;
-import br.gov.es.openpmo.apis.edocs.dto.ProcessNumberWithIds;
-import br.gov.es.openpmo.apis.edocs.response.ProcessResponse;
-import br.gov.es.openpmo.apis.organograma.OrganogramaApi;
 import br.gov.es.openpmo.configuration.properties.AppProperties;
 import br.gov.es.openpmo.dto.process.ProcessCardDto;
 import br.gov.es.openpmo.dto.process.ProcessCreateDto;
 import br.gov.es.openpmo.dto.process.ProcessDetailDto;
 import br.gov.es.openpmo.dto.process.ProcessFromEDocsDto;
+import br.gov.es.openpmo.dto.process.ProcessNumberWithIds;
 import br.gov.es.openpmo.dto.process.ProcessUpdateDto;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.exception.RegistroNaoEncontradoException;
@@ -19,6 +16,7 @@ import br.gov.es.openpmo.repository.ProcessRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllProcessUsingCustomFilter;
 import br.gov.es.openpmo.service.filters.CustomFilterService;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
+import br.gov.es.pmo.administrative_process_core.model.AdministrativeProcessDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,7 +38,7 @@ public class ProcessService {
 
   private final ProcessRepository repository;
 
-  private final EDocsApi eDocsApi;
+  private final AdministrativeProcessProviderService administrativeProcessProviderService;
 
   private final WorkpackService workpackService;
 
@@ -50,32 +48,28 @@ public class ProcessService {
 
   private final AppProperties appProperties;
 
-  private final OrganogramaApi organogramaApi;
-
   @Autowired
   public ProcessService(
     final ProcessRepository repository,
-    final EDocsApi eDocsApi,
+    final AdministrativeProcessProviderService administrativeProcessProviderService,
     final WorkpackService workpackService,
     final FindAllProcessUsingCustomFilter findAllProcess,
     final CustomFilterService customFilterService,
-    final AppProperties appProperties,
-    final OrganogramaApi organogramaApi
+    final AppProperties appProperties
   ) {
     this.repository = repository;
-    this.eDocsApi = eDocsApi;
+    this.administrativeProcessProviderService = administrativeProcessProviderService;
     this.workpackService = workpackService;
     this.findAllProcess = findAllProcess;
     this.customFilterService = customFilterService;
     this.appProperties = appProperties;
-    this.organogramaApi = organogramaApi;
   }
 
   public ProcessFromEDocsDto findProcessByProtocol(
     final String protocol,
     final Long idPerson
   ) {
-    final ProcessResponse process = this.eDocsApi.findProcessByProtocol(protocol, idPerson);
+    final AdministrativeProcessDto process = this.administrativeProcessProviderService.getProcess(protocol, idPerson);
     return ProcessFromEDocsDto.of(process);
   }
 
@@ -99,7 +93,10 @@ public class ProcessService {
     final Process process = this.maybeFindById(request)
       .orElseThrow(() -> new RegistroNaoEncontradoException(PROCESS_NOT_FOUND));
 
-    final ProcessResponse processResponse = this.eDocsApi.findProcessByProtocol(process.getProcessNumber(), idPerson);
+    final AdministrativeProcessDto processResponse = this.administrativeProcessProviderService.getProcess(
+      process.getProcessNumber(),
+      idPerson
+    );
 
     final ProcessFromEDocsDto fromEDocs = ProcessFromEDocsDto.of(processResponse);
 
@@ -126,7 +123,10 @@ public class ProcessService {
   ) {
     final Process process = this.repository.findById(idProcess)
       .orElseThrow(() -> new RegistroNaoEncontradoException(PROCESS_NOT_FOUND));
-    final ProcessResponse processResponse = this.eDocsApi.findProcessByProtocol(process.getProcessNumber(), idPerson);
+    final AdministrativeProcessDto processResponse = this.administrativeProcessProviderService.getProcess(
+      process.getProcessNumber(),
+      idPerson
+    );
     
     final ProcessFromEDocsDto fromEDocs = ProcessFromEDocsDto.of(processResponse);
     this.updateProcessState(process, fromEDocs);
@@ -192,6 +192,10 @@ public class ProcessService {
   @Transactional
   public void updateAllProcesses() {
 
+    if (!this.administrativeProcessProviderService.isAvailable()) {
+      return;
+    }
+
     List<ProcessNumberWithIds> allProcesses = this.repository.findProcessNumbersWithIdsFromActiveWorkpacks();
 
     if (allProcesses.isEmpty()) {
@@ -202,11 +206,9 @@ public class ProcessService {
       .map(ProcessNumberWithIds::getProcessNumber)
       .collect(Collectors.toList());
     
-    this.organogramaApi.clearCache();
-    
-    List<ProcessResponse> processes = this.eDocsApi.findProcessesByProtocolsAsSystem(processNumbers);
+    List<AdministrativeProcessDto> processes = this.administrativeProcessProviderService.getProcesses(processNumbers);
 
-    for (ProcessResponse processResponse : processes) {
+    for (AdministrativeProcessDto processResponse : processes) {
 
       ProcessFromEDocsDto fromEDocs = ProcessFromEDocsDto.of(processResponse);
 

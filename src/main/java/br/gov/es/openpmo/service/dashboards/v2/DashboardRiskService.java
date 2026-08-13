@@ -28,12 +28,20 @@ public class DashboardRiskService implements IDashboardRiskService {
   @Override
   public RiskDataChart build(final DashboardParameters parameters) {
     final Long workpackId = parameters.getWorkpackId();
-    return this.build(workpackId);
+    final Long planId = workpackId == null ? parameters.getPlanId() : null;
+    final List<RiskDataChartDto> counts = this.repository.countRisksForDashboard(
+      planId,
+      workpackId
+    );
+    return this.build(counts);
   }
 
   @Override
   public RiskDataChart build(final Long workpackId) {
-    List<RiskDataChartDto> counts = this.repository.countRisksOfWorkpack(workpackId);
+    return this.build(this.repository.countRisksForDashboard(null, workpackId));
+  }
+
+  private RiskDataChart build(final List<RiskDataChartDto> counts) {
     Long totalOpenedRisks = this.countTotalOpenedRisks(counts);
     Long totalByImportanceHigh = this.countRisksByImportance(counts, HIGH);
     Long totalByImportanceLow = this.countRisksByImportance(counts, LOW);

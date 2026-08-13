@@ -67,7 +67,8 @@ public interface IsCCBMemberRepository extends Neo4jRepository<IsCCBMemberFor, L
     Long idWorkpack
   );
 
-  @Query("MATCH (pl:Plan)-[a:IS_ADOPTED_BY]->(o:Office)<-[i:IS_IN_CONTACT_BOOK_OF]-(p:Person)-[c:IS_CCB_MEMBER_FOR]->" +
+  @Query("MATCH (pl:Plan)-[a:IS_ADOPTED_BY]->(o:Office)" +
+         "<-[i:IS_IN_CONTACT_BOOK_OF]-(p:Person)-[c:IS_CCB_MEMBER_FOR]->" +
          "(w:Workpack) " +
          "WHERE id(w)=$idWorkpack AND id(p)=$idPerson AND id(pl)=$idPlan " +
          "OPTIONAL MATCH (p)-[aut:IS_AUTHENTICATED_BY]-(autS:AuthService) " +

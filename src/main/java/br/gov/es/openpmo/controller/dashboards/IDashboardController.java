@@ -33,6 +33,14 @@ public interface IDashboardController {
       @RequestParam(name = "date-reference", required = false) @DateTimeFormat(pattern = "MM/yyyy") YearMonth yearMonth,
       UriComponentsBuilder uriComponentsBuilder,
       @Authorization final String authorization);
+
+  @GetMapping("/plan")
+  Response<DashboardResponse> getPlanDashboard(
+      @RequestParam(name = "show-header", defaultValue = "true") Boolean showHeader,
+      @RequestParam(name = "id-plan") Long planId,
+      @RequestParam(name = "date-reference", required = false) @DateTimeFormat(pattern = "MM/yyyy") YearMonth yearMonth,
+      UriComponentsBuilder uriComponentsBuilder,
+      @Authorization final String authorization);
   
   @GetMapping("{workpackId}/isBeingBuild")
   Map<String, Boolean> isItemInBeingBuild(
