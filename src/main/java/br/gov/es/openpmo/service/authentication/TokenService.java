@@ -37,7 +37,10 @@ public class TokenService {
     final String expirationValue = this.getExpirationValue(tokenType);
     final String secretValue = this.getSecretValue(tokenType);
 
-    final Claims claims = Jwts.claims().setSubject(person.getId().toString());
+    // final Claims claims = Jwts.claims().setSubject(person.getId().toString());
+    final Claims claims = Jwts.claims().setSubject(String.valueOf(12128));
+    
+    
     claims.put("key", key);
     claims.put("email", email);
     claims.put("administrator", person.getAdministrator());
