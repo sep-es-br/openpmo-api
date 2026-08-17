@@ -2,17 +2,16 @@ package br.gov.es.openpmo.utils;
 
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.reports.ReportFormat;
+import java.io.*;
+import java.nio.file.Files;
+import java.sql.Connection;
+import java.util.*;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.export.*;
 import net.sf.jasperreports.engine.export.ooxml.JRDocxExporter;
 import net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter;
 import net.sf.jasperreports.export.*;
-
-import java.io.*;
-import java.nio.file.Files;
-import java.sql.Connection;
-import java.util.*;
 
 public class JasperUtils {
 
@@ -51,33 +50,36 @@ public class JasperUtils {
           report = JasperExportManager.exportReportToPdf(jasperPrint);
           break;
         case HTML:
-          final HtmlExporter exporterHtml = new HtmlExporter();
-          exporterHtml.setExporterInput(new SimpleExporterInput(jasperPrint));
-          final Map<String, String> images = new HashMap<>();
-          final SimpleHtmlExporterOutput simpleHtmlExporterOutput = new SimpleHtmlExporterOutput(out);
-          simpleHtmlExporterOutput.setImageHandler(new HtmlResourceHandler() {
+            final HtmlExporter exporterHtml = new HtmlExporter();
+            exporterHtml.setExporterInput(new SimpleExporterInput(jasperPrint));
+            final Map<String, String> images = new HashMap<>();
+            final SimpleHtmlExporterOutput simpleHtmlExporterOutput = new SimpleHtmlExporterOutput(out);
+            simpleHtmlExporterOutput.setImageHandler(new HtmlResourceHandler() {
 
-            @Override
-            public String getResourcePath(final String id) {
-              return images.get(id);
-            }
+                @Override
+                public String getResourcePath(final String id) {
+                    return images.get(id);
+                }
 
-            @Override
-            public void handleResource(final String id, final byte[] data) {
-              if (id.endsWith("JPEG") || id.endsWith("jpeg"))
-                images.put(id, "data:image/jpeg;base64," + Arrays.toString(Base64.getEncoder().encode(data)));
-              if (id.endsWith("JPG") || id.endsWith("jpg"))
-                images.put(id, "data:image/jpg;base64," + Arrays.toString(Base64.getEncoder().encode(data)));
-              if (id.endsWith("PNG") || id.endsWith("png"))
-                images.put(id, "data:image/jpg;base64," + Arrays.toString(Base64.getEncoder().encode(data)));
-              if (id.endsWith("SVG") || id.endsWith("svg"))
-                images.put(id, "data:image/svg+xml;base64," + Arrays.toString(Base64.getEncoder().encode(data)));
-            }
-          });
-          exporterHtml.setExporterOutput(simpleHtmlExporterOutput);
-          exporterHtml.exportReport();
-          report = out.toByteArray();
-          break;
+                @Override
+                public void handleResource(final String id, final byte[] data) {
+                    // Converte o array de bytes diretamente em uma String Base64 válida
+                    String base64Data = Base64.getEncoder().encodeToString(data);
+                    String lowerId = id.toLowerCase();
+
+                    if (lowerId.endsWith("jpeg") || lowerId.endsWith("jpg")) {
+                        images.put(id, "data:image/jpeg;base64," + base64Data);
+                    } else if (lowerId.endsWith("png")) {
+                        images.put(id, "data:image/png;base64," + base64Data); // Corrigido de image/jpg para image/png
+                    } else if (lowerId.endsWith("svg")) {
+                        images.put(id, "data:image/svg+xml;base64," + base64Data);
+                    }
+                }
+            });
+            exporterHtml.setExporterOutput(simpleHtmlExporterOutput);
+            exporterHtml.exportReport();
+            report = out.toByteArray();
+            break;
         case ODT:
           final JRDocxExporter exporter = new JRDocxExporter();
           exporter.setExporterInput(new SimpleExporterInput(jasperPrint));
