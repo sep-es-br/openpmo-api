@@ -17,6 +17,7 @@ public abstract class Agreement extends Entity {
     private Long processId;
     private String object;
     private String organizationIdentifier;
+    private String numOriginal;
 
     @Relationship(type = "SIGNED_FOR")
     private Workpack workpack;
@@ -28,11 +29,13 @@ public abstract class Agreement extends Entity {
         final Long processId,
         final String object,
         final String organizationIdentifier,
+        final String numOriginal,
         final Workpack workpack
     ) {
         this.processId = processId;
         this.object = object;
         this.organizationIdentifier = organizationIdentifier;
+        this.numOriginal = numOriginal;
         this.workpack = workpack;
     }
 
@@ -41,7 +44,7 @@ public abstract class Agreement extends Entity {
             case CONTRACT:
                 return new Contract(request.getProcessId(), request.getObject(), request.getOrganizationIdentifier(), workpack);
             case COOPERATION:
-                return new Cooperation(request.getProcessId(), request.getObject(), request.getOrganizationIdentifier(), workpack);
+                return new Cooperation(request.getProcessId(), request.getObject(), request.getOrganizationIdentifier(), request.getNumOriginal(), workpack);
             default:
                 throw new IllegalArgumentException("agreement.type.invalid");
         }
@@ -54,6 +57,9 @@ public abstract class Agreement extends Entity {
         ObjectUtils.updateIfPresent(request::getProcessId, this::setProcessId);
         ObjectUtils.updateIfPresent(request::getObject, this::setObject);
         ObjectUtils.updateIfPresent(request::getOrganizationIdentifier, this::setOrganizationIdentifier);
+        if (this.getType() == AgreementType.COOPERATION) {
+            ObjectUtils.updateIfPresent(request::getNumOriginal, this::setNumOriginal);
+        }
     }
 
     public abstract AgreementType getType();
@@ -69,6 +75,8 @@ public abstract class Agreement extends Entity {
     public void setObject(final String object) { this.object = object; }
     public String getOrganizationIdentifier() { return this.organizationIdentifier; }
     public void setOrganizationIdentifier(final String organizationIdentifier) { this.organizationIdentifier = organizationIdentifier; }
+    public String getNumOriginal() { return this.numOriginal; }
+    public void setNumOriginal(final String numOriginal) { this.numOriginal = numOriginal; }
     public Workpack getWorkpack() { return this.workpack; }
     public void setWorkpack(final Workpack workpack) { this.workpack = workpack; }
 }
