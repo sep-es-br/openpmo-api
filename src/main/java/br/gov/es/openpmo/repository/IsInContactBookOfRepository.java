@@ -30,7 +30,7 @@ public interface IsInContactBookOfRepository extends Neo4jRepository<IsInContact
     @Param("idOffice") Long idOffice
   );
 
-  @Query("match (p:Person)-[i:IS_IN_CONTACT_BOOK_OF]->(o:Office) " +
+  @Query("MATCH (p:Person)-[i:IS_IN_CONTACT_BOOK_OF]->(o:Office) " +
          "where id(p)=$personId and id(o)=$officeId " +
          "return count(i)>0")
   boolean existsByPersonIdAndOfficeId(
@@ -45,7 +45,10 @@ public interface IsInContactBookOfRepository extends Neo4jRepository<IsInContact
           "  address: $address, " +
           "  phoneNumber: $phoneNumber " +
           "}]->(o) " +
-          "RETURN r")
+          "CREATE (wp:WorkPlace) " +
+          "CREATE (wp)-[:OF]->(p) " +
+          "CREATE (wp)-[:`FOR`]->(o) " +
+          "RETURN p, r, o")
   IsInContactBookOf createIsInContactBookOf(Long personId, Long officeId,
                                        String email, String address,
                                        String phoneNumber);
@@ -55,7 +58,7 @@ public interface IsInContactBookOfRepository extends Neo4jRepository<IsInContact
           "SET r.email = $email, " +
           "    r.address = $address, " +
           "    r.phoneNumber = $phoneNumber " +
-          "RETURN r")
+          "RETURN p, r, o")
   IsInContactBookOf updateIsInContactBookOf(Long personId, Long officeId,
                                       String email, String address,
                                       String phoneNumber);

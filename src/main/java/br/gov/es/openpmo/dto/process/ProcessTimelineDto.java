@@ -1,6 +1,6 @@
 package br.gov.es.openpmo.dto.process;
 
-import br.gov.es.openpmo.apis.edocs.ProcessTimeline;
+import br.gov.es.pmo.administrative_process_core.model.AdministrativeProcessHistoryDto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDateTime;
@@ -17,42 +17,26 @@ public class ProcessTimelineDto {
   private final String sector;
   private final String descricaoTipo;
 
-  private ProcessTimelineDto(final ProcessTimeline item) {
-    this.daysDuration = item.daysDuration();
-    this.updateDate = item.detail().getDate();
-    this.organizationName = item.detail().getAbbreviation();
-    this.sector = item.detail().getName();
-    this.descricaoTipo = item.detail().getDescricaoTipo();
+  private ProcessTimelineDto(final AdministrativeProcessHistoryDto item) {
+    this.daysDuration = item.getDaysDuration();
+    this.updateDate = item.getUpdateDate();
+    this.organizationName = item.getOrganizationName();
+    this.sector = item.getSector();
+    this.descricaoTipo = item.getDescriptionType();
   }
 
-  public static List<ProcessTimelineDto> of(final Collection<ProcessTimeline> timeline) {
+  public static List<ProcessTimelineDto> of(
+    final Collection<AdministrativeProcessHistoryDto> timeline
+  ) {
     return timeline.stream()
       .map(ProcessTimelineDto::new)
       .collect(Collectors.toList());
   }
 
-  public Long getDaysDuration() {
-    return this.daysDuration;
-  }
-
-  public void clearDaysDuration() {
-    this.daysDuration = null;
-  }
-
-  public LocalDateTime getUpdateDate() {
-    return this.updateDate;
-  }
-
-  public Object getOrganizationName() {
-    return this.organizationName;
-  }
-
-  public String getSector() {
-    return this.sector;
-  }
-
-  public String getDescricaoTipo() {
-    return this.descricaoTipo;
-  }
-
+  public Long getDaysDuration() { return this.daysDuration; }
+  public void clearDaysDuration() { this.daysDuration = null; }
+  public LocalDateTime getUpdateDate() { return this.updateDate; }
+  public Object getOrganizationName() { return this.organizationName; }
+  public String getSector() { return this.sector; }
+  public String getDescricaoTipo() { return this.descricaoTipo; }
 }

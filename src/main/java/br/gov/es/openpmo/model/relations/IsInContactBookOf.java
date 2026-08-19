@@ -47,7 +47,7 @@ public class IsInContactBookOf {
     final Person person
   ) {
     this.person = person;
-    this.office = office;
+    this.setOffice(office);
     this.address = personDto.getAddress();
     this.email = personDto.getContactEmail();
     this.phoneNumber = personDto.getPhoneNumber();
@@ -72,7 +72,7 @@ public class IsInContactBookOf {
 
   @Transient
   public Long getOfficeId() {
-    return this.office.getId();
+    return this.getOffice().getId();
   }
 
   public Office getOffice() {

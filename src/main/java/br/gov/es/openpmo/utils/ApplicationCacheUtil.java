@@ -125,6 +125,14 @@ public class ApplicationCacheUtil {
         return list;
     }
 
+    public List<WorkpackResultDto> getPlanRootWorkpacks(Long idPlan) {
+        loadPlanIfChanged(null, idPlan);
+        return mapPlanWorkpackResult.get(idPlan).stream()
+            .filter(workpack -> workpack.getIdParent() == null)
+            .map(WorkpackResultDto::new)
+            .collect(Collectors.toList());
+    }
+
     public List<Long> getListIdWorkpackWithParent(Long idWorkpack) {
         loadPlanIfChanged(idWorkpack, null);
         List<Long> ids = new ArrayList<>(0);

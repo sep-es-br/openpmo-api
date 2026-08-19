@@ -22,6 +22,8 @@ public class AgreementCreateDto {
     @NotBlank(message = "O identificador do órgão é obrigatório")
     private String organizationIdentifier;
 
+    private String numOriginal;
+
     public Long getIdWorkpack() { return this.idWorkpack; }
     public void setIdWorkpack(final Long idWorkpack) { this.idWorkpack = idWorkpack; }
     public AgreementType getType() { return this.type; }
@@ -32,4 +34,6 @@ public class AgreementCreateDto {
     public void setObject(final String object) { this.object = object; }
     public String getOrganizationIdentifier() { return this.organizationIdentifier; }
     public void setOrganizationIdentifier(final String organizationIdentifier) { this.organizationIdentifier = organizationIdentifier; }
+    public String getNumOriginal() { return this.numOriginal; }
+    public void setNumOriginal(final String numOriginal) { this.numOriginal = numOriginal; }
 }

@@ -10,6 +10,7 @@ public class AgreementDto {
     private AgreementType type;
     private Long processId;
     private String object;
+    private String numOriginal;
 
     public AgreementDto() {
     }
@@ -20,6 +21,7 @@ public class AgreementDto {
         this.type = agreement.getType();
         this.processId = agreement.getProcessId();
         this.object = agreement.getObject();
+        this.numOriginal = agreement.getNumOriginal();
     }
 
     public static AgreementDto of(final Agreement agreement) { return new AgreementDto(agreement); }
@@ -33,4 +35,6 @@ public class AgreementDto {
     public void setProcessId(final Long processId) { this.processId = processId; }
     public String getObject() { return this.object; }
     public void setObject(final String object) { this.object = object; }
+    public String getNumOriginal() { return this.numOriginal; }
+    public void setNumOriginal(final String numOriginal) { this.numOriginal = numOriginal; }
 }
