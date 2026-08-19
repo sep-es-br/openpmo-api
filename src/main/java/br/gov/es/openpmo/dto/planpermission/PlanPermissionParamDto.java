@@ -66,12 +66,20 @@ public class PlanPermissionParamDto {
   @JsonIgnore
   public PermissionLevelEnum getGratherPermissionLevel() {
     if (this.hasEdit()) return PermissionLevelEnum.EDIT;
-    return PermissionLevelEnum.READ;
+    if (this.hasPermission()) return PermissionLevelEnum.READ;
+    return PermissionLevelEnum.NONE;
   }
 
   @JsonIgnore
   private boolean hasEdit() {
     return this.permissions.stream().map(PermissionDto::getLevel).anyMatch(level -> level.equals(PermissionLevelEnum.EDIT));
+  }
+
+  @JsonIgnore
+  private boolean hasPermission() {
+    return this.permissions.stream()
+      .map(PermissionDto::getLevel)
+      .anyMatch(level -> level != null && !PermissionLevelEnum.NONE.equals(level));
   }
 
 }

@@ -187,7 +187,12 @@ public class OfficePermissionService {
 
     final Office office = this.officeService.findById(idOffice);
 
-    final List<Person> listPerson = this.personService.personInCanAccessOffice(idOffice);
+    final List<Person> listPerson = new ArrayList<>(this.personService.personInCanAccessOffice(idOffice));
+    this.isCCBMemberRepository.findAllPersonsByOfficeId(idOffice).forEach(ccmPerson -> {
+      if (listPerson.stream().noneMatch(person -> person.getId().equals(ccmPerson.getId()))) {
+        listPerson.add(ccmPerson);
+      }
+    });
 
     final List<CanAccessOffice> listOfficesPermission = this.listOfficesPermissions(office, key, idFilter);
 
@@ -197,12 +202,13 @@ public class OfficePermissionService {
       final List<CanAccessOffice> permissionsFilteredByPerson = listOfficesPermission.stream()
         .filter(permission -> permission.getPerson().equals(person))
         .collect(Collectors.toList());
-      if (permissionsFilteredByPerson.isEmpty()) {
+      if (permissionsFilteredByPerson.isEmpty()
+        && !this.isCCBMemberRepository.existsCCMForPersonAndTarget(person.getId(), idOffice)) {
         continue;
       }
       this.fillPersonDto(idOffice, person, officePermissionItem, roles, term);
       officePermissionItem.setIdOffice(idOffice);
-      this.fillPermissions(officePermissionItem, permissionsFilteredByPerson);
+      this.fillPermissions(officePermissionItem, permissionsFilteredByPerson, person.getId(), idOffice);
       allPermissionsOfOffice.add(officePermissionItem);
     }
 
@@ -284,34 +290,32 @@ public class OfficePermissionService {
 
   private void fillPermissions(
     final OfficePermissionDto officePermissionItem,
-    final Collection<CanAccessOffice> permissionsFilteredByPerson
+    final Collection<CanAccessOffice> permissionsFilteredByPerson,
+    final Long idPerson,
+    final Long idOffice
   ) {
-  
-    if (permissionsFilteredByPerson.isEmpty()) {
-      officePermissionItem.setPermissions(Collections.emptyList());
-      return;
-    }
-  
-    CanAccessOffice any = permissionsFilteredByPerson.iterator().next();
-  
-    Long idPerson = any.getPerson().getId();
-    Long idOffice = any.getOffice().getId();
-  
     List<String> ccbRoles = isCCBMemberRepository.findCcbRolesByPersonAndOffice(idPerson, idOffice);
     Set<String> ccbRolesSet = new HashSet<>(ccbRoles);
-  
-    final List<PermissionDto> permissions = permissionsFilteredByPerson.stream()
+
+    final List<PermissionDto> permissions = new ArrayList<>(permissionsFilteredByPerson.stream()
       .map(permission -> {
         PermissionDto dto = PermissionDto.of(permission);
-  
         boolean isCcm = ccbRolesSet.contains(permission.getRole());
-  
         dto.setCcmMember(isCcm);
-  
         return dto;
       })
-      .collect(Collectors.toList());
-  
+      .collect(Collectors.toList()));
+
+    ccbRolesSet.stream()
+      .filter(role -> permissions.stream().noneMatch(permission -> role.equals(permission.getRole())))
+      .forEach(role -> {
+        final PermissionDto permission = new PermissionDto();
+        permission.setRole(role);
+        permission.setLevel(PermissionLevelEnum.NONE);
+        permission.setCcmMember(true);
+        permissions.add(permission);
+      });
+
     officePermissionItem.setPermissions(permissions);
   }
 
@@ -350,12 +354,16 @@ public class OfficePermissionService {
 
     officesPermissionsDataBase.forEach(permissionDatabase -> {
       if (request.getPermissions() == null || request.getPermissions().stream().noneMatch(
-        rp -> rp.getRole().equals(permissionDatabase.getRole()))) {
+        rp -> !PermissionLevelEnum.NONE.equals(rp.getLevel())
+          && rp.getRole().equals(permissionDatabase.getRole()))) {
         this.delete(permissionDatabase);
       }
     });
     if (request.getPermissions() != null && !(request.getPermissions()).isEmpty()) {
       request.getPermissions().forEach(permission -> {
+        if (PermissionLevelEnum.NONE.equals(permission.getLevel())) {
+          return;
+        }
         if (permission.getId() == null && officesPermissionsDataBase.stream().noneMatch(
           pbd -> permission.getRole() != null && permission.getRole().equals(pbd.getRole()))) {
           this.save(this.buildCanAccessOffice(target, office, permission, null));
@@ -398,16 +406,18 @@ public class OfficePermissionService {
                   officePermission.getPermissionLevel());
         }
       });
-      this.journalCreator.officePermission(
-        office,
-        target,
-        author,
-        request.getGratherPermissionLevel(),
-        JournalAction.EDITED
-      );
+      if (!PermissionLevelEnum.NONE.equals(request.getGratherPermissionLevel())) {
+        this.journalCreator.officePermission(
+          office,
+          target,
+          author,
+          request.getGratherPermissionLevel(),
+          JournalAction.EDITED
+        );
+      }
     }
 
-    this.isCCBMemberRepository.deleteAllByPersonIdAndOfficeId(request.getPerson().getId(), request.getIdOffice());
+    this.isCCBMemberRepository.deleteAllByPersonIdAndOfficeId(target.getId(), request.getIdOffice());
 
     for (final PermissionDto permission : request.getPermissions()) {
 
@@ -416,14 +426,14 @@ public class OfficePermissionService {
       }
     
       this.isCCBMemberRepository.createIsCCBMemberForByOffice(
-          request.getPerson().getId(),
+          target.getId(),
           request.getIdOffice(),
           permission.getRole(),
           permission.isCcmMember()
       );
     }
 
-    if(!this.isCCBMemberRepository.existsCCMForPersonAndTarget(request.getPerson().getId(), request.getIdOffice())){
+    if(!this.isCCBMemberRepository.existsCCMForPersonAndTarget(target.getId(), request.getIdOffice())){
       this.evaluateBaselineService.handlePostMemberDeletion(request.getIdOffice());
     }
 
@@ -504,17 +514,22 @@ public class OfficePermissionService {
     final Office office = this.officeService.findById(request.getIdOffice());
     final List<CanAccessOffice> canAccessOffices = this.findByOfficeAndPerson(office.getId(), target.getId());
     request.getPermissions().forEach(permission -> {
+      if (PermissionLevelEnum.NONE.equals(permission.getLevel())) {
+        return;
+      }
       if (canAccessOffices.stream().noneMatch(c -> c.getRole().equals(permission.getRole()))) {
         this.save(this.buildCanAccessOffice(target, office, permission, null));
       }
     });
-    this.journalCreator.officePermission(
-      office,
-      target,
-      author,
-      request.getGratherPermissionLevel(),
-      JournalAction.CREATED
-    );
+    if (!PermissionLevelEnum.NONE.equals(request.getGratherPermissionLevel())) {
+      this.journalCreator.officePermission(
+        office,
+        target,
+        author,
+        request.getGratherPermissionLevel(),
+        JournalAction.CREATED
+      );
+    }
 
     for (final PermissionDto permission : request.getPermissions()) {
 
@@ -523,7 +538,7 @@ public class OfficePermissionService {
       }
     
       this.isCCBMemberRepository.createIsCCBMemberForByOffice(
-          request.getPerson().getId(),
+          target.getId(),
           request.getIdOffice(),
           permission.getRole(),
           permission.isCcmMember()
@@ -551,7 +566,7 @@ public class OfficePermissionService {
       ? this.roleService.getRolesByKey(idPerson, key)
       : Collections.emptyList();
     this.fillPersonDto(idOffice, person, officePermissionDto, roles, null);
-    this.fillPermissions(officePermissionDto, permissions);
+    this.fillPermissions(officePermissionDto, permissions, person.getId(), idOffice);
     this.fillPersonRoles(officePermissionDto, person.getId());
 
     return officePermissionDto;
