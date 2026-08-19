@@ -23,8 +23,8 @@ public interface IsCCBMemberRepository extends Neo4jRepository<IsCCBMemberFor, L
          "RETURN w")
   List<Workpack> findAllWorkpacksByPersonId(Long personId);
 
-  @Query("MATCH (p:Person)-[c:IS_CCB_MEMBER_FOR{active: true}]->(:Workpack) " +
-         "WHERE id(p)=$personId " +
+  @Query("MATCH (p:Person)-[c:IS_CCB_MEMBER_FOR{active: true}]->(target) " +
+         "WHERE id(p)=$personId AND (target:Office OR target:Plan OR target:Workpack) " +
          "RETURN count(c)>0")
   boolean isActive(@Param("personId") Long personId);
 
