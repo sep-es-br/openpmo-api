@@ -182,6 +182,12 @@ public class PlanPermissionService {
       mapPermission.computeIfAbsent(p.getPerson(), k -> new ArrayList<>());
       mapPermission.get(p.getPerson()).add(dto);
     });
+    final List<Person> ccmPersons = new ArrayList<>(this.isCCBMemberRepository.findAllPersonsByPlanId(idPlan));
+    if (!StringUtils.isBlank(key)) {
+      final Person personByKey = this.personService.findPersonByKey(key);
+      ccmPersons.removeIf(person -> !person.getId().equals(personByKey.getId()));
+    }
+    ccmPersons.forEach(person -> mapPermission.computeIfAbsent(person, keyPerson -> new ArrayList<>()));
     mapPermission.keySet().forEach(person -> {
       List<String> ccbRoles = isCCBMemberRepository.findCcbRolesByPersonAndPlan(person.getId(), idPlan);
       Set<String> ccbRolesSet = new HashSet<>(ccbRoles);
@@ -193,7 +199,17 @@ public class PlanPermissionService {
           return dto;
         })
         .collect(Collectors.toList());
-      
+
+      ccbRolesSet.stream()
+        .filter(role -> permissions.stream().noneMatch(permission -> role.equals(permission.getRole())))
+        .forEach(role -> {
+          final PermissionDto permission = new PermissionDto();
+          permission.setRole(role);
+          permission.setLevel(PermissionLevelEnum.NONE);
+          permission.setCcmMember(true);
+          permissions.add(permission);
+        });
+
       final PlanPermissionDto planPermissionDto = new PlanPermissionDto();
       planPermissionDto.setIdPlan(idPlan);
       planPermissionDto.setPermissions(permissions);
@@ -295,7 +311,8 @@ public class PlanPermissionService {
     final List<CanAccessPlan> plansPermissionsDataBase = this.findByPlanAndPerson(plan, target);
     plansPermissionsDataBase.forEach(permissionDatabase -> {
       final boolean find = request.getPermissions() != null && request.getPermissions().stream()
-        .anyMatch(filtro -> permissionDatabase.getId().equals(filtro.getId()));
+        .anyMatch(filtro -> !PermissionLevelEnum.NONE.equals(filtro.getLevel())
+          && permissionDatabase.getId().equals(filtro.getId()));
       if (find) {
         return;
       }
@@ -303,6 +320,9 @@ public class PlanPermissionService {
     });
     if (request.getPermissions() != null) {
       request.getPermissions().forEach(permission -> {
+        if (PermissionLevelEnum.NONE.equals(permission.getLevel())) {
+          return;
+        }
         if (permission.getId() == null) {
           this.save(this.buildCanAccessPlan(target, plan, permission, null), target);
           return;
@@ -319,15 +339,17 @@ public class PlanPermissionService {
                 planPermission.getRole(),
                 planPermission.getPermissionLevel());
       });
-      this.journalCreator.planPermission(
-        plan,
-        target,
-        author,
-        request.getGratherPermissionLevel(),
-        JournalAction.EDITED
-      );
+      if (!PermissionLevelEnum.NONE.equals(request.getGratherPermissionLevel())) {
+        this.journalCreator.planPermission(
+          plan,
+          target,
+          author,
+          request.getGratherPermissionLevel(),
+          JournalAction.EDITED
+        );
+      }
     }
-    this.isCCBMemberRepository.deleteAllByPersonIdAndPlanId(request.getPerson().getId(), request.getIdPlan());
+    this.isCCBMemberRepository.deleteAllByPersonIdAndPlanId(target.getId(), request.getIdPlan());
 
     for (final PermissionDto permission : request.getPermissions()) {
 
@@ -336,14 +358,14 @@ public class PlanPermissionService {
       }
     
       this.isCCBMemberRepository.createIsCCBMemberForByPlan(
-          request.getPerson().getId(),
+          target.getId(),
           request.getIdPlan(),
           permission.getRole(),
           permission.isCcmMember()
       );
     }
 
-    if(!this.isCCBMemberRepository.existsCCMForPersonAndTarget(request.getPerson().getId(), request.getIdPlan())){
+    if(!this.isCCBMemberRepository.existsCCMForPersonAndTarget(target.getId(), request.getIdPlan())){
       this.evaluateBaselineService.handlePostMemberDeletion(request.getIdPlan());
     }
   }
@@ -428,16 +450,34 @@ public class PlanPermissionService {
     final Person target = this.returnPersonOrCreateIfNotExists(request.getPerson(), office.getId());
     final Plan plan = this.planService.findById(request.getIdPlan());
     for (final PermissionDto permission : request.getPermissions()) {
+      if (PermissionLevelEnum.NONE.equals(permission.getLevel())) {
+        continue;
+      }
       final CanAccessPlan planPermission = this.buildCanAccessPlan(target, plan, permission, null);
       this.save(planPermission, target);
     }
-    this.journalCreator.planPermission(
-      plan,
-      target,
-      author,
-      request.getGratherPermissionLevel(),
-      JournalAction.CREATED
-    );
+    if (!PermissionLevelEnum.NONE.equals(request.getGratherPermissionLevel())) {
+      this.journalCreator.planPermission(
+        plan,
+        target,
+        author,
+        request.getGratherPermissionLevel(),
+        JournalAction.CREATED
+      );
+    }
+
+    for (final PermissionDto permission : request.getPermissions()) {
+      if (!permission.isCcmMember()) {
+        continue;
+      }
+
+      this.isCCBMemberRepository.createIsCCBMemberForByPlan(
+        target.getId(),
+        request.getIdPlan(),
+        permission.getRole(),
+        true
+      );
+    }
   }
 
   public Set<CanAccessPlan> findInheritedPermission(
