@@ -58,6 +58,33 @@ public interface DashboardDatasheetRepository extends Neo4jRepository<Workpack, 
        "       length(p) AS level")
 List<WorkpackByModelQueryResult> workpackByModel(Long workpackId, Long workpackModelId);
 
+  @Query("MATCH (plan:Plan)<-[:BELONGS_TO]-(workpack:Workpack{deleted:false,canceled:false}) " +
+      "WHERE id(plan)=$planId AND (workpack.category <> 'SNAPSHOT' OR workpack.category IS NULL) " +
+      "MATCH (workpack)-[:IS_INSTANCE_BY|IS_LINKED_TO]->(model:WorkpackModel) " +
+      "OPTIONAL MATCH hierarchy=(workpack)-[:IS_IN*]->(:Workpack{deleted:false,canceled:false}) " +
+      "WITH plan, workpack, model, coalesce(max(length(hierarchy)),0) AS hierarchyLevel " +
+      "OPTIONAL MATCH (workpack)<-[:IS_SNAPSHOT_OF]-(milestoneSnapshot:Milestone{deleted:false,canceled:false})" +
+      "-[:COMPOSES]->(directBaseline:Baseline{active:true}) " +
+      "OPTIONAL MATCH (workpack)<-[:IS_IN*]-(descendant:Workpack{deleted:false,canceled:false}) " +
+      "OPTIONAL MATCH (descendant)<-[:IS_SNAPSHOT_OF]-(snapshot)-[:COMPOSES]->(descendantBaseline:Baseline{active:true}) " +
+      "WHERE (snapshot:Milestone OR snapshot:Deliverable) AND snapshot.deleted=false AND snapshot.canceled=false " +
+      "WITH plan, workpack, model, hierarchyLevel, milestoneSnapshot, directBaseline, " +
+      "count(DISTINCT descendantBaseline) > 0 AS hasDescendantBaseline " +
+      "WHERE CASE " +
+      "WHEN 'Milestone' IN labels(workpack) THEN directBaseline IS NOT NULL " +
+      "AND left(milestoneSnapshot.date,10) >= left(plan.start,10) " +
+      "AND left(milestoneSnapshot.date,10) <= left(plan.finish,10) " +
+      "WHEN 'Deliverable' IN labels(workpack) THEN " +
+      "EXISTS((workpack)<-[:IS_SNAPSHOT_OF]-()-[:COMPOSES]->(:Baseline{active:true})) " +
+      "ELSE hasDescendantBaseline END " +
+      "WITH plan, model.modelName AS singularName, model.modelNameInPlural AS pluralName, " +
+      "model.fontIcon AS icon, collect(DISTINCT workpack) AS workpacks, collect(DISTINCT id(model)) AS modelIds, " +
+      "min(hierarchyLevel) AS level, min(coalesce(model.position,0)) AS position " +
+      "RETURN head(modelIds) AS idWorkpackModel, id(plan) AS idPlan, size(workpacks) AS quantity, " +
+      "singularName, pluralName, icon, level, position " +
+      "ORDER BY level ASC, position ASC, pluralName ASC")
+  List<WorkpackByModelQueryResult> workpackByModelForPlan(Long planId);
+
   @Query("MATCH (a:Actor)-[s:IS_STAKEHOLDER_IN{active: true }]->(w:Workpack{deleted: false , canceled: false })\n" +
       "WHERE id(w)=$workpackId AND (a)-[s]->(w)\n" +
       "OPTIONAL MATCH (w)-[:IS_IN*]->(v:Workpack{deleted: false , canceled: false })\n" +

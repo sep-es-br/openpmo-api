@@ -36,6 +36,7 @@ import br.gov.es.openpmo.repository.IsCCBMemberRepository;
 import br.gov.es.openpmo.repository.OfficeRepository;
 import br.gov.es.openpmo.repository.PersonRepository;
 import br.gov.es.openpmo.repository.PlanRepository;
+import br.gov.es.openpmo.service.organization.WorkPlaceService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import static br.gov.es.openpmo.utils.ApplicationMessage.OFFICE_NOT_FOUND;
 import br.gov.es.openpmo.utils.NameFormatter;
@@ -76,6 +77,8 @@ public class PersonService {
 
   private final AcessoCidadaoApi acessoCidadaoApi;
 
+  private final WorkPlaceService workPlaceService;
+
   @Autowired
   public PersonService(
     final PersonRepository repository,
@@ -85,7 +88,8 @@ public class PersonService {
     final IsInContactBookOfService isInContactBookOfService,
     final IsCCBMemberRepository ccbMemberRepository,
     @Value("${app.login.server.idsvr.name}") final String authName,
-    final AcessoCidadaoApi acessoCidadaoApi
+    final AcessoCidadaoApi acessoCidadaoApi,
+    final WorkPlaceService workPlaceService
   ) {
     this.repository = repository;
     this.isAuthenticatedByService = isAuthenticatedByService;
@@ -95,6 +99,7 @@ public class PersonService {
     this.ccbMemberRepository = ccbMemberRepository;
     this.authName = authName;
     this.acessoCidadaoApi = acessoCidadaoApi;
+    this.workPlaceService = workPlaceService;
   }
 
   public Person findById(final Long id) {
@@ -347,6 +352,14 @@ public class PersonService {
     this.repository.updateNamePerson(personToUpdate.getId(), personToUpdate.getName());
     this.updateContactBook(personUpdateDto, personToUpdate);
 
+    if(personUpdateDto.getIdOrganization() != null) {
+      this.workPlaceService.selectOrganization(
+        personToUpdate.getId(),
+        personUpdateDto.getIdOffice(),
+        personUpdateDto.getIdOrganization()
+      );
+    }
+
     if (personUpdateDto.getUnify()) {
       this.unifyContactInformationsInAllOffices(personUpdateDto);
     }
@@ -569,7 +582,17 @@ public class PersonService {
         Optional.ofNullable(newPreferences.getDisplayMode())
             .ifPresent(person::setDisplayMode);
         
-        repository.save(person);
+        // Persist only preference properties. Saving a partially loaded Person
+        // graph can recreate contact WorkPlaces without their FOR relationship.
+        this.repository.updatePreferences(
+          person.getId(),
+          person.getIdOffice(),
+          person.getIdWorkpack(),
+          person.getIdWorkpackModelLinked(),
+          person.getPageSize(),
+          person.getFixedMenu(),
+          person.getDisplayMode()
+        );
       
   }
 }

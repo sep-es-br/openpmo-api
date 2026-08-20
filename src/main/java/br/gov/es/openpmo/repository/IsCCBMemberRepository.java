@@ -23,8 +23,8 @@ public interface IsCCBMemberRepository extends Neo4jRepository<IsCCBMemberFor, L
          "RETURN w")
   List<Workpack> findAllWorkpacksByPersonId(Long personId);
 
-  @Query("MATCH (p:Person)-[c:IS_CCB_MEMBER_FOR{active: true}]->(:Workpack) " +
-         "WHERE id(p)=$personId " +
+  @Query("MATCH (p:Person)-[c:IS_CCB_MEMBER_FOR{active: true}]->(target) " +
+         "WHERE id(p)=$personId AND (target:Office OR target:Plan OR target:Workpack) " +
          "RETURN count(c)>0")
   boolean isActive(@Param("personId") Long personId);
 
@@ -67,7 +67,8 @@ public interface IsCCBMemberRepository extends Neo4jRepository<IsCCBMemberFor, L
     Long idWorkpack
   );
 
-  @Query("MATCH (pl:Plan)-[a:IS_ADOPTED_BY]->(o:Office)<-[i:IS_IN_CONTACT_BOOK_OF]-(p:Person)-[c:IS_CCB_MEMBER_FOR]->" +
+  @Query("MATCH (pl:Plan)-[a:IS_ADOPTED_BY]->(o:Office)" +
+         "<-[i:IS_IN_CONTACT_BOOK_OF]-(p:Person)-[c:IS_CCB_MEMBER_FOR]->" +
          "(w:Workpack) " +
          "WHERE id(w)=$idWorkpack AND id(p)=$idPerson AND id(pl)=$idPlan " +
          "OPTIONAL MATCH (p)-[aut:IS_AUTHENTICATED_BY]-(autS:AuthService) " +
@@ -166,4 +167,14 @@ public interface IsCCBMemberRepository extends Neo4jRepository<IsCCBMemberFor, L
        Long idPerson,
        Long idPlan
        );
+
+  @Query("MATCH (p:Person)-[:IS_CCB_MEMBER_FOR]->(o:Office) " +
+       "WHERE id(o) = $idOffice " +
+       "RETURN DISTINCT p")
+  List<Person> findAllPersonsByOfficeId(Long idOffice);
+
+  @Query("MATCH (p:Person)-[:IS_CCB_MEMBER_FOR]->(plan:Plan) " +
+       "WHERE id(plan) = $idPlan " +
+       "RETURN DISTINCT p")
+  List<Person> findAllPersonsByPlanId(Long idPlan);
 }

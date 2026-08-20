@@ -1,6 +1,5 @@
 package br.gov.es.openpmo.controller.process;
 
-import br.gov.es.openpmo.apis.organograma.OrganogramaApi;
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.process.ProcessCardDto;
@@ -31,18 +30,14 @@ public class ProcessController {
 
   private final ICanAccessService canAccessService;
 
-  private final OrganogramaApi organogramaApi;
-
   @Autowired
   public ProcessController(
       final ProcessService service,
       final TokenService tokenService,
-      final ICanAccessService canAccessService,
-      final OrganogramaApi organogramaApi) {
+      final ICanAccessService canAccessService) {
     this.service = service;
     this.tokenService = tokenService;
     this.canAccessService = canAccessService;
-    this.organogramaApi = organogramaApi;
   }
 
   @GetMapping
@@ -65,7 +60,6 @@ public class ProcessController {
       @RequestHeader(name = "Authorization") final String authorization) {
 
     // this.canAccessService.ensureIsAdministrator(authorization);
-    this.organogramaApi.clearCache();
     final Long idPerson = this.tokenService.getUserId(authorization);
     final ProcessFromEDocsDto processByProtocol = this.service.findProcessByProtocol(protocol, idPerson);
     final ResponseBase<ProcessFromEDocsDto> response = ResponseBase.of(processByProtocol);

@@ -48,15 +48,19 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     
   private final String frontendUrl;
 
+  private final String logoutUrl;
+
   @Autowired
   public SecurityConfiguration(
     final TokenService tokenService,
     final ClientRegistrationRepository clientRegistrationRepository,
-    @Value("${app.homeURI}") final String frontendUrl
+    @Value("${app.homeURI}") final String frontendUrl,
+    @Value("${app.logoutURI:}") final String logoutUrl
   ) {
     this.tokenService = tokenService;
     this.clientRegistrationRepository = clientRegistrationRepository;
     this.frontendUrl = frontendUrl;
+    this.logoutUrl = logoutUrl;
   }
 
 
@@ -87,7 +91,11 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                             .logoutUrl("/logout")
                             .invalidateHttpSession(true)
                             .deleteCookies("JSESSIONID")
-                            .logoutSuccessUrl(this.frontendUrl + "/login"))
+                            .logoutSuccessUrl(
+                              this.logoutUrl == null || this.logoutUrl.trim().isEmpty()
+                                ? this.frontendUrl
+                                : this.logoutUrl
+                            ))
         
         .exceptionHandling().authenticationEntryPoint((req, res, ex) -> {
             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -98,8 +106,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
       http.addFilterBefore(this.securityFilter, UsernamePasswordAuthenticationFilter.class);
       http.addFilterBefore(this.oAuth2AuthorizationFilter, OAuth2AuthorizationRequestRedirectFilter.class);
     }
-    
-  
+
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration config = new CorsConfiguration();
