@@ -34,6 +34,18 @@ efeito de histórico e consultas posteriores diretamente ao banco de dados.
 
 ### Instalação
 
+## Logout
+
+A URL de logout do provedor de identidade pode ser configurada opcionalmente no arquivo
+`application.properties`:
+
+```properties
+app.logoutURI=https://acessocidadao.es.gov.br/is/logout
+```
+
+Quando a propriedade não for informada, o logout redirecionará para a URL inicial da
+aplicação, que encaminhará o usuário sem sessão para a tela de login.
+
 ## Login Google
 
 Para habilitar a autenticação via Google no OpenPMO, é necessário adicionar as propriedades abaixo no arquivo `application.properties`.
