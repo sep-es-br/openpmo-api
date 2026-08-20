@@ -16,9 +16,11 @@ import br.gov.es.openpmo.dto.person.PersonGetByIdDto;
 import br.gov.es.openpmo.dto.person.PersonListDto;
 import br.gov.es.openpmo.dto.person.PersonUpdateDto;
 import br.gov.es.openpmo.dto.person.detail.PersonDetailDto;
+import br.gov.es.openpmo.dto.organization.OrganizationDto;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.service.actors.PersonService;
 import br.gov.es.openpmo.service.authentication.TokenService;
+import br.gov.es.openpmo.service.organization.WorkPlaceService;
 import br.gov.es.openpmo.service.permissions.PersonPermissionsService;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.utils.ResponseHandler;
@@ -60,6 +62,7 @@ public class PersonController {
 
   private final ICanAccessService canAccessService;
   private final TokenService tokenService;
+  private final WorkPlaceService workPlaceService;
 
   @Autowired
   public PersonController(
@@ -67,13 +70,15 @@ public class PersonController {
     final PersonPermissionsService personPermissionsService,
     final ResponseHandler responseHandler,
     final ICanAccessService canAccessService,
-    final TokenService tokenService
+    final TokenService tokenService,
+    final WorkPlaceService workPlaceService
   ) {
     this.personService = personService;
     this.personPermissionsService = personPermissionsService;
     this.responseHandler = responseHandler;
     this.canAccessService = canAccessService;
     this.tokenService = tokenService;
+    this.workPlaceService = workPlaceService;
   }
 
   @GetMapping("/{key}")
@@ -141,6 +146,16 @@ public class PersonController {
     );
     final Person person = this.personService.update(personUpdateDto);
     return ResponseEntity.ok().body(ResponseBase.of(new EntityDto(person.getId())));
+  }
+
+  @PostMapping("/me/workplaces/resolve")
+  public ResponseEntity<ResponseBase<OrganizationDto>> resolveAuthenticatedUserWorkPlace(
+    @RequestParam("id-office") final Long officeId,
+    @Authorization final String authorization
+  ) {
+    return this.workPlaceService.resolveForAuthenticatedUser(authorization, officeId)
+      .map(organization -> ResponseEntity.ok(ResponseBase.of(new OrganizationDto(organization))))
+      .orElseGet(() -> ResponseEntity.noContent().build());
   }
 
   @DeleteMapping("/{idPerson}/office/{idOffice}/permissions")

@@ -41,6 +41,14 @@ public class IsAuthenticatedByService {
             isAuthenticatedBy.getGuid());
   }
 
+  public void updateCredentials(
+    final Long authenticationId,
+    final String email,
+    final String key
+  ) {
+    this.repository.updateCredentials(authenticationId, email, key);
+  }
+
   public Optional<IsAuthenticatedBy> findAuthenticatedBy(final Long idPerson) {
     return this.repository.findAuthenticatedByUsingPersonAndDefaultServerName(
       idPerson,

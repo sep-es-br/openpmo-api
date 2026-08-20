@@ -13,6 +13,8 @@ public class PersonUpdateDto {
   @NotNull
   private final Long idOffice;
 
+  private final Long idOrganization;
+
   @NotEmpty
   @NotNull
   @NotBlank
@@ -29,6 +31,7 @@ public class PersonUpdateDto {
   public PersonUpdateDto(
     final Long id,
     final Long idOffice,
+    final Long idOrganization,
     final String name,
     final String contactEmail,
     final String phoneNumber,
@@ -37,6 +40,7 @@ public class PersonUpdateDto {
   ) {
     this.id = id;
     this.idOffice = idOffice;
+    this.idOrganization = idOrganization;
     this.name = name;
     this.contactEmail = contactEmail;
     this.phoneNumber = phoneNumber;
@@ -50,6 +54,10 @@ public class PersonUpdateDto {
 
   public Long getIdOffice() {
     return this.idOffice;
+  }
+
+  public Long getIdOrganization() {
+    return this.idOrganization;
   }
 
   public String getName() {

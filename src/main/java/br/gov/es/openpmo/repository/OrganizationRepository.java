@@ -66,4 +66,7 @@ public interface OrganizationRepository extends CrudRepository<Organization, Lon
     )
     List<Organization> findByGuidIn(List<String> guids);
 
+    @Query("MATCH (organization:Organization) WHERE organization.guid=$guid RETURN organization")
+    Optional<Organization> findByGuid(@Param("guid") String guid);
+
 }
