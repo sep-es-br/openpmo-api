@@ -8,21 +8,16 @@ import br.gov.es.openpmo.dto.schedule.ScheduleParamDto;
 import br.gov.es.openpmo.model.schedule.Schedule;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.schedule.ScheduleService;
-import br.gov.es.openpmo.utils.RestTemplateUtils;
+import br.gov.es.openpmo.sigef_core.model.ISigefProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.annotations.Api;
+import java.util.List;
+import java.util.Optional;
+import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
-
-import javax.validation.Valid;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 @Api
 @RestController
@@ -33,25 +28,18 @@ public class ScheduleController {
   private final ScheduleService scheduleService;
 
   private final ICanAccessService canAccessService;
-
-  @Value("${pentaho.api.po_liquidado.url}")
-  private String poLiquidatedUrl;
-
-  @Value("${pentahoBI.userId}")
-  private String pentahoUserId;
-
-  @Value("${pentahoBI.password}")
-  private String pentahoPassword;
-
-  private final RestTemplateUtils restTemplateUtils = new RestTemplateUtils();
+  
+  private final Optional<ISigefProvider> sigefProviderOpt;
 
   @Autowired
   public ScheduleController(
     final ScheduleService scheduleService,
-    final ICanAccessService canAccessService
+    final ICanAccessService canAccessService,
+    final Optional<ISigefProvider> sigefProviderOpt
   ) {
     this.scheduleService = scheduleService;
     this.canAccessService = canAccessService;
+    this.sigefProviderOpt = sigefProviderOpt;
   }
 
   @GetMapping
@@ -124,29 +112,19 @@ public class ScheduleController {
    * Método controlador responsável pela consulta dos valores liquidados do PO
    *
    * @param codPo codigo do PO para consulta dos valores liquidados
+   * @param codUo codigo da UO para consulta dos valores liguidados
    * @return o JSON Object da consulta
    */
   @GetMapping("/pentaho/po/liquidated/{codPo}/{codUo}")
   public ResponseEntity<Object> getPoLiquidated(@PathVariable("codPo") String codPo,
                                                 @PathVariable("codUo") String codUo) {
-    RestTemplate restTemplate;
+    
+        
+        if(!sigefProviderOpt.isPresent()) return ResponseEntity.noContent().build();
+        ISigefProvider sigefProvider = sigefProviderOpt.get();
+      
     try {
-      restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
-    } catch (Exception e) {
-      return ResponseEntity.badRequest().build();
-    }
-    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
-
-    String url = poLiquidatedUrl + codPo + "&parampCodUo=" + codUo;
-
-    try {
-      CompletableFuture<JsonNode> futureResponse = restTemplateUtils.createRequestWithAuth(
-              restTemplate,
-              url,
-              pentahoUserId,
-              pentahoPassword
-      );
-      JsonNode response = futureResponse.join();
+      JsonNode response = sigefProvider.getLiquidatedValueByBudgetPlan(codPo, codUo);
 
       return ResponseEntity.ok(response);
     } catch (Exception e) {

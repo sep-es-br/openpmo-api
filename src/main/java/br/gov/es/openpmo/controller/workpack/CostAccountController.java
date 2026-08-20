@@ -11,18 +11,15 @@ import br.gov.es.openpmo.dto.costaccount.CostDto;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.workpack.CostAccountService;
-import br.gov.es.openpmo.utils.RestTemplateUtils;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.annotation.JsonNaming;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import io.swagger.annotations.Api;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import java.util.List;
+import java.util.UUID;
+import javax.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
-import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,15 +30,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
-
-import javax.validation.Valid;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import org.apache.logging.log4j.Level;
 
 @Api
 @RestController
@@ -52,9 +40,8 @@ public class CostAccountController {
   private final CostAccountService costAccountService;
   private final ICanAccessService canAccessService;
 
-  private final RestTemplateUtils restTemplateUtils = new RestTemplateUtils();
 
-  private final Logger logger = LogManager.getLogger(CostAccountController.class);
+  private final Logger logger = LoggerFactory.getLogger(CostAccountController.class);
 
   @Autowired
   public CostAccountController(
@@ -146,10 +133,13 @@ public class CostAccountController {
 
     this.canAccessService.ensureCanReadResource(idCostAccount, authorization);  
     try {
-      return ResponseEntity.ok(costAccountService.getUOFromPentaho(codPo));
+        JsonNode response = costAccountService.getUOFromPentaho(codPo);
+        if(response == null) return ResponseEntity.noContent().build();
+        
+        return ResponseEntity.ok(response);
     } catch (Exception e) {
         final UUID uuid = UUID.randomUUID();
-        logger.log(Level.FATAL, uuid, e);
+        logger.error(uuid.toString(), e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(uuid + " - " + e.getMessage());
     }
 
@@ -170,7 +160,10 @@ public class CostAccountController {
     this.canAccessService.ensureCanReadResource(idCostAccount, authorization);
 
     try {
-      return ResponseEntity.ok(this.costAccountService.getPOFromPentaho(codUo));
+        JsonNode response = this.costAccountService.getPOFromPentaho(codUo);
+        if(response == null) return ResponseEntity.noContent().build();
+        
+        return ResponseEntity.ok(response);
     } catch (Exception e) {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
     }
@@ -180,17 +173,17 @@ public class CostAccountController {
 
   @GetMapping("/pentaho/instrumentsList")
   public ResponseEntity<Object> getInstruments(
-        @RequestParam("costAccountId") Long idCostAccount,
         @RequestParam("codUo") String codUo,
-        @RequestParam(name = "codPo", required = false, defaultValue = "-1") String codPo,
         @RequestParam("startYear") Long startYear,
-        @RequestParam("endYear") Long endYear,
-        @Authorization final String authorization) {
+        @RequestParam("endYear") Long endYear) {
     try {
-      return ResponseEntity.ok(costAccountService.listInstrumentsFromPentaho(codUo, codPo, startYear, endYear));
+        JsonNode response = costAccountService.listInstrumentsFromPentaho(codUo, startYear, endYear);
+        if(response == null) return ResponseEntity.noContent().build();
+        
+        return ResponseEntity.ok(response);
     } catch (Exception e) {
         UUID uuid = UUID.randomUUID();
-       logger.log(Level.FATAL, uuid.toString(), e);
+       logger.error(uuid.toString(), e);
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(uuid + " - " + e.getMessage());
     }
   }

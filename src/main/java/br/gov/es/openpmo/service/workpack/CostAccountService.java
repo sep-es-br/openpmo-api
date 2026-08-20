@@ -42,25 +42,9 @@ import br.gov.es.openpmo.model.workpacks.models.CostAccountModel;
 import br.gov.es.openpmo.repository.*;
 import br.gov.es.openpmo.repository.custom.filters.FindAllCostAccountUsingCustomFilter;
 import br.gov.es.openpmo.service.reports.models.GetPropertyModelDtoFromEntity;
+import br.gov.es.openpmo.sigef_core.model.ISigefProvider;
 import br.gov.es.openpmo.utils.ApplicationCacheUtil;
 import br.gov.es.openpmo.utils.ApplicationMessage;
-import br.gov.es.openpmo.utils.TextSimilarityScore;
-import org.apache.commons.lang3.StringUtils;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import static br.gov.es.openpmo.utils.ApplicationMessage.COST_ACCOUNT_DELETE_RELATIONSHIP_ERROR;
 import static br.gov.es.openpmo.utils.ApplicationMessage.COST_ACCOUNT_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.CUSTOM_FILTER_NOT_FOUND;
@@ -76,19 +60,26 @@ import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_TEXT_AREA;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_TOGGLE;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_UNIT_SELECTION;
-import br.gov.es.openpmo.utils.RestTemplateUtils;
+import br.gov.es.openpmo.utils.TextSimilarityScore;
 import br.gov.es.openpmo.utils.factory.CostAccountFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.concurrent.CompletableFuture;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.converter.StringHttpMessageConverter;
-import org.springframework.web.client.RestTemplate;
+import org.apache.commons.lang3.StringUtils;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 public class CostAccountService {
@@ -131,27 +122,8 @@ public class CostAccountService {
   
   private final CostAccountFactory costAccountFactory;
   
-  @Value("${pentaho.api.contratos.url}")
-  private String instrumentsUrl;
-
-  @Value("${pentaho.api.liquidacao.url}")
-  private String liquidacaoUrl;
+  private final Optional<ISigefProvider> sigefProviderOpt;
   
-  @Value("${pentaho.api.uo.url}")
-  private String uoUrl;
-  
-  @Value("${pentaho.api.po.url}")
-  private String poUrl;
-
-  @Value("${pentahoBI.userId}")
-  private String pentahoUserId;
-
-  @Value("${pentahoBI.password}")
-  private String pentahoPassword;
-  
-  
-  private final RestTemplateUtils restTemplateUtils = new RestTemplateUtils();
-
   @Autowired
   public CostAccountService(
     final CostAccountRepository costAccountRepository,
@@ -171,7 +143,8 @@ public class CostAccountService {
     final UnidadeOrcamentariaRepository unidadeOrcamentariaRepository,
     final PlanoOrcamentarioRepository planoOrcamentarioRepository,
     final InstrumentService instrumentService,
-    final CostAccountFactory costAccountFactory
+    final CostAccountFactory costAccountFactory,
+    final Optional<ISigefProvider> sigefProviderOpt
   ) {
     this.costAccountRepository = costAccountRepository;
     this.consumesRepository = consumesRepository;
@@ -191,6 +164,7 @@ public class CostAccountService {
     this.planoOrcamentarioRepository = planoOrcamentarioRepository;
     this.instrumentService = instrumentService;
     this.costAccountFactory = costAccountFactory;
+    this.sigefProviderOpt = sigefProviderOpt;
   }
 
   public List<CostAccountDto> findAllByIdWorkpack(
@@ -616,28 +590,14 @@ public class CostAccountService {
   
   public JsonNode listInstrumentsFromPentaho(
         String codUo,
-        String codPo,
         Long startYear,
         Long endYear
   ) throws Exception {
-         
-    RestTemplate restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
-    
-    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
-    
-    String url = String.format(instrumentsUrl, codUo, startYear, endYear);
-
-      CompletableFuture<JsonNode> futureResponse = restTemplateUtils.createRequestWithAuth(restTemplate,
-              url,
-              pentahoUserId,
-              pentahoPassword
-      );
       
-      
-      JsonNode response = futureResponse.join();
-      
-      
-      ArrayNode resultSet = (ArrayNode) response.get(RESULTSET_FIELD);
+      if(!sigefProviderOpt.isPresent()) return null;
+      ISigefProvider sigefProvider = sigefProviderOpt.get();
+            
+      ArrayNode resultSet = (ArrayNode) sigefProvider.getInstrumentsList(codUo, startYear, endYear);
       ArrayNode filteredResultSet = JsonNodeFactory.instance.arrayNode();
       
       List<CostAccount> CaList = this.findByUoCode(java.lang.Integer.parseInt(codUo));
@@ -646,7 +606,7 @@ public class CostAccountService {
               .map(Instrument::getSigefesCode)
               .collect(Collectors.toList());
       
-      if(UsedInstrumentsCode.isEmpty()) return response;
+      if(UsedInstrumentsCode.isEmpty()) return resultSet;
        
       for(JsonNode registro : resultSet) {
           
@@ -662,26 +622,18 @@ public class CostAccountService {
           
       }
       
-      ((ObjectNode) response).set(RESULTSET_FIELD, filteredResultSet);
       
-      
-      return response;
+      return filteredResultSet;
     }
   
   public JsonNode getUOFromPentaho(java.lang.Integer codPo) throws Exception {
       
-    RestTemplate restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();;
-    
-    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
+      
+    if(!sigefProviderOpt.isPresent()) return null;
+    ISigefProvider sigefProvider = sigefProviderOpt.get();
+      
+    JsonNode response = sigefProvider.getBudgetUnitList();
 
-    CompletableFuture<JsonNode> futureResponse = restTemplateUtils.createRequestWithAuth(
-            restTemplate,
-            uoUrl,
-            pentahoUserId,
-            pentahoPassword
-    );
-    JsonNode response = futureResponse.join();
-    
     if(codPo != null) {
         List<UnidadeOrcamentaria> uos = unidadeOrcamentariaRepository.findAllByPoCodeWithCostAccount(codPo);
         Set<String> uoCodes = uos.stream()
@@ -694,14 +646,13 @@ public class CostAccountService {
             .map(code -> String.format("%06d", code))
             .collect(Collectors.toSet());
 
-        ArrayNode resultSet = (ArrayNode) response.get(RESULTSET_FIELD);
         ArrayNode filteredResultSet = JsonNodeFactory.instance.arrayNode();
 
-        StreamSupport.stream(resultSet.spliterator(), true)
+        StreamSupport.stream(response.spliterator(), true)
             .filter(elem -> !uoCodes.contains(elem.get(0).asText()))
             .forEach(filteredResultSet::add);
-        
-        ((ObjectNode) response).set(RESULTSET_FIELD, filteredResultSet);
+
+        return filteredResultSet;
     }
 
     return response;
@@ -710,24 +661,17 @@ public class CostAccountService {
   
   
   public JsonNode getPOFromPentaho(String codUo) throws Exception {
-      RestTemplate restTemplate = restTemplateUtils.createRestTemplateWithNoSSL();
-    
-    restTemplate.getMessageConverters().add(0, new StringHttpMessageConverter(StandardCharsets.UTF_8));
-
-    String url = poUrl + codUo;
-
-      CompletableFuture<JsonNode> futureResponse = restTemplateUtils.createRequestWithAuth(restTemplate,
-              url,
-              pentahoUserId,
-              pentahoPassword
-      );
-      JsonNode response = futureResponse.join();
+      
+      
+      if(!sigefProviderOpt.isPresent()) return null;
+      ISigefProvider sigefProvider = sigefProviderOpt.get();
+      
+      ArrayNode response = (ArrayNode) sigefProvider.getBudgetPlanList(codUo);
       
       if(codUo != null) {
           
           java.lang.Integer codUoAsInt = java.lang.Integer.valueOf(codUo);
           
-            ArrayNode resultSet = (ArrayNode) response.get(RESULTSET_FIELD);
             ArrayNode filteredResultSet = JsonNodeFactory.instance.arrayNode();
 
             List<String> usedPoCodes = planoOrcamentarioRepository
@@ -746,11 +690,11 @@ public class CostAccountService {
                                        .collect(ArrayList::new, (arr, code) -> arr.add(String.format("%06d", code)), ArrayList::addAll);
 
 
-            StreamSupport.stream(resultSet.spliterator(), true)
+            StreamSupport.stream(response.spliterator(), true)
                 .filter(elem -> !usedPoCodes.contains(elem.get(1).asText()))
                 .forEach(filteredResultSet::add);
             
-            ((ObjectNode) response).set(RESULTSET_FIELD, filteredResultSet);
+            return filteredResultSet;
         
       }
       
