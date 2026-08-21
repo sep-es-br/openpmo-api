@@ -21,7 +21,6 @@ repositories {
     mavenCentral()
     exclusiveContent {
         forRepositories(
-            mavenLocal(),
             maven {
                 url 'https://jitpack.io'
             }
@@ -79,7 +78,6 @@ dependencies {
         implementation props['app.organization.parser.repository']
     }
     implementation 'com.github.sep-es-br:pmo-core-organization-parser:1.1.2'
-    implementation 'com.github.sep-es-br:organization-parser-goves:1.1.0'
     implementation 'com.github.sep-es-br:openpmo-plugin-agreement-interface:1.0.6'
     implementation 'com.github.sep-es-br:openpmo-plugin-procurement-interface:1.0.0'
     implementation 'com.github.sep-es-br:openpmo-plugin-obligation-interface:1.0.0'
