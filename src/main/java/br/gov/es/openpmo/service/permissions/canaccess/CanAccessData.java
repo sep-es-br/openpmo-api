@@ -134,8 +134,9 @@ public class CanAccessData implements ICanAccessData {
     // 2. Resolve as regras de negócio puramente em memória (ordem de prioridade)
 
     // Regra EDIT
-    boolean hasEdit = permissions.contains("EDIT") || 
-                     (permissions.contains("UPDATE") && statusList.contains("Estruturação"));
+    boolean hasEdit = permissions.contains("EDIT") ||
+                     (permissions.contains("UPDATE") &&
+                       (statusList.contains("Estruturação") || statusList.contains("Repactuação")));
 
     if (hasEdit) {
         return CanAccessDataResponse.edit(personData.getKey(), false, self);
