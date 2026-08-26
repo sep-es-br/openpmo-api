@@ -26,6 +26,7 @@ import br.gov.es.openpmo.dto.workpack.ProgramDetailDto;
 import br.gov.es.openpmo.dto.workpack.ProgramDetailParentDto;
 import br.gov.es.openpmo.dto.workpack.ProjectDetailDto;
 import br.gov.es.openpmo.dto.workpack.ProjectDetailParentDto;
+import br.gov.es.openpmo.dto.workpack.ProjectParamDto;
 import br.gov.es.openpmo.dto.workpack.PropertyDto;
 import br.gov.es.openpmo.dto.workpack.SelectionDto;
 import br.gov.es.openpmo.dto.workpack.SimpleResource;
@@ -107,6 +108,8 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.PLAN_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_RELATIONSHIP_MODEL_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_REQUIRED_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_UPDATE_TYPE_ERROR;
+import static br.gov.es.openpmo.utils.ApplicationMessage.PROJECT_CANNOT_ENTER_REPACTUATION_WITHOUT_APPROVED_BASELINE;
+import static br.gov.es.openpmo.utils.ApplicationMessage.PROJECT_CANNOT_RETURN_TO_STRUCTURING;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_VALUE_NOT_EMPTY;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_VALUE_NOT_MAX;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_VALUE_NOT_MIN;
@@ -710,6 +713,7 @@ public class WorkpackService {
 
   public Workpack update(final Workpack workpack) {
     final Long workpackId = workpack.getId();
+    this.validateProjectStatusAgainstBaselineHistory(workpack);
     final Workpack workpackUpdate = this.findById(workpackId);
     if (workpackUpdate.getProperties() == null){
       workpackUpdate.setProperties(new HashSet<>(0));
@@ -949,6 +953,36 @@ public class WorkpackService {
     return hasDataChanged;
   }
 
+  private void validateProjectStatusAgainstBaselineHistory(final Workpack workpack) {
+    if (!(workpack instanceof Project) || workpack.getProperties() == null) {
+      return;
+    }
+
+    final Optional<String> requestedStatus = workpack.getProperties().stream()
+      .filter(Selection.class::isInstance)
+      .map(Selection.class::cast)
+      .filter(property -> property.getDriver() != null
+        && "Status".equals(property.getDriver().getName()))
+      .map(Selection::getValue)
+      .findFirst();
+
+    if (!requestedStatus.isPresent()
+      || !("Estruturação".equals(requestedStatus.get())
+        || "Repactuação".equals(requestedStatus.get()))) {
+      return;
+    }
+
+    final boolean hasApprovedBaseline = this.workpackRepository.hasApprovedBaseline(workpack.getId());
+
+    if ("Estruturação".equals(requestedStatus.get()) && hasApprovedBaseline) {
+      throw new NegocioException(PROJECT_CANNOT_RETURN_TO_STRUCTURING);
+    }
+
+    if ("Repactuação".equals(requestedStatus.get()) && !hasApprovedBaseline) {
+      throw new NegocioException(PROJECT_CANNOT_ENTER_REPACTUATION_WITHOUT_APPROVED_BASELINE);
+    }
+  }
+
   public Workpack findByIdDefault(final Long id) {
     return this.workpackRepository.findById(id)
       .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
@@ -1073,6 +1107,9 @@ public class WorkpackService {
       case TYPE_NAME_PROJECT:
         workpackModel = ((Project) workpack).getInstance();
         workpackDetailDto = ProjectDetailDto.of(workpack);
+        workpackDetailDto.setHasApprovedBaseline(
+          this.workpackRepository.hasApprovedBaseline(workpack.getId())
+        );
         break;
       case TYPE_NAME_MILESTONE:
         workpackModel = ((Milestone) workpack).getInstance();
@@ -1297,6 +1334,14 @@ public class WorkpackService {
     List<? extends PropertyDto> propertyDtos = workpackParamDto.getProperties();
     if (propertyDtos != null && !propertyDtos.isEmpty()) {
       properties = this.getProperties(propertyDtos);
+    }
+    if (workpackParamDto instanceof ProjectParamDto && properties != null) {
+      properties.stream()
+        .filter(Selection.class::isInstance)
+        .map(Selection.class::cast)
+        .filter(property -> property.getDriver() != null
+          && "Status".equals(property.getDriver().getName()))
+        .forEach(property -> property.setValue("Estruturação"));
     }
     Iterable<PropertyModel> propertyModels = this.workpackModelService.getPropertyModels(workpackParamDto.getIdWorkpackModel());
     for (PropertyModel propertyModel : propertyModels) {
