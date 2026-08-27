@@ -108,7 +108,7 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.PLAN_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_RELATIONSHIP_MODEL_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_REQUIRED_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_UPDATE_TYPE_ERROR;
-import static br.gov.es.openpmo.utils.ApplicationMessage.PROJECT_CANNOT_ENTER_REPACTUATION_WITHOUT_APPROVED_BASELINE;
+import static br.gov.es.openpmo.utils.ApplicationMessage.PROJECT_STATUS_CANNOT_CHANGE_WITHOUT_APPROVED_BASELINE;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROJECT_CANNOT_RETURN_TO_STRUCTURING;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_VALUE_NOT_EMPTY;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_VALUE_NOT_MAX;
@@ -966,20 +966,18 @@ public class WorkpackService {
       .map(Selection::getValue)
       .findFirst();
 
-    if (!requestedStatus.isPresent()
-      || !("Estruturação".equals(requestedStatus.get())
-        || "Repactuação".equals(requestedStatus.get()))) {
+    if (!requestedStatus.isPresent()) {
       return;
     }
 
     final boolean hasApprovedBaseline = this.workpackRepository.hasApprovedBaseline(workpack.getId());
 
-    if ("Estruturação".equals(requestedStatus.get()) && hasApprovedBaseline) {
-      throw new NegocioException(PROJECT_CANNOT_RETURN_TO_STRUCTURING);
+    if (!hasApprovedBaseline && !"Estruturação".equals(requestedStatus.get())) {
+      throw new NegocioException(PROJECT_STATUS_CANNOT_CHANGE_WITHOUT_APPROVED_BASELINE);
     }
 
-    if ("Repactuação".equals(requestedStatus.get()) && !hasApprovedBaseline) {
-      throw new NegocioException(PROJECT_CANNOT_ENTER_REPACTUATION_WITHOUT_APPROVED_BASELINE);
+    if ("Estruturação".equals(requestedStatus.get()) && hasApprovedBaseline) {
+      throw new NegocioException(PROJECT_CANNOT_RETURN_TO_STRUCTURING);
     }
   }
 

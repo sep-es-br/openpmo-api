@@ -32,6 +32,7 @@ public class ApplicationMessage {
   public static final String PROPERTY_UPDATE_TYPE_ERROR = "property.update.type.error";
   public static final String PROJECT_CANNOT_RETURN_TO_STRUCTURING = "project.cannot.return.to.structuring";
   public static final String PROJECT_CANNOT_ENTER_REPACTUATION_WITHOUT_APPROVED_BASELINE = "project.cannot.enter.repactuation.without.approved.baseline";
+  public static final String PROJECT_STATUS_CANNOT_CHANGE_WITHOUT_APPROVED_BASELINE = "project.status.cannot.change.without.approved.baseline";
   public static final String WORKPACK_NOT_FOUND = "workpack.not.found";
   public static final String WORKPACK_NAME_NOT_FOUND = "workpack.name.not.found";
   public static final String WORKPACK_DELETE_RELATIONSHIP_ERROR = "workpack.delete.relationship.error";
