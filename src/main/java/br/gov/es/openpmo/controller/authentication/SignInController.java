@@ -86,7 +86,7 @@ public class SignInController {
     final String valor
   ) {
     final Cookie cookie = this.cookieService.findCookie(request, FRONT_CALLBACK_URL);
-    this.cookieService.deleteCookie(request, response, FRONT_CALLBACK_URL, "/openpmo");
+    this.cookieService.deleteCookie(request, response, FRONT_CALLBACK_URL, "/");
     String url = cookie.getValue();
     if(url.contains("?")) {
       url = url.substring(0, url.indexOf('?'));
