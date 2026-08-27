@@ -1,6 +1,5 @@
 package br.gov.es.openpmo.service.authentication;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.Cookie;
@@ -11,10 +10,6 @@ import java.util.Optional;
 
 @Service
 public class CookieService {
-
-  @Value("${app.domain.cookie}")
-  private String domainCookie;
-
 
   public void createCookie(
     final HttpServletResponse response,
@@ -27,7 +22,6 @@ public class CookieService {
     cookie.setHttpOnly(true);
     cookie.setSecure(true);
     cookie.setPath(path);
-    cookie.setDomain(this.domainCookie);
     response.addCookie(cookie);
   }
 
@@ -42,7 +36,6 @@ public class CookieService {
     cookie.setHttpOnly(true);
     cookie.setSecure(true);
     cookie.setPath(path);
-    cookie.setDomain(this.domainCookie);
     response.addCookie(cookie);
   }
 
