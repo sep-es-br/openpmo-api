@@ -24,11 +24,13 @@ import static org.neo4j.ogm.annotation.Relationship.INCOMING;
   @JsonSubTypes.Type(value = NumberModel.class, name = "NumberModel"),
   @JsonSubTypes.Type(value = CurrencyModel.class, name = "CurrencyModel"),
   @JsonSubTypes.Type(value = LocalitySelectionModel.class, name = "LocalitySelectionModel"),
+  @JsonSubTypes.Type(value = BudgetPlanSelectionModel.class, name = "BudgetPlanSelectionModel"),
+  @JsonSubTypes.Type(value = FinancialSourceSelectionModel.class, name = "FinancialSourceSelectionModel"),
   @JsonSubTypes.Type(value = GroupModel.class, name = "GroupModel"),
   @JsonSubTypes.Type(value = OrganizationSelectionModel.class, name = "OrganizationSelectionModel")})
 @ApiModel(subTypes = {IntegerModel.class, TextModel.class, DateModel.class, ToggleModel.class,
   UnitSelectionModel.class, SelectionModel.class, TextAreaModel.class, NumberModel.class, CurrencyModel.class,
-  LocalitySelectionModel.class,
+  LocalitySelectionModel.class, BudgetPlanSelectionModel.class, FinancialSourceSelectionModel.class,
   OrganizationSelectionModel.class, GroupModel.class}, discriminator = "type", description = "Supertype of all PropertyModel.")
 @NodeEntity
 public class PropertyModel extends Entity {

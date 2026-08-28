@@ -20,6 +20,8 @@ import static com.fasterxml.jackson.annotation.JsonSubTypes.Type;
   @Type(value = NumberDto.class, name = "Num"),
   @Type(value = CurrencyDto.class, name = "Currency"),
   @Type(value = LocalitySelectionDto.class, name = "LocalitySelection"),
+  @Type(value = BudgetPlanSelectionDto.class, name = "BudgetPlanSelection"),
+  @Type(value = FinancialSourceSelectionDto.class, name = "FinancialSourceSelection"),
   @Type(value = GroupDto.class, name = "Group"),
   @Type(value = OrganizationSelectionDto.class, name = "OrganizationSelection")
 })
@@ -34,6 +36,8 @@ import static com.fasterxml.jackson.annotation.JsonSubTypes.Type;
   NumberDto.class,
   CurrencyDto.class,
   LocalitySelectionDto.class,
+  BudgetPlanSelectionDto.class,
+  FinancialSourceSelectionDto.class,
   GroupDto.class,
   OrganizationSelectionDto.class
 }, discriminator = "type", description = "Supertype of all Property.")

@@ -85,6 +85,20 @@ public final class GetPropertyByModel {
             return localitySelection;
           }
           break;
+        case TYPE_MODEL_NAME_BUDGET_PLAN_SELECTION:
+          final BudgetPlanSelection budgetPlanSelection = (BudgetPlanSelection) property;
+          if(budgetPlanSelection.getDriver() != null
+             && budgetPlanSelection.getDriver().getId().equals(propertyModel.getId())) {
+            return budgetPlanSelection;
+          }
+          break;
+        case TYPE_MODEL_NAME_FINANCIAL_SOURCE_SELECTION:
+          final FinancialSourceSelection financialSourceSelection = (FinancialSourceSelection) property;
+          if(financialSourceSelection.getDriver() != null
+             && financialSourceSelection.getDriver().getId().equals(propertyModel.getId())) {
+            return financialSourceSelection;
+          }
+          break;
         case TYPE_MODEL_NAME_ORGANIZATION_SELECTION:
           final OrganizationSelection organizationSelection = (OrganizationSelection) property;
           if(organizationSelection.getDriver() != null

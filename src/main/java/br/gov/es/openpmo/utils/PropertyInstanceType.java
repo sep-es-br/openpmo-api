@@ -68,6 +68,18 @@ public enum PropertyInstanceType {
     LocalitySelectionDto.class,
     LocalitySelectionDto::of
   ),
+  TYPE_MODEL_NAME_BUDGET_PLAN_SELECTION(
+    "br.gov.es.openpmo.model.properties.BudgetPlanSelection",
+    BudgetPlanSelectionDto::new,
+    BudgetPlanSelectionDto.class,
+    BudgetPlanSelectionDto::of
+  ),
+  TYPE_MODEL_NAME_FINANCIAL_SOURCE_SELECTION(
+    "br.gov.es.openpmo.model.properties.FinancialSourceSelection",
+    FinancialSourceSelectionDto::new,
+    FinancialSourceSelectionDto.class,
+    FinancialSourceSelectionDto::of
+  ),
   TYPE_MODEL_NAME_ORGANIZATION_SELECTION(
     "br.gov.es.openpmo.model.properties.OrganizationSelection",
     OrganizationSelectionDto::new,

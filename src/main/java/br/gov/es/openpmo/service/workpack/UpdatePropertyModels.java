@@ -179,6 +179,22 @@ public class UpdatePropertyModels {
         localitySelectionModelUpdate.setDefaultValue(localitySelectionModel.getDefaultValue());
         localitySelectionModelUpdate.setDomain(localitySelectionModel.getDomain());
         break;
+      case PropertyModelType.TYPE_NAME_MODEL_BUDGET_PLAN_SELECTION:
+        final BudgetPlanSelectionModel budgetPlanSelectionModelUpdate =
+          (BudgetPlanSelectionModel) propertyModelUpdate;
+        final BudgetPlanSelectionModel budgetPlanSelectionModel = (BudgetPlanSelectionModel) propertyModel;
+        budgetPlanSelectionModelUpdate.setMultipleSelection(budgetPlanSelectionModel.isMultipleSelection());
+        budgetPlanSelectionModelUpdate.setDefaultValue(budgetPlanSelectionModel.getDefaultValue());
+        break;
+      case PropertyModelType.TYPE_NAME_MODEL_FINANCIAL_SOURCE_SELECTION:
+        final FinancialSourceSelectionModel financialSourceSelectionModelUpdate =
+          (FinancialSourceSelectionModel) propertyModelUpdate;
+        final FinancialSourceSelectionModel financialSourceSelectionModel =
+          (FinancialSourceSelectionModel) propertyModel;
+        financialSourceSelectionModelUpdate.setMultipleSelection(financialSourceSelectionModel.isMultipleSelection());
+        financialSourceSelectionModelUpdate.setSelectionLevel(financialSourceSelectionModel.getSelectionLevel());
+        financialSourceSelectionModelUpdate.setDefaultValue(financialSourceSelectionModel.getDefaultValue());
+        break;
       case PropertyModelType.TYPE_NAME_MODEL_ORGANIZATION_SELECTION:
         final OrganizationSelectionModel organizationSelectionModelUpdate =
           (OrganizationSelectionModel) propertyModelUpdate;

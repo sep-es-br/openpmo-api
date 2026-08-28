@@ -86,7 +86,7 @@ dependencies {
     implementation 'com.github.sep-es-br:openpmo-plugin-obligation-interface:1.0.0'
     implementation 'com.github.sep-es-br:openpmo-plugin-administrative-process-interface:1.0.0'
     implementation 'com.github.sep-es-br:openpmo-plugin-user-a-identify-goves:v2.2.0'
-    implementation 'com.github.sep-es-br:openpmo-plugin-sigef-interface:1.1.0'
+    implementation 'com.github.sep-es-br:openpmo-plugin-sigef-interface:2.0.0'
 
 
     if (props.containsKey('app.agreement.parser.repository') &&
@@ -126,7 +126,7 @@ dependencies {
         !props['app.plugin.sigef.repository'].trim().isEmpty()) {
         implementation props['app.plugin.sigef.repository']
     }
-    //implementation files('lib/openpmo-plugin-sigef-goves-1.0.0.jar')
+    implementation files('lib/openpmo-plugin-sigef-goves-1.0.0.jar')
 
     //implementation 'com.github.sep-es-br:acesso-cidadao-identity-parser:f92a8db'
 

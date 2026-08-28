@@ -21,11 +21,14 @@ import java.util.function.Supplier;
   @JsonSubTypes.Type(value = NumberModelDto.class, name = "NumberModel"),
   @JsonSubTypes.Type(value = CurrencyModelDto.class, name = "CurrencyModel"),
   @JsonSubTypes.Type(value = LocalitySelectionModelDto.class, name = "LocalitySelectionModel"),
+  @JsonSubTypes.Type(value = BudgetPlanSelectionModelDto.class, name = "BudgetPlanSelectionModel"),
+  @JsonSubTypes.Type(value = FinancialSourceSelectionModelDto.class, name = "FinancialSourceSelectionModel"),
   @JsonSubTypes.Type(value = GroupModelDto.class, name = "GroupModel"),
   @JsonSubTypes.Type(value = OrganizationSelectionModelDto.class, name = "OrganizationSelectionModel")})
 @ApiModel(subTypes = {IntegerModelDto.class, TextModelDto.class, DateModelDto.class, ToggleModelDto.class,
   UnitSelectionModelDto.class, SelectionModelDto.class, TextAreaModelDto.class, NumberModelDto.class, CurrencyModelDto.class,
-  LocalitySelectionModelDto.class, GroupModelDto.class,
+  LocalitySelectionModelDto.class, BudgetPlanSelectionModelDto.class, FinancialSourceSelectionModelDto.class,
+  GroupModelDto.class,
   OrganizationSelectionModelDto.class}, discriminator = "type", description = "Supertype of all PropertyModel.")
 public class PropertyModelDto {
 

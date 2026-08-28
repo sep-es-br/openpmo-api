@@ -6,8 +6,10 @@ import br.gov.es.openpmo.dto.costaccount.CostAccountStoreDto;
 import br.gov.es.openpmo.dto.costaccount.CostAccountUpdateDto;
 import br.gov.es.openpmo.dto.costaccount.CostDto;
 import br.gov.es.openpmo.dto.workpack.CurrencyDto;
+import br.gov.es.openpmo.dto.workpack.BudgetPlanSelectionDto;
 import br.gov.es.openpmo.dto.workpack.DateDto;
 import br.gov.es.openpmo.dto.workpack.IntegerDto;
+import br.gov.es.openpmo.dto.workpack.FinancialSourceSelectionDto;
 import br.gov.es.openpmo.dto.workpack.LocalitySelectionDto;
 import br.gov.es.openpmo.dto.workpack.NumberDto;
 import br.gov.es.openpmo.dto.workpack.OrganizationSelectionDto;
@@ -23,8 +25,10 @@ import br.gov.es.openpmo.model.budget.PlanoOrcamentario;
 import br.gov.es.openpmo.model.budget.UnidadeOrcamentaria;
 import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.model.properties.Currency;
+import br.gov.es.openpmo.model.properties.BudgetPlanSelection;
 import br.gov.es.openpmo.model.properties.Date;
 import br.gov.es.openpmo.model.properties.Integer;
+import br.gov.es.openpmo.model.properties.FinancialSourceSelection;
 import br.gov.es.openpmo.model.properties.LocalitySelection;
 import br.gov.es.openpmo.model.properties.Number;
 import br.gov.es.openpmo.model.properties.OrganizationSelection;
@@ -50,9 +54,11 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.COST_ACCOUNT_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.CUSTOM_FILTER_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_NOT_FOUND;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_CURRENCY;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_BUDGET_PLAN_SELECTION;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_DATE;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_INTEGER;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_LOCALITY_SELECTION;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_FINANCIAL_SOURCE_SELECTION;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_NUMBER;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_ORGANIZATION_SELECTION;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_SELECTION;
@@ -389,6 +395,26 @@ public class CostAccountService {
             ((LocalitySelection) property).getValue().forEach(o -> localitySelectionDto.getSelectedValues().add(o.getId()));
           }
           list.add(localitySelectionDto);
+          break;
+        case TYPE_MODEL_NAME_BUDGET_PLAN_SELECTION:
+          final BudgetPlanSelectionDto budgetPlanSelectionDto = BudgetPlanSelectionDto.of(property);
+          if (((BudgetPlanSelection) property).getDriver() != null) {
+            budgetPlanSelectionDto.setIdPropertyModel(((BudgetPlanSelection) property).getDriver().getId());
+            costAccountDto.getModels().add(this.getPropertyModelDtoFromEntity.execute(
+              ((BudgetPlanSelection) property).getDriver()
+            ));
+          }
+          list.add(budgetPlanSelectionDto);
+          break;
+        case TYPE_MODEL_NAME_FINANCIAL_SOURCE_SELECTION:
+          final FinancialSourceSelectionDto financialSourceSelectionDto = FinancialSourceSelectionDto.of(property);
+          if (((FinancialSourceSelection) property).getDriver() != null) {
+            financialSourceSelectionDto.setIdPropertyModel(((FinancialSourceSelection) property).getDriver().getId());
+            costAccountDto.getModels().add(this.getPropertyModelDtoFromEntity.execute(
+              ((FinancialSourceSelection) property).getDriver()
+            ));
+          }
+          list.add(financialSourceSelectionDto);
           break;
         case TYPE_MODEL_NAME_ORGANIZATION_SELECTION:
           final OrganizationSelectionDto organizationSelectionDto = OrganizationSelectionDto.of(property);

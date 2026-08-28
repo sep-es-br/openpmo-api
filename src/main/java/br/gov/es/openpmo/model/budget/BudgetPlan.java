@@ -5,6 +5,7 @@
 package br.gov.es.openpmo.model.budget;
 
 import br.gov.es.openpmo.model.Entity;
+import java.util.Objects;
 import org.neo4j.ogm.annotation.NodeEntity;
 
 /**
@@ -15,6 +16,8 @@ import org.neo4j.ogm.annotation.NodeEntity;
 public class BudgetPlan extends Entity{
     
     private String budgetUnitCode;
+    private String budgetUnitName;
+    private String budgetUnitAcronym;
     private String budgetPlanCode;
     private String budgetPlanName;
 
@@ -24,6 +27,22 @@ public class BudgetPlan extends Entity{
 
     public void setBudgetUnitCode(String budgetUnitCode) {
         this.budgetUnitCode = budgetUnitCode;
+    }
+
+    public String getBudgetUnitName() {
+        return budgetUnitName;
+    }
+
+    public void setBudgetUnitName(String budgetUnitName) {
+        this.budgetUnitName = budgetUnitName;
+    }
+
+    public String getBudgetUnitAcronym() {
+        return budgetUnitAcronym;
+    }
+
+    public void setBudgetUnitAcronym(String budgetUnitAcronym) {
+        this.budgetUnitAcronym = budgetUnitAcronym;
     }
 
     public String getBudgetPlanCode() {
@@ -41,7 +60,22 @@ public class BudgetPlan extends Entity{
     public void setBudgetPlanName(String budgetPlanName) {
         this.budgetPlanName = budgetPlanName;
     }
-    
-    
-    
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof BudgetPlan)) {
+            return false;
+        }
+        BudgetPlan that = (BudgetPlan) object;
+        return Objects.equals(budgetUnitCode, that.budgetUnitCode)
+            && Objects.equals(budgetPlanCode, that.budgetPlanCode);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(budgetUnitCode, budgetPlanCode);
+    }
 }

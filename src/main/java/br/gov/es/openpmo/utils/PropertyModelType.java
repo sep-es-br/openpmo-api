@@ -22,6 +22,10 @@ public class PropertyModelType {
 
   public static final String TYPE_NAME_MODEL_LOCALITY_SELECTION = "br.gov.es.openpmo.model.properties.models.LocalitySelectionModel";
 
+  public static final String TYPE_NAME_MODEL_BUDGET_PLAN_SELECTION = "br.gov.es.openpmo.model.properties.models.BudgetPlanSelectionModel";
+
+  public static final String TYPE_NAME_MODEL_FINANCIAL_SOURCE_SELECTION = "br.gov.es.openpmo.model.properties.models.FinancialSourceSelectionModel";
+
   public static final String TYPE_NAME_MODEL_ORGANIZATION_SELECTION = "br.gov.es.openpmo.model.properties.models" +
                                                                       ".OrganizationSelectionModel";
 

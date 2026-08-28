@@ -1,6 +1,8 @@
 package br.gov.es.openpmo.service.reports.models;
 
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.GroupModelDto;
+import br.gov.es.openpmo.dto.workpackmodel.params.properties.BudgetPlanSelectionModelDto;
+import br.gov.es.openpmo.dto.workpackmodel.params.properties.FinancialSourceSelectionModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.LocalitySelectionModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.OrganizationSelectionModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.PropertyModelDto;
@@ -147,6 +149,12 @@ public class ExtractPropertyModel {
             o -> organizationSelectionModel.getDefaultValue().add(this.organizationService.findById(o)));
         }
         propertyModels.add(organizationSelectionModel);
+        break;
+      case PACKAGE_PROPERTIES_DTO + ".BudgetPlanSelectionModelDto":
+        propertyModels.add(this.modelMapper.map(property, BudgetPlanSelectionModel.class));
+        break;
+      case PACKAGE_PROPERTIES_DTO + ".FinancialSourceSelectionModelDto":
+        propertyModels.add(this.modelMapper.map(property, FinancialSourceSelectionModel.class));
         break;
       case PACKAGE_PROPERTIES_DTO + ".GroupModelDto":
         final GroupModel groupModel = this.modelMapper.map(

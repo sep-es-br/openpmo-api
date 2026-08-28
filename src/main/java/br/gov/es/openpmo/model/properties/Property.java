@@ -33,6 +33,8 @@ import static org.neo4j.ogm.annotation.Relationship.INCOMING;
   @JsonSubTypes.Type(value = Number.class, name = "Number"),
   @JsonSubTypes.Type(value = Currency.class, name = "Currency"),
   @JsonSubTypes.Type(value = LocalitySelection.class, name = "LocalitySelection"),
+  @JsonSubTypes.Type(value = BudgetPlanSelection.class, name = "BudgetPlanSelection"),
+  @JsonSubTypes.Type(value = FinancialSourceSelection.class, name = "FinancialSourceSelection"),
   @JsonSubTypes.Type(value = Group.class, name = "Group"),
   @JsonSubTypes.Type(value = OrganizationSelection.class, name = "OrganizationSelection")
 })
@@ -47,6 +49,8 @@ import static org.neo4j.ogm.annotation.Relationship.INCOMING;
   Number.class,
   Currency.class,
   LocalitySelection.class,
+  BudgetPlanSelection.class,
+  FinancialSourceSelection.class,
   Group.class,
   OrganizationSelection.class
 }, discriminator = "type", description = "Supertype of all Property.")

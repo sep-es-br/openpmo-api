@@ -8,10 +8,12 @@ import br.gov.es.openpmo.dto.plan.PlanDto;
 import br.gov.es.openpmo.dto.universalSearch.UniversalSearchItemQueryResult;
 import br.gov.es.openpmo.dto.universalSearch.UniversalSearchParameters;
 import br.gov.es.openpmo.dto.workpack.CurrencyDto;
+import br.gov.es.openpmo.dto.workpack.BudgetPlanSelectionDto;
 import br.gov.es.openpmo.dto.workpack.DateDto;
 import br.gov.es.openpmo.dto.workpack.DeliverableDetailDto;
 import br.gov.es.openpmo.dto.workpack.DeliverableDetailParentDto;
 import br.gov.es.openpmo.dto.workpack.GroupDto;
+import br.gov.es.openpmo.dto.workpack.FinancialSourceSelectionDto;
 import br.gov.es.openpmo.dto.workpack.IntegerDto;
 import br.gov.es.openpmo.dto.workpack.LocalitySelectionDto;
 import br.gov.es.openpmo.dto.workpack.MilestoneDetailDto;
@@ -38,6 +40,9 @@ import br.gov.es.openpmo.dto.workpack.WorkpackDetailParentDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackParamDto;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.Entity;
+import br.gov.es.openpmo.enumerator.SelectionLevel;
+import br.gov.es.openpmo.model.budget.BudgetPlan;
+import br.gov.es.openpmo.model.budget.FinancialSource;
 import br.gov.es.openpmo.model.actors.Organization;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.filter.CustomFilter;
@@ -45,8 +50,10 @@ import br.gov.es.openpmo.model.office.Locality;
 import br.gov.es.openpmo.model.office.UnitMeasure;
 import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.properties.Currency;
+import br.gov.es.openpmo.model.properties.BudgetPlanSelection;
 import br.gov.es.openpmo.model.properties.Date;
 import br.gov.es.openpmo.model.properties.Group;
+import br.gov.es.openpmo.model.properties.FinancialSourceSelection;
 import br.gov.es.openpmo.model.properties.HasValue;
 import br.gov.es.openpmo.model.properties.Integer;
 import br.gov.es.openpmo.model.properties.LocalitySelection;
@@ -59,8 +66,10 @@ import br.gov.es.openpmo.model.properties.TextArea;
 import br.gov.es.openpmo.model.properties.Toggle;
 import br.gov.es.openpmo.model.properties.UnitSelection;
 import br.gov.es.openpmo.model.properties.models.CurrencyModel;
+import br.gov.es.openpmo.model.properties.models.BudgetPlanSelectionModel;
 import br.gov.es.openpmo.model.properties.models.DateModel;
 import br.gov.es.openpmo.model.properties.models.GroupModel;
+import br.gov.es.openpmo.model.properties.models.FinancialSourceSelectionModel;
 import br.gov.es.openpmo.model.properties.models.IntegerModel;
 import br.gov.es.openpmo.model.properties.models.LocalitySelectionModel;
 import br.gov.es.openpmo.model.properties.models.NumberModel;
@@ -117,10 +126,12 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_DELETE_RELATIO
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_NOT_FOUND;
 import br.gov.es.openpmo.utils.DashboardCacheUtil;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_CURRENCY;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_BUDGET_PLAN_SELECTION;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_DATE;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_GROUP;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_INTEGER;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_LOCALITY_SELECTION;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_FINANCIAL_SOURCE_SELECTION;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_NUMBER;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_ORGANIZATION_SELECTION;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_SELECTION;
@@ -494,6 +505,26 @@ public class WorkpackService {
               propertyModelFound = true;
               if (localitySelection.getDriver().isRequired() && (localitySelection.getValue() == null
                 || localitySelection.getValue().isEmpty())) {
+                throw new NegocioException(PROPERTY_VALUE_NOT_NULL + "$" + propertyModel.getLabel());
+              }
+            }
+            break;
+          case TYPE_MODEL_NAME_BUDGET_PLAN_SELECTION:
+            final BudgetPlanSelection budgetPlanSelection = (BudgetPlanSelection) property;
+            if (budgetPlanSelection.getDriver().getId().equals(propertyModel.getId())) {
+              propertyModelFound = true;
+              if (budgetPlanSelection.getDriver().isRequired()
+                && (budgetPlanSelection.getValue() == null || budgetPlanSelection.getValue().isEmpty())) {
+                throw new NegocioException(PROPERTY_VALUE_NOT_NULL + "$" + propertyModel.getLabel());
+              }
+            }
+            break;
+          case TYPE_MODEL_NAME_FINANCIAL_SOURCE_SELECTION:
+            final FinancialSourceSelection financialSourceSelection = (FinancialSourceSelection) property;
+            if (financialSourceSelection.getDriver().getId().equals(propertyModel.getId())) {
+              propertyModelFound = true;
+              if (financialSourceSelection.getDriver().isRequired()
+                && (financialSourceSelection.getValue() == null || financialSourceSelection.getValue().isEmpty())) {
                 throw new NegocioException(PROPERTY_VALUE_NOT_NULL + "$" + propertyModel.getLabel());
               }
             }
@@ -1453,6 +1484,20 @@ public class WorkpackService {
             }
             list.add(localitySelectionDto);
             break;
+          case TYPE_MODEL_NAME_BUDGET_PLAN_SELECTION:
+            final BudgetPlanSelectionDto budgetPlanSelectionDto = BudgetPlanSelectionDto.of(property);
+            if (((BudgetPlanSelection) property).getDriver() != null) {
+              budgetPlanSelectionDto.setIdPropertyModel(((BudgetPlanSelection) property).getDriver().getId());
+            }
+            list.add(budgetPlanSelectionDto);
+            break;
+          case TYPE_MODEL_NAME_FINANCIAL_SOURCE_SELECTION:
+            final FinancialSourceSelectionDto financialSourceSelectionDto = FinancialSourceSelectionDto.of(property);
+            if (((FinancialSourceSelection) property).getDriver() != null) {
+              financialSourceSelectionDto.setIdPropertyModel(((FinancialSourceSelection) property).getDriver().getId());
+            }
+            list.add(financialSourceSelectionDto);
+            break;
           case TYPE_MODEL_NAME_ORGANIZATION_SELECTION:
             final OrganizationSelectionDto organizationSelectionDto =
               OrganizationSelectionDto.of(property);
@@ -1606,6 +1651,31 @@ public class WorkpackService {
         }
         properties.add(localitySelection);
         break;
+      case "br.gov.es.openpmo.dto.workpack.BudgetPlanSelectionDto":
+        final BudgetPlanSelection budgetPlanSelection = new BudgetPlanSelection();
+        final BudgetPlanSelectionDto budgetPlanSelectionDto = (BudgetPlanSelectionDto) propertyDto;
+        final BudgetPlanSelectionModel budgetPlanSelectionModel = (BudgetPlanSelectionModel) propertyModel;
+        budgetPlanSelection.setId(budgetPlanSelectionDto.getId());
+        budgetPlanSelection.setDriver(budgetPlanSelectionModel);
+        budgetPlanSelection.setValue(this.limitSelection(
+          budgetPlanSelectionDto.getValue(),
+          budgetPlanSelectionModel.isMultipleSelection()
+        ));
+        properties.add(budgetPlanSelection);
+        break;
+      case "br.gov.es.openpmo.dto.workpack.FinancialSourceSelectionDto":
+        final FinancialSourceSelection financialSourceSelection = new FinancialSourceSelection();
+        final FinancialSourceSelectionDto financialSourceSelectionDto = (FinancialSourceSelectionDto) propertyDto;
+        final FinancialSourceSelectionModel financialSourceSelectionModel =
+          (FinancialSourceSelectionModel) propertyModel;
+        financialSourceSelection.setId(financialSourceSelectionDto.getId());
+        financialSourceSelection.setDriver(financialSourceSelectionModel);
+        financialSourceSelection.setValue(this.normalizeFinancialSources(
+          financialSourceSelectionDto.getValue(),
+          financialSourceSelectionModel
+        ));
+        properties.add(financialSourceSelection);
+        break;
       case "br.gov.es.openpmo.dto.workpack.OrganizationSelectionDto":
         final OrganizationSelection organizationSelection = this.modelMapper.map(
           propertyDto,
@@ -1636,6 +1706,57 @@ public class WorkpackService {
         properties.add(group);
         break;
     }
+  }
+
+  private <T> Set<T> limitSelection(Set<T> values, boolean multipleSelection) {
+    if (values == null || values.isEmpty()) {
+      return null;
+    }
+    if (multipleSelection) {
+      return new HashSet<>(values);
+    }
+    return values.stream().limit(1).collect(Collectors.toSet());
+  }
+
+  private Set<FinancialSource> normalizeFinancialSources(
+    Set<FinancialSource> values,
+    FinancialSourceSelectionModel model
+  ) {
+    if (values == null || values.isEmpty()) {
+      return null;
+    }
+    SelectionLevel level = Optional.ofNullable(model.getSelectionLevel()).orElse(SelectionLevel.DETAIL);
+    return values.stream()
+      .limit(model.isMultipleSelection() ? Long.MAX_VALUE : 1)
+      .peek(value -> {
+      switch (level) {
+        case TYPE:
+          value.setSourceGroupCode(null);
+          value.setSourceGroupName(null);
+          value.setSourceCode(null);
+          value.setSourceName(null);
+          value.setDetailedSourceCode(null);
+          value.setDetailedSourceName(null);
+          break;
+        case GROUP:
+          value.setTypeCode(null);
+          value.setTypeName(null);
+          value.setSourceCode(null);
+          value.setSourceName(null);
+          value.setDetailedSourceCode(null);
+          value.setDetailedSourceName(null);
+          break;
+        case SOURCE:
+          value.setTypeCode(null);
+          value.setTypeName(null);
+          value.setDetailedSourceCode(null);
+          value.setDetailedSourceName(null);
+          break;
+        case DETAIL:
+          break;
+      }
+      })
+      .collect(Collectors.toSet());
   }
 
   public Set<Long> findAllWorkpacksWithPermissions(

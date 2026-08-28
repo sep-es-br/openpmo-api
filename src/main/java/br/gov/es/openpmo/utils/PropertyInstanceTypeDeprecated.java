@@ -13,6 +13,8 @@ public final class PropertyInstanceTypeDeprecated {
   public static final String TYPE_MODEL_NAME_NUMBER = "br.gov.es.openpmo.model.properties.Number";
   public static final String TYPE_MODEL_NAME_CURRENCY = "br.gov.es.openpmo.model.properties.Currency";
   public static final String TYPE_MODEL_NAME_LOCALITY_SELECTION = "br.gov.es.openpmo.model.properties.LocalitySelection";
+  public static final String TYPE_MODEL_NAME_BUDGET_PLAN_SELECTION = "br.gov.es.openpmo.model.properties.BudgetPlanSelection";
+  public static final String TYPE_MODEL_NAME_FINANCIAL_SOURCE_SELECTION = "br.gov.es.openpmo.model.properties.FinancialSourceSelection";
   public static final String TYPE_MODEL_NAME_ORGANIZATION_SELECTION = "br.gov.es.openpmo.model.properties.OrganizationSelection";
   public static final String TYPE_MODEL_NAME_GROUP = "br.gov.es.openpmo.model.properties.Group";
 

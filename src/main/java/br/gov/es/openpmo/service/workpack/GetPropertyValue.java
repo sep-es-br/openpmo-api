@@ -66,6 +66,14 @@ public final class GetPropertyValue {
           final LocalitySelection localitySelection = (LocalitySelection) property;
           object = localitySelection.getValue();
           break;
+        case TYPE_MODEL_NAME_BUDGET_PLAN_SELECTION:
+          final BudgetPlanSelection budgetPlanSelection = (BudgetPlanSelection) property;
+          object = budgetPlanSelection.getValue();
+          break;
+        case TYPE_MODEL_NAME_FINANCIAL_SOURCE_SELECTION:
+          final FinancialSourceSelection financialSourceSelection = (FinancialSourceSelection) property;
+          object = financialSourceSelection.getValue();
+          break;
         case TYPE_MODEL_NAME_ORGANIZATION_SELECTION:
           final OrganizationSelection organizationSelection = (OrganizationSelection) property;
           object = organizationSelection.getValue();

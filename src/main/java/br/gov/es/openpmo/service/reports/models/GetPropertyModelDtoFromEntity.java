@@ -2,6 +2,8 @@ package br.gov.es.openpmo.service.reports.models;
 
 import br.gov.es.openpmo.dto.workpack.SimpleResource;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.CurrencyModelDto;
+import br.gov.es.openpmo.dto.workpackmodel.params.properties.BudgetPlanSelectionModelDto;
+import br.gov.es.openpmo.dto.workpackmodel.params.properties.FinancialSourceSelectionModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.DateModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.GroupModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.IntegerModelDto;
@@ -26,6 +28,8 @@ import java.util.List;
 import java.util.Set;
 
 import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_CURRENCY;
+import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_BUDGET_PLAN_SELECTION;
+import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_FINANCIAL_SOURCE_SELECTION;
 import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_DATE;
 import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_GROUP;
 import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_INTEGER;
@@ -66,6 +70,10 @@ public class GetPropertyModelDtoFromEntity {
         return NumberModelDto.of(propertyModel);
       case TYPE_NAME_MODEL_CURRENCY:
         return CurrencyModelDto.of(propertyModel);
+      case TYPE_NAME_MODEL_BUDGET_PLAN_SELECTION:
+        return BudgetPlanSelectionModelDto.of(propertyModel);
+      case TYPE_NAME_MODEL_FINANCIAL_SOURCE_SELECTION:
+        return FinancialSourceSelectionModelDto.of(propertyModel);
       case TYPE_NAME_MODEL_LOCALITY_SELECTION:
         final LocalitySelectionModelDto localityDto = LocalitySelectionModelDto.of(propertyModel);
         final LocalitySelectionModel localityModel = (LocalitySelectionModel) propertyModel;
