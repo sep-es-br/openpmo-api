@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.repository;
 
+import br.gov.es.openpmo.dto.ccbmembers.CCBMemberLevelResult;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.relations.IsCCBMemberFor;
 import br.gov.es.openpmo.model.workpacks.Workpack;
@@ -177,4 +178,20 @@ public interface IsCCBMemberRepository extends Neo4jRepository<IsCCBMemberFor, L
        "WHERE id(plan) = $idPlan " +
        "RETURN DISTINCT p")
   List<Person> findAllPersonsByPlanId(Long idPlan);
+
+   
+  @Query(
+    "MATCH (w:Workpack) WHERE id(w) = $workpackId " +
+    "MATCH (w)-[:BELONGS_TO]->(plan:Plan) " +
+    "OPTIONAL MATCH (plan)-[:IS_ADOPTED_BY]->(office:Office) " +
+    "OPTIONAL MATCH (p1:Person)-[c1:IS_CCB_MEMBER_FOR]->(plan) " +
+    "WITH plan, office, collect(DISTINCT {idPerson: id(p1), role: c1.inRole, workLocation: c1.workLocation, active: c1.active, level: 'PLAN', idLevel: id(plan), levelName: plan.name}) AS planMembers " +
+    "OPTIONAL MATCH (p2:Person)-[c2:IS_CCB_MEMBER_FOR]->(office) " +
+    "WITH planMembers, collect(DISTINCT {idPerson: id(p2), role: c2.inRole, workLocation: c2.workLocation, active: c2.active, level: 'OFFICE', idLevel: id(office), levelName: office.name}) AS officeMembers " +
+    "UNWIND planMembers + officeMembers AS result " +
+    "WITH result WHERE result.idPerson IS NOT NULL " +
+    "RETURN result.idPerson AS idPerson, result.role AS role, result.workLocation AS workLocation, " +
+    "       result.active AS active, result.level AS level, result.idLevel AS idLevel, result.levelName AS levelName"
+  )
+  List<CCBMemberLevelResult> findAllPlanAndOfficeMembersByWorkpackId(Long workpackId);
 }
