@@ -4,6 +4,7 @@ import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.properties.models.*;
 import br.gov.es.openpmo.service.properties.PropertyModelService;
 import br.gov.es.openpmo.utils.PropertyModelType;
+import br.gov.es.openpmo.sigef_core.model.ISigefProvider;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -21,9 +22,14 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_UPDATE_TYPE_ER
 public class UpdatePropertyModels {
 
   private final PropertyModelService propertyModelService;
+  private final Optional<ISigefProvider> sigefProvider;
 
-  public UpdatePropertyModels(PropertyModelService propertyModelService) {
+  public UpdatePropertyModels(
+    PropertyModelService propertyModelService,
+    Optional<ISigefProvider> sigefProvider
+  ) {
     this.propertyModelService = propertyModelService;
+    this.sigefProvider = sigefProvider;
   }
 
   public void execute(
@@ -62,6 +68,8 @@ public class UpdatePropertyModels {
         properties.stream().noneMatch(p -> p.getId() != null && p.getId().equals(propertyModel.getId()));
       final Set<PropertyModel> propertiesToDelete = propertiesToUpdate.stream()
         .filter(findPropertiesToDelete)
+        .filter(propertyModel -> this.sigefProvider.isPresent()
+          || !this.isPluginProperty(propertyModel))
         .collect(Collectors.toSet());
       if (!propertiesToDelete.isEmpty()) {
         for (final PropertyModel propertyModel : propertiesToDelete) {
@@ -218,6 +226,12 @@ public class UpdatePropertyModels {
 
   private boolean isCanDeleteProperty(final Long idPropertyModel) {
     return this.propertyModelService.canDeleteProperty(idPropertyModel);
+  }
+
+  private boolean isPluginProperty(final PropertyModel propertyModel) {
+    final String typeName = propertyModel.getTypeName();
+    return PropertyModelType.TYPE_NAME_MODEL_BUDGET_PLAN_SELECTION.equals(typeName)
+      || PropertyModelType.TYPE_NAME_MODEL_FINANCIAL_SOURCE_SELECTION.equals(typeName);
   }
 
 }

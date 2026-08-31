@@ -5,6 +5,7 @@ import br.gov.es.openpmo.service.agreements.AgreementProviderService;
 import br.gov.es.openpmo.service.obligations.ObligationProviderService;
 import br.gov.es.openpmo.service.procurements.ProcurementProviderService;
 import br.gov.es.openpmo.service.process.AdministrativeProcessProviderService;
+import br.gov.es.openpmo.sigef_core.model.ISigefProvider;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/plugins")
@@ -21,17 +23,20 @@ public class PluginAvailabilityController {
   private final ProcurementProviderService procurementProviderService;
   private final ObligationProviderService obligationProviderService;
   private final AdministrativeProcessProviderService administrativeProcessProviderService;
+  private final Optional<ISigefProvider> sigefProvider;
 
   public PluginAvailabilityController(
     final AgreementProviderService agreementProviderService,
     final ProcurementProviderService procurementProviderService,
     final ObligationProviderService obligationProviderService,
-    final AdministrativeProcessProviderService administrativeProcessProviderService
+    final AdministrativeProcessProviderService administrativeProcessProviderService,
+    final Optional<ISigefProvider> sigefProvider
   ) {
     this.agreementProviderService = agreementProviderService;
     this.procurementProviderService = procurementProviderService;
     this.obligationProviderService = obligationProviderService;
     this.administrativeProcessProviderService = administrativeProcessProviderService;
+    this.sigefProvider = sigefProvider;
   }
 
   @GetMapping("/availability")
@@ -41,6 +46,9 @@ public class PluginAvailabilityController {
     availability.put("procurements", this.procurementProviderService.isAvailable());
     availability.put("obligations", this.obligationProviderService.isAvailable());
     availability.put("edocs", this.administrativeProcessProviderService.isAvailable());
+    final boolean sigefAvailable = this.sigefProvider.isPresent();
+    availability.put("budgetPlans", sigefAvailable);
+    availability.put("financialSources", sigefAvailable);
     return ResponseEntity.ok(ResponseBase.of(availability));
   }
 }

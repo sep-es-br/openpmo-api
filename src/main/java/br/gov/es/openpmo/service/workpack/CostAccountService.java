@@ -22,6 +22,7 @@ import br.gov.es.openpmo.dto.workpack.UnitSelectionDto;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.exception.RegistroNaoEncontradoException;
 import br.gov.es.openpmo.model.budget.PlanoOrcamentario;
+import br.gov.es.openpmo.model.budget.BudgetPlan;
 import br.gov.es.openpmo.model.budget.UnidadeOrcamentaria;
 import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.model.properties.Currency;
@@ -74,6 +75,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -404,6 +406,22 @@ public class CostAccountService {
               ((BudgetPlanSelection) property).getDriver()
             ));
           }
+          if ((budgetPlanSelectionDto.getValue() == null || budgetPlanSelectionDto.getValue().isEmpty())
+            && costAccountDto.getUnidadeOrcamentaria() != null
+            && costAccountDto.getPlanoOrcamentario() != null
+            && costAccountDto.getUnidadeOrcamentaria().getCode() != null
+            && costAccountDto.getPlanoOrcamentario().getCode() != null) {
+            final BudgetPlan legacyBudgetPlan = new BudgetPlan();
+            legacyBudgetPlan.setBudgetUnitCode(costAccountDto.getUnidadeOrcamentaria().getCode());
+            legacyBudgetPlan.setBudgetUnitName(costAccountDto.getUnidadeOrcamentaria().getName());
+            legacyBudgetPlan.setBudgetPlanCode(costAccountDto.getPlanoOrcamentario().getCode());
+            legacyBudgetPlan.setBudgetPlanName(
+              costAccountDto.getPlanoOrcamentario().getFullName() != null
+                ? costAccountDto.getPlanoOrcamentario().getFullName()
+                : costAccountDto.getPlanoOrcamentario().getName()
+            );
+            budgetPlanSelectionDto.setValue(new HashSet<>(Collections.singleton(legacyBudgetPlan)));
+          }
           list.add(budgetPlanSelectionDto);
           break;
         case TYPE_MODEL_NAME_FINANCIAL_SOURCE_SELECTION:
@@ -546,15 +564,28 @@ public class CostAccountService {
       costAccount.setWorkpack(workpack);
     } else {
       costAccount = this.findById(idCostAccount);
-
-      if (costAccount.getUnidadeOrcamentaria() != null) {
-        unidadeOrcamentariaRepository.deleteById(costAccount.getUnidadeOrcamentaria().getId());
+      if (idCostAccountModel == null && costAccount.getInstance() != null) {
+        idCostAccountModel = costAccount.getInstance().getId();
       }
-
-      if (costAccount.getPlanoOrcamentario() != null) {
-        planoOrcamentarioRepository.deleteById(costAccount.getPlanoOrcamentario().getId());
+      final UnidadeOrcamentaria previousUo = costAccount.getUnidadeOrcamentaria();
+      final PlanoOrcamentario previousPo = costAccount.getPlanoOrcamentario();
+      // The hardcoded selector is no longer sent by the frontend. A null value
+      // therefore preserves the legacy relation.
+      if (unidadeOrcamentaria == null) {
+        unidadeOrcamentaria = previousUo;
+      } else if (previousUo != null && previousUo.getId() != null
+        && !previousUo.getId().equals(unidadeOrcamentaria.getId())) {
+        unidadeOrcamentariaRepository.deleteById(previousUo.getId());
       }
-      
+      if (planoOrcamentario == null) {
+        planoOrcamentario = previousPo;
+      } else if (previousPo != null && previousPo.getId() != null
+        && !previousPo.getId().equals(planoOrcamentario.getId())) {
+        planoOrcamentarioRepository.deleteById(previousPo.getId());
+      }
+      if (properties == null) {
+        properties = costAccount.getProperties();
+      }
     }
 
     costAccount.setPlanoOrcamentario(planoOrcamentario);
@@ -569,6 +600,9 @@ public class CostAccountService {
         unidadeOrcamentaria.getPlanoOrcamentario().add(planoOrcamentario);
     }
 
+    if (!sigefProviderOpt.isPresent()) {
+      properties = preserveUnavailablePluginProperties(costAccount.getProperties(), properties);
+    }
     costAccount.setProperties(properties);
 
     final CostAccountModel costAccountModel = this.costAccountModelRepository.findById(idCostAccountModel, 0)
@@ -585,6 +619,26 @@ public class CostAccountService {
     }
 
     return costAccount;
+  }
+
+  private Set<Property> preserveUnavailablePluginProperties(
+    final Set<Property> currentProperties,
+    final Set<Property> incomingProperties
+  ) {
+    final Set<Property> mergedProperties = incomingProperties == null
+      ? new HashSet<>()
+      : new HashSet<>(incomingProperties);
+    if (currentProperties == null) {
+      return mergedProperties;
+    }
+    currentProperties.stream()
+      .filter(property -> property instanceof BudgetPlanSelection
+        || property instanceof FinancialSourceSelection)
+      .filter(legacyProperty -> mergedProperties.stream()
+        .noneMatch(property -> property.getId() != null
+          && property.getId().equals(legacyProperty.getId())))
+      .forEach(mergedProperties::add);
+    return mergedProperties;
   }
   
   /**

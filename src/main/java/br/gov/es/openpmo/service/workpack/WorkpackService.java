@@ -80,6 +80,7 @@ import br.gov.es.openpmo.model.properties.models.TextAreaModel;
 import br.gov.es.openpmo.model.properties.models.TextModel;
 import br.gov.es.openpmo.model.properties.models.ToggleModel;
 import br.gov.es.openpmo.model.properties.models.UnitSelectionModel;
+import br.gov.es.openpmo.sigef_core.model.ISigefProvider;
 import br.gov.es.openpmo.model.relations.IsSharedWith;
 import br.gov.es.openpmo.model.workpacks.Deliverable;
 import br.gov.es.openpmo.model.workpacks.Milestone;
@@ -219,6 +220,7 @@ public class WorkpackService {
   private final PropertyRepository propertyRepository;
   private final  ApplicationCacheUtil cacheUtil;
   private final DashboardCacheUtil dashboardCacheUtil;
+  private final Optional<ISigefProvider> sigefProvider;
 
   @Autowired
   public WorkpackService(
@@ -242,7 +244,8 @@ public class WorkpackService {
     final AppProperties appProperties,
     final  ApplicationCacheUtil cacheUtil,
     final DashboardCacheUtil dashboardCacheUtil,
-    final PropertyRepository propertyRepository
+    final PropertyRepository propertyRepository,
+    final Optional<ISigefProvider> sigefProvider
   ) {
     this.workpackModelService = workpackModelService;
     this.planService = planService;
@@ -265,6 +268,7 @@ public class WorkpackService {
     this.propertyRepository = propertyRepository;
     this.dashboardCacheUtil = dashboardCacheUtil;
     this.cacheUtil = cacheUtil;
+    this.sigefProvider = sigefProvider;
   }
 
   public List<PlanWorkpackDto> findAllMappedByPlanWithPermission(Long idOffice, Long idPerson) {
@@ -860,6 +864,9 @@ public class WorkpackService {
       final Set<Property> propertiesToDelete = propertiesToUpdate.stream()
         .filter(property -> properties == null || properties.stream()
           .noneMatch(p -> p.getId() != null && p.getId().equals(property.getId())))
+        .filter(property -> this.sigefProvider.isPresent()
+          || !(property instanceof BudgetPlanSelection)
+          && !(property instanceof FinancialSourceSelection))
         .collect(Collectors.toSet());
       if (!propertiesToDelete.isEmpty()) {
         this.verifyForGroupedPropertiesToDelete(propertiesToDelete);
@@ -932,6 +939,16 @@ public class WorkpackService {
         final HasValue<String> selectionUpdate = (Selection) propertyToUpdate;
         final Selection selection = (Selection) property;
         selectionUpdate.setValue(selection.getValue());
+        break;
+      case TYPE_MODEL_NAME_BUDGET_PLAN_SELECTION:
+        final HasValue<Set<BudgetPlan>> budgetPlanSelectionUpdate = (BudgetPlanSelection) propertyToUpdate;
+        final BudgetPlanSelection budgetPlanSelection = (BudgetPlanSelection) property;
+        budgetPlanSelectionUpdate.setValue(budgetPlanSelection.getValue());
+        break;
+      case TYPE_MODEL_NAME_FINANCIAL_SOURCE_SELECTION:
+        final HasValue<Set<FinancialSource>> financialSourceSelectionUpdate = (FinancialSourceSelection) propertyToUpdate;
+        final FinancialSourceSelection financialSourceSelection = (FinancialSourceSelection) property;
+        financialSourceSelectionUpdate.setValue(financialSourceSelection.getValue());
         break;
       case TYPE_MODEL_NAME_TEXT_AREA:
         final HasValue<String> textAreaUpdate = (TextArea) propertyToUpdate;
