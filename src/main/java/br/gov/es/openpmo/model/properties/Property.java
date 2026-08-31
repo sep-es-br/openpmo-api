@@ -34,6 +34,10 @@ import static org.neo4j.ogm.annotation.Relationship.INCOMING;
   @JsonSubTypes.Type(value = Currency.class, name = "Currency"),
   @JsonSubTypes.Type(value = LocalitySelection.class, name = "LocalitySelection"),
   @JsonSubTypes.Type(value = Group.class, name = "Group"),
+  @JsonSubTypes.Type(value = CriteriaList.class, name = "CriteriaList"),
+  @JsonSubTypes.Type(value = CriteriaSelection.class, name = "CriteriaSelection"),
+  @JsonSubTypes.Type(value = CriteriaGroup.class, name = "CriteriaGroup"),
+  @JsonSubTypes.Type(value = CriteriaTab.class, name = "CriteriaTab"),
   @JsonSubTypes.Type(value = OrganizationSelection.class, name = "OrganizationSelection")
 })
 @ApiModel(subTypes = {
@@ -48,6 +52,10 @@ import static org.neo4j.ogm.annotation.Relationship.INCOMING;
   Currency.class,
   LocalitySelection.class,
   Group.class,
+  CriteriaList.class,
+  CriteriaSelection.class,
+  CriteriaGroup.class,
+  CriteriaTab.class,
   OrganizationSelection.class
 }, discriminator = "type", description = "Supertype of all Property.")
 @NodeEntity

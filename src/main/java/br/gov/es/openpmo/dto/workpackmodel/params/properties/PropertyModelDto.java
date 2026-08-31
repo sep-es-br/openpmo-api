@@ -22,11 +22,19 @@ import java.util.function.Supplier;
   @JsonSubTypes.Type(value = CurrencyModelDto.class, name = "CurrencyModel"),
   @JsonSubTypes.Type(value = LocalitySelectionModelDto.class, name = "LocalitySelectionModel"),
   @JsonSubTypes.Type(value = GroupModelDto.class, name = "GroupModel"),
+  @JsonSubTypes.Type(value = TabModelDto.class, name = "TabModel"),
+  @JsonSubTypes.Type(value = ListModelDto.class, name = "ListModel"),
+  @JsonSubTypes.Type(value = CriteriaTabModelDto.class, name = "CriteriaTabModel"),
+  @JsonSubTypes.Type(value = CriteriaGroupModelDto.class, name = "CriteriaGroupModel"),
+  @JsonSubTypes.Type(value = CriteriaSelectionModelDto.class, name = "CriteriaSelectionModel"),
+  @JsonSubTypes.Type(value = CriteriaListModelDto.class, name = "CriteriaListModel"),
   @JsonSubTypes.Type(value = OrganizationSelectionModelDto.class, name = "OrganizationSelectionModel")})
 @ApiModel(subTypes = {IntegerModelDto.class, TextModelDto.class, DateModelDto.class, ToggleModelDto.class,
   UnitSelectionModelDto.class, SelectionModelDto.class, TextAreaModelDto.class, NumberModelDto.class, CurrencyModelDto.class,
   LocalitySelectionModelDto.class, GroupModelDto.class,
-  OrganizationSelectionModelDto.class}, discriminator = "type", description = "Supertype of all PropertyModel.")
+  OrganizationSelectionModelDto.class, TabModelDto.class, ListModelDto.class, CriteriaTabModelDto.class,
+  CriteriaGroupModelDto.class, CriteriaSelectionModelDto.class,
+  CriteriaListModelDto.class}, discriminator = "type", description = "Supertype of all PropertyModel.")
 public class PropertyModelDto {
 
 

@@ -4,6 +4,7 @@ import br.gov.es.openpmo.dto.office.OfficeDto;
 import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.office.plan.PlanModel;
+import br.gov.es.openpmo.model.preprojects.models.PreProjectModel;
 import br.gov.es.openpmo.model.actors.WorkPlace;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.neo4j.ogm.annotation.NodeEntity;
@@ -27,6 +28,10 @@ public class Office extends Entity {
   @JsonIgnoreProperties("office")
   @Relationship(type = "IS_ADOPTED_BY", direction = INCOMING)
   private Set<PlanModel> plansModel;
+
+  @JsonIgnoreProperties("office")
+  @Relationship(type = "IS_ADOPTED_BY", direction = INCOMING)
+  private PreProjectModel preProjectModel;
 
   @JsonIgnoreProperties("office")
   @Relationship(type = "FOR", direction = INCOMING)
@@ -62,6 +67,14 @@ public class Office extends Entity {
 
   public void setPlansModel(final Set<PlanModel> plansModel) {
     this.plansModel = plansModel;
+  }
+
+  public PreProjectModel getPreProjectModel() {
+    return this.preProjectModel;
+  }
+
+  public void setPreProjectModel(final PreProjectModel preProjectModel) {
+    this.preProjectModel = preProjectModel;
   }
 
   public Set<WorkPlace> getWorkPlaces() {

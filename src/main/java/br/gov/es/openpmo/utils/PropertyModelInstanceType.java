@@ -79,6 +79,42 @@ public enum PropertyModelInstanceType {
     GroupModelDto::new,
     GroupModelDto.class,
     GroupModelDto::of
+  ),
+  TYPE_MODEL_NAME_TAB(
+    "br.gov.es.openpmo.model.properties.models.TabModel",
+    TabModelDto::new,
+    TabModelDto.class,
+    TabModelDto::of
+  ),
+  TYPE_MODEL_NAME_LIST(
+    "br.gov.es.openpmo.model.properties.models.ListModel",
+    ListModelDto::new,
+    ListModelDto.class,
+    ListModelDto::of
+  ),
+  TYPE_MODEL_NAME_CRITERIA_TAB(
+    "br.gov.es.openpmo.model.properties.models.CriteriaTabModel",
+    CriteriaTabModelDto::new,
+    CriteriaTabModelDto.class,
+    CriteriaTabModelDto::of
+  ),
+  TYPE_MODEL_NAME_CRITERIA_GROUP(
+    "br.gov.es.openpmo.model.properties.models.CriteriaGroupModel",
+    CriteriaGroupModelDto::new,
+    CriteriaGroupModelDto.class,
+    CriteriaGroupModelDto::of
+  ),
+  TYPE_MODEL_NAME_CRITERIA_SELECTION(
+    "br.gov.es.openpmo.model.properties.models.CriteriaSelectionModel",
+    CriteriaSelectionModelDto::new,
+    CriteriaSelectionModelDto.class,
+    CriteriaSelectionModelDto::of
+  ),
+  TYPE_MODEL_NAME_CRITERIA_LIST(
+    "br.gov.es.openpmo.model.properties.models.CriteriaListModel",
+    CriteriaListModelDto::new,
+    CriteriaListModelDto.class,
+    CriteriaListModelDto::of
   );
 
   private final String className;

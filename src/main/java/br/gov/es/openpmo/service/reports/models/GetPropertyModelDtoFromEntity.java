@@ -2,23 +2,32 @@ package br.gov.es.openpmo.service.reports.models;
 
 import br.gov.es.openpmo.dto.workpack.SimpleResource;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.CurrencyModelDto;
+import br.gov.es.openpmo.dto.workpackmodel.params.properties.CriteriaGroupModelDto;
+import br.gov.es.openpmo.dto.workpackmodel.params.properties.CriteriaListModelDto;
+import br.gov.es.openpmo.dto.workpackmodel.params.properties.CriteriaSelectionModelDto;
+import br.gov.es.openpmo.dto.workpackmodel.params.properties.CriteriaTabModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.DateModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.GroupModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.IntegerModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.LocalitySelectionModelDto;
+import br.gov.es.openpmo.dto.workpackmodel.params.properties.ListModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.NumberModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.OrganizationSelectionModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.PropertyModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.SelectionModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.TextAreaModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.TextModelDto;
+import br.gov.es.openpmo.dto.workpackmodel.params.properties.TabModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.ToggleModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.UnitSelectionModelDto;
 import br.gov.es.openpmo.model.properties.models.GroupModel;
+import br.gov.es.openpmo.model.properties.models.CriteriaGroupModel;
+import br.gov.es.openpmo.model.properties.models.CriteriaTabModel;
 import br.gov.es.openpmo.model.properties.models.LocalitySelectionModel;
 import br.gov.es.openpmo.model.properties.models.OrganizationSelectionModel;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.properties.models.UnitSelectionModel;
+import br.gov.es.openpmo.model.properties.models.TabModel;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -26,15 +35,21 @@ import java.util.List;
 import java.util.Set;
 
 import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_CURRENCY;
+import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_CRITERIA_GROUP;
+import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_CRITERIA_LIST;
+import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_CRITERIA_SELECTION;
+import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_CRITERIA_TAB;
 import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_DATE;
 import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_GROUP;
 import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_INTEGER;
 import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_LOCALITY_SELECTION;
+import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_LIST;
 import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_NUMBER;
 import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_ORGANIZATION_SELECTION;
 import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_SELECTION;
 import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_TEXT;
 import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_TEXT_AREA;
+import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_TAB;
 import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_TOGGLE;
 import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_UNIT_SELECTION;
 
@@ -99,6 +114,40 @@ public class GetPropertyModelDtoFromEntity {
         }
         groupModelDto.setGroupedProperties(groupedProperties);
         return groupModelDto;
+      case TYPE_NAME_MODEL_TAB:
+        final TabModelDto tabModelDto = TabModelDto.of(propertyModel);
+        final TabModel tabModel = (TabModel) propertyModel;
+        final List<PropertyModelDto> organizedProperties = new ArrayList<>();
+        if (tabModel.getOrganizedProperties() != null) {
+          tabModel.getOrganizedProperties().forEach(property -> organizedProperties.add(this.execute(property)));
+        }
+        tabModelDto.setOrganizedProperties(organizedProperties);
+        return tabModelDto;
+      case TYPE_NAME_MODEL_LIST:
+        return ListModelDto.of(propertyModel);
+      case TYPE_NAME_MODEL_CRITERIA_TAB:
+        final CriteriaTabModelDto criteriaTabModelDto = CriteriaTabModelDto.of(propertyModel);
+        final CriteriaTabModel criteriaTabModel = (CriteriaTabModel) propertyModel;
+        final List<PropertyModelDto> organizedCriteria = new ArrayList<>();
+        if (criteriaTabModel.getOrganizedProperties() != null) {
+          criteriaTabModel.getOrganizedProperties()
+            .forEach(property -> organizedCriteria.add(this.execute(property)));
+        }
+        criteriaTabModelDto.setOrganizedProperties(organizedCriteria);
+        return criteriaTabModelDto;
+      case TYPE_NAME_MODEL_CRITERIA_GROUP:
+        final CriteriaGroupModelDto criteriaGroupModelDto = CriteriaGroupModelDto.of(propertyModel);
+        final CriteriaGroupModel criteriaGroupModel = (CriteriaGroupModel) propertyModel;
+        final List<PropertyModelDto> groupedCriteria = new ArrayList<>();
+        if (criteriaGroupModel.getGroupedProperties() != null) {
+          criteriaGroupModel.getGroupedProperties().forEach(property -> groupedCriteria.add(this.execute(property)));
+        }
+        criteriaGroupModelDto.setGroupedProperties(groupedCriteria);
+        return criteriaGroupModelDto;
+      case TYPE_NAME_MODEL_CRITERIA_SELECTION:
+        return CriteriaSelectionModelDto.of(propertyModel);
+      case TYPE_NAME_MODEL_CRITERIA_LIST:
+        return CriteriaListModelDto.of(propertyModel);
       default:
         return null;
     }
