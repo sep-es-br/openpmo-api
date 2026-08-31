@@ -280,13 +280,19 @@ public class StepService {
       consumesDto.setCostAccount(costAccount);
 
       final BigDecimal baselinePlannedCost = Optional.ofNullable(snapshotStep)
-        .map(Step::getConsumes)
-        .flatMap(consumesSnapshot -> consumesSnapshot.stream()
-          .filter(snapshot -> snapshot.getIdCostAccountMaster().equals(consumes.getIdCostAccount()))
-          .map(Consumes::getPlannedCost)
-          .findFirst()
-        )
-        .orElse(null);
+              .map(Step::getConsumes)
+              .flatMap(consumesSnapshot -> consumesSnapshot.stream()
+                      .filter(snapshot -> Objects.equals(
+                              snapshot.getIdCostAccountMaster(),
+                              consumes.getIdCostAccount()
+                      ))
+                      .map(snapshot ->
+                              Optional.ofNullable(snapshot.getPlannedCost())
+                                      .orElse(BigDecimal.ZERO)
+                      )
+                      .findFirst()
+              )
+              .orElse(null);
 
       consumesDto.setBaselinePlannedCost(baselinePlannedCost);
 
