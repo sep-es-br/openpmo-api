@@ -8,6 +8,8 @@ import br.gov.es.openpmo.utils.PropertyModelType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_MODEL_NOT_FOUND;
 
 @Service
@@ -27,6 +29,14 @@ public class PropertyModelService {
 
   public void delete(final Iterable<PropertyModel> propertiesModel) {
     this.propertyModelRepository.deleteAll(propertiesModel);
+  }
+
+  public PropertyModel save(final PropertyModel propertyModel) {
+    return this.propertyModelRepository.save(propertyModel);
+  }
+
+  public void deleteSelectionOptions(final List<Long> propertyModelIds) {
+    this.propertyModelRepository.deleteSelectionOptionsByPropertyModelIds(propertyModelIds);
   }
 
   public boolean canDeleteProperty(final Long id) {

@@ -37,4 +37,11 @@ public interface PropertyModelRepository extends Neo4jRepository<PropertyModel, 
     "DETACH DELETE model, property"
   )
   void deletePropertyModelAndInstances(List<Long> propertiesModelId);
+
+  @Query(
+    "MATCH (model:PropertyModel)-[:ACCEPTS]->(option:SelectionOption) " +
+    "WHERE id(model) IN $ids " +
+    "DETACH DELETE option"
+  )
+  void deleteSelectionOptionsByPropertyModelIds(@Param("ids") List<Long> ids);
 }

@@ -2,11 +2,14 @@ package br.gov.es.openpmo.dto.workpackmodel.params.properties;
 
 import br.gov.es.openpmo.model.properties.models.CriteriaListModel;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
+import javax.validation.constraints.NotNull;
 
 public class CriteriaListModelDto extends ListModelDto {
 
+  @NotNull
   private Double weight;
 
+  @NotNull
   private Double itemValue;
 
   public static CriteriaListModelDto of(final PropertyModel propertyModel) {

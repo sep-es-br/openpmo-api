@@ -7,11 +7,14 @@ import br.gov.es.openpmo.utils.PropertyModelInstanceType;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 
 public class CriteriaTabModelDto extends TabModelDto {
 
+  @NotNull
   private Double weight;
 
+  @NotNull
   private CriteriaOperation operation;
 
   public static CriteriaTabModelDto of(final PropertyModel propertyModel) {
@@ -20,6 +23,7 @@ public class CriteriaTabModelDto extends TabModelDto {
       CriteriaTabModelDto::new
     );
     final CriteriaTabModel criteriaTabModel = (CriteriaTabModel) propertyModel;
+    instance.setIcon(criteriaTabModel.getIcon());
     instance.setWeight(criteriaTabModel.getWeight());
     instance.setOperation(criteriaTabModel.getOperation());
     instance.setOrganizedProperties(Optional.ofNullable(criteriaTabModel.getOrganizedProperties())

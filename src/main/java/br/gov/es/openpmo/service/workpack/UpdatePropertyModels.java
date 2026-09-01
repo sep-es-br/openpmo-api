@@ -200,6 +200,7 @@ public class UpdatePropertyModels {
       case PropertyModelType.TYPE_NAME_MODEL_TAB:
         final TabModel tabModelUpdate = (TabModel) propertyModelUpdate;
         final TabModel tabModel = (TabModel) propertyModel;
+        tabModelUpdate.setIcon(tabModel.getIcon());
         if (tabModelUpdate.getOrganizedProperties() == null) {
           tabModelUpdate.setOrganizedProperties(new HashSet<>());
         }
@@ -208,6 +209,7 @@ public class UpdatePropertyModels {
       case PropertyModelType.TYPE_NAME_MODEL_CRITERIA_TAB:
         final CriteriaTabModel criteriaTabModelUpdate = (CriteriaTabModel) propertyModelUpdate;
         final CriteriaTabModel criteriaTabModel = (CriteriaTabModel) propertyModel;
+        criteriaTabModelUpdate.setIcon(criteriaTabModel.getIcon());
         criteriaTabModelUpdate.setWeight(criteriaTabModel.getWeight());
         criteriaTabModelUpdate.setOperation(criteriaTabModel.getOperation());
         if (criteriaTabModelUpdate.getOrganizedProperties() == null) {
@@ -223,6 +225,13 @@ public class UpdatePropertyModels {
         final CriteriaGroupModel criteriaGroupModel = (CriteriaGroupModel) propertyModel;
         criteriaGroupModelUpdate.setWeight(criteriaGroupModel.getWeight());
         criteriaGroupModelUpdate.setOperation(criteriaGroupModel.getOperation());
+        criteriaGroupModelUpdate.setEnablementKey(criteriaGroupModel.isEnablementKey());
+        criteriaGroupModelUpdate.setDisabledValue(
+          criteriaGroupModel.isEnablementKey() ? criteriaGroupModel.getDisabledValue() : null
+        );
+        criteriaGroupModelUpdate.setLegend(
+          criteriaGroupModel.isEnablementKey() ? criteriaGroupModel.getLegend() : null
+        );
         if (criteriaGroupModelUpdate.getGroupedProperties() == null) {
           criteriaGroupModelUpdate.setGroupedProperties(new HashSet<>());
         }

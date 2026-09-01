@@ -4,10 +4,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
+import br.gov.es.openpmo.dto.workpackmodel.params.properties.CriteriaGroupModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.CriteriaListModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.CriteriaTabModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.PropertyModelDto;
 import br.gov.es.openpmo.enumerator.CriteriaOperation;
+import br.gov.es.openpmo.model.properties.models.CriteriaGroupModel;
 import br.gov.es.openpmo.model.properties.models.CriteriaListModel;
 import br.gov.es.openpmo.model.properties.models.CriteriaTabModel;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
@@ -34,13 +36,25 @@ public class CriteriaPropertyModelConversionTest {
     listModel.setWeight(3D);
     listModel.setItemValue(5D);
 
+    final CriteriaGroupModel groupModel = new CriteriaGroupModel();
+    groupModel.setSortIndex(1L);
+    groupModel.setName("strategic-alignment");
+    groupModel.setLabel("Alinhamento Estrategico");
+    groupModel.setWeight(1D);
+    groupModel.setOperation(CriteriaOperation.SUM);
+    groupModel.setEnablementKey(true);
+    groupModel.setDisabledValue(0D);
+    groupModel.setLegend("Legenda do grupo");
+    groupModel.setGroupedProperties(Collections.singleton(listModel));
+
     final CriteriaTabModel tabModel = new CriteriaTabModel();
     tabModel.setSortIndex(1L);
     tabModel.setName("criteria");
     tabModel.setLabel("Criterios");
+    tabModel.setIcon("settings");
     tabModel.setWeight(2D);
     tabModel.setOperation(CriteriaOperation.AVERAGE);
-    tabModel.setOrganizedProperties(Collections.singleton(listModel));
+    tabModel.setOrganizedProperties(Collections.singleton(groupModel));
 
     final PropertyModelDto result = new GetPropertyModelDtoFromEntity().execute(tabModel);
 
@@ -48,8 +62,13 @@ public class CriteriaPropertyModelConversionTest {
     final CriteriaTabModelDto tabDto = (CriteriaTabModelDto) result;
     assertEquals(CriteriaOperation.AVERAGE, tabDto.getOperation());
     assertEquals(Double.valueOf(2D), tabDto.getWeight());
-    assertTrue(tabDto.getOrganizedProperties().get(0) instanceof CriteriaListModelDto);
-    final CriteriaListModelDto listDto = (CriteriaListModelDto) tabDto.getOrganizedProperties().get(0);
+    assertEquals("settings", tabDto.getIcon());
+    assertTrue(tabDto.getOrganizedProperties().get(0) instanceof CriteriaGroupModelDto);
+    final CriteriaGroupModelDto groupDto = (CriteriaGroupModelDto) tabDto.getOrganizedProperties().get(0);
+    assertTrue(groupDto.isEnablementKey());
+    assertEquals(Double.valueOf(0D), groupDto.getDisabledValue());
+    assertEquals("Legenda do grupo", groupDto.getLegend());
+    final CriteriaListModelDto listDto = (CriteriaListModelDto) groupDto.getGroupedProperties().get(0);
     assertEquals(Double.valueOf(3D), listDto.getWeight());
     assertEquals(Double.valueOf(5D), listDto.getItemValue());
   }
@@ -63,13 +82,25 @@ public class CriteriaPropertyModelConversionTest {
     listDto.setWeight(3D);
     listDto.setItemValue(5D);
 
+    final CriteriaGroupModelDto groupDto = new CriteriaGroupModelDto();
+    groupDto.setSortIndex(1L);
+    groupDto.setName("strategic-alignment");
+    groupDto.setLabel("Alinhamento Estrategico");
+    groupDto.setWeight(1D);
+    groupDto.setOperation(CriteriaOperation.SUM);
+    groupDto.setEnablementKey(true);
+    groupDto.setDisabledValue(0D);
+    groupDto.setLegend("Legenda do grupo");
+    groupDto.setGroupedProperties(Collections.singletonList(listDto));
+
     final CriteriaTabModelDto tabDto = new CriteriaTabModelDto();
     tabDto.setSortIndex(1L);
     tabDto.setName("criteria");
     tabDto.setLabel("Criterios");
+    tabDto.setIcon("settings");
     tabDto.setWeight(2D);
     tabDto.setOperation(CriteriaOperation.SUM);
-    tabDto.setOrganizedProperties(Collections.singletonList(listDto));
+    tabDto.setOrganizedProperties(Collections.singletonList(groupDto));
 
     final ExtractPropertyModel converter = new ExtractPropertyModel(
       new ModelMapper(),
@@ -86,8 +117,14 @@ public class CriteriaPropertyModelConversionTest {
     final CriteriaTabModel tabModel = (CriteriaTabModel) properties.iterator().next();
     assertEquals(CriteriaOperation.SUM, tabModel.getOperation());
     assertEquals(Double.valueOf(2D), tabModel.getWeight());
-    assertTrue(tabModel.getOrganizedProperties().iterator().next() instanceof CriteriaListModel);
-    final CriteriaListModel listModel = (CriteriaListModel) tabModel.getOrganizedProperties().iterator().next();
+    assertEquals("settings", tabModel.getIcon());
+    assertTrue(tabModel.getOrganizedProperties().iterator().next() instanceof CriteriaGroupModel);
+    final CriteriaGroupModel groupModel =
+      (CriteriaGroupModel) tabModel.getOrganizedProperties().iterator().next();
+    assertTrue(groupModel.isEnablementKey());
+    assertEquals(Double.valueOf(0D), groupModel.getDisabledValue());
+    assertEquals("Legenda do grupo", groupModel.getLegend());
+    final CriteriaListModel listModel = (CriteriaListModel) groupModel.getGroupedProperties().iterator().next();
     assertEquals(Double.valueOf(3D), listModel.getWeight());
     assertEquals(Double.valueOf(5D), listModel.getItemValue());
   }

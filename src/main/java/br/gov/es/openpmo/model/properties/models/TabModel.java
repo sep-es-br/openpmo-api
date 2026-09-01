@@ -7,8 +7,18 @@ import org.neo4j.ogm.annotation.Relationship;
 @NodeEntity
 public class TabModel extends PropertyModel {
 
+  private String icon;
+
   @Relationship("ORGANIZES")
   private Set<PropertyModel> organizedProperties;
+
+  public String getIcon() {
+    return this.icon;
+  }
+
+  public void setIcon(final String icon) {
+    this.icon = icon;
+  }
 
   public Set<PropertyModel> getOrganizedProperties() {
     return this.organizedProperties;

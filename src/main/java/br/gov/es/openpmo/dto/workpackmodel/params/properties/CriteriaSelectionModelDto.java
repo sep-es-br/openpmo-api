@@ -7,9 +7,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 
-public class CriteriaSelectionModelDto extends SelectionModelDto {
+public class CriteriaSelectionModelDto extends PropertyModelDto {
 
+  @NotNull
   private Double weight;
 
   private List<SelectionOptionDto> acceptedOptions;
@@ -20,9 +22,6 @@ public class CriteriaSelectionModelDto extends SelectionModelDto {
       propertyModel,
       CriteriaSelectionModelDto::new
     );
-    instance.setDefaultValue(criteriaSelectionModel.getDefaultValue());
-    instance.setPossibleValues(criteriaSelectionModel.getPossibleValues());
-    instance.setMultipleSelection(criteriaSelectionModel.isMultipleSelection());
     instance.setWeight(criteriaSelectionModel.getWeight());
     instance.setAcceptedOptions(Optional.ofNullable(criteriaSelectionModel.getAcceptedOptions())
       .map(options -> options.stream()

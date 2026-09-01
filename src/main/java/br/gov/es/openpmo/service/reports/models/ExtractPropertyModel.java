@@ -5,7 +5,6 @@ import br.gov.es.openpmo.dto.workpackmodel.params.properties.CriteriaGroupModelD
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.CriteriaListModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.CriteriaSelectionModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.CriteriaTabModelDto;
-import br.gov.es.openpmo.dto.workpackmodel.params.properties.SelectionModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.SelectionOptionDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.TabModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.LocalitySelectionModelDto;
@@ -178,6 +177,7 @@ public class ExtractPropertyModel {
       case PACKAGE_PROPERTIES_DTO + ".TabModelDto":
         final TabModel tabModel = new TabModel();
         this.copyBaseFields(property, tabModel);
+        tabModel.setIcon(((TabModelDto) property).getIcon());
         tabModel.setOrganizedProperties(this.extractNestedProperties(((TabModelDto) property).getOrganizedProperties()));
         propertyModels.add(tabModel);
         break;
@@ -190,6 +190,7 @@ public class ExtractPropertyModel {
         final CriteriaTabModelDto criteriaTabDto = (CriteriaTabModelDto) property;
         final CriteriaTabModel criteriaTabModel = new CriteriaTabModel();
         this.copyBaseFields(criteriaTabDto, criteriaTabModel);
+        criteriaTabModel.setIcon(criteriaTabDto.getIcon());
         criteriaTabModel.setWeight(criteriaTabDto.getWeight());
         criteriaTabModel.setOperation(criteriaTabDto.getOperation());
         criteriaTabModel.setOrganizedProperties(this.extractNestedProperties(criteriaTabDto.getOrganizedProperties()));
@@ -201,6 +202,11 @@ public class ExtractPropertyModel {
         this.copyBaseFields(criteriaGroupDto, criteriaGroupModel);
         criteriaGroupModel.setWeight(criteriaGroupDto.getWeight());
         criteriaGroupModel.setOperation(criteriaGroupDto.getOperation());
+        criteriaGroupModel.setEnablementKey(criteriaGroupDto.isEnablementKey());
+        if (criteriaGroupDto.isEnablementKey()) {
+          criteriaGroupModel.setDisabledValue(criteriaGroupDto.getDisabledValue());
+          criteriaGroupModel.setLegend(criteriaGroupDto.getLegend());
+        }
         criteriaGroupModel.setGroupedProperties(this.extractNestedProperties(criteriaGroupDto.getGroupedProperties()));
         propertyModels.add(criteriaGroupModel);
         break;
@@ -208,7 +214,6 @@ public class ExtractPropertyModel {
         final CriteriaSelectionModelDto criteriaSelectionDto = (CriteriaSelectionModelDto) property;
         final CriteriaSelectionModel criteriaSelectionModel = new CriteriaSelectionModel();
         this.copyBaseFields(criteriaSelectionDto, criteriaSelectionModel);
-        this.copySelectionFields(criteriaSelectionDto, criteriaSelectionModel);
         criteriaSelectionModel.setWeight(criteriaSelectionDto.getWeight());
         criteriaSelectionModel.setAcceptedOptions(this.extractAcceptedOptions(
           criteriaSelectionDto.getAcceptedOptions(),
@@ -259,12 +264,6 @@ public class ExtractPropertyModel {
       acceptedOptions.add(accepts);
     });
     return acceptedOptions;
-  }
-
-  private void copySelectionFields(final SelectionModelDto source, final SelectionModel target) {
-    target.setDefaultValue(source.getDefaultValue());
-    target.setPossibleValues(source.getPossibleValues());
-    target.setMultipleSelection(source.isMultipleSelection());
   }
 
   private void copyBaseFields(final PropertyModelDto source, final PropertyModel target) {
