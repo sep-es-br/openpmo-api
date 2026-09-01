@@ -187,7 +187,7 @@ public class PreProjectModelServiceTest {
     criteriaTabModel.setId(30L);
     final CriteriaTabModelDto response = new CriteriaTabModelDto();
     response.setId(30L);
-    when(this.propertyModelService.findById(30L)).thenReturn(criteriaTabModel);
+    when(this.propertyModelService.findByIdWithChildren(30L)).thenReturn(criteriaTabModel);
     when(this.getPropertyModelDtoFromEntity.execute(criteriaTabModel)).thenReturn(response);
 
     final CriteriaTabModelDto result = this.service.findCriteriaTabById(30L);
@@ -207,7 +207,7 @@ public class PreProjectModelServiceTest {
     final HashSet<PropertyModel> extractedProperties = new HashSet<>();
     extractedProperties.add(requestedCriteriaTab);
 
-    when(this.propertyModelService.findById(30L)).thenReturn(criteriaTabModel);
+    when(this.propertyModelService.findByIdWithChildren(30L)).thenReturn(criteriaTabModel);
     when(this.getPropertyModelFromDto.execute(Collections.singletonList(request)))
       .thenReturn(extractedProperties);
     when(this.propertyModelService.save(criteriaTabModel)).thenReturn(criteriaTabModel);
@@ -228,7 +228,7 @@ public class PreProjectModelServiceTest {
   public void shouldDeleteCriteriaTabById() {
     final CriteriaTabModel criteriaTabModel = new CriteriaTabModel();
     criteriaTabModel.setId(30L);
-    when(this.propertyModelService.findById(30L)).thenReturn(criteriaTabModel);
+    when(this.propertyModelService.findByIdWithChildren(30L)).thenReturn(criteriaTabModel);
     when(this.propertyModelService.canDeleteProperty(30L)).thenReturn(true);
 
     this.service.deleteCriteriaTab(30L);

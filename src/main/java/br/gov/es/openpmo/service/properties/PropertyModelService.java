@@ -27,6 +27,11 @@ public class PropertyModelService {
       .orElseThrow(() -> new NegocioException(PROPERTY_MODEL_NOT_FOUND));
   }
 
+  public PropertyModel findByIdWithChildren(final Long id) {
+    return this.propertyModelRepository.findById(id, -1)
+      .orElseThrow(() -> new NegocioException(PROPERTY_MODEL_NOT_FOUND));
+  }
+
   public void delete(final Iterable<PropertyModel> propertiesModel) {
     this.propertyModelRepository.deleteAll(propertiesModel);
   }

@@ -159,7 +159,7 @@ public class PreProjectModelService {
   }
 
   private CriteriaTabModel getCriteriaTabById(final Long id) {
-    final PropertyModel propertyModel = this.propertyModelService.findById(id);
+    final PropertyModel propertyModel = this.propertyModelService.findByIdWithChildren(id);
     if (!(propertyModel instanceof CriteriaTabModel)) {
       throw new NegocioException(PROPERTY_UPDATE_TYPE_ERROR);
     }
