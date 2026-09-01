@@ -19,12 +19,12 @@ public class PropertyModelServiceTest {
     final PropertyModelService service = new PropertyModelService(repository);
     final CriteriaTabModel criteriaTabModel = new CriteriaTabModel();
     criteriaTabModel.setId(30L);
-    when(repository.findById(30L, -1)).thenReturn(Optional.of(criteriaTabModel));
+    when(repository.findByIdWithChildren(30L)).thenReturn(Optional.of(criteriaTabModel));
 
     final PropertyModel result = service.findByIdWithChildren(30L);
 
     assertSame(criteriaTabModel, result);
-    verify(repository).findById(30L, -1);
+    verify(repository).findByIdWithChildren(30L);
   }
 
 }

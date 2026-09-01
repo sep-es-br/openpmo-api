@@ -28,7 +28,7 @@ public class PropertyModelService {
   }
 
   public PropertyModel findByIdWithChildren(final Long id) {
-    return this.propertyModelRepository.findById(id, -1)
+    return this.propertyModelRepository.findByIdWithChildren(id)
       .orElseThrow(() -> new NegocioException(PROPERTY_MODEL_NOT_FOUND));
   }
 
