@@ -22,7 +22,9 @@ public interface CostAccountRepository extends Neo4jRepository<CostAccount, Long
       "RETURN c,f1,p1,d1,pm1,ap, workpack, [  " +
       " [(p1)-[v1:VALUES]->(o:Organization) | [v1, o] ], " +
       " [(p1)-[v2:VALUES]->(l:Locality) | [v2, l] ],  " +
-      " [(p1)-[v3:VALUES]->(u:UnitMeasure) | [v3, u] ] " +
+      " [(p1)-[v3:VALUES]->(u:UnitMeasure) | [v3, u] ], " +
+      " [(p1)-[v4:VALUES]->(bp:BudgetPlan) | [v4, bp] ], " +
+      " [(p1)-[v5:VALUES]->(fs:FinancialSource) | [v5, fs] ] " +
       "]"
   )
   List<CostAccount> findAllByWorkpackId(List<Long> ids);
@@ -34,6 +36,8 @@ public interface CostAccountRepository extends Neo4jRepository<CostAccount, Long
     + " [(c)<-[fo:FEATURES]-(po:Property)-[v1:VALUES]->(o:Organization) | [fo, po, v1, o] ], "
     + " [(c)<-[fl:FEATURES]-(pl:Property)-[v2:VALUES]-(l:Locality) | [fl, pl, v2, l] ], "
     + " [(c)<-[fu:FEATURES]-(pu:Property)-[v3:VALUES]-(u:UnitMeasure) | [fu, pu, v3, u] ], "
+    + " [(c)<-[fbp:FEATURES]-(pbp:Property)-[v4:VALUES]->(bp:BudgetPlan) | [fbp, pbp, v4, bp] ], "
+    + " [(c)<-[ffs:FEATURES]-(pfs:Property)-[v5:VALUES]->(fs:FinancialSource) | [ffs, pfs, v5, fs] ], "
     + " [(c)<-[funds:FUNDS]-(in:Instrument) | [funds, in]], "
     + " [(c)-[ii:IS_INSTANCE_BY]->(cm:CostAccountModel) | [ii,cm]] "
     + "]")

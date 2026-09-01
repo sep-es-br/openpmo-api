@@ -614,6 +614,10 @@ public class CostAccountService {
     if (properties != null && !properties.isEmpty()) {
       for (Property property : properties) {
         property.setCostAccount(costAccount);
+        if (property.getId() != null
+          && (property instanceof BudgetPlanSelection || property instanceof FinancialSourceSelection)) {
+          this.propertyRepository.deleteValuesRelationshipsByPropertyId(property.getId());
+        }
       }
       this.propertyRepository.saveAll(properties);
     }

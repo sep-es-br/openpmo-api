@@ -126,8 +126,6 @@ dependencies {
         !props['app.plugin.sigef.repository'].trim().isEmpty()) {
         implementation props['app.plugin.sigef.repository']
     }
-    implementation files('lib/openpmo-plugin-sigef-goves-1.0.0.jar')
-
     //implementation 'com.github.sep-es-br:acesso-cidadao-identity-parser:f92a8db'
 
 

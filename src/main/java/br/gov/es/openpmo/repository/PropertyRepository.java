@@ -76,4 +76,9 @@ public interface PropertyRepository extends Neo4jRepository<Property, Long> {
     Long workpackId
   );
 
+  @Query("MATCH (p:Property)-[v:VALUES]->() " +
+         "WHERE id(p)=$propertyId " +
+         "DELETE v")
+  void deleteValuesRelationshipsByPropertyId(Long propertyId);
+
 }
