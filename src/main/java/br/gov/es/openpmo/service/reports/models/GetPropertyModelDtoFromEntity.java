@@ -129,11 +129,19 @@ public class GetPropertyModelDtoFromEntity {
         final CriteriaTabModelDto criteriaTabModelDto = CriteriaTabModelDto.of(propertyModel);
         final CriteriaTabModel criteriaTabModel = (CriteriaTabModel) propertyModel;
         final List<PropertyModelDto> organizedCriteria = new ArrayList<>();
+        final List<PropertyModelDto> standaloneCriteria = new ArrayList<>();
         if (criteriaTabModel.getOrganizedProperties() != null) {
-          criteriaTabModel.getOrganizedProperties()
-            .forEach(property -> organizedCriteria.add(this.execute(property)));
+          criteriaTabModel.getOrganizedProperties().forEach(property -> {
+            final PropertyModelDto propertyModelDto = this.execute(property);
+            if (property instanceof GroupModel) {
+              organizedCriteria.add(propertyModelDto);
+            } else {
+              standaloneCriteria.add(propertyModelDto);
+            }
+          });
         }
-        criteriaTabModelDto.setOrganizedProperties(organizedCriteria);
+        criteriaTabModelDto.setOrganized(organizedCriteria);
+        criteriaTabModelDto.setProperties(standaloneCriteria);
         return criteriaTabModelDto;
       case TYPE_NAME_MODEL_CRITERIA_GROUP:
         final CriteriaGroupModelDto criteriaGroupModelDto = CriteriaGroupModelDto.of(propertyModel);
@@ -142,7 +150,7 @@ public class GetPropertyModelDtoFromEntity {
         if (criteriaGroupModel.getGroupedProperties() != null) {
           criteriaGroupModel.getGroupedProperties().forEach(property -> groupedCriteria.add(this.execute(property)));
         }
-        criteriaGroupModelDto.setGroupedProperties(groupedCriteria);
+        criteriaGroupModelDto.setProperties(groupedCriteria);
         return criteriaGroupModelDto;
       case TYPE_NAME_MODEL_CRITERIA_SELECTION:
         return CriteriaSelectionModelDto.of(propertyModel);

@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.service.preprojects;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
@@ -19,6 +20,8 @@ import br.gov.es.openpmo.service.office.LocalityService;
 import br.gov.es.openpmo.service.office.UnitMeasureService;
 import br.gov.es.openpmo.service.reports.models.ExtractPropertyModel;
 import br.gov.es.openpmo.service.reports.models.GetPropertyModelDtoFromEntity;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -26,6 +29,28 @@ import org.junit.Test;
 import org.modelmapper.ModelMapper;
 
 public class CriteriaPropertyModelConversionTest {
+
+  @Test
+  public void shouldExposeOnlyCriteriaCollectionNamesInJson() throws Exception {
+    final CriteriaGroupModelDto groupDto = new CriteriaGroupModelDto();
+    groupDto.setProperties(Collections.emptyList());
+    final CriteriaListModelDto propertyDto = new CriteriaListModelDto();
+
+    final CriteriaTabModelDto tabDto = new CriteriaTabModelDto();
+    tabDto.setOrganized(Collections.singletonList(groupDto));
+    tabDto.setProperties(Collections.singletonList(propertyDto));
+
+    final ObjectMapper objectMapper = new ObjectMapper();
+    final String json = objectMapper.writeValueAsString(tabDto);
+    final JsonNode jsonNode = objectMapper.readTree(json);
+
+    assertTrue(json.contains("\"organized\":"));
+    assertTrue(json.contains("\"properties\":"));
+    assertFalse(json.contains("\"organizedProperties\":"));
+    assertFalse(json.contains("\"groupedProperties\":"));
+    assertEquals("CriteriaGroupModel", jsonNode.get("organized").get(0).get("type").asText());
+    assertEquals("CriteriaListModel", jsonNode.get("properties").get(0).get("type").asText());
+  }
 
   @Test
   public void shouldConvertNestedCriteriaFromEntityToDto() {
@@ -54,7 +79,13 @@ public class CriteriaPropertyModelConversionTest {
     tabModel.setIcon("settings");
     tabModel.setWeight(2D);
     tabModel.setOperation(CriteriaOperation.AVERAGE);
-    tabModel.setOrganizedProperties(Collections.singleton(groupModel));
+    final CriteriaListModel standaloneListModel = new CriteriaListModel();
+    standaloneListModel.setSortIndex(3L);
+    standaloneListModel.setName("cost");
+    standaloneListModel.setLabel("Custo");
+    standaloneListModel.setWeight(2D);
+    standaloneListModel.setItemValue(10D);
+    tabModel.setOrganizedProperties(new HashSet<>(java.util.Arrays.asList(groupModel, standaloneListModel)));
 
     final PropertyModelDto result = new GetPropertyModelDtoFromEntity().execute(tabModel);
 
@@ -63,12 +94,15 @@ public class CriteriaPropertyModelConversionTest {
     assertEquals(CriteriaOperation.AVERAGE, tabDto.getOperation());
     assertEquals(Double.valueOf(2D), tabDto.getWeight());
     assertEquals("settings", tabDto.getIcon());
-    assertTrue(tabDto.getOrganizedProperties().get(0) instanceof CriteriaGroupModelDto);
-    final CriteriaGroupModelDto groupDto = (CriteriaGroupModelDto) tabDto.getOrganizedProperties().get(0);
+    assertEquals(1, tabDto.getOrganized().size());
+    assertEquals(1, tabDto.getProperties().size());
+    assertTrue(tabDto.getOrganized().get(0) instanceof CriteriaGroupModelDto);
+    assertTrue(tabDto.getProperties().get(0) instanceof CriteriaListModelDto);
+    final CriteriaGroupModelDto groupDto = (CriteriaGroupModelDto) tabDto.getOrganized().get(0);
     assertTrue(groupDto.isEnablementKey());
     assertEquals(Double.valueOf(0D), groupDto.getDisabledValue());
     assertEquals("Legenda do grupo", groupDto.getLegend());
-    final CriteriaListModelDto listDto = (CriteriaListModelDto) groupDto.getGroupedProperties().get(0);
+    final CriteriaListModelDto listDto = (CriteriaListModelDto) groupDto.getProperties().get(0);
     assertEquals(Double.valueOf(3D), listDto.getWeight());
     assertEquals(Double.valueOf(5D), listDto.getItemValue());
   }
@@ -91,7 +125,7 @@ public class CriteriaPropertyModelConversionTest {
     groupDto.setEnablementKey(true);
     groupDto.setDisabledValue(0D);
     groupDto.setLegend("Legenda do grupo");
-    groupDto.setGroupedProperties(Collections.singletonList(listDto));
+    groupDto.setProperties(Collections.singletonList(listDto));
 
     final CriteriaTabModelDto tabDto = new CriteriaTabModelDto();
     tabDto.setSortIndex(1L);
@@ -100,7 +134,14 @@ public class CriteriaPropertyModelConversionTest {
     tabDto.setIcon("settings");
     tabDto.setWeight(2D);
     tabDto.setOperation(CriteriaOperation.SUM);
-    tabDto.setOrganizedProperties(Collections.singletonList(groupDto));
+    tabDto.setOrganized(Collections.singletonList(groupDto));
+    final CriteriaListModelDto standaloneListDto = new CriteriaListModelDto();
+    standaloneListDto.setSortIndex(3L);
+    standaloneListDto.setName("cost");
+    standaloneListDto.setLabel("Custo");
+    standaloneListDto.setWeight(2D);
+    standaloneListDto.setItemValue(10D);
+    tabDto.setProperties(Collections.singletonList(standaloneListDto));
 
     final ExtractPropertyModel converter = new ExtractPropertyModel(
       new ModelMapper(),
@@ -118,9 +159,14 @@ public class CriteriaPropertyModelConversionTest {
     assertEquals(CriteriaOperation.SUM, tabModel.getOperation());
     assertEquals(Double.valueOf(2D), tabModel.getWeight());
     assertEquals("settings", tabModel.getIcon());
-    assertTrue(tabModel.getOrganizedProperties().iterator().next() instanceof CriteriaGroupModel);
+    assertEquals(2, tabModel.getOrganizedProperties().size());
+    assertTrue(tabModel.getOrganizedProperties().stream().anyMatch(CriteriaGroupModel.class::isInstance));
+    assertTrue(tabModel.getOrganizedProperties().stream().anyMatch(CriteriaListModel.class::isInstance));
     final CriteriaGroupModel groupModel =
-      (CriteriaGroupModel) tabModel.getOrganizedProperties().iterator().next();
+      (CriteriaGroupModel) tabModel.getOrganizedProperties().stream()
+        .filter(CriteriaGroupModel.class::isInstance)
+        .findFirst()
+        .orElseThrow(AssertionError::new);
     assertTrue(groupModel.isEnablementKey());
     assertEquals(Double.valueOf(0D), groupModel.getDisabledValue());
     assertEquals("Legenda do grupo", groupModel.getLegend());

@@ -193,7 +193,17 @@ public class ExtractPropertyModel {
         criteriaTabModel.setIcon(criteriaTabDto.getIcon());
         criteriaTabModel.setWeight(criteriaTabDto.getWeight());
         criteriaTabModel.setOperation(criteriaTabDto.getOperation());
-        criteriaTabModel.setOrganizedProperties(this.extractNestedProperties(criteriaTabDto.getOrganizedProperties()));
+        final Set<PropertyModel> organizedGroups = this.extractNestedProperties(criteriaTabDto.getOrganized());
+        if (organizedGroups.stream().anyMatch(model -> !(model instanceof GroupModel))) {
+          throw new NegocioException(ApplicationMessage.PROPERTY_UPDATE_TYPE_ERROR);
+        }
+        final Set<PropertyModel> standaloneProperties =
+          this.extractNestedProperties(criteriaTabDto.getProperties());
+        if (standaloneProperties.stream().anyMatch(GroupModel.class::isInstance)) {
+          throw new NegocioException(ApplicationMessage.PROPERTY_UPDATE_TYPE_ERROR);
+        }
+        organizedGroups.addAll(standaloneProperties);
+        criteriaTabModel.setOrganizedProperties(organizedGroups);
         propertyModels.add(criteriaTabModel);
         break;
       case PACKAGE_PROPERTIES_DTO + ".CriteriaGroupModelDto":
@@ -207,7 +217,7 @@ public class ExtractPropertyModel {
           criteriaGroupModel.setDisabledValue(criteriaGroupDto.getDisabledValue());
           criteriaGroupModel.setLegend(criteriaGroupDto.getLegend());
         }
-        criteriaGroupModel.setGroupedProperties(this.extractNestedProperties(criteriaGroupDto.getGroupedProperties()));
+        criteriaGroupModel.setGroupedProperties(this.extractNestedProperties(criteriaGroupDto.getProperties()));
         propertyModels.add(criteriaGroupModel);
         break;
       case PACKAGE_PROPERTIES_DTO + ".CriteriaSelectionModelDto":

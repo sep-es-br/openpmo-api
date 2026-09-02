@@ -4,12 +4,18 @@ import br.gov.es.openpmo.enumerator.CriteriaOperation;
 import br.gov.es.openpmo.model.properties.models.CriteriaGroupModel;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.utils.PropertyModelInstanceType;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
-public class CriteriaGroupModelDto extends GroupModelDto {
+public class CriteriaGroupModelDto extends PropertyModelDto {
+
+  @Valid
+  private List<? extends PropertyModelDto> properties;
 
   @NotNull
   private Double weight;
@@ -36,10 +42,19 @@ public class CriteriaGroupModelDto extends GroupModelDto {
       instance.setDisabledValue(criteriaGroupModel.getDisabledValue());
       instance.setLegend(criteriaGroupModel.getLegend());
     }
-    instance.setGroupedProperties(Optional.ofNullable(criteriaGroupModel.getGroupedProperties())
+    instance.setProperties(Optional.ofNullable(criteriaGroupModel.getGroupedProperties())
       .map(properties -> properties.stream().map(PropertyModelInstanceType::map).collect(Collectors.toList()))
       .orElse(Collections.emptyList()));
     return instance;
+  }
+
+  public List<? extends PropertyModelDto> getProperties() {
+    return this.properties;
+  }
+
+  @JsonAlias("groupedProperties")
+  public void setProperties(final List<? extends PropertyModelDto> properties) {
+    this.properties = properties;
   }
 
   public Double getWeight() {

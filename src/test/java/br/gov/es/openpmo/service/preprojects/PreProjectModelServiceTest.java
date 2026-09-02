@@ -156,7 +156,8 @@ public class PreProjectModelServiceTest {
     request.setSortIndex(1L);
     request.setWeight(1D);
     request.setOperation(CriteriaOperation.AVERAGE);
-    request.setOrganizedProperties(Collections.emptyList());
+    request.setOrganized(Collections.emptyList());
+    request.setProperties(Collections.emptyList());
 
     final CriteriaTabModel criteriaTabModel = new CriteriaTabModel();
     criteriaTabModel.setName("technical-criteria");
