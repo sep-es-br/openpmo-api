@@ -6,7 +6,9 @@ import br.gov.es.openpmo.dto.ccbmembers.MemberAs;
 import br.gov.es.openpmo.model.relations.IsCCBMemberFor;
 import br.gov.es.openpmo.repository.IsCCBMemberRepository;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -31,10 +33,18 @@ public class GetAllCCBMemberService implements IGetAllCCBMemberService {
     final List<CCBMemberLevelResult> planAndOfficeResults =
       this.ccbMemberRepository.findAllPlanAndOfficeMembersByWorkpackId(workpackId);
 
-    return this.findAllCCBMmembersByWorkpackId(workpackId)
+    final List<CCBMemberResponse> workpackMembers = this.findAllCCBMmembersByWorkpackId(workpackId)
       .stream()
-      .map(ccbMember -> this.getCCBMemberResponse(ccbMember, planAndOfficeResults))
+      .map(this::getWorkpackMemberResponse)
       .filter(distinctByKeyAndWorkpack(CCBMemberResponse::getPersonId, CCBMemberResponse::getIdWorkpack))
+      .collect(Collectors.toList());
+
+    final List<CCBMemberResponse> planAndOfficeMembers = this.getPlanAndOfficeMemberResponses(
+      workpackId,
+      planAndOfficeResults
+    );
+
+    return Stream.concat(workpackMembers.stream(), planAndOfficeMembers.stream())
       .collect(Collectors.toList());
   }
 
@@ -62,35 +72,57 @@ public class GetAllCCBMemberService implements IGetAllCCBMemberService {
     return this.ccbMemberRepository.findAllByWorkpackId(workpackId);
   }
 
-  private CCBMemberResponse getCCBMemberResponse(
-    final IsCCBMemberFor ccbMember,
-    final List<CCBMemberLevelResult> planAndOfficeResults
-  ) {
-    final List<MemberAs> memberAs = this.getMemberAs(ccbMember, planAndOfficeResults);
+  private CCBMemberResponse getWorkpackMemberResponse(final IsCCBMemberFor ccbMember) {
+    final List<MemberAs> memberAs = this.findByPersonIdAndWorkpackId(ccbMember)
+      .stream()
+      .map(IsCCBMemberFor::getMemberAs)
+      .collect(Collectors.toList());
 
     return new CCBMemberResponse(
       ccbMember.getWorkpackId(),
       ccbMember.getPersonResponse(),
       memberAs,
-      memberAs.stream().anyMatch(MemberAs::getActive)
+      memberAs.stream().anyMatch(member -> Boolean.TRUE.equals(member.getActive()))
     );
   }
 
-  private List<MemberAs> getMemberAs(
-    final IsCCBMemberFor ccbMember,
+  private List<CCBMemberResponse> getPlanAndOfficeMemberResponses(
+    final Long workpackId,
     final List<CCBMemberLevelResult> planAndOfficeResults
   ) {
-    final List<MemberAs> workpackLevel = this.findByPersonIdAndWorkpackId(ccbMember)
-      .stream()
-      .map(IsCCBMemberFor::getMemberAs)
-      .collect(Collectors.toList());
+    final Map<Long, List<CCBMemberLevelResult>> resultsByPerson = planAndOfficeResults.stream()
+      .filter(result -> result.getIdPerson() != null && result.getPerson() != null)
+      .collect(Collectors.groupingBy(
+        CCBMemberLevelResult::getIdPerson,
+        LinkedHashMap::new,
+        Collectors.toList()
+      ));
 
-    final List<MemberAs> planAndOfficeLevel = planAndOfficeResults.stream()
-      .filter(r -> r.getIdPerson() != null && r.getIdPerson().equals(ccbMember.getIdPerson()))
-      .map(r -> new MemberAs(r.getRole(), r.getWorkLocation(), r.getActive(), r.getLevel(), r.getLevelName()))
-      .collect(Collectors.toList());
+    return resultsByPerson.values().stream()
+      .map(results -> {
+        final List<MemberAs> memberAs = results.stream()
+          .sorted((first, second) -> Boolean.compare(
+            Boolean.TRUE.equals(second.getActive()),
+            Boolean.TRUE.equals(first.getActive())
+          ))
+          .filter(distinctByKey(result -> Arrays.asList(result.getLevel(), result.getIdLevel())))
+          .map(result -> new MemberAs(
+            result.getRole(),
+            result.getWorkLocation(),
+            result.getActive(),
+            result.getLevel(),
+            result.getLevelName(),
+            result.getIdLevel()
+          ))
+          .collect(Collectors.toList());
 
-    return Stream.concat(workpackLevel.stream(), planAndOfficeLevel.stream())
+        return new CCBMemberResponse(
+          workpackId,
+          results.get(0).getPerson().getPersonResponse(),
+          memberAs,
+          memberAs.stream().anyMatch(member -> Boolean.TRUE.equals(member.getActive()))
+        );
+      })
       .collect(Collectors.toList());
   }
 
