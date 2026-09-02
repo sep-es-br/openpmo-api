@@ -7,6 +7,7 @@ public class MemberAs {
   private Boolean active;
   private String level;      // "WORKPACK" | "PLAN" | "OFFICE"
   private String levelName;  // nome do Plano/Escritório; null para Workpack
+  private Long levelId;
 
   public MemberAs() {
   }
@@ -23,11 +24,23 @@ public class MemberAs {
     final String level,
     final String levelName
   ) {
+    this(role, workLocation, active, level, levelName, null);
+  }
+
+  public MemberAs(
+    final String role,
+    final String workLocation,
+    final Boolean active,
+    final String level,
+    final String levelName,
+    final Long levelId
+  ) {
     this.role = role;
     this.workLocation = workLocation;
     this.active = active;
     this.level = level;
     this.levelName = levelName;
+    this.levelId = levelId;
   }
 
 
@@ -69,6 +82,14 @@ public class MemberAs {
 
   public void setLevelName(final String levelName) {
     this.levelName = levelName;
+  }
+
+  public Long getLevelId() {
+    return this.levelId;
+  }
+
+  public void setLevelId(final Long levelId) {
+    this.levelId = levelId;
   }
 
 }

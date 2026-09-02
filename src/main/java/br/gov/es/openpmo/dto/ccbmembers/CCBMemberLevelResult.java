@@ -1,11 +1,13 @@
 package br.gov.es.openpmo.dto.ccbmembers;
 
+import br.gov.es.openpmo.model.actors.Person;
 import org.springframework.data.neo4j.annotation.QueryResult;
 
 @QueryResult
 public class CCBMemberLevelResult {
 
   private Long idPerson;
+  private Person person;
   private String role;
   private String workLocation;
   private Boolean active;
@@ -19,6 +21,14 @@ public class CCBMemberLevelResult {
 
   public void setIdPerson(final Long idPerson) {
     this.idPerson = idPerson;
+  }
+
+  public Person getPerson() {
+    return this.person;
+  }
+
+  public void setPerson(final Person person) {
+    this.person = person;
   }
 
   public String getRole() {
