@@ -13,6 +13,7 @@ import br.gov.es.openpmo.service.actors.OrganizationService;
 import br.gov.es.openpmo.service.office.DomainService;
 import br.gov.es.openpmo.service.office.LocalityService;
 import br.gov.es.openpmo.service.office.UnitMeasureService;
+import br.gov.es.openpmo.service.workpack.BudgetReferenceService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
@@ -36,18 +37,22 @@ public class ExtractPropertyModel {
 
   private final OrganizationService organizationService;
 
+  private final BudgetReferenceService budgetReferenceService;
+
   public ExtractPropertyModel(
     ModelMapper modelMapper,
     UnitMeasureService unitMeasureService,
     DomainService domainService,
     LocalityService localityService,
-    OrganizationService organizationService
+    OrganizationService organizationService,
+    BudgetReferenceService budgetReferenceService
   ) {
     this.modelMapper = modelMapper;
     this.unitMeasureService = unitMeasureService;
     this.domainService = domainService;
     this.localityService = localityService;
     this.organizationService = organizationService;
+    this.budgetReferenceService = budgetReferenceService;
   }
 
   public void execute(
@@ -151,10 +156,24 @@ public class ExtractPropertyModel {
         propertyModels.add(organizationSelectionModel);
         break;
       case PACKAGE_PROPERTIES_DTO + ".BudgetPlanSelectionModelDto":
-        propertyModels.add(this.modelMapper.map(property, BudgetPlanSelectionModel.class));
+        final BudgetPlanSelectionModel budgetPlanSelectionModel = this.modelMapper.map(
+          property,
+          BudgetPlanSelectionModel.class
+        );
+        budgetPlanSelectionModel.setDefaultValue(this.budgetReferenceService.resolveBudgetPlans(
+          budgetPlanSelectionModel.getDefaultValue()
+        ));
+        propertyModels.add(budgetPlanSelectionModel);
         break;
       case PACKAGE_PROPERTIES_DTO + ".FinancialSourceSelectionModelDto":
-        propertyModels.add(this.modelMapper.map(property, FinancialSourceSelectionModel.class));
+        final FinancialSourceSelectionModel financialSourceSelectionModel = this.modelMapper.map(
+          property,
+          FinancialSourceSelectionModel.class
+        );
+        financialSourceSelectionModel.setDefaultValue(this.budgetReferenceService.resolveFinancialSources(
+          financialSourceSelectionModel.getDefaultValue()
+        ));
+        propertyModels.add(financialSourceSelectionModel);
         break;
       case PACKAGE_PROPERTIES_DTO + ".GroupModelDto":
         final GroupModel groupModel = this.modelMapper.map(

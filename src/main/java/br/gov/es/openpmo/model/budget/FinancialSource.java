@@ -23,6 +23,7 @@ public class FinancialSource extends Entity {
     private String sourceName;
     private String sourceGroupCode;
     private String sourceGroupName;
+    private String identityKey;
 
     public String getTypeCode() {
         return typeCode;
@@ -86,6 +87,14 @@ public class FinancialSource extends Entity {
 
     public void setSourceGroupName(String sourceGroupName) {
         this.sourceGroupName = sourceGroupName;
+    }
+
+    public String getIdentityKey() {
+        return identityKey;
+    }
+
+    public void setIdentityKey(String identityKey) {
+        this.identityKey = identityKey;
     }
 
     @Override

@@ -222,6 +222,8 @@ public class WorkpackService {
   private final DashboardCacheUtil dashboardCacheUtil;
   private final Optional<ISigefProvider> sigefProvider;
 
+  private final BudgetReferenceService budgetReferenceService;
+
   @Autowired
   public WorkpackService(
     final WorkpackModelService workpackModelService,
@@ -245,7 +247,8 @@ public class WorkpackService {
     final  ApplicationCacheUtil cacheUtil,
     final DashboardCacheUtil dashboardCacheUtil,
     final PropertyRepository propertyRepository,
-    final Optional<ISigefProvider> sigefProvider
+    final Optional<ISigefProvider> sigefProvider,
+    final BudgetReferenceService budgetReferenceService
   ) {
     this.workpackModelService = workpackModelService;
     this.planService = planService;
@@ -269,6 +272,7 @@ public class WorkpackService {
     this.dashboardCacheUtil = dashboardCacheUtil;
     this.cacheUtil = cacheUtil;
     this.sigefProvider = sigefProvider;
+    this.budgetReferenceService = budgetReferenceService;
   }
 
   public List<PlanWorkpackDto> findAllMappedByPlanWithPermission(Long idOffice, Long idPerson) {
@@ -1674,10 +1678,10 @@ public class WorkpackService {
         final BudgetPlanSelectionModel budgetPlanSelectionModel = (BudgetPlanSelectionModel) propertyModel;
         budgetPlanSelection.setId(budgetPlanSelectionDto.getId());
         budgetPlanSelection.setDriver(budgetPlanSelectionModel);
-        budgetPlanSelection.setValue(this.limitSelection(
+        budgetPlanSelection.setValue(this.budgetReferenceService.resolveBudgetPlans(this.limitSelection(
           budgetPlanSelectionDto.getValue(),
           budgetPlanSelectionModel.isMultipleSelection()
-        ));
+        )));
         properties.add(budgetPlanSelection);
         break;
       case "br.gov.es.openpmo.dto.workpack.FinancialSourceSelectionDto":
@@ -1687,9 +1691,11 @@ public class WorkpackService {
           (FinancialSourceSelectionModel) propertyModel;
         financialSourceSelection.setId(financialSourceSelectionDto.getId());
         financialSourceSelection.setDriver(financialSourceSelectionModel);
-        financialSourceSelection.setValue(this.normalizeFinancialSources(
-          financialSourceSelectionDto.getValue(),
-          financialSourceSelectionModel
+        financialSourceSelection.setValue(this.budgetReferenceService.resolveFinancialSources(
+          this.normalizeFinancialSources(
+            financialSourceSelectionDto.getValue(),
+            financialSourceSelectionModel
+          )
         ));
         properties.add(financialSourceSelection);
         break;

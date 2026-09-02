@@ -20,6 +20,7 @@ public class BudgetPlan extends Entity{
     private String budgetUnitAcronym;
     private String budgetPlanCode;
     private String budgetPlanName;
+    private String identityKey;
 
     public String getBudgetUnitCode() {
         return budgetUnitCode;
@@ -59,6 +60,14 @@ public class BudgetPlan extends Entity{
 
     public void setBudgetPlanName(String budgetPlanName) {
         this.budgetPlanName = budgetPlanName;
+    }
+
+    public String getIdentityKey() {
+        return identityKey;
+    }
+
+    public void setIdentityKey(String identityKey) {
+        this.identityKey = identityKey;
     }
 
     @Override
