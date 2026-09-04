@@ -68,6 +68,20 @@ public interface PropertyRepository extends Neo4jRepository<Property, Long> {
   )
   List<Property> findAllByPropertyModelId(Long idPropertyModel);
 
+  @Query(
+    "MATCH (criteriaList:CriteriaList)-[:CONTAINS]->(item:ListItem) " +
+    "WHERE id(criteriaList) = $id " +
+    "DETACH DELETE item"
+  )
+  void deleteCriteriaListItems(Long id);
+
+  @Query(
+    "MATCH (criteriaSelection:CriteriaSelection)-[values:VALUES]->(:SelectionOption) " +
+    "WHERE id(criteriaSelection) = $id " +
+    "DELETE values"
+  )
+  void deleteCriteriaSelectionValues(Long id);
+
   @Query("match (p:Property), (w:Workpack) " +
     "where id(p)=$propertyId and id(w)=$workpackId " +
     "create (p)-[:FEATURES]->(w)")

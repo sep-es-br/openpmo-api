@@ -22,7 +22,9 @@ import br.gov.es.openpmo.service.workpack.UpdatePropertyModels;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -82,6 +84,24 @@ public class PreProjectModelService {
       preProjectModel = this.createForOffice(idOffice);
     }
 
+    return this.toDto(preProjectModel);
+  }
+
+  @Transactional(readOnly = true)
+  public PreProjectModelDto findById(final Long id) {
+    final PreProjectModel preProjectModel = this.preProjectModelRepository.findById(id)
+      .orElseThrow(() -> new RegistroNaoEncontradoException(PRE_PROJECT_MODEL_NOT_FOUND));
+    if (preProjectModel.getProperties() != null) {
+      final List<PropertyModel> properties = preProjectModel.getProperties().stream()
+        .filter(property -> property.getId() != null)
+        .map(property -> this.propertyModelService.findByIdWithChildren(property.getId()))
+        .sorted(Comparator.comparing(
+          PropertyModel::getSortIndex,
+          Comparator.nullsLast(Comparator.naturalOrder())
+        ))
+        .collect(java.util.stream.Collectors.toList());
+      preProjectModel.setProperties(new LinkedHashSet<>(properties));
+    }
     return this.toDto(preProjectModel);
   }
 

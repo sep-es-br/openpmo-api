@@ -5,6 +5,7 @@ import java.util.Objects;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.baselines.Snapshotable;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
+import br.gov.es.openpmo.model.preprojects.PreProject;
 import br.gov.es.openpmo.model.relations.IsPropertySnapshotOf;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
 import br.gov.es.openpmo.model.workpacks.Workpack;
@@ -76,6 +77,9 @@ public abstract class Property<T, V> extends Entity implements HasValue<V>, Snap
   @Relationship(type = "FEATURES")
   private CostAccount costAccount;
 
+  @Relationship(type = "FEATURES")
+  private PreProject preProject;
+
   protected Property() {
   }
 
@@ -126,6 +130,14 @@ public abstract class Property<T, V> extends Entity implements HasValue<V>, Snap
 
   public void setCostAccount(CostAccount costAccount) {
     this.costAccount = costAccount;
+  }
+
+  public PreProject getPreProject() {
+    return this.preProject;
+  }
+
+  public void setPreProject(final PreProject preProject) {
+    this.preProject = preProject;
   }
 
   @Transient

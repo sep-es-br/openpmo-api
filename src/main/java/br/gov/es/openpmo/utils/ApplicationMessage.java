@@ -5,6 +5,7 @@ public class ApplicationMessage {
   public static final String PLAN_MODEL_NOT_FOUND = "planModel.not.found";
   public static final String COST_ACCOUNT_MODEL_NOT_FOUND = "costAccountModel.not.found";
   public static final String PRE_PROJECT_MODEL_NOT_FOUND = "preProjectModel.not.found";
+  public static final String PRE_PROJECT_NOT_FOUND = "preProject.not.found";
   public static final String CUSTOM_FILTER_NOT_FOUND = "customFilter.not.found";
   public static final String PLAN_NOT_FOUND = "plan.not.found";
   public static final String OFFICE_NOT_FOUND = "office.not.found";

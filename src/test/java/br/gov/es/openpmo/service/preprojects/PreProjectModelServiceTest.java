@@ -90,6 +90,26 @@ public class PreProjectModelServiceTest {
   }
 
   @Test
+  public void shouldLoadTheCompleteModelStructureById() {
+    final PreProjectModel model = new PreProjectModel();
+    model.setId(10L);
+    final CriteriaTabModel thinTab = new CriteriaTabModel();
+    thinTab.setId(30L);
+    model.setProperties(Collections.singleton(thinTab));
+    final CriteriaTabModel completeTab = new CriteriaTabModel();
+    completeTab.setId(30L);
+    completeTab.setName("relevance");
+    completeTab.setOrganizedProperties(Collections.emptySet());
+    when(this.preProjectModelRepository.findById(10L)).thenReturn(Optional.of(model));
+    when(this.propertyModelService.findByIdWithChildren(30L)).thenReturn(completeTab);
+
+    this.service.findById(10L);
+
+    assertEquals(completeTab, model.getProperties().iterator().next());
+    verify(this.propertyModelService).findByIdWithChildren(30L);
+  }
+
+  @Test
   public void shouldCreateTheDefaultPreProjectModelWhenItDoesNotExist() {
     final Office office = new Office();
     office.setId(1L);

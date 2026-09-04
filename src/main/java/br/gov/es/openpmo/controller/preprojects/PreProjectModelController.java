@@ -61,6 +61,15 @@ public class PreProjectModelController {
     return ResponseEntity.ok(ResponseBase.of(preProjectModel));
   }
 
+  @GetMapping("/{id}")
+  public ResponseEntity<ResponseBase<PreProjectModelDto>> findById(
+    @PathVariable final Long id,
+    @Authorization final String authorization
+  ) {
+    this.canAccessService.ensureCanReadResource(id, authorization);
+    return ResponseEntity.ok(ResponseBase.of(this.preProjectModelService.findById(id)));
+  }
+
   @PostMapping("/{id}/criteria-tabs")
   public ResponseEntity<ResponseBase<CriteriaTabModelDto>> createCriteriaTab(
     @PathVariable final Long id,
