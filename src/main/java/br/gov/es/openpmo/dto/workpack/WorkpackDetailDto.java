@@ -57,6 +57,8 @@ public abstract class WorkpackDetailDto {
 
   private Boolean hasScheduleSectionActive;
 
+  private Boolean hasApprovedBaseline;
+
   @JsonFormat(pattern = "dd-MM-yyyy")
   private LocalDate endManagementDate;
 
@@ -249,6 +251,14 @@ public abstract class WorkpackDetailDto {
 
   public void setHasScheduleSectionActive(final Boolean hasScheduleSectionActive) {
     this.hasScheduleSectionActive = hasScheduleSectionActive;
+  }
+
+  public Boolean getHasApprovedBaseline() {
+    return hasApprovedBaseline;
+  }
+
+  public void setHasApprovedBaseline(final Boolean hasApprovedBaseline) {
+    this.hasApprovedBaseline = hasApprovedBaseline;
   }
 
   public Long getIdParent() {

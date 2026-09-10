@@ -161,7 +161,7 @@ public class WorkpackPermissionVerifier {
 
       if (!permissionPrent.isEmpty()) {
         return permissionPrent.stream()
-            .map(c -> adjustUpdateToEditIfEstruturacao(c, idWorkpack)) 
+            .map(c -> adjustUpdateToEditIfStatusAllows(c, idWorkpack))
             .collect(Collectors.toList());
       }
 
@@ -184,12 +184,12 @@ public class WorkpackPermissionVerifier {
     return Collections.emptyList();
   }
 
-  private PermissionDto adjustUpdateToEditIfEstruturacao(CanAccessWorkpack c, Long idWorkpack) {
+  private PermissionDto adjustUpdateToEditIfStatusAllows(CanAccessWorkpack c, Long idWorkpack) {
       PermissionLevelEnum level = c.getPermissionLevel();
 
       if (level == PermissionLevelEnum.UPDATE) {
-          Boolean isEstruturacao = workpackRepository.isEstruturacao(idWorkpack);
-          if (Boolean.TRUE.equals(isEstruturacao)) {
+          Boolean hasStatusAllowedForUpdate = workpackRepository.hasStatusAllowedForUpdate(idWorkpack);
+          if (Boolean.TRUE.equals(hasStatusAllowedForUpdate)) {
               level = PermissionLevelEnum.EDIT;
           }
       }

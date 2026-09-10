@@ -495,6 +495,11 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       "RETURN count(baseline)>0 ")
   boolean hasActiveBaseline(Long idWorkpack);
 
+  @Query("MATCH (workpack:Workpack)-[:IS_BASELINED_BY]->(baseline:Baseline{status:'APPROVED'}) " +
+      "WHERE id(workpack)=$idWorkpack " +
+      "RETURN count(baseline)>0 ")
+  boolean hasApprovedBaseline(Long idWorkpack);
+
   @Query("MATCH (w:Workpack)<-[:IS_IN*]-(:Project{deleted:false,canceled:false})-[:IS_BASELINED_BY]->" +
       "(b:Baseline{active: true})" +
       " " +
@@ -806,8 +811,8 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       "MATCH (w)-[:IS_IN*0..]->(p:Project) " +
       "OPTIONAL MATCH (p)<-[:FEATURES]-(prop:Property)-[:IS_DRIVEN_BY]->(pm:PropertyModel) " +
       "WHERE pm.name IN ['Situação','Status'] " +
-      "RETURN prop.value = 'Estruturação' AS isEstruturacao")
-  Boolean isEstruturacao(@Param("idWorkpack") Long idWorkpack);
+      "RETURN prop.value IN ['Estruturação', 'Repactuação'] AS hasStatusAllowedForUpdate")
+  Boolean hasStatusAllowedForUpdate(@Param("idWorkpack") Long idWorkpack);
 
   // @Query(
   // "MATCH (organizer:Organizer)-[:IS_IN*]->(project:Project) " +

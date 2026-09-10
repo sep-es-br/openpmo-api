@@ -217,12 +217,11 @@ public class OfficePermissionService {
       return dto.getPerson().getScore() < this.appProperties.getSearchCutOffScore();
     });
 
+    allPermissionsOfOffice.removeIf(permission -> permission.getPerson().getKey() == null);
+
     if (key != null) {
       return allPermissionsOfOffice.stream()
-        .filter(permission -> {
-          if (permission.getPerson().getKey() == null) return true;
-          return permission.getPerson().getKey().equals(key);
-        })
+        .filter(permission -> key.equals(permission.getPerson().getKey()))
         .sorted(Comparator.comparing(p -> p.getPerson().getScore()))
         .collect(Collectors.toList());
     }

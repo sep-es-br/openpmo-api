@@ -18,6 +18,7 @@ import br.gov.es.openpmo.dto.workpackmodel.params.WorkpackModelParamDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.PropertyModelDto;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
+import br.gov.es.openpmo.model.properties.models.SelectionModel;
 import br.gov.es.openpmo.model.workpacks.models.DeliverableModel;
 import br.gov.es.openpmo.model.workpacks.models.MilestoneModel;
 import br.gov.es.openpmo.model.workpacks.models.OrganizerModel;
@@ -133,6 +134,7 @@ public class WorkpackModelService {
     final WorkpackModel workpackModel,
     final Long idParent
   ) {
+    this.ensureRequiredProjectStatuses(workpackModel);
     if (workpackModel.getId() == null) {
       workpackModel.setPlanModel(this.planModelService.findById(workpackModel.getIdPlanModel()));
       this.ifHasParentIdCreateAsChild(workpackModel, idParent);
@@ -182,6 +184,7 @@ public class WorkpackModelService {
 
   @Transactional
   public WorkpackModel update(final WorkpackModel workpackModel) {
+    this.ensureRequiredProjectStatuses(workpackModel);
     final WorkpackModel workpackModelUpdate = this.findById(workpackModel.getId());
 
     final Set<PropertyModel> properties = workpackModel.getProperties();
@@ -216,6 +219,34 @@ public class WorkpackModelService {
     WorkpackModel model = this.workpackModelRepository.save(workpackModelUpdate);
     this.cacheUtil.loadAllCache();
     return model;
+  }
+
+  private void ensureRequiredProjectStatuses(final WorkpackModel workpackModel) {
+    if (!(workpackModel instanceof ProjectModel) || workpackModel.getProperties() == null) {
+      return;
+    }
+
+    workpackModel.getProperties().stream()
+      .filter(SelectionModel.class::isInstance)
+      .map(SelectionModel.class::cast)
+      .filter(property -> "Status".equals(property.getName()))
+      .forEach(property -> {
+        final List<String> possibleValues = Optional.ofNullable(property.getPossibleValues())
+          .map(values -> java.util.Arrays.stream(values.split(","))
+            .map(String::trim)
+            .filter(value -> !value.isEmpty())
+            .collect(Collectors.toList()))
+          .orElseGet(java.util.ArrayList::new);
+
+        if (!possibleValues.contains("Estruturação")) {
+          possibleValues.add("Estruturação");
+        }
+        if (!possibleValues.contains("Repactuação")) {
+          possibleValues.add("Repactuação");
+        }
+
+        property.setPossibleValues(String.join(",", possibleValues));
+      });
   }
 
   public WorkpackModel getWorkpackModel(final WorkpackModelParamDto workpackModelParamDto) {
