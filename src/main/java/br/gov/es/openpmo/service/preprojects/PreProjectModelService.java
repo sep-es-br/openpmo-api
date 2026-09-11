@@ -88,6 +88,11 @@ public class PreProjectModelService {
   }
 
   @Transactional(readOnly = true)
+  public boolean isActiveByOfficeId(final Long idOffice) {
+    return this.preProjectModelRepository.isActiveByOfficeId(idOffice);
+  }
+
+  @Transactional(readOnly = true)
   public PreProjectModelDto findById(final Long id) {
     final PreProjectModel preProjectModel = this.preProjectModelRepository.findById(id)
       .orElseThrow(() -> new RegistroNaoEncontradoException(PRE_PROJECT_MODEL_NOT_FOUND));

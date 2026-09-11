@@ -90,6 +90,18 @@ public class PreProjectModelServiceTest {
   }
 
   @Test
+  public void shouldReturnWhetherTheOfficeHasAnActivePreProjectModel() {
+    when(this.preProjectModelRepository.isActiveByOfficeId(1L)).thenReturn(true);
+
+    assertTrue(this.service.isActiveByOfficeId(1L));
+
+    verify(this.preProjectModelRepository).isActiveByOfficeId(1L);
+    verify(this.preProjectModelRepository, never()).save(
+      org.mockito.ArgumentMatchers.any(PreProjectModel.class)
+    );
+  }
+
+  @Test
   public void shouldLoadTheCompleteModelStructureById() {
     final PreProjectModel model = new PreProjectModel();
     model.setId(10L);

@@ -50,6 +50,15 @@ public class PreProjectModelController {
     return ResponseEntity.ok(ResponseBase.of(preProjectModel));
   }
 
+  @GetMapping("/office/{id-office}/active")
+  public ResponseEntity<ResponseBase<Boolean>> isActiveByOfficeId(
+    @PathVariable("id-office") final Long idOffice,
+    @Authorization final String authorization
+  ) {
+    this.canAccessService.ensureCanReadResource(idOffice, authorization);
+    return ResponseEntity.ok(ResponseBase.of(this.preProjectModelService.isActiveByOfficeId(idOffice)));
+  }
+
   @PutMapping("/{id}")
   public ResponseEntity<ResponseBase<PreProjectModelDto>> update(
     @PathVariable final Long id,

@@ -18,4 +18,12 @@ public interface PreProjectModelRepository
   )
   Optional<Long> findIdByOfficeId(@Param("idOffice") Long idOffice);
 
+  @Query(
+    "MATCH (preProjectModel:PreProjectModel)-[:IS_ADOPTED_BY]->(office:Office) " +
+    "WHERE id(office) = $idOffice " +
+    "AND coalesce(preProjectModel.active, false) = true " +
+    "RETURN count(preProjectModel) > 0"
+  )
+  boolean isActiveByOfficeId(@Param("idOffice") Long idOffice);
+
 }
