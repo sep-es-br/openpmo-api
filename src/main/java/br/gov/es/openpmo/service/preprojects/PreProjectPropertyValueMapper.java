@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.service.preprojects;
 
 import br.gov.es.openpmo.dto.preprojects.PreProjectCriteriaTabValuesDto;
+import br.gov.es.openpmo.dto.preprojects.PreProjectCriteriaGroupValueDto;
 import br.gov.es.openpmo.dto.preprojects.properties.PreProjectCriteriaListValueDto;
 import br.gov.es.openpmo.dto.preprojects.properties.PreProjectCriteriaSelectionValueDto;
 import br.gov.es.openpmo.dto.preprojects.properties.PreProjectListItemDto;
@@ -23,17 +24,20 @@ public class PreProjectPropertyValueMapper {
 
   public PreProjectCriteriaTabValuesDto execute(final CriteriaTab criteriaTab) {
     final List<PreProjectPropertyValueDto> values = new ArrayList<>();
-    this.collect(criteriaTab.getValue(), values);
+    final List<PreProjectCriteriaGroupValueDto> groups = new ArrayList<>();
+    this.collect(criteriaTab.getValue(), values, groups);
     return new PreProjectCriteriaTabValuesDto(
       criteriaTab.getId(),
       criteriaTab.getDriver() == null ? null : criteriaTab.getDriver().getId(),
-      values
+      values,
+      groups
     );
   }
 
   private void collect(
     final Collection<? extends Property> properties,
-    final Collection<PreProjectPropertyValueDto> values
+    final Collection<PreProjectPropertyValueDto> values,
+    final Collection<PreProjectCriteriaGroupValueDto> groups
   ) {
     if (properties == null) {
       return;
@@ -44,7 +48,18 @@ public class PreProjectPropertyValueMapper {
       } else if (property instanceof CriteriaSelection) {
         values.add(this.mapSelection((CriteriaSelection) property));
       } else if (property instanceof CriteriaGroup) {
-        this.collect(((CriteriaGroup) property).getValue(), values);
+        final CriteriaGroup group = (CriteriaGroup) property;
+        final PreProjectCriteriaGroupValueDto groupValue = new PreProjectCriteriaGroupValueDto();
+        groupValue.setId(group.getId());
+        groupValue.setIdPropertyModel(
+          group.getPropertyModel() == null ? null : group.getPropertyModel().getId()
+        );
+        groupValue.setActive(group.isActive());
+        // A group is a property too. Keep its runtime state in the same
+        // property-value collection consumed by the front end.
+        values.add(groupValue);
+        groups.add(groupValue);
+        this.collect(group.getValue(), values, groups);
       }
     });
   }

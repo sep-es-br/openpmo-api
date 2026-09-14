@@ -5,6 +5,8 @@ import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.preprojects.CreatePreProjectRequest;
 import br.gov.es.openpmo.dto.preprojects.PreProjectCriteriaTabValuesDto;
 import br.gov.es.openpmo.dto.preprojects.PreProjectDto;
+import br.gov.es.openpmo.dto.preprojects.PreProjectListDto;
+import br.gov.es.openpmo.dto.preprojects.PreProjectEvaluationDto;
 import br.gov.es.openpmo.dto.preprojects.SavePreProjectCriteriaTabValuesRequest;
 import br.gov.es.openpmo.dto.preprojects.UpdatePreProjectRequest;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
@@ -19,7 +21,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import java.util.List;
 
 @Api
 @RestController
@@ -39,6 +43,15 @@ public class PreProjectController {
     this.canAccessService = canAccessService;
   }
 
+  @GetMapping
+  public ResponseEntity<ResponseBase<List<PreProjectListDto>>> findAllByOfficeId(
+    @RequestParam("id-office") final Long idOffice,
+    @Authorization final String authorization
+  ) {
+    this.canAccessService.ensureCanReadResource(idOffice, authorization);
+    return ResponseEntity.ok(ResponseBase.of(this.preProjectService.findAllByOfficeId(idOffice)));
+  }
+
   @PostMapping
   public ResponseEntity<ResponseBase<PreProjectDto>> create(
     @RequestBody @Valid final CreatePreProjectRequest request,
@@ -55,6 +68,15 @@ public class PreProjectController {
   ) {
     this.canAccessService.ensureCanReadResource(id, authorization);
     return ResponseEntity.ok(ResponseBase.of(this.preProjectService.findById(id)));
+  }
+
+  @GetMapping("/{id}/evaluation")
+  public ResponseEntity<ResponseBase<PreProjectEvaluationDto>> findEvaluation(
+    @PathVariable final Long id,
+    @Authorization final String authorization
+  ) {
+    this.canAccessService.ensureCanReadResource(id, authorization);
+    return ResponseEntity.ok(ResponseBase.of(this.preProjectService.findEvaluation(id)));
   }
 
   @PutMapping("/{id}")

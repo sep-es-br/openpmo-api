@@ -3,6 +3,9 @@ package br.gov.es.openpmo.repository;
 import br.gov.es.openpmo.model.preprojects.PreProject;
 import br.gov.es.openpmo.model.properties.CriteriaTab;
 import br.gov.es.openpmo.repository.custom.CustomRepository;
+import br.gov.es.openpmo.dto.preprojects.PreProjectListDto;
+import br.gov.es.openpmo.dto.preprojects.PreProjectEvaluationRow;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
@@ -10,6 +13,51 @@ import org.springframework.data.repository.query.Param;
 
 public interface PreProjectRepository
   extends Neo4jRepository<PreProject, Long>, CustomRepository {
+
+  @Query(
+    "MATCH (preProject:PreProject)-[:INSTANTIATES]->(:PreProjectModel)-[:IS_ADOPTED_BY]->(office:Office) " +
+    "WHERE id(office) = $idOffice " +
+    "RETURN id(preProject) AS id, preProject.name AS name, preProject.fullName AS fullName " +
+    "ORDER BY toLower(preProject.name), id(preProject)"
+  )
+  List<PreProjectListDto> findAllByOfficeId(@Param("idOffice") Long idOffice);
+
+  @Query(
+    "MATCH (preProject:PreProject)-[:INSTANTIATES]->(:PreProjectModel)<-[:FEATURES]-(criteriaTabModel:CriteriaTabModel) " +
+    "MATCH (preProject)<-[:FEATURES]-(criteriaTab:CriteriaTab)-[:IS_DRIVEN_BY]->(criteriaTabModel) " +
+    "MATCH propertyPath=(criteriaTab)-[:ORGANIZES|GROUPS*0..]->(property:CriteriaSelection) " +
+    "-[:IS_DRIVEN_BY]->(propertyModel:CriteriaSelectionModel) " +
+    "WHERE id(preProject) = $idPreProject " +
+    "WITH preProject, criteriaTabModel, property, propertyModel, " +
+    "     [node IN nodes(propertyPath) WHERE node:CriteriaGroup][0] AS group " +
+    "OPTIONAL MATCH (group)-[:IS_DRIVEN_BY]->(groupModel:CriteriaGroupModel) " +
+    "OPTIONAL MATCH (property)-[:VALUES]->(option:SelectionOption) " +
+    "OPTIONAL MATCH (propertyModel)-[:ACCEPTS]->(allowedOption:SelectionOption) " +
+    "WITH criteriaTabModel, property, propertyModel, group, groupModel, " +
+    "     sum(DISTINCT toFloat(coalesce(option.value, 0.0))) AS note, " +
+    "     max(toFloat(coalesce(allowedOption.value, 0.0))) AS maximumNote " +
+    "RETURN id(criteriaTabModel) AS idCriteriaTabModel, " +
+    "       criteriaTabModel.name AS criteriaTabName, " +
+    "       criteriaTabModel.label AS criteriaTabLabel, " +
+    "       criteriaTabModel.sortIndex AS criteriaTabSortIndex, " +
+    "       criteriaTabModel.weight AS criteriaTabWeight, " +
+    "       toString(criteriaTabModel.operation) AS criteriaTabOperation, " +
+    "       id(group) AS idGroup, " +
+    "       groupModel.name AS groupName, " +
+    "       groupModel.label AS groupLabel, " +
+    "       coalesce(groupModel.weight, 1.0) AS groupWeight, " +
+    "       toString(groupModel.operation) AS groupOperation, " +
+    "       coalesce(group.active, true) AS groupActive, " +
+    "       coalesce(groupModel.disabledValue, 0.0) AS groupDisabledValue, " +
+    "       id(propertyModel) AS idPropertyModel, " +
+    "       propertyModel.name AS name, " +
+    "       propertyModel.label AS label, " +
+    "       coalesce(propertyModel.weight, 1.0) AS weight, " +
+    "       note AS note, " +
+    "       maximumNote AS maximumNote " +
+    "ORDER BY criteriaTabSortIndex, idCriteriaTabModel, idGroup, propertyModel.sortIndex, idPropertyModel"
+  )
+  List<PreProjectEvaluationRow> findEvaluationRows(@Param("idPreProject") Long idPreProject);
 
   @Query(
     "MATCH (preProject:PreProject) " +

@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.dto.preprojects.properties;
 
+import br.gov.es.openpmo.dto.preprojects.PreProjectCriteriaGroupValueDto;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import javax.validation.constraints.NotNull;
@@ -7,7 +8,8 @@ import javax.validation.constraints.NotNull;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = PreProjectCriteriaListValueDto.class, name = "CriteriaList"),
-  @JsonSubTypes.Type(value = PreProjectCriteriaSelectionValueDto.class, name = "CriteriaSelection")
+  @JsonSubTypes.Type(value = PreProjectCriteriaSelectionValueDto.class, name = "CriteriaSelection"),
+  @JsonSubTypes.Type(value = PreProjectCriteriaGroupValueDto.class, name = "CriteriaGroup")
 })
 public abstract class PreProjectPropertyValueDto {
 

@@ -17,6 +17,8 @@ public class CriteriaGroup extends Property<CriteriaGroup, Set<Property>> {
 
   private CategoryEnum category;
 
+  private boolean active = true;
+
   @Relationship("IS_DRIVEN_BY")
   private CriteriaGroupModel driver;
 
@@ -24,6 +26,7 @@ public class CriteriaGroup extends Property<CriteriaGroup, Set<Property>> {
   public CriteriaGroup snapshot() {
     final CriteriaGroup criteriaGroup = new CriteriaGroup();
     criteriaGroup.setValue(Optional.ofNullable(this.groupedProperties).map(HashSet::new).orElse(null));
+    criteriaGroup.setActive(this.active);
     return criteriaGroup;
   }
 
@@ -39,8 +42,9 @@ public class CriteriaGroup extends Property<CriteriaGroup, Set<Property>> {
 
   @Override
   public boolean hasChanges(final CriteriaGroup other) {
-    return (this.groupedProperties != null || other.groupedProperties != null)
+    final boolean propertiesChanged = (this.groupedProperties != null || other.groupedProperties != null)
       && (this.groupedProperties == null || !this.groupedProperties.equals(other.groupedProperties));
+    return this.active != other.active || propertiesChanged;
   }
 
   @Override
@@ -64,6 +68,14 @@ public class CriteriaGroup extends Property<CriteriaGroup, Set<Property>> {
 
   public void setDriver(final CriteriaGroupModel driver) {
     this.driver = driver;
+  }
+
+  public boolean isActive() {
+    return this.active;
+  }
+
+  public void setActive(final boolean active) {
+    this.active = active;
   }
 
 }

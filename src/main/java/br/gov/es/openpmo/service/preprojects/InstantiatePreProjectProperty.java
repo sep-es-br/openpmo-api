@@ -6,7 +6,6 @@ import br.gov.es.openpmo.model.properties.CriteriaList;
 import br.gov.es.openpmo.model.properties.CriteriaSelection;
 import br.gov.es.openpmo.model.properties.CriteriaTab;
 import br.gov.es.openpmo.model.properties.Property;
-import br.gov.es.openpmo.model.properties.SelectionOption;
 import br.gov.es.openpmo.model.properties.models.CriteriaGroupModel;
 import br.gov.es.openpmo.model.properties.models.CriteriaListModel;
 import br.gov.es.openpmo.model.properties.models.CriteriaSelectionModel;
@@ -14,13 +13,11 @@ import br.gov.es.openpmo.model.properties.models.CriteriaTabModel;
 import br.gov.es.openpmo.model.properties.models.GroupModel;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.properties.models.TabModel;
-import br.gov.es.openpmo.model.relations.Accepts;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -52,6 +49,7 @@ public class InstantiatePreProjectProperty {
   private CriteriaGroup createGroup(final CriteriaGroupModel model) {
     final CriteriaGroup property = new CriteriaGroup();
     property.setDriver(model);
+    property.setActive(!model.isEnablementKey());
     property.setValue(this.createChildren(model));
     return property;
   }
@@ -66,11 +64,9 @@ public class InstantiatePreProjectProperty {
   private CriteriaSelection createSelection(final CriteriaSelectionModel model) {
     final CriteriaSelection property = new CriteriaSelection();
     property.setDriver(model);
-    final Set<SelectionOption> defaultOptions = this.acceptedOptions(model).stream()
-      .filter(accepts -> Boolean.TRUE.equals(accepts.getDefaultOption()))
-      .map(Accepts::getSelectionOption)
-      .collect(Collectors.toSet());
-    property.setValue(defaultOptions);
+    // Criteria values belong to the explicit save action on the criterion tab.
+    // Do not persist model default options when the pre-project is created.
+    property.setValue(Collections.emptySet());
     return property;
   }
 
@@ -93,10 +89,6 @@ public class InstantiatePreProjectProperty {
 
   private Set<Property> newIdentitySet() {
     return Collections.newSetFromMap(new IdentityHashMap<>());
-  }
-
-  private Set<Accepts> acceptedOptions(final CriteriaSelectionModel model) {
-    return model.getAcceptedOptions() == null ? Collections.emptySet() : model.getAcceptedOptions();
   }
 
 }
