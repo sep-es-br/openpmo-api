@@ -111,6 +111,7 @@ public class UpdatePropertyModels {
     propertyModelUpdate.setSortIndex(propertyModel.getSortIndex());
     propertyModelUpdate.setName(propertyModel.getName());
     propertyModelUpdate.setHelpText(propertyModel.getHelpText());
+    propertyModelUpdate.setWeight(propertyModel.getWeight());
 
     switch (propertyModelUpdate.getClass().getTypeName()) {
       case PropertyModelType.TYPE_NAME_MODEL_INTEGER:

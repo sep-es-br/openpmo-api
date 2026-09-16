@@ -1,8 +1,10 @@
 package br.gov.es.openpmo.service.preprojects;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -71,7 +73,7 @@ public class PreProjectServiceTest {
   }
 
   @Test
-  public void shouldCreatePreProjectFromSavedModel() {
+  public void shouldCreatePreProjectWithoutInstantiatingCriteria() {
     final PreProjectModel preProjectModel = new PreProjectModel();
     preProjectModel.setId(10L);
     final CriteriaTabModel thinTabModel = new CriteriaTabModel();
@@ -115,8 +117,7 @@ public class PreProjectServiceTest {
     verify(this.preProjectRepository).save(org.mockito.ArgumentMatchers.argThat(preProject ->
       preProject.getInstance() == preProjectModel &&
         preProject.getOrganization() == organization &&
-        preProject.getProperties().iterator().next() instanceof CriteriaTab &&
-        preProject.getProperties().iterator().next().getPreProject() == preProject
+        preProject.getProperties().isEmpty()
     ));
   }
 
@@ -127,6 +128,28 @@ public class PreProjectServiceTest {
     when(this.preProjectModelRepository.findIdByOfficeId(2L)).thenReturn(Optional.empty());
 
     this.service.create(request);
+  }
+
+  @Test
+  public void shouldPreviewCriteriaWithoutCreatingItsRuntimeStructure() {
+    final PreProject preProject = new PreProject();
+    preProject.setId(40L);
+    final CriteriaListModel listModel = new CriteriaListModel();
+    listModel.setId(22L);
+    final CriteriaTabModel tabModel = new CriteriaTabModel();
+    tabModel.setId(20L);
+    tabModel.setOrganizedProperties(Collections.singleton(listModel));
+
+    when(this.preProjectRepository.findByIdThin(40L)).thenReturn(Optional.of(preProject));
+    when(this.preProjectRepository.findCriteriaTabByModelId(40L, 20L)).thenReturn(Optional.empty());
+    when(this.propertyModelService.findByIdWithChildren(20L)).thenReturn(tabModel);
+
+    final br.gov.es.openpmo.dto.preprojects.PreProjectCriteriaTabValuesDto result =
+      this.service.findCriteriaTabValues(40L, 20L);
+
+    assertNull(result.getIdCriteriaTab());
+    assertEquals(1, result.getValues().size());
+    verify(this.propertyRepository, never()).save(any(Property.class));
   }
 
   @Test

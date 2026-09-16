@@ -48,14 +48,16 @@ public class PreProjectEvaluationGroupDto {
     final Double maximumAggregate = items.stream()
       .mapToDouble(item -> item.getMaximumNote() * item.getWeight())
       .sum();
-    final long itemCount = items.size();
+    final Double totalWeight = items.stream()
+      .mapToDouble(PreProjectEvaluationItemDto::getWeight)
+      .sum();
     final boolean average = "AVERAGE".equalsIgnoreCase(this.operation);
     this.total = this.active
-      ? (average && itemCount > 0 ? aggregate / itemCount : aggregate) * this.weight
+      ? (average && totalWeight > 0 ? aggregate / totalWeight : aggregate) * this.weight
       : this.disabledValue;
     this.maximum = this.active
-      ? (average && itemCount > 0
-      ? maximumAggregate / itemCount
+      ? (average && totalWeight > 0
+      ? maximumAggregate / totalWeight
       : maximumAggregate) * this.weight
       : this.disabledValue;
   }

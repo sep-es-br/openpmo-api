@@ -6,8 +6,6 @@ import org.neo4j.ogm.annotation.NodeEntity;
 @NodeEntity
 public class CriteriaGroupModel extends GroupModel {
 
-  private Double weight;
-
   private CriteriaOperation operation;
 
   private boolean enablementKey;
@@ -15,14 +13,6 @@ public class CriteriaGroupModel extends GroupModel {
   private Double disabledValue;
 
   private String legend;
-
-  public Double getWeight() {
-    return this.weight;
-  }
-
-  public void setWeight(final Double weight) {
-    this.weight = weight;
-  }
 
   public CriteriaOperation getOperation() {
     return this.operation;

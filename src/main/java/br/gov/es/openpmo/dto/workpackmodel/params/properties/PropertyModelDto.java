@@ -52,6 +52,8 @@ public class PropertyModelDto {
   private boolean fullLine;
   private boolean required;
 
+  private Double weight;
+
   protected static <TYPE extends PropertyModelDto> PropertyModelDto of(
     final PropertyModel propertyModel,
     final Supplier<TYPE> instanceSupplier
@@ -65,6 +67,7 @@ public class PropertyModelDto {
     instance.setFullLine(propertyModel.isFullLine());
     instance.setRequired(propertyModel.isRequired());
     instance.setHelpText(propertyModel.getHelpText());
+    instance.setWeight(propertyModel.getWeight());
     return instance;
   }
 
@@ -130,5 +133,13 @@ public class PropertyModelDto {
 
   public void setHelpText(String helpText) {
     this.helpText = helpText;
+  }
+
+  public Double getWeight() {
+    return this.weight;
+  }
+
+  public void setWeight(final Double weight) {
+    this.weight = weight;
   }
 }

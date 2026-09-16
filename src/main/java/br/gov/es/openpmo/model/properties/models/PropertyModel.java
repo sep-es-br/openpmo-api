@@ -49,6 +49,12 @@ public class PropertyModel extends Entity {
 
   private String helpText;
 
+  /**
+   * Relative importance of this property when it belongs to a criterion.
+   * Models outside criteria keep the default value and are unaffected.
+   */
+  private Double weight = 1D;
+
   private boolean active;
 
   private boolean fullLine;
@@ -122,10 +128,18 @@ public class PropertyModel extends Entity {
     this.helpText = helpText;
   }
 
+  public Double getWeight() {
+    return this.weight;
+  }
+
+  public void setWeight(final Double weight) {
+    this.weight = weight;
+  }
+
   @Override
   public int hashCode() {
     return Objects.hash(super.hashCode(), this.sortIndex, this.name, this.label,
-      this.active, this.fullLine, this.required
+      this.active, this.fullLine, this.required, this.weight
     );
   }
 
@@ -142,7 +156,8 @@ public class PropertyModel extends Entity {
     }
     final PropertyModel that = (PropertyModel) o;
     return this.active == that.active && this.fullLine == that.fullLine && this.required == that.required && Objects.equals(
-      this.sortIndex, that.sortIndex) && Objects.equals(this.name, that.name) && Objects.equals(this.label, that.label);
+      this.sortIndex, that.sortIndex) && Objects.equals(this.name, that.name) && Objects.equals(this.label, that.label)
+      && Objects.equals(this.weight, that.weight);
   }
 
   @Transient

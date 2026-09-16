@@ -53,13 +53,17 @@ public class PreProjectEvaluationCriterionDto {
       .sum() + items.stream()
       .mapToDouble(item -> item.getMaximumNote() * item.getWeight())
       .sum();
-    final long componentCount = groups.size() + items.size();
-    final Double operationResult = "AVERAGE".equalsIgnoreCase(this.operation) && componentCount > 0
-      ? aggregate / componentCount
+    final Double totalWeight = groups.stream()
+      .mapToDouble(PreProjectEvaluationGroupDto::getWeight)
+      .sum() + items.stream()
+      .mapToDouble(PreProjectEvaluationItemDto::getWeight)
+      .sum();
+    final Double operationResult = "AVERAGE".equalsIgnoreCase(this.operation) && totalWeight > 0
+      ? aggregate / totalWeight
       : aggregate;
     this.total = operationResult * this.weight;
-    final Double maximumResult = "AVERAGE".equalsIgnoreCase(this.operation) && componentCount > 0
-      ? maximumAggregate / componentCount
+    final Double maximumResult = "AVERAGE".equalsIgnoreCase(this.operation) && totalWeight > 0
+      ? maximumAggregate / totalWeight
       : maximumAggregate;
     this.maximum = maximumResult * this.weight;
   }

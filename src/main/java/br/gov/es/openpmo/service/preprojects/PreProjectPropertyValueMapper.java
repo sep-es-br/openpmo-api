@@ -11,6 +11,12 @@ import br.gov.es.openpmo.model.properties.CriteriaList;
 import br.gov.es.openpmo.model.properties.CriteriaSelection;
 import br.gov.es.openpmo.model.properties.CriteriaTab;
 import br.gov.es.openpmo.model.properties.Property;
+import br.gov.es.openpmo.model.properties.models.CriteriaGroupModel;
+import br.gov.es.openpmo.model.properties.models.CriteriaListModel;
+import br.gov.es.openpmo.model.properties.models.CriteriaSelectionModel;
+import br.gov.es.openpmo.model.properties.models.CriteriaTabModel;
+import br.gov.es.openpmo.model.properties.models.GroupModel;
+import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,6 +35,23 @@ public class PreProjectPropertyValueMapper {
     return new PreProjectCriteriaTabValuesDto(
       criteriaTab.getId(),
       criteriaTab.getDriver() == null ? null : criteriaTab.getDriver().getId(),
+      values,
+      groups
+    );
+  }
+
+  /**
+   * Builds the initial payload shown by a criterion tab without persisting any
+   * runtime Property node. The model id is used as a temporary identity and is
+   * resolved to the newly created runtime property when the user saves.
+   */
+  public PreProjectCriteriaTabValuesDto preview(final CriteriaTabModel criteriaTabModel) {
+    final List<PreProjectPropertyValueDto> values = new ArrayList<>();
+    final List<PreProjectCriteriaGroupValueDto> groups = new ArrayList<>();
+    this.collectPreview(criteriaTabModel.getOrganizedProperties(), values, groups);
+    return new PreProjectCriteriaTabValuesDto(
+      null,
+      criteriaTabModel.getId(),
       values,
       groups
     );
@@ -64,6 +87,39 @@ public class PreProjectPropertyValueMapper {
     });
   }
 
+  private void collectPreview(
+    final Collection<? extends PropertyModel> properties,
+    final Collection<PreProjectPropertyValueDto> values,
+    final Collection<PreProjectCriteriaGroupValueDto> groups
+  ) {
+    if (properties == null) {
+      return;
+    }
+    properties.forEach(property -> {
+      if (property instanceof CriteriaListModel) {
+        final PreProjectCriteriaListValueDto dto = new PreProjectCriteriaListValueDto();
+        this.copyPreviewIdentity(property, dto);
+        dto.setItems(Collections.emptyList());
+        values.add(dto);
+      } else if (property instanceof CriteriaSelectionModel) {
+        final PreProjectCriteriaSelectionValueDto dto = new PreProjectCriteriaSelectionValueDto();
+        this.copyPreviewIdentity(property, dto);
+        dto.setSelectedOptionIds(Collections.emptyList());
+        values.add(dto);
+      } else if (property instanceof CriteriaGroupModel) {
+        final CriteriaGroupModel group = (CriteriaGroupModel) property;
+        final PreProjectCriteriaGroupValueDto dto = new PreProjectCriteriaGroupValueDto();
+        this.copyPreviewIdentity(group, dto);
+        dto.setActive(!group.isEnablementKey());
+        values.add(dto);
+        groups.add(dto);
+        this.collectPreview(group.getGroupedProperties(), values, groups);
+      } else if (property instanceof GroupModel) {
+        this.collectPreview(((GroupModel) property).getGroupedProperties(), values, groups);
+      }
+    });
+  }
+
   private PreProjectCriteriaListValueDto mapList(final CriteriaList property) {
     final PreProjectCriteriaListValueDto dto = new PreProjectCriteriaListValueDto();
     this.copyIdentity(property, dto);
@@ -95,6 +151,16 @@ public class PreProjectPropertyValueMapper {
     dto.setIdPropertyModel(
       property.getPropertyModel() == null ? null : property.getPropertyModel().getId()
     );
+  }
+
+  private void copyPreviewIdentity(
+    final PropertyModel property,
+    final PreProjectPropertyValueDto dto
+  ) {
+    // The value is sent back on the first PUT and the service resolves it by
+    // idPropertyModel after creating the criterion structure.
+    dto.setId(property.getId());
+    dto.setIdPropertyModel(property.getId());
   }
 
 }

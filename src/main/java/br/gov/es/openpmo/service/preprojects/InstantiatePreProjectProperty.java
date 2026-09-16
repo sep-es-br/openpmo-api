@@ -5,14 +5,37 @@ import br.gov.es.openpmo.model.properties.CriteriaGroup;
 import br.gov.es.openpmo.model.properties.CriteriaList;
 import br.gov.es.openpmo.model.properties.CriteriaSelection;
 import br.gov.es.openpmo.model.properties.CriteriaTab;
+import br.gov.es.openpmo.model.properties.Currency;
+import br.gov.es.openpmo.model.properties.Date;
+import br.gov.es.openpmo.model.properties.Group;
+import br.gov.es.openpmo.model.properties.Integer;
+import br.gov.es.openpmo.model.properties.LocalitySelection;
+import br.gov.es.openpmo.model.properties.Number;
+import br.gov.es.openpmo.model.properties.OrganizationSelection;
 import br.gov.es.openpmo.model.properties.Property;
+import br.gov.es.openpmo.model.properties.Selection;
+import br.gov.es.openpmo.model.properties.Text;
+import br.gov.es.openpmo.model.properties.TextArea;
+import br.gov.es.openpmo.model.properties.Toggle;
+import br.gov.es.openpmo.model.properties.UnitSelection;
 import br.gov.es.openpmo.model.properties.models.CriteriaGroupModel;
 import br.gov.es.openpmo.model.properties.models.CriteriaListModel;
 import br.gov.es.openpmo.model.properties.models.CriteriaSelectionModel;
 import br.gov.es.openpmo.model.properties.models.CriteriaTabModel;
+import br.gov.es.openpmo.model.properties.models.CurrencyModel;
+import br.gov.es.openpmo.model.properties.models.DateModel;
 import br.gov.es.openpmo.model.properties.models.GroupModel;
+import br.gov.es.openpmo.model.properties.models.IntegerModel;
+import br.gov.es.openpmo.model.properties.models.LocalitySelectionModel;
+import br.gov.es.openpmo.model.properties.models.NumberModel;
+import br.gov.es.openpmo.model.properties.models.OrganizationSelectionModel;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
+import br.gov.es.openpmo.model.properties.models.SelectionModel;
 import br.gov.es.openpmo.model.properties.models.TabModel;
+import br.gov.es.openpmo.model.properties.models.TextAreaModel;
+import br.gov.es.openpmo.model.properties.models.TextModel;
+import br.gov.es.openpmo.model.properties.models.ToggleModel;
+import br.gov.es.openpmo.model.properties.models.UnitSelectionModel;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import java.util.Collections;
 import java.util.HashSet;
@@ -36,6 +59,64 @@ public class InstantiatePreProjectProperty {
     if (model instanceof CriteriaSelectionModel) {
       return this.createSelection((CriteriaSelectionModel) model);
     }
+    if (model instanceof GroupModel) {
+      return this.createGroup((GroupModel) model);
+    }
+    if (model instanceof IntegerModel) {
+      final Integer property = new Integer();
+      property.setDriver((IntegerModel) model);
+      return property;
+    }
+    if (model instanceof TextModel) {
+      final Text property = new Text();
+      property.setDriver((TextModel) model);
+      return property;
+    }
+    if (model instanceof DateModel) {
+      final Date property = new Date();
+      property.setDriver((DateModel) model);
+      return property;
+    }
+    if (model instanceof ToggleModel) {
+      final Toggle property = new Toggle();
+      property.setDriver((ToggleModel) model);
+      return property;
+    }
+    if (model instanceof UnitSelectionModel) {
+      final UnitSelection property = new UnitSelection();
+      property.setDriver((UnitSelectionModel) model);
+      return property;
+    }
+    if (model instanceof SelectionModel) {
+      final Selection property = new Selection();
+      property.setDriver((SelectionModel) model);
+      return property;
+    }
+    if (model instanceof TextAreaModel) {
+      final TextArea property = new TextArea();
+      property.setDriver((TextAreaModel) model);
+      return property;
+    }
+    if (model instanceof NumberModel) {
+      final Number property = new Number();
+      property.setDriver((NumberModel) model);
+      return property;
+    }
+    if (model instanceof CurrencyModel) {
+      final Currency property = new Currency();
+      property.setDriver((CurrencyModel) model);
+      return property;
+    }
+    if (model instanceof LocalitySelectionModel) {
+      final LocalitySelection property = new LocalitySelection();
+      property.setDriver((LocalitySelectionModel) model);
+      return property;
+    }
+    if (model instanceof OrganizationSelectionModel) {
+      final OrganizationSelection property = new OrganizationSelection();
+      property.setDriver((OrganizationSelectionModel) model);
+      return property;
+    }
     throw new NegocioException(ApplicationMessage.PROPERTY_MODEL_INVALID_TYPE);
   }
 
@@ -50,6 +131,13 @@ public class InstantiatePreProjectProperty {
     final CriteriaGroup property = new CriteriaGroup();
     property.setDriver(model);
     property.setActive(!model.isEnablementKey());
+    property.setValue(this.createChildren(model));
+    return property;
+  }
+
+  private Group createGroup(final GroupModel model) {
+    final Group property = new Group();
+    property.setDriver(model);
     property.setValue(this.createChildren(model));
     return property;
   }

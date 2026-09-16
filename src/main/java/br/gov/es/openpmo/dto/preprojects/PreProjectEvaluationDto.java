@@ -23,8 +23,11 @@ public class PreProjectEvaluationDto {
     final double total = criteria.stream()
       .mapToDouble(PreProjectEvaluationCriterionDto::getTotal)
       .sum();
-    this.finalNote = "AVERAGE".equalsIgnoreCase(this.operation) && !criteria.isEmpty()
-      ? total / criteria.size()
+    final double totalWeight = criteria.stream()
+      .mapToDouble(PreProjectEvaluationCriterionDto::getWeight)
+      .sum();
+    this.finalNote = "AVERAGE".equalsIgnoreCase(this.operation) && totalWeight > 0
+      ? total / totalWeight
       : total;
   }
 

@@ -218,9 +218,12 @@ public class PreProjectService {
     final Long id,
     final Long idCriteriaTabModel
   ) {
-    return this.preProjectPropertyValueMapper.execute(
-      this.getCriteriaTab(id, idCriteriaTabModel)
-    );
+    this.findByIdThin(id);
+    return this.preProjectRepository.findCriteriaTabByModelId(id, idCriteriaTabModel)
+      .map(this.preProjectPropertyValueMapper::execute)
+      .orElseGet(() -> this.preProjectPropertyValueMapper.preview(
+        this.findCriteriaTabModel(idCriteriaTabModel)
+      ));
   }
 
   @Transactional
@@ -243,12 +246,19 @@ public class PreProjectService {
     final CriteriaTab criteriaTab = this.getCriteriaTab(id, idCriteriaTabModel);
     final Map<Long, Property> propertiesById = new HashMap<>();
     this.collectProperties(Collections.singleton(criteriaTab), propertiesById);
+    final Map<Long, Property> propertiesByModelId = this.propertiesByModelId(propertiesById.values());
     final Map<Long, CriteriaGroup> groupsById = new HashMap<>();
     this.collectGroups(Collections.singleton(criteriaTab), groupsById);
+    final Map<Long, CriteriaGroup> groupsByModelId = this.groupsByModelId(groupsById.values());
     final Set<Property> updatedProperties = new HashSet<>();
 
     request.getValues().forEach(value -> {
-      final Property property = propertiesById.get(value.getId());
+      final Property property = this.findProperty(
+        value.getId(),
+        value.getIdPropertyModel(),
+        propertiesById,
+        propertiesByModelId
+      );
       if (property == null) {
         throw new RegistroNaoEncontradoException(PROPERTY_NOT_FOUND);
       }
@@ -261,7 +271,12 @@ public class PreProjectService {
     });
 
     request.getGroups().forEach(groupValue -> {
-      final CriteriaGroup group = groupsById.get(groupValue.getId());
+      final CriteriaGroup group = this.findGroup(
+        groupValue.getId(),
+        groupValue.getIdPropertyModel(),
+        groupsById,
+        groupsByModelId
+      );
       if (group == null || groupValue.getActive() == null) {
         throw new RegistroNaoEncontradoException(PROPERTY_NOT_FOUND);
       }
@@ -284,10 +299,13 @@ public class PreProjectService {
     }
     final Set<Property> properties = this.newIdentitySet();
     model.getProperties().stream()
-      .filter(propertyModel -> !(propertyModel instanceof br.gov.es.openpmo.model.properties.models.CriteriaTabModel))
       .map(PropertyModel::getId)
       .filter(Objects::nonNull)
       .map(this.propertyModelService::findByIdWithChildren)
+      // The relation returned by the model query can be hydrated as the base
+      // PropertyModel. Only after loading it with its children is its concrete
+      // type reliable, so the criterion filter must be applied here.
+      .filter(propertyModel -> !(propertyModel instanceof br.gov.es.openpmo.model.properties.models.CriteriaTabModel))
       .map(this.instantiatePreProjectProperty::execute)
       .forEach(properties::add);
     return properties;
@@ -453,6 +471,52 @@ public class PreProjectService {
     });
   }
 
+  private Map<Long, Property> propertiesByModelId(final Collection<Property> properties) {
+    return properties.stream()
+      .filter(property -> property.getPropertyModelId() != null)
+      .collect(Collectors.toMap(
+        Property::getPropertyModelId,
+        property -> property,
+        (first, ignored) -> first
+      ));
+  }
+
+  private Map<Long, CriteriaGroup> groupsByModelId(final Collection<CriteriaGroup> groups) {
+    return groups.stream()
+      .filter(group -> group.getPropertyModelId() != null)
+      .collect(Collectors.toMap(
+        Property::getPropertyModelId,
+        group -> group,
+        (first, ignored) -> first
+      ));
+  }
+
+  private Property findProperty(
+    final Long id,
+    final Long idPropertyModel,
+    final Map<Long, Property> propertiesById,
+    final Map<Long, Property> propertiesByModelId
+  ) {
+    final Property property = propertiesById.get(id);
+    if (property != null && Objects.equals(property.getPropertyModelId(), idPropertyModel)) {
+      return property;
+    }
+    return propertiesByModelId.get(idPropertyModel);
+  }
+
+  private CriteriaGroup findGroup(
+    final Long id,
+    final Long idPropertyModel,
+    final Map<Long, CriteriaGroup> groupsById,
+    final Map<Long, CriteriaGroup> groupsByModelId
+  ) {
+    final CriteriaGroup group = groupsById.get(id);
+    if (group != null && Objects.equals(group.getPropertyModelId(), idPropertyModel)) {
+      return group;
+    }
+    return groupsByModelId.get(idPropertyModel);
+  }
+
   private PreProject findByIdThin(final Long id) {
     return this.preProjectRepository.findByIdThin(id)
       .orElseThrow(() -> new RegistroNaoEncontradoException(PRE_PROJECT_NOT_FOUND));
@@ -465,13 +529,21 @@ public class PreProjectService {
     return criteriaTab;
   }
 
-  /** Creates the empty criterion structure only when its tab is first accessed. */
-  private CriteriaTab createCriteriaTab(final Long idPreProject, final Long idCriteriaTabModel) {
+  private br.gov.es.openpmo.model.properties.models.CriteriaTabModel findCriteriaTabModel(
+    final Long idCriteriaTabModel
+  ) {
     final PropertyModel model = this.propertyModelService.findByIdWithChildren(idCriteriaTabModel);
     if (!(model instanceof br.gov.es.openpmo.model.properties.models.CriteriaTabModel)) {
       throw new RegistroNaoEncontradoException(PROPERTY_NOT_FOUND);
     }
-    final CriteriaTab criteriaTab = (CriteriaTab) this.instantiatePreProjectProperty.execute(model);
+    return (br.gov.es.openpmo.model.properties.models.CriteriaTabModel) model;
+  }
+
+  /** Creates the criterion structure only as part of its explicit save operation. */
+  private CriteriaTab createCriteriaTab(final Long idPreProject, final Long idCriteriaTabModel) {
+    final CriteriaTab criteriaTab = (CriteriaTab) this.instantiatePreProjectProperty.execute(
+      this.findCriteriaTabModel(idCriteriaTabModel)
+    );
     criteriaTab.setPreProject(this.findByIdThin(idPreProject));
     return this.propertyRepository.save(criteriaTab);
   }
