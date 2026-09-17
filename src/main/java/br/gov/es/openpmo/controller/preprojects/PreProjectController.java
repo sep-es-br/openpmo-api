@@ -1,8 +1,10 @@
 package br.gov.es.openpmo.controller.preprojects;
 
 import br.gov.es.openpmo.configuration.Authorization;
+import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.preprojects.CreatePreProjectRequest;
+import br.gov.es.openpmo.dto.preprojects.CreateProjectFromPreProjectRequest;
 import br.gov.es.openpmo.dto.preprojects.PreProjectCriteriaTabValuesDto;
 import br.gov.es.openpmo.dto.preprojects.PreProjectDto;
 import br.gov.es.openpmo.dto.preprojects.PreProjectListDto;
@@ -10,7 +12,13 @@ import br.gov.es.openpmo.dto.preprojects.PreProjectEvaluationDto;
 import br.gov.es.openpmo.dto.preprojects.SavePreProjectCriteriaTabValuesRequest;
 import br.gov.es.openpmo.dto.preprojects.UpdatePreProjectRequest;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
+import br.gov.es.openpmo.service.preprojects.CreateProjectFromPreProjectService;
 import br.gov.es.openpmo.service.preprojects.PreProjectService;
+import br.gov.es.openpmo.service.authentication.TokenService;
+import br.gov.es.openpmo.service.completed.ICompleteWorkpackService;
+import br.gov.es.openpmo.service.journals.JournalCreator;
+import br.gov.es.openpmo.model.journals.JournalAction;
+import br.gov.es.openpmo.model.workpacks.Workpack;
 import io.swagger.annotations.Api;
 import javax.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -33,14 +41,30 @@ public class PreProjectController {
 
   private final PreProjectService preProjectService;
 
+  private final CreateProjectFromPreProjectService createProjectFromPreProjectService;
+
   private final ICanAccessService canAccessService;
+
+  private final ICompleteWorkpackService completeDeliverableService;
+
+  private final TokenService tokenService;
+
+  private final JournalCreator journalCreator;
 
   public PreProjectController(
     final PreProjectService preProjectService,
-    final ICanAccessService canAccessService
+    final CreateProjectFromPreProjectService createProjectFromPreProjectService,
+    final ICanAccessService canAccessService,
+    final ICompleteWorkpackService completeDeliverableService,
+    final TokenService tokenService,
+    final JournalCreator journalCreator
   ) {
     this.preProjectService = preProjectService;
+    this.createProjectFromPreProjectService = createProjectFromPreProjectService;
     this.canAccessService = canAccessService;
+    this.completeDeliverableService = completeDeliverableService;
+    this.tokenService = tokenService;
+    this.journalCreator = journalCreator;
   }
 
   @GetMapping
@@ -59,6 +83,27 @@ public class PreProjectController {
   ) {
     this.canAccessService.ensureCanEditResource(request.getIdOffice(), authorization);
     return ResponseEntity.ok(ResponseBase.of(this.preProjectService.create(request)));
+  }
+
+  @PostMapping("/{id}/projects")
+  public ResponseEntity<ResponseBase<EntityDto>> createProject(
+    @PathVariable final Long id,
+    @RequestBody @Valid final CreateProjectFromPreProjectRequest request,
+    @Authorization final String authorization
+  ) {
+    this.canAccessService.ensureCanEditResource(
+      java.util.Arrays.asList(id, request.getIdPlan(), request.getIdParent()),
+      authorization
+    );
+    final Workpack project = this.createProjectFromPreProjectService.create(id, request);
+    this.completeDeliverableService.onWorkpackCreated(project);
+    this.journalCreator.edition(
+      project,
+      JournalAction.CREATED,
+      request.getObservations(),
+      this.tokenService.getUserId(authorization)
+    );
+    return ResponseEntity.ok(ResponseBase.of(EntityDto.of(project)));
   }
 
   @GetMapping("/{id}")

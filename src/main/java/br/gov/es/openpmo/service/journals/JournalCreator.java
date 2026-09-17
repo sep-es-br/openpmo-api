@@ -478,11 +478,20 @@ public class JournalCreator {
     final JournalAction journalAction,
     final Long personId
   ) {
+    this.edition(workpack, journalAction, null, personId);
+  }
+
+  public void edition(
+    final Workpack workpack,
+    final JournalAction journalAction,
+    final String description,
+    final Long personId
+  ) {
     this.create(
       JournalType.EDITION,
       journalAction,
       null,
-      null,
+      description,
       workpack.getId(),
       personId
     );

@@ -71,6 +71,16 @@ public interface PreProjectRepository
   Optional<PreProject> findByIdThin(@Param("id") Long id);
 
   @Query(
+    "MATCH (preProject:PreProject), (project:Project) " +
+    "WHERE id(preProject) = $idPreProject AND id(project) = $idProject " +
+    "MERGE (preProject)-[:ORIGINATED]->(project)"
+  )
+  void createOriginatedRelationship(
+    @Param("idPreProject") Long idPreProject,
+    @Param("idProject") Long idProject
+  );
+
+  @Query(
     "MATCH (preProject:PreProject)<-[features:FEATURES]-(criteriaTab:CriteriaTab)" +
     "-[tabDrivenBy:IS_DRIVEN_BY]->(criteriaTabModel:CriteriaTabModel) " +
     "WHERE id(preProject) = $idPreProject " +

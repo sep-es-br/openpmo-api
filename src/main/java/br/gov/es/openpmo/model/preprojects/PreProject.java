@@ -4,6 +4,7 @@ import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.actors.Organization;
 import br.gov.es.openpmo.model.preprojects.models.PreProjectModel;
 import br.gov.es.openpmo.model.properties.Property;
+import br.gov.es.openpmo.model.workpacks.Project;
 import java.time.LocalDate;
 import java.util.Set;
 import org.neo4j.ogm.annotation.NodeEntity;
@@ -28,6 +29,9 @@ public class PreProject extends Entity {
 
   @Relationship(value = "FEATURES", direction = Relationship.INCOMING)
   private Set<Property> properties;
+
+  @Relationship("ORIGINATED")
+  private Set<Project> originatedProjects;
 
   public String getName() {
     return this.name;
@@ -83,6 +87,14 @@ public class PreProject extends Entity {
 
   public void setProperties(final Set<Property> properties) {
     this.properties = properties;
+  }
+
+  public Set<Project> getOriginatedProjects() {
+    return this.originatedProjects;
+  }
+
+  public void setOriginatedProjects(final Set<Project> originatedProjects) {
+    this.originatedProjects = originatedProjects;
   }
 
 }
