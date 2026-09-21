@@ -334,13 +334,14 @@ public class WorkpackService {
         }
         break;
     }
-    models.forEach(m -> validateProperty(m, workpack.getProperties()));
+    models.forEach(m -> validateProperty(m, workpack.getProperties(), false));
 
   }
    
   private static void validateProperty(
     final PropertyModel propertyModel,
-    final Collection<? extends Property> properties
+    final Collection<? extends Property> properties,
+    final boolean ignoreRequiredProperties
   ) {
     boolean propertyModelFound = false;
     if (properties != null && !properties.isEmpty()) {
@@ -350,7 +351,7 @@ public class WorkpackService {
             final Integer integer = (Integer) property;
             if (integer.getDriver().getId().equals(propertyModel.getId())) {
               propertyModelFound = true;
-              if (integer.getDriver().isRequired() && integer.getValue() == null) {
+              if (!ignoreRequiredProperties && integer.getDriver().isRequired() && integer.getValue() == null) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_NULL + "$" + propertyModel.getLabel());
               }
@@ -372,7 +373,7 @@ public class WorkpackService {
             final Text text = (Text) property;
             if (text.getDriver().getId().equals(propertyModel.getId())) {
               propertyModelFound = true;
-              if (text.getDriver().isRequired()
+              if (!ignoreRequiredProperties && text.getDriver().isRequired()
                 && (text.getValue() == null || text.getValue().isEmpty())) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_EMPTY + "$" + propertyModel.getLabel());
@@ -395,7 +396,7 @@ public class WorkpackService {
             final Date date = (Date) property;
             if (date.getDriver().getId().equals(propertyModel.getId())) {
               propertyModelFound = true;
-              if (date.getDriver().isRequired() && date.getValue() == null) {
+              if (!ignoreRequiredProperties && date.getDriver().isRequired() && date.getValue() == null) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_NULL + "$" + propertyModel.getLabel());
               }
@@ -423,7 +424,7 @@ public class WorkpackService {
             final UnitSelection unitSelection = (UnitSelection) property;
             if (unitSelection.getDriver().getId().equals(propertyModel.getId())) {
               propertyModelFound = true;
-              if (unitSelection.getDriver().isRequired() && unitSelection.getValue() == null) {
+              if (!ignoreRequiredProperties && unitSelection.getDriver().isRequired() && unitSelection.getValue() == null) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_NULL + "$" + propertyModel.getLabel());
               }
@@ -433,7 +434,7 @@ public class WorkpackService {
             final Selection selection = (Selection) property;
             if (selection.getDriver().getId().equals(propertyModel.getId())) {
               propertyModelFound = true;
-              if (selection.getDriver().isRequired()
+              if (!ignoreRequiredProperties && selection.getDriver().isRequired()
                 && (selection.getValue() == null || selection.getValue().isEmpty())) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_NULL + "$" + propertyModel.getLabel());
@@ -444,7 +445,7 @@ public class WorkpackService {
             final TextArea textArea = (TextArea) property;
             if (textArea.getDriver().getId().equals(propertyModel.getId())) {
               propertyModelFound = true;
-              if (textArea.getDriver().isRequired()
+              if (!ignoreRequiredProperties && textArea.getDriver().isRequired()
                 && (textArea.getValue() == null || textArea.getValue().isEmpty())) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_EMPTY + "$" + propertyModel.getLabel());
@@ -467,7 +468,7 @@ public class WorkpackService {
             final Number decimal = (Number) property;
             if (decimal.getDriver().getId().equals(propertyModel.getId())) {
               propertyModelFound = true;
-              if (decimal.getDriver().isRequired() && decimal.getValue() == null) {
+              if (!ignoreRequiredProperties && decimal.getDriver().isRequired() && decimal.getValue() == null) {
                 throw new NegocioException(PROPERTY_VALUE_NOT_NULL + "$" + propertyModel.getLabel());
               }
               if (decimal.getDriver().getMin() != null
@@ -486,7 +487,7 @@ public class WorkpackService {
             final Currency currency = (Currency) property;
             if (currency.getDriver().getId().equals(propertyModel.getId())) {
               propertyModelFound = true;
-              if (currency.getDriver().isRequired() && currency.getValue() == null) {
+              if (!ignoreRequiredProperties && currency.getDriver().isRequired() && currency.getValue() == null) {
                 throw new NegocioException(PROPERTY_VALUE_NOT_NULL + "$" + propertyModel.getLabel());
               }
             }
@@ -495,7 +496,7 @@ public class WorkpackService {
             final LocalitySelection localitySelection = (LocalitySelection) property;
             if (localitySelection.getDriver().getId().equals(propertyModel.getId())) {
               propertyModelFound = true;
-              if (localitySelection.getDriver().isRequired() && (localitySelection.getValue() == null
+              if (!ignoreRequiredProperties && localitySelection.getDriver().isRequired() && (localitySelection.getValue() == null
                 || localitySelection.getValue().isEmpty())) {
                 throw new NegocioException(PROPERTY_VALUE_NOT_NULL + "$" + propertyModel.getLabel());
               }
@@ -505,7 +506,7 @@ public class WorkpackService {
             final OrganizationSelection organizationSelection = (OrganizationSelection) property;
             if (organizationSelection.getDriver().getId().equals(propertyModel.getId())) {
               propertyModelFound = true;
-              if (organizationSelection.getDriver().isRequired()
+              if (!ignoreRequiredProperties && organizationSelection.getDriver().isRequired()
                 && (organizationSelection.getValue() == null
                 || organizationSelection.getValue().isEmpty())) {
                 throw new NegocioException(PROPERTY_VALUE_NOT_NULL + "$" + propertyModel.getLabel());
@@ -518,7 +519,7 @@ public class WorkpackService {
         }
       }
     }
-    if (!propertyModelFound && propertyModel.isRequired() && propertyModel.isActive()) {
+    if (!ignoreRequiredProperties && !propertyModelFound && propertyModel.isRequired() && propertyModel.isActive()) {
       throw new NegocioException(PROPERTY_REQUIRED_NOT_FOUND + "$" + propertyModel.getLabel());
     }
   }
@@ -1328,6 +1329,18 @@ public class WorkpackService {
 
   @Transactional
   public Workpack criarWorkpack(final WorkpackParamDto workpackParamDto) {
+    return this.criarWorkpack(workpackParamDto, false);
+  }
+
+  @Transactional
+  public Workpack criarWorkpackFromPreProject(final WorkpackParamDto workpackParamDto) {
+    return this.criarWorkpack(workpackParamDto, true);
+  }
+
+  private Workpack criarWorkpack(
+    final WorkpackParamDto workpackParamDto,
+    final boolean ignoreRequiredProperties
+  ) {
     Set<Property> properties = null;
     List<? extends PropertyDto> propertyDtos = workpackParamDto.getProperties();
     if (propertyDtos != null && !propertyDtos.isEmpty()) {
@@ -1343,7 +1356,7 @@ public class WorkpackService {
     }
     Iterable<PropertyModel> propertyModels = this.workpackModelService.getPropertyModels(workpackParamDto.getIdWorkpackModel());
     for (PropertyModel propertyModel : propertyModels) {
-      validateProperty(propertyModel, properties);
+      validateProperty(propertyModel, properties, ignoreRequiredProperties);
     }
     workpackParamDto.setProperties(null);
     Workpack workpack = workpackParamDto.getWorkpack(modelMapper);

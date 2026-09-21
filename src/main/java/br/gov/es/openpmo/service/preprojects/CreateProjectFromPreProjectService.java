@@ -77,7 +77,7 @@ public class CreateProjectFromPreProjectService {
     project.setFullName(preProject.getFullName());
     project.setProperties(this.getOrganizationProperties(projectModel, preProject));
 
-    final Workpack createdProject = this.workpackService.criarWorkpack(project);
+    final Workpack createdProject = this.workpackService.criarWorkpackFromPreProject(project);
     this.preProjectRepository.createOriginatedRelationship(idPreProject, createdProject.getId());
     return createdProject;
   }
