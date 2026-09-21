@@ -5,6 +5,7 @@ import br.gov.es.openpmo.model.actors.Organization;
 import br.gov.es.openpmo.model.preprojects.models.PreProjectModel;
 import br.gov.es.openpmo.model.properties.Property;
 import br.gov.es.openpmo.model.workpacks.Project;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDate;
 import java.util.Set;
 import org.neo4j.ogm.annotation.NodeEntity;
@@ -30,6 +31,7 @@ public class PreProject extends Entity {
   @Relationship(value = "FEATURES", direction = Relationship.INCOMING)
   private Set<Property> properties;
 
+  @JsonIgnore
   @Relationship("ORIGINATED")
   private Set<Project> originatedProjects;
 
