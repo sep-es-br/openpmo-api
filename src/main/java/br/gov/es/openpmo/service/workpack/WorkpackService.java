@@ -294,7 +294,10 @@ public class WorkpackService {
     detailDto.setSharedWith(workpackSharedWith != null && !workpackSharedWith.isEmpty());
   }
 
-   private static void validateWorkpack(final Workpack workpack) {
+   private static void validateWorkpack(
+    final Workpack workpack,
+    final boolean ignoreRequiredProperties
+  ) {
     final Collection<PropertyModel> models = new HashSet<>();
     switch (workpack.getClass().getTypeName()) {
       case TYPE_NAME_PORTFOLIO:
@@ -334,7 +337,7 @@ public class WorkpackService {
         }
         break;
     }
-    models.forEach(m -> validateProperty(m, workpack.getProperties(), false));
+    models.forEach(m -> validateProperty(m, workpack.getProperties(), ignoreRequiredProperties));
 
   }
    
@@ -714,6 +717,8 @@ public class WorkpackService {
 
   public Workpack update(final Workpack workpack) {
     final Long workpackId = workpack.getId();
+    final boolean ignoreRequiredProperties = this.workpackRepository
+      .isFromPreProjectInStructuring(workpackId);
     this.validateProjectStatusAgainstBaselineHistory(workpack);
     final Workpack workpackUpdate = this.findById(workpackId);
     if (workpackUpdate.getProperties() == null){
@@ -730,7 +735,7 @@ public class WorkpackService {
       propertiesToUpdate,
       properties
     );
-    validateWorkpack(workpackUpdate);
+    validateWorkpack(workpackUpdate, ignoreRequiredProperties);
     workpackUpdate.setName(workpack.getName());
     workpackUpdate.setFullName(workpack.getFullName());
     if (workpack instanceof Milestone) {

@@ -846,6 +846,13 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       "RETURN prop.value IN ['Estruturação', 'Repactuação'] AS hasStatusAllowedForUpdate")
   Boolean hasStatusAllowedForUpdate(@Param("idWorkpack") Long idWorkpack);
 
+  @Query("MATCH (workpack:Workpack) " +
+      "WHERE id(workpack) = $idWorkpack " +
+      "OPTIONAL MATCH (workpack)-[:IS_IN*0..]->(project:Project)<-[:ORIGINATED]-(:PreProject) " +
+      "OPTIONAL MATCH (project)<-[:FEATURES]-(status:Property)-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Status'}) " +
+      "RETURN count(CASE WHEN status.value = 'Estruturação' THEN project END) > 0")
+  boolean isFromPreProjectInStructuring(@Param("idWorkpack") Long idWorkpack);
+
   // @Query(
   // "MATCH (organizer:Organizer)-[:IS_IN*]->(project:Project) " +
   // "WHERE id(organizer) = $idOrganizer " +
