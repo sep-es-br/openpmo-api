@@ -9,6 +9,7 @@ import br.gov.es.openpmo.dto.workpack.GroupDto;
 import br.gov.es.openpmo.dto.workpack.OrganizationSelectionDto;
 import br.gov.es.openpmo.dto.workpack.ProjectParamDto;
 import br.gov.es.openpmo.dto.workpack.PropertyDto;
+import br.gov.es.openpmo.dto.workpack.SelectionDto;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.exception.RegistroNaoEncontradoException;
 import br.gov.es.openpmo.model.office.plan.Plan;
@@ -16,6 +17,7 @@ import br.gov.es.openpmo.model.preprojects.PreProject;
 import br.gov.es.openpmo.model.properties.models.GroupModel;
 import br.gov.es.openpmo.model.properties.models.OrganizationSelectionModel;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
+import br.gov.es.openpmo.model.properties.models.SelectionModel;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.ProjectModel;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
@@ -23,6 +25,7 @@ import br.gov.es.openpmo.repository.PreProjectRepository;
 import br.gov.es.openpmo.service.office.plan.PlanService;
 import br.gov.es.openpmo.service.workpack.WorkpackModelService;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
+import br.gov.es.openpmo.utils.ApplicationCacheUtil;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -43,16 +46,20 @@ public class CreateProjectFromPreProjectService {
 
   private final WorkpackService workpackService;
 
+  private final ApplicationCacheUtil applicationCacheUtil;
+
   public CreateProjectFromPreProjectService(
     final PreProjectRepository preProjectRepository,
     final PlanService planService,
     final WorkpackModelService workpackModelService,
-    final WorkpackService workpackService
+    final WorkpackService workpackService,
+    final ApplicationCacheUtil applicationCacheUtil
   ) {
     this.preProjectRepository = preProjectRepository;
     this.planService = planService;
     this.workpackModelService = workpackModelService;
     this.workpackService = workpackService;
+    this.applicationCacheUtil = applicationCacheUtil;
   }
 
   /**
@@ -75,10 +82,11 @@ public class CreateProjectFromPreProjectService {
     project.setIdWorkpackModel(projectModel.getId());
     project.setName(preProject.getName());
     project.setFullName(preProject.getFullName());
-    project.setProperties(this.getOrganizationProperties(projectModel, preProject));
+    project.setProperties(this.getProjectProperties(projectModel, preProject));
 
     final Workpack createdProject = this.workpackService.criarWorkpackFromPreProject(project);
     this.preProjectRepository.createOriginatedRelationship(idPreProject, createdProject.getId());
+    this.applicationCacheUtil.loadAllCacheSync();
     return createdProject;
   }
 
@@ -112,16 +120,16 @@ public class CreateProjectFromPreProjectService {
     return (ProjectModel) model;
   }
 
-  private List<PropertyDto> getOrganizationProperties(
+  private List<PropertyDto> getProjectProperties(
     final ProjectModel projectModel,
     final PreProject preProject
   ) {
-    if (preProject.getOrganization() == null) {
-      return Collections.emptyList();
-    }
     final List<PropertyDto> properties = new ArrayList<>();
+    final Long idOrganization = preProject.getOrganization() == null
+      ? null
+      : preProject.getOrganization().getId();
     for (final PropertyModel propertyModel : projectModel.getProperties()) {
-      final PropertyDto property = this.getOrganizationProperty(propertyModel, preProject.getOrganization().getId());
+      final PropertyDto property = this.getProjectProperty(propertyModel, idOrganization);
       if (property != null) {
         properties.add(property);
       }
@@ -129,14 +137,20 @@ public class CreateProjectFromPreProjectService {
     return properties;
   }
 
-  private PropertyDto getOrganizationProperty(
+  private PropertyDto getProjectProperty(
     final PropertyModel propertyModel,
     final Long idOrganization
   ) {
-    if (propertyModel instanceof OrganizationSelectionModel) {
+    if (propertyModel instanceof OrganizationSelectionModel && idOrganization != null) {
       final OrganizationSelectionDto property = new OrganizationSelectionDto();
       property.setIdPropertyModel(propertyModel.getId());
       property.setSelectedValues(Collections.singleton(idOrganization));
+      return property;
+    }
+    if (propertyModel instanceof SelectionModel && "Status".equals(propertyModel.getName())) {
+      final SelectionDto property = new SelectionDto();
+      property.setIdPropertyModel(propertyModel.getId());
+      property.setValue("Estruturação");
       return property;
     }
     if (!(propertyModel instanceof GroupModel)) {
@@ -147,7 +161,7 @@ public class CreateProjectFromPreProjectService {
     final GroupModel groupModel = (GroupModel) propertyModel;
     if (groupModel.getGroupedProperties() != null) {
       for (final PropertyModel groupedProperty : groupModel.getGroupedProperties()) {
-        final PropertyDto property = this.getOrganizationProperty(groupedProperty, idOrganization);
+        final PropertyDto property = this.getProjectProperty(groupedProperty, idOrganization);
         if (property != null) {
           groupedProperties.add(property);
         }

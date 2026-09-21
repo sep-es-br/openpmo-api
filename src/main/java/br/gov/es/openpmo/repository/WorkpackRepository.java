@@ -49,8 +49,11 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
 
   @Query("MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO]-(w:Workpack{deleted:false,canceled:false})-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) "
       +
-      "WHERE id(plan) = $idPlan AND NOT (w)-[:IS_IN]->(:Workpack) " +
-      "AND (NOT EXISTS(belongsTo.linked) OR belongsTo.linked = false) " +
+       "WHERE id(plan) = $idPlan AND NOT (w)-[:IS_IN]->(:Workpack) " +
+       "AND (NOT EXISTS(belongsTo.linked) OR belongsTo.linked = false) " +
+       "AND (NOT EXISTS((plan)-[:IS_ADOPTED_BY]->(:Office)<-[:IS_ADOPTED_BY]-(:PreProjectModel {active:true})) " +
+       "OR NOT 'Project' IN labels(w) OR (NOT EXISTS((:PreProject)-[:ORIGINATED]->(w)) " +
+       "AND NOT EXISTS((w)<-[:FEATURES]-(:Property {value: 'Estruturação'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Status'})))) " +
       "RETURN DISTINCT id(w) as id, id(model) as idWorkpackModel, false as linked, id(plan) as idPlan, w.idParent as idParent "
       +
       ", w.name as name, w.fullName as fullName, model.fontIcon as fontIcon, model.modelName as modelName " +
@@ -62,8 +65,11 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       ",(w)<-[:IS_IN*]-(children:Workpack{deleted:false,canceled:false})-[:IS_INSTANCE_BY]->(modelChildren:WorkpackModel), (children)-[childBelongsTo:BELONGS_TO]-(plan)  "
       +
       "WHERE id(plan) = $idPlan AND (children)-[:IS_IN]->(w) " +
-      "AND (NOT EXISTS(belongsTo.linked) OR belongsTo.linked = false) " +
-      "AND (NOT EXISTS(childBelongsTo.linked) OR childBelongsTo.linked = false) " +
+       "AND (NOT EXISTS(belongsTo.linked) OR belongsTo.linked = false) " +
+       "AND (NOT EXISTS(childBelongsTo.linked) OR childBelongsTo.linked = false) " +
+       "AND (NOT EXISTS((plan)-[:IS_ADOPTED_BY]->(:Office)<-[:IS_ADOPTED_BY]-(:PreProjectModel {active:true})) " +
+       "OR NOT 'Project' IN labels(children) OR (NOT EXISTS((:PreProject)-[:ORIGINATED]->(children)) " +
+       "AND NOT EXISTS((children)<-[:FEATURES]-(:Property {value: 'Estruturação'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Status'})))) " +
       "RETURN id(children) as id, id(modelChildren) as idWorkpackModel, false as linked, id(plan) as idPlan,id(w) as idParent "
       +
       ", children.name as name, children.fullName as fullName, modelChildren.fontIcon as fontIcon, modelChildren.modelName as modelName "
@@ -74,8 +80,11 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       "UNION ALL " +
       "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO{linked:true}]-(w:Workpack{deleted:false,canceled:false})-[isLinkedTo:IS_LINKED_TO]->(model:WorkpackModel) "
       +
-      ", (w)-[:IS_IN]->(parent:Workpack)-[:BELONGS_TO]-(plan) " +
-      "WHERE id(plan) = $idPlan RETURN " +
+       ", (w)-[:IS_IN]->(parent:Workpack)-[:BELONGS_TO]-(plan) " +
+       "WHERE id(plan) = $idPlan " +
+       "AND (NOT EXISTS((plan)-[:IS_ADOPTED_BY]->(:Office)<-[:IS_ADOPTED_BY]-(:PreProjectModel {active:true})) " +
+       "OR NOT 'Project' IN labels(w) OR (NOT EXISTS((:PreProject)-[:ORIGINATED]->(w)) " +
+       "AND NOT EXISTS((w)<-[:FEATURES]-(:Property {value: 'Estruturação'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Status'})))) RETURN " +
       "DISTINCT id(w) as id, id(model) as idWorkpackModel, true as linked, id(plan) as idPlan, id(parent) as idParent "
       +
       ", w.name as name, w.fullName as fullName, model.fontIcon as fontIcon, model.modelName as modelName " +
@@ -85,7 +94,10 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO{linked:true}]-(w:Workpack{deleted:false,canceled:false})-[isLinkedTo:IS_LINKED_TO]->(model:WorkpackModel) "
       +
       ", (w)-[:BELONGS_TO]->(plan) " +
-      "WHERE id(plan) = $idPlan AND NOT (w)-[:IS_IN]->(:Workpack) RETURN " +
+       "WHERE id(plan) = $idPlan AND NOT (w)-[:IS_IN]->(:Workpack) " +
+       "AND (NOT EXISTS((plan)-[:IS_ADOPTED_BY]->(:Office)<-[:IS_ADOPTED_BY]-(:PreProjectModel {active:true})) " +
+       "OR NOT 'Project' IN labels(w) OR (NOT EXISTS((:PreProject)-[:ORIGINATED]->(w)) " +
+       "AND NOT EXISTS((w)<-[:FEATURES]-(:Property {value: 'Estruturação'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Status'})))) RETURN " +
       "DISTINCT id(w) as id, id(model) as idWorkpackModel, true as linked, id(plan) as idPlan, w.idParent as idParent "
       +
       ", w.name as name, w.fullName as fullName, model.fontIcon as fontIcon, model.modelName as modelName " +
@@ -210,9 +222,12 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
 
   @Query("MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO]-(w:Workpack{deleted:false,canceled:false})-[instanceBy:IS_INSTANCE_BY]->(model:WorkpackModel) "
       +
-      "WHERE id(plan) = $idPlan AND NOT (w)-[:IS_IN]->(:Workpack) " +
-      "AND (NOT EXISTS(belongsTo.linked) OR belongsTo.linked = false) " +
-      "WITH DISTINCT id(w) as id, id(model) as idWorkpackModel, false as linked, id(plan) as idPlan, w.idParent as idParent "
+       "WHERE id(plan) = $idPlan AND NOT (w)-[:IS_IN]->(:Workpack) " +
+       "AND (NOT EXISTS(belongsTo.linked) OR belongsTo.linked = false) " +
+       "AND (NOT EXISTS((plan)-[:IS_ADOPTED_BY]->(:Office)<-[:IS_ADOPTED_BY]-(:PreProjectModel {active:true})) " +
+       "OR NOT 'Project' IN labels(w) OR (NOT EXISTS((:PreProject)-[:ORIGINATED]->(w)) " +
+       "AND NOT EXISTS((w)<-[:FEATURES]-(:Property {value: 'Estruturação'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Status'})))) " +
+       "WITH DISTINCT id(w) as id, id(model) as idWorkpackModel, false as linked, id(plan) as idPlan, w.idParent as idParent "
       +
       ", w.name as name, w.fullName as fullName, model.fontIcon as fontIcon, model.modelName as modelName " +
       " , model.modelNameInPlural as modelNameInPlural,labels(w) as labels, model.position as position " +
@@ -226,9 +241,12 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       ",(w)<-[:IS_IN*]-(children:Workpack{deleted:false,canceled:false})-[:IS_INSTANCE_BY]->(modelChildren:WorkpackModel), (children)-[childBelongsTo:BELONGS_TO]-(plan)  "
       +
       "WHERE id(plan) = $idPlan AND (children)-[:IS_IN]->(w) " +
-      "AND (NOT EXISTS(belongsTo.linked) OR belongsTo.linked = false) " +
-      "AND (NOT EXISTS(childBelongsTo.linked) OR childBelongsTo.linked = false) " +
-      "WITH id(children) as id, id(modelChildren) as idWorkpackModel, false as linked, id(plan) as idPlan,id(w) as idParent "
+       "AND (NOT EXISTS(belongsTo.linked) OR belongsTo.linked = false) " +
+       "AND (NOT EXISTS(childBelongsTo.linked) OR childBelongsTo.linked = false) " +
+       "AND (NOT EXISTS((plan)-[:IS_ADOPTED_BY]->(:Office)<-[:IS_ADOPTED_BY]-(:PreProjectModel {active:true})) " +
+       "OR NOT 'Project' IN labels(children) OR (NOT EXISTS((:PreProject)-[:ORIGINATED]->(children)) " +
+       "AND NOT EXISTS((children)<-[:FEATURES]-(:Property {value: 'Estruturação'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Status'})))) " +
+       "WITH id(children) as id, id(modelChildren) as idWorkpackModel, false as linked, id(plan) as idPlan,id(w) as idParent "
       +
       ", children.name as name, children.fullName as fullName, modelChildren.fontIcon as fontIcon, modelChildren.modelName as modelName "
       +
@@ -241,9 +259,12 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       "UNION ALL " +
       "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO{linked:true}]-(w:Workpack{deleted:false,canceled:false})-[isLinkedTo:IS_LINKED_TO]->(model:WorkpackModel) "
       +
-      ", (w)-[:IS_IN]->(parent:Workpack)-[:BELONGS_TO]-(plan) " +
-      "WHERE id(plan) = $idPlan " +
-      "WITH DISTINCT id(w) as id, id(model) as idWorkpackModel, true as linked, id(plan) as idPlan, id(parent) as idParent "
+       ", (w)-[:IS_IN]->(parent:Workpack)-[:BELONGS_TO]-(plan) " +
+       "WHERE id(plan) = $idPlan " +
+       "AND (NOT EXISTS((plan)-[:IS_ADOPTED_BY]->(:Office)<-[:IS_ADOPTED_BY]-(:PreProjectModel {active:true})) " +
+       "OR NOT 'Project' IN labels(w) OR (NOT EXISTS((:PreProject)-[:ORIGINATED]->(w)) " +
+       "AND NOT EXISTS((w)<-[:FEATURES]-(:Property {value: 'Estruturação'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Status'})))) " +
+       "WITH DISTINCT id(w) as id, id(model) as idWorkpackModel, true as linked, id(plan) as idPlan, id(parent) as idParent "
       +
       ", w.name as name, w.fullName as fullName, model.fontIcon as fontIcon, model.modelName as modelName " +
       ", model.modelNameInPlural as modelNameInPlural,labels(w) as labels, model.position as position " +
@@ -254,9 +275,12 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       "UNION ALL " +
       "MATCH (planModel:PlanModel)<-[isStructuredBy:IS_STRUCTURED_BY]-(plan:Plan)<-[belongsTo:BELONGS_TO{linked:true}]-(w:Workpack{deleted:false,canceled:false})-[isLinkedTo:IS_LINKED_TO]->(model:WorkpackModel) "
       +
-      ", (w)-[:BELONGS_TO]->(plan) " +
-      "WHERE id(plan) = $idPlan AND NOT (w)-[:IS_IN]->(:Workpack) " +
-      "WITH DISTINCT id(w) as id, id(model) as idWorkpackModel, true as linked, id(plan) as idPlan, w.idParent as idParent "
+       ", (w)-[:BELONGS_TO]->(plan) " +
+       "WHERE id(plan) = $idPlan AND NOT (w)-[:IS_IN]->(:Workpack) " +
+       "AND (NOT EXISTS((plan)-[:IS_ADOPTED_BY]->(:Office)<-[:IS_ADOPTED_BY]-(:PreProjectModel {active:true})) " +
+       "OR NOT 'Project' IN labels(w) OR (NOT EXISTS((:PreProject)-[:ORIGINATED]->(w)) " +
+       "AND NOT EXISTS((w)<-[:FEATURES]-(:Property {value: 'Estruturação'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Status'})))) " +
+       "WITH DISTINCT id(w) as id, id(model) as idWorkpackModel, true as linked, id(plan) as idPlan, w.idParent as idParent "
       +
       ", w.name as name, w.fullName as fullName, model.fontIcon as fontIcon, model.modelName as modelName " +
       ", model.modelNameInPlural as modelNameInPlural,labels(w) as labels, model.position as position " +
@@ -307,10 +331,14 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       + "apoc.text.levenshteinSimilarity(apoc.text.clean(w.name), apoc.text.clean($term)) AS nameScore, "
       + "apoc.text.levenshteinSimilarity(apoc.text.clean(w.fullName), apoc.text.clean($term)) AS fullNameScore "
       + "WITH *, CASE WHEN nameScore > fullNameScore THEN nameScore ELSE fullNameScore END AS score "
+      + "WITH *, EXISTS((p)-[:IS_ADOPTED_BY]->(:Office)<-[:IS_ADOPTED_BY]-(:PreProjectModel {active:true})) AS hasActivePreProjectModel "
       + "WHERE id(p)=$idPlan "
       + "AND id(pw) = $idWorkpackParent "
       + "AND id(wm) = $idWorkpackModel "
       + "AND ($term IS NULL OR $term = '' OR score > $searchCutOffScore) "
+      + "AND (NOT hasActivePreProjectModel OR NOT 'Project' IN labels(w) "
+      + "OR (NOT EXISTS((:PreProject)-[:ORIGINATED]->(w)) "
+      + "AND NOT EXISTS((w)<-[:FEATURES]-(:Property {value: 'Estruturação'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Status'})))) "
       + "RETURN w, wm, rf, p, [ "
       + " [ (w)<-[f1:FEATURES]-(p1:Property)-[d1:IS_DRIVEN_BY]->(pm1:PropertyModel) | [f1, p1, d1, pm1] ], "
       + " [ (w)<-[f2:FEATURES]-(l:LocalitySelection)-[v1:VALUES]->(l1:Locality) | [f2,l,v1,l1]], "
@@ -335,10 +363,14 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       + "apoc.text.levenshteinSimilarity(apoc.text.clean(w.name), apoc.text.clean($term)) AS nameScore, "
       + "apoc.text.levenshteinSimilarity(apoc.text.clean(w.fullName), apoc.text.clean($term)) AS fullNameScore "
       + "WITH *, CASE WHEN nameScore > fullNameScore THEN nameScore ELSE fullNameScore END AS score "
+      + "WITH *, EXISTS((p)-[:IS_ADOPTED_BY]->(:Office)<-[:IS_ADOPTED_BY]-(:PreProjectModel {active:true})) AS hasActivePreProjectModel "
       + "WHERE id(p)=$idPlan "
       + "AND id(pw) = $idWorkpackParent "
       + "AND id(wm) = $idWorkpackModel "
       + "AND ($term IS NULL OR $term = '' OR score > $searchCutOffScore) "
+      + "AND (NOT hasActivePreProjectModel OR NOT 'Project' IN labels(w) "
+      + "OR (NOT EXISTS((:PreProject)-[:ORIGINATED]->(w)) "
+      + "AND NOT EXISTS((w)<-[:FEATURES]-(:Property {value: 'Estruturação'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Status'})))) "
       + "RETURN w, wm,ilk, rf, p, [ "
       + " [ (w)<-[f1:FEATURES]-(p1:Property)-[d1:IS_DRIVEN_BY]->(pm1:PropertyModel) | [f1, p1, d1, pm1] ], "
       + " [ (w)<-[f2:FEATURES]-(l:LocalitySelection)-[v1:VALUES]->(l1:Locality) | [f2,l,v1,l1]], "
