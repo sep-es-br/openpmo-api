@@ -16,10 +16,11 @@ public interface PreProjectRepository
 
   @Query(
     "MATCH (preProject:PreProject)-[:INSTANTIATES]->(:PreProjectModel)-[:IS_ADOPTED_BY]->(office:Office) " +
+    "WHERE id(office) = $idOffice " +
     "OPTIONAL MATCH (preProject)<-[:IS]-(organization:Organization) " +
     "OPTIONAL MATCH (preProject)-[:ORIGINATED]->(project:Project)-[:BELONGS_TO]->(plan:Plan) " +
-    "WHERE id(office) = $idOffice " +
-    "  AND (project IS NULL OR (coalesce(project.deleted, false) = false AND coalesce(project.canceled, false) = false)) " +
+    "WITH preProject, organization, project, plan " +
+    "WHERE project IS NULL OR (coalesce(project.deleted, false) = false AND coalesce(project.canceled, false) = false) " +
     "OPTIONAL MATCH (project)<-[:FEATURES]-(status:Property)-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Status'}) " +
     "RETURN id(preProject) AS id, id(preProject) AS idPreProject, id(project) AS idProject, " +
     "       preProject.name AS name, preProject.fullName AS fullName, status.value AS status, " +
