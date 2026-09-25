@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import io.swagger.annotations.ApiModel;
+import br.gov.es.openpmo.model.workpacks.models.WorkpackModelClassification;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
@@ -39,6 +40,8 @@ public abstract class WorkpackModelParamDto {
   private String modelName;
 
   private String modelNameInPlural;
+
+  private WorkpackModelClassification classification = WorkpackModelClassification.STRUCTURAL;
 
   private boolean costSessionActive;
 
@@ -117,6 +120,16 @@ public abstract class WorkpackModelParamDto {
 
   public void setModelName(final String modelName) {
     this.modelName = modelName;
+  }
+
+  public WorkpackModelClassification getClassification() {
+    return this.classification == null
+      ? WorkpackModelClassification.STRUCTURAL
+      : this.classification;
+  }
+
+  public void setClassification(final WorkpackModelClassification classification) {
+    this.classification = classification;
   }
 
   public String getModelNameInPlural() {

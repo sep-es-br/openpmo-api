@@ -5,6 +5,7 @@ import br.gov.es.openpmo.dto.workpackmodel.WorkpackModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.DashboardConfiguration;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.PropertyModelDto;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
+import br.gov.es.openpmo.model.workpacks.models.WorkpackModelClassification;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -53,6 +54,8 @@ public abstract class WorkpackModelDetailDto {
   private String modelName;
 
   private String modelNameInPlural;
+
+  private WorkpackModelClassification classification = WorkpackModelClassification.STRUCTURAL;
 
   private Boolean costSessionActive;
 
@@ -123,6 +126,7 @@ public abstract class WorkpackModelDetailDto {
     instance.setFontIcon(workpackModel.getFontIcon());
     instance.setModelName(workpackModel.getModelName());
     instance.setModelNameInPlural(workpackModel.getModelNameInPlural());
+    instance.setClassification(workpackModel.getClassification());
     instance.setCostSessionActive(workpackModel.getCostSessionActive());
     instance.setScheduleSessionActive(workpackModel.getScheduleSessionActive());
     instance.setObligationsSessionActive(workpackModel.getObligationsSessionActive());
@@ -165,6 +169,16 @@ public abstract class WorkpackModelDetailDto {
 
   public void setModelName(final String modelName) {
     this.modelName = modelName;
+  }
+
+  public WorkpackModelClassification getClassification() {
+    return this.classification == null
+      ? WorkpackModelClassification.STRUCTURAL
+      : this.classification;
+  }
+
+  public void setClassification(final WorkpackModelClassification classification) {
+    this.classification = classification;
   }
 
   public String getModelNameInPlural() {

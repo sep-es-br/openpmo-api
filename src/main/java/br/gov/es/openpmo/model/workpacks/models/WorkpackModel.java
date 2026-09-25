@@ -45,6 +45,8 @@ public abstract class WorkpackModel extends Entity {
 
   private String modelNameInPlural;
 
+  private WorkpackModelClassification classification = WorkpackModelClassification.STRUCTURAL;
+
   private Boolean costSessionActive;
 
   private Boolean stakeholderSessionActive;
@@ -114,6 +116,9 @@ public abstract class WorkpackModel extends Entity {
 
   @Relationship(type = "IS_LINKED_TO", direction = Relationship.INCOMING)
   private Set<IsLinkedTo> linkedToRelationship;
+
+  @Relationship(type = "USES")
+  private Set<WorkpackModel> uses;
 
   @Transient
   private Long idParent;
@@ -349,6 +354,27 @@ public abstract class WorkpackModel extends Entity {
     this.modelName = modelName;
   }
 
+  public WorkpackModelClassification getClassification() {
+    return this.classification == null
+      ? WorkpackModelClassification.STRUCTURAL
+      : this.classification;
+  }
+
+  public void setClassification(final WorkpackModelClassification classification) {
+    this.classification = classification;
+  }
+
+  public Set<WorkpackModel> getUses() {
+    if (this.uses == null) {
+      this.uses = new HashSet<>();
+    }
+    return this.uses;
+  }
+
+  public void setUses(final Set<WorkpackModel> uses) {
+    this.uses = uses;
+  }
+
   public String getModelNameWithOffice() {
     final Office office = this.planModel.getOffice();
     return this.modelName + " (" + office.getName() + ")";
@@ -431,6 +457,7 @@ public abstract class WorkpackModel extends Entity {
 
   public void updateFields(final WorkpackModel workpackModel) {
     this.modelName = workpackModel.modelName;
+    this.classification = workpackModel.getClassification();
     this.personRoles = workpackModel.personRoles;
     this.fontIcon = workpackModel.fontIcon;
     this.modelNameInPlural = workpackModel.modelNameInPlural;

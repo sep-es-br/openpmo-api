@@ -2,6 +2,7 @@ package br.gov.es.openpmo.dto.workpackmodel;
 
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.PropertyModelDto;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
+import br.gov.es.openpmo.model.workpacks.models.WorkpackModelClassification;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -33,6 +34,8 @@ public abstract class WorkpackModelDto {
 
   private String modelNameInPlural;
 
+  private WorkpackModelClassification classification = WorkpackModelClassification.STRUCTURAL;
+
   private String fontIcon;
 
   private PropertyModelDto sortBy;
@@ -48,6 +51,7 @@ public abstract class WorkpackModelDto {
     instance.setId(workpackModel.getId());
     instance.setModelNameInPlural(workpackModel.getModelNameInPlural());
     instance.setModelName(workpackModel.getModelName());
+    instance.setClassification(workpackModel.getClassification());
     instance.setFontIcon(workpackModel.getFontIcon());
     instance.setPosition(workpackModel.getPosition());
     return instance;
@@ -76,6 +80,16 @@ public abstract class WorkpackModelDto {
 
   public void setModelName(final String modelName) {
     this.modelName = modelName;
+  }
+
+  public WorkpackModelClassification getClassification() {
+    return this.classification == null
+      ? WorkpackModelClassification.STRUCTURAL
+      : this.classification;
+  }
+
+  public void setClassification(final WorkpackModelClassification classification) {
+    this.classification = classification;
   }
 
   public String getModelNameInPlural() {
