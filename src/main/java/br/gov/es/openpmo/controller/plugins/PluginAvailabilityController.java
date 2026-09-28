@@ -2,6 +2,7 @@ package br.gov.es.openpmo.controller.plugins;
 
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.service.agreements.AgreementProviderService;
+import br.gov.es.openpmo.service.indicators.IndicatorProviderService;
 import br.gov.es.openpmo.service.obligations.ObligationProviderService;
 import br.gov.es.openpmo.service.procurements.ProcurementProviderService;
 import br.gov.es.openpmo.service.process.AdministrativeProcessProviderService;
@@ -21,17 +22,20 @@ public class PluginAvailabilityController {
   private final ProcurementProviderService procurementProviderService;
   private final ObligationProviderService obligationProviderService;
   private final AdministrativeProcessProviderService administrativeProcessProviderService;
+  private final IndicatorProviderService indicatorProviderService;
 
   public PluginAvailabilityController(
     final AgreementProviderService agreementProviderService,
     final ProcurementProviderService procurementProviderService,
     final ObligationProviderService obligationProviderService,
-    final AdministrativeProcessProviderService administrativeProcessProviderService
+    final AdministrativeProcessProviderService administrativeProcessProviderService,
+    final IndicatorProviderService indicatorProviderService
   ) {
     this.agreementProviderService = agreementProviderService;
     this.procurementProviderService = procurementProviderService;
     this.obligationProviderService = obligationProviderService;
     this.administrativeProcessProviderService = administrativeProcessProviderService;
+    this.indicatorProviderService = indicatorProviderService;
   }
 
   @GetMapping("/availability")
@@ -41,6 +45,7 @@ public class PluginAvailabilityController {
     availability.put("procurements", this.procurementProviderService.isAvailable());
     availability.put("obligations", this.obligationProviderService.isAvailable());
     availability.put("edocs", this.administrativeProcessProviderService.isAvailable());
+    availability.put("indicators", this.indicatorProviderService.isAvailable());
     return ResponseEntity.ok(ResponseBase.of(availability));
   }
 }

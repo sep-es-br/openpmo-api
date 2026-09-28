@@ -82,6 +82,7 @@ dependencies {
     implementation 'com.github.sep-es-br:openpmo-plugin-procurement-interface:1.0.0'
     implementation 'com.github.sep-es-br:openpmo-plugin-obligation-interface:1.0.0'
     implementation 'com.github.sep-es-br:openpmo-plugin-administrative-process-interface:1.0.0'
+    implementation 'com.github.sep-es-br:openpmo-plugin-indicator-interface:1.0.0'
     implementation 'com.github.sep-es-br:openpmo-plugin-user-a-identify-goves:v2.2.0'
 
     if (props.containsKey('app.agreement.parser.repository') &&
@@ -106,6 +107,12 @@ dependencies {
         props['app.edocs.plugin.repository'] != null &&
         !props['app.edocs.plugin.repository'].trim().isEmpty()) {
         implementation props['app.edocs.plugin.repository']
+    }
+
+    if (props.containsKey('app.indicator.parser.repository') &&
+        props['app.indicator.parser.repository'] != null &&
+        !props['app.indicator.parser.repository'].trim().isEmpty()) {
+        implementation props['app.indicator.parser.repository']
     }
 
 
