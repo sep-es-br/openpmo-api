@@ -1,5 +1,8 @@
 package br.gov.es.openpmo.dto.workpackmodel;
 
+import org.springframework.data.neo4j.annotation.QueryResult;
+
+@QueryResult
 public class TransversalContextDto {
 
   private Long idPlan;

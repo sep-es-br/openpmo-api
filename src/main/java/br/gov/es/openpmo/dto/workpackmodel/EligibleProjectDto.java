@@ -1,5 +1,8 @@
 package br.gov.es.openpmo.dto.workpackmodel;
 
+import org.springframework.data.neo4j.annotation.QueryResult;
+
+@QueryResult
 public class EligibleProjectDto {
 
   private Long idProject;
@@ -11,6 +14,7 @@ public class EligibleProjectDto {
   private String fullName;
   private Long originalParentId;
   private boolean alreadyIncluded;
+  private boolean currentlyEligible;
 
   public Long getIdProject() { return idProject; }
   public void setIdProject(Long idProject) { this.idProject = idProject; }
@@ -30,4 +34,6 @@ public class EligibleProjectDto {
   public void setOriginalParentId(Long originalParentId) { this.originalParentId = originalParentId; }
   public boolean isAlreadyIncluded() { return alreadyIncluded; }
   public void setAlreadyIncluded(boolean alreadyIncluded) { this.alreadyIncluded = alreadyIncluded; }
+  public boolean isCurrentlyEligible() { return currentlyEligible; }
+  public void setCurrentlyEligible(boolean currentlyEligible) { this.currentlyEligible = currentlyEligible; }
 }
