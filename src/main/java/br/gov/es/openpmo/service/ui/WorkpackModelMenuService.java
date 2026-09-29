@@ -4,6 +4,7 @@ import br.gov.es.openpmo.dto.menu.PlanModelMenuResponse;
 import br.gov.es.openpmo.dto.menu.WorkpackModelMenuResponse;
 import br.gov.es.openpmo.model.office.plan.PlanModel;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
+import br.gov.es.openpmo.model.workpacks.models.WorkpackModelClassification;
 import br.gov.es.openpmo.repository.OfficeRepository;
 import br.gov.es.openpmo.repository.PlanModelRepository;
 import org.springframework.stereotype.Service;
@@ -49,7 +50,7 @@ public class WorkpackModelMenuService {
       final Collection<WorkpackModelMenuResponse> workpackModelMenuResponses = new HashSet<>();
 
       for (final WorkpackModel workpackModel : workpackModels) {
-        final WorkpackModelMenuResponse response = this.getResponse(planModel, workpackModel);
+        final WorkpackModelMenuResponse response = this.getResponse(planModel, workpackModel, null);
         workpackModelMenuResponses.add(response);
       }
 
@@ -67,7 +68,8 @@ public class WorkpackModelMenuService {
 
   private WorkpackModelMenuResponse getResponse(
     final PlanModel planModel,
-    final WorkpackModel workpackModel
+    final WorkpackModel workpackModel,
+    final WorkpackModelClassification inheritedClassification
   ) {
     final WorkpackModelMenuResponse item = new WorkpackModelMenuResponse();
 
@@ -77,6 +79,10 @@ public class WorkpackModelMenuService {
     item.setName(workpackModel.getModelName());
     item.setFontIcon(workpackModel.getFontIcon());
     item.setType(workpackModel.getType());
+    final WorkpackModelClassification classification = inheritedClassification == WorkpackModelClassification.TRANSVERSAL
+      ? WorkpackModelClassification.TRANSVERSAL
+      : workpackModel.getClassification();
+    item.setClassification(classification);
     item.setPosition(workpackModel.getPosition());
 
     final Set<WorkpackModelMenuResponse> children = new HashSet<>();
@@ -87,7 +93,7 @@ public class WorkpackModelMenuService {
     }
 
     for (final WorkpackModel child : workpackModel.getChildren()) {
-      final WorkpackModelMenuResponse response = this.getResponse(planModel, child);
+      final WorkpackModelMenuResponse response = this.getResponse(planModel, child, classification);
       children.add(response);
     }
     final Set<WorkpackModelMenuResponse> sortedChildren = children.stream()

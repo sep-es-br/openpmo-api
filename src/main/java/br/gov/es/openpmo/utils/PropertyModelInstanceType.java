@@ -44,6 +44,12 @@ public enum PropertyModelInstanceType {
     SelectionModelDto.class,
     SelectionModelDto::of
   ),
+  TYPE_MODEL_NAME_TRANSVERSAL_VIEW_SELECTION(
+    "br.gov.es.openpmo.model.properties.models.TransversalViewSelectionModel",
+    TransversalViewSelectionModelDto::new,
+    TransversalViewSelectionModelDto.class,
+    TransversalViewSelectionModelDto::of
+  ),
   TYPE_MODEL_NAME_TEXT_AREA(
     "br.gov.es.openpmo.model.properties.models.TextAreaModel",
     TextAreaModelDto::new,

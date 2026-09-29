@@ -94,6 +94,12 @@ public class ExtractPropertyModel {
           SelectionModel.class
         ));
         break;
+      case PACKAGE_PROPERTIES_DTO + ".TransversalViewSelectionModelDto":
+        propertyModels.add(this.modelMapper.map(
+          property,
+          TransversalViewSelectionModel.class
+        ));
+        break;
       case PACKAGE_PROPERTIES_DTO + ".TextAreaModelDto":
         propertyModels.add(this.modelMapper.map(
           property,

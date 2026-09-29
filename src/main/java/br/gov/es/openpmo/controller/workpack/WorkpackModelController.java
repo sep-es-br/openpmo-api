@@ -7,6 +7,7 @@ import br.gov.es.openpmo.dto.workpackmodel.GetNextPositionResponse;
 import br.gov.es.openpmo.dto.workpackmodel.ResponseBaseWorkpackModel;
 import br.gov.es.openpmo.dto.workpackmodel.WorkpackModelCompletedUpdateRequest;
 import br.gov.es.openpmo.dto.workpackmodel.WorkpackModelDto;
+import br.gov.es.openpmo.dto.workpackmodel.WorkpackModelUsesRequest;
 import br.gov.es.openpmo.dto.workpackmodel.details.ResponseBaseWorkpackModelDetail;
 import br.gov.es.openpmo.dto.workpackmodel.details.WorkpackModelDetailDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.WorkpackModelParamDto;
@@ -135,6 +136,32 @@ public class WorkpackModelController {
     return ResponseEntity.ok(success(modelDetailDto));
   }
 
+  @GetMapping("/{id}/uses")
+  public ResponseEntity<ResponseBase<List<WorkpackModelDto>>> findUses(
+    @PathVariable final Long id,
+    @RequestHeader("Authorization") final String authorization
+  ) {
+    this.canAccessService.ensureCanReadResource(id, authorization);
+    final List<WorkpackModelDto> uses = this.workpackModelService.findUses(id).stream()
+      .map(this.workpackModelService::getWorkpackModelDto)
+      .collect(Collectors.toList());
+    return ResponseEntity.ok(ResponseBase.of(uses));
+  }
+
+  @PutMapping("/{id}/uses")
+  public ResponseEntity<ResponseBase<List<WorkpackModelDto>>> replaceUses(
+    @PathVariable final Long id,
+    @RequestBody @Valid final WorkpackModelUsesRequest request,
+    @RequestHeader("Authorization") final String authorization
+  ) {
+    this.canAccessService.ensureCanEditResource(id, authorization);
+    final List<WorkpackModelDto> uses = this.workpackModelService
+      .replaceUses(id, request.getIdsWorkpackModel()).stream()
+      .map(this.workpackModelService::getWorkpackModelDto)
+      .collect(Collectors.toList());
+    return ResponseEntity.ok(ResponseBase.of(uses));
+  }
+
   @PostMapping
   public ResponseEntity<ResponseBase<EntityDto>> save(
     @RequestBody @Valid final WorkpackModelParamDto workpackModelParamDto,
@@ -144,7 +171,11 @@ public class WorkpackModelController {
     this.canAccessService.ensureCanEditResource(workpackModelParamDto.getIdPlanModel(), authorization);
 
     WorkpackModel workpackModel = this.workpackModelService.getWorkpackModel(workpackModelParamDto);
-    workpackModel = this.workpackModelService.save(workpackModel, workpackModelParamDto.getIdParent());
+    workpackModel = this.workpackModelService.saveWithUses(
+      workpackModel,
+      workpackModelParamDto.getIdParent(),
+      workpackModelParamDto.getIdsUses()
+    );
     return ResponseEntity.ok(ResponseBase.of(new EntityDto(workpackModel.getId())));
   }
 
@@ -157,7 +188,7 @@ public class WorkpackModelController {
     this.canAccessService.ensureCanEditResource(workpackModelParamDto.getId(), authorization);
 
     WorkpackModel workpackModel = this.workpackModelService.getWorkpackModel(workpackModelParamDto);
-    workpackModel = this.workpackModelService.update(workpackModel);
+    workpackModel = this.workpackModelService.updateWithUses(workpackModel, workpackModelParamDto.getIdsUses());
     return ResponseEntity.ok(ResponseBase.of(new EntityDto(workpackModel.getId())));
   }
 

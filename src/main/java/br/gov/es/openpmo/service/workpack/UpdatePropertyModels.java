@@ -151,6 +151,13 @@ public class UpdatePropertyModels {
         selectionModelUpdate.setPossibleValues(selectionModel.getPossibleValues());
         selectionModelUpdate.setDefaultValue(selectionModel.getDefaultValue());
         break;
+      case PropertyModelType.TYPE_NAME_MODEL_TRANSVERSAL_VIEW_SELECTION:
+        final TransversalViewSelectionModel transversalViewUpdate = (TransversalViewSelectionModel) propertyModelUpdate;
+        final TransversalViewSelectionModel transversalView = (TransversalViewSelectionModel) propertyModel;
+        transversalViewUpdate.setMultipleSelection(transversalView.isMultipleSelection());
+        transversalViewUpdate.setPossibleValues(transversalView.getPossibleValues());
+        transversalViewUpdate.setDefaultValue(transversalView.getDefaultValue());
+        break;
       case PropertyModelType.TYPE_NAME_MODEL_TEXT_AREA:
         final TextAreaModel textAreaModelUpdate = (TextAreaModel) propertyModelUpdate;
         final TextAreaModel textAreaModel = (TextAreaModel) propertyModel;

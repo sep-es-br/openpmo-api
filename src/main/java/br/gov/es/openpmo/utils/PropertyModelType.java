@@ -14,6 +14,9 @@ public class PropertyModelType {
 
   public static final String TYPE_NAME_MODEL_SELECTION = "br.gov.es.openpmo.model.properties.models.SelectionModel";
 
+  public static final String TYPE_NAME_MODEL_TRANSVERSAL_VIEW_SELECTION =
+    "br.gov.es.openpmo.model.properties.models.TransversalViewSelectionModel";
+
   public static final String TYPE_NAME_MODEL_TEXT_AREA = "br.gov.es.openpmo.model.properties.models.TextAreaModel";
 
   public static final String TYPE_NAME_MODEL_NUMBER = "br.gov.es.openpmo.model.properties.models.NumberModel";

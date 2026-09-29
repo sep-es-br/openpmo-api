@@ -15,6 +15,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 @JsonTypeInfo(use = Id.NAME, property = "type")
 @JsonSubTypes({@Type(value = PortfolioModelParamDto.class, name = "PortfolioModel"),
@@ -39,6 +40,7 @@ public abstract class WorkpackModelParamDto {
   @NotBlank(message = "modelName.not.blank")
   private String modelName;
 
+  @NotBlank(message = "modelNameInPlural.not.blank")
   private String modelNameInPlural;
 
   private WorkpackModelClassification classification = WorkpackModelClassification.STRUCTURAL;
@@ -85,6 +87,8 @@ public abstract class WorkpackModelParamDto {
   private List<? extends PropertyModelDto> properties;
 
   private Long idParent;
+
+  private Set<Long> idsUses;
 
   private String sortBy;
 
@@ -282,6 +286,14 @@ public abstract class WorkpackModelParamDto {
 
   public void setIdParent(final Long idParent) {
     this.idParent = idParent;
+  }
+
+  public Set<Long> getIdsUses() {
+    return this.idsUses;
+  }
+
+  public void setIdsUses(final Set<Long> idsUses) {
+    this.idsUses = idsUses;
   }
 
   public Boolean isJournalManagementSessionActive() {

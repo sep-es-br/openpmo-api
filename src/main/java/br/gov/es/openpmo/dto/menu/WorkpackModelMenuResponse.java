@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.dto.menu;
 
+import br.gov.es.openpmo.model.workpacks.models.WorkpackModelClassification;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.Objects;
@@ -18,6 +19,8 @@ public class WorkpackModelMenuResponse {
   private String fontIcon;
 
   private String type;
+
+  private WorkpackModelClassification classification = WorkpackModelClassification.STRUCTURAL;
 
   private Long position;
 
@@ -77,6 +80,16 @@ public class WorkpackModelMenuResponse {
 
   public void setType(final String type) {
     this.type = type;
+  }
+
+  public WorkpackModelClassification getClassification() {
+    return this.classification == null
+      ? WorkpackModelClassification.STRUCTURAL
+      : this.classification;
+  }
+
+  public void setClassification(final WorkpackModelClassification classification) {
+    this.classification = classification;
   }
 
   public Long getPosition() {

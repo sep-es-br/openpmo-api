@@ -18,7 +18,9 @@ import br.gov.es.openpmo.dto.workpackmodel.params.WorkpackModelParamDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.PropertyModelDto;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
+import br.gov.es.openpmo.model.properties.models.GroupModel;
 import br.gov.es.openpmo.model.properties.models.SelectionModel;
+import br.gov.es.openpmo.model.properties.models.TransversalViewSelectionModel;
 import br.gov.es.openpmo.model.workpacks.models.DeliverableModel;
 import br.gov.es.openpmo.model.workpacks.models.MilestoneModel;
 import br.gov.es.openpmo.model.workpacks.models.OrganizerModel;
@@ -26,6 +28,7 @@ import br.gov.es.openpmo.model.workpacks.models.PortfolioModel;
 import br.gov.es.openpmo.model.workpacks.models.ProgramModel;
 import br.gov.es.openpmo.model.workpacks.models.ProjectModel;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
+import br.gov.es.openpmo.model.workpacks.models.WorkpackModelClassification;
 import br.gov.es.openpmo.repository.WorkpackModelRepository;
 import br.gov.es.openpmo.service.office.plan.PlanModelService;
 import br.gov.es.openpmo.service.properties.PropertyModelService;
@@ -144,12 +147,24 @@ public class WorkpackModelService {
     return model;
   }
 
+  @Transactional
+  public WorkpackModel saveWithUses(
+    final WorkpackModel workpackModel,
+    final Long idParent,
+    final Set<Long> idsUses
+  ) {
+    final WorkpackModel saved = this.save(workpackModel, idParent);
+    this.replaceUsesIfProvided(saved, idsUses);
+    return saved;
+  }
+
   private void ifHasParentIdCreateAsChild(
     final WorkpackModel workpackModel,
     final Long idParent
   ) {
     if (idParent != null) {
       final WorkpackModel parent = this.findById(idParent);
+      workpackModel.setClassification(parent.getClassification());
       workpackModel.addParent(parent);
     }
   }
@@ -180,6 +195,78 @@ public class WorkpackModelService {
     return this.workpackModelRepository.findAllByIdPlanModel(idPlanModel)
       .stream().sorted(Comparator.comparing(WorkpackModel::getPositionOrElseZero))
       .collect(Collectors.toList());
+  }
+
+  @Transactional
+  public List<WorkpackModel> replaceUses(final Long sourceId, final Set<Long> targetIds) {
+    final WorkpackModel source = this.findById(sourceId);
+    if (source.getClassification() != WorkpackModelClassification.TRANSVERSAL) {
+      throw new NegocioException(ApplicationMessage.WORKPACK_MODEL_USES_SOURCE_NOT_TRANSVERSAL);
+    }
+
+    final Set<Long> normalizedTargetIds = Optional.ofNullable(targetIds)
+      .orElseGet(Collections::emptySet)
+      .stream()
+      .filter(java.util.Objects::nonNull)
+      .collect(Collectors.toCollection(LinkedHashSet::new));
+
+    if (normalizedTargetIds.contains(sourceId)) {
+      throw new NegocioException(ApplicationMessage.WORKPACK_MODEL_USES_SELF);
+    }
+
+    final List<WorkpackModel> targets = normalizedTargetIds.stream()
+      .map(this::findById)
+      .collect(Collectors.toList());
+
+    targets.forEach(target -> {
+      if (target.getClassification() != WorkpackModelClassification.STRUCTURAL) {
+        throw new NegocioException(ApplicationMessage.WORKPACK_MODEL_USES_TARGET_NOT_STRUCTURAL);
+      }
+      if (!this.workpackModelRepository.areInSamePlan(sourceId, target.getId())) {
+        throw new NegocioException(ApplicationMessage.WORKPACK_MODEL_USES_DIFFERENT_PLAN);
+      }
+    });
+
+    this.workpackModelRepository.deleteUses(sourceId);
+    normalizedTargetIds.forEach(targetId -> this.workpackModelRepository.createUses(sourceId, targetId));
+    return this.findUses(sourceId);
+  }
+
+  public List<WorkpackModel> findUses(final Long sourceId) {
+    return this.workpackModelRepository.findUses(sourceId).stream()
+      .sorted(Comparator.comparing(
+        WorkpackModel::getModelName,
+        Comparator.nullsLast(String::compareToIgnoreCase)
+      ))
+      .collect(Collectors.toList());
+  }
+
+  public void validateTransversalViewSelection(
+    final Long projectModelId,
+    final String selectedValues,
+    final boolean multipleSelection
+  ) {
+    if (selectedValues == null || selectedValues.trim().isEmpty()) {
+      return;
+    }
+
+    final Set<Long> selectedIds = new LinkedHashSet<>();
+    try {
+      for (final String value : selectedValues.split(",", -1)) {
+        if (value.trim().isEmpty()) {
+          throw new NumberFormatException();
+        }
+        selectedIds.add(Long.valueOf(value.trim()));
+      }
+    } catch (final NumberFormatException exception) {
+      throw new NegocioException(ApplicationMessage.TRANSVERSAL_VIEW_SELECTION_INVALID);
+    }
+
+    if ((!multipleSelection && selectedIds.size() > 1)
+      || !this.workpackModelRepository.findEligibleTransversalViewIdsForProjectModel(projectModelId)
+        .containsAll(selectedIds)) {
+      throw new NegocioException(ApplicationMessage.TRANSVERSAL_VIEW_SELECTION_INVALID);
+    }
   }
 
   @Transactional
@@ -219,6 +306,24 @@ public class WorkpackModelService {
     WorkpackModel model = this.workpackModelRepository.save(workpackModelUpdate);
     this.cacheUtil.loadAllCache();
     return model;
+  }
+
+  @Transactional
+  public WorkpackModel updateWithUses(final WorkpackModel workpackModel, final Set<Long> idsUses) {
+    final WorkpackModel updated = this.update(workpackModel);
+    this.replaceUsesIfProvided(updated, idsUses);
+    return updated;
+  }
+
+  private void replaceUsesIfProvided(final WorkpackModel workpackModel, final Set<Long> idsUses) {
+    if (idsUses == null) {
+      return;
+    }
+    if (workpackModel.getClassification() == WorkpackModelClassification.TRANSVERSAL) {
+      this.replaceUses(workpackModel.getId(), idsUses);
+    } else if (!idsUses.isEmpty()) {
+      throw new NegocioException(ApplicationMessage.WORKPACK_MODEL_USES_SOURCE_NOT_TRANSVERSAL);
+    }
   }
 
   private void ensureRequiredProjectStatuses(final WorkpackModel workpackModel) {
@@ -279,6 +384,7 @@ public class WorkpackModelService {
     if (workpackModel != null) {
       workpackModel.dashboardConfiguration(workpackModelParamDto.getDashboardConfiguration());
       workpackModel.setProperties(propertyModels);
+      this.validateTransversalViewProperty(workpackModel);
       if (workpackModelParamDto.getSortBy() != null) {
         if (CollectionUtils.isNotEmpty(workpackModel.getProperties())) {
           workpackModel.setSortBy(
@@ -293,6 +399,38 @@ public class WorkpackModelService {
       }
     }
     return workpackModel;
+  }
+
+  private void validateTransversalViewProperty(final WorkpackModel workpackModel) {
+    if (workpackModel.getProperties() == null) {
+      return;
+    }
+
+    final boolean isProjectModel = workpackModel instanceof ProjectModel;
+    final long rootPropertyCount = workpackModel.getProperties().stream()
+      .filter(TransversalViewSelectionModel.class::isInstance)
+      .count();
+    final boolean nestedProperty = workpackModel.getProperties().stream()
+      .filter(GroupModel.class::isInstance)
+      .map(GroupModel.class::cast)
+      .anyMatch(group -> group.getGroupedProperties() != null
+        && group.getGroupedProperties().stream().anyMatch(this::containsTransversalViewProperty));
+
+    if ((!isProjectModel && rootPropertyCount > 0) || rootPropertyCount > 1 || nestedProperty) {
+      throw new NegocioException(ApplicationMessage.PROPERTY_MODEL_INVALID_TYPE);
+    }
+  }
+
+  private boolean containsTransversalViewProperty(final PropertyModel propertyModel) {
+    if (propertyModel instanceof TransversalViewSelectionModel) {
+      return true;
+    }
+    if (propertyModel instanceof GroupModel) {
+      final GroupModel group = (GroupModel) propertyModel;
+      return group.getGroupedProperties() != null
+        && group.getGroupedProperties().stream().anyMatch(this::containsTransversalViewProperty);
+    }
+    return false;
   }
 
 

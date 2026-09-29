@@ -29,6 +29,7 @@ import br.gov.es.openpmo.dto.workpack.ProjectDetailParentDto;
 import br.gov.es.openpmo.dto.workpack.ProjectParamDto;
 import br.gov.es.openpmo.dto.workpack.PropertyDto;
 import br.gov.es.openpmo.dto.workpack.SelectionDto;
+import br.gov.es.openpmo.dto.workpack.TransversalViewSelectionDto;
 import br.gov.es.openpmo.dto.workpack.SimpleResource;
 import br.gov.es.openpmo.dto.workpack.TextAreaDto;
 import br.gov.es.openpmo.dto.workpack.TextDto;
@@ -55,6 +56,7 @@ import br.gov.es.openpmo.model.properties.Number;
 import br.gov.es.openpmo.model.properties.OrganizationSelection;
 import br.gov.es.openpmo.model.properties.Property;
 import br.gov.es.openpmo.model.properties.Selection;
+import br.gov.es.openpmo.model.properties.TransversalViewSelection;
 import br.gov.es.openpmo.model.properties.Text;
 import br.gov.es.openpmo.model.properties.TextArea;
 import br.gov.es.openpmo.model.properties.Toggle;
@@ -68,6 +70,7 @@ import br.gov.es.openpmo.model.properties.models.NumberModel;
 import br.gov.es.openpmo.model.properties.models.OrganizationSelectionModel;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.properties.models.SelectionModel;
+import br.gov.es.openpmo.model.properties.models.TransversalViewSelectionModel;
 import br.gov.es.openpmo.model.properties.models.TextAreaModel;
 import br.gov.es.openpmo.model.properties.models.TextModel;
 import br.gov.es.openpmo.model.properties.models.ToggleModel;
@@ -127,6 +130,7 @@ import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_NUMBER;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_ORGANIZATION_SELECTION;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_SELECTION;
+import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_TRANSVERSAL_VIEW_SELECTION;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_TEXT;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_TEXT_AREA;
 import static br.gov.es.openpmo.utils.PropertyInstanceTypeDeprecated.TYPE_MODEL_NAME_TOGGLE;
@@ -294,7 +298,7 @@ public class WorkpackService {
     detailDto.setSharedWith(workpackSharedWith != null && !workpackSharedWith.isEmpty());
   }
 
-   private static void validateWorkpack(final Workpack workpack) {
+   private void validateWorkpack(final Workpack workpack) {
     final Collection<PropertyModel> models = new HashSet<>();
     switch (workpack.getClass().getTypeName()) {
       case TYPE_NAME_PORTFOLIO:
@@ -334,13 +338,14 @@ public class WorkpackService {
         }
         break;
     }
-    models.forEach(m -> validateProperty(m, workpack.getProperties()));
+    models.forEach(m -> validateProperty(m, workpack.getProperties(), workpack.getIdWorkpackModel()));
 
   }
    
-  private static void validateProperty(
+  private void validateProperty(
     final PropertyModel propertyModel,
-    final Collection<? extends Property> properties
+    final Collection<? extends Property> properties,
+    final Long idWorkpackModel
   ) {
     boolean propertyModelFound = false;
     if (properties != null && !properties.isEmpty()) {
@@ -435,6 +440,24 @@ public class WorkpackService {
               propertyModelFound = true;
               if (selection.getDriver().isRequired()
                 && (selection.getValue() == null || selection.getValue().isEmpty())) {
+                throw new NegocioException(
+                  PROPERTY_VALUE_NOT_NULL + "$" + propertyModel.getLabel());
+              }
+            }
+            break;
+          case TYPE_MODEL_NAME_TRANSVERSAL_VIEW_SELECTION:
+            final TransversalViewSelection transversalViewSelection = (TransversalViewSelection) property;
+            if (transversalViewSelection.getDriver().getId().equals(propertyModel.getId())) {
+              propertyModelFound = true;
+              if (propertyModel instanceof TransversalViewSelectionModel) {
+                this.workpackModelService.validateTransversalViewSelection(
+                  idWorkpackModel,
+                  transversalViewSelection.getValue(),
+                  ((TransversalViewSelectionModel) propertyModel).isMultipleSelection()
+                );
+              }
+              if (transversalViewSelection.getDriver().isRequired()
+                && (transversalViewSelection.getValue() == null || transversalViewSelection.getValue().isEmpty())) {
                 throw new NegocioException(
                   PROPERTY_VALUE_NOT_NULL + "$" + propertyModel.getLabel());
               }
@@ -906,6 +929,11 @@ public class WorkpackService {
         final Selection selection = (Selection) property;
         selectionUpdate.setValue(selection.getValue());
         break;
+      case TYPE_MODEL_NAME_TRANSVERSAL_VIEW_SELECTION:
+        final HasValue<String> transversalViewSelectionUpdate = (TransversalViewSelection) propertyToUpdate;
+        final TransversalViewSelection transversalViewSelection = (TransversalViewSelection) property;
+        transversalViewSelectionUpdate.setValue(transversalViewSelection.getValue());
+        break;
       case TYPE_MODEL_NAME_TEXT_AREA:
         final HasValue<String> textAreaUpdate = (TextArea) propertyToUpdate;
         final TextArea textArea = (TextArea) property;
@@ -1343,7 +1371,7 @@ public class WorkpackService {
     }
     Iterable<PropertyModel> propertyModels = this.workpackModelService.getPropertyModels(workpackParamDto.getIdWorkpackModel());
     for (PropertyModel propertyModel : propertyModels) {
-      validateProperty(propertyModel, properties);
+      validateProperty(propertyModel, properties, workpackParamDto.getIdWorkpackModel());
     }
     workpackParamDto.setProperties(null);
     Workpack workpack = workpackParamDto.getWorkpack(modelMapper);
@@ -1451,6 +1479,13 @@ public class WorkpackService {
               selectionDto.setIdPropertyModel(((Selection) property).getDriver().getId());
             }
             list.add(selectionDto);
+            break;
+          case TYPE_MODEL_NAME_TRANSVERSAL_VIEW_SELECTION:
+            final TransversalViewSelectionDto transversalViewSelectionDto = TransversalViewSelectionDto.of(property);
+            if (((TransversalViewSelection) property).getDriver() != null) {
+              transversalViewSelectionDto.setIdPropertyModel(((TransversalViewSelection) property).getDriver().getId());
+            }
+            list.add(transversalViewSelectionDto);
             break;
           case TYPE_MODEL_NAME_TEXT_AREA:
             final TextAreaDto textAreaDto = TextAreaDto.of(property);
@@ -1596,6 +1631,14 @@ public class WorkpackService {
         );
         selection.setDriver((SelectionModel) propertyModel);
         properties.add(selection);
+        break;
+      case "br.gov.es.openpmo.dto.workpack.TransversalViewSelectionDto":
+        final TransversalViewSelection transversalViewSelection = this.modelMapper.map(
+          propertyDto,
+          TransversalViewSelection.class
+        );
+        transversalViewSelection.setDriver((TransversalViewSelectionModel) propertyModel);
+        properties.add(transversalViewSelection);
         break;
       case "br.gov.es.openpmo.dto.workpack.TextAreaDto":
         final TextArea textArea = this.modelMapper.map(

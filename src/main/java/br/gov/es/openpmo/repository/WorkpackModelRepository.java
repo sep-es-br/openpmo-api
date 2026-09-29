@@ -38,6 +38,37 @@ public interface WorkpackModelRepository extends Neo4jRepository<WorkpackModel, 
     + "] ")
   Optional<WorkpackModel> findAllByIdWorkpackModel(@Param("id") Long id);
 
+  @Query("MATCH (source:WorkpackModel)-[:USES]->(used:WorkpackModel) "
+    + "WHERE id(source) = $id "
+    + "RETURN used")
+  Set<WorkpackModel> findUses(@Param("id") Long id);
+
+  @Query("MATCH (projectModel:ProjectModel)-[:BELONGS_TO]->(:PlanModel)<-[:BELONGS_TO]-(view:WorkpackModel)-[:USES]->(projectModel) "
+    + "WHERE id(projectModel) = $projectModelId AND view.classification = 'TRANSVERSAL' "
+    + "RETURN id(view)")
+  Set<Long> findEligibleTransversalViewIdsForProjectModel(@Param("projectModelId") Long projectModelId);
+
+  @Query("MATCH (source:WorkpackModel)-[:BELONGS_TO]->(plan:PlanModel)<-[:BELONGS_TO]-(target:WorkpackModel) "
+    + "WHERE id(source) = $sourceId AND id(target) = $targetId "
+    + "RETURN count(target) > 0")
+  boolean areInSamePlan(
+    @Param("sourceId") Long sourceId,
+    @Param("targetId") Long targetId
+  );
+
+  @Query("MATCH (source:WorkpackModel), (target:WorkpackModel) "
+    + "WHERE id(source) = $sourceId AND id(target) = $targetId "
+    + "MERGE (source)-[:USES]->(target)")
+  void createUses(
+    @Param("sourceId") Long sourceId,
+    @Param("targetId") Long targetId
+  );
+
+  @Query("MATCH (source:WorkpackModel)-[uses:USES]->(:WorkpackModel) "
+    + "WHERE id(source) = $sourceId "
+    + "DELETE uses")
+  void deleteUses(@Param("sourceId") Long sourceId);
+
   @Query("MATCH (w:WorkpackModel)-[wp:BELONGS_TO]->(pm:PlanModel) "
           + "WHERE id(w) = $id "
           + "RETURN w, wp, pm, "

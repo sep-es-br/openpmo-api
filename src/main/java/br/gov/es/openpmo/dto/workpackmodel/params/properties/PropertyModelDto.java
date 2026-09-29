@@ -17,6 +17,7 @@ import java.util.function.Supplier;
   @JsonSubTypes.Type(value = ToggleModelDto.class, name = "ToggleModel"),
   @JsonSubTypes.Type(value = UnitSelectionModelDto.class, name = "UnitSelectionModel"),
   @JsonSubTypes.Type(value = SelectionModelDto.class, name = "SelectionModel"),
+  @JsonSubTypes.Type(value = TransversalViewSelectionModelDto.class, name = "TransversalViewSelectionModel"),
   @JsonSubTypes.Type(value = TextAreaModelDto.class, name = "TextAreaModel"),
   @JsonSubTypes.Type(value = NumberModelDto.class, name = "NumberModel"),
   @JsonSubTypes.Type(value = CurrencyModelDto.class, name = "CurrencyModel"),
@@ -24,7 +25,7 @@ import java.util.function.Supplier;
   @JsonSubTypes.Type(value = GroupModelDto.class, name = "GroupModel"),
   @JsonSubTypes.Type(value = OrganizationSelectionModelDto.class, name = "OrganizationSelectionModel")})
 @ApiModel(subTypes = {IntegerModelDto.class, TextModelDto.class, DateModelDto.class, ToggleModelDto.class,
-  UnitSelectionModelDto.class, SelectionModelDto.class, TextAreaModelDto.class, NumberModelDto.class, CurrencyModelDto.class,
+  UnitSelectionModelDto.class, SelectionModelDto.class, TransversalViewSelectionModelDto.class, TextAreaModelDto.class, NumberModelDto.class, CurrencyModelDto.class,
   LocalitySelectionModelDto.class, GroupModelDto.class,
   OrganizationSelectionModelDto.class}, discriminator = "type", description = "Supertype of all PropertyModel.")
 public class PropertyModelDto {

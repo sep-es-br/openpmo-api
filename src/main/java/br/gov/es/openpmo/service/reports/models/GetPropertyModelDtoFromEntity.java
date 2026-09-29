@@ -13,6 +13,7 @@ import br.gov.es.openpmo.dto.workpackmodel.params.properties.SelectionModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.TextAreaModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.TextModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.ToggleModelDto;
+import br.gov.es.openpmo.dto.workpackmodel.params.properties.TransversalViewSelectionModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.UnitSelectionModelDto;
 import br.gov.es.openpmo.model.properties.models.GroupModel;
 import br.gov.es.openpmo.model.properties.models.LocalitySelectionModel;
@@ -33,6 +34,7 @@ import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_LOCALITY
 import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_NUMBER;
 import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_ORGANIZATION_SELECTION;
 import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_SELECTION;
+import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_TRANSVERSAL_VIEW_SELECTION;
 import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_TEXT;
 import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_TEXT_AREA;
 import static br.gov.es.openpmo.utils.PropertyModelType.TYPE_NAME_MODEL_TOGGLE;
@@ -60,6 +62,8 @@ public class GetPropertyModelDtoFromEntity {
         return unitDto;
       case TYPE_NAME_MODEL_SELECTION:
         return SelectionModelDto.of(propertyModel);
+      case TYPE_NAME_MODEL_TRANSVERSAL_VIEW_SELECTION:
+        return TransversalViewSelectionModelDto.of(propertyModel);
       case TYPE_NAME_MODEL_TEXT_AREA:
         return TextAreaModelDto.of(propertyModel);
       case TYPE_NAME_MODEL_NUMBER:

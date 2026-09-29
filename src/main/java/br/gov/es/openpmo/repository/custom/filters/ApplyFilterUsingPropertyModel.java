@@ -105,7 +105,8 @@ public interface ApplyFilterUsingPropertyModel {
   }
 
   default boolean isValueInArray(final String typeName) {
-    return PropertyModelType.TYPE_NAME_MODEL_SELECTION.equals(typeName);
+    return PropertyModelType.TYPE_NAME_MODEL_SELECTION.equals(typeName)
+           || PropertyModelType.TYPE_NAME_MODEL_TRANSVERSAL_VIEW_SELECTION.equals(typeName);
   }
 
   default boolean isValueDirectComparable(final String typeName) {

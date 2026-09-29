@@ -9,6 +9,8 @@ public final class PropertyInstanceTypeDeprecated {
   public static final String TYPE_MODEL_NAME_TOGGLE = "br.gov.es.openpmo.model.properties.Toggle";
   public static final String TYPE_MODEL_NAME_UNIT_SELECTION = "br.gov.es.openpmo.model.properties.UnitSelection";
   public static final String TYPE_MODEL_NAME_SELECTION = "br.gov.es.openpmo.model.properties.Selection";
+  public static final String TYPE_MODEL_NAME_TRANSVERSAL_VIEW_SELECTION =
+    "br.gov.es.openpmo.model.properties.TransversalViewSelection";
   public static final String TYPE_MODEL_NAME_TEXT_AREA = "br.gov.es.openpmo.model.properties.TextArea";
   public static final String TYPE_MODEL_NAME_NUMBER = "br.gov.es.openpmo.model.properties.Number";
   public static final String TYPE_MODEL_NAME_CURRENCY = "br.gov.es.openpmo.model.properties.Currency";

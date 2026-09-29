@@ -29,6 +29,7 @@ import static org.neo4j.ogm.annotation.Relationship.INCOMING;
   @JsonSubTypes.Type(value = Toggle.class, name = "Toggle"),
   @JsonSubTypes.Type(value = UnitSelection.class, name = "UnitSelection"),
   @JsonSubTypes.Type(value = Selection.class, name = "Selection"),
+  @JsonSubTypes.Type(value = TransversalViewSelection.class, name = "TransversalViewSelection"),
   @JsonSubTypes.Type(value = TextArea.class, name = "TextArea"),
   @JsonSubTypes.Type(value = Number.class, name = "Number"),
   @JsonSubTypes.Type(value = Currency.class, name = "Currency"),
