@@ -1,4 +1,6 @@
-# openpmo-api
+# OpenPMO
+Este é um guia de desenvolvimento e instalação, que se destina a desenvolvedores e dev ops interessados em construir seu ambiente de desenvolvimento, homologação ou produção do OpenPMO. 
+Os manuais de usuário e administrador se encontram em https://sep-es-br.gitbook.io/manuais-openpmo.
 
 O produto é composto por 3 componentes:
 
