@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.service.baselines;
 
 import br.gov.es.openpmo.dto.baselines.BaselineEvaluationRequest;
+import br.gov.es.openpmo.dto.completed.CompleteWorkpackRequest;
 import br.gov.es.openpmo.dto.person.ApprovedPersonDto;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Person;
@@ -23,7 +24,6 @@ import br.gov.es.openpmo.service.completed.ICompleteWorkpackService;
 import br.gov.es.openpmo.service.journals.JournalCreator;
 import br.gov.es.openpmo.service.schedule.UpdateStatusService;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
-import java.util.HashSet;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_IS_NOT_PROPOSED_INVALID_STATE_ERROR;
 import static br.gov.es.openpmo.utils.ApplicationMessage.BASELINE_NOT_FOUND;
@@ -237,6 +237,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     final Workpack workpack = this.repository.findWorkpackByBaselineId(baseline.getId())
       .orElseThrow(() -> new NegocioException(WORKPACK_NOT_FOUND));
     this.workpackService.cancel(workpack.getId());
+    this.completeDeliverableService.onWorkpackCanceled(workpack.getId());
     workpackRepository.updateSituationValue(workpack.getId(), "Cancelado");
     List<ApprovedPersonDto> approvedPersons =
     journalRepository.getApprovedPersons(workpack.getId(), baseline.getId());
@@ -254,8 +255,6 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
 
     final List<Deliverable> deliverables =
       this.workpackRepository.findMasterDeliverablesFromBaseline(baseline.getId());
-
-    final Set<Long> affectedWorkpacks = new HashSet<>();
 
     for (Deliverable deliverable : deliverables) {
 
@@ -287,13 +286,10 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
         deliverable.setCompleted(false);
       }
 
-      affectedWorkpacks.add(deliverable.getId());
-
-    }
-
-    for (Long workpackId : affectedWorkpacks) {
-      this.completeDeliverableService
-        .recalculateCompletionStatus(workpackId);
+      this.completeDeliverableService.apply(
+        deliverable.getId(),
+        new CompleteWorkpackRequest(deliverable.getCompleted(), null)
+      );
     }
   }
 
