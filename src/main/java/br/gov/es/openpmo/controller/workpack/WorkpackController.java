@@ -336,6 +336,11 @@ public class WorkpackController {
           workpack = this.workpackService.update(this.workpackService.getWorkpack(request));
       }
 
+      if (workpack.isProject()) {
+          this.completeDeliverableService.recalculateCompletionStatus(workpack.getId());
+          workpack = this.workpackService.findById(workpack.getId());
+      }
+
       this.journalCreator.edition(
           workpack,
           JournalAction.EDITED,
@@ -373,6 +378,7 @@ public class WorkpackController {
       authorization
     );
     final Workpack workpack = this.workpackService.cancel(idWorkpack);
+    this.completeDeliverableService.onWorkpackCanceled(idWorkpack);
     final Long idPerson = this.tokenService.getUserId(authorization);
     this.journalCreator.edition(
       workpack,
