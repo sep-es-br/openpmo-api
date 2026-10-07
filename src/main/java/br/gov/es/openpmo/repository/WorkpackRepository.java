@@ -25,6 +25,11 @@ import org.springframework.data.repository.query.Param;
 
 public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, CustomRepository {
 
+  @Query("MATCH (parent:Program)-[:MEMBER_OF]->(view:WorkpackModel) "
+    + "WHERE id(parent) = $idParent AND view.classification = 'TRANSVERSAL' "
+    + "RETURN id(view)")
+  Long findTransversalViewIdByProgram(@Param("idParent") Long idParent);
+
   @Query("MATCH (w:Workpack{deleted:false})<-[f:FEATURES]-(p:UnitSelection)-[v:VALUES]-(u:UnitMeasure) " +
       "WHERE id(w) IN $ids " +
       "RETURN w, f, p, v, u ")
@@ -299,6 +304,26 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       @Param("idWorkPackModel") Long idWorkPackModel,
       @Param("term") String term,
       @Param("searchCutOffScore") Double searchCutOffScore);
+
+  @Query("MATCH (wm:WorkpackModel)<-[:IS_INSTANCE_BY | IS_LINKED_TO]-(w:Workpack{deleted:false})-[rf:BELONGS_TO]->(p:Plan), "
+      + "(p)-[is:IS_STRUCTURED_BY]->(pm:PlanModel) "
+      + "WHERE id(p) = $idPlan AND id(w) IN $ids "
+      + "AND (id(pm) = $idPlanModel OR $idPlanModel IS NULL) "
+      + "AND (id(wm) = $idWorkPackModel OR $idWorkPackModel IS NULL) "
+      + "RETURN w, wm, rf, p, pm, [ "
+      + " [ (w)<-[f1:FEATURES]-(p1:Property)-[d1:IS_DRIVEN_BY]->(pm1:PropertyModel) | [f1, p1, d1, pm1] ], "
+      + " [ (w)<-[f2:FEATURES]-(l:LocalitySelection)-[v1:VALUES]->(l1:Locality) | [f2,l,v1,l1]], "
+      + " [ (w)<-[f3:FEATURES]-(o:OrganizationSelection)-[v2:VALUES]->(o1:Organization) | [f3,o,v2,o1]], "
+      + " [ (w)<-[f4:FEATURES]-(u:UnitSelection)-[v3:VALUES]->(u1:UnitMeasure) | [f4,u,v3,u1]], "
+      + " [ (w)-[sharedWith:IS_SHARED_WITH]->(office:Office) | [sharedWith, office]], "
+      + " [ (w)-[instanceBy:IS_INSTANCE_BY]->(wm) | [instanceBy, wm] ], "
+      + " [ (w)-[isLinkedTo:IS_LINKED_TO]->(wm) | [isLinkedTo, wm] ] "
+      + "]")
+  List<Workpack> findAllByIds(
+      @Param("idPlan") Long idPlan,
+      @Param("idPlanModel") Long idPlanModel,
+      @Param("idWorkPackModel") Long idWorkPackModel,
+      @Param("ids") List<Long> ids);
 
   @Query("MATCH (wm:WorkpackModel)<-[:IS_INSTANCE_BY | IS_LINKED_TO]-(w:Workpack)-[rf:BELONGS_TO]->(p:Plan),\n" +
       "      (w)-[:IS_IN]->(pw:Workpack)\n" +
@@ -625,6 +650,13 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   void createIsInstanceByRelationship(
       Long workpackId,
       Long workpackModelId);
+
+  @Query("MATCH (program:Program), (view:WorkpackModel) "
+      + "WHERE id(program) = $workpackId AND id(view) = $viewModelId "
+      + "MERGE (program)-[:MEMBER_OF]->(view)")
+  void createMemberOfRelationship(
+      @Param("workpackId") Long workpackId,
+      @Param("viewModelId") Long viewModelId);
 
   @Query("MATCH (w:Workpack), (p:Property) " +
       "WHERE id(w)=$workpackId AND id(p)=$propertyId " +

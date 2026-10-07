@@ -147,19 +147,25 @@ public class ApplicationCacheUtil {
 
     public WorkpackResultDto getWorkpackBreakdownStructure(Long idWorkpack, Long idPlan, boolean allLevels) {
         loadPlanIfChanged(idWorkpack, idPlan);
-        Set<WorkpackResultDto> list =
-            idPlan != null
-            ? this.mapPlanWorkpackResult.get(idPlan).stream().map(WorkpackResultDto::new).collect(
-                Collectors.toCollection(LinkedHashSet::new))
-            : mapPlanWorkpackResult.values().stream().flatMap(Collection::stream).map(WorkpackResultDto::new).collect(
-                Collectors.toCollection(LinkedHashSet::new));
+        final List<WorkpackResultDto> cachedWorkpacks = idPlan != null
+            ? this.mapPlanWorkpackResult.get(idPlan)
+            : mapPlanWorkpackResult.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
         if (!allLevels) {
-            WorkpackResultDto workpack = list.stream().filter(w -> w.getId().equals(idWorkpack)).findFirst().orElse(null);
+            WorkpackResultDto workpack = cachedWorkpacks.stream()
+                .filter(w -> w.getId().equals(idWorkpack))
+                .findFirst()
+                .map(WorkpackResultDto::new)
+                .orElse(null);
             if (workpack == null) return null;
-            workpack.getChildren().addAll(list.stream().filter(w -> workpack.getId().equals(w.getIdParent())).collect(
-                Collectors.toList()));
+            workpack.setChildren(cachedWorkpacks.stream()
+                .filter(w -> workpack.getId().equals(w.getIdParent()))
+                .map(WorkpackResultDto::new)
+                .collect(Collectors.toCollection(LinkedHashSet::new)));
             return workpack;
         }
+        final Set<WorkpackResultDto> list = cachedWorkpacks.stream()
+            .map(WorkpackResultDto::new)
+            .collect(Collectors.toCollection(LinkedHashSet::new));
         return this.getWorkpackResultDto(idWorkpack, list);
     }
 

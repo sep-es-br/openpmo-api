@@ -29,10 +29,9 @@ public class DashboardRiskService implements IDashboardRiskService {
   public RiskDataChart build(final DashboardParameters parameters) {
     final Long workpackId = parameters.getWorkpackId();
     final Long planId = workpackId == null ? parameters.getPlanId() : null;
-    final List<RiskDataChartDto> counts = this.repository.countRisksForDashboard(
-      planId,
-      workpackId
-    );
+    final List<RiskDataChartDto> counts = parameters.isTransversal()
+      ? this.repository.countRisksForTransversalDashboard(workpackId)
+      : this.repository.countRisksForDashboard(planId, workpackId);
     return this.build(counts);
   }
 

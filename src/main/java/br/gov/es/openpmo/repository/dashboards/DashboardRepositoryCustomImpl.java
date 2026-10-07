@@ -5,6 +5,7 @@
 package br.gov.es.openpmo.repository.dashboards;
 
 import br.gov.es.openpmo.dto.dashboards.DashboardDataByMonth;
+import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -13,6 +14,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,7 +39,7 @@ public class DashboardRepositoryCustomImpl implements DashboardRepositoryCustom 
     }
 
     @Override
-    public DashboardDataByMonth getDataByMonth(Long scope, Long baselineId, Integer monthYear, boolean sCurve) {
+    public DashboardDataByMonth getDataByMonth(Long scope, Long baselineId, Integer monthYear, boolean sCurve, boolean transversal) {
         
         Long startOfTask = System.currentTimeMillis();
         
@@ -52,11 +54,26 @@ public class DashboardRepositoryCustomImpl implements DashboardRepositoryCustom 
             parameters.put("baselineId", baselineId);
             parameters.put("monthYear", monthYear);
             parameters.put("sCurve", sCurve);
+            parameters.put("transversal", transversal);
             
             try (org.neo4j.driver.Session session = driver.session()) {
-                Record record = session.readTransaction(tx ->
-                        tx.run(query, parameters).single()
-                );
+                Record record = session.readTransaction(tx -> {
+                    org.neo4j.driver.Result result = tx.run(query, parameters);
+                    return result.hasNext() ? result.single() : null;
+                });
+
+                if (record == null && transversal) {
+                    DashboardDataByMonth empty = new DashboardDataByMonth();
+                    DashboardMonthDto month = new DashboardMonthDto();
+                    month.setTripleConstraint(null);
+                    month.setPerformanceIndex(null);
+                    empty.setDashboardMonthDto(month);
+                    empty.setEarnedValueByStepDto(Collections.emptyList());
+                    return empty;
+                }
+                if (record == null) {
+                    throw new IllegalStateException("No dashboard data for scope " + scope);
+                }
                 
                 Object node = record.values().get(0).asObject();
 

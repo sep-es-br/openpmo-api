@@ -59,7 +59,7 @@ public class ASyncDashboardService {
     Long scopeId = Optional.ofNullable(parameters.getWorkpackId()).orElse(parameters.getPlanId());
     Long baselineId = parameters.getBaselineId();
     
-    DashboardDataByMonth dataByMonth = dashboardRepository.getDataByMonth(scopeId, baselineId, Integer.valueOf(yearMonthAsStr), sCurve);
+    DashboardDataByMonth dataByMonth = dashboardRepository.getDataByMonth(scopeId, baselineId, Integer.valueOf(yearMonthAsStr), sCurve, parameters.isTransversal());
     
     return CompletableFuture.completedFuture(dataByMonth);
   }
@@ -86,11 +86,9 @@ public class ASyncDashboardService {
     final Long workpackId = parameters.getWorkpackId();
     final Long planId = workpackId == null ? parameters.getPlanId() : null;
     final Long baselineId = workpackId == null ? null : parameters.getBaselineId();
-    DashboardStatusData dashDataStatus = dashboardRepository.getStatusAmountData(
-      planId,
-      workpackId,
-      baselineId
-    ).orElse(null);
+    DashboardStatusData dashDataStatus = parameters.isTransversal()
+      ? dashboardRepository.getTransversalStatusAmountData(workpackId).orElse(null)
+      : dashboardRepository.getStatusAmountData(planId, workpackId, baselineId).orElse(null);
 
     Logger.getGlobal().log(Level.INFO, "status data concluido em: {0}ms", System.currentTimeMillis() - agora);
     

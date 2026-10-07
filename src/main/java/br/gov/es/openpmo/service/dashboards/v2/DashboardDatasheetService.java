@@ -37,7 +37,7 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
     final UriComponentsBuilder uriComponentsBuilder = parameters.getUriComponentsBuilder();
 
     return new DatasheetResponse(
-      this.getDatasheetTotalizers(parameters.getPlanId(), workpackId, workpackModelId),
+      this.getDatasheetTotalizers(parameters.getPlanId(), workpackId, workpackModelId, parameters.isTransversal()),
       this.getDatasheetStakeholders(workpackId, uriComponentsBuilder)
     );
   }
@@ -52,9 +52,13 @@ public class DashboardDatasheetService implements IDashboardDatasheetService {
   private DatasheetTotalizers getDatasheetTotalizers(
     final Long planId,
     final Long workpackId,
-    final Long workpackModelId
+    final Long workpackModelId,
+    final boolean transversal
   ) {
-    final List<WorkpacksByModelResponse> workpacksByModel = workpackId == null
+    final List<WorkpacksByModelResponse> workpacksByModel = transversal
+      ? this.repository.workpackByModelForTransversal(workpackId).stream()
+          .map(WorkpacksByModelResponse::from).collect(Collectors.toList())
+      : workpackId == null
       ? this.getWorkpackByModelForPlan(planId)
       : this.getWorkpackByModel(workpackId, workpackModelId);
     return new DatasheetTotalizers(workpacksByModel);

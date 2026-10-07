@@ -10,6 +10,7 @@ import br.gov.es.openpmo.dto.dashboards.v2.DashboardResponse;
 import br.gov.es.openpmo.model.workpacks.Deliverable;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
+import br.gov.es.openpmo.repository.TransversalRepository;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,24 +25,30 @@ public class DashboardService {
   private final ASyncDashboardService aSyncDashboardService;
   
   private final WorkpackService wpSrv;
+  private final TransversalRepository transversalRepository;
 
   
   public DashboardService(
     final IDashboardMilestoneService milestoneService,
     final IDashboardBaselineService baselineSrv,
     final ASyncDashboardService aSyncDashboardService,
-    final WorkpackService wpSrv
+    final WorkpackService wpSrv,
+    final TransversalRepository transversalRepository
   ) {
     this.milestoneService = milestoneService;
     this.baselineSrv = baselineSrv;
     this.aSyncDashboardService = aSyncDashboardService;
     this.wpSrv = wpSrv;
+    this.transversalRepository = transversalRepository;
   }
 
   @Transactional
   public DashboardResponse build(final DashboardParameters parameters) {
     if (parameters == null) {
       return null;
+    }
+    if (parameters.getWorkpackId() != null) {
+      parameters.setTransversal(this.transversalRepository.isTransversalProgram(parameters.getWorkpackId()));
     }
       
     final Long agora = System.currentTimeMillis();

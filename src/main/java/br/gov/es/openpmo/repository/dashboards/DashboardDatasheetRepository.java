@@ -58,6 +58,18 @@ public interface DashboardDatasheetRepository extends Neo4jRepository<Workpack, 
        "       length(p) AS level")
 List<WorkpackByModelQueryResult> workpackByModel(Long workpackId, Long workpackModelId);
 
+  @Query("MATCH (root:Program)<-[:IS_IN*0..]-(program:Program)-[:INCLUDES]->(included:Workpack) " +
+      "MATCH (included)<-[:IS_IN*0..]-(workpack:Workpack{deleted:false,canceled:false}) " +
+      "MATCH (workpack)-[:IS_INSTANCE_BY]->(model:WorkpackModel) " +
+      "WHERE id(root)=$workpackId AND coalesce(workpack.category,'MASTER') <> 'SNAPSHOT' " +
+      "WITH DISTINCT workpack, model " +
+      "WITH model, count(workpack) AS quantity " +
+      "RETURN id(model) AS idWorkpackModel, quantity, model.modelName AS singularName, " +
+      "model.modelNameInPlural AS pluralName, model.fontIcon AS icon, " +
+      "0 AS level, coalesce(model.position,0) AS position " +
+      "ORDER BY position ASC, pluralName ASC")
+  List<WorkpackByModelQueryResult> workpackByModelForTransversal(Long workpackId);
+
   @Query("MATCH (plan:Plan)<-[:BELONGS_TO]-(workpack:Workpack{deleted:false,canceled:false}) " +
       "WHERE id(plan)=$planId AND (workpack.category <> 'SNAPSHOT' OR workpack.category IS NULL) " +
       "MATCH (workpack)-[:IS_INSTANCE_BY|IS_LINKED_TO]->(model:WorkpackModel) " +

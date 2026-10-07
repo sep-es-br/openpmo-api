@@ -105,4 +105,12 @@ public interface RiskRepository extends Neo4jRepository<Risk, Long>, CustomRepos
     @Param("planId") Long planId,
     @Param("workpackId") Long workpackId
   );
+
+  @Query("MATCH (root:Program)<-[:IS_IN*0..]-(program:Program)-[:INCLUDES]->(included:Workpack) " +
+      "MATCH (included)<-[:IS_IN*0..]-(workpack:Workpack{deleted:false,canceled:false}) " +
+      "WHERE id(root)=$workpackId " +
+      "WITH DISTINCT workpack " +
+      "MATCH (workpack)<-[:IS_FORSEEN_ON]-(risk:Risk) " +
+      "RETURN count(DISTINCT risk) AS count, risk.status AS status, risk.importance AS importance")
+  List<RiskDataChartDto> countRisksForTransversalDashboard(@Param("workpackId") Long workpackId);
 }

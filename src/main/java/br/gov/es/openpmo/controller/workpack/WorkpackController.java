@@ -151,6 +151,7 @@ public class WorkpackController {
     @RequestParam(value = "id-workpack-model", required = false) final Long idWorkpackModel,
     @RequestParam(value = "idFilter", required = false) final Long idFilter,
     @RequestParam(required = false) final String term,
+    @RequestParam(value = "ids", required = false) final List<Long> ids,
     @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanReadResource(
@@ -158,15 +159,13 @@ public class WorkpackController {
       authorization
     );
 
-    final List<Workpack> workpacks = this.workpackService.findAll(
-      idPlan,
-      idPlanModel,
-      idWorkpackModel,
-      idFilter,
-      term
-    );
+    final List<Workpack> workpacks = ids == null || ids.isEmpty()
+      ? this.workpackService.findAll(idPlan, idPlanModel, idWorkpackModel, idFilter, term)
+      : this.workpackService.findAllByIds(idPlan, idPlanModel, idWorkpackModel, ids);
 
-    final List<WorkpackDetailParentDto> response = this.getResponseWorkpackDetailParentDto(workpacks, authorization, idWorkpackModel, idPlan);
+    final List<WorkpackDetailParentDto> response = this.getResponseWorkpackDetailParentDto(
+      workpacks, authorization, idWorkpackModel, idPlan, ids == null || ids.isEmpty()
+    );
 
     if (response.isEmpty()) {
       return ResponseEntity.noContent().build();
@@ -177,6 +176,11 @@ public class WorkpackController {
 
   private List<WorkpackDetailParentDto> getResponseWorkpackDetailParentDto(final List<Workpack> workpacks, final String authorization
       , final Long idWorkpackModel, final Long idPlan) {
+    return getResponseWorkpackDetailParentDto(workpacks, authorization, idWorkpackModel, idPlan, true);
+  }
+
+  private List<WorkpackDetailParentDto> getResponseWorkpackDetailParentDto(final List<Workpack> workpacks, final String authorization
+      , final Long idWorkpackModel, final Long idPlan, final boolean includeDashboard) {
     List<Long> ids = workpacks.stream().map(Workpack::getId).collect(Collectors.toList());
     final List<MilestoneDateDto> milestoneDates = this.dashboardMilestoneRepository.findByParentIds(ids, idPlan);
     final List<RiskWorkpackDto> risks = this.riskRepository.findByWorkpackIds(ids);
@@ -185,7 +189,9 @@ public class WorkpackController {
             
     return  workpacks.stream()
                      .filter(workpack -> this.canAccessData.execute(workpack.getId(), authorization).canReadResource())
-                     .map(workpack -> this.mapToWorkpackDetailParentDto(workpack, idWorkpackModel, milestoneDates, risks, journals, idPlan, mapCanUseCCB))
+                     .map(workpack -> this.mapToWorkpackDetailParentDto(
+                       workpack, idWorkpackModel, milestoneDates, risks, journals, idPlan, mapCanUseCCB, includeDashboard
+                     ))
                      .collect(Collectors.toList());
   }
 
@@ -472,16 +478,17 @@ public class WorkpackController {
     List<RiskWorkpackDto> risks,
     final List<JournalInformationDto> journals,
     final Long idPlan,
-    Map<Long, Boolean> mapCanUseCCB
+    Map<Long, Boolean> mapCanUseCCB,
+    final boolean includeDashboard
   ) {
     final WorkpackDetailParentDto itemDetail = this.workpackService.getWorkpackDetailParentDto(workpack, idWorkpackModel);
     
     itemDetail.applyLinkedStatus(workpack, idWorkpackModel);
 
-    DashboardMonthDto monthDto = workpackService.getDashboardMonthDto(workpack, idPlan);
-    
-    
-    itemDetail.setDashboard(monthDto);
+    if (includeDashboard) {
+      DashboardMonthDto monthDto = workpackService.getDashboardMonthDto(workpack, idPlan);
+      itemDetail.setDashboard(monthDto);
+    }
 
     final List<MilestoneDateDto> milestones = milestoneDates
       .stream()

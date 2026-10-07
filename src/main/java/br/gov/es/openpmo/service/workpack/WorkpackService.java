@@ -94,6 +94,7 @@ import br.gov.es.openpmo.repository.CustomFilterRepository;
 import br.gov.es.openpmo.repository.MilestoneRepository;
 import br.gov.es.openpmo.repository.PropertyRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
+import br.gov.es.openpmo.repository.WorkpackModelRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllWorkpackByParentUsingCustomFilter;
 import br.gov.es.openpmo.repository.custom.filters.FindAllWorkpackUsingCustomFilter;
 import br.gov.es.openpmo.service.actors.OrganizationService;
@@ -182,6 +183,8 @@ public class WorkpackService {
 
   private final WorkpackRepository workpackRepository;
 
+  private final WorkpackModelRepository workpackModelRepository;
+
   private final PlanService planService;
 
   private final ModelMapper modelMapper;
@@ -224,6 +227,7 @@ public class WorkpackService {
     final PropertyService propertyService,
     final PropertyModelService propertyModelService,
     final WorkpackRepository workpackRepository,
+    final WorkpackModelRepository workpackModelRepository,
     final CustomFilterRepository customFilterRepository,
     final FindAllWorkpackByParentUsingCustomFilter findAllWorkpackByParent,
     final OrganizationService organizationService,
@@ -245,6 +249,7 @@ public class WorkpackService {
     this.modelMapper = modelMapper;
     this.propertyService = propertyService;
     this.workpackRepository = workpackRepository;
+    this.workpackModelRepository = workpackModelRepository;
     this.propertyModelService = propertyModelService;
     this.customFilterRepository = customFilterRepository;
     this.findAllWorkpackByParent = findAllWorkpackByParent;
@@ -298,7 +303,7 @@ public class WorkpackService {
     detailDto.setSharedWith(workpackSharedWith != null && !workpackSharedWith.isEmpty());
   }
 
-   private void validateWorkpack(final Workpack workpack) {
+  private void validateWorkpack(final Workpack workpack, final Map<Long, String> previouslySelectedValues) {
     final Collection<PropertyModel> models = new HashSet<>();
     switch (workpack.getClass().getTypeName()) {
       case TYPE_NAME_PORTFOLIO:
@@ -338,14 +343,20 @@ public class WorkpackService {
         }
         break;
     }
-    models.forEach(m -> validateProperty(m, workpack.getProperties(), workpack.getIdWorkpackModel()));
+    models.forEach(m -> validateProperty(
+      m,
+      workpack.getProperties(),
+      workpack.getIdWorkpackModel(),
+      previouslySelectedValues
+    ));
 
   }
    
   private void validateProperty(
     final PropertyModel propertyModel,
     final Collection<? extends Property> properties,
-    final Long idWorkpackModel
+    final Long idWorkpackModel,
+    final Map<Long, String> previouslySelectedValues
   ) {
     boolean propertyModelFound = false;
     if (properties != null && !properties.isEmpty()) {
@@ -453,7 +464,9 @@ public class WorkpackService {
                 this.workpackModelService.validateTransversalViewSelection(
                   idWorkpackModel,
                   transversalViewSelection.getValue(),
-                  ((TransversalViewSelectionModel) propertyModel).isMultipleSelection()
+                  ((TransversalViewSelectionModel) propertyModel).isMultipleSelection(),
+                  ((TransversalViewSelectionModel) propertyModel).getIdRootTransversalViewModel(),
+                  previouslySelectedValues.get(propertyModel.getId())
                 );
               }
               if (transversalViewSelection.getDriver().isRequired()
@@ -669,6 +682,18 @@ public class WorkpackService {
     ));
   }
 
+  public List<Workpack> findAllByIds(
+      final Long idPlan,
+      final Long idPlanModel,
+      final Long idWorkpackModel,
+      final List<Long> ids
+  ) {
+    if (ids == null || ids.isEmpty()) {
+      return Collections.emptyList();
+    }
+    return this.workpackRepository.findAllByIds(idPlan, idPlanModel, idWorkpackModel, ids);
+  }
+
   private List<Workpack> findAll(
     final Long idPlan,
     final Long idPlanModel,
@@ -743,6 +768,16 @@ public class WorkpackService {
     }
     final Set<Property> propertiesToUpdate = workpackUpdate.getProperties();
     final Set<Property> properties = workpack.getProperties();
+    final Map<Long, String> previouslySelectedValues = propertiesToUpdate.stream()
+      .filter(TransversalViewSelection.class::isInstance)
+      .map(TransversalViewSelection.class::cast)
+      .filter(selection -> selection.getDriver() != null && selection.getDriver().getId() != null
+        && selection.getValue() != null)
+      .collect(Collectors.toMap(
+        selection -> selection.getDriver().getId(),
+        TransversalViewSelection::getValue,
+        (first, second) -> first
+      ));
     this.verifyForPropertiesToDelete(
       propertiesToUpdate,
       properties
@@ -752,7 +787,7 @@ public class WorkpackService {
       propertiesToUpdate,
       properties
     );
-    validateWorkpack(workpackUpdate);
+    validateWorkpack(workpackUpdate, previouslySelectedValues);
     workpackUpdate.setName(workpack.getName());
     workpackUpdate.setFullName(workpack.getFullName());
     if (workpack instanceof Milestone) {
@@ -1356,6 +1391,10 @@ public class WorkpackService {
 
   @Transactional
   public Workpack criarWorkpack(final WorkpackParamDto workpackParamDto) {
+    if (workpackParamDto.getIdTransversalView() == null
+      && this.workpackModelRepository.isTransversalProgramModel(workpackParamDto.getIdWorkpackModel())) {
+      throw new NegocioException(ApplicationMessage.TRANSVERSAL_PROGRAM_PARENT_INVALID);
+    }
     Set<Property> properties = null;
     List<? extends PropertyDto> propertyDtos = workpackParamDto.getProperties();
     if (propertyDtos != null && !propertyDtos.isEmpty()) {
@@ -1371,12 +1410,26 @@ public class WorkpackService {
     }
     Iterable<PropertyModel> propertyModels = this.workpackModelService.getPropertyModels(workpackParamDto.getIdWorkpackModel());
     for (PropertyModel propertyModel : propertyModels) {
-      validateProperty(propertyModel, properties, workpackParamDto.getIdWorkpackModel());
+      validateProperty(
+        propertyModel,
+        properties,
+        workpackParamDto.getIdWorkpackModel(),
+        Collections.emptyMap()
+      );
     }
     workpackParamDto.setProperties(null);
     Workpack workpack = workpackParamDto.getWorkpack(modelMapper);
     workpack = this.workpackRepository.save(workpack);
     this.workpackRepository.createIsInstanceByRelationship(workpack.getId(), workpackParamDto.getIdWorkpackModel());
+    if (workpackParamDto.getIdTransversalView() != null) {
+      if (!(workpack instanceof Program)
+        || !this.workpackModelRepository.isTransversalProgramModelForView(
+          workpackParamDto.getIdWorkpackModel(), workpackParamDto.getIdTransversalView()
+        )) {
+        throw new NegocioException(WORKPACKMODEL_NOT_FOUND);
+      }
+      this.workpackRepository.createMemberOfRelationship(workpack.getId(), workpackParamDto.getIdTransversalView());
+    }
     if (properties != null && !properties.isEmpty()) {
       final Iterable<Property> savedProperties = this.propertyRepository.saveAll(properties);
       for (Property property : savedProperties) {
@@ -1385,6 +1438,23 @@ public class WorkpackService {
     }
     Long idPlan = workpackParamDto.getIdPlan();
     Long idParent = workpackParamDto.getIdParent();
+    if (workpackParamDto.getIdTransversalView() != null) {
+      final boolean validModelPosition = idParent == null
+        ? this.workpackModelRepository.isTransversalRootProgramModelForView(
+          workpackParamDto.getIdWorkpackModel(), workpackParamDto.getIdTransversalView())
+        : this.workpackModelRepository.isTransversalProgramModelChildOfParent(
+          workpackParamDto.getIdWorkpackModel(), idParent);
+      if (!validModelPosition) {
+        throw new NegocioException(ApplicationMessage.TRANSVERSAL_PROGRAM_PARENT_INVALID);
+      }
+    }
+    if (idParent != null) {
+      final Long parentTransversalView = this.workpackRepository.findTransversalViewIdByProgram(idParent);
+      if ((workpackParamDto.getIdTransversalView() != null || parentTransversalView != null)
+        && !Objects.equals(workpackParamDto.getIdTransversalView(), parentTransversalView)) {
+        throw new NegocioException(ApplicationMessage.TRANSVERSAL_PROGRAM_PARENT_INVALID);
+      }
+    }
     if (idPlan != null && idParent != null) {
       final Plan workpackParentPlan = this.planService.findNotLinkedBelongsTo(idParent);
       if (!idPlan.equals(workpackParentPlan.getId())) {

@@ -244,27 +244,47 @@ public class WorkpackModelService {
   public void validateTransversalViewSelection(
     final Long projectModelId,
     final String selectedValues,
-    final boolean multipleSelection
+    final boolean multipleSelection,
+    final Long idRootTransversalViewModel,
+    final String previouslySelectedValues
   ) {
     if (selectedValues == null || selectedValues.trim().isEmpty()) {
       return;
     }
 
-    final Set<Long> selectedIds = new LinkedHashSet<>();
-    try {
-      for (final String value : selectedValues.split(",", -1)) {
-        if (value.trim().isEmpty()) {
-          throw new NumberFormatException();
-        }
-        selectedIds.add(Long.valueOf(value.trim()));
+    final Set<String> selectedTokens = new LinkedHashSet<>();
+    for (final String value : selectedValues.split(",", -1)) {
+      if (value.trim().isEmpty()) {
+        throw new NegocioException(ApplicationMessage.TRANSVERSAL_VIEW_SELECTION_INVALID);
       }
-    } catch (final NumberFormatException exception) {
-      throw new NegocioException(ApplicationMessage.TRANSVERSAL_VIEW_SELECTION_INVALID);
+      selectedTokens.add(value);
     }
 
-    if ((!multipleSelection && selectedIds.size() > 1)
-      || !this.workpackModelRepository.findEligibleTransversalViewIdsForProjectModel(projectModelId)
-        .containsAll(selectedIds)) {
+    final Set<Long> allowedIds = idRootTransversalViewModel == null
+      ? new LinkedHashSet<>()
+      : new LinkedHashSet<>(this.workpackModelRepository.findTransversalSelectionIdsForProjectModel(
+        projectModelId,
+        idRootTransversalViewModel
+      ));
+    final Set<String> previouslySelectedLegacyTokens = new LinkedHashSet<>();
+    if (previouslySelectedValues != null) {
+      for (final String value : previouslySelectedValues.split(",", -1)) {
+        try {
+          allowedIds.add(Long.valueOf(value.trim()));
+        } catch (final NumberFormatException ignored) {
+          previouslySelectedLegacyTokens.add(value);
+        }
+      }
+    }
+
+    final boolean hasInvalidSelection = selectedTokens.stream().anyMatch(value -> {
+      try {
+        return !allowedIds.contains(Long.valueOf(value.trim()));
+      } catch (final NumberFormatException ignored) {
+        return !previouslySelectedLegacyTokens.contains(value);
+      }
+    });
+    if ((!multipleSelection && selectedTokens.size() > 1) || hasInvalidSelection) {
       throw new NegocioException(ApplicationMessage.TRANSVERSAL_VIEW_SELECTION_INVALID);
     }
   }
@@ -384,7 +404,7 @@ public class WorkpackModelService {
     if (workpackModel != null) {
       workpackModel.dashboardConfiguration(workpackModelParamDto.getDashboardConfiguration());
       workpackModel.setProperties(propertyModels);
-      this.validateTransversalViewProperty(workpackModel);
+      this.validateTransversalViewProperty(workpackModel, workpackModelParamDto.getIdPlanModel());
       if (workpackModelParamDto.getSortBy() != null) {
         if (CollectionUtils.isNotEmpty(workpackModel.getProperties())) {
           workpackModel.setSortBy(
@@ -401,7 +421,7 @@ public class WorkpackModelService {
     return workpackModel;
   }
 
-  private void validateTransversalViewProperty(final WorkpackModel workpackModel) {
+  private void validateTransversalViewProperty(final WorkpackModel workpackModel, final Long idPlanModel) {
     if (workpackModel.getProperties() == null) {
       return;
     }
@@ -419,6 +439,36 @@ public class WorkpackModelService {
     if ((!isProjectModel && rootPropertyCount > 0) || rootPropertyCount > 1 || nestedProperty) {
       throw new NegocioException(ApplicationMessage.PROPERTY_MODEL_INVALID_TYPE);
     }
+    workpackModel.getProperties().stream()
+      .filter(TransversalViewSelectionModel.class::isInstance)
+      .map(TransversalViewSelectionModel.class::cast)
+      .forEach(property -> {
+        final Long idViewModel = property.getIdRootTransversalViewModel();
+        if (idViewModel == null && idPlanModel != null
+          && this.workpackModelRepository.hasTransversalRootViewModelInPlanModel(idPlanModel)) {
+          throw new NegocioException(ApplicationMessage.TRANSVERSAL_VIEW_SELECTION_INVALID);
+        }
+        if (idViewModel != null && (idPlanModel == null
+          || !this.workpackModelRepository.isTransversalViewModelInPlanModel(idViewModel, idPlanModel))) {
+          throw new NegocioException(ApplicationMessage.TRANSVERSAL_VIEW_SELECTION_INVALID);
+        }
+        if (idViewModel != null && property.getDefaultValue() != null && !property.getDefaultValue().trim().isEmpty()) {
+          final Set<Long> defaultIds = new LinkedHashSet<>();
+          try {
+            for (final String value : property.getDefaultValue().split(",", -1)) {
+              if (value.trim().isEmpty()) throw new NumberFormatException();
+              defaultIds.add(Long.valueOf(value.trim()));
+            }
+          } catch (final NumberFormatException exception) {
+            throw new NegocioException(ApplicationMessage.TRANSVERSAL_VIEW_SELECTION_INVALID);
+          }
+          if ((!property.isMultipleSelection() && defaultIds.size() > 1)
+            || !new HashSet<>(this.workpackModelRepository.findTransversalViewInstanceIds(idViewModel, idPlanModel))
+              .containsAll(defaultIds)) {
+            throw new NegocioException(ApplicationMessage.TRANSVERSAL_VIEW_SELECTION_INVALID);
+          }
+        }
+      });
   }
 
   private boolean containsTransversalViewProperty(final PropertyModel propertyModel) {
@@ -435,6 +485,7 @@ public class WorkpackModelService {
 
 
   public WorkpackModelDetailDto getWorkpackModelDetailWithoutChildren(final WorkpackModel workpackModel) {
+    this.includeTransversalSelectionPropertyModels(workpackModel);
     List<WorkpackModelDto> parent = null;
     PropertyModelDto sortBy = null;
     if (workpackModel.getParent() != null) {
@@ -469,6 +520,7 @@ public class WorkpackModelService {
   }
 
   public WorkpackModelDetailDto getWorkpackModelDetailDto(final WorkpackModel workpackModel) {
+    this.includeTransversalSelectionPropertyModels(workpackModel);
     Set<WorkpackModelDetailDto> children = null;
     List<WorkpackModelDto> parent = null;
     PropertyModelDto sortBy = null;
@@ -508,6 +560,19 @@ public class WorkpackModelService {
       detailDto.setChildren(sortedChildren);
     }
     return detailDto;
+  }
+
+  private void includeTransversalSelectionPropertyModels(final WorkpackModel workpackModel) {
+    if (!(workpackModel instanceof ProjectModel) || workpackModel.getId() == null) {
+      return;
+    }
+    final Set<PropertyModel> properties = workpackModel.getProperties() == null
+      ? new LinkedHashSet<>()
+      : new LinkedHashSet<>(workpackModel.getProperties());
+    final Set<TransversalViewSelectionModel> transversalProperties = this.workpackModelRepository
+      .findTransversalViewSelectionPropertyModels(workpackModel.getId());
+    properties.addAll(transversalProperties);
+    workpackModel.setProperties(properties);
   }
 
   public WorkpackModelDto getWorkpackModelDto(final WorkpackModel workpackModel) {

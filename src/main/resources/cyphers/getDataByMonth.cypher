@@ -2,11 +2,16 @@ WITH
 	$scope AS _scope,
 	$baselineId AS _baselineId,
 	$monthYear AS _anomesRef,
-	$sCurve AS _sCurve
+	$sCurve AS _sCurve,
+	$transversal AS _transversal
 
 // Pega todas as entregas MASTER não excluídas nem canceladas
 MATCH (Wp:Workpack)<-[:IS_IN*1..]-(w:Deliverable)-[:BELONGS_TO]->(p:Plan)-[:IS_ADOPTED_BY]->(o:Office)
-WHERE (id(w) = _scope OR id(Wp) = _scope OR id(p) = _scope)
+WHERE (id(w) = _scope OR id(Wp) = _scope OR id(p) = _scope
+  OR (_transversal AND EXISTS {
+    MATCH (root:Program)<-[:IS_IN*0..]-(program:Program)-[:INCLUDES]->(included:Workpack)<-[:IS_IN*0..]-(w)
+    WHERE id(root) = _scope
+  }))
   AND (NOT w.deleted AND NOT w.canceled)
 
 WITH DISTINCT w, _baselineId, _anomesRef, p, _sCurve,

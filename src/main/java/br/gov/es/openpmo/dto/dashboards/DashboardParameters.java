@@ -26,6 +26,8 @@ public class DashboardParameters {
 
   private final UriComponentsBuilder uriComponentsBuilder;
 
+  private boolean transversal;
+
   public DashboardParameters(
     final Boolean showHeader,
     final Long workpackId,
@@ -88,6 +90,14 @@ public class DashboardParameters {
 
   public Long getPersonId() {
     return this.personId;
+  }
+
+  public boolean isTransversal() {
+    return transversal;
+  }
+
+  public void setTransversal(final boolean transversal) {
+    this.transversal = transversal;
   }
 
 }

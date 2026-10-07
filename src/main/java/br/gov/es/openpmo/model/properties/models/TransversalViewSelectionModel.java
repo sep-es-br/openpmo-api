@@ -1,21 +1,19 @@
 package br.gov.es.openpmo.model.properties.models;
 
 import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Property;
 
-/**
- * Fixed project property that stores the transversal views associated with a
- * project.
- *
- * <p>This is intentionally a direct {@link PropertyModel} subtype.  A
- * transversal view is supplied by the transversal-view menu and is not a
- * user-defined {@link SelectionModel} with manually maintained options.</p>
- */
+/** Property model that configures a transversal root-view model and its defaults. */
 @NodeEntity
 public class TransversalViewSelectionModel extends PropertyModel {
 
   private String defaultValue;
 
   private String possibleValues;
+
+  /** The transversal model whose instances can be selected by this property. */
+  @Property("idRootTransversalViewModel")
+  private Long idRootTransversalViewModel;
 
   private boolean multipleSelection;
 
@@ -33,6 +31,14 @@ public class TransversalViewSelectionModel extends PropertyModel {
 
   public void setPossibleValues(final String possibleValues) {
     this.possibleValues = possibleValues;
+  }
+
+  public Long getIdRootTransversalViewModel() {
+    return this.idRootTransversalViewModel;
+  }
+
+  public void setIdRootTransversalViewModel(final Long idRootTransversalViewModel) {
+    this.idRootTransversalViewModel = idRootTransversalViewModel;
   }
 
   public boolean isMultipleSelection() {

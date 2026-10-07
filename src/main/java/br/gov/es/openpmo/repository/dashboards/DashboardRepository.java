@@ -68,6 +68,23 @@ public interface DashboardRepository extends Neo4jRepository<Dashboard, Long>, D
                 "    count(DISTINCT d) as totalDeliverable\n" +
                 "LIMIT 1")
         Optional<DashboardStatusData> getStatusAmountData(Long planId, Long workpackId, Long baselineId);
+
+        @Query("MATCH (root:Program)<-[:IS_IN*0..]-(program:Program)-[:INCLUDES]->(included:Workpack) " +
+                "MATCH (included)<-[:IS_IN*0..]-(d:Deliverable{deleted:false,canceled:false}) " +
+                "WHERE id(root) = $workpackId " +
+                "WITH DISTINCT d " +
+                "MATCH (d)<-[:IS_SNAPSHOT_OF]-(:Deliverable {category: 'SNAPSHOT'})-[]-(bl:Baseline) " +
+                "WHERE bl.active " +
+                "OPTIONAL MATCH (d)<-[:FEATURES]-(concluded:Property {value: 'Concluída'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Situação'}) " +
+                "OPTIONAL MATCH (d)<-[:FEATURES]-(inProgress:Property {value: 'Em execução'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Situação'}) " +
+                "OPTIONAL MATCH (d)<-[:FEATURES]-(canceling:Property {value: 'A cancelar'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Situação'}) " +
+                "OPTIONAL MATCH (d)<-[:FEATURES]-(stopped:Property {value: 'Paralisada'})-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Situação'}) " +
+                "OPTIONAL MATCH (d)<-[:FEATURES]-(planning:Property)-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Situação'}) " +
+                "WHERE planning.value STARTS WITH 'Planejamento\\\\' " +
+                "RETURN count(DISTINCT concluded) AS statusConcluida, count(DISTINCT inProgress) AS statusEmExec, " +
+                "count(DISTINCT canceling) AS statusCancelar, count(DISTINCT planning) AS statusPlanejamento, " +
+                "count(DISTINCT stopped) AS statusParalisada, count(DISTINCT d) AS totalDeliverable")
+        Optional<DashboardStatusData> getTransversalStatusAmountData(Long workpackId);
         
         
 }

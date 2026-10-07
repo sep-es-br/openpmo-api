@@ -9,6 +9,8 @@ public class TransversalViewSelectionModelDto extends PropertyModelDto {
 
   private String possibleValues;
 
+  private Long idRootTransversalViewModel;
+
   private boolean multipleSelection;
 
   public static TransversalViewSelectionModelDto of(final PropertyModel propertyModel) {
@@ -19,6 +21,7 @@ public class TransversalViewSelectionModelDto extends PropertyModelDto {
     final TransversalViewSelectionModel transversalProperty = (TransversalViewSelectionModel) propertyModel;
     instance.setDefaultValue(transversalProperty.getDefaultValue());
     instance.setPossibleValues(transversalProperty.getPossibleValues());
+    instance.setIdRootTransversalViewModel(transversalProperty.getIdRootTransversalViewModel());
     instance.setMultipleSelection(transversalProperty.isMultipleSelection());
     return instance;
   }
@@ -37,6 +40,14 @@ public class TransversalViewSelectionModelDto extends PropertyModelDto {
 
   public void setPossibleValues(final String possibleValues) {
     this.possibleValues = possibleValues;
+  }
+
+  public Long getIdRootTransversalViewModel() {
+    return this.idRootTransversalViewModel;
+  }
+
+  public void setIdRootTransversalViewModel(final Long idRootTransversalViewModel) {
+    this.idRootTransversalViewModel = idRootTransversalViewModel;
   }
 
   public boolean isMultipleSelection() {

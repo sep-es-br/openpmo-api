@@ -41,6 +41,8 @@ public abstract class WorkpackParamDto {
   @NotNull
   private Long idWorkpackModel;
 
+  private Long idTransversalView;
+
   @NotNull
   private Long idPlan;
 
@@ -72,6 +74,14 @@ public abstract class WorkpackParamDto {
 
   public void setIdWorkpackModel(final Long idWorkpackModel) {
     this.idWorkpackModel = idWorkpackModel;
+  }
+
+  public Long getIdTransversalView() {
+    return this.idTransversalView;
+  }
+
+  public void setIdTransversalView(final Long idTransversalView) {
+    this.idTransversalView = idTransversalView;
   }
 
   public Long getIdPlan() {

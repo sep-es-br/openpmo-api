@@ -24,6 +24,15 @@ public interface DashboardMilestoneRepository extends Neo4jRepository<Milestone,
       "RETURN m.completed AS completed, m.date AS milestoneDate, s.date AS snapshotDate")
   List<MilestoneDateDto> findForDashboard(Long planId, Long workpackId, Long baselineId);
 
+  @Query("MATCH (root:Program)<-[:IS_IN*0..]-(program:Program)-[:INCLUDES]->(included:Workpack) " +
+      "MATCH (included)<-[:IS_IN*0..]-(m:Milestone{deleted:false,canceled:false})-[:BELONGS_TO]->(plan:Plan) " +
+      "WHERE id(root)=$workpackId " +
+      "WITH DISTINCT m, plan " +
+      "MATCH (m)<-[:IS_SNAPSHOT_OF]-(s:Milestone{deleted:false,canceled:false})-[:COMPOSES]->(b:Baseline{active:true}) " +
+      "WHERE left(s.date,10) >= left(plan.start,10) AND left(s.date,10) <= left(plan.finish,10) " +
+      "RETURN DISTINCT id(m) AS idWorkpack, m.completed AS completed, m.date AS milestoneDate, s.date AS snapshotDate")
+  List<MilestoneDateDto> findForTransversalDashboard(Long workpackId);
+
 
   @Query("MATCH (w:Workpack{deleted:false, canceled:false})<-[:IS_IN*]-(m:Milestone{deleted:false , canceled:false})-[:BELONGS_TO]->(plan:Plan) " +
       "WHERE id(w) IN $workpackId " +

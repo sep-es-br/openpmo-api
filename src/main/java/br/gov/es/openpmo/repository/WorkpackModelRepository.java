@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.repository;
 
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
+import br.gov.es.openpmo.model.properties.models.TransversalViewSelectionModel;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
@@ -45,8 +46,85 @@ public interface WorkpackModelRepository extends Neo4jRepository<WorkpackModel, 
 
   @Query("MATCH (projectModel:ProjectModel)-[:BELONGS_TO]->(:PlanModel)<-[:BELONGS_TO]-(view:WorkpackModel)-[:USES]->(projectModel) "
     + "WHERE id(projectModel) = $projectModelId AND view.classification = 'TRANSVERSAL' "
+    + "AND NOT EXISTS((view)-[:IS_IN]->(:WorkpackModel)) "
     + "RETURN id(view)")
   Set<Long> findEligibleTransversalViewIdsForProjectModel(@Param("projectModelId") Long projectModelId);
+
+  @Query("MATCH (projectModel:ProjectModel)-[:BELONGS_TO]->(planModel:PlanModel) "
+    + "MATCH (viewModel:WorkpackModel)-[:BELONGS_TO]->(planModel) "
+    + "MATCH (node:Program)-[:MEMBER_OF]->(viewModel) "
+    + "MATCH (node)-[:BELONGS_TO]->(:Plan)-[:IS_STRUCTURED_BY]->(planModel) "
+    + "MATCH (node)-[:IS_INSTANCE_BY]->(programModel:ProgramModel)-[:IS_IN*0..]->(viewModel) "
+    + "WHERE id(projectModel) = $projectModelId AND id(viewModel) = $viewModelId "
+    + "AND viewModel.classification = 'TRANSVERSAL' "
+    + "AND NOT EXISTS((viewModel)-[:IS_IN]->(:WorkpackModel)) "
+    + "AND coalesce(node.deleted, false) = false "
+    + "RETURN DISTINCT id(node)")
+  Set<Long> findTransversalSelectionIdsForProjectModel(
+    @Param("projectModelId") Long projectModelId,
+    @Param("viewModelId") Long viewModelId
+  );
+
+  @Query("MATCH (viewModel:WorkpackModel)-[:BELONGS_TO]->(planModel:PlanModel) "
+    + "WHERE id(viewModel) = $viewModelId AND id(planModel) = $planModelId "
+    + "AND viewModel.classification = 'TRANSVERSAL' "
+    + "AND NOT EXISTS((viewModel)-[:IS_IN]->(:WorkpackModel)) RETURN count(viewModel) > 0")
+  boolean isTransversalViewModelInPlanModel(
+    @Param("viewModelId") Long viewModelId,
+    @Param("planModelId") Long planModelId
+  );
+
+  @Query("MATCH (viewModel:WorkpackModel)-[:BELONGS_TO]->(planModel:PlanModel) "
+    + "WHERE id(planModel) = $planModelId AND viewModel.classification = 'TRANSVERSAL' "
+    + "AND NOT EXISTS((viewModel)-[:IS_IN]->(:WorkpackModel)) "
+    + "RETURN count(viewModel) > 0")
+  boolean hasTransversalRootViewModelInPlanModel(@Param("planModelId") Long planModelId);
+
+  @Query("MATCH (programModel:ProgramModel)-[:IS_IN*0..]->(viewModel:WorkpackModel) "
+    + "MATCH (programModel)-[:BELONGS_TO]->(planModel:PlanModel) "
+    + "MATCH (viewModel)-[:BELONGS_TO]->(planModel) "
+    + "WHERE id(programModel) = $programModelId AND id(viewModel) = $viewModelId "
+    + "AND programModel.classification = 'TRANSVERSAL' AND viewModel.classification = 'TRANSVERSAL' "
+    + "RETURN count(programModel) > 0")
+  boolean isTransversalProgramModelForView(
+    @Param("programModelId") Long programModelId,
+    @Param("viewModelId") Long viewModelId
+  );
+
+  @Query("MATCH (model:ProgramModel) WHERE id(model) = $programModelId "
+    + "AND model.classification = 'TRANSVERSAL' RETURN count(model) > 0")
+  boolean isTransversalProgramModel(@Param("programModelId") Long programModelId);
+
+  @Query("MATCH (view:WorkpackModel), (model:ProgramModel) "
+    + "WHERE id(view) = $viewModelId AND id(model) = $programModelId "
+    + "AND (model = view OR (NOT view:ProgramModel AND EXISTS((model)-[:IS_IN]->(view)))) "
+    + "RETURN count(model) > 0")
+  boolean isTransversalRootProgramModelForView(
+    @Param("programModelId") Long programModelId,
+    @Param("viewModelId") Long viewModelId
+  );
+
+  @Query("MATCH (child:ProgramModel)-[:IS_IN]->(parentModel:ProgramModel) "
+    + "MATCH (parent:Program)-[:IS_INSTANCE_BY]->(parentModel) "
+    + "WHERE id(child) = $programModelId AND id(parent) = $parentProgramId "
+    + "RETURN count(child) > 0")
+  boolean isTransversalProgramModelChildOfParent(
+    @Param("programModelId") Long programModelId,
+    @Param("parentProgramId") Long parentProgramId
+  );
+
+  @Query("MATCH (instance:Program)-[:MEMBER_OF]->(viewModel:WorkpackModel)-[:BELONGS_TO]->(planModel:PlanModel) "
+    + "MATCH (instance)-[:BELONGS_TO]->(:Plan)-[:IS_STRUCTURED_BY]->(planModel) "
+    + "MATCH (instance)-[:IS_INSTANCE_BY]->(programModel:ProgramModel)-[:IS_IN*0..]->(viewModel) "
+    + "WHERE id(viewModel) = $viewModelId AND id(planModel) = $planModelId "
+    + "AND viewModel.classification = 'TRANSVERSAL' "
+    + "AND NOT EXISTS((viewModel)-[:IS_IN]->(:WorkpackModel)) "
+    + "AND coalesce(instance.deleted, false) = false "
+    + "RETURN DISTINCT id(instance)")
+  List<Long> findTransversalViewInstanceIds(
+    @Param("viewModelId") Long viewModelId,
+    @Param("planModelId") Long planModelId
+  );
 
   @Query("MATCH (source:WorkpackModel)-[:BELONGS_TO]->(plan:PlanModel)<-[:BELONGS_TO]-(target:WorkpackModel) "
     + "WHERE id(source) = $sourceId AND id(target) = $targetId "
@@ -82,6 +160,10 @@ public interface WorkpackModelRepository extends Neo4jRepository<WorkpackModel, 
           + "  [(wm)<-[featureGroup:FEATURES]-(group:GroupModel)-[groups:GROUPS]->(groupedProperty:PropertyModel) | [groups, groupedProperty] ] "
           )
   Set<PropertyModel> findAllPropertyModels(@Param("id") Long id);
+
+  @Query("MATCH (wm:ProjectModel)<-[f:FEATURES]-(property:TransversalViewSelectionModel) "
+    + "WHERE id(wm) = $id RETURN wm, f, property")
+  Set<TransversalViewSelectionModel> findTransversalViewSelectionPropertyModels(@Param("id") Long id);
 
   @Query("MATCH (w:Workpack)-[wp:IS_INSTANCE_BY]->(wm:WorkpackModel) "
     + "WHERE id(w) = $idWorkpack "
