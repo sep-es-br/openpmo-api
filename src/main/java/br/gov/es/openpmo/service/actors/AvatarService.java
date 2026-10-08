@@ -5,6 +5,7 @@ import br.gov.es.openpmo.dto.file.AvatarDto;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.repository.FileRepository;
+import br.gov.es.openpmo.service.files.FileService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.UrlResource;
@@ -30,16 +31,19 @@ public class AvatarService {
 
   private final PersonService personService;
   private final FileRepository repository;
+  private final FileService fileService;
 
   @Value("${app.pathImagens}")
   private String basePath;
 
   public AvatarService(
     final PersonService personService,
-    final FileRepository repository
+    final FileRepository repository,
+    final FileService fileService
   ) {
     this.personService = personService;
     this.repository = repository;
+    this.fileService = fileService;
   }
 
   private static void ifPersonAlreadyHasAvatarThrowException(final Person person) {
@@ -109,7 +113,7 @@ public class AvatarService {
     final Person person
   ) {
     final br.gov.es.openpmo.model.actors.File avatar = new br.gov.es.openpmo.model.actors.File();
-    avatar.setUniqueNameKey(UUID.randomUUID() + multipartFile.getOriginalFilename());
+   avatar.setUniqueNameKey(this.fileService.generateName(multipartFile));  //mudei
     avatar.setUserGivenName(multipartFile.getOriginalFilename());
     avatar.setMimeType(multipartFile.getContentType());
     avatar.setPerson(person);
