@@ -52,10 +52,13 @@ public interface IndicatorRepository extends Neo4jRepository<Indicator, Long>, C
             "ORDER BY year ASC")
     List<Integer> findUniqueYearsByProjectId(Long idWorkpack);
 
-    @Query("MATCH(o:Organization)-[:IS_REGISTERED_IN]->(office:Office) " +
+    @Query("MATCH (o:Organization) " +
+            "OPTIONAL MATCH (o)-[r:IS_REGISTERED_IN]->(office:Office) " +
             "WHERE id(office) = $idOffice " +
-            "RETURN o.name")
-    List<String> findAllOrganizationFromOffice(Long idOffice);
+            "WITH o, r " +
+            "WHERE o.integration IS NOT NULL OR r IS NOT NULL " +
+            "RETURN DISTINCT o.name")
+List<String> findAllOrganizationFromOffice(Long idOffice);
 
     @Query("MATCH(u:UnitMeasure) " +
             "RETURN u.name")
