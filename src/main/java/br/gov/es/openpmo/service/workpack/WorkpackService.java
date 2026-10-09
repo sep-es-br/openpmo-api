@@ -972,7 +972,8 @@ public class WorkpackService {
       .map(Selection::getValue)
       .findFirst();
 
-    if (!requestedStatus.isPresent()) {
+    if (!requestedStatus.isPresent() ||
+      !this.workpackRepository.isFromPreProject(workpack.getId())) {
       return;
     }
 
@@ -1113,6 +1114,9 @@ public class WorkpackService {
         workpackDetailDto = ProjectDetailDto.of(workpack);
         workpackDetailDto.setHasApprovedBaseline(
           this.workpackRepository.hasApprovedBaseline(workpack.getId())
+        );
+        ((ProjectDetailDto) workpackDetailDto).setFromPreProjectInStructuring(
+          this.workpackRepository.isFromPreProjectInStructuring(workpack.getId())
         );
         break;
       case TYPE_NAME_MILESTONE:
