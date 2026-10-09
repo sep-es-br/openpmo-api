@@ -13,6 +13,7 @@ import br.gov.es.openpmo.repository.PropertyModelRepository;
 import br.gov.es.openpmo.repository.PropertyRepository;
 import br.gov.es.openpmo.repository.WorkpackModelRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
+import br.gov.es.openpmo.service.completed.ICompleteWorkpackService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
 import java.util.Collection;
 import java.util.HashSet;
@@ -38,6 +39,7 @@ public class PasteToWorkpackService {
   private final PropertyRepository propertyRepository;
 
   private final PropertyModelRepository propertyModelRepository;
+  private final ICompleteWorkpackService completeWorkpackService;
 
   @Autowired
   public PasteToWorkpackService(
@@ -46,7 +48,8 @@ public class PasteToWorkpackService {
     final PlanRepository planRepository,
     final WorkpackModelRepository workpackModelRepository,
     final PropertyRepository propertyRepository,
-    final PropertyModelRepository propertyModelRepository
+    final PropertyModelRepository propertyModelRepository,
+    final ICompleteWorkpackService completeWorkpackService
   ) {
     this.workpackRepository = workpackRepository;
     this.belongsToRepository = belongsToRepository;
@@ -54,6 +57,7 @@ public class PasteToWorkpackService {
     this.workpackModelRepository = workpackModelRepository;
     this.propertyRepository = propertyRepository;
     this.propertyModelRepository = propertyModelRepository;
+    this.completeWorkpackService = completeWorkpackService;
   }
 
   private static boolean areWorkpackModelsCompatible(
@@ -143,6 +147,12 @@ public class PasteToWorkpackService {
     }
 
     this.handlePasteWorkpack(workpack, workpackModel, plan);
+    if (idParentFrom != null) {
+      this.completeWorkpackService.recalculateCompletionStatus(idParentFrom);
+    }
+    if (idParentTo != null && !idParentTo.equals(idParentFrom)) {
+      this.completeWorkpackService.recalculateCompletionStatus(idParentTo);
+    }
   }
 
   public void saveIdParent(Long idWorkpack, Long idParentTo) {
