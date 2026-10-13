@@ -242,7 +242,7 @@ public class WorkpackModelService {
   }
 
   public void validateTransversalViewSelection(
-    final Long projectModelId,
+    final Long workpackModelId,
     final String selectedValues,
     final boolean multipleSelection,
     final Long idRootTransversalViewModel,
@@ -260,12 +260,11 @@ public class WorkpackModelService {
       selectedTokens.add(value);
     }
 
-    final Set<Long> allowedIds = idRootTransversalViewModel == null
-      ? new LinkedHashSet<>()
-      : new LinkedHashSet<>(this.workpackModelRepository.findTransversalSelectionIdsForProjectModel(
-        projectModelId,
-        idRootTransversalViewModel
-      ));
+    final Set<Long> allowedIds = new LinkedHashSet<>(
+      this.workpackModelRepository.findTransversalSelectionIdsForWorkpackModel(
+        workpackModelId, idRootTransversalViewModel
+      )
+    );
     final Set<String> previouslySelectedLegacyTokens = new LinkedHashSet<>();
     if (previouslySelectedValues != null) {
       for (final String value : previouslySelectedValues.split(",", -1)) {
@@ -426,7 +425,6 @@ public class WorkpackModelService {
       return;
     }
 
-    final boolean isProjectModel = workpackModel instanceof ProjectModel;
     final long rootPropertyCount = workpackModel.getProperties().stream()
       .filter(TransversalViewSelectionModel.class::isInstance)
       .count();
@@ -436,23 +434,20 @@ public class WorkpackModelService {
       .anyMatch(group -> group.getGroupedProperties() != null
         && group.getGroupedProperties().stream().anyMatch(this::containsTransversalViewProperty));
 
-    if ((!isProjectModel && rootPropertyCount > 0) || rootPropertyCount > 1 || nestedProperty) {
+    if (rootPropertyCount > 1 || nestedProperty) {
       throw new NegocioException(ApplicationMessage.PROPERTY_MODEL_INVALID_TYPE);
     }
     workpackModel.getProperties().stream()
       .filter(TransversalViewSelectionModel.class::isInstance)
       .map(TransversalViewSelectionModel.class::cast)
       .forEach(property -> {
-        final Long idViewModel = property.getIdRootTransversalViewModel();
-        if (idViewModel == null && idPlanModel != null
-          && this.workpackModelRepository.hasTransversalRootViewModelInPlanModel(idPlanModel)) {
+        if (property.getIdRootTransversalViewModel() == null || idPlanModel == null
+          || !this.workpackModelRepository.isTransversalViewModelInPlanModel(
+            property.getIdRootTransversalViewModel(), idPlanModel
+          )) {
           throw new NegocioException(ApplicationMessage.TRANSVERSAL_VIEW_SELECTION_INVALID);
         }
-        if (idViewModel != null && (idPlanModel == null
-          || !this.workpackModelRepository.isTransversalViewModelInPlanModel(idViewModel, idPlanModel))) {
-          throw new NegocioException(ApplicationMessage.TRANSVERSAL_VIEW_SELECTION_INVALID);
-        }
-        if (idViewModel != null && property.getDefaultValue() != null && !property.getDefaultValue().trim().isEmpty()) {
+        if (property.getDefaultValue() != null && !property.getDefaultValue().trim().isEmpty()) {
           final Set<Long> defaultIds = new LinkedHashSet<>();
           try {
             for (final String value : property.getDefaultValue().split(",", -1)) {
@@ -463,7 +458,10 @@ public class WorkpackModelService {
             throw new NegocioException(ApplicationMessage.TRANSVERSAL_VIEW_SELECTION_INVALID);
           }
           if ((!property.isMultipleSelection() && defaultIds.size() > 1)
-            || !new HashSet<>(this.workpackModelRepository.findTransversalViewInstanceIds(idViewModel, idPlanModel))
+            || idPlanModel == null
+            || !new HashSet<>(this.workpackModelRepository.findTransversalSelectionIdsForPlanModel(
+              idPlanModel, property.getIdRootTransversalViewModel()
+            ))
               .containsAll(defaultIds)) {
             throw new NegocioException(ApplicationMessage.TRANSVERSAL_VIEW_SELECTION_INVALID);
           }
@@ -563,7 +561,7 @@ public class WorkpackModelService {
   }
 
   private void includeTransversalSelectionPropertyModels(final WorkpackModel workpackModel) {
-    if (!(workpackModel instanceof ProjectModel) || workpackModel.getId() == null) {
+    if (workpackModel.getId() == null) {
       return;
     }
     final Set<PropertyModel> properties = workpackModel.getProperties() == null

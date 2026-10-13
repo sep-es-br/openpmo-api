@@ -50,19 +50,35 @@ public interface WorkpackModelRepository extends Neo4jRepository<WorkpackModel, 
     + "RETURN id(view)")
   Set<Long> findEligibleTransversalViewIdsForProjectModel(@Param("projectModelId") Long projectModelId);
 
-  @Query("MATCH (projectModel:ProjectModel)-[:BELONGS_TO]->(planModel:PlanModel) "
+  @Query("MATCH (workpackModel:WorkpackModel)-[:BELONGS_TO]->(planModel:PlanModel) "
     + "MATCH (viewModel:WorkpackModel)-[:BELONGS_TO]->(planModel) "
     + "MATCH (node:Program)-[:MEMBER_OF]->(viewModel) "
     + "MATCH (node)-[:BELONGS_TO]->(:Plan)-[:IS_STRUCTURED_BY]->(planModel) "
     + "MATCH (node)-[:IS_INSTANCE_BY]->(programModel:ProgramModel)-[:IS_IN*0..]->(viewModel) "
-    + "WHERE id(projectModel) = $projectModelId AND id(viewModel) = $viewModelId "
+    + "WHERE id(workpackModel) = $workpackModelId "
+    + "AND ($idRootTransversalViewModel IS NULL OR id(viewModel) = $idRootTransversalViewModel) "
     + "AND viewModel.classification = 'TRANSVERSAL' "
     + "AND NOT EXISTS((viewModel)-[:IS_IN]->(:WorkpackModel)) "
     + "AND coalesce(node.deleted, false) = false "
     + "RETURN DISTINCT id(node)")
-  Set<Long> findTransversalSelectionIdsForProjectModel(
-    @Param("projectModelId") Long projectModelId,
-    @Param("viewModelId") Long viewModelId
+  Set<Long> findTransversalSelectionIdsForWorkpackModel(
+    @Param("workpackModelId") Long workpackModelId,
+    @Param("idRootTransversalViewModel") Long idRootTransversalViewModel
+  );
+
+  @Query("MATCH (planModel:PlanModel) "
+    + "MATCH (viewModel:WorkpackModel)-[:BELONGS_TO]->(planModel) "
+    + "MATCH (node:Program)-[:MEMBER_OF]->(viewModel) "
+    + "MATCH (node)-[:BELONGS_TO]->(:Plan)-[:IS_STRUCTURED_BY]->(planModel) "
+    + "MATCH (node)-[:IS_INSTANCE_BY]->(programModel:ProgramModel)-[:IS_IN*0..]->(viewModel) "
+    + "WHERE id(planModel) = $planModelId AND viewModel.classification = 'TRANSVERSAL' "
+    + "AND ($idRootTransversalViewModel IS NULL OR id(viewModel) = $idRootTransversalViewModel) "
+    + "AND NOT EXISTS((viewModel)-[:IS_IN]->(:WorkpackModel)) "
+    + "AND programModel.classification = 'TRANSVERSAL' AND coalesce(node.deleted, false) = false "
+    + "RETURN DISTINCT id(node)")
+  Set<Long> findTransversalSelectionIdsForPlanModel(
+    @Param("planModelId") Long planModelId,
+    @Param("idRootTransversalViewModel") Long idRootTransversalViewModel
   );
 
   @Query("MATCH (viewModel:WorkpackModel)-[:BELONGS_TO]->(planModel:PlanModel) "
@@ -161,7 +177,7 @@ public interface WorkpackModelRepository extends Neo4jRepository<WorkpackModel, 
           )
   Set<PropertyModel> findAllPropertyModels(@Param("id") Long id);
 
-  @Query("MATCH (wm:ProjectModel)<-[f:FEATURES]-(property:TransversalViewSelectionModel) "
+  @Query("MATCH (wm:WorkpackModel)<-[f:FEATURES]-(property:TransversalViewSelectionModel) "
     + "WHERE id(wm) = $id RETURN wm, f, property")
   Set<TransversalViewSelectionModel> findTransversalViewSelectionPropertyModels(@Param("id") Long id);
 

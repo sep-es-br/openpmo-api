@@ -10,6 +10,7 @@ import br.gov.es.openpmo.dto.workpackmodel.TransversalSelectionOptionDto;
 import br.gov.es.openpmo.dto.workpackmodel.TransversalLinkedModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.TransversalWorkpackDto;
 import br.gov.es.openpmo.dto.workpackmodel.TransversalWorkpackParticipationDto;
+import br.gov.es.openpmo.dto.workpackmodel.TransversalStructuralLinkDto;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessData;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.workpack.TransversalProjectService;
@@ -53,12 +54,15 @@ public class TransversalController {
 
   @GetMapping("/selection-options")
   public ResponseEntity<ResponseBase<List<TransversalSelectionOptionDto>>> getSelectionOptions(
-    @RequestParam("id-root-transversal-view-model") final Long idRootTransversalViewModel,
+    @RequestParam(value = "id-root-transversal-view-model", required = false) final Long idRootTransversalViewModel,
     @RequestParam(value = "id-plan", required = false) final Long idPlan,
     @RequestParam(value = "id-plan-model", required = false) final Long idPlanModel,
     @RequestHeader("Authorization") final String authorization
   ) {
-    this.canAccessService.ensureCanReadResource(idRootTransversalViewModel, authorization);
+    final Long resourceId = idRootTransversalViewModel != null
+      ? idRootTransversalViewModel
+      : (idPlan != null ? idPlan : idPlanModel);
+    this.canAccessService.ensureCanReadResource(resourceId, authorization);
     final List<TransversalSelectionOptionDto> options = this.transversalProjectService.findSelectionOptions(
       idRootTransversalViewModel,
       idPlan,
@@ -113,6 +117,37 @@ public class TransversalController {
     this.canAccessService.ensureCanReadResourceWorkpack(idTransversalProgram, authorization);
     return ResponseEntity.ok(ResponseBase.of(
       this.transversalProjectService.findLinkedModels(idTransversalProgram)
+    ));
+  }
+
+  @GetMapping("/programs/{idTransversalProgram}/structural-links")
+  public ResponseEntity<ResponseBase<List<TransversalStructuralLinkDto>>> getStructuralLinks(
+    @PathVariable final Long idTransversalProgram,
+    @RequestParam(value = "include-descendants", defaultValue = "false") final boolean includeDescendants,
+    @RequestParam(value = "include-structural-descendants", defaultValue = "true") final boolean includeStructuralDescendants,
+    @RequestHeader("Authorization") final String authorization
+  ) {
+    this.canAccessService.ensureCanReadResourceWorkpack(idTransversalProgram, authorization);
+    return ResponseEntity.ok(ResponseBase.of(
+      (includeDescendants
+        ? this.transversalProjectService.findStructuralLinksForProgramTree(idTransversalProgram, includeStructuralDescendants)
+        : this.transversalProjectService.findStructuralLinks(idTransversalProgram)).stream()
+        .filter(item -> this.canAccessData.execute(item.getIdWorkpack(), authorization).canReadResource())
+        .collect(Collectors.toList())
+    ));
+  }
+
+  @GetMapping("/views/{idTransversalView}/structural-links")
+  public ResponseEntity<ResponseBase<List<TransversalStructuralLinkDto>>> getStructuralLinksForView(
+    @PathVariable final Long idTransversalView,
+    @RequestParam("id-plan") final Long idPlan,
+    @RequestHeader("Authorization") final String authorization
+  ) {
+    this.canAccessService.ensureCanReadResource(idTransversalView, authorization);
+    return ResponseEntity.ok(ResponseBase.of(
+      this.transversalProjectService.findStructuralLinksForView(idTransversalView, idPlan).stream()
+        .filter(item -> this.canAccessData.execute(item.getIdWorkpack(), authorization).canReadResource())
+        .collect(Collectors.toList())
     ));
   }
 

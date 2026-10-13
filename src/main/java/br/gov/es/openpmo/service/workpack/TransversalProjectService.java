@@ -9,6 +9,7 @@ import br.gov.es.openpmo.dto.workpackmodel.TransversalSelectionOptionDto;
 import br.gov.es.openpmo.dto.workpackmodel.TransversalLinkedModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.TransversalWorkpackDto;
 import br.gov.es.openpmo.dto.workpackmodel.TransversalWorkpackParticipationDto;
+import br.gov.es.openpmo.dto.workpackmodel.TransversalStructuralLinkDto;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.repository.TransversalRepository;
 import java.util.List;
@@ -61,6 +62,27 @@ public class TransversalProjectService {
     );
     models.addAll(this.repository.findHistoricalModels(idTransversalProgram));
     return models;
+  }
+
+  public List<TransversalStructuralLinkDto> findStructuralLinks(final Long idTransversalProgram) {
+    this.requireProgramContext(idTransversalProgram);
+    return this.repository.findStructuralLinks(idTransversalProgram, null, null, false, true);
+  }
+
+  public List<TransversalStructuralLinkDto> findStructuralLinksForProgramTree(final Long idTransversalProgram) {
+    return this.findStructuralLinksForProgramTree(idTransversalProgram, true);
+  }
+
+  public List<TransversalStructuralLinkDto> findStructuralLinksForProgramTree(
+    final Long idTransversalProgram,
+    final boolean includeStructuralDescendants
+  ) {
+    this.requireProgramContext(idTransversalProgram);
+    return this.repository.findStructuralLinks(idTransversalProgram, null, null, true, includeStructuralDescendants);
+  }
+
+  public List<TransversalStructuralLinkDto> findStructuralLinksForView(final Long idTransversalView, final Long idPlan) {
+    return this.repository.findStructuralLinks(null, idTransversalView, idPlan, false, true);
   }
 
   public Page<TransversalWorkpackDto> findEligibleWorkpacks(
@@ -147,8 +169,11 @@ public class TransversalProjectService {
     final Long idPlan,
     final Long idPlanModel
   ) {
+    if (idRootTransversalViewModel == null && idPlanModel != null) {
+      return this.repository.findSelectionOptionsByPlanModel(idPlanModel);
+    }
     if (idPlan == null) {
-      return this.repository.findSelectionOptionsByPlanModel(idRootTransversalViewModel);
+      return this.repository.findSelectionOptionsForRootModel(idRootTransversalViewModel);
     }
     return this.repository.findSelectionOptions(idRootTransversalViewModel, idPlan, idPlanModel);
   }
