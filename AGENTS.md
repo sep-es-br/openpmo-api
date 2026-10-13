@@ -27,6 +27,10 @@ O GitBook é a **fonte da verdade para regras de negócio, fluxos funcionais e c
 - **Persistência:** Neo4j via Spring Data Neo4j e driver Bolt; repositórios são habilitados para `br.gov.es.openpmo.repository`.
 - **Execução local configurada:** contexto HTTP `/openpmo`, porta `8080`, Neo4j local em `bolt://localhost:7687` e fuso padrão `GMT-3:00`.
 
+## Serviços locais
+
+- **Não encerre serviços em execução sem solicitação expressa do usuário.** Isso inclui o backend, o frontend e outros processos de desenvolvimento. Antes de iniciar um serviço, verifique se ele já está ativo; se estiver, preserve-o e informe o estado.
+
 O `README.md` e o `Dockerfile` ainda contêm referências a Java 8, mas a configuração efetiva de compilação do projeto é Java 11. Não rebaixe a linguagem nem altere a imagem de runtime sem uma tarefa específica para compatibilização da implantação.
 
 ## Dependências principais
