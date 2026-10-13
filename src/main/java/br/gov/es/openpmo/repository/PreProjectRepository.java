@@ -22,8 +22,11 @@ public interface PreProjectRepository
     "WITH preProject, organization, project, plan " +
     "WHERE project IS NULL OR (coalesce(project.deleted, false) = false AND coalesce(project.canceled, false) = false) " +
     "OPTIONAL MATCH (project)<-[:FEATURES]-(status:Property)-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Status'}) " +
+    "WITH preProject, organization, project, plan, status " +
+    "WHERE project IS NULL OR status.value = 'Estruturação' " +
     "RETURN id(preProject) AS id, id(preProject) AS idPreProject, id(project) AS idProject, " +
-    "       preProject.name AS name, preProject.fullName AS fullName, status.value AS status, " +
+    "       preProject.name AS name, preProject.fullName AS fullName, " +
+    "       coalesce(status.value, 'Elaboração') AS status, " +
     "       id(plan) AS idPlan, id(project) AS idWorkpack, id(organization) AS idOrganization " +
     "ORDER BY toLower(preProject.name), id(preProject)"
   )

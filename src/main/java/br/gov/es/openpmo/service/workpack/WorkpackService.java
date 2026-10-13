@@ -98,6 +98,7 @@ import br.gov.es.openpmo.service.journals.JournalDeleter;
 import br.gov.es.openpmo.service.office.LocalityService;
 import br.gov.es.openpmo.service.office.UnitMeasureService;
 import br.gov.es.openpmo.service.office.plan.PlanService;
+import br.gov.es.openpmo.service.preprojects.PreProjectModelService;
 import br.gov.es.openpmo.service.properties.PropertyModelService;
 import br.gov.es.openpmo.service.properties.PropertyService;
 import static br.gov.es.openpmo.service.workpack.GetPropertyValue.getValueProperty;
@@ -179,6 +180,7 @@ public class WorkpackService {
   private final WorkpackRepository workpackRepository;
 
   private final PlanService planService;
+  private final PreProjectModelService preProjectModelService;
 
   private final ModelMapper modelMapper;
 
@@ -216,6 +218,7 @@ public class WorkpackService {
   public WorkpackService(
     final WorkpackModelService workpackModelService,
     final PlanService planService,
+    final PreProjectModelService preProjectModelService,
     final ModelMapper modelMapper,
     final PropertyService propertyService,
     final PropertyModelService propertyModelService,
@@ -238,6 +241,7 @@ public class WorkpackService {
   ) {
     this.workpackModelService = workpackModelService;
     this.planService = planService;
+    this.preProjectModelService = preProjectModelService;
     this.modelMapper = modelMapper;
     this.propertyService = propertyService;
     this.workpackRepository = workpackRepository;
@@ -1350,6 +1354,12 @@ public class WorkpackService {
     final WorkpackParamDto workpackParamDto,
     final boolean ignoreRequiredProperties
   ) {
+    if (!ignoreRequiredProperties && workpackParamDto instanceof ProjectParamDto) {
+      final Plan plan = this.planService.findById(workpackParamDto.getIdPlan());
+      if (this.preProjectModelService.isActiveByOfficeId(plan.getOffice().getId())) {
+        throw new NegocioException(ApplicationMessage.PROJECT_DIRECT_CREATION_BLOCKED_BY_PRE_PROJECT);
+      }
+    }
     Set<Property> properties = null;
     List<? extends PropertyDto> propertyDtos = workpackParamDto.getProperties();
     if (propertyDtos != null && !propertyDtos.isEmpty()) {
