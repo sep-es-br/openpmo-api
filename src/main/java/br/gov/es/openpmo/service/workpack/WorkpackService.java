@@ -118,6 +118,7 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_VALUE_NOT_EMPT
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_VALUE_NOT_MAX;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_VALUE_NOT_MIN;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_VALUE_NOT_NULL;
+import static br.gov.es.openpmo.utils.ApplicationMessage.TRANSVERSAL_PRINCIPAL_PROGRAM_NOT_SELECTED;
 import static br.gov.es.openpmo.utils.ApplicationMessage.VALUE_DOES_NOT_MATCH_PRECISION;
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACKMODEL_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_DELETE_RELATIONSHIP_ERROR;
@@ -142,6 +143,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -461,6 +463,7 @@ public class WorkpackService {
             if (transversalViewSelection.getDriver().getId().equals(propertyModel.getId())) {
               propertyModelFound = true;
               if (propertyModel instanceof TransversalViewSelectionModel) {
+                validateTransversalPrincipalProgram(transversalViewSelection);
                 this.workpackModelService.validateTransversalViewSelection(
                   idWorkpackModel,
                   transversalViewSelection.getValue(),
@@ -561,6 +564,20 @@ public class WorkpackService {
 
   private static Set<Property> extractGroupedPropertyIfExists(final Collection<? extends Property> propertiesToDelete) {
     return propertiesToDelete.stream().filter(Group.class::isInstance).collect(Collectors.toSet());
+  }
+
+  private static void validateTransversalPrincipalProgram(final TransversalViewSelection selection) {
+    final Long principalProgramId = selection.getPrincipalProgramId();
+    if (principalProgramId == null) {
+      return;
+    }
+    final String selectedPrograms = selection.getValue();
+    final boolean principalIsSelected = selectedPrograms != null && Arrays.stream(selectedPrograms.split(","))
+      .map(String::trim)
+      .anyMatch(value -> value.equals(String.valueOf(principalProgramId)));
+    if (!principalIsSelected) {
+      throw new NegocioException(TRANSVERSAL_PRINCIPAL_PROGRAM_NOT_SELECTED);
+    }
   }
 
   public List<Workpack> findAllUsingParent(
@@ -965,9 +982,10 @@ public class WorkpackService {
         selectionUpdate.setValue(selection.getValue());
         break;
       case TYPE_MODEL_NAME_TRANSVERSAL_VIEW_SELECTION:
-        final HasValue<String> transversalViewSelectionUpdate = (TransversalViewSelection) propertyToUpdate;
+        final TransversalViewSelection transversalViewSelectionUpdate = (TransversalViewSelection) propertyToUpdate;
         final TransversalViewSelection transversalViewSelection = (TransversalViewSelection) property;
         transversalViewSelectionUpdate.setValue(transversalViewSelection.getValue());
+        transversalViewSelectionUpdate.setPrincipalProgramId(transversalViewSelection.getPrincipalProgramId());
         break;
       case TYPE_MODEL_NAME_TEXT_AREA:
         final HasValue<String> textAreaUpdate = (TextArea) propertyToUpdate;

@@ -13,6 +13,8 @@ public class TransversalViewSelection extends Property<TransversalViewSelection,
 
   private String value;
 
+  private Long principalProgramId;
+
   private CategoryEnum category;
 
   @Relationship("IS_DRIVEN_BY")
@@ -22,13 +24,14 @@ public class TransversalViewSelection extends Property<TransversalViewSelection,
   public TransversalViewSelection snapshot() {
     final TransversalViewSelection selection = new TransversalViewSelection();
     selection.setValue(this.value);
+    selection.setPrincipalProgramId(this.principalProgramId);
     return selection;
   }
 
   @Override
   public boolean hasChanges(final TransversalViewSelection other) {
-    return (this.value != null || other.value != null)
-      && (this.value == null || !this.value.equals(other.value));
+    return !Objects.equals(this.value, other.value)
+      || !Objects.equals(this.principalProgramId, other.principalProgramId);
   }
 
   @Override
@@ -39,6 +42,14 @@ public class TransversalViewSelection extends Property<TransversalViewSelection,
   @Override
   public void setValue(final String value) {
     this.value = value;
+  }
+
+  public Long getPrincipalProgramId() {
+    return this.principalProgramId;
+  }
+
+  public void setPrincipalProgramId(final Long principalProgramId) {
+    this.principalProgramId = principalProgramId;
   }
 
   @Override

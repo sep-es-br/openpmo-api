@@ -32,6 +32,7 @@ public class ApplicationMessage {
   public static final String WORKPACK_MODEL_USES_DIFFERENT_PLAN = "workpackModel.uses.different.plan";
   public static final String WORKPACK_MODEL_USES_SELF = "workpackModel.uses.self";
   public static final String TRANSVERSAL_VIEW_SELECTION_INVALID = "transversal.view.selection.invalid";
+  public static final String TRANSVERSAL_PRINCIPAL_PROGRAM_NOT_SELECTED = "transversal.principal.program.not.selected";
   public static final String TRANSVERSAL_PROGRAM_CONTEXT_INVALID = "transversal.program.context.invalid";
   public static final String TRANSVERSAL_PROGRAM_PARENT_INVALID = "transversal.program.parent.invalid";
   public static final String TRANSVERSAL_PROJECT_NOT_FOUND = "transversal.project.not.found";
