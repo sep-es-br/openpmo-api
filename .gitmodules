@@ -1,0 +1,4 @@
+[submodule "openpmo-plugin-interfaces"]
+	path = openpmo-plugin-interfaces
+	url = https://github.com/sep-es-br/openpmo-plugin-interfaces
+	branch = main

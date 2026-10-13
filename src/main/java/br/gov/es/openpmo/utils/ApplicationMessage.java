@@ -37,6 +37,7 @@ public class ApplicationMessage {
   public static final String PROJECT_CANNOT_ENTER_REPACTUATION_WITHOUT_APPROVED_BASELINE = "project.cannot.enter.repactuation.without.approved.baseline";
   public static final String PROJECT_STATUS_CANNOT_CHANGE_WITHOUT_APPROVED_BASELINE = "project.status.cannot.change.without.approved.baseline";
   public static final String PROJECT_DIRECT_CREATION_BLOCKED_BY_PRE_PROJECT = "project.direct.creation.blocked.by.preproject";
+  public static final String PROJECT_COMPLETION_REQUIREMENTS_NOT_MET = "project.completion.requirements.not.met";
   public static final String WORKPACK_NOT_FOUND = "workpack.not.found";
   public static final String WORKPACK_NAME_NOT_FOUND = "workpack.name.not.found";
   public static final String WORKPACK_DELETE_RELATIONSHIP_ERROR = "workpack.delete.relationship.error";

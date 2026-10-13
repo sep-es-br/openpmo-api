@@ -2,16 +2,12 @@ package br.gov.es.openpmo.service.schedule;
 
 import br.gov.es.openpmo.dto.completed.CompleteWorkpackRequest;
 import br.gov.es.openpmo.model.workpacks.Deliverable;
-import br.gov.es.openpmo.model.workpacks.Program;
-import br.gov.es.openpmo.model.workpacks.Project;
-import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.StepRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.service.completed.ICompleteWorkpackService;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Service;
 
@@ -63,22 +59,22 @@ public class UpdateStatusService {
   }
 
   public void update(final Collection<? extends Deliverable> deliverables) {
-    final Collection<Workpack> analyzedDeliverables = new ArrayList<>();
+    final Collection<Deliverable> analyzedDeliverables = new ArrayList<>();
 
     for (final Deliverable deliverable : deliverables) {
       this.updateIfCompleted(deliverable, analyzedDeliverables);
     }
 
-    for (final Workpack workpack : analyzedDeliverables) {
-      final CompleteWorkpackRequest request = new CompleteWorkpackRequest(workpack.getCompleted(), null);
-      this.completeWorkpackService.apply(workpack.getId(), request);
+    for (final Deliverable deliverable : analyzedDeliverables) {
+      final CompleteWorkpackRequest request = new CompleteWorkpackRequest(deliverable.getCompleted(), null);
+      this.completeWorkpackService.apply(deliverable.getId(), request);
     }
 
   }
 
   private void updateIfCompleted(
     final Deliverable deliverable,
-    final Collection<? super Workpack> analyzedDeliverables
+    final Collection<? super Deliverable> analyzedDeliverables
   ) {
     final boolean hasScheduleRelated = this.hasScheduleRelated(deliverable);
     if (!hasScheduleRelated) {
@@ -98,20 +94,6 @@ public class UpdateStatusService {
 
     deliverable.setCompleted(false);
     analyzedDeliverables.add(deliverable);
-
-    final Optional<Project> maybeProject = this.workpackRepository.findProject(deliverable.getId());
-    if (maybeProject.isPresent()) {
-      final Project project = maybeProject.get();
-      project.setCompleted(false);
-      analyzedDeliverables.add(project);
-    }
-
-    final Optional<Program> maybeProgram = this.workpackRepository.findProgram(deliverable.getId());
-    if (maybeProgram.isPresent()) {
-      final Program program = maybeProgram.get();
-      program.setCompleted(false);
-      analyzedDeliverables.add(program);
-    }
   }
 
   private boolean hasScheduleRelated(final Deliverable deliverable) {

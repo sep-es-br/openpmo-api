@@ -24,12 +24,27 @@ public interface CompletedRepository extends Neo4jRepository<Workpack, Long> {
   @Query("MATCH (w:Workpack)-[:IS_IN]->(p:Workpack) WHERE id(w)=$workpackId RETURN id(p)")
   List<Long> getParentIds(Long workpackId);
 
+  @Query("MATCH path=(w:Workpack)-[:IS_IN*1..]->(parent:Workpack) " +
+         "WHERE id(w)=$workpackId " +
+         "WITH parent, min(length(path)) AS depth " +
+         "RETURN id(parent) ORDER BY depth")
+  List<Long> getAncestorIds(Long workpackId);
+
   @Query("MATCH (parent:Workpack)<-[:IS_IN]-(sons:Workpack{deleted:false, canceled:false}) " +
          "WHERE id(parent)=$parentId " +
          "WITH collect(sons) AS allSons " +
          "RETURN size(allSons) > 0 " +
          "AND ALL(son IN allSons WHERE son.completed IS NOT NULL AND son.completed=true)")
   boolean allSonsAreCompleted(Long parentId);
+
+  @Query("MATCH (project:Project) WHERE id(project)=$projectId " +
+         "OPTIONAL MATCH (project)<-[:IS_IN*1..]-(child:Workpack) " +
+         "WHERE (child:Deliverable OR child:Milestone) " +
+         "AND child.deleted=false AND child.canceled=false " +
+         "WITH collect(DISTINCT child) AS children " +
+         "RETURN size(children)>0 " +
+         "AND ALL(child IN children WHERE coalesce(child.completed, false)=true)")
+  boolean allProjectDeliverablesAndMilestonesAreCompleted(Long projectId);
 
   @Query("MATCH (w:Workpack) WHERE id(w)=$workpackId SET w.endManagementDate=$endManagementDate")
   void setEndManagementDate(
