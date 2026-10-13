@@ -13,6 +13,7 @@ import br.gov.es.openpmo.model.properties.models.GroupModel;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.model.properties.models.TabModel;
 import br.gov.es.openpmo.repository.PreProjectModelRepository;
+import br.gov.es.openpmo.repository.PreProjectRepository;
 import br.gov.es.openpmo.service.office.OfficeService;
 import br.gov.es.openpmo.service.properties.PropertyModelService;
 import br.gov.es.openpmo.service.reports.models.GetPropertyModelDtoFromEntity;
@@ -33,6 +34,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.PRE_PROJECT_MODEL_NOT_FOUND;
+import static br.gov.es.openpmo.utils.ApplicationMessage.PRE_PROJECT_MODEL_CANNOT_DEACTIVATE_WITH_PRE_PROJECTS;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_MODEL_DELETE_RELATIONSHIP_ERROR;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_UPDATE_TYPE_ERROR;
 
@@ -40,6 +42,7 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_UPDATE_TYPE_ER
 public class PreProjectModelService {
 
   private final PreProjectModelRepository preProjectModelRepository;
+  private final PreProjectRepository preProjectRepository;
 
   private final OfficeService officeService;
 
@@ -56,6 +59,7 @@ public class PreProjectModelService {
   @Autowired
   public PreProjectModelService(
     final PreProjectModelRepository preProjectModelRepository,
+    final PreProjectRepository preProjectRepository,
     final OfficeService officeService,
     final GetPropertyModelDtosFromEntities getPropertyModelDtosFromEntities,
     final GetPropertyModelFromDto getPropertyModelFromDto,
@@ -64,6 +68,7 @@ public class PreProjectModelService {
     final UpdatePropertyModels updatePropertyModels
   ) {
     this.preProjectModelRepository = preProjectModelRepository;
+    this.preProjectRepository = preProjectRepository;
     this.officeService = officeService;
     this.getPropertyModelDtosFromEntities = getPropertyModelDtosFromEntities;
     this.getPropertyModelFromDto = getPropertyModelFromDto;
@@ -115,6 +120,11 @@ public class PreProjectModelService {
     final PreProjectModel preProjectModel = this.preProjectModelRepository
       .findById(id)
       .orElseThrow(() -> new RegistroNaoEncontradoException(PRE_PROJECT_MODEL_NOT_FOUND));
+
+    if (preProjectModel.isActive() && !request.getActive() &&
+      this.preProjectRepository.existsByPreProjectModelId(id)) {
+      throw new NegocioException(PRE_PROJECT_MODEL_CANNOT_DEACTIVATE_WITH_PRE_PROJECTS);
+    }
 
     preProjectModel.setActive(request.getActive());
     preProjectModel.setOperation(request.getOperation());
@@ -236,7 +246,11 @@ public class PreProjectModelService {
   private PreProjectModelDto toDto(final PreProjectModel preProjectModel) {
     final List<? extends PropertyModelDto> properties =
       this.getPropertyModelDtosFromEntities.execute(preProjectModel.getProperties());
-    return new PreProjectModelDto(preProjectModel, properties);
+    return new PreProjectModelDto(
+      preProjectModel,
+      properties,
+      this.preProjectRepository.existsByPreProjectModelId(preProjectModel.getId())
+    );
   }
 
 }

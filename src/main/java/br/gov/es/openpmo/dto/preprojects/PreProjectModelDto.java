@@ -10,6 +10,7 @@ public class PreProjectModelDto {
   private final Long id;
 
   private final boolean active;
+  private final boolean hasPreProjects;
 
   private final CriteriaOperation operation;
 
@@ -17,10 +18,12 @@ public class PreProjectModelDto {
 
   public PreProjectModelDto(
     final PreProjectModel preProjectModel,
-    final List<? extends PropertyModelDto> properties
+    final List<? extends PropertyModelDto> properties,
+    final boolean hasPreProjects
   ) {
     this.id = preProjectModel.getId();
     this.active = preProjectModel.isActive();
+    this.hasPreProjects = hasPreProjects;
     this.operation = preProjectModel.getOperation();
     this.properties = properties;
   }
@@ -31,6 +34,10 @@ public class PreProjectModelDto {
 
   public boolean isActive() {
     return this.active;
+  }
+
+  public boolean getHasPreProjects() {
+    return this.hasPreProjects;
   }
 
   public CriteriaOperation getOperation() {

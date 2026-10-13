@@ -15,6 +15,13 @@ public interface PreProjectRepository
   extends Neo4jRepository<PreProject, Long>, CustomRepository {
 
   @Query(
+    "MATCH (preProject:PreProject)-[:INSTANTIATES]->(model:PreProjectModel) " +
+    "WHERE id(model) = $idPreProjectModel " +
+    "RETURN count(preProject) > 0"
+  )
+  boolean existsByPreProjectModelId(@Param("idPreProjectModel") Long idPreProjectModel);
+
+  @Query(
     "MATCH (preProject:PreProject)-[:INSTANTIATES]->(:PreProjectModel)-[:IS_ADOPTED_BY]->(office:Office) " +
     "WHERE id(office) = $idOffice " +
     "OPTIONAL MATCH (preProject)<-[:IS]-(organization:Organization) " +

@@ -12,12 +12,14 @@ import br.gov.es.openpmo.dto.preprojects.PreProjectModelDto;
 import br.gov.es.openpmo.dto.preprojects.UpdatePreProjectModelRequest;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.CriteriaTabModelDto;
 import br.gov.es.openpmo.enumerator.CriteriaOperation;
+import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.exception.RegistroNaoEncontradoException;
 import br.gov.es.openpmo.model.office.Office;
 import br.gov.es.openpmo.model.preprojects.models.PreProjectModel;
 import br.gov.es.openpmo.model.properties.models.CriteriaTabModel;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.repository.PreProjectModelRepository;
+import br.gov.es.openpmo.repository.PreProjectRepository;
 import br.gov.es.openpmo.service.office.OfficeService;
 import br.gov.es.openpmo.service.properties.PropertyModelService;
 import br.gov.es.openpmo.service.reports.models.GetPropertyModelDtoFromEntity;
@@ -33,6 +35,7 @@ import org.junit.Test;
 public class PreProjectModelServiceTest {
 
   private PreProjectModelRepository preProjectModelRepository;
+  private PreProjectRepository preProjectRepository;
 
   private OfficeService officeService;
 
@@ -51,6 +54,7 @@ public class PreProjectModelServiceTest {
   @Before
   public void setUp() {
     this.preProjectModelRepository = mock(PreProjectModelRepository.class);
+    this.preProjectRepository = mock(PreProjectRepository.class);
     this.officeService = mock(OfficeService.class);
     this.getPropertyModelDtosFromEntities = mock(GetPropertyModelDtosFromEntities.class);
     this.getPropertyModelFromDto = mock(GetPropertyModelFromDto.class);
@@ -61,6 +65,7 @@ public class PreProjectModelServiceTest {
       .thenReturn(Collections.emptyList());
     this.service = new PreProjectModelService(
       this.preProjectModelRepository,
+      this.preProjectRepository,
       this.officeService,
       this.getPropertyModelDtosFromEntities,
       this.getPropertyModelFromDto,
@@ -78,11 +83,13 @@ public class PreProjectModelServiceTest {
     existing.setOperation(CriteriaOperation.SUM);
     when(this.preProjectModelRepository.findIdByOfficeId(1L)).thenReturn(Optional.of(10L));
     when(this.preProjectModelRepository.findById(10L)).thenReturn(Optional.of(existing));
+    when(this.preProjectRepository.existsByPreProjectModelId(10L)).thenReturn(true);
 
     final PreProjectModelDto result = this.service.findOrCreateByOfficeId(1L);
 
     assertEquals(Long.valueOf(10L), result.getId());
     assertTrue(result.isActive());
+    assertTrue(result.getHasPreProjects());
     assertEquals(CriteriaOperation.SUM, result.getOperation());
     assertTrue(result.getProperties().isEmpty());
     verify(this.officeService, never()).findByIdThin(1L);
@@ -164,6 +171,50 @@ public class PreProjectModelServiceTest {
     assertTrue(result.isActive());
     assertEquals(CriteriaOperation.SUM, result.getOperation());
     assertTrue(result.getProperties().isEmpty());
+    verify(this.preProjectModelRepository).save(existing);
+  }
+
+  @Test
+  public void shouldRejectDeactivationWhenPreProjectsExist() {
+    final PreProjectModel existing = new PreProjectModel();
+    existing.setId(10L);
+    existing.setActive(true);
+    when(this.preProjectModelRepository.findById(10L)).thenReturn(Optional.of(existing));
+    when(this.preProjectRepository.existsByPreProjectModelId(10L)).thenReturn(true);
+
+    final UpdatePreProjectModelRequest request = new UpdatePreProjectModelRequest();
+    request.setActive(false);
+    request.setOperation(CriteriaOperation.SUM);
+
+    try {
+      this.service.update(10L, request);
+      org.junit.Assert.fail("A desativação deveria ser bloqueada");
+    } catch (NegocioException exception) {
+      assertEquals(
+        br.gov.es.openpmo.utils.ApplicationMessage.PRE_PROJECT_MODEL_CANNOT_DEACTIVATE_WITH_PRE_PROJECTS,
+        exception.getMessage()
+      );
+    }
+
+    assertTrue(existing.isActive());
+    verify(this.preProjectModelRepository, never()).save(existing);
+  }
+
+  @Test
+  public void shouldAllowDeactivationWhenNoPreProjectsExist() {
+    final PreProjectModel existing = new PreProjectModel();
+    existing.setId(10L);
+    existing.setActive(true);
+    when(this.preProjectModelRepository.findById(10L)).thenReturn(Optional.of(existing));
+    when(this.preProjectModelRepository.save(existing)).thenReturn(existing);
+
+    final UpdatePreProjectModelRequest request = new UpdatePreProjectModelRequest();
+    request.setActive(false);
+    request.setOperation(CriteriaOperation.AVERAGE);
+
+    final PreProjectModelDto result = this.service.update(10L, request);
+
+    assertFalse(result.isActive());
     verify(this.preProjectModelRepository).save(existing);
   }
 
