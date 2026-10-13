@@ -8,9 +8,11 @@ import br.gov.es.openpmo.utils.PropertyModelInstanceType;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import javax.validation.Valid;
 
 public class GroupModelDto extends PropertyModelDto {
 
+  @Valid
   private List<? extends PropertyModelDto> groupedProperties;
 
   public static GroupModelDto of(final PropertyModel propertyModel) {

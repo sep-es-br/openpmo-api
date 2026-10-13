@@ -25,11 +25,19 @@ import static org.neo4j.ogm.annotation.Relationship.INCOMING;
   @JsonSubTypes.Type(value = CurrencyModel.class, name = "CurrencyModel"),
   @JsonSubTypes.Type(value = LocalitySelectionModel.class, name = "LocalitySelectionModel"),
   @JsonSubTypes.Type(value = GroupModel.class, name = "GroupModel"),
+  @JsonSubTypes.Type(value = TabModel.class, name = "TabModel"),
+  @JsonSubTypes.Type(value = ListModel.class, name = "ListModel"),
+  @JsonSubTypes.Type(value = CriteriaTabModel.class, name = "CriteriaTabModel"),
+  @JsonSubTypes.Type(value = CriteriaGroupModel.class, name = "CriteriaGroupModel"),
+  @JsonSubTypes.Type(value = CriteriaSelectionModel.class, name = "CriteriaSelectionModel"),
+  @JsonSubTypes.Type(value = CriteriaListModel.class, name = "CriteriaListModel"),
   @JsonSubTypes.Type(value = OrganizationSelectionModel.class, name = "OrganizationSelectionModel")})
 @ApiModel(subTypes = {IntegerModel.class, TextModel.class, DateModel.class, ToggleModel.class,
   UnitSelectionModel.class, SelectionModel.class, TextAreaModel.class, NumberModel.class, CurrencyModel.class,
   LocalitySelectionModel.class,
-  OrganizationSelectionModel.class, GroupModel.class}, discriminator = "type", description = "Supertype of all PropertyModel.")
+  OrganizationSelectionModel.class, GroupModel.class, TabModel.class, ListModel.class,
+  CriteriaTabModel.class, CriteriaGroupModel.class, CriteriaSelectionModel.class,
+  CriteriaListModel.class}, discriminator = "type", description = "Supertype of all PropertyModel.")
 @NodeEntity
 public class PropertyModel extends Entity {
 
@@ -40,6 +48,12 @@ public class PropertyModel extends Entity {
   private String label;
 
   private String helpText;
+
+  /**
+   * Relative importance of this property when it belongs to a criterion.
+   * Models outside criteria keep the default value and are unaffected.
+   */
+  private Double weight = 1D;
 
   private boolean active;
 
@@ -114,10 +128,18 @@ public class PropertyModel extends Entity {
     this.helpText = helpText;
   }
 
+  public Double getWeight() {
+    return this.weight;
+  }
+
+  public void setWeight(final Double weight) {
+    this.weight = weight;
+  }
+
   @Override
   public int hashCode() {
     return Objects.hash(super.hashCode(), this.sortIndex, this.name, this.label,
-      this.active, this.fullLine, this.required
+      this.active, this.fullLine, this.required, this.weight
     );
   }
 
@@ -134,7 +156,8 @@ public class PropertyModel extends Entity {
     }
     final PropertyModel that = (PropertyModel) o;
     return this.active == that.active && this.fullLine == that.fullLine && this.required == that.required && Objects.equals(
-      this.sortIndex, that.sortIndex) && Objects.equals(this.name, that.name) && Objects.equals(this.label, that.label);
+      this.sortIndex, that.sortIndex) && Objects.equals(this.name, that.name) && Objects.equals(this.label, that.label)
+      && Objects.equals(this.weight, that.weight);
   }
 
   @Transient
