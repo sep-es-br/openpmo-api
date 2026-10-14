@@ -15,6 +15,8 @@ public class TransversalStructuralLinkDto {
   private String name;
   private String fullName;
   private String modelName;
+  private String modelNameInPlural;
+  private String workpackModelType;
   private String fontIcon;
   private boolean directlyLinked;
   private boolean clickable;
@@ -38,6 +40,10 @@ public class TransversalStructuralLinkDto {
   public void setFullName(final String fullName) { this.fullName = fullName; }
   public String getModelName() { return modelName; }
   public void setModelName(final String modelName) { this.modelName = modelName; }
+  public String getModelNameInPlural() { return modelNameInPlural; }
+  public void setModelNameInPlural(final String modelNameInPlural) { this.modelNameInPlural = modelNameInPlural; }
+  public String getWorkpackModelType() { return workpackModelType; }
+  public void setWorkpackModelType(final String workpackModelType) { this.workpackModelType = workpackModelType; }
   public String getFontIcon() { return fontIcon; }
   public void setFontIcon(final String fontIcon) { this.fontIcon = fontIcon; }
   public boolean isDirectlyLinked() { return directlyLinked; }

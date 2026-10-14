@@ -62,6 +62,14 @@ public class DashboardService {
       CompletableFuture.allOf(dataByMonthFuture, milestonesFuture, statusDataFuture, datasheetFuture, riskFuture).join();
       
     
+    final DashboardStatusData statusData = statusDataFuture.join();
+    if (parameters.isTransversal() && statusData != null) {
+      final Long linkedDeliverableCount = datasheetFuture.join().getDatasheetTotalizers().getTransversalDeliverableCount();
+      if (linkedDeliverableCount != null) {
+        statusData.setTotalDeliverable(linkedDeliverableCount.intValue());
+      }
+    }
+
     return new DashboardResponse(
       riskFuture.join(),
       dataByMonthFuture.join().getDashboardMonthDto().getTripleConstraint(),
@@ -69,7 +77,7 @@ public class DashboardService {
       dataByMonthFuture.join().getEarnedValueByStepDto(),
       dataByMonthFuture.join().getDashboardMonthDto().getPerformanceIndex(),
       milestonesFuture.join(),
-      statusDataFuture.join()
+      statusData
     );
   }
 
