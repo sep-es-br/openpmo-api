@@ -557,7 +557,11 @@ public class PersonService {
     person.setIdPlan(request.getIdPlan());
     person.setIdWorkpack(request.getIdWorkpack());
     person.setIdWorkpackModelLinked(request.getIdWorkpackModelLinked());
-    this.repository.updateLocalWork(person.getId(), person.getIdOffice(), person.getIdPlan(), person.getIdWorkpack(), person.getIdWorkpackModelLinked());
+    person.setClassification(request.getClassification());
+    person.setIdTransversalRoot(request.getIdTransversalRoot());
+    this.repository.updateLocalWork(person.getId(), person.getIdOffice(), person.getIdPlan(),
+      person.getIdWorkpack(), person.getIdWorkpackModelLinked(), person.getClassification(),
+      person.getIdTransversalRoot());
   }
   
   public void updatePreference(Long idPerson, PreferencesDto newPreferences){

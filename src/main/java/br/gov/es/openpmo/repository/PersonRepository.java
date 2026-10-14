@@ -282,10 +282,13 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
                   "SET p.idOffice = $idOffice, " +
                   "p.idPlan = $idPlan, " +
                   "p.idWorkpack = $idWorkpack, " +
-                  "p.idWorkpackModelLinked = $idWorkpackModelLinked " +
+                  "p.idWorkpackModelLinked = $idWorkpackModelLinked, " +
+                  "p.classification = $classification, " +
+                  "p.idTransversalRoot = $idTransversalRoot " +
                   "RETURN p "
   )
-  Person updateLocalWork(Long personId, Long idOffice, Long idPlan, Long idWorkpack, Long idWorkpackModelLinked);
+  Person updateLocalWork(Long personId, Long idOffice, Long idPlan, Long idWorkpack,
+                         Long idWorkpackModelLinked, String classification, Long idTransversalRoot);
 
   @Query(
     "MATCH (p:Person) WHERE id(p) = $personId " +

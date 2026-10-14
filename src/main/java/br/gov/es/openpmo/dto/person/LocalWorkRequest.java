@@ -8,13 +8,18 @@ public class LocalWorkRequest {
   private final Long idPlan;
   private final Long idWorkpack;
   private final Long idWorkpackModelLinked;
+  private final String classification;
+  private final Long idTransversalRoot;
 
   @JsonCreator
-  public LocalWorkRequest(Long idOffice, Long idPlan, Long idWorkpack, Long idWorkpackModelLinked) {
+  public LocalWorkRequest(Long idOffice, Long idPlan, Long idWorkpack, Long idWorkpackModelLinked,
+                          String classification, Long idTransversalRoot) {
     this.idOffice = idOffice;
     this.idPlan = idPlan;
     this.idWorkpack = idWorkpack;
     this.idWorkpackModelLinked = idWorkpackModelLinked;
+    this.classification = classification;
+    this.idTransversalRoot = idTransversalRoot;
   }
 
   public Long getIdOffice() {
@@ -31,5 +36,13 @@ public class LocalWorkRequest {
 
   public Long getIdWorkpackModelLinked() {
     return idWorkpackModelLinked;
+  }
+
+  public String getClassification() {
+    return classification;
+  }
+
+  public Long getIdTransversalRoot() {
+    return idTransversalRoot;
   }
 }

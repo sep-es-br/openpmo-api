@@ -20,6 +20,8 @@ public class Person extends Actor {
   private Long idPlan;
   private Long idWorkpack;
   private Long idWorkpackModelLinked;
+  private String classification;
+  private Long idTransversalRoot;
   private Integer pageSize;
   private Boolean fixedMenu;
   private DisplayModeEnum displayMode;
@@ -84,6 +86,22 @@ public class Person extends Actor {
 
   public void setIdWorkpackModelLinked(Long idWorkpackModelLinked) {
     this.idWorkpackModelLinked = idWorkpackModelLinked;
+  }
+
+  public String getClassification() {
+    return classification;
+  }
+
+  public void setClassification(String classification) {
+    this.classification = classification;
+  }
+
+  public Long getIdTransversalRoot() {
+    return idTransversalRoot;
+  }
+
+  public void setIdTransversalRoot(Long idTransversalRoot) {
+    this.idTransversalRoot = idTransversalRoot;
   }
 
   public boolean getAdministrator() {
