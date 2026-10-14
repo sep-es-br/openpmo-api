@@ -8,6 +8,8 @@ import br.gov.es.openpmo.dto.workpackmodel.TransversalSelectionOptionDto;
 import br.gov.es.openpmo.dto.workpackmodel.TransversalLinkedModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.TransversalWorkpackDto;
 import br.gov.es.openpmo.dto.workpackmodel.TransversalStructuralLinkDto;
+import br.gov.es.openpmo.dto.workpackmodel.TransversalProjectScopeCountDto;
+import br.gov.es.openpmo.dto.workpackmodel.TransversalProjectScopeItemDto;
 import br.gov.es.openpmo.model.workpacks.Program;
 import java.util.List;
 import java.util.Optional;
@@ -33,8 +35,8 @@ public interface TransversalRepository extends Neo4jRepository<Program, Long> {
     + "AND toString(id(program)) IN [token IN split(coalesce(selection.value, ''), ',') | trim(token)] "
     + "AND coalesce(selected.deleted, false) = false "
     + "MATCH (candidate:Workpack)-[:BELONGS_TO]->(plan) "
-    + "WHERE candidate = selected OR ($includeStructuralDescendants AND EXISTS((candidate)-[:IS_IN*1..]->(selected))) "
-    + "OR EXISTS((selected)-[:IS_IN*1..]->(candidate)) "
+    + "WHERE (candidate = selected OR ($includeStructuralDescendants AND EXISTS((candidate)-[:IS_IN*1..]->(selected))) "
+    + "OR EXISTS((selected)-[:IS_IN*1..]->(candidate))) AND coalesce(candidate.deleted, false) = false "
     + "MATCH (candidate)-[:IS_INSTANCE_BY]->(candidateModel:WorkpackModel) "
     + "MATCH (selectedModel)-[:IS_IN*0..]->(rootModel:WorkpackModel)<-[:FEATURES]-(:TransversalViewSelectionModel) "
     + "WHERE NOT EXISTS((rootModel)-[:IS_IN*1..]->(:WorkpackModel)<-[:FEATURES]-(:TransversalViewSelectionModel)) "
@@ -53,6 +55,38 @@ public interface TransversalRepository extends Neo4jRepository<Program, Long> {
     @Param("idPlan") Long idPlan,
     @Param("includeDescendants") boolean includeDescendants,
     @Param("includeStructuralDescendants") boolean includeStructuralDescendants
+  );
+
+  @Query("MATCH (program:Program)-[:MEMBER_OF]->(view:WorkpackModel) "
+    + "MATCH (program)-[:BELONGS_TO]->(plan:Plan) "
+    + "MATCH (selected:Workpack)-[:BELONGS_TO]->(plan) "
+    + "MATCH (selected)-[:IS_INSTANCE_BY]->(selectedModel:WorkpackModel) "
+    + "MATCH (selectedModel)<-[:FEATURES]-(selectionModel:TransversalViewSelectionModel) "
+    + "MATCH (selected)<-[:FEATURES]-(selection:TransversalViewSelection)-[:IS_DRIVEN_BY]->(selectionModel) "
+    + "WHERE id(program) = $idTransversalProgram "
+    + "AND toString(id(program)) IN [token IN split(coalesce(selection.value, ''), ',') | trim(token)] "
+    + "AND coalesce(selected.deleted, false) = false "
+    + "AND coalesce(selected.canceled, false) = false "
+    + "MATCH (selected)-[:IS_IN*0..]->(project:Project)-[:BELONGS_TO]->(plan) "
+    + "WHERE coalesce(project.deleted, false) = false "
+    + "WITH program, view, plan, project, collect(DISTINCT selected) AS selectedItems "
+    + "MATCH (project)-[:IS_INSTANCE_BY]->(projectModel:WorkpackModel) "
+    + "MATCH (leafModel:WorkpackModel)-[:IS_IN*1..]->(projectModel) "
+    + "WHERE NOT EXISTS((:WorkpackModel)-[:IS_IN]->(leafModel)) "
+    + "AND EXISTS((view)-[:USES]->(:WorkpackModel)<-[:IS_IN*0..]-(leafModel)) "
+    + "MATCH (leaf:Workpack)-[:IS_INSTANCE_BY]->(leafModel) "
+    + "MATCH (leaf)-[:BELONGS_TO]->(plan) "
+    + "WHERE (leaf = project OR EXISTS((leaf)-[:IS_IN*1..]->(project))) "
+    + "AND coalesce(leaf.deleted, false) = false "
+    + "AND coalesce(leaf.canceled, false) = false "
+    + "WITH DISTINCT program, project, leafModel, leaf, "
+    + "any(selectedItem IN selectedItems WHERE selectedItem = project OR selectedItem = leaf "
+    + "OR EXISTS((leaf)-[:IS_IN*1..]->(selectedItem))) AS linked "
+    + "RETURN id(project) AS idProject, id(leaf) AS idWorkpack, id(leafModel) AS idWorkpackModel, "
+    + "leafModel.modelNameInPlural AS modelNameInPlural, leafModel.fontIcon AS fontIcon, linked "
+    + "ORDER BY idProject, modelNameInPlural, idWorkpack")
+  List<TransversalProjectScopeItemDto> findProjectScopeItems(
+    @Param("idTransversalProgram") Long idTransversalProgram
   );
 
   @Query("MATCH (program:Program)-[:MEMBER_OF]->(view:WorkpackModel) "

@@ -10,9 +10,17 @@ import br.gov.es.openpmo.dto.workpackmodel.TransversalLinkedModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.TransversalWorkpackDto;
 import br.gov.es.openpmo.dto.workpackmodel.TransversalWorkpackParticipationDto;
 import br.gov.es.openpmo.dto.workpackmodel.TransversalStructuralLinkDto;
+import br.gov.es.openpmo.dto.workpackmodel.TransversalProjectScopeCountDto;
+import br.gov.es.openpmo.dto.workpackmodel.TransversalProjectScopeItemDto;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.repository.TransversalRepository;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +30,6 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.TRANSVERSAL_PROJECT_NOT
 import static br.gov.es.openpmo.utils.ApplicationMessage.TRANSVERSAL_PROJECT_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.TRANSVERSAL_WORKPACK_NOT_ELIGIBLE;
 import static br.gov.es.openpmo.utils.ApplicationMessage.TRANSVERSAL_WORKPACK_NOT_FOUND;
-import java.util.ArrayList;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -78,11 +85,59 @@ public class TransversalProjectService {
     final boolean includeStructuralDescendants
   ) {
     this.requireProgramContext(idTransversalProgram);
-    return this.repository.findStructuralLinks(idTransversalProgram, null, null, true, includeStructuralDescendants);
+    return this.repository.findStructuralLinks(
+      idTransversalProgram, null, null, true, includeStructuralDescendants
+    );
   }
 
   public List<TransversalStructuralLinkDto> findStructuralLinksForView(final Long idTransversalView, final Long idPlan) {
     return this.repository.findStructuralLinks(null, idTransversalView, idPlan, false, true);
+  }
+
+  public List<TransversalProjectScopeItemDto> findProjectScopeItems(final Long idTransversalProgram) {
+    this.requireProgramContext(idTransversalProgram);
+    return this.repository.findProjectScopeItems(idTransversalProgram);
+  }
+
+  public void attachProjectScopeCounts(
+    final List<TransversalStructuralLinkDto> links,
+    final List<TransversalProjectScopeItemDto> scopeItems,
+    final Set<Long> readableProjectIds
+  ) {
+    final Map<Long, Map<Long, TransversalProjectScopeCountDto>> countsByProject = new HashMap<>();
+    scopeItems.stream()
+      .filter(item -> readableProjectIds.contains(item.getIdProject()))
+      .forEach(item -> {
+        final Map<Long, TransversalProjectScopeCountDto> countsByModel = countsByProject
+          .computeIfAbsent(item.getIdProject(), key -> new HashMap<>());
+        final TransversalProjectScopeCountDto count = countsByModel.computeIfAbsent(
+          item.getIdWorkpackModel(), key -> {
+            final TransversalProjectScopeCountDto newCount = new TransversalProjectScopeCountDto();
+            newCount.setIdProject(item.getIdProject());
+            newCount.setIdWorkpackModel(item.getIdWorkpackModel());
+            newCount.setModelNameInPlural(item.getModelNameInPlural());
+            newCount.setFontIcon(item.getFontIcon());
+            return newCount;
+          }
+        );
+        count.setTotalCount(count.getTotalCount() + 1);
+        if (item.isLinked()) {
+          count.setLinkedCount(count.getLinkedCount() + 1);
+        }
+      });
+    links.forEach(link -> {
+      final Map<Long, TransversalProjectScopeCountDto> countsByModel = countsByProject.get(link.getIdWorkpack());
+      if (countsByModel != null) {
+        final List<TransversalProjectScopeCountDto> counts = countsByModel.values().stream()
+          .filter(count -> count.getLinkedCount() > 0)
+          .sorted(Comparator.comparing(TransversalProjectScopeCountDto::getModelNameInPlural,
+            Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
+          .collect(Collectors.toList());
+        if (!counts.isEmpty()) {
+          link.setScopeCounts(counts);
+        }
+      }
+    });
   }
 
   public Page<TransversalWorkpackDto> findEligibleWorkpacks(

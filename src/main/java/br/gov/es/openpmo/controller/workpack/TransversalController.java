@@ -11,11 +11,15 @@ import br.gov.es.openpmo.dto.workpackmodel.TransversalLinkedModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.TransversalWorkpackDto;
 import br.gov.es.openpmo.dto.workpackmodel.TransversalWorkpackParticipationDto;
 import br.gov.es.openpmo.dto.workpackmodel.TransversalStructuralLinkDto;
+import br.gov.es.openpmo.dto.workpackmodel.TransversalProjectScopeItemDto;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessData;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.workpack.TransversalProjectService;
 import io.swagger.annotations.Api;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -128,13 +132,21 @@ public class TransversalController {
     @RequestHeader("Authorization") final String authorization
   ) {
     this.canAccessService.ensureCanReadResourceWorkpack(idTransversalProgram, authorization);
-    return ResponseEntity.ok(ResponseBase.of(
-      (includeDescendants
-        ? this.transversalProjectService.findStructuralLinksForProgramTree(idTransversalProgram, includeStructuralDescendants)
-        : this.transversalProjectService.findStructuralLinks(idTransversalProgram)).stream()
-        .filter(item -> this.canAccessData.execute(item.getIdWorkpack(), authorization).canReadResource())
-        .collect(Collectors.toList())
-    ));
+    final List<TransversalStructuralLinkDto> links = includeDescendants
+      ? this.transversalProjectService.findStructuralLinksForProgramTree(idTransversalProgram, includeStructuralDescendants)
+      : this.transversalProjectService.findStructuralLinks(idTransversalProgram);
+    final List<TransversalProjectScopeItemDto> scopeItems = this.transversalProjectService
+      .findProjectScopeItems(idTransversalProgram);
+    final Map<Long, Boolean> readableByWorkpack = new HashMap<>();
+    final List<TransversalStructuralLinkDto> readableLinks = links.stream()
+      .filter(item -> readableByWorkpack.computeIfAbsent(item.getIdWorkpack(), id ->
+        this.canAccessData.execute(id, authorization).canReadResource()))
+      .collect(Collectors.toList());
+    final Set<Long> readableProjectIds = readableLinks.stream()
+      .map(TransversalStructuralLinkDto::getIdWorkpack)
+      .collect(Collectors.toSet());
+    this.transversalProjectService.attachProjectScopeCounts(links, scopeItems, readableProjectIds);
+    return ResponseEntity.ok(ResponseBase.of(readableLinks));
   }
 
   @GetMapping("/views/{idTransversalView}/structural-links")

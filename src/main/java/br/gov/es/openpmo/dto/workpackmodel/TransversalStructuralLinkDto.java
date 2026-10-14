@@ -1,5 +1,6 @@
 package br.gov.es.openpmo.dto.workpackmodel;
 
+import java.util.List;
 import org.springframework.data.neo4j.annotation.QueryResult;
 
 @QueryResult
@@ -17,6 +18,7 @@ public class TransversalStructuralLinkDto {
   private String fontIcon;
   private boolean directlyLinked;
   private boolean clickable;
+  private List<TransversalProjectScopeCountDto> scopeCounts;
 
   public Long getIdTransversalProgram() { return idTransversalProgram; }
   public void setIdTransversalProgram(final Long idTransversalProgram) { this.idTransversalProgram = idTransversalProgram; }
@@ -42,4 +44,6 @@ public class TransversalStructuralLinkDto {
   public void setDirectlyLinked(final boolean directlyLinked) { this.directlyLinked = directlyLinked; }
   public boolean isClickable() { return clickable; }
   public void setClickable(final boolean clickable) { this.clickable = clickable; }
+  public List<TransversalProjectScopeCountDto> getScopeCounts() { return scopeCounts; }
+  public void setScopeCounts(final List<TransversalProjectScopeCountDto> scopeCounts) { this.scopeCounts = scopeCounts; }
 }
