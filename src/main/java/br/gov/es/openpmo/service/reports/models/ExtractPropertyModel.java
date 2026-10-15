@@ -225,6 +225,7 @@ public class ExtractPropertyModel {
         final CriteriaSelectionModel criteriaSelectionModel = new CriteriaSelectionModel();
         this.copyBaseFields(criteriaSelectionDto, criteriaSelectionModel);
         criteriaSelectionModel.setWeight(criteriaSelectionDto.getWeight());
+        criteriaSelectionModel.setMultipleSelection(criteriaSelectionDto.isMultipleSelection());
         criteriaSelectionModel.setAcceptedOptions(this.extractAcceptedOptions(
           criteriaSelectionDto.getAcceptedOptions(),
           criteriaSelectionModel

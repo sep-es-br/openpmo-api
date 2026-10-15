@@ -16,6 +16,8 @@ public class CriteriaSelectionModelDto extends PropertyModelDto {
 
   private List<SelectionOptionDto> acceptedOptions;
 
+  private boolean multipleSelection;
+
   public static CriteriaSelectionModelDto of(final PropertyModel propertyModel) {
     final CriteriaSelectionModel criteriaSelectionModel = (CriteriaSelectionModel) propertyModel;
     final CriteriaSelectionModelDto instance = (CriteriaSelectionModelDto) PropertyModelDto.of(
@@ -23,6 +25,7 @@ public class CriteriaSelectionModelDto extends PropertyModelDto {
       CriteriaSelectionModelDto::new
     );
     instance.setWeight(criteriaSelectionModel.getWeight());
+    instance.setMultipleSelection(criteriaSelectionModel.isMultipleSelection());
     instance.setAcceptedOptions(Optional.ofNullable(criteriaSelectionModel.getAcceptedOptions())
       .map(options -> options.stream()
         .map(SelectionOptionDto::of)
@@ -43,6 +46,14 @@ public class CriteriaSelectionModelDto extends PropertyModelDto {
 
   public List<SelectionOptionDto> getAcceptedOptions() {
     return this.acceptedOptions;
+  }
+
+  public boolean isMultipleSelection() {
+    return this.multipleSelection;
+  }
+
+  public void setMultipleSelection(final boolean multipleSelection) {
+    this.multipleSelection = multipleSelection;
   }
 
   public void setAcceptedOptions(final List<SelectionOptionDto> acceptedOptions) {
