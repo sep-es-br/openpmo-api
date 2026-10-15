@@ -85,8 +85,8 @@ public interface TransversalRepository extends Neo4jRepository<Program, Long> {
     + "AND coalesce(leaf.deleted, false) = false "
     + "AND coalesce(leaf.canceled, false) = false "
     + "WITH DISTINCT project, leafModel, leaf, "
-    + "any(selectedItem IN selectedItems WHERE selectedItem <> project AND (selectedItem = leaf "
-    + "OR EXISTS((leaf)-[:IS_IN*1..]->(selectedItem)))) AS linked "
+    + "any(selectedItem IN selectedItems WHERE selectedItem = project OR selectedItem = leaf "
+    + "OR EXISTS((leaf)-[:IS_IN*1..]->(selectedItem))) AS linked "
     + "RETURN id(project) AS idProject, id(leaf) AS idWorkpack, id(leafModel) AS idWorkpackModel, "
     + "leafModel.modelNameInPlural AS modelNameInPlural, leafModel.fontIcon AS fontIcon, linked "
     + "ORDER BY idProject, modelNameInPlural, idWorkpack")
