@@ -29,7 +29,7 @@ O GitBook é a **fonte da verdade para regras de negócio, fluxos funcionais e c
 
 ## Serviços locais
 
-- **Não encerre serviços em execução sem solicitação expressa do usuário.** Isso inclui o backend, o frontend e outros processos de desenvolvimento. Antes de iniciar um serviço, verifique se ele já está ativo; se estiver, preserve-o e informe o estado.
+- **Em tarefas que autorizem iniciar ou reiniciar serviços, a parada temporária durante a execução está autorizada.** Isso inclui o backend, o frontend e outros processos de desenvolvimento. Ao concluir a tarefa, deixe os serviços solicitados ativos e disponíveis para inspeção humana. Se a tarefa não autorizar iniciar ou reiniciar um serviço, verifique seu estado antes de agir e preserve os serviços que já estiverem em execução.
 
 O `README.md` e o `Dockerfile` ainda contêm referências a Java 8, mas a configuração efetiva de compilação do projeto é Java 11. Não rebaixe a linguagem nem altere a imagem de runtime sem uma tarefa específica para compatibilização da implantação.
 
