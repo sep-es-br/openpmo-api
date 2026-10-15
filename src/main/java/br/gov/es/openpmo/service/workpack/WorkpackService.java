@@ -91,6 +91,7 @@ import br.gov.es.openpmo.repository.CustomFilterRepository;
 import br.gov.es.openpmo.repository.MilestoneRepository;
 import br.gov.es.openpmo.repository.PropertyRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
+import br.gov.es.openpmo.repository.completed.CompletedRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllWorkpackByParentUsingCustomFilter;
 import br.gov.es.openpmo.repository.custom.filters.FindAllWorkpackUsingCustomFilter;
 import br.gov.es.openpmo.service.actors.OrganizationService;
@@ -111,6 +112,7 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_REQUIRED_NOT_F
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_UPDATE_TYPE_ERROR;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROJECT_STATUS_CANNOT_CHANGE_WITHOUT_APPROVED_BASELINE;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROJECT_CANNOT_RETURN_TO_STRUCTURING;
+import static br.gov.es.openpmo.utils.ApplicationMessage.PROJECT_COMPLETION_REQUIREMENTS_NOT_MET;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_VALUE_NOT_EMPTY;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_VALUE_NOT_MAX;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_VALUE_NOT_MIN;
@@ -178,6 +180,7 @@ public class WorkpackService {
   private final PropertyModelService propertyModelService;
 
   private final WorkpackRepository workpackRepository;
+  private final CompletedRepository completedRepository;
 
   private final PlanService planService;
   private final PreProjectModelService preProjectModelService;
@@ -223,6 +226,7 @@ public class WorkpackService {
     final PropertyService propertyService,
     final PropertyModelService propertyModelService,
     final WorkpackRepository workpackRepository,
+    final CompletedRepository completedRepository,
     final CustomFilterRepository customFilterRepository,
     final FindAllWorkpackByParentUsingCustomFilter findAllWorkpackByParent,
     final OrganizationService organizationService,
@@ -245,6 +249,7 @@ public class WorkpackService {
     this.modelMapper = modelMapper;
     this.propertyService = propertyService;
     this.workpackRepository = workpackRepository;
+    this.completedRepository = completedRepository;
     this.propertyModelService = propertyModelService;
     this.customFilterRepository = customFilterRepository;
     this.findAllWorkpackByParent = findAllWorkpackByParent;
@@ -989,6 +994,11 @@ public class WorkpackService {
 
     if ("Estruturação".equals(requestedStatus.get()) && hasApprovedBaseline) {
       throw new NegocioException(PROJECT_CANNOT_RETURN_TO_STRUCTURING);
+    }
+
+    if ("Concluído".equals(requestedStatus.get())
+      && !this.completedRepository.allProjectDeliverablesAndMilestonesAreCompleted(workpack.getId())) {
+      throw new NegocioException(PROJECT_COMPLETION_REQUIREMENTS_NOT_MET);
     }
   }
 

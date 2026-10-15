@@ -78,5 +78,6 @@ public class CitizenServiceTest {
     assertEquals("Organization Name", result.getOrganization().getName());
     assertEquals("organization-guid", result.getOrganization().getGuid());
     assertEquals("Organization Name", result.getRoles().get(1).getWorkLocation());
+    assertEquals("role-guid", result.getRoles().get(1).getRoleGuid());
   }
 }

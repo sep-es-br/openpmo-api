@@ -2,6 +2,7 @@ package br.gov.es.openpmo.scheduler.updateroles;
 
 import br.gov.es.openpmo.apis.acessocidadao.IAcessoCidadaoApi;
 import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentRoleResponse;
+import br.gov.es.openpmo.dto.person.RoleResource;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.relations.CanAccessOffice;
 import br.gov.es.openpmo.model.relations.CanAccessPlan;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
@@ -83,7 +85,7 @@ public class UpdateLocalRolesUsingRemoteRoles {
     for(final IsAuthenticatedBy userAuth : allUserAuthentications) {
       if(userAuth.getGuid() == null) continue;
 
-      final List<String> roles = this.fetchRoles(userAuth);
+      final List<RoleResource> roles = this.fetchRoles(userAuth);
 
       LOGGER.info("Found {} roles for user {}", roles.size(), userAuth.getIdPerson());
 
@@ -120,7 +122,7 @@ public class UpdateLocalRolesUsingRemoteRoles {
   }
 
   private static <T extends HasRole> void deleteRolesNotFound(
-    final List<String> roles,
+    final Collection<? extends HasRole> roles,
     final Consumer<? super List<T>> deleteMethod,
     final Collection<? extends T> permissions
   ) {
@@ -135,21 +137,31 @@ public class UpdateLocalRolesUsingRemoteRoles {
   }
 
   private static <T extends HasRole> List<T> extractRemovedPermission(
-    final List<String> roles,
+    final Collection<? extends HasRole> roles,
     final Collection<? extends T> permissions
   ) {
     return permissions.stream()
-      .filter(permission -> !roles.contains(permission.getRole()))
+      .filter(permission -> roles.stream().noneMatch(role -> isRoleEquals(role, permission)))
       .collect(Collectors.toList());
+  }
+
+  private static boolean isRoleEquals(
+    final HasRole role1,
+    final HasRole role2
+  ) {
+   if (role1.getRoleGuid() != null || role2.getRoleGuid() != null) {
+      return Objects.equals(role1.getRoleGuid(), role2.getRoleGuid());
+    }
+    return Objects.equals(role1.getRole(), role2.getRole());
   }
 
   private Set<CanAccessWorkpack> findAllWorkpackPermissions(final Person person) {
     return this.workpackPermissionRepository.findAllPermissionsOfPerson(person.getId());
   }
 
-  private List<String> fetchRoles(final IsAuthenticatedBy userAuth) {
+  private List<RoleResource> fetchRoles(final IsAuthenticatedBy userAuth) {
     return this.acessoCidadaoApi.findRoles(userAuth.getGuid(), null).stream()
-      .map(PublicAgentRoleResponse::getName)
+      .map(role -> new RoleResource(role.getName(), null, role.getGuid()))
       .collect(Collectors.toList());
   }
 
