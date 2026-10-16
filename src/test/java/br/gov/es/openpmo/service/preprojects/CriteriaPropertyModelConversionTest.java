@@ -7,11 +7,13 @@ import static org.mockito.Mockito.mock;
 
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.CriteriaGroupModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.CriteriaListModelDto;
+import br.gov.es.openpmo.dto.workpackmodel.params.properties.CriteriaSelectionModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.CriteriaTabModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.PropertyModelDto;
 import br.gov.es.openpmo.enumerator.CriteriaOperation;
 import br.gov.es.openpmo.model.properties.models.CriteriaGroupModel;
 import br.gov.es.openpmo.model.properties.models.CriteriaListModel;
+import br.gov.es.openpmo.model.properties.models.CriteriaSelectionModel;
 import br.gov.es.openpmo.model.properties.models.CriteriaTabModel;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
 import br.gov.es.openpmo.service.actors.OrganizationService;
@@ -20,6 +22,8 @@ import br.gov.es.openpmo.service.office.LocalityService;
 import br.gov.es.openpmo.service.office.UnitMeasureService;
 import br.gov.es.openpmo.service.reports.models.ExtractPropertyModel;
 import br.gov.es.openpmo.service.reports.models.GetPropertyModelDtoFromEntity;
+import br.gov.es.openpmo.service.properties.PropertyModelService;
+import br.gov.es.openpmo.service.workpack.UpdatePropertyModels;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
@@ -29,6 +33,43 @@ import org.junit.Test;
 import org.modelmapper.ModelMapper;
 
 public class CriteriaPropertyModelConversionTest {
+
+
+  @Test
+  public void shouldPreserveMultipleSelectionFromRequestToResponse() throws Exception {
+    final ObjectMapper mapper = new ObjectMapper();
+    final ExtractPropertyModel converter = new ExtractPropertyModel(
+      new ModelMapper(), mock(UnitMeasureService.class), mock(DomainService.class),
+      mock(LocalityService.class), mock(OrganizationService.class)
+    );
+
+    for (final boolean multipleSelection : new boolean[] {true, false}) {
+      final CriteriaSelectionModelDto request = mapper.readValue(
+        "{\"type\":\"CriteriaSelectionModel\",\"name\":\"selection\","
+          + "\"label\":\"Selection\",\"sortIndex\":1,\"weight\":1,"
+          + "\"multipleSelection\":" + multipleSelection + "}",
+        CriteriaSelectionModelDto.class
+      );
+      final Set<PropertyModel> properties = new HashSet<>();
+      converter.execute(properties, request);
+      final CriteriaSelectionModel model = (CriteriaSelectionModel) properties.iterator().next();
+      assertEquals(multipleSelection, model.isMultipleSelection());
+
+      model.setId(1L);
+      final CriteriaSelectionModel savedModel = new CriteriaSelectionModel();
+      savedModel.setId(1L);
+      savedModel.setMultipleSelection(!multipleSelection);
+      new UpdatePropertyModels(mock(PropertyModelService.class)).execute(
+        Collections.singleton(model), new HashSet<>(Collections.singleton(savedModel))
+      );
+      assertEquals(multipleSelection, savedModel.isMultipleSelection());
+
+      final PropertyModelDto response = new GetPropertyModelDtoFromEntity().execute(savedModel);
+      final JsonNode json = mapper.readTree(mapper.writeValueAsString(response));
+      assertTrue(json.has("multipleSelection"));
+      assertEquals(multipleSelection, json.get("multipleSelection").asBoolean());
+    }
+  }
 
   @Test
   public void shouldExposeOnlyCriteriaCollectionNamesInJson() throws Exception {

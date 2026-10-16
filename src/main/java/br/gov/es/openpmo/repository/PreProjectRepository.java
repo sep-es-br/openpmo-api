@@ -51,8 +51,11 @@ public interface PreProjectRepository
     "OPTIONAL MATCH (property)-[:VALUES]->(option:SelectionOption) " +
     "OPTIONAL MATCH (propertyModel)-[:ACCEPTS]->(allowedOption:SelectionOption) " +
     "WITH criteriaTabModel, property, propertyModel, group, groupModel, " +
-    "     sum(DISTINCT toFloat(coalesce(option.value, 0.0))) AS note, " +
+    "     collect(DISTINCT option) AS selectedOptions, " +
     "     max(toFloat(coalesce(allowedOption.value, 0.0))) AS maximumNote " +
+    "WITH criteriaTabModel, property, propertyModel, group, groupModel, maximumNote, " +
+    "     reduce(total = 0.0, selectedOption IN selectedOptions | " +
+    "       total + toFloat(coalesce(selectedOption.value, 0.0))) AS note " +
     "RETURN id(criteriaTabModel) AS idCriteriaTabModel, " +
     "       criteriaTabModel.name AS criteriaTabName, " +
     "       criteriaTabModel.label AS criteriaTabLabel, " +
