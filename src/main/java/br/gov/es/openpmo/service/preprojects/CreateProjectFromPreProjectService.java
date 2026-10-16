@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.service.preprojects;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.PRE_PROJECT_NOT_FOUND;
+import static br.gov.es.openpmo.utils.ApplicationMessage.PRE_PROJECT_ACTIVE_PROJECT_EXISTS;
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_MODEL_INVALID_TYPE;
 import static br.gov.es.openpmo.utils.ApplicationMessage.WORKPACK_PARENT_PLAN_MISMATCH;
 
@@ -71,6 +72,11 @@ public class CreateProjectFromPreProjectService {
     final Long idPreProject,
     final CreateProjectFromPreProjectRequest request
   ) {
+    this.preProjectRepository.lockForProjectCreation(idPreProject)
+      .orElseThrow(() -> new RegistroNaoEncontradoException(PRE_PROJECT_NOT_FOUND));
+    if (this.preProjectRepository.findActiveProjectId(idPreProject).isPresent()) {
+      throw new NegocioException(PRE_PROJECT_ACTIVE_PROJECT_EXISTS);
+    }
     final PreProject preProject = this.preProjectRepository.findByIdThin(idPreProject)
       .orElseThrow(() -> new RegistroNaoEncontradoException(PRE_PROJECT_NOT_FOUND));
     final Plan plan = this.planService.findById(request.getIdPlan());

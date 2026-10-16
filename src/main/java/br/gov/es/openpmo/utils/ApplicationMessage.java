@@ -8,6 +8,7 @@ public class ApplicationMessage {
   public static final String PRE_PROJECT_MODEL_CANNOT_DEACTIVATE_WITH_PRE_PROJECTS = "preProjectModel.cannot.deactivate.with.preProjects";
   public static final String PRE_PROJECT_CRITERIA_TAB_INACTIVE = "preProject.criteriaTab.inactive";
   public static final String PRE_PROJECT_NOT_FOUND = "preProject.not.found";
+  public static final String PRE_PROJECT_ACTIVE_PROJECT_EXISTS = "preProject.active.project.exists";
   public static final String CUSTOM_FILTER_NOT_FOUND = "customFilter.not.found";
   public static final String PLAN_NOT_FOUND = "plan.not.found";
   public static final String OFFICE_NOT_FOUND = "office.not.found";
