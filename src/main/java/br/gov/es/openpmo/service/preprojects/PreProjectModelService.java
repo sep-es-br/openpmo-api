@@ -172,11 +172,9 @@ public class PreProjectModelService {
     final Set<PropertyModel> propertiesToDelete = new HashSet<>();
     this.collectProperties(criteriaTabModel, propertiesToDelete);
 
-    propertiesToDelete.forEach(propertyModel -> {
-      if (!this.propertyModelService.canDeleteProperty(propertyModel.getId())) {
-        throw new NegocioException(PROPERTY_MODEL_DELETE_RELATIONSHIP_ERROR);
-      }
-    });
+    if (!this.canDeleteProperties(propertiesToDelete)) {
+      throw new NegocioException(PROPERTY_MODEL_DELETE_RELATIONSHIP_ERROR);
+    }
 
     final List<Long> propertyModelIds = new ArrayList<>();
     propertiesToDelete.stream()
@@ -187,6 +185,27 @@ public class PreProjectModelService {
       this.propertyModelService.deleteSelectionOptions(propertyModelIds);
     }
     this.propertyModelService.delete(propertiesToDelete);
+  }
+
+  @Transactional(readOnly = true)
+  public boolean canDeleteCriteriaTab(final Long id) {
+    final Set<PropertyModel> properties = new HashSet<>();
+    this.collectProperties(this.getCriteriaTabById(id), properties);
+    return this.canDeleteProperties(properties);
+  }
+
+  @Transactional
+  public CriteriaTabModelDto setCriteriaTabActive(final Long id, final boolean active) {
+    final CriteriaTabModel criteriaTabModel = this.getCriteriaTabById(id);
+    this.preProjectModelRepository.setCriteriaTabActive(id, active);
+    criteriaTabModel.setActive(active);
+    return this.toCriteriaTabDto(criteriaTabModel);
+  }
+
+  private boolean canDeleteProperties(final Collection<PropertyModel> properties) {
+    return properties.stream().allMatch(property ->
+      property.getId() != null && this.propertyModelService.canDeleteProperty(property.getId())
+    );
   }
 
   private PreProjectModel createForOffice(final Long idOffice) {

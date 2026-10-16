@@ -323,4 +323,55 @@ public class PreProjectModelServiceTest {
     ));
   }
 
+  @Test
+  public void shouldNotDeleteCriteriaTabWithLinkedPreProjects() {
+    final CriteriaTabModel tab = new CriteriaTabModel();
+    tab.setId(30L);
+    when(this.propertyModelService.findByIdWithChildren(30L)).thenReturn(tab);
+    when(this.propertyModelService.canDeleteProperty(30L)).thenReturn(false);
+
+    assertFalse(this.service.canDeleteCriteriaTab(30L));
+    try {
+      this.service.deleteCriteriaTab(30L);
+      org.junit.Assert.fail("A exclusão deveria ser bloqueada");
+    } catch (NegocioException expected) {
+      assertEquals(
+        br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_MODEL_DELETE_RELATIONSHIP_ERROR,
+        expected.getMessage()
+      );
+    }
+    verify(this.propertyModelService, never()).delete(org.mockito.ArgumentMatchers.any());
+  }
+
+  @Test
+  public void shouldNotDeleteCriteriaTabWhenAChildIsLinked() {
+    final CriteriaTabModel tab = new CriteriaTabModel();
+    tab.setId(30L);
+    final PropertyModel child = new PropertyModel();
+    child.setId(31L);
+    tab.setOrganizedProperties(Collections.singleton(child));
+    when(this.propertyModelService.findByIdWithChildren(30L)).thenReturn(tab);
+    when(this.propertyModelService.canDeleteProperty(30L)).thenReturn(true);
+    when(this.propertyModelService.canDeleteProperty(31L)).thenReturn(false);
+
+    assertFalse(this.service.canDeleteCriteriaTab(30L));
+  }
+
+  @Test
+  public void shouldInactivateAndReactivateWithoutDeletingCriteriaTab() {
+    final CriteriaTabModel tab = new CriteriaTabModel();
+    tab.setId(30L);
+    tab.setActive(true);
+    when(this.propertyModelService.findByIdWithChildren(30L)).thenReturn(tab);
+
+    this.service.setCriteriaTabActive(30L, false);
+    assertFalse(tab.isActive());
+    this.service.setCriteriaTabActive(30L, true);
+    assertTrue(tab.isActive());
+    verify(this.preProjectModelRepository).setCriteriaTabActive(30L, false);
+    verify(this.preProjectModelRepository).setCriteriaTabActive(30L, true);
+    verify(this.propertyModelService, never()).save(tab);
+    verify(this.propertyModelService, never()).delete(org.mockito.ArgumentMatchers.any());
+  }
+
 }

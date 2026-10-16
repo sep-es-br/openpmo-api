@@ -22,12 +22,20 @@ public interface PreProjectRepository
   boolean existsByPreProjectModelId(@Param("idPreProjectModel") Long idPreProjectModel);
 
   @Query(
+    "MATCH (preProject:PreProject)<-[:FEATURES]-(criteriaTab:CriteriaTab)" +
+    "-[:IS_DRIVEN_BY]->(criteriaTabModel:CriteriaTabModel) " +
+    "WHERE id(preProject) = $idPreProject " +
+    "RETURN DISTINCT id(criteriaTabModel)"
+  )
+  List<Long> findLinkedCriteriaTabModelIds(@Param("idPreProject") Long idPreProject);
+
+  @Query(
     "MATCH (preProject:PreProject)-[:INSTANTIATES]->(:PreProjectModel)-[:IS_ADOPTED_BY]->(office:Office) " +
     "WHERE id(office) = $idOffice " +
     "OPTIONAL MATCH (preProject)<-[:IS]-(organization:Organization) " +
     "OPTIONAL MATCH (preProject)-[:ORIGINATED]->(project:Project)-[:BELONGS_TO]->(plan:Plan) " +
+    "WHERE coalesce(project.deleted, false) = false AND coalesce(project.canceled, false) = false " +
     "WITH preProject, organization, project, plan " +
-    "WHERE project IS NULL OR (coalesce(project.deleted, false) = false AND coalesce(project.canceled, false) = false) " +
     "OPTIONAL MATCH (project)<-[:FEATURES]-(status:Property)-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Status'}) " +
     "WITH preProject, organization, project, plan, status " +
     "WHERE project IS NULL OR status.value = 'Estruturação' " +
@@ -89,6 +97,60 @@ public interface PreProjectRepository
     "  [isOrganization, organization]]"
   )
   Optional<PreProject> findByIdThin(@Param("id") Long id);
+
+  @Query(
+    "MATCH (preProject:PreProject) WHERE id(preProject) = $id " +
+    "SET preProject.projectCreationVersion = coalesce(preProject.projectCreationVersion, 0) + 1 " +
+    "RETURN preProject.projectCreationVersion"
+  )
+  Optional<Long> lockForProjectCreation(@Param("id") Long id);
+
+  @Query(
+    "MATCH (preProject:PreProject)-[:ORIGINATED]->(project:Project) " +
+    "WHERE id(preProject) = $id " +
+    "  AND coalesce(project.deleted, false) = false AND coalesce(project.canceled, false) = false " +
+    "RETURN id(project) LIMIT 1"
+  )
+  Optional<Long> findActiveProjectId(@Param("id") Long id);
+
+  @Query(
+    "MATCH (preProject:PreProject)-[:ORIGINATED]->(project:Project) " +
+    "WHERE id(preProject) = $id AND id(project) = $idProject " +
+    "  AND coalesce(project.deleted, false) = false AND coalesce(project.canceled, false) = false " +
+    "RETURN id(project)"
+  )
+  Optional<Long> findActiveProjectId(
+    @Param("id") Long id,
+    @Param("idProject") Long idProject
+  );
+
+  @Query(
+    "MATCH (preProject:PreProject)-[:ORIGINATED]->(project:Project) " +
+    "MATCH (project)<-[:FEATURES]-(status:Property)-[:IS_DRIVEN_BY]->(:PropertyModel {name: 'Status'}) " +
+    "WHERE id(preProject) = $id AND id(project) = $idProject " +
+    "  AND coalesce(project.deleted, false) = false AND coalesce(project.canceled, false) = false " +
+    "  AND status.value = 'Estruturação' " +
+    "RETURN id(project)"
+  )
+  Optional<Long> findStructuringProjectId(
+    @Param("id") Long id,
+    @Param("idProject") Long idProject
+  );
+
+  @Query(
+    "MATCH (preProject:PreProject)<-[:FEATURES]-(root:Property) " +
+    "WHERE id(preProject) = $id " +
+    "MATCH (root)-[:ORGANIZES|GROUPS*0..]->(property:Property) " +
+    "OPTIONAL MATCH (property)-[:CONTAINS]->(item:ListItem) " +
+    "WITH collect(DISTINCT property) + collect(DISTINCT item) AS owned " +
+    "UNWIND owned AS node " +
+    "WITH DISTINCT node WHERE node IS NOT NULL " +
+    "DETACH DELETE node"
+  )
+  void deleteOwnedProperties(@Param("id") Long id);
+
+  @Query("MATCH (preProject:PreProject) WHERE id(preProject) = $id DETACH DELETE preProject")
+  void deletePreProject(@Param("id") Long id);
 
   @Query(
     "MATCH (preProject:PreProject), (project:Project) " +

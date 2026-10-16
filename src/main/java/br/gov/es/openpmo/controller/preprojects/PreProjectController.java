@@ -13,6 +13,7 @@ import br.gov.es.openpmo.dto.preprojects.SavePreProjectCriteriaTabValuesRequest;
 import br.gov.es.openpmo.dto.preprojects.UpdatePreProjectRequest;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.preprojects.CreateProjectFromPreProjectService;
+import br.gov.es.openpmo.service.preprojects.DeletePreProjectService;
 import br.gov.es.openpmo.service.preprojects.PreProjectService;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.completed.ICompleteWorkpackService;
@@ -23,6 +24,7 @@ import io.swagger.annotations.Api;
 import javax.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -42,6 +44,7 @@ public class PreProjectController {
   private final PreProjectService preProjectService;
 
   private final CreateProjectFromPreProjectService createProjectFromPreProjectService;
+  private final DeletePreProjectService deletePreProjectService;
 
   private final ICanAccessService canAccessService;
 
@@ -54,6 +57,7 @@ public class PreProjectController {
   public PreProjectController(
     final PreProjectService preProjectService,
     final CreateProjectFromPreProjectService createProjectFromPreProjectService,
+    final DeletePreProjectService deletePreProjectService,
     final ICanAccessService canAccessService,
     final ICompleteWorkpackService completeDeliverableService,
     final TokenService tokenService,
@@ -61,6 +65,7 @@ public class PreProjectController {
   ) {
     this.preProjectService = preProjectService;
     this.createProjectFromPreProjectService = createProjectFromPreProjectService;
+    this.deletePreProjectService = deletePreProjectService;
     this.canAccessService = canAccessService;
     this.completeDeliverableService = completeDeliverableService;
     this.tokenService = tokenService;
@@ -115,6 +120,17 @@ public class PreProjectController {
     return ResponseEntity.ok(ResponseBase.of(this.preProjectService.findById(id)));
   }
 
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> delete(
+    @PathVariable final Long id,
+    @RequestParam(value = "idProject", required = false) final Long idProject,
+    @Authorization final String authorization
+  ) {
+    this.canAccessService.ensureCanEditResource(id, authorization);
+    this.deletePreProjectService.delete(id, idProject, authorization);
+    return ResponseEntity.ok().build();
+  }
+
   @GetMapping("/{id}/evaluation")
   public ResponseEntity<ResponseBase<PreProjectEvaluationDto>> findEvaluation(
     @PathVariable final Long id,
@@ -144,6 +160,15 @@ public class PreProjectController {
     return ResponseEntity.ok(ResponseBase.of(
       this.preProjectService.findCriteriaTabValues(id, idCriteriaTabModel)
     ));
+  }
+
+  @GetMapping("/{id}/criteria-tabs/linked")
+  public ResponseEntity<ResponseBase<List<Long>>> findLinkedCriteriaTabModelIds(
+    @PathVariable final Long id,
+    @Authorization final String authorization
+  ) {
+    this.canAccessService.ensureCanReadResource(id, authorization);
+    return ResponseEntity.ok(ResponseBase.of(this.preProjectService.findLinkedCriteriaTabModelIds(id)));
   }
 
   @PutMapping("/{id}/criteria-tabs/{idCriteriaTabModel}/values")
