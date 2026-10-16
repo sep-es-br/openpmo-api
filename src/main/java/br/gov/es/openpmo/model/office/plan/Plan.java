@@ -34,6 +34,8 @@ public class Plan extends Entity {
 
   private LocalDate finish;
 
+  private boolean deleted;
+
   public Plan() {
   }
 
@@ -93,12 +95,21 @@ public class Plan extends Entity {
     this.finish = finish;
   }
 
+  public void setDeleted(final boolean deleted) {
+    this.deleted = deleted;
+  }
+
+  public boolean isDeleted() {
+    return this.deleted;
+  }
+
   @Transient
   public Set<Workpack> getWorkpacks() {
-    if (Objects.isNull(this.belongsTo)) return new HashSet<>();
+    if (Objects.isNull(this.belongsTo))
+      return new HashSet<>();
     return this.belongsTo.stream()
-      .map(BelongsTo::getWorkpack)
-      .collect(Collectors.toSet());
+        .map(BelongsTo::getWorkpack)
+        .collect(Collectors.toSet());
   }
 
 }
