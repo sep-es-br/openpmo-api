@@ -39,15 +39,22 @@ public interface OfficeRepository extends Neo4jRepository<Office, Long>, CustomR
                      +
                      "WITH *, CASE WHEN nameScore > fullNameScore THEN nameScore ELSE fullNameScore END AS score " +
                      "WHERE score > $searchCutOffScore " +
+                     "AND (NOT EXISTS(o.deleted) OR o.deleted = false) " +
                      "RETURN o " +
                      "ORDER BY score DESC")
        List<Office> findAllOfficeByNameOrFullName(
                      @Param("name") String name,
                      @Param("searchCutOffScore") double searchCutOffScore);
 
-       @Query("MATCH (o: Office) " +
+       @Query("MATCH (o:Office) " +
                      "WHERE id(o)=$idOffice " +
-                     "SET p.deleted = true")
+                     "SET o.deleted = true")
        void setOfficeDeleted(
                      @Param("idOffice") Long idOffice);
+
+       @Query("MATCH (o:Office) " +
+                     "WHERE NOT EXISTS(o.deleted) OR o.deleted = false " +
+                     "RETURN o")
+       List<Office> findAllActive();
+
 }

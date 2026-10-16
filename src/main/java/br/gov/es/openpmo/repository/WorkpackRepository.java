@@ -653,15 +653,17 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
             "RETURN p")
     Optional<Program> findProgram(Long idDeliverable);
 
-    @Query("MATCH (w:Workpack)-[:BELONGS_TO]->(p:Plan) " +
-            "AND NOT (w)-[:IS_IN]->(:Workpack) " +
+    @Query("MATCH (w:Workpack)-[bt:BELONGS_TO]->(p:Plan) " +
             "WHERE id(p)=$id " +
+            "AND NOT (w)-[:IS_IN]->(:Workpack) " +
+            "AND (NOT EXISTS(bt.linked) OR bt.linked = false) " +
             "RETURN count(w)>0")
-    boolean existsByPlanId(@Param("id") Long id);
+    boolean existsRootWorkpackByPlanId(@Param("id") Long id);
 
     @Query("MATCH (w:Workpack)-[bt:BELONGS_TO]->(p:Plan) " +
             "WHERE id(p)=$id " +
             "AND NOT (w)-[:IS_IN]->(:Workpack) " +
+            "AND (NOT EXISTS(bt.linked) OR bt.linked = false) " +
             "AND (NOT EXISTS(w.deleted) OR w.deleted = false) " +
             "RETURN count(w)>0")
     boolean existsActiveRootWorkpackByPlanId(

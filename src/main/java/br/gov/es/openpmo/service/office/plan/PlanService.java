@@ -119,9 +119,8 @@ public class PlanService {
     return saved;
   }
 
-  // mexer nesse
   public void delete(final Plan plan) {
-    if (this.workpackRepository.existsByPlanId(plan.getId())) {
+    if (this.workpackRepository.existsRootWorkpackByPlanId(plan.getId())) {
       if (this.workpackRepository.existsActiveRootWorkpackByPlanId(plan.getId())) {
         throw new NegocioException(ApplicationMessage.PLAN_DELETE_RELATIONSHIP_ERROR);
       } else {
