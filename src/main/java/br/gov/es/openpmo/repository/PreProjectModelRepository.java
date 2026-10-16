@@ -26,4 +26,11 @@ public interface PreProjectModelRepository
   )
   boolean isActiveByOfficeId(@Param("idOffice") Long idOffice);
 
+  @Query(
+    "MATCH (criteriaTabModel:CriteriaTabModel) " +
+    "WHERE id(criteriaTabModel) = $id " +
+    "SET criteriaTabModel.active = $active"
+  )
+  void setCriteriaTabActive(@Param("id") Long id, @Param("active") boolean active);
+
 }

@@ -22,6 +22,14 @@ public interface PreProjectRepository
   boolean existsByPreProjectModelId(@Param("idPreProjectModel") Long idPreProjectModel);
 
   @Query(
+    "MATCH (preProject:PreProject)<-[:FEATURES]-(criteriaTab:CriteriaTab)" +
+    "-[:IS_DRIVEN_BY]->(criteriaTabModel:CriteriaTabModel) " +
+    "WHERE id(preProject) = $idPreProject " +
+    "RETURN DISTINCT id(criteriaTabModel)"
+  )
+  List<Long> findLinkedCriteriaTabModelIds(@Param("idPreProject") Long idPreProject);
+
+  @Query(
     "MATCH (preProject:PreProject)-[:INSTANTIATES]->(:PreProjectModel)-[:IS_ADOPTED_BY]->(office:Office) " +
     "WHERE id(office) = $idOffice " +
     "OPTIONAL MATCH (preProject)<-[:IS]-(organization:Organization) " +

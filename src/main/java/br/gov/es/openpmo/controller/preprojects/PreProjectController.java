@@ -146,6 +146,15 @@ public class PreProjectController {
     ));
   }
 
+  @GetMapping("/{id}/criteria-tabs/linked")
+  public ResponseEntity<ResponseBase<List<Long>>> findLinkedCriteriaTabModelIds(
+    @PathVariable final Long id,
+    @Authorization final String authorization
+  ) {
+    this.canAccessService.ensureCanReadResource(id, authorization);
+    return ResponseEntity.ok(ResponseBase.of(this.preProjectService.findLinkedCriteriaTabModelIds(id)));
+  }
+
   @PutMapping("/{id}/criteria-tabs/{idCriteriaTabModel}/values")
   public ResponseEntity<ResponseBase<PreProjectCriteriaTabValuesDto>> saveCriteriaTabValues(
     @PathVariable final Long id,

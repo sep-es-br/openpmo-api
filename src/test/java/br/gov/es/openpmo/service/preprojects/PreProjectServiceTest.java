@@ -15,6 +15,7 @@ import br.gov.es.openpmo.dto.preprojects.properties.PreProjectCriteriaListValueD
 import br.gov.es.openpmo.dto.preprojects.properties.PreProjectCriteriaSelectionValueDto;
 import br.gov.es.openpmo.dto.preprojects.properties.PreProjectListItemDto;
 import br.gov.es.openpmo.enumerator.CriteriaOperation;
+import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.exception.RegistroNaoEncontradoException;
 import br.gov.es.openpmo.model.actors.Organization;
 import br.gov.es.openpmo.model.preprojects.PreProject;
@@ -138,6 +139,7 @@ public class PreProjectServiceTest {
     listModel.setId(22L);
     final CriteriaTabModel tabModel = new CriteriaTabModel();
     tabModel.setId(20L);
+    tabModel.setActive(true);
     tabModel.setOrganizedProperties(Collections.singleton(listModel));
 
     when(this.preProjectRepository.findByIdThin(40L)).thenReturn(Optional.of(preProject));
@@ -149,6 +151,51 @@ public class PreProjectServiceTest {
 
     assertNull(result.getIdCriteriaTab());
     assertEquals(1, result.getValues().size());
+    verify(this.propertyRepository, never()).save(any(Property.class));
+  }
+
+  @Test
+  public void shouldRejectNewLinkToInactiveCriteriaTab() {
+    final PreProject preProject = new PreProject();
+    preProject.setId(40L);
+    final CriteriaTabModel tabModel = new CriteriaTabModel();
+    tabModel.setId(20L);
+    tabModel.setActive(false);
+    when(this.preProjectRepository.findByIdThin(40L)).thenReturn(Optional.of(preProject));
+    when(this.preProjectRepository.findCriteriaTabByModelId(40L, 20L)).thenReturn(Optional.empty());
+    when(this.propertyModelService.findByIdWithChildren(20L)).thenReturn(tabModel);
+
+    try {
+      this.service.findCriteriaTabValues(40L, 20L);
+      org.junit.Assert.fail("A guia inativa não deveria aceitar nova vinculação");
+    } catch (NegocioException expected) {
+      assertEquals(
+        br.gov.es.openpmo.utils.ApplicationMessage.PRE_PROJECT_CRITERIA_TAB_INACTIVE,
+        expected.getMessage()
+      );
+    }
+    verify(this.propertyRepository, never()).save(any(Property.class));
+  }
+
+  @Test
+  public void shouldKeepExistingInactiveCriteriaTabReadable() {
+    final PreProject preProject = new PreProject();
+    preProject.setId(40L);
+    final CriteriaTabModel tabModel = new CriteriaTabModel();
+    tabModel.setId(20L);
+    tabModel.setActive(false);
+    final CriteriaTab linkedTab = new CriteriaTab();
+    linkedTab.setId(50L);
+    linkedTab.setDriver(tabModel);
+    linkedTab.setValue(Collections.emptySet());
+    when(this.preProjectRepository.findByIdThin(40L)).thenReturn(Optional.of(preProject));
+    when(this.preProjectRepository.findCriteriaTabByModelId(40L, 20L))
+      .thenReturn(Optional.of(linkedTab));
+
+    final br.gov.es.openpmo.dto.preprojects.PreProjectCriteriaTabValuesDto result =
+      this.service.findCriteriaTabValues(40L, 20L);
+
+    assertEquals(Long.valueOf(50L), result.getIdCriteriaTab());
     verify(this.propertyRepository, never()).save(any(Property.class));
   }
 

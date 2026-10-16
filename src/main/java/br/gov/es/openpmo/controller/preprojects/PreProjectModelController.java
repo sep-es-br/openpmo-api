@@ -4,6 +4,7 @@ import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.preprojects.PreProjectModelDto;
 import br.gov.es.openpmo.dto.preprojects.UpdatePreProjectModelRequest;
+import br.gov.es.openpmo.dto.preprojects.UpdateCriteriaTabActiveRequest;
 import br.gov.es.openpmo.dto.workpackmodel.params.properties.CriteriaTabModelDto;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.preprojects.PreProjectModelService;
@@ -119,6 +120,27 @@ public class PreProjectModelController {
     this.canAccessService.ensureCanEditResource(id, authorization);
     this.preProjectModelService.deleteCriteriaTab(id);
     return ResponseEntity.ok(ResponseBase.success());
+  }
+
+  @GetMapping("/criteria-tabs/{id}/deletable")
+  public ResponseEntity<ResponseBase<Boolean>> canDeleteCriteriaTab(
+    @PathVariable final Long id,
+    @Authorization final String authorization
+  ) {
+    this.canAccessService.ensureCanReadResource(id, authorization);
+    return ResponseEntity.ok(ResponseBase.of(this.preProjectModelService.canDeleteCriteriaTab(id)));
+  }
+
+  @PutMapping("/criteria-tabs/{id}/active")
+  public ResponseEntity<ResponseBase<CriteriaTabModelDto>> setCriteriaTabActive(
+    @PathVariable final Long id,
+    @RequestBody @Valid final UpdateCriteriaTabActiveRequest request,
+    @Authorization final String authorization
+  ) {
+    this.canAccessService.ensureCanEditResource(id, authorization);
+    return ResponseEntity.ok(ResponseBase.of(
+      this.preProjectModelService.setCriteriaTabActive(id, request.getActive())
+    ));
   }
 
 }

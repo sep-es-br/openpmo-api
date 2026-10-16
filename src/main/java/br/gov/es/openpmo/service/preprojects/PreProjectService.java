@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.service.preprojects;
 
 import static br.gov.es.openpmo.utils.ApplicationMessage.PRE_PROJECT_MODEL_NOT_FOUND;
+import static br.gov.es.openpmo.utils.ApplicationMessage.PRE_PROJECT_CRITERIA_TAB_INACTIVE;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PRE_PROJECT_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PROPERTY_REQUIRED_NOT_FOUND;
@@ -224,6 +225,12 @@ public class PreProjectService {
       .orElseGet(() -> this.preProjectPropertyValueMapper.preview(
         this.findCriteriaTabModel(idCriteriaTabModel)
       ));
+  }
+
+  @Transactional(readOnly = true)
+  public List<Long> findLinkedCriteriaTabModelIds(final Long idPreProject) {
+    this.findByIdThin(idPreProject);
+    return this.preProjectRepository.findLinkedCriteriaTabModelIds(idPreProject);
   }
 
   @Transactional
@@ -535,6 +542,9 @@ public class PreProjectService {
     final PropertyModel model = this.propertyModelService.findByIdWithChildren(idCriteriaTabModel);
     if (!(model instanceof br.gov.es.openpmo.model.properties.models.CriteriaTabModel)) {
       throw new RegistroNaoEncontradoException(PROPERTY_NOT_FOUND);
+    }
+    if (!model.isActive()) {
+      throw new NegocioException(PRE_PROJECT_CRITERIA_TAB_INACTIVE);
     }
     return (br.gov.es.openpmo.model.properties.models.CriteriaTabModel) model;
   }
