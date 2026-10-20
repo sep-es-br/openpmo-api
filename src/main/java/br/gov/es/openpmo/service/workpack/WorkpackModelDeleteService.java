@@ -4,6 +4,7 @@ import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.WorkpackModelRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.util.HashSet;
 
 import java.util.Objects;
 import java.util.Set;
@@ -19,17 +20,16 @@ public class WorkpackModelDeleteService {
   }
 
   public void delete(
-    final Long idWorkpackModel,
-    final Long idParentModel
-  ) {
+      final Long idWorkpackModel,
+      final Long idParentModel) {
     if (idParentModel != null) {
       this.workpackModelRepository
-              .findAllByIdWithParents(idWorkpackModel, idParentModel)
-              .ifPresent(workpackModel -> deleteWorkpackModel(workpackModel, idParentModel));
+          .findAllByIdWithParents(idWorkpackModel, idParentModel)
+          .ifPresent(workpackModel -> deleteWorkpackModel(workpackModel, idParentModel));
     } else {
       this.workpackModelRepository
-              .findByIdWithChildren(idWorkpackModel)
-              .ifPresent(workpackModel -> deleteWorkpackModel(workpackModel, idParentModel));
+          .findByIdWithChildren(idWorkpackModel)
+          .ifPresent(workpackModel -> deleteWorkpackModel(workpackModel, idParentModel));
     }
 
   }
@@ -46,7 +46,7 @@ public class WorkpackModelDeleteService {
     }
     final Set<WorkpackModel> children = workpackModel.getChildren();
     if (children != null) {
-      for (WorkpackModel child : children) {
+      for (WorkpackModel child : new HashSet<>(children)) {
         deleteWorkpackModel(child, workpackModel.getId());
       }
     }

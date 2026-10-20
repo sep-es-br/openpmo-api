@@ -25,6 +25,15 @@ import org.springframework.data.repository.query.Param;
 
 public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, CustomRepository {
 
+  @Query("MATCH (w:Workpack)-[:BELONGS_TO]->(p:Plan) " +
+      "WHERE id(p)=$idPlan AND NOT (w)-[:IS_IN]->(:Workpack) " +
+      "AND coalesce(w.deleted, false) = false RETURN count(w)>0")
+  boolean existsActiveRootWorkpackByPlanId(@Param("idPlan") Long idPlan);
+
+  @Query("MATCH (w:Workpack)-[:BELONGS_TO]->(p:Plan) " +
+      "WHERE id(p)=$idPlan AND NOT (w)-[:IS_IN]->(:Workpack) RETURN count(w)>0")
+  boolean existsRootWorkpackByPlanId(@Param("idPlan") Long idPlan);
+
   @Query("MATCH (w:Workpack{deleted:false})<-[f:FEATURES]-(p:UnitSelection)-[v:VALUES]-(u:UnitMeasure) " +
       "WHERE id(w) IN $ids " +
       "RETURN w, f, p, v, u ")
