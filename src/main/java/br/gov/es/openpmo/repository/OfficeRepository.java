@@ -13,6 +13,9 @@ import java.util.Optional;
 
 public interface OfficeRepository extends Neo4jRepository<Office, Long>, CustomRepository {
 
+  @Query("MATCH (o:Office) WHERE id(o)=$idOffice SET o.deleted = true")
+  void setOfficeDeleted(@Param("idOffice") Long idOffice);
+
   @Query("MATCH (o:Office) WHERE id(o)=$id return o")
   Optional<Office> findByIdThin(Long id);
 
