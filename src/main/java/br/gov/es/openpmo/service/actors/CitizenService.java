@@ -35,11 +35,10 @@ public class CitizenService {
   private final WorkPlaceService workPlaceService;
 
   public CitizenService(
-    final PersonService personService,
-    final IsInContactBookOfService contactService,
-    final ObjectProvider<IPublicIdentityProvider> publicIdentityProvider,
-    final WorkPlaceService workPlaceService
-  ) {
+      final PersonService personService,
+      final IsInContactBookOfService contactService,
+      final ObjectProvider<IPublicIdentityProvider> publicIdentityProvider,
+      final WorkPlaceService workPlaceService) {
     this.personService = personService;
     this.contactService = contactService;
     this.publicIdentityProvider = publicIdentityProvider;
@@ -48,34 +47,31 @@ public class CitizenService {
 
   @Transactional
   public List<CitizenByNameQuery> findPersonByName(
-    final String name,
-    final Long idPerson
-  ) {
+      final String name,
+      final Long idPerson) {
     final PublicAgentSearchResult result = this.getPublicIdentityProvider().findPublicAgentsByName(name);
 
-    if(PublicIdentityStatus.UNAVAILABLE.equals(result.getStatus())) {
+    if (PublicIdentityStatus.UNAVAILABLE.equals(result.getStatus())) {
       throw new NegocioException("Não foi possível consultar os agentes públicos.");
     }
     return result.getAgents().stream()
-      .map(agent -> new CitizenByNameQuery(agent.getName(), agent.getSub()))
-      .collect(Collectors.toList());
+        .map(agent -> new CitizenByNameQuery(agent.getName(), agent.getSub()))
+        .collect(Collectors.toList());
   }
 
   public CitizenDto findPersonByCpf(
-    final String cpf,
-    final Long idOffice,
-    final Long idPerson
-  ) {
+      final String cpf,
+      final Long idOffice,
+      final Long idPerson) {
     final PublicIdentityResult result = this.getPublicIdentityProvider().findByCpf(cpf);
     this.ensureIdentityFound(result);
     return this.toCitizenDto(result, idOffice);
   }
 
   public CitizenDto findCitizenBySub(
-    final String sub,
-    final Long idOffice,
-    final Long idPerson
-  ) {
+      final String sub,
+      final Long idOffice,
+      final Long idPerson) {
     final PublicIdentityResult result = this.getPublicIdentityProvider().findPublicAgentBySub(sub);
     this.ensureIdentityFound(result);
     return this.toCitizenDto(result, idOffice);
@@ -83,100 +79,98 @@ public class CitizenService {
 
   private IPublicIdentityProvider getPublicIdentityProvider() {
     final IPublicIdentityProvider provider = this.publicIdentityProvider.getIfAvailable();
-    if(provider == null) {
+    if (provider == null) {
       throw new NegocioException("Plugin de validação de identidade não disponível.");
     }
     return provider;
   }
 
   private void ensureIdentityFound(final PublicIdentityResult result) {
-    if(PublicIdentityStatus.NOT_FOUND.equals(result.getStatus())) {
+    if (PublicIdentityStatus.NOT_FOUND.equals(result.getStatus())) {
       throw new NegocioException(CITIZEN_NOT_FOUND);
     }
-    if(!PublicIdentityStatus.FOUND.equals(result.getStatus())) {
+    if (!PublicIdentityStatus.FOUND.equals(result.getStatus())) {
       throw new NegocioException("Não foi possível validar o usuário no Acesso Cidadão.");
     }
   }
 
   private CitizenDto toCitizenDto(
-    final PublicIdentityResult identity,
-    final Long idOffice
-  ) {
+      final PublicIdentityResult identity,
+      final Long idOffice) {
     final List<PublicAgentAssignment> assignments = identity.getAssignments();
     final List<Optional<Organization>> localOrganizations = assignments.stream()
-      .map(assignment -> this.workPlaceService.resolveOrganizationByWorkLocationGuid(
-        assignment.getWorkLocationGuid()
-      ))
-      .collect(Collectors.toList());
+        .map(assignment -> this.workPlaceService.resolveOrganizationByWorkLocationGuid(
+            assignment.getWorkLocationGuid()))
+        .collect(Collectors.toList());
     final List<RoleResource> roles = IntStream.range(0, assignments.size())
-      .mapToObj(index -> this.toRoleResource(
-        assignments.get(index),
-        localOrganizations.get(index)
-      ))
-      .collect(Collectors.toList());
+        .mapToObj(index -> this.toRoleResource(
+            assignments.get(index),
+            localOrganizations.get(index)))
+        .collect(Collectors.toList());
     final Optional<Person> maybePerson = this.personService.findByKey(identity.getSub());
     final CitizenDtoBuilder builder = CitizenDtoBuilder.aCitizenDto()
-      .withKey(identity.getSub())
-      .withName(identity.getName())
-      .withFullName(identity.getName())
-      .withEmail(identity.getEmail())
-      .withContactEmail(identity.getCorporateEmail())
-      .withIsUser(maybePerson.isPresent())
-      .withRoles(roles);
+        .withKey(identity.getSub())
+        .withName(identity.getName())
+        .withFullName(identity.getName())
+        .withEmail(identity.getEmail())
+        .withContactEmail(identity.getCorporateEmail())
+        .withIsUser(maybePerson.isPresent())
+        .withRoles(roles);
 
     localOrganizations.stream()
-      .filter(Optional::isPresent)
-      .map(Optional::get)
-      .findFirst()
-      .ifPresent(organization -> builder.withOrganization(new OrganizationDto(organization)));
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .findFirst()
+        .ifPresent(organization -> builder.withOrganization(new OrganizationDto(organization)));
 
     maybePerson.ifPresent(person -> {
       builder.withId(person.getId());
       builder.withAdministrator(person.getAdministrator());
-      if(person.getName() != null) builder.withName(person.getName());
-      if(person.getFullName() != null) builder.withFullName(person.getFullName());
-      if(idOffice != null) {
+      if (person.getName() != null)
+        builder.withName(person.getName());
+      if (person.getFullName() != null)
+        builder.withFullName(person.getFullName());
+      if (idOffice != null) {
         this.contactService.findContactInformationUsingPersonIdAndOffice(
-          person.getId(),
-          idOffice
-        ).ifPresent(contact -> builder
-          .withAddress(contact.getAddress())
-          .withPhoneNumber(contact.getPhoneNumber())
-        );
+            person.getId(),
+            idOffice).ifPresent(
+                contact -> builder
+                    .withAddress(contact.getAddress())
+                    .withPhoneNumber(contact.getPhoneNumber()));
       }
     });
     return builder.build();
   }
 
   private RoleResource toRoleResource(
-    final PublicAgentAssignment assignment,
-    final Optional<Organization> localOrganization
-  ) {
+      final PublicAgentAssignment assignment,
+      final Optional<Organization> localOrganization) {
     final OrganizationInfo organizationInfo = assignment.getOrganization();
     final String organization = organizationInfo == null
-      ? localOrganization
-        .map(this::organizationName)
-        .orElse(assignment.getWorkLocationGuid())
-      : firstNotBlank(
-        organizationInfo.getAbbreviation(),
-        organizationInfo.getTradeName(),
-        organizationInfo.getCorporateName(),
-        organizationInfo.getGuid()
-      );
-    return new RoleResource(assignment.getRoleName(), organization);
+        ? localOrganization
+            .map(this::organizationName)
+            .orElse(assignment.getWorkLocationGuid())
+        : firstNotBlank(
+            organizationInfo.getAbbreviation(),
+            organizationInfo.getTradeName(),
+            organizationInfo.getCorporateName(),
+            organizationInfo.getGuid());
+    return new RoleResource(
+        assignment.getRoleName(),
+        organization,
+        assignment.getRoleGuid());
   }
 
   private String organizationName(final Organization organization) {
     return firstNotBlank(
-      organization.getName(),
-      organization.getFullName(),
-      organization.getGuid()
-    );
+        organization.getName(),
+        organization.getFullName(),
+        organization.getGuid());
   }
 
   private static String firstNotBlank(final String... values) {
-    for(final String value : values) {
-      if(value != null && !value.trim().isEmpty()) {
+    for (final String value : values) {
+      if (value != null && !value.trim().isEmpty()) {
         return value;
       }
     }

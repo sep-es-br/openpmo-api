@@ -25,68 +25,57 @@ public class FileServiceImpl implements FileService {
   private static final Logger log = LoggerFactory.getLogger(FileServiceImpl.class);
   private static final Pattern SPACE_CHAR = Pattern.compile(" ", Pattern.LITERAL);
 
-
   @Override
   public void save(
-    final MultipartFile file,
-    final String filename,
-    final String directoryPath
-  ) {
+      final MultipartFile file,
+      final String filename,
+      final String directoryPath) {
     try (final InputStream inputStream = file.getInputStream()) {
       final Path basePath = new File(directoryPath).toPath();
       log.info("Criando o arquivo {} no diretório {}", filename, directoryPath);
       createDirectoryIfNotExists(basePath);
       Files.copy(
-        inputStream,
-        basePath.resolve(filename)
-      );
-    }
-    catch (final FileAlreadyExistsException e) {
+          inputStream,
+          basePath.resolve(filename));
+    } catch (final FileAlreadyExistsException e) {
       log.error("O arquivo já existe", e);
       throw new NegocioException(ApplicationMessage.FILE_ALREADY_EXISTS);
-    }
-    catch (final IOException e) {
+    } catch (final IOException e) {
       log.error("Ocorreu um erro ao tentar persistir o arquivo no disco", e);
       throw new NegocioException(ApplicationMessage.FILE_ERROR_ON_PERSIST);
     }
   }
-  
+
   @Override
   public void save(
-    final InputStream inputStream,
-    final String filename,
-    final String directoryPath
-  ) {      
-      try {
-    	final Path basePath = new File(directoryPath).toPath();
-        log.info("Criando o arquivo {} no diretório {}", filename, directoryPath);
-		createDirectoryIfNotExists(basePath);
-		Files.copy(
-	        inputStream,
-	        basePath.resolve(filename)
-	      );
-      }
-      catch (final FileAlreadyExistsException e) {
-    	log.error("O arquivo já existe", e);
-    	throw new NegocioException(ApplicationMessage.FILE_ALREADY_EXISTS);
-      }
-      catch (final IOException e) {
-    	log.error("Ocorreu um erro ao tentar persistir o arquivo no disco", e);
-    	throw new NegocioException(ApplicationMessage.FILE_ERROR_ON_PERSIST);
-      }
+      final InputStream inputStream,
+      final String filename,
+      final String directoryPath) {
+    try {
+      final Path basePath = new File(directoryPath).toPath();
+      log.info("Criando o arquivo {} no diretório {}", filename, directoryPath);
+      createDirectoryIfNotExists(basePath);
+      Files.copy(
+          inputStream,
+          basePath.resolve(filename));
+    } catch (final FileAlreadyExistsException e) {
+      log.error("O arquivo já existe", e);
+      throw new NegocioException(ApplicationMessage.FILE_ALREADY_EXISTS);
+    } catch (final IOException e) {
+      log.error("Ocorreu um erro ao tentar persistir o arquivo no disco", e);
+      throw new NegocioException(ApplicationMessage.FILE_ERROR_ON_PERSIST);
+    }
   }
 
   @Override
   public void save(
-    final MultipartFile multipartFile,
-    final String filename,
-    final Supplier<String> pathSupplier
-  ) {
+      final MultipartFile multipartFile,
+      final String filename,
+      final Supplier<String> pathSupplier) {
     this.save(
-      multipartFile,
-      filename,
-      pathSupplier.get()
-    );
+        multipartFile,
+        filename,
+        pathSupplier.get());
   }
 
   @Override
@@ -94,8 +83,7 @@ public class FileServiceImpl implements FileService {
     try {
       log.info("Removendo o arquivo/diretório {}", path);
       Files.deleteIfExists(Paths.get(path));
-    }
-    catch (final IOException e) {
+    } catch (final IOException e) {
       log.error("Ocorreu um erro ao tentar remover o arquivo do disco", e);
       throw new NegocioException(ApplicationMessage.FILE_ERROR_ON_DELETE);
     }
@@ -104,9 +92,8 @@ public class FileServiceImpl implements FileService {
   @Override
   public void createDirectory(final String path) {
     try {
-      createDirectoryIfNotExists(Paths.get(path ));
-    }
-    catch (final IOException e) {
+      createDirectoryIfNotExists(Paths.get(path));
+    } catch (final IOException e) {
       log.error("Ocorreu um erro ao tentar criar o diretório {}", path, e);
       throw new NegocioException(ApplicationMessage.FILE_ERROR_ON_CREATE_DIRECTORY);
     }
@@ -114,13 +101,40 @@ public class FileServiceImpl implements FileService {
 
   @Override
   public String generateName(final MultipartFile file) {
-	return this.generateName(file.getOriginalFilename());
+    return this.generateName(file.getOriginalFilename());
   }
+
+  /*
+   * 
+   * @Override
+   * public String generateName(final String originalFilename) {
+   * final String generatedFilename = UUID.randomUUID() + "-" + originalFilename;
+   * final String sanitizedGeneratedFilename =
+   * SPACE_CHAR.matcher(generatedFilename).replaceAll(Matcher.quoteReplacement("-"
+   * ));
+   * log.info("Nome do arquivo gerado com sucesso: {}",
+   * sanitizedGeneratedFilename);
+   * return sanitizedGeneratedFilename;
+   * }
+   */
 
   @Override
   public String generateName(final String originalFilename) {
-    final String generatedFilename = UUID.randomUUID() + "-" + originalFilename;
-    final String sanitizedGeneratedFilename = SPACE_CHAR.matcher(generatedFilename).replaceAll(Matcher.quoteReplacement("-"));
+    String limitedFilename;
+
+    if (originalFilename.length() <= 20) {
+      limitedFilename = originalFilename;
+    } else {
+      String firstCharacters = originalFilename.substring(0, 9);
+      String lastCharacters = originalFilename.substring(originalFilename.length() - 9);
+
+      limitedFilename = firstCharacters + ".." + lastCharacters;
+    }
+
+    final String generatedFilename = UUID.randomUUID() + "_" + limitedFilename;
+
+    final String sanitizedGeneratedFilename = SPACE_CHAR.matcher(generatedFilename)
+        .replaceAll(Matcher.quoteReplacement("-"));
     log.info("Nome do arquivo gerado com sucesso: {}", sanitizedGeneratedFilename);
     return sanitizedGeneratedFilename;
   }
