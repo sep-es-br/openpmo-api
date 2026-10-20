@@ -8,15 +8,19 @@ import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.filter.CustomFilter;
 import br.gov.es.openpmo.model.office.Office;
+import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.relations.CanAccessOffice;
 import br.gov.es.openpmo.repository.CustomFilterRepository;
 import br.gov.es.openpmo.repository.OfficePermissionRepository;
 import br.gov.es.openpmo.repository.OfficeRepository;
+import br.gov.es.openpmo.repository.PlanRepository;
+import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllOfficeUsingCustomFilter;
 import br.gov.es.openpmo.service.actors.PersonService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -43,22 +47,27 @@ public class OfficeService {
   private final CustomFilterRepository customFilterRepository;
   private final FindAllOfficeUsingCustomFilter findAllOffice;
   private final AppProperties appProperties;
+  private final PlanRepository planRepository;
+  private final WorkpackRepository workpackRepository;
 
   @Autowired
   public OfficeService(
-    final OfficeRepository officeRepository,
-    final PersonService personService,
-    final OfficePermissionRepository officePermissionRepository,
-    final CustomFilterRepository customFilterRepository,
-    final FindAllOfficeUsingCustomFilter findAllOffice,
-    final AppProperties appProperties
-  ) {
+      final OfficeRepository officeRepository,
+      final PersonService personService,
+      final OfficePermissionRepository officePermissionRepository,
+      final CustomFilterRepository customFilterRepository,
+      final FindAllOfficeUsingCustomFilter findAllOffice,
+      final AppProperties appProperties,
+      final PlanRepository planRepository,
+      final WorkpackRepository workpackRepository) {
     this.officeRepository = officeRepository;
     this.personService = personService;
     this.officePermissionRepository = officePermissionRepository;
     this.customFilterRepository = customFilterRepository;
     this.findAllOffice = findAllOffice;
     this.appProperties = appProperties;
+    this.planRepository = planRepository;
+    this.workpackRepository = workpackRepository;
   }
 
   public List<Office> findAll(final Long idFilter, final String term) {
@@ -108,10 +117,24 @@ public class OfficeService {
     return this.officeRepository.findById(id);
   }
 
+  @Transactional
   public void delete(final Office office) {
-    if((office.getPlans() != null && !office.getPlans().isEmpty())
-       || (office.getPlansModel() != null && !office.getPlansModel().isEmpty())) {
+    final List<Plan> activePlans = this.planRepository.findActiveByOfficeId(office.getId());
+    final boolean hasActiveWorkpacks = activePlans.stream()
+        .anyMatch(plan -> this.workpackRepository.existsActiveRootWorkpackByPlanId(plan.getId()));
+    if (hasActiveWorkpacks || (office.getPlansModel() != null && !office.getPlansModel().isEmpty())) {
       throw new NegocioException(OFFICE_DELETE_RELATIONSHIP_ERROR);
+    }
+    for (final Plan plan : activePlans) {
+      if (this.workpackRepository.existsRootWorkpackByPlanId(plan.getId())) {
+        this.planRepository.setPlanDeleted(plan.getId());
+      } else {
+        this.planRepository.delete(plan);
+      }
+    }
+    if (this.planRepository.existsByOfficeId(office.getId())) {
+      this.officeRepository.setOfficeDeleted(office.getId());
+      return;
     }
     this.officeRepository.delete(office);
   }
