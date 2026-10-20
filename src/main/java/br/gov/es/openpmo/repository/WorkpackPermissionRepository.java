@@ -13,6 +13,7 @@ import java.util.Set;
 @Repository
 public interface WorkpackPermissionRepository extends Neo4jRepository<CanAccessWorkpack, Long> {
 
+
   @Query("MATCH (person:Person)-[canAccess:CAN_ACCESS_WORKPACK]->(workpack:Workpack) " +
     " WHERE id(workpack) = $idWorkpack " +
     " AND (id(person) = $idPerson OR $idPerson IS NULL) " +

@@ -4,6 +4,7 @@ import br.gov.es.openpmo.repository.PlanRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.repository.permissions.PermissionRepository;
 import br.gov.es.openpmo.service.actors.IGetPersonFromAuthorization;
+import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessData;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -14,15 +15,19 @@ public class GetReportScope {
   private final PermissionRepository permissionRepository;
   private final IGetPersonFromAuthorization getPersonFromAuthorization;
   private final WorkpackRepository workpackRepository;
+  private final ICanAccessData canAccessData;
 
   public GetReportScope(
           final PlanRepository planRepository,
           final PermissionRepository permissionRepository,
-          IGetPersonFromAuthorization getPersonFromAuthorization, WorkpackRepository workpackRepository) {
+          IGetPersonFromAuthorization getPersonFromAuthorization,
+          WorkpackRepository workpackRepository,
+          ICanAccessData canAccessData) {
     this.planRepository = planRepository;
     this.permissionRepository = permissionRepository;
     this.getPersonFromAuthorization = getPersonFromAuthorization;
     this.workpackRepository = workpackRepository;
+    this.canAccessData = canAccessData;
   }
 
   public List<Long> execute(final List<Long> scope, final Long idPlan, final String authorization) {
@@ -61,7 +66,9 @@ public class GetReportScope {
       final List<Long> workpacksIds = new ArrayList<>();
       workpacksIds.add(scopeId);
       boolean hasPermissionWorkpackSelfOrParents = this.permissionRepository.hasPermissionWorkpackSelfOrParents(scopeId, personData.getKey());
-      if (hasPermissionWorkpackSelfOrParents) {
+      boolean hasTransversalReadPermission = !hasPermissionWorkpackSelfOrParents
+        && Boolean.TRUE.equals(this.canAccessData.execute(scopeId, authorization).canReadResource());
+      if (hasPermissionWorkpackSelfOrParents || hasTransversalReadPermission) {
         scopeResponse.add(scopeId);
         final List<Long> workpacksChildren = this.workpackRepository.idsWorkpacksChildren(workpacksIds);
         if (workpacksChildren != null && !workpacksChildren.isEmpty()) {

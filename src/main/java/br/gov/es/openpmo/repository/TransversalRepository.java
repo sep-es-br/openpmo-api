@@ -355,6 +355,34 @@ public interface TransversalRepository extends Neo4jRepository<Program, Long> {
     @Param("idTransversalProgram") Long idTransversalProgram
   );
 
+  @Query("MATCH (person:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() "
+    + "MATCH (program:Program)-[:MEMBER_OF]->(view:WorkpackModel {classification:'TRANSVERSAL'}) "
+    + "OPTIONAL MATCH (person)-[stakeholder:IS_STAKEHOLDER_IN {active:true}]->(program) "
+    + "OPTIONAL MATCH (person)-[directAccess:CAN_ACCESS_WORKPACK]->(program) "
+    + "MATCH (program)-[:IS_INSTANCE_BY]->(programModel:ProgramModel) "
+    + "MATCH (program)-[:BELONGS_TO]->(plan:Plan)-[:IS_ADOPTED_BY]->(office:Office) "
+    + "MATCH (plan)-[:IS_STRUCTURED_BY]->(planModel:PlanModel) "
+    + "WHERE ((stakeholder IS NOT NULL AND (stakeholder.from IS NULL OR date(stakeholder.from) <= date()) "
+    + "AND (stakeholder.to IS NULL OR date(stakeholder.to) >= date())) OR directAccess IS NOT NULL) "
+    + "AND programModel.classification = 'TRANSVERSAL' "
+    + "AND coalesce(program.deleted, false) = false "
+    + "RETURN DISTINCT id(plan) AS idPlan, id(planModel) AS idPlanModel, "
+    + "id(view) AS idTransversalView, view.modelName AS viewName, id(office) AS idOffice, "
+    + "id(program) AS idTransversalProgram, id(programModel) AS idWorkpackModel, id(program) AS idWorkpack "
+    + "ORDER BY viewName, idTransversalProgram")
+  List<TransversalContextDto> findStakeholderAccessContexts(@Param("sub") String sub);
+
+  @Query("MATCH (person:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() "
+    + "MATCH (person)-[:CAN_ACCESS_WORKPACK]->(workpack:Workpack) "
+    + "MATCH (workpack)-[:IS_INSTANCE_BY]->(workpackModel:WorkpackModel) "
+    + "MATCH (workpack)-[:BELONGS_TO]->(plan:Plan)-[:IS_ADOPTED_BY]->(office:Office) "
+    + "WHERE coalesce(workpack.deleted, false) = false "
+    + "AND coalesce(workpackModel.classification, 'STRUCTURAL') = 'STRUCTURAL' "
+    + "RETURN DISTINCT id(plan) AS idPlan, id(office) AS idOffice, "
+    + "id(workpack) AS idWorkpack, id(workpackModel) AS idWorkpackModel "
+    + "ORDER BY idPlan, idWorkpack")
+  List<TransversalContextDto> findDirectStructuralAccessContexts(@Param("sub") String sub);
+
   @Query("MATCH (program:Program)-[:IS_INSTANCE_BY]->(programModel:ProgramModel) "
     + "MATCH (program)-[:MEMBER_OF]->(view:WorkpackModel) "
     + "MATCH (program)-[:BELONGS_TO]->(plan:Plan)-[:IS_STRUCTURED_BY]->(planModel:PlanModel) "

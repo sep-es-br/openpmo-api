@@ -61,7 +61,8 @@ public class CanAccessData implements ICanAccessData {
     final String authorizationHeader
   ) {
     final List<Long> ids = Collections.singletonList(id);
-    return this.execute(ids, authorizationHeader);
+    final CanAccessDataResponse response = this.execute(ids, authorizationHeader);
+    return this.withTransversalStakeholderRead(id, response, authorizationHeader);
   }
 
   @Override
@@ -78,6 +79,12 @@ public class CanAccessData implements ICanAccessData {
 
     final boolean hasPermission = this.permissionRepository.hasPermissionWorkpack(idWorkpack, personData.getKey());
     if (hasPermission) {
+      return CanAccessDataResponse.read(personData.getKey(), false, false);
+    }
+    if (this.permissionRepository.hasTransversalStakeholderReadAccess(idWorkpack, personData.getKey())) {
+      return CanAccessDataResponse.read(personData.getKey(), false, false);
+    }
+    if (this.execute(idWorkpack, authorizationHeader).canReadResource()) {
       return CanAccessDataResponse.read(personData.getKey(), false, false);
     }
     return new CanAccessDataResponse(
@@ -189,6 +196,24 @@ public class CanAccessData implements ICanAccessData {
 
   private PersonDataResponse getPerson(final String authorizationHeader) {
     return this.getPersonFromAuthorization.execute(authorizationHeader);
+  }
+
+  private CanAccessDataResponse withTransversalStakeholderRead(
+    final Long idWorkpack,
+    final CanAccessDataResponse response,
+    final String authorizationHeader
+  ) {
+    if (Boolean.TRUE.equals(response.canReadResource())) {
+      return response;
+    }
+
+    final PersonDataResponse personData = this.getPerson(authorizationHeader);
+    if (this.permissionRepository.hasTransversalStakeholderReadAccess(idWorkpack, personData.getKey())
+      || this.permissionRepository.hasTransversalStakeholderViewReadAccess(idWorkpack, personData.getKey())
+      || this.permissionRepository.hasTransversalStakeholderModelReadAccess(idWorkpack, personData.getKey())) {
+      return CanAccessDataResponse.read(personData.getKey(), false, false);
+    }
+    return response;
   }
 
 }

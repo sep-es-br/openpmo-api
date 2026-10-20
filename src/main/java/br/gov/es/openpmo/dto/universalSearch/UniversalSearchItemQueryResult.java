@@ -5,6 +5,7 @@
 package br.gov.es.openpmo.dto.universalSearch;
 
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.data.neo4j.annotation.QueryResult;
 
 /**
@@ -22,6 +23,7 @@ public class UniversalSearchItemQueryResult {
     private String fullName;
     private Double matchDistance;
     private List<BreadCrumb> breadcrumbs;
+    private boolean structuralAccess;
 
     public Long getPlanId() {
         return planId;
@@ -86,6 +88,12 @@ public class UniversalSearchItemQueryResult {
     public void setMatchDistance(Double matchDistance) {
         this.matchDistance = matchDistance;
     }
+
+    @JsonIgnore
+    public boolean isStructuralAccess() { return structuralAccess; }
+
+    public void setStructuralAccess(final boolean structuralAccess) { this.structuralAccess = structuralAccess; }
+
         
     public static class BreadCrumb {
         

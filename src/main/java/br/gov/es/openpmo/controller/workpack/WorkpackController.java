@@ -14,8 +14,11 @@ import br.gov.es.openpmo.dto.dashboards.RiskResultDto;
 import br.gov.es.openpmo.dto.dashboards.RiskWorkpackDto;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.dto.workpack.EndDeliverableManagementRequest;
+import br.gov.es.openpmo.dto.workpack.GroupDto;
+import br.gov.es.openpmo.dto.workpack.PropertyDto;
 import br.gov.es.openpmo.dto.workpack.ResponseBaseWorkpack;
 import br.gov.es.openpmo.dto.workpack.ResponseBaseWorkpackDetail;
+import br.gov.es.openpmo.dto.workpack.TransversalViewSelectionDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackDetailDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackDetailParentDto;
 import br.gov.es.openpmo.dto.workpack.WorkpackHasChildrenResponse;
@@ -25,6 +28,8 @@ import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.journals.JournalAction;
 import br.gov.es.openpmo.model.properties.Property;
+import br.gov.es.openpmo.model.properties.Group;
+import br.gov.es.openpmo.model.properties.TransversalViewSelection;
 import br.gov.es.openpmo.model.risk.Risk;
 import br.gov.es.openpmo.model.workpacks.Milestone;
 import br.gov.es.openpmo.model.workpacks.Workpack;
@@ -288,6 +293,7 @@ public class WorkpackController {
     @RequestBody @Valid final WorkpackParamDto request,
     @Authorization final String authorization
   ) {
+    this.ensurePlanEditorForTransversalSelection(request, authorization);
     this.canAccessService.ensureCanEditResource(
       Arrays.asList(request.getIdPlan(), request.getIdParent()),
       authorization
@@ -316,6 +322,7 @@ public class WorkpackController {
       @RequestBody @Valid final WorkpackParamDto request,
       @Authorization final String authorization
   ) {
+      this.ensurePlanEditorForTransversalSelection(request, authorization);
       this.canAccessService.ensureCanUpdateResource(
           request.getId(),
           authorization
@@ -366,6 +373,68 @@ public class WorkpackController {
 
 
       return ResponseEntity.ok(ResponseBase.of(EntityDto.of(workpack)));
+  }
+
+  private void ensurePlanEditorForTransversalSelection(
+    final WorkpackParamDto request,
+    final String authorization
+  ) {
+    if (request.getId() == null) {
+      if (request.getProperties() != null
+        && request.getProperties().stream().anyMatch(this::containsTransversalViewSelection)) {
+        this.canAccessService.ensureCanEditResource(request.getIdPlan(), authorization);
+      }
+      return;
+    }
+
+    final Workpack current = this.workpackService.findById(request.getId());
+    final List<String> currentSelection = this.transversalSelectionValues(current.getProperties());
+    final List<String> requestedSelection = this.transversalSelectionValues(request.getProperties());
+    if (!currentSelection.equals(requestedSelection)) {
+      this.canAccessService.ensureCanEditResource(request.getIdPlan(), authorization);
+    }
+  }
+
+  private List<String> transversalSelectionValues(final Iterable<?> properties) {
+    final List<String> values = new java.util.ArrayList<>();
+    if (properties == null) {
+      return values;
+    }
+    for (final Object property : properties) {
+      if (property instanceof TransversalViewSelection) {
+        final TransversalViewSelection selection = (TransversalViewSelection) property;
+        values.add(String.valueOf(selection.getPropertyModelId()) + "|"
+          + String.valueOf(selection.getValue()) + "|"
+          + String.valueOf(selection.getPrincipalProgramId()));
+      } else if (property instanceof Group) {
+        values.addAll(this.transversalSelectionValues(((Group) property).getGroupedProperties()));
+      } else if (property instanceof TransversalViewSelectionDto) {
+        final TransversalViewSelectionDto selection = (TransversalViewSelectionDto) property;
+        values.add(String.valueOf(selection.getIdPropertyModel()) + "|"
+          + String.valueOf(selection.getValue()) + "|"
+          + String.valueOf(selection.getPrincipalProgramId()));
+      } else if (property instanceof GroupDto) {
+        final GroupDto group = (GroupDto) property;
+        values.addAll(this.transversalSelectionValues(group.getGroupedProperties()));
+      }
+    }
+    java.util.Collections.sort(values);
+    return values;
+  }
+
+  private boolean containsTransversalViewSelection(final PropertyDto property) {
+    if (property == null) {
+      return false;
+    }
+    if ("TransversalViewSelection".equals(property.getType())) {
+      return true;
+    }
+    if (property instanceof GroupDto) {
+      final GroupDto group = (GroupDto) property;
+      return group.getGroupedProperties() != null
+        && group.getGroupedProperties().stream().anyMatch(this::containsTransversalViewSelection);
+    }
+    return false;
   }
 
 

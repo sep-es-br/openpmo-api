@@ -54,6 +54,79 @@ public interface PermissionRepository extends Neo4jRepository<Workpack, Long>, C
   );
 
   @Query(
+    "MATCH (person:Person)-[stakeholder:IS_STAKEHOLDER_IN {active:true}]->(rootProgram:Program) " +
+      "-[:MEMBER_OF]->(view:WorkpackModel {classification:'TRANSVERSAL'}) " +
+      "MATCH (person)-[:IS_AUTHENTICATED_BY {key:$sub}]->() " +
+      "MATCH (target:Workpack) WHERE id(target) = $id " +
+      "AND (stakeholder.from IS NULL OR date(stakeholder.from) <= date()) " +
+      "AND (stakeholder.to IS NULL OR date(stakeholder.to) >= date()) " +
+      "AND (target = rootProgram " +
+      "OR EXISTS((target:Program)-[:IS_IN*1..]->(rootProgram)) " +
+      "OR EXISTS { " +
+      "  MATCH (program:Program)-[:MEMBER_OF]->(view), " +
+      "        (program)-[:BELONGS_TO]->(plan:Plan), " +
+      "        (selected:Workpack)-[:BELONGS_TO]->(plan), " +
+      "        (selected)-[:IS_INSTANCE_BY]->(selectedModel:WorkpackModel), " +
+      "        (selectedModel)<-[:FEATURES]-(selectionModel:TransversalViewSelectionModel), " +
+      "        (selected)<-[:FEATURES]-(selection:TransversalViewSelection)-[:IS_DRIVEN_BY]->(selectionModel), " +
+      "        (selectedModel)-[:IS_IN*0..]->(rootModel:WorkpackModel)<-[:FEATURES]-(:TransversalViewSelectionModel), " +
+      "        (target)-[:BELONGS_TO]->(plan), " +
+      "        (target)-[:IS_INSTANCE_BY]->(targetModel:WorkpackModel) " +
+      "  WHERE (program = rootProgram OR EXISTS((program)-[:IS_IN*1..]->(rootProgram))) " +
+      "  AND toString(id(program)) IN [token IN split(coalesce(selection.value, ''), ',') | trim(token)] " +
+      "  AND NOT EXISTS((rootModel)-[:IS_IN*1..]->(:WorkpackModel)<-[:FEATURES]-(:TransversalViewSelectionModel)) " +
+      "  AND EXISTS((targetModel)-[:IS_IN*0..]->(rootModel)) " +
+      "  AND (target = selected OR EXISTS((target)-[:IS_IN*1..]->(selected)) " +
+      "    OR EXISTS((selected)-[:IS_IN*1..]->(target))) " +
+      "} " +
+      "OR EXISTS { " +
+      "  MATCH (program:Program)-[:MEMBER_OF]->(view), " +
+      "        (program)-[:INCLUDES]->(included:Workpack) " +
+      "  WHERE (program = rootProgram OR EXISTS((program)-[:IS_IN*1..]->(rootProgram))) " +
+      "  AND (target = included OR EXISTS((target)-[:IS_IN*1..]->(included))) " +
+      "} " +
+      ") RETURN count(DISTINCT rootProgram) > 0"
+  )
+  boolean hasTransversalStakeholderReadAccess(
+    @Param("id") Long idWorkpack,
+    @Param("sub") String sub
+  );
+
+  @Query(
+    "MATCH (person:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
+    "MATCH (view:WorkpackModel {classification:'TRANSVERSAL'})<-[:MEMBER_OF]-(rootProgram:Program) " +
+    "OPTIONAL MATCH (person)-[stakeholder:IS_STAKEHOLDER_IN {active:true}]->(rootProgram) " +
+    "OPTIONAL MATCH (person)-[directAccess:CAN_ACCESS_WORKPACK]->(rootProgram) " +
+    "WHERE id(view) = $id " +
+    "AND ((stakeholder IS NOT NULL AND (stakeholder.from IS NULL OR date(stakeholder.from) <= date()) " +
+    "AND (stakeholder.to IS NULL OR date(stakeholder.to) >= date())) OR directAccess IS NOT NULL) " +
+    "RETURN count(DISTINCT rootProgram) > 0"
+  )
+  boolean hasTransversalStakeholderViewReadAccess(
+    @Param("id") Long idTransversalView,
+    @Param("sub") String sub
+  );
+
+  @Query(
+    "MATCH (person:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
+    "MATCH (view:WorkpackModel {classification:'TRANSVERSAL'})<-[:MEMBER_OF]-(rootProgram:Program) " +
+    "OPTIONAL MATCH (person)-[stakeholder:IS_STAKEHOLDER_IN {active:true}]->(rootProgram) " +
+    "OPTIONAL MATCH (person)-[directAccess:CAN_ACCESS_WORKPACK]->(rootProgram) " +
+    "MATCH (target:WorkpackModel) " +
+    "MATCH (program:Program)-[:MEMBER_OF]->(view) " +
+    "WHERE id(target) = $id " +
+    "AND (program = rootProgram OR EXISTS((program)-[:IS_IN*1..]->(rootProgram))) " +
+    "AND (target = view OR EXISTS((view)-[:USES]->(target)) OR EXISTS((program)-[:IS_INSTANCE_BY]->(target))) " +
+    "AND ((stakeholder IS NOT NULL AND (stakeholder.from IS NULL OR date(stakeholder.from) <= date()) " +
+    "AND (stakeholder.to IS NULL OR date(stakeholder.to) >= date())) OR directAccess IS NOT NULL) " +
+    "RETURN count(DISTINCT rootProgram) > 0"
+  )
+  boolean hasTransversalStakeholderModelReadAccess(
+    @Param("id") Long idWorkpackModel,
+    @Param("sub") String sub
+  );
+
+  @Query(
     "MATCH " +
     "   (m)<-[r:CAN_ACCESS_WORKPACK|CAN_ACCESS_PLAN]-(p:Person)-[:IS_AUTHENTICATED_BY {key:$sub}]-() " +
     "   WHERE r.permissionLevel IN ['READ', 'UPDATE', 'EDIT'] " +

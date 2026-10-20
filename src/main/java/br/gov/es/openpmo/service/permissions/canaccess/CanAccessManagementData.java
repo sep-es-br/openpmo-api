@@ -73,6 +73,8 @@ public class CanAccessManagementData implements ICanAccessManagementData {
       return;
     if (Boolean.TRUE.equals(canAccess.getAdmin()))
       return;
+    if (Boolean.TRUE.equals(canAccess.canReadResource()))
+      return;
     if (Boolean.FALSE.equals(canAccess.getManagementEdit())) {
       throw new CannotAccessResourceException(CANNOT_ACCESS_MANAGEMENT_RESOURCE);
     }

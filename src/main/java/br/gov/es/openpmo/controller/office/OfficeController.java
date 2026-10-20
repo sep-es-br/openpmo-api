@@ -6,9 +6,8 @@ import br.gov.es.openpmo.dto.office.OfficeDto;
 import br.gov.es.openpmo.dto.office.OfficeStoreDto;
 import br.gov.es.openpmo.dto.office.OfficeUpdateDto;
 import br.gov.es.openpmo.dto.treeview.OfficeTreeViewDto;
-import br.gov.es.openpmo.enumerator.TokenType;
 import br.gov.es.openpmo.model.office.Office;
-import br.gov.es.openpmo.service.authentication.TokenService;
+import br.gov.es.openpmo.service.actors.IGetPersonFromAuthorization;
 import br.gov.es.openpmo.service.office.OfficeService;
 import br.gov.es.openpmo.service.office.OfficeTreeViewService;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
@@ -31,7 +30,7 @@ public class OfficeController {
   private final OfficeService officeService;
   private final OfficeTreeViewService officeTreeViewService;
   private final ModelMapper modelMapper;
-  private final TokenService tokenService;
+  private final IGetPersonFromAuthorization getPersonFromAuthorization;
   private final ICanAccessService canAccessService;
 
   @Autowired
@@ -39,12 +38,12 @@ public class OfficeController {
       final OfficeService officeService,
       final OfficeTreeViewService officeTreeViewService,
       final ModelMapper modelMapper,
-      final TokenService tokenService,
+      final IGetPersonFromAuthorization getPersonFromAuthorization,
       final ICanAccessService canAccessService) {
     this.officeService = officeService;
     this.officeTreeViewService = officeTreeViewService;
     this.modelMapper = modelMapper;
-    this.tokenService = tokenService;
+    this.getPersonFromAuthorization = getPersonFromAuthorization;
     this.canAccessService = canAccessService;
   }
 
@@ -54,8 +53,9 @@ public class OfficeController {
       @RequestParam(required = false) final Long idFilter,
       @RequestParam(required = false) final String term) {
 
-    final String token = authorization.substring(7);
-    final Long idUser = this.tokenService.getPersonId(token, TokenType.AUTHENTICATION);
+    final IGetPersonFromAuthorization.PersonDataResponse currentPerson =
+      this.getPersonFromAuthorization.execute(authorization);
+    final Long idUser = currentPerson.getPerson().getId();
     List<OfficeDto> offices = this.officeService.findAll(idFilter, term)
         .stream()
         .map(o -> this.modelMapper.map(o, OfficeDto.class))
@@ -63,7 +63,7 @@ public class OfficeController {
     if (offices.isEmpty()) {
       return ResponseEntity.noContent().build();
     }
-    offices = this.officeService.checkPermission(offices, idUser);
+    offices = this.officeService.checkPermission(offices, idUser, currentPerson.getKey());
     final ResponseBase<List<OfficeDto>> response = new ResponseBase<List<OfficeDto>>().setData(offices)
         .setSuccess(true);
     return ResponseEntity.status(200).body(response);

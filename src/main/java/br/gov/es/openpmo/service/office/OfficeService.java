@@ -3,6 +3,7 @@ package br.gov.es.openpmo.service.office;
 import br.gov.es.openpmo.configuration.properties.AppProperties;
 import br.gov.es.openpmo.dto.office.OfficeDto;
 import br.gov.es.openpmo.dto.permission.PermissionDto;
+import br.gov.es.openpmo.dto.workpackmodel.TransversalContextDto;
 import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.actors.Person;
@@ -12,6 +13,7 @@ import br.gov.es.openpmo.model.relations.CanAccessOffice;
 import br.gov.es.openpmo.repository.CustomFilterRepository;
 import br.gov.es.openpmo.repository.OfficePermissionRepository;
 import br.gov.es.openpmo.repository.OfficeRepository;
+import br.gov.es.openpmo.repository.TransversalRepository;
 import br.gov.es.openpmo.repository.custom.filters.FindAllOfficeUsingCustomFilter;
 import br.gov.es.openpmo.service.actors.PersonService;
 import org.apache.commons.lang3.StringUtils;
@@ -21,9 +23,11 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Spliterator;
@@ -43,6 +47,7 @@ public class OfficeService {
   private final CustomFilterRepository customFilterRepository;
   private final FindAllOfficeUsingCustomFilter findAllOffice;
   private final AppProperties appProperties;
+  private final TransversalRepository transversalRepository;
 
   @Autowired
   public OfficeService(
@@ -51,7 +56,8 @@ public class OfficeService {
     final OfficePermissionRepository officePermissionRepository,
     final CustomFilterRepository customFilterRepository,
     final FindAllOfficeUsingCustomFilter findAllOffice,
-    final AppProperties appProperties
+    final AppProperties appProperties,
+    final TransversalRepository transversalRepository
   ) {
     this.officeRepository = officeRepository;
     this.personService = personService;
@@ -59,6 +65,7 @@ public class OfficeService {
     this.customFilterRepository = customFilterRepository;
     this.findAllOffice = findAllOffice;
     this.appProperties = appProperties;
+    this.transversalRepository = transversalRepository;
   }
 
   public List<Office> findAll(final Long idFilter, final String term) {
@@ -118,12 +125,22 @@ public class OfficeService {
 
   public List<OfficeDto> checkPermission(
     final List<OfficeDto> offices,
-    final Long idUser
+    final Long idUser,
+    final String userKey
   ) {
     final Person person = this.personService.findById(idUser);
     if(person.getAdministrator()) {
       return offices;
     }
+    final Set<Long> officesWithStakeholderAccess = new HashSet<>();
+    this.transversalRepository.findStakeholderAccessContexts(userKey).stream()
+      .map(TransversalContextDto::getIdOffice)
+      .filter(Objects::nonNull)
+      .forEach(officesWithStakeholderAccess::add);
+    this.transversalRepository.findDirectStructuralAccessContexts(userKey).stream()
+      .map(TransversalContextDto::getIdOffice)
+      .filter(Objects::nonNull)
+      .forEach(officesWithStakeholderAccess::add);
     for(final Iterator<OfficeDto> it = offices.iterator(); it.hasNext(); ) {
       final OfficeDto officeDto = it.next();
       final Long officeId = officeDto.getId();
@@ -133,7 +150,8 @@ public class OfficeService {
       );
       canAccessOffices.removeIf(c -> c.getPermissionLevel() == PermissionLevelEnum.NONE);
       if(canAccessOffices.isEmpty()) {
-        if(!this.hasPermissionPlanWorkpack(officeId, idUser)) {
+        if(!this.hasPermissionPlanWorkpack(officeId, idUser)
+          && !officesWithStakeholderAccess.contains(officeId)) {
           it.remove();
           continue;
         }

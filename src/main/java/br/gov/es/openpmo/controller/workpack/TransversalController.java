@@ -4,6 +4,7 @@ import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.ResponseBasePaginated;
 import br.gov.es.openpmo.dto.workpackmodel.EligibleProjectDto;
 import br.gov.es.openpmo.dto.workpackmodel.TransversalProgramOptionDto;
+import br.gov.es.openpmo.dto.workpackmodel.TransversalContextDto;
 import br.gov.es.openpmo.dto.workpackmodel.TransversalProgramModelDto;
 import br.gov.es.openpmo.dto.workpackmodel.TransversalProjectParticipationDto;
 import br.gov.es.openpmo.dto.workpackmodel.TransversalSelectionOptionDto;
@@ -12,7 +13,10 @@ import br.gov.es.openpmo.dto.workpackmodel.TransversalWorkpackDto;
 import br.gov.es.openpmo.dto.workpackmodel.TransversalWorkpackParticipationDto;
 import br.gov.es.openpmo.dto.workpackmodel.TransversalStructuralLinkDto;
 import br.gov.es.openpmo.dto.workpackmodel.TransversalProjectScopeItemDto;
+import br.gov.es.openpmo.repository.PlanPermissionRepository;
+import br.gov.es.openpmo.service.actors.IGetPersonFromAuthorization;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessData;
+import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessDataResponse;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.workpack.TransversalProjectService;
 import io.swagger.annotations.Api;
@@ -44,16 +48,38 @@ public class TransversalController {
   private final TransversalProjectService transversalProjectService;
   private final ICanAccessService canAccessService;
   private final ICanAccessData canAccessData;
+  private final IGetPersonFromAuthorization getPersonFromAuthorization;
+  private final PlanPermissionRepository planPermissionRepository;
 
   @Autowired
   public TransversalController(
     final TransversalProjectService transversalProjectService,
     final ICanAccessService canAccessService,
-    final ICanAccessData canAccessData
+    final ICanAccessData canAccessData,
+    final IGetPersonFromAuthorization getPersonFromAuthorization,
+    final PlanPermissionRepository planPermissionRepository
   ) {
     this.transversalProjectService = transversalProjectService;
     this.canAccessService = canAccessService;
     this.canAccessData = canAccessData;
+    this.getPersonFromAuthorization = getPersonFromAuthorization;
+    this.planPermissionRepository = planPermissionRepository;
+  }
+
+  @GetMapping("/access-contexts")
+  public ResponseEntity<ResponseBase<List<TransversalContextDto>>> getStakeholderAccessContexts(
+    @RequestHeader("Authorization") final String authorization
+  ) {
+    final String key = this.canAccessData.execute(authorization).getKey();
+    return ResponseEntity.ok(ResponseBase.of(this.transversalProjectService.findStakeholderAccessContexts(key)));
+  }
+
+  @GetMapping("/structural-access-contexts")
+  public ResponseEntity<ResponseBase<List<TransversalContextDto>>> getDirectStructuralAccessContexts(
+    @RequestHeader("Authorization") final String authorization
+  ) {
+    final String key = this.canAccessData.execute(authorization).getKey();
+    return ResponseEntity.ok(ResponseBase.of(this.transversalProjectService.findDirectStructuralAccessContexts(key)));
   }
 
   @GetMapping("/selection-options")
@@ -96,9 +122,7 @@ public class TransversalController {
   ) {
     this.canAccessService.ensureCanReadResource(idTransversalView, authorization);
     return ResponseEntity.ok(ResponseBase.of(
-      this.transversalProjectService.findProgramsForView(idTransversalView, idPlan).stream()
-        .filter(program -> this.canAccessData.execute(program.getIdTransversalProgram(), authorization).canReadResource())
-        .collect(Collectors.toList())
+      this.getProgramsAccessibleInView(idTransversalView, idPlan, authorization)
     ));
   }
 
@@ -156,11 +180,39 @@ public class TransversalController {
     @RequestHeader("Authorization") final String authorization
   ) {
     this.canAccessService.ensureCanReadResource(idTransversalView, authorization);
+    final Set<Long> accessibleProgramIds = this.getProgramsAccessibleInView(
+      idTransversalView, idPlan, authorization
+    ).stream()
+      .map(TransversalProgramOptionDto::getIdTransversalProgram)
+      .collect(Collectors.toSet());
     return ResponseEntity.ok(ResponseBase.of(
       this.transversalProjectService.findStructuralLinksForView(idTransversalView, idPlan).stream()
+        .filter(item -> accessibleProgramIds.contains(item.getIdTransversalProgram()))
         .filter(item -> this.canAccessData.execute(item.getIdWorkpack(), authorization).canReadResource())
         .collect(Collectors.toList())
     ));
+  }
+
+  private List<TransversalProgramOptionDto> getProgramsAccessibleInView(
+    final Long idTransversalView,
+    final Long idPlan,
+    final String authorization
+  ) {
+    final List<TransversalProgramOptionDto> programs = this.transversalProjectService
+      .findProgramsForView(idTransversalView, idPlan);
+    final ICanAccessDataResponse currentUser = this.canAccessData.execute(authorization);
+    final Long idPerson = this.getPersonFromAuthorization.execute(authorization).getPerson().getId();
+    if (Boolean.TRUE.equals(currentUser.getAdmin())
+      || this.planPermissionRepository.hasPermissionPlan(idPlan, idPerson)) {
+      return programs.stream()
+        .filter(program -> this.canAccessData.execute(program.getIdTransversalProgram(), authorization).canReadResource())
+        .collect(Collectors.toList());
+    }
+    final List<TransversalContextDto> accessContexts = this.transversalProjectService
+      .findStakeholderAccessContexts(currentUser.getKey());
+    return this.transversalProjectService.filterProgramsForAccessContexts(
+      programs, accessContexts, idTransversalView, idPlan
+    );
   }
 
   @GetMapping("/programs/{idTransversalProgram}/eligible-workpacks")

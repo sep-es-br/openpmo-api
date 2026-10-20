@@ -4,11 +4,12 @@ import br.gov.es.openpmo.configuration.Authorization;
 import br.gov.es.openpmo.dto.EntityDto;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.plan.PlanDto;
+import br.gov.es.openpmo.dto.plan.PlanAccessContextDto;
 import br.gov.es.openpmo.dto.plan.PlanStoreDto;
 import br.gov.es.openpmo.dto.plan.PlanUpdateDto;
-import br.gov.es.openpmo.enumerator.TokenType;
 import br.gov.es.openpmo.model.office.plan.Plan;
-import br.gov.es.openpmo.service.authentication.TokenService;
+import br.gov.es.openpmo.repository.PlanPermissionRepository;
+import br.gov.es.openpmo.service.actors.IGetPersonFromAuthorization;
 import br.gov.es.openpmo.service.office.OfficeService;
 import br.gov.es.openpmo.service.office.plan.PlanModelService;
 import br.gov.es.openpmo.service.office.plan.PlanService;
@@ -42,8 +43,10 @@ public class PlanController {
   private final OfficeService officeService;
   private final PlanModelService planModelService;
   private final ModelMapper modelMapper;
-  private final TokenService tokenService;
+  private final IGetPersonFromAuthorization getPersonFromAuthorization;
   private final ICanAccessService canAccessService;
+
+  private final PlanPermissionRepository planPermissionRepository;
 
   @Autowired
   public PlanController(
@@ -51,15 +54,17 @@ public class PlanController {
     final OfficeService officeService,
     final PlanModelService planModelService,
     final ModelMapper modelMapper,
-    final TokenService tokenService,
-    final ICanAccessService canAccessService
+    final IGetPersonFromAuthorization getPersonFromAuthorization,
+    final ICanAccessService canAccessService,
+    final PlanPermissionRepository planPermissionRepository
   ) {
     this.planService = planService;
     this.officeService = officeService;
     this.planModelService = planModelService;
     this.modelMapper = modelMapper;
-    this.tokenService = tokenService;
+    this.getPersonFromAuthorization = getPersonFromAuthorization;
     this.canAccessService = canAccessService;
+    this.planPermissionRepository = planPermissionRepository;
   }
 
   @GetMapping
@@ -70,8 +75,7 @@ public class PlanController {
     @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanReadResource(idOffice, authorization);
-    final String token = authorization.substring(7);
-    final Long idUser = this.tokenService.getPersonId(token, TokenType.AUTHENTICATION);
+    final Long idUser = this.getPersonFromAuthorization.execute(authorization).getPerson().getId();
     List<PlanDto> plans = this.planService.findAllInOffice(idOffice, idFilter, term)
       .stream()
       .map(PlanDto::of)
@@ -92,6 +96,24 @@ public class PlanController {
       .map(PlanDto::of)
       .orElse(null);
     return ResponseEntity.ok(ResponseBase.of(response));
+  }
+
+  @GetMapping("/{id}/direct-access")
+  public ResponseEntity<ResponseBase<Boolean>> hasDirectAccess(
+    @PathVariable final Long id,
+    @Authorization final String authorization
+  ) {
+    final Long idPerson = this.getPersonFromAuthorization.execute(authorization).getPerson().getId();
+    final boolean hasAccess = this.planPermissionRepository.hasPermissionPlan(id, idPerson);
+    return ResponseEntity.ok(ResponseBase.of(hasAccess));
+  }
+
+  @GetMapping("/access-contexts/direct")
+  public ResponseEntity<ResponseBase<List<PlanAccessContextDto>>> getDirectAccessContexts(
+    @Authorization final String authorization
+  ) {
+    final Long idPerson = this.getPersonFromAuthorization.execute(authorization).getPerson().getId();
+    return ResponseEntity.ok(ResponseBase.of(this.planPermissionRepository.findDirectAccessContexts(idPerson)));
   }
 
   @PostMapping

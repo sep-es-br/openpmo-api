@@ -5,7 +5,7 @@ import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.dto.officepermission.OfficePermissionDto;
 import br.gov.es.openpmo.dto.officepermission.OfficePermissionParamDto;
 import br.gov.es.openpmo.model.Entity;
-import br.gov.es.openpmo.service.authentication.TokenService;
+import br.gov.es.openpmo.service.actors.IGetPersonFromAuthorization;
 import br.gov.es.openpmo.service.permissions.OfficePermissionService;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import io.swagger.annotations.Api;
@@ -23,17 +23,17 @@ import java.util.List;
 public class OfficePermissionController {
 
   private final OfficePermissionService service;
-  private final TokenService tokenService;
+  private final IGetPersonFromAuthorization getPersonFromAuthorization;
   private final ICanAccessService canAccessService;
 
   @Autowired
   public OfficePermissionController(
     final OfficePermissionService service,
-    final TokenService tokenService,
+    final IGetPersonFromAuthorization getPersonFromAuthorization,
     final ICanAccessService canAccessService
   ) {
     this.service = service;
-    this.tokenService = tokenService;
+    this.getPersonFromAuthorization = getPersonFromAuthorization;
     this.canAccessService = canAccessService;
   }
 
@@ -46,7 +46,7 @@ public class OfficePermissionController {
     @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanReadManagementResource(idOffice, key, authorization);
-    final Long idPerson = this.tokenService.getUserId(authorization);
+    final Long idPerson = this.getPersonFromAuthorization.execute(authorization).getPerson().getId();
     final List<OfficePermissionDto> offices = this.service.findAllDto(idOffice, idFilter, key, idPerson, term);
     if(offices.isEmpty()) {
       return ResponseEntity.noContent().build();
@@ -61,7 +61,7 @@ public class OfficePermissionController {
     @Authorization final String authorization
   ) {
     this.canAccessService.ensureCanReadManagementResource(idOffice, key, authorization);
-    final Long idPerson = this.tokenService.getUserId(authorization);
+    final Long idPerson = this.getPersonFromAuthorization.execute(authorization).getPerson().getId();
     final OfficePermissionDto permissions = this.service.findOfficePermissionsByKey(idOffice, key, idPerson);
     return ResponseEntity.ok(ResponseBase.of(permissions));
   }

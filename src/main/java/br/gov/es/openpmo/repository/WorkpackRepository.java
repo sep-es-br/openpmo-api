@@ -4,6 +4,7 @@ import br.gov.es.openpmo.dto.ccbmembers.CanUseCCBProjection;
 import br.gov.es.openpmo.dto.menu.PlanWorkpackDto;
 import br.gov.es.openpmo.dto.menu.WorkpackResultDto;
 import br.gov.es.openpmo.dto.universalSearch.UniversalSearchItemQueryResult;
+import br.gov.es.openpmo.dto.universalSearch.UniversalSearchBreadcrumbQueryResult;
 import br.gov.es.openpmo.dto.workpack.breakdown.structure.WorkpackBreakdownClassificationDto;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.office.plan.Plan;
@@ -957,25 +958,11 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       "where (w)-[:IS_IN|BELONGS_TO|IS_ADOPTED_BY*0..]->()<-[:CAN_ACCESS_OFFICE|CAN_ACCESS_PLAN|CAN_ACCESS_WORKPACK]-(user)\n"
       +
       "    OR (w)<-[:IS_IN*0..]-()<-[:CAN_ACCESS_WORKPACK]-(user)\n" +
+      "    OR (rootId IS NULL AND id(w) IN $transversalWorkpackIds)\n" +
       "    or user.administrator\n" +
       "\n" +
-      "// Chama uma subquery para resgatar o breadcrumb de cada item encontrado\n" +
-      "CALL {\n" +
-      "    WITH w, rootId\n" +
-      "    MATCH (w)-[:IS_IN*0..]->(parent:Workpack)-[:IS_IN*0..]->(last:Workpack),\n" +
-      "    (parent)-[:IS_INSTANCE_BY]->(pwm:WorkpackModel)\n" +
-      "    WHERE id(last) = rootId or (rootId IS NULL AND not exists ((last)-[:IS_IN]->(:Workpack)))\n" +
-      "    MATCH path = ((w)-[:IS_IN*]->(parent))\n" +
-      "    WITH distinct parent, pwm, length(path) AS hops\n" +
-      "    ORDER BY hops desc\n" +
-      "    WITH parent, pwm\n" +
-      "    RETURN distinct \n" +
-      "        //collect('(' + pwm.modelName + ') ' + parent.name) AS parents,\n" +
-      "        collect({modelo: pwm.modelName, id:id(parent), nome: parent.name}) as breadcrumbs\n" +
-      "}\n" +
-      "\n" +
       "// Organiza as variáveis e calcula o nível de similaridade (com o token) para cada workpack encontrado\n" +
-      "WITH distinct id(w) AS id, planId, token, frase, w, breadcrumbs, \n" +
+      "WITH distinct id(w) AS id, planId, token, frase, w, user, rootId, \n" +
       "     wm.modelName AS model,\n" +
       "     wm.fontIcon AS icon,\n" +
       "     trim(w.name) AS name,\n" +
@@ -990,12 +977,11 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
       "            when apoc.text.clean(w.fullName) contains token then 4\n" +
       "            else 1\n" +
       "     end as fator\n" +
-      "WITH  id, planId, token, frase, model, icon, name, fullName, breadcrumbs,\n" +
+      "WITH  id, planId, token, frase, model, icon, name, fullName, w, user, rootId,\n" +
       "    // Calculando a pontuação no ranking de proximidade\n" +
       "    (apoc.text.jaroWinklerDistance(token, apoc.text.clean(w.name))\n" +
 
       "    + apoc.text.jaroWinklerDistance(token, apoc.text.clean(w.fullName)))/fator AS matchDistance\n" +
-      "WHERE breadcrumbs IS NOT NULL AND size(breadcrumbs) > 0\n" +
       "  	";
 
   /**
@@ -1008,11 +994,60 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
    * @return
    */
   @Query(value = doSearchInAll_queryBase +
-      "RETURN planId, id, model, icon, name, fullName, matchDistance, breadcrumbs\n" +
+      "RETURN planId, id, model, icon, name, fullName, matchDistance, " +
+      "(user.administrator OR (w)-[:IS_IN|BELONGS_TO|IS_ADOPTED_BY*0..]->()<-[:CAN_ACCESS_OFFICE|CAN_ACCESS_PLAN|CAN_ACCESS_WORKPACK]-(user) " +
+      "OR (w)<-[:IS_IN*0..]-()<-[:CAN_ACCESS_WORKPACK]-(user)) AS structuralAccess\n" +
       "ORDER BY matchDistance ASC", countQuery = doSearchInAll_queryBase +
           "RETURN count(id)")
-  public Page<UniversalSearchItemQueryResult> doSearchInAll(Long workpackId, String term, Long userId, Long planId,
+  public Page<UniversalSearchItemQueryResult> doSearchInAll(
+      @Param("workpackId") Long workpackId,
+      @Param("term") String term,
+      @Param("userId") Long userId,
+      @Param("transversalWorkpackIds") List<Long> transversalWorkpackIds,
+      @Param("planId") Long planId,
       PageRequest request);
+
+  @Query("MATCH (target:Workpack) WHERE id(target) IN $workpackIds " +
+      "OPTIONAL MATCH (root:Workpack) WHERE $rootId IS NOT NULL AND id(root) = $rootId " +
+      "WITH target, root " +
+      "MATCH path = (target)-[:IS_IN*1..]->(ancestor:Workpack)-[:IS_INSTANCE_BY]->(model:WorkpackModel) " +
+      "WHERE ($rootId IS NULL AND NOT EXISTS((ancestor)-[:IS_IN]->(:Workpack))) " +
+      "OR ($rootId IS NOT NULL AND (ancestor = root OR EXISTS((ancestor)-[:IS_IN*1..]->(root)))) " +
+      "WITH target, ancestor, model, length(path) AS hops ORDER BY hops DESC " +
+      "WITH target, collect({id:id(ancestor), nome:ancestor.name, modelo:model.modelName}) AS breadcrumbs " +
+      "RETURN id(target) AS id, breadcrumbs")
+  List<UniversalSearchBreadcrumbQueryResult> findStructuralSearchBreadcrumbs(
+      @Param("workpackIds") List<Long> workpackIds,
+      @Param("rootId") Long rootId);
+
+  @Query("MATCH (program:Program)-[:MEMBER_OF]->(view:WorkpackModel {classification:'TRANSVERSAL'}) " +
+      "WHERE id(program) IN $programIds " +
+      "MATCH (program)-[:BELONGS_TO]->(plan:Plan) " +
+      "MATCH (selected:Workpack)-[:BELONGS_TO]->(plan) " +
+      "MATCH (selected)-[:IS_INSTANCE_BY]->(selectedModel:WorkpackModel) " +
+      "MATCH (selectedModel)<-[:FEATURES]-(selectionModel:TransversalViewSelectionModel) " +
+      "MATCH (selected)<-[:FEATURES]-(selection:TransversalViewSelection)-[:IS_DRIVEN_BY]->(selectionModel) " +
+      "MATCH (selectedModel)-[:IS_IN*0..]->(rootModel:WorkpackModel)<-[:FEATURES]-(:TransversalViewSelectionModel) " +
+      "WHERE NOT EXISTS((rootModel)-[:IS_IN*1..]->(:WorkpackModel)<-[:FEATURES]-(:TransversalViewSelectionModel)) " +
+      "AND toString(id(program)) IN [token IN split(coalesce(selection.value, ''), ',') | trim(token)] " +
+      "MATCH (target:Workpack)-[:BELONGS_TO]->(plan) WHERE id(target) IN $workpackIds " +
+      "AND (target = selected OR EXISTS((target)-[:IS_IN*1..]->(selected)) OR EXISTS((selected)-[:IS_IN*1..]->(target))) " +
+      "CALL { WITH program MATCH path=(program)-[:IS_IN*0..]->(ancestor:Program) " +
+      "WITH ancestor, length(path) AS hops ORDER BY hops DESC " +
+      "RETURN collect({id:id(ancestor), nome:ancestor.name, modelo:'Programa'}) AS programBreadcrumbs } " +
+      "CALL { WITH target, rootModel " +
+      "OPTIONAL MATCH path=(target)-[:IS_IN*1..]->(ancestor:Workpack)-[:IS_INSTANCE_BY]->(ancestorModel:WorkpackModel) " +
+      "WHERE EXISTS((ancestorModel)-[:IS_IN*0..]->(rootModel)) " +
+      "WITH ancestor, length(path) AS hops ORDER BY hops DESC " +
+      "WITH ancestor WHERE ancestor IS NOT NULL " +
+      "RETURN collect({id:id(ancestor), nome:ancestor.name, " +
+      "modelo:head([(ancestor)-[:IS_INSTANCE_BY]->(m:WorkpackModel) | m.modelName])}) AS itemBreadcrumbs } " +
+      "RETURN id(target) AS id, id(program) AS programId, selection.principalProgramId AS principalProgramId, " +
+      "programBreadcrumbs + itemBreadcrumbs AS breadcrumbs " +
+      "ORDER BY id, programId")
+  List<UniversalSearchBreadcrumbQueryResult> findTransversalSearchBreadcrumbs(
+      @Param("workpackIds") List<Long> workpackIds,
+      @Param("programIds") List<Long> programIds);
 
   @Query("MATCH (w:Workpack)-[belongsTo:BELONGS_TO]->(plan:Plan) " +
       "WHERE ID(w) = $idWorkpack " +

@@ -9,7 +9,8 @@ import br.gov.es.openpmo.dto.PageResponse;
 import br.gov.es.openpmo.dto.Response;
 import br.gov.es.openpmo.dto.universalSearch.UniversalSearchItemQueryResult;
 import br.gov.es.openpmo.dto.universalSearch.UniversalSearchParameters;
-import br.gov.es.openpmo.service.authentication.TokenService;
+import br.gov.es.openpmo.service.actors.IGetPersonFromAuthorization;
+import br.gov.es.openpmo.service.workpack.GetTransversalSearchWorkpackIds;
 import br.gov.es.openpmo.service.workpack.WorkpackService;
 import br.gov.es.openpmo.utils.ResponseHandler;
 import io.swagger.annotations.Api;
@@ -32,16 +33,19 @@ public class SearchController {
     private final ResponseHandler responseHandler;
     
     private final WorkpackService wpSrv;
-    private final TokenService tokenService;
+    private final IGetPersonFromAuthorization getPersonFromAuthorization;
+    private final GetTransversalSearchWorkpackIds getTransversalSearchWorkpackIds;
     
     
     public SearchController(
             final WorkpackService wpSrv,
-            final TokenService tokenSrv,
+            final IGetPersonFromAuthorization getPersonFromAuthorization,
+            final GetTransversalSearchWorkpackIds getTransversalSearchWorkpackIds,
             final ResponseHandler responseHandler
     ) {
         this.wpSrv = wpSrv;
-        this.tokenService = tokenSrv;
+        this.getPersonFromAuthorization = getPersonFromAuthorization;
+        this.getTransversalSearchWorkpackIds = getTransversalSearchWorkpackIds;
         this.responseHandler = responseHandler;
     }
     
@@ -57,9 +61,27 @@ public class SearchController {
             return this.responseHandler.success(PageResponse.of(Page.empty()));
         }
         
-        final Long userId = this.tokenService.getUserId(authorization);
+        final IGetPersonFromAuthorization.PersonDataResponse currentPerson =
+          this.getPersonFromAuthorization.execute(authorization);
+        final Long userId = currentPerson.getPerson().getId();
 
-        UniversalSearchParameters params = new UniversalSearchParameters(planId, workpackId, userId, term);
+        UniversalSearchParameters params = new UniversalSearchParameters(
+          planId,
+          workpackId,
+          userId,
+          currentPerson.getKey(),
+          term
+        );
+        final java.util.Map<Long, java.util.List<Long>> transversalProgramsByWorkpack =
+          this.getTransversalSearchWorkpackIds.findAccessibleWorkpackProgramIds(
+          planId,
+          currentPerson.getKey(),
+          authorization
+        );
+        params.setTransversalWorkpackIds(new java.util.ArrayList<>(transversalProgramsByWorkpack.keySet()));
+        params.setTransversalProgramsByWorkpack(transversalProgramsByWorkpack);
+        params.setTransversalProgramIds(transversalProgramsByWorkpack.values().stream()
+          .flatMap(java.util.Collection::stream).distinct().collect(java.util.stream.Collectors.toList()));
 
         return this.responseHandler.success(PageResponse.of(this.wpSrv.doUniversalSearch(params, PageRequest.of(page, pageSize))));
     }

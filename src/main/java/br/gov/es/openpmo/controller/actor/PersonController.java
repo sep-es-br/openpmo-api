@@ -22,6 +22,7 @@ import br.gov.es.openpmo.service.actors.PersonService;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.organization.WorkPlaceService;
 import br.gov.es.openpmo.service.permissions.PersonPermissionsService;
+import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessData;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.utils.ResponseHandler;
 import io.swagger.annotations.Api;
@@ -61,6 +62,7 @@ public class PersonController {
   private final ResponseHandler responseHandler;
 
   private final ICanAccessService canAccessService;
+  private final ICanAccessData canAccessData;
   private final TokenService tokenService;
   private final WorkPlaceService workPlaceService;
 
@@ -70,6 +72,7 @@ public class PersonController {
     final PersonPermissionsService personPermissionsService,
     final ResponseHandler responseHandler,
     final ICanAccessService canAccessService,
+    final ICanAccessData canAccessData,
     final TokenService tokenService,
     final WorkPlaceService workPlaceService
   ) {
@@ -77,6 +80,7 @@ public class PersonController {
     this.personPermissionsService = personPermissionsService;
     this.responseHandler = responseHandler;
     this.canAccessService = canAccessService;
+    this.canAccessData = canAccessData;
     this.tokenService = tokenService;
     this.workPlaceService = workPlaceService;
   }
@@ -94,6 +98,14 @@ public class PersonController {
     return maybePerson
       .map(personGetByIdDto -> ResponseEntity.ok(ResponseBase.of(personGetByIdDto)))
       .orElseGet(() -> ResponseEntity.noContent().build());
+  }
+
+  @GetMapping("/is-administrator")
+  public ResponseEntity<ResponseBase<Boolean>> isAdministrator(
+    @Authorization final String authorization
+  ) {
+    final Boolean isAdministrator = this.canAccessData.execute(authorization).getAdmin();
+    return ResponseEntity.ok(ResponseBase.of(Boolean.TRUE.equals(isAdministrator)));
   }
 
   @PostMapping("/office/{officeScope}")

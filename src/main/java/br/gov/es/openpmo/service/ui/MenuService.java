@@ -102,7 +102,7 @@ public class MenuService {
       return Collections.emptySet();
     }
 
-    if (admin || officePermission) {
+    if (admin || planPermission) {
       return findAllPortifolio(request.getIdPlan());
     }
 
@@ -199,7 +199,65 @@ public class MenuService {
         }
       }
     }
-    return sortMenusChildren(result);
+    if (!plansWithPermission.isEmpty()) {
+      return sortMenusChildren(result);
+    }
+    final Set<Long> permittedWorkpacks = workpackDtos.stream()
+      .filter(workpack -> workpack.getWorkpacks() != null)
+      .flatMap(workpack -> workpack.getWorkpacks().stream())
+      .collect(Collectors.toSet());
+    return sortMenusChildren(this.filterMenuToPermittedBranches(result, permittedWorkpacks, false));
+  }
+
+  Set<WorkpackMenuResultDto> filterMenuToPermittedBranches(
+    final Collection<WorkpackMenuResultDto> items,
+    final Set<Long> permittedWorkpacks,
+    final boolean parentIsPermitted
+  ) {
+    final Set<WorkpackMenuResultDto> filtered = new LinkedHashSet<>(0);
+    for (final WorkpackMenuResultDto item : items) {
+      final boolean permitted = parentIsPermitted || permittedWorkpacks.contains(item.getId());
+      final Collection<WorkpackMenuResultDto> itemChildren = item.getChildren() == null
+        ? Collections.emptySet()
+        : item.getChildren();
+      final Set<WorkpackMenuResultDto> children = permitted
+        ? this.copyMenuSubtree(itemChildren)
+        : this.filterMenuToPermittedBranches(itemChildren, permittedWorkpacks, false);
+      if (permitted || !children.isEmpty()) {
+        filtered.add(this.copyMenuItem(item, children));
+      }
+    }
+    return filtered;
+  }
+
+  private Set<WorkpackMenuResultDto> copyMenuSubtree(final Collection<WorkpackMenuResultDto> items) {
+    final Set<WorkpackMenuResultDto> copy = new LinkedHashSet<>(0);
+    for (final WorkpackMenuResultDto item : items) {
+      final Collection<WorkpackMenuResultDto> children = item.getChildren() == null
+        ? Collections.emptySet()
+        : item.getChildren();
+      copy.add(this.copyMenuItem(item, this.copyMenuSubtree(children)));
+    }
+    return copy;
+  }
+
+  private WorkpackMenuResultDto copyMenuItem(
+    final WorkpackMenuResultDto source,
+    final Set<WorkpackMenuResultDto> children
+  ) {
+    final WorkpackMenuResultDto copy = new WorkpackMenuResultDto();
+    copy.setId(source.getId());
+    copy.setIdWorkpackModel(source.getIdWorkpackModel());
+    copy.setIdWorkpackModelLinked(source.getIdWorkpackModelLinked());
+    copy.setIdPlan(source.getIdPlan());
+    copy.setIdParent(source.getIdParent());
+    copy.setName(source.getName());
+    copy.setFullName(source.getFullName());
+    copy.setFontIcon(source.getFontIcon());
+    copy.setSort(source.getSort());
+    copy.setPosition(source.getPosition());
+    copy.setChildren(children);
+    return copy;
   }
 
   private WorkpackMenuResultDto getWorkpackMenuResultDto(Long idWorkpack, final List<WorkpackMenuResultDto> listWorkpackMenus) {

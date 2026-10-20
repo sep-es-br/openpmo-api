@@ -9,7 +9,7 @@ import br.gov.es.openpmo.dto.menu.PortfolioParentsResponse;
 import br.gov.es.openpmo.dto.menu.WorkpackMenuDto;
 import br.gov.es.openpmo.dto.menu.WorkpackMenuResultDto;
 import br.gov.es.openpmo.dto.menu.WorkpackModelParentsResponse;
-import br.gov.es.openpmo.service.authentication.TokenService;
+import br.gov.es.openpmo.service.actors.IGetPersonFromAuthorization;
 import br.gov.es.openpmo.service.properties.GetSorterProperty;
 import br.gov.es.openpmo.service.ui.IGetPortfolioParents;
 import br.gov.es.openpmo.service.ui.IGetWorkpackModelParents;
@@ -36,7 +36,7 @@ public class MenuController {
 
   private final MenuService menuService;
 
-  private final TokenService tokenService;
+  private final IGetPersonFromAuthorization getPersonFromAuthorization;
 
   private final IGetPortfolioParents getPortfolioParents;
 
@@ -47,13 +47,13 @@ public class MenuController {
   @Autowired
   public MenuController(
     final MenuService menuService,
-    final TokenService tokenService,
+    final IGetPersonFromAuthorization getPersonFromAuthorization,
     final IGetPortfolioParents getPortfolioParents,
     final IGetWorkpackModelParents getWorkpackModelParents,
     final WorkpackModelMenuService workpackModelMenuService
   ) {
     this.menuService = menuService;
-    this.tokenService = tokenService;
+    this.getPersonFromAuthorization = getPersonFromAuthorization;
     this.getPortfolioParents = getPortfolioParents;
     this.getWorkpackModelParents = getWorkpackModelParents;
     this.workpackModelMenuService = workpackModelMenuService;
@@ -64,7 +64,7 @@ public class MenuController {
     @RequestHeader(name = "Authorization") final String authorization
   ) {
 
-    final Long idUser = this.tokenService.getUserId(authorization);
+    final Long idUser = this.getCurrentPersonId(authorization);
     final List<MenuOfficeDto> offices = this.menuService.findAllOffice(idUser);
     GetSorterProperty.clear();
 
@@ -82,7 +82,7 @@ public class MenuController {
     @RequestHeader(name = "Authorization") final String authorization
   ) {
 
-    final Long idUser = this.tokenService.getUserId(authorization);
+    final Long idUser = this.getCurrentPersonId(authorization);
     final Set<WorkpackMenuDto> portfolios = this.menuService
       .findAllPortfolio(new PortfolioMenuRequest(idOffice, idPlan, idUser));
     GetSorterProperty.clear();
@@ -101,7 +101,7 @@ public class MenuController {
       @RequestHeader(name = "Authorization") final String authorization
   ) {
 
-    final Long idUser = this.tokenService.getUserId(authorization);
+    final Long idUser = this.getCurrentPersonId(authorization);
     final Set<WorkpackMenuResultDto> portfolios = this.menuService
         .findAllPortfolioCached(new PortfolioMenuRequest(idOffice, idPlan, idUser));
     GetSorterProperty.clear();
@@ -111,6 +111,10 @@ public class MenuController {
     }
 
     return ResponseEntity.ok(ResponseBaseItens.of(portfolios));
+  }
+
+  private Long getCurrentPersonId(final String authorization) {
+    return this.getPersonFromAuthorization.execute(authorization).getPerson().getId();
   }
 
   @GetMapping("/planModels")

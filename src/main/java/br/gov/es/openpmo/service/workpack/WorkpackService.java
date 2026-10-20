@@ -6,6 +6,7 @@ import br.gov.es.openpmo.dto.dashboards.DashboardMonthDto;
 import br.gov.es.openpmo.dto.menu.PlanWorkpackDto;
 import br.gov.es.openpmo.dto.plan.PlanDto;
 import br.gov.es.openpmo.dto.universalSearch.UniversalSearchItemQueryResult;
+import br.gov.es.openpmo.dto.universalSearch.UniversalSearchBreadcrumbQueryResult;
 import br.gov.es.openpmo.dto.universalSearch.UniversalSearchParameters;
 import br.gov.es.openpmo.dto.workpack.CurrencyDto;
 import br.gov.es.openpmo.dto.workpack.DateDto;
@@ -1894,8 +1895,62 @@ public class WorkpackService {
 
   
   public Page<UniversalSearchItemQueryResult> doUniversalSearch(UniversalSearchParameters parameters, PageRequest pageRequest) {
-      
-      return this.workpackRepository.doSearchInAll(parameters.getWorkpackId(), parameters.getTerm(), parameters.getUserId(), parameters.getPlanId(), pageRequest);
+      final Page<UniversalSearchItemQueryResult> page = this.workpackRepository.doSearchInAll(
+        parameters.getWorkpackId(),
+        parameters.getTerm(),
+        parameters.getUserId(),
+        parameters.getTransversalWorkpackIds(),
+        parameters.getPlanId(),
+        pageRequest
+      );
+      if (page.isEmpty()) {
+        return page;
+      }
+
+      final List<Long> structuralIds = page.getContent().stream()
+        .filter(UniversalSearchItemQueryResult::isStructuralAccess)
+        .map(UniversalSearchItemQueryResult::getId)
+        .collect(Collectors.toList());
+      final List<Long> transversalIds = page.getContent().stream()
+        .filter(item -> !item.isStructuralAccess())
+        .map(UniversalSearchItemQueryResult::getId)
+        .collect(Collectors.toList());
+      final Map<Long, List<UniversalSearchItemQueryResult.BreadCrumb>> breadcrumbsById = new HashMap<>();
+
+      if (!structuralIds.isEmpty()) {
+        this.workpackRepository.findStructuralSearchBreadcrumbs(structuralIds, parameters.getWorkpackId())
+          .forEach(result -> breadcrumbsById.put(result.getId(), result.getBreadcrumbs()));
+      }
+
+      if (!transversalIds.isEmpty() && parameters.getTransversalProgramIds() != null
+        && !parameters.getTransversalProgramIds().isEmpty()) {
+        final Map<Long, UniversalSearchBreadcrumbQueryResult> selectedBreadcrumbs = new HashMap<>();
+        this.workpackRepository.findTransversalSearchBreadcrumbs(
+          transversalIds,
+          parameters.getTransversalProgramIds()
+        ).forEach(candidate -> {
+          final List<Long> accessiblePrograms = parameters.getTransversalProgramsByWorkpack()
+            .getOrDefault(candidate.getId(), Collections.emptyList());
+          if (!accessiblePrograms.contains(candidate.getProgramId())) {
+            return;
+          }
+          final UniversalSearchBreadcrumbQueryResult current = selectedBreadcrumbs.get(candidate.getId());
+          final boolean candidateIsPrincipal = candidate.getProgramId().equals(candidate.getPrincipalProgramId());
+          final boolean currentIsPrincipal = current != null && current.getProgramId().equals(current.getPrincipalProgramId());
+          final int candidateOrder = accessiblePrograms.indexOf(candidate.getProgramId());
+          final int currentOrder = current == null ? java.lang.Integer.MAX_VALUE : accessiblePrograms.indexOf(current.getProgramId());
+          if (current == null || (candidateIsPrincipal && !currentIsPrincipal)
+            || (candidateIsPrincipal == currentIsPrincipal && candidateOrder < currentOrder)) {
+            selectedBreadcrumbs.put(candidate.getId(), candidate);
+          }
+        });
+        selectedBreadcrumbs.forEach((id, result) -> breadcrumbsById.put(id, result.getBreadcrumbs()));
+      }
+
+      return page.map(item -> {
+        item.setBreadcrumbs(breadcrumbsById.getOrDefault(item.getId(), Collections.emptyList()));
+        return item;
+      });
   }
   
   public Long countTypeByWorkpack(Long workpackId, String type){

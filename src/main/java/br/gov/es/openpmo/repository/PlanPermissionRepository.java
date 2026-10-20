@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.repository;
 
 import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
+import br.gov.es.openpmo.dto.plan.PlanAccessContextDto;
 import br.gov.es.openpmo.model.relations.CanAccessOffice;
 import br.gov.es.openpmo.model.relations.CanAccessPlan;
 import org.springframework.data.neo4j.annotation.Query;
@@ -13,6 +14,12 @@ import java.util.Set;
 
 @Repository
 public interface PlanPermissionRepository extends Neo4jRepository<CanAccessPlan, Long> {
+
+  @Query("MATCH (person:Person) WHERE id(person) = $idPerson " +
+    "MATCH (person)-[permission:CAN_ACCESS_PLAN]->(plan:Plan)-[:IS_ADOPTED_BY]->(office:Office) " +
+    "WHERE permission.permissionLevel IN ['READ', 'UPDATE', 'EDIT'] " +
+    "RETURN DISTINCT id(plan) AS idPlan, id(office) AS idOffice ORDER BY idPlan")
+  List<PlanAccessContextDto> findDirectAccessContexts(@Param("idPerson") Long idPerson);
 
   @Query("MATCH (p:Person)-[is:CAN_ACCESS_PLAN]->(o:Plan) WHERE id(o) = $idPlan AND id(p) = $idPerson  RETURN o,p,is")
   List<CanAccessPlan> findByIdPlanAndIdPerson(

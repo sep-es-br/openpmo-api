@@ -13,6 +13,8 @@ Para entender as regras de negócio, arquitetura, fluxos de usuário e especific
 1. Sempre que precisar entender um fluxo de negócio, autenticação ou funcionalidade (ex: *Conceitos Básicos*, *Acompanhamento de Projetos*), consulte primeiro os links mapeados no `llms.txt`.
 2. Para obter a documentação em formato Markdown limpo de qualquer página, adicione a extensão `.md` ao final da URL da página correspondente.
    - *Exemplo:* Se a página for `https://sep-es-br.gitbook.io/manuais-openpmo/manual-do-usuario/conceitos-basicos`, acesse `https://sep-es-br.gitbook.io/manuais-openpmo/manual-do-usuario/conceitos-basicos.md`.
+3. Se a ferramenta de navegação ou o shell dentro do sandbox não conseguir acessar o GitBook, tente novamente a requisição HTTP fora do sandbox do Codex, usando o mecanismo de execução externa com autorização (`Invoke-WebRequest` no PowerShell, por exemplo). O acesso público pode funcionar fora do sandbox mesmo quando a rede interna do Codex falha.
+4. Se a execução externa não estiver disponível ou for negada, informe que a documentação não foi consultada por uma limitação de acesso do ambiente; não trate a falha do sandbox como indisponibilidade do GitBook nem invente o conteúdo das páginas.
 
 O GitBook é a **fonte da verdade para regras de negócio, fluxos funcionais e comportamento esperado do OpenPMO**. Antes de implementar ou corrigir uma funcionalidade, consulte essa documentação e alinhe a mudança ao que estiver especificado nela. Use o código e a configuração locais como fonte da verdade para o estado técnico atualmente implementado; se houver conflito, não invente uma regra: registre a divergência e confirme qual comportamento deve prevalecer.
 
@@ -29,6 +31,7 @@ O GitBook é a **fonte da verdade para regras de negócio, fluxos funcionais e c
 
 ## Serviços locais
 
+- **Após qualquer alteração no backend, reinicie o serviço para carregar o código atualizado e validar a mudança.** Não espere uma solicitação separada para reiniciar. Ao concluir, deixe o backend em execução para inspeção humana; se não for possível iniciá-lo, informe o erro e a última verificação realizada.
 - **Em tarefas que autorizem iniciar ou reiniciar serviços, a parada temporária durante a execução está autorizada.** Isso inclui o backend, o frontend e outros processos de desenvolvimento. Ao concluir a tarefa, deixe os serviços solicitados ativos e disponíveis para inspeção humana. Se a tarefa não autorizar iniciar ou reiniciar um serviço, verifique seu estado antes de agir e preserve os serviços que já estiverem em execução.
 
 O `README.md` e o `Dockerfile` ainda contêm referências a Java 8, mas a configuração efetiva de compilação do projeto é Java 11. Não rebaixe a linguagem nem altere a imagem de runtime sem uma tarefa específica para compatibilização da implantação.

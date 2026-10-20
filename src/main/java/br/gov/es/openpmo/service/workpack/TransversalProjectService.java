@@ -17,6 +17,7 @@ import br.gov.es.openpmo.repository.TransversalRepository;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -50,11 +51,47 @@ public class TransversalProjectService {
     return this.repository.findProgramModelsForView(idTransversalView);
   }
 
+  public List<TransversalContextDto> findStakeholderAccessContexts(final String key) {
+    return this.repository.findStakeholderAccessContexts(key);
+  }
+
+  public List<TransversalContextDto> findDirectStructuralAccessContexts(final String key) {
+    return this.repository.findDirectStructuralAccessContexts(key);
+  }
+
   public List<TransversalProgramOptionDto> findProgramsForView(
     final Long idTransversalView,
     final Long idPlan
   ) {
     return this.repository.findProgramsForView(idTransversalView, idPlan);
+  }
+
+  public List<TransversalProgramOptionDto> filterProgramsForAccessContexts(
+    final List<TransversalProgramOptionDto> programs,
+    final List<TransversalContextDto> accessContexts,
+    final Long idTransversalView,
+    final Long idPlan
+  ) {
+    final Set<Long> visibleProgramIds = accessContexts.stream()
+      .filter(context -> idTransversalView.equals(context.getIdTransversalView()))
+      .filter(context -> idPlan.equals(context.getIdPlan()))
+      .map(TransversalContextDto::getIdTransversalProgram)
+      .collect(Collectors.toCollection(HashSet::new));
+    boolean addedDescendant;
+    do {
+      addedDescendant = false;
+      for (final TransversalProgramOptionDto program : programs) {
+        if (program.getIdParent() != null
+          && visibleProgramIds.contains(program.getIdParent())
+          && visibleProgramIds.add(program.getIdTransversalProgram())) {
+          addedDescendant = true;
+        }
+      }
+    } while (addedDescendant);
+
+    return programs.stream()
+      .filter(program -> visibleProgramIds.contains(program.getIdTransversalProgram()))
+      .collect(Collectors.toList());
   }
 
   public List<EligibleProjectDto> findEligibleProjects(final Long idTransversalProgram) {

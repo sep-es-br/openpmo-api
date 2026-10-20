@@ -11,6 +11,8 @@ public class TransversalContextDto {
   private Long idTransversalProgram;
   private Long idWorkpackModel;
   private Long idWorkpack;
+  private Long idOffice;
+  private String viewName;
 
   public Long getIdPlan() { return idPlan; }
   public void setIdPlan(Long idPlan) { this.idPlan = idPlan; }
@@ -24,4 +26,8 @@ public class TransversalContextDto {
   public void setIdWorkpackModel(Long idWorkpackModel) { this.idWorkpackModel = idWorkpackModel; }
   public Long getIdWorkpack() { return idWorkpack; }
   public void setIdWorkpack(Long idWorkpack) { this.idWorkpack = idWorkpack; }
+  public Long getIdOffice() { return idOffice; }
+  public void setIdOffice(Long idOffice) { this.idOffice = idOffice; }
+  public String getViewName() { return viewName; }
+  public void setViewName(String viewName) { this.viewName = viewName; }
 }
