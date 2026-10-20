@@ -4,6 +4,7 @@ import br.gov.es.openpmo.dto.office.OfficeDto;
 import br.gov.es.openpmo.model.Entity;
 import br.gov.es.openpmo.model.office.plan.Plan;
 import br.gov.es.openpmo.model.office.plan.PlanModel;
+import br.gov.es.openpmo.model.preprojects.models.PreProjectModel;
 import br.gov.es.openpmo.model.actors.WorkPlace;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.neo4j.ogm.annotation.NodeEntity;
@@ -20,6 +21,8 @@ public class Office extends Entity {
   private String name;
   private String fullName;
 
+  private boolean deleted;
+
   @JsonIgnoreProperties("office")
   @Relationship(type = "IS_ADOPTED_BY", direction = INCOMING)
   private Set<Plan> plans;
@@ -27,6 +30,10 @@ public class Office extends Entity {
   @JsonIgnoreProperties("office")
   @Relationship(type = "IS_ADOPTED_BY", direction = INCOMING)
   private Set<PlanModel> plansModel;
+
+  @JsonIgnoreProperties("office")
+  @Relationship(type = "IS_ADOPTED_BY", direction = INCOMING)
+  private PreProjectModel preProjectModel;
 
   @JsonIgnoreProperties("office")
   @Relationship(type = "FOR", direction = INCOMING)
@@ -64,6 +71,14 @@ public class Office extends Entity {
     this.plansModel = plansModel;
   }
 
+  public PreProjectModel getPreProjectModel() {
+    return this.preProjectModel;
+  }
+
+  public void setPreProjectModel(final PreProjectModel preProjectModel) {
+    this.preProjectModel = preProjectModel;
+  }
+
   public Set<WorkPlace> getWorkPlaces() {
     return this.workPlaces;
   }
@@ -75,6 +90,14 @@ public class Office extends Entity {
   @Transient
   public OfficeDto getDto() {
     return new OfficeDto(this);
+  }
+
+  public void setDeleted(final boolean deleted) {
+    this.deleted = deleted;
+  }
+
+  public boolean isDeleted() {
+    return this.deleted;
   }
 
 }

@@ -13,9 +13,12 @@ import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.model.indicators.Indicator;
 import br.gov.es.openpmo.service.authentication.TokenService;
 import br.gov.es.openpmo.service.indicators.IndicatorService;
+import br.gov.es.openpmo.service.indicators.IndicatorProviderService;
 import br.gov.es.openpmo.service.permissions.canaccess.ICanAccessService;
 import br.gov.es.openpmo.service.workpack.GetWorkpackPermissions;
 import br.gov.es.openpmo.service.workpack.WorkpackPermissionVerifier;
+import br.gov.es.pmo.indicator_interface.model.ChallengeDto;
+import br.gov.es.pmo.indicator_interface.model.IndicatorDto;
 import io.swagger.annotations.Api;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,20 +35,39 @@ import java.util.List;
 public class IndicatorController {
 
     private final IndicatorService service;
+    private final IndicatorProviderService indicatorProviderService;
     private final WorkpackPermissionVerifier workpackPermissionVerifier;
     private final TokenService tokenService;
     private final ICanAccessService canAccessService;
 
     public IndicatorController(
         final IndicatorService service,
+        final IndicatorProviderService indicatorProviderService,
         final TokenService tokenService,
         final ICanAccessService canAccessService,
         final WorkpackPermissionVerifier workpackPermissionVerifier
     ) {
         this.service = service;
+        this.indicatorProviderService = indicatorProviderService;
         this.tokenService = tokenService;
         this.canAccessService = canAccessService;
         this.workpackPermissionVerifier = workpackPermissionVerifier;
+    }
+
+    @GetMapping("/ods")
+    public ResponseEntity<ResponseBase<List<IndicatorDto>>> getOds(
+        @Authorization final String authorization
+    ) {
+        this.tokenService.getUserId(authorization);
+        return ResponseEntity.ok(ResponseBase.of(this.indicatorProviderService.getIndicators()));
+    }
+
+    @GetMapping("/challenges")
+    public ResponseEntity<ResponseBase<List<ChallengeDto>>> getChallenges(
+        @Authorization final String authorization
+    ) {
+        this.tokenService.getUserId(authorization);
+        return ResponseEntity.ok(ResponseBase.of(this.indicatorProviderService.getChallenges()));
     }
 
     @GetMapping

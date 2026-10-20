@@ -5,6 +5,7 @@ import java.util.Objects;
 import br.gov.es.openpmo.model.baselines.Baseline;
 import br.gov.es.openpmo.model.baselines.Snapshotable;
 import br.gov.es.openpmo.model.properties.models.PropertyModel;
+import br.gov.es.openpmo.model.preprojects.PreProject;
 import br.gov.es.openpmo.model.relations.IsPropertySnapshotOf;
 import br.gov.es.openpmo.model.workpacks.CostAccount;
 import br.gov.es.openpmo.model.workpacks.Workpack;
@@ -34,6 +35,10 @@ import static org.neo4j.ogm.annotation.Relationship.INCOMING;
   @JsonSubTypes.Type(value = Currency.class, name = "Currency"),
   @JsonSubTypes.Type(value = LocalitySelection.class, name = "LocalitySelection"),
   @JsonSubTypes.Type(value = Group.class, name = "Group"),
+  @JsonSubTypes.Type(value = CriteriaList.class, name = "CriteriaList"),
+  @JsonSubTypes.Type(value = CriteriaSelection.class, name = "CriteriaSelection"),
+  @JsonSubTypes.Type(value = CriteriaGroup.class, name = "CriteriaGroup"),
+  @JsonSubTypes.Type(value = CriteriaTab.class, name = "CriteriaTab"),
   @JsonSubTypes.Type(value = OrganizationSelection.class, name = "OrganizationSelection")
 })
 @ApiModel(subTypes = {
@@ -48,6 +53,10 @@ import static org.neo4j.ogm.annotation.Relationship.INCOMING;
   Currency.class,
   LocalitySelection.class,
   Group.class,
+  CriteriaList.class,
+  CriteriaSelection.class,
+  CriteriaGroup.class,
+  CriteriaTab.class,
   OrganizationSelection.class
 }, discriminator = "type", description = "Supertype of all Property.")
 @NodeEntity
@@ -67,6 +76,9 @@ public abstract class Property<T, V> extends Entity implements HasValue<V>, Snap
 
   @Relationship(type = "FEATURES")
   private CostAccount costAccount;
+
+  @Relationship(type = "FEATURES")
+  private PreProject preProject;
 
   protected Property() {
   }
@@ -118,6 +130,14 @@ public abstract class Property<T, V> extends Entity implements HasValue<V>, Snap
 
   public void setCostAccount(CostAccount costAccount) {
     this.costAccount = costAccount;
+  }
+
+  public PreProject getPreProject() {
+    return this.preProject;
+  }
+
+  public void setPreProject(final PreProject preProject) {
+    this.preProject = preProject;
   }
 
   @Transient

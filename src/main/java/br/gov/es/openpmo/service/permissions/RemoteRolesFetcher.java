@@ -65,7 +65,11 @@ public class RemoteRolesFetcher implements IRemoteRolesFetcher {
     final Long idPerson
   ) {
     final String workLocation = this.acessoCidadaoApi.getWorkLocation(agentRole.getOrganizationGuid(), idPerson);
-    return new RoleResource(agentRole.getName(), workLocation);
+    return new RoleResource(
+      agentRole.getName(),
+      workLocation,
+      agentRole.getGuid()
+    );
   }
 
   private IsAuthenticatedBy findAuthenticatedByUsingPersonAndDefaultServerName(final Long idPerson) {

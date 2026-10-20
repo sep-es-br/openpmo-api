@@ -72,31 +72,33 @@ public class OfficeService {
 
   public List<Office> findAll(final Long idFilter, final String term) {
 
-    if(idFilter == null) {
-    	if (StringUtils.isBlank(term)) return this.findAll();
-    	else return findByNameOrFullName(term);
+    if (idFilter == null) {
+      if (StringUtils.isBlank(term))
+        return this.findAll();
+      else
+        return findByNameOrFullName(term);
     }
 
     final CustomFilter filter = this.customFilterRepository
-      .findById(idFilter)
-      .orElseThrow(() -> new NegocioException(CUSTOM_FILTER_NOT_FOUND));
+        .findById(idFilter)
+        .orElseThrow(() -> new NegocioException(CUSTOM_FILTER_NOT_FOUND));
     Map<String, Object> map = new HashMap<>();
     map.put("term", term);
     map.put("searchCutOffScore", appProperties.getSearchCutOffScore());
     if (StringUtils.isNotBlank(term)) {
-    	filter.setSimilarityFilter(true);
+      filter.setSimilarityFilter(true);
     }
     return this.findAllOffice.execute(filter, map);
   }
 
-	public List<Office> findByNameOrFullName(String name) {
-		return this.officeRepository.findAllOfficeByNameOrFullName(name,
-                appProperties.getSearchCutOffScore());
-	}
+  public List<Office> findByNameOrFullName(String name) {
+    return this.officeRepository.findAllOfficeByNameOrFullName(name,
+        appProperties.getSearchCutOffScore());
+  }
 
   public List<Office> findAll() {
     final List<Office> offices = new ArrayList<>();
-    this.officeRepository.findAll().forEach(offices::add);
+    this.officeRepository.findAllActive().forEach(offices::add);
     offices.sort(Comparator.comparing(Office::getName));
     return offices;
   }
@@ -140,28 +142,26 @@ public class OfficeService {
   }
 
   public List<OfficeDto> checkPermission(
-    final List<OfficeDto> offices,
-    final Long idUser
-  ) {
+      final List<OfficeDto> offices,
+      final Long idUser) {
     final Person person = this.personService.findById(idUser);
-    if(person.getAdministrator()) {
+    if (person.getAdministrator()) {
       return offices;
     }
-    for(final Iterator<OfficeDto> it = offices.iterator(); it.hasNext(); ) {
+    for (final Iterator<OfficeDto> it = offices.iterator(); it.hasNext();) {
       final OfficeDto officeDto = it.next();
       final Long officeId = officeDto.getId();
       final List<CanAccessOffice> canAccessOffices = this.officePermissionRepository.findByIdOfficeAndIdPerson(
-        officeId,
-        idUser
-      );
+          officeId,
+          idUser);
       canAccessOffices.removeIf(c -> c.getPermissionLevel() == PermissionLevelEnum.NONE);
-      if(canAccessOffices.isEmpty()) {
-        if(!this.hasPermissionPlanWorkpack(officeId, idUser)) {
+      if (canAccessOffices.isEmpty()) {
+        if (!this.hasPermissionPlanWorkpack(officeId, idUser)) {
           it.remove();
           continue;
         }
       }
-      if(!canAccessOffices.isEmpty()) {
+      if (!canAccessOffices.isEmpty()) {
         officeDto.setPermissions(new ArrayList<>());
         canAccessOffices.forEach(canAcessOffice -> {
           final PermissionDto dto = new PermissionDto();
@@ -184,11 +184,10 @@ public class OfficeService {
   }
 
   public boolean hasPermissionPlanWorkpack(
-    final Long idOffice,
-    final Long idUser
-  ) {
+      final Long idOffice,
+      final Long idUser) {
     final boolean hasCanAccessPlan = this.officePermissionRepository.hasCanAccessPlan(idOffice, idUser);
-    if(hasCanAccessPlan) {
+    if (hasCanAccessPlan) {
       return true;
     }
     return this.officePermissionRepository.hasCanAccessWorkpack(idOffice, idUser);

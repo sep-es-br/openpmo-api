@@ -27,4 +27,20 @@ public class PropertyModelType {
 
   public static final String TYPE_NAME_MODEL_GROUP = "br.gov.es.openpmo.model.properties.models.GroupModel";
 
+  public static final String TYPE_NAME_MODEL_TAB = "br.gov.es.openpmo.model.properties.models.TabModel";
+
+  public static final String TYPE_NAME_MODEL_LIST = "br.gov.es.openpmo.model.properties.models.ListModel";
+
+  public static final String TYPE_NAME_MODEL_CRITERIA_TAB =
+    "br.gov.es.openpmo.model.properties.models.CriteriaTabModel";
+
+  public static final String TYPE_NAME_MODEL_CRITERIA_GROUP =
+    "br.gov.es.openpmo.model.properties.models.CriteriaGroupModel";
+
+  public static final String TYPE_NAME_MODEL_CRITERIA_SELECTION =
+    "br.gov.es.openpmo.model.properties.models.CriteriaSelectionModel";
+
+  public static final String TYPE_NAME_MODEL_CRITERIA_LIST =
+    "br.gov.es.openpmo.model.properties.models.CriteriaListModel";
+
 }

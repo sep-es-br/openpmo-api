@@ -75,6 +75,9 @@ public class GetWorkpackBreakdownStructure {
       return null;
     }
     WorkpackResultDto workpackDto = cacheUtil.getWorkpackBreakdownStructure(idWorkpack, idPlan, allLevels);
+    if (workpackDto == null && workpackRepository.isFromPreProjectInStructuring(idWorkpack)) {
+      workpackDto = cacheUtil.getFullWorkpackBreakdownStructure(idWorkpack, idPlan, allLevels);
+    }
     if (workpackDto != null) {
       final List<Long> idsMileston = new ArrayList<>(getIdsWorkpackByType(Collections.singleton(workpackDto), "Milestone"));
       final List<MilestoneDateDto> milestoneWorkpack = this.dashboardMilestoneRepository.findByIds(idsMileston);
