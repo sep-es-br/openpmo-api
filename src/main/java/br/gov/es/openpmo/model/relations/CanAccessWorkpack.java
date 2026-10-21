@@ -24,8 +24,6 @@ public class CanAccessWorkpack implements HasRole, PermissionEntityProvider {
   private Long idPlan;
   @Property("permitedRole")
   private String role;
-  @Property("roleGuid")
-  private String roleGuid;
   private PermissionLevelEnum permissionLevel;
 
   @StartNode
@@ -38,14 +36,14 @@ public class CanAccessWorkpack implements HasRole, PermissionEntityProvider {
   }
 
   public CanAccessWorkpack(
-      final Long id,
-      final String organization,
-      final String role,
-
-      final PermissionLevelEnum permissionLevel,
-      final Person person,
-      final Workpack workpack,
-      final Long idPlan) {
+    final Long id,
+    final String organization,
+    final String role,
+    final PermissionLevelEnum permissionLevel,
+    final Person person,
+    final Workpack workpack,
+    final Long idPlan
+  ) {
     this.id = id;
     this.organization = organization;
     this.role = role;
@@ -57,7 +55,7 @@ public class CanAccessWorkpack implements HasRole, PermissionEntityProvider {
 
   @Transient
   public Long getIdWorkpack() {
-    if (this.workpack == null) {
+    if(this.workpack == null) {
       return null;
     }
     return this.workpack.getId();
@@ -65,7 +63,7 @@ public class CanAccessWorkpack implements HasRole, PermissionEntityProvider {
 
   @Transient
   public String getWorkpackName() {
-    if (this.workpack == null) {
+    if(this.workpack == null) {
       return null;
     }
     return this.workpack.getWorkpackModelInstance().getModelName();
@@ -130,14 +128,6 @@ public class CanAccessWorkpack implements HasRole, PermissionEntityProvider {
   @Transient
   public boolean hasSameUser(final Long idUser) {
     return this.person.getId().equals(idUser);
-  }
-
-  public String getRoleGuid() {
-    return this.roleGuid;
-  }
-
-  public void setRoleGuid(final String roleGuid) {
-    this.roleGuid = roleGuid;
   }
 
   @Override

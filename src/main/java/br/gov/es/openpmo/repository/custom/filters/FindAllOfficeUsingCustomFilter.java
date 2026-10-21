@@ -38,12 +38,9 @@ public class FindAllOfficeUsingCustomFilter extends FindAllUsingCustomFilterBuil
     final CustomFilter filter,
     final StringBuilder query
   ) {
-	query.append("WHERE (NOT EXISTS(")
-	  .append(this.nodeName)
-	  .append(".deleted) OR ")
-	  .append(this.nodeName)
-	  .append(".deleted = false) ");
 	buildFilterBySimilarity(filter, query);
+    if(filter.getRules() == null || filter.getRules().isEmpty() || filter.isSimilarityFilter()) return;
+    query.append("WHERE").append(" ");
   }
 
   @Override
@@ -53,12 +50,12 @@ public class FindAllOfficeUsingCustomFilter extends FindAllUsingCustomFilterBuil
 
   @Override
   protected boolean hasAppendedBooleanBlock() {
-    return true;
+    return false;
   }
 
   @Override
   protected boolean hasToCloseAppendedBooleanBlock() {
-    return true;
+    return false;
   }
 
   @Override

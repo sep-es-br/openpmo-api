@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import br.gov.es.openpmo.service.files.FileService;
 
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -25,43 +24,40 @@ public class EvidenceCreator {
 
   private final JournalRepository journalRepository;
 
-  private final FileService fileService;
-
   @Value("${app.journalPath}")
   private String journalPath;
 
   @Autowired
   public EvidenceCreator(
-      final FileRepository fileRepository,
-      final JournalRepository journalRepository,
-      final FileService fileService) {
+    final FileRepository fileRepository,
+    final JournalRepository journalRepository
+  ) {
     this.fileRepository = fileRepository;
     this.journalRepository = journalRepository;
-    this.fileService = fileService;
   }
 
-  private File createFile(
-      final JournalEntry journalEntry,
-      final MultipartFile multipartFile) {
+  private static File createFile(
+    final JournalEntry journalEntry,
+    final MultipartFile multipartFile
+  ) {
     final File file = new File();
     file.setJournalEntry(journalEntry);
-    file.setUniqueNameKey(this.fileService.generateName(multipartFile)); // edittt
+    file.setUniqueNameKey(getUniqueNameKey(multipartFile));
     file.setUserGivenName(multipartFile.getOriginalFilename());
     file.setMimeType(multipartFile.getContentType());
     return file;
   }
 
-  /*
-   * private static String getUniqueNameKey(final MultipartFile multipartFile) {
-   * final UUID randomNumber = UUID.randomUUID();
-   * final String originalFilename = multipartFile.getOriginalFilename();
-   * return MessageFormat.format("{0}{1}", randomNumber, originalFilename);
-   * }
-   */
+  private static String getUniqueNameKey(final MultipartFile multipartFile) {
+    final UUID randomNumber = UUID.randomUUID();
+    final String originalFilename = multipartFile.getOriginalFilename();
+    return MessageFormat.format("{0}{1}", randomNumber, originalFilename);
+  }
 
   public EvidenceCreatedResponse create(
-      final Long idJournal,
-      final MultipartFile multipartFile) {
+    final Long idJournal,
+    final MultipartFile multipartFile
+  ) {
     final JournalEntry journalEntry = this.findJournalById(idJournal);
     final File file = createFile(journalEntry, multipartFile);
     try {
@@ -79,7 +75,7 @@ public class EvidenceCreator {
 
   private JournalEntry findJournalById(final Long idJournal) {
     return this.journalRepository.findById(idJournal)
-        .orElseThrow(() -> new NegocioException(ApplicationMessage.JOURNAL_NOT_FOUND));
+      .orElseThrow(() -> new NegocioException(ApplicationMessage.JOURNAL_NOT_FOUND));
   }
 
 }

@@ -20,8 +20,6 @@ public class Office extends Entity {
   private String name;
   private String fullName;
 
-  private boolean deleted;
-
   @JsonIgnoreProperties("office")
   @Relationship(type = "IS_ADOPTED_BY", direction = INCOMING)
   private Set<Plan> plans;
@@ -77,14 +75,6 @@ public class Office extends Entity {
   @Transient
   public OfficeDto getDto() {
     return new OfficeDto(this);
-  }
-
-  public void setDeleted(final boolean deleted) {
-    this.deleted = deleted;
-  }
-
-  public boolean isDeleted() {
-    return this.deleted;
   }
 
 }

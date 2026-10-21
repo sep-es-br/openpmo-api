@@ -13,8 +13,6 @@ public class RoleResource implements HasRole {
 
   private String workLocation;
 
-  private String roleGuid; //add
-
   private RoleResource(final String role) {
     this.role = role;
   }
@@ -23,17 +21,8 @@ public class RoleResource implements HasRole {
     final String role,
     final String workLocation
   ) {
-    this(role, workLocation, null);
-  }
-
-  public RoleResource(
-    final String role,
-    final String workLocation,
-    final String roleGuid
-  ) {
     this.role = role;
     this.workLocation = workLocation;
-    this.roleGuid = roleGuid;
   }
 
   public static RoleResource citizen() {
@@ -53,14 +42,6 @@ public class RoleResource implements HasRole {
     return this.workLocation;
   }
 
-  public String getRoleGuid() {
-    return this.roleGuid;
-  }
-
-  public void setRoleGuid(final String roleGuid) {
-    this.roleGuid = roleGuid;
-  }
-
   public void setWorkLocation(final String workLocation) {
     this.workLocation = Optional.ofNullable(workLocation)
       .filter(str -> !str.isEmpty())
@@ -69,7 +50,7 @@ public class RoleResource implements HasRole {
 
   @Override
   public int hashCode() {
-    return Objects.hash(this.role, this.workLocation, this.roleGuid);
+    return Objects.hash(this.role, this.workLocation);
   }
 
   @Override
@@ -77,9 +58,7 @@ public class RoleResource implements HasRole {
     if(this == o) return true;
     if(o == null || this.getClass() != o.getClass()) return false;
     final RoleResource that = (RoleResource) o;
-    return this.role.equals(that.role)
-      && Objects.equals(this.workLocation, that.workLocation)
-      && Objects.equals(this.roleGuid, that.roleGuid);
+    return this.role.equals(that.role) && Objects.equals(this.workLocation, that.workLocation);
   }
 
 }
