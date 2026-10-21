@@ -32,9 +32,28 @@ public interface PropertyModelRepository extends Neo4jRepository<PropertyModel, 
   Optional<PropertyModel> findByIdProperty(Long propertyId);
 
   @Query(
+    "MATCH (root:PropertyModel) " +
+    "WHERE id(root) = $id " +
+    "RETURN root, " +
+    "[(root)-[children:ORGANIZES|GROUPS*1..]->(property:PropertyModel) | " +
+    "  [children, property]], " +
+    "[(root)-[:ORGANIZES|GROUPS*0..]->(selection:CriteriaSelectionModel)" +
+    "  -[accepts:ACCEPTS]->(option:SelectionOption) | " +
+    "  [selection, accepts, option]]"
+  )
+  Optional<PropertyModel> findByIdWithChildren(@Param("id") Long id);
+
+  @Query(
     "MATCH (model:PropertyModel)<-[:IS_DRIVEN_BY]-(property:Property) " +
     "WHERE id(model) IN $propertiesModelId " +
     "DETACH DELETE model, property"
   )
   void deletePropertyModelAndInstances(List<Long> propertiesModelId);
+
+  @Query(
+    "MATCH (model:PropertyModel)-[:ACCEPTS]->(option:SelectionOption) " +
+    "WHERE id(model) IN $ids " +
+    "DETACH DELETE option"
+  )
+  void deleteSelectionOptionsByPropertyModelIds(@Param("ids") List<Long> ids);
 }

@@ -113,4 +113,14 @@ public interface PlanRepository extends Neo4jRepository<Plan, Long>, CustomRepos
           @Param("sub") String sub
   );
 
+        @Query("MATCH (p:Plan)-[:IS_ADOPTED_BY]->(o:Office) " +
+                        "WHERE id(o)=$idOffice " +
+                        "AND (NOT EXISTS(p.deleted) OR p.deleted = false) " +
+                        "RETURN count(p)>0")
+        boolean existsActivePlanByOfficeId(
+                        @Param("idOffice") Long idOffice);
+
+        @Query("MATCH (p:Plan)-[:IS_ADOPTED_BY]->(o:Office) " +
+                        "WHERE id(o)=$idOffice AND coalesce(p.deleted, false) = false RETURN p")
+        List<Plan> findActiveByOfficeId(@Param("idOffice") Long idOffice);
 }

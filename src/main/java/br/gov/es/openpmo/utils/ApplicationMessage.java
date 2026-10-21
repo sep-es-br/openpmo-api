@@ -4,6 +4,11 @@ public class ApplicationMessage {
 
   public static final String PLAN_MODEL_NOT_FOUND = "planModel.not.found";
   public static final String COST_ACCOUNT_MODEL_NOT_FOUND = "costAccountModel.not.found";
+  public static final String PRE_PROJECT_MODEL_NOT_FOUND = "preProjectModel.not.found";
+  public static final String PRE_PROJECT_MODEL_CANNOT_DEACTIVATE_WITH_PRE_PROJECTS = "preProjectModel.cannot.deactivate.with.preProjects";
+  public static final String PRE_PROJECT_CRITERIA_TAB_INACTIVE = "preProject.criteriaTab.inactive";
+  public static final String PRE_PROJECT_NOT_FOUND = "preProject.not.found";
+  public static final String PRE_PROJECT_ACTIVE_PROJECT_EXISTS = "preProject.active.project.exists";
   public static final String CUSTOM_FILTER_NOT_FOUND = "customFilter.not.found";
   public static final String PLAN_NOT_FOUND = "plan.not.found";
   public static final String OFFICE_NOT_FOUND = "office.not.found";
@@ -33,6 +38,7 @@ public class ApplicationMessage {
   public static final String PROJECT_CANNOT_RETURN_TO_STRUCTURING = "project.cannot.return.to.structuring";
   public static final String PROJECT_CANNOT_ENTER_REPACTUATION_WITHOUT_APPROVED_BASELINE = "project.cannot.enter.repactuation.without.approved.baseline";
   public static final String PROJECT_STATUS_CANNOT_CHANGE_WITHOUT_APPROVED_BASELINE = "project.status.cannot.change.without.approved.baseline";
+  public static final String PROJECT_DIRECT_CREATION_BLOCKED_BY_PRE_PROJECT = "project.direct.creation.blocked.by.preproject";
   public static final String PROJECT_COMPLETION_REQUIREMENTS_NOT_MET = "project.completion.requirements.not.met";
   public static final String WORKPACK_NOT_FOUND = "workpack.not.found";
   public static final String WORKPACK_NAME_NOT_FOUND = "workpack.name.not.found";

@@ -111,6 +111,7 @@ public class UpdatePropertyModels {
     propertyModelUpdate.setSortIndex(propertyModel.getSortIndex());
     propertyModelUpdate.setName(propertyModel.getName());
     propertyModelUpdate.setHelpText(propertyModel.getHelpText());
+    propertyModelUpdate.setWeight(propertyModel.getWeight());
 
     switch (propertyModelUpdate.getClass().getTypeName()) {
       case PropertyModelType.TYPE_NAME_MODEL_INTEGER:
@@ -197,7 +198,77 @@ public class UpdatePropertyModels {
         this.verifyForPropertiesToDelete(groupedProperties, groupedPropertiesToUpdate);
         this.verifyForPropertiesToUpdate(groupedProperties, groupedPropertiesToUpdate);
         break;
+      case PropertyModelType.TYPE_NAME_MODEL_TAB:
+        final TabModel tabModelUpdate = (TabModel) propertyModelUpdate;
+        final TabModel tabModel = (TabModel) propertyModel;
+        tabModelUpdate.setIcon(tabModel.getIcon());
+        if (tabModelUpdate.getOrganizedProperties() == null) {
+          tabModelUpdate.setOrganizedProperties(new HashSet<>());
+        }
+        this.updateNestedProperties(tabModel.getOrganizedProperties(), tabModelUpdate.getOrganizedProperties());
+        break;
+      case PropertyModelType.TYPE_NAME_MODEL_CRITERIA_TAB:
+        final CriteriaTabModel criteriaTabModelUpdate = (CriteriaTabModel) propertyModelUpdate;
+        final CriteriaTabModel criteriaTabModel = (CriteriaTabModel) propertyModel;
+        criteriaTabModelUpdate.setIcon(criteriaTabModel.getIcon());
+        criteriaTabModelUpdate.setWeight(criteriaTabModel.getWeight());
+        criteriaTabModelUpdate.setOperation(criteriaTabModel.getOperation());
+        if (criteriaTabModelUpdate.getOrganizedProperties() == null) {
+          criteriaTabModelUpdate.setOrganizedProperties(new HashSet<>());
+        }
+        this.updateNestedProperties(
+          criteriaTabModel.getOrganizedProperties(),
+          criteriaTabModelUpdate.getOrganizedProperties()
+        );
+        break;
+      case PropertyModelType.TYPE_NAME_MODEL_CRITERIA_GROUP:
+        final CriteriaGroupModel criteriaGroupModelUpdate = (CriteriaGroupModel) propertyModelUpdate;
+        final CriteriaGroupModel criteriaGroupModel = (CriteriaGroupModel) propertyModel;
+        criteriaGroupModelUpdate.setWeight(criteriaGroupModel.getWeight());
+        criteriaGroupModelUpdate.setOperation(criteriaGroupModel.getOperation());
+        criteriaGroupModelUpdate.setEnablementKey(criteriaGroupModel.isEnablementKey());
+        criteriaGroupModelUpdate.setDisabledValue(
+          criteriaGroupModel.isEnablementKey() ? criteriaGroupModel.getDisabledValue() : null
+        );
+        criteriaGroupModelUpdate.setLegend(
+          criteriaGroupModel.isEnablementKey() ? criteriaGroupModel.getLegend() : null
+        );
+        if (criteriaGroupModelUpdate.getGroupedProperties() == null) {
+          criteriaGroupModelUpdate.setGroupedProperties(new HashSet<>());
+        }
+        this.updateNestedProperties(
+          criteriaGroupModel.getGroupedProperties(),
+          criteriaGroupModelUpdate.getGroupedProperties()
+        );
+        break;
+      case PropertyModelType.TYPE_NAME_MODEL_CRITERIA_SELECTION:
+        final CriteriaSelectionModel criteriaSelectionModelUpdate = (CriteriaSelectionModel) propertyModelUpdate;
+        final CriteriaSelectionModel criteriaSelectionModel = (CriteriaSelectionModel) propertyModel;
+        criteriaSelectionModelUpdate.setDefaultValue(criteriaSelectionModel.getDefaultValue());
+        criteriaSelectionModelUpdate.setPossibleValues(criteriaSelectionModel.getPossibleValues());
+        criteriaSelectionModelUpdate.setMultipleSelection(criteriaSelectionModel.isMultipleSelection());
+        criteriaSelectionModelUpdate.setWeight(criteriaSelectionModel.getWeight());
+        criteriaSelectionModelUpdate.setAcceptedOptions(criteriaSelectionModel.getAcceptedOptions());
+        if (criteriaSelectionModelUpdate.getAcceptedOptions() != null) {
+          criteriaSelectionModelUpdate.getAcceptedOptions()
+            .forEach(option -> option.setCriteriaSelectionModel(criteriaSelectionModelUpdate));
+        }
+        break;
+      case PropertyModelType.TYPE_NAME_MODEL_CRITERIA_LIST:
+        final CriteriaListModel criteriaListModelUpdate = (CriteriaListModel) propertyModelUpdate;
+        final CriteriaListModel criteriaListModel = (CriteriaListModel) propertyModel;
+        criteriaListModelUpdate.setWeight(criteriaListModel.getWeight());
+        criteriaListModelUpdate.setItemValue(criteriaListModel.getItemValue());
+        break;
     }
+  }
+
+  private void updateNestedProperties(
+    final Set<PropertyModel> properties,
+    final Set<PropertyModel> propertiesToUpdate
+  ) {
+    this.verifyForPropertiesToDelete(properties, propertiesToUpdate);
+    this.verifyForPropertiesToUpdate(properties, propertiesToUpdate);
   }
 
   private boolean isCanDeleteProperty(final Long idPropertyModel) {
