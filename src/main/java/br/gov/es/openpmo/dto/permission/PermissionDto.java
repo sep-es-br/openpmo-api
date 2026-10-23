@@ -62,6 +62,7 @@ public class PermissionDto {
         canAccessPlan.getRole(),
         canAccessPlan.getPermissionLevel());
     dto.setIdPlan(canAccessPlan.getIdPlan());
+    dto.setRoleGuid(canAccessPlan.getRoleGuid());
     return dto;
   }
 
@@ -92,10 +93,12 @@ public class PermissionDto {
   }
 
   public static PermissionDto of(final CanAccessOffice canAccessOffice) {
-    return new PermissionDto(
+    final PermissionDto dto = new PermissionDto(
         canAccessOffice.getId(),
         canAccessOffice.getRole(),
         canAccessOffice.getPermissionLevel());
+    dto.setRoleGuid(canAccessOffice.getRoleGuid());
+    return dto;
   }
 
   public Long getIdPlan() {

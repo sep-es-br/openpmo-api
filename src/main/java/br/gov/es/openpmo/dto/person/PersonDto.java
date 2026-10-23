@@ -4,6 +4,7 @@ import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.relations.IsAuthenticatedBy;
 import br.gov.es.openpmo.model.relations.IsInContactBookOf;
 import br.gov.es.openpmo.dto.organization.OrganizationDto; 
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -175,6 +176,7 @@ public class PersonDto {
     this.isUser = user;
   }
 
+  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
   public List<RoleResource> getRoles() {
     this.roles.sort((a, b) -> a.getRole().compareToIgnoreCase(b.getRole()));
     return Collections.unmodifiableList(this.roles);

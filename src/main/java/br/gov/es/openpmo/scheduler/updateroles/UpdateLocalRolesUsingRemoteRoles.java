@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
@@ -141,18 +140,8 @@ public class UpdateLocalRolesUsingRemoteRoles {
     final Collection<? extends T> permissions
   ) {
     return permissions.stream()
-      .filter(permission -> roles.stream().noneMatch(role -> isRoleEquals(role, permission)))
+      .filter(permission -> roles.stream().noneMatch(role -> HasRole.sameRole(role, permission)))
       .collect(Collectors.toList());
-  }
-
-  private static boolean isRoleEquals(
-    final HasRole role1,
-    final HasRole role2
-  ) {
-   if (role1.getRoleGuid() != null || role2.getRoleGuid() != null) {
-      return Objects.equals(role1.getRoleGuid(), role2.getRoleGuid());
-    }
-    return Objects.equals(role1.getRole(), role2.getRole());
   }
 
   private Set<CanAccessWorkpack> findAllWorkpackPermissions(final Person person) {

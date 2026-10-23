@@ -37,6 +37,7 @@ import static br.gov.es.openpmo.utils.ApplicationMessage.OFFICE_NOT_FOUND;
 import static br.gov.es.openpmo.utils.ApplicationMessage.PLAN_PERMISSION_NOT_FOUND;
 import br.gov.es.openpmo.utils.TextSimilarityScore;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -179,6 +180,7 @@ public class PlanPermissionService {
       dto.setId(p.getId());
       dto.setLevel(p.getPermissionLevel());
       dto.setRole(p.getRole());
+      dto.setRoleGuid(p.getRoleGuid());
       mapPermission.computeIfAbsent(p.getPerson(), k -> new ArrayList<>());
       mapPermission.get(p.getPerson()).add(dto);
     });
@@ -309,6 +311,7 @@ public class PlanPermissionService {
     );
     final Plan plan = this.planService.findById(request.getIdPlan());
     final List<CanAccessPlan> plansPermissionsDataBase = this.findByPlanAndPerson(plan, target);
+    this.roleService.fillMissingRoleGuids(author.getId(), request.getKey(), request.getPermissions(), plansPermissionsDataBase);
     plansPermissionsDataBase.forEach(permissionDatabase -> {
       final boolean find = request.getPermissions() != null && request.getPermissions().stream()
         .anyMatch(filtro -> !PermissionLevelEnum.NONE.equals(filtro.getLevel())
@@ -337,6 +340,7 @@ public class PlanPermissionService {
                 planPermission.getId(),
                 planPermission.getOrganization(),
                 planPermission.getRole(),
+                planPermission.getRoleGuid(),
                 planPermission.getPermissionLevel());
       });
       if (!PermissionLevelEnum.NONE.equals(request.getGratherPermissionLevel())) {
@@ -400,6 +404,7 @@ public class PlanPermissionService {
             planPermission.getPlan().getId(),
             planPermission.getOrganization(),
             planPermission.getRole(),
+            planPermission.getRoleGuid(),
             planPermission.getPermissionLevel());
   }
 
@@ -409,7 +414,7 @@ public class PlanPermissionService {
     final PermissionDto request,
     final Long id
   ) {
-    return new CanAccessPlan(
+    final CanAccessPlan permission = new CanAccessPlan(
       id,
       "",
       request.getRole(),
@@ -417,6 +422,8 @@ public class PlanPermissionService {
       person,
       plan
     );
+    permission.setRoleGuid(request.getRoleGuid());
+    return permission;
   }
 
   private Person storePerson(
@@ -449,6 +456,7 @@ public class PlanPermissionService {
       .orElseThrow(() -> new NegocioException(OFFICE_NOT_FOUND));
     final Person target = this.returnPersonOrCreateIfNotExists(request.getPerson(), office.getId());
     final Plan plan = this.planService.findById(request.getIdPlan());
+    this.roleService.fillMissingRoleGuids(author.getId(), request.getKey(), request.getPermissions(), Collections.emptyList());
     for (final PermissionDto permission : request.getPermissions()) {
       if (PermissionLevelEnum.NONE.equals(permission.getLevel())) {
         continue;

@@ -21,6 +21,8 @@ public class CanAccessOffice implements HasRole {
   private String organization;
   @Property("permitedRole")
   private String role;
+  @Property("roleGuid")
+  private String roleGuid;
   private PermissionLevelEnum permissionLevel;
 
   @StartNode
@@ -67,6 +69,15 @@ public class CanAccessOffice implements HasRole {
 
   public void setRole(final String role) {
     this.role = role;
+  }
+
+  @Override
+  public String getRoleGuid() {
+    return this.roleGuid;
+  }
+
+  public void setRoleGuid(final String roleGuid) {
+    this.roleGuid = roleGuid;
   }
 
   public PermissionLevelEnum getPermissionLevel() {

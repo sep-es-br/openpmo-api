@@ -66,18 +66,20 @@ public interface PlanPermissionRepository extends Neo4jRepository<CanAccessPlan,
 
   @Query("MATCH (p:Person) WHERE id(p) = $personId " +
           "MATCH (plan:Plan) WHERE id(plan) = $planId " +
-          "CREATE (p)-[r:CAN_ACCESS_PLAN {organization: $organization, permitedRole: $role, permissionLevel: $permissionLevel}]->(plan) " +
+          "CREATE (p)-[r:CAN_ACCESS_PLAN {organization: $organization, permitedRole: $role, roleGuid: $roleGuid, permissionLevel: $permissionLevel}]->(plan) " +
           "RETURN r")
   CanAccessPlan createCanAccessPlan(@Param("personId") Long personId,
                                         @Param("planId") Long planId,
                                         @Param("organization") String organization,
                                         @Param("role") String role,
+                                        @Param("roleGuid") String roleGuid,
                                         @Param("permissionLevel") PermissionLevelEnum permissionLevel);
 
   @Query("MATCH (p:Person)-[r:CAN_ACCESS_PLAN]-(plan:Plan) WHERE id(p) = $personId AND id(plan) = $planId AND id(r) = $relationId " +
           "SET r.organization = $organization, " +
           "r.permitedRole = $role, " +
+          "r.roleGuid = $roleGuid, " +
           "r.permissionLevel = $permissionLevel " +
           "RETURN r")
-  CanAccessOffice updateCanAccessPlan(Long personId, Long planId, Long relationId, String organization, String role, PermissionLevelEnum permissionLevel);
+  CanAccessPlan updateCanAccessPlan(Long personId, Long planId, Long relationId, String organization, String role, String roleGuid, PermissionLevelEnum permissionLevel);
 }
