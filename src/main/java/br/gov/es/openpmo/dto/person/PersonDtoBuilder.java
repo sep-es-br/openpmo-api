@@ -90,7 +90,7 @@ public final class PersonDtoBuilder {
     personDto.setContactEmail(this.contactEmail);
     personDto.setAdministrator(this.administrator);
     personDto.setIsUser(this.isUser);
-    personDto.getRoles().addAll(this.roles);
+    personDto.addAllRoles(this.roles);
     return personDto;
   }
 
