@@ -19,6 +19,7 @@ import br.gov.es.openpmo.repository.BelongsToRepository;
 import br.gov.es.openpmo.repository.WorkpackLinkRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
 import br.gov.es.openpmo.repository.WorkpackSharedRepository;
+import br.gov.es.openpmo.service.baselines.EvaluateBaselineService;
 import br.gov.es.openpmo.service.office.plan.PlanService;
 import static br.gov.es.openpmo.utils.ApplicationMessage.*;
 import static java.lang.Boolean.TRUE;
@@ -44,6 +45,7 @@ public class WorkpackLinkService {
   private final WorkpackSharedRepository workpackSharedRepository;
   private final PlanService planService;
   private final WorkpackRepository workpackRepository;
+  private final EvaluateBaselineService evaluateBaselineService;
 
   @Autowired
   public WorkpackLinkService(
@@ -53,7 +55,8 @@ public class WorkpackLinkService {
           final BelongsToRepository belongsToRepository,
           final WorkpackSharedRepository workpackSharedRepository,
           final PlanService planService,
-          final WorkpackRepository workpackRepository
+          final WorkpackRepository workpackRepository,
+          final EvaluateBaselineService evaluateBaselineService
   ) {
     this.repository = repository;
     this.workpackService = workpackService;
@@ -62,6 +65,7 @@ public class WorkpackLinkService {
     this.workpackSharedRepository = workpackSharedRepository;
     this.planService = planService;
     this.workpackRepository = workpackRepository;
+    this.evaluateBaselineService = evaluateBaselineService;
   }
 
   private static void ifNotSameModelTypeThrowException(
@@ -312,6 +316,7 @@ public class WorkpackLinkService {
     this.repository.unlinkParentRelation(idPlan, idWorkpackModel, idWorkpack);
     this.repository.unlinkPlan(idPlan, idWorkpack);
     unlinkBetween(workpack, workpackModelLinked, idPlan);
+    this.evaluateBaselineService.handlePostMemberDeletion(idWorkpack);
   }
 
   private void unlinkBetween(

@@ -1,6 +1,7 @@
 package br.gov.es.openpmo.repository;
 
 import br.gov.es.openpmo.dto.ccbmembers.CCBMemberLevelResult;
+import br.gov.es.openpmo.dto.baselines.BaselineOfficeMember;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.relations.IsCCBMemberFor;
 import br.gov.es.openpmo.model.workpacks.Workpack;
@@ -14,9 +15,16 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface IsCCBMemberRepository extends Neo4jRepository<IsCCBMemberFor, Long> {
 
-  @Query("MATCH (p:Person)-[c:IS_CCB_MEMBER_FOR]->(w:Workpack)<-[:IS_IN*0..]-(n:Workpack)\n" +
-            "WHERE $workpackId IN [id(w), id(n)]\n" +
-            "RETURN p,c,w")
+  @Query("MATCH (workpack:Workpack) WHERE id(workpack)=$workpackId " +
+         "MATCH (workpack)-[:BELONGS_TO {linked:false}]->(originPlan:Plan) " +
+         "OPTIONAL MATCH (workpack)-[:IS_SHARED_WITH {permissionLevel:'EDIT'}]->(consumerOffice:Office) " +
+         "WITH workpack, originPlan, collect(DISTINCT consumerOffice) AS consumerOffices " +
+         "MATCH (workpack)-[:IS_IN*0..]->(w:Workpack)<-[c:IS_CCB_MEMBER_FOR]-(p:Person) " +
+         "WHERE w=workpack OR EXISTS { " +
+         "  MATCH (w)-[belongsTo:BELONGS_TO]->(memberPlan:Plan)-[:IS_ADOPTED_BY]->(memberOffice:Office) " +
+         "  WHERE (belongsTo.linked=false AND memberPlan=originPlan) OR memberOffice IN consumerOffices " +
+         "} " +
+         "RETURN DISTINCT p,c,w")
   List<IsCCBMemberFor> findAllByWorkpackId(Long workpackId);
 
   @Query("MATCH (p:Person)-[c:IS_CCB_MEMBER_FOR{active:true}]->(w:Workpack)-[:IS_BASELINED_BY]->(:Baseline) " +
@@ -83,20 +91,65 @@ public interface IsCCBMemberRepository extends Neo4jRepository<IsCCBMemberFor, L
   @Query(
      "MATCH (workpack:Workpack)-[isBaselinedBy:IS_BASELINED_BY]->(baseline:Baseline) " +
      "WHERE id(baseline)=$idBaseline " +
-
-     "MATCH (workpack)-[:BELONGS_TO {linked:false}]->(plan:Plan) " +
-
-     "OPTIONAL MATCH (workpack)-[:IS_IN*0..]->(parent:Workpack)-[:BELONGS_TO {linked:false}]->(plan) " +
-     "WITH workpack, isBaselinedBy, baseline, plan, collect(DISTINCT parent) + workpack AS workpacks " +
-
+     "MATCH (workpack)-[:BELONGS_TO {linked:false}]->(plan:Plan)-[:IS_ADOPTED_BY]->(originOffice:Office) " +
+     "OPTIONAL MATCH (workpack)-[:IS_SHARED_WITH {permissionLevel:'EDIT'}]->(consumerOffice:Office) " +
+     "WITH workpack, isBaselinedBy, baseline, plan, originOffice, collect(DISTINCT consumerOffice) AS consumerOffices " +
+     "OPTIONAL MATCH (workpack)-[:BELONGS_TO {linked:true}]->(linkedPlan:Plan)-[:IS_ADOPTED_BY]->(linkedOffice:Office) " +
+     "WHERE linkedOffice IN consumerOffices " +
+     "WITH workpack, isBaselinedBy, baseline, plan, originOffice, consumerOffices, collect(DISTINCT linkedPlan) AS linkedPlans " +
+     "OPTIONAL MATCH (workpack)-[:IS_IN*0..]->(parent:Workpack)-[parentBelongsTo:BELONGS_TO]->" +
+     "(parentPlan:Plan)-[:IS_ADOPTED_BY]->(parentOffice:Office) " +
+     "WHERE (parentPlan=plan AND parentBelongsTo.linked=false) OR parentOffice IN consumerOffices " +
+     "WITH workpack, isBaselinedBy, baseline, plan, originOffice, consumerOffices, linkedPlans, " +
+     "collect(DISTINCT parent) + workpack AS workpacks " +
      "MATCH (person:Person)-[ccbMember:IS_CCB_MEMBER_FOR{active:true}]->(target) " +
      "WHERE target IN workpacks " +
      "   OR target = plan " +
-     "   OR (target:Office AND (target)<-[:IS_ADOPTED_BY]-(plan)) " +
+     "   OR target = originOffice " +
+     "   OR target IN consumerOffices " +
+     "   OR target IN linkedPlans " +
    
      "RETURN DISTINCT person, ccbMember, workpack, isBaselinedBy, baseline"
    )
    Set<Person> findAllActiveMembersOfBaseline(Long idBaseline);
+
+  @Query(
+    "MATCH (workpack:Workpack)-[:IS_BASELINED_BY]->(baseline:Baseline) WHERE id(baseline)=$idBaseline " +
+    "MATCH (workpack)-[:BELONGS_TO {linked:false}]->(:Plan)-[:IS_ADOPTED_BY]->(originOffice:Office) " +
+    "OPTIONAL MATCH (workpack)-[:IS_SHARED_WITH {permissionLevel:'EDIT'}]->(consumerOffice:Office) " +
+    "WITH [originOffice] + collect(DISTINCT consumerOffice) AS offices " +
+    "UNWIND offices AS office RETURN DISTINCT id(office)"
+  )
+  List<Long> findRequiredOfficeIdsOfBaseline(Long idBaseline);
+
+  @Query(
+    "MATCH (workpack:Workpack)-[:IS_BASELINED_BY]->(baseline:Baseline) WHERE id(baseline)=$idBaseline " +
+    "MATCH (workpack)-[:BELONGS_TO {linked:false}]->(plan:Plan)-[:IS_ADOPTED_BY]->(originOffice:Office) " +
+    "OPTIONAL MATCH (workpack)-[:IS_SHARED_WITH {permissionLevel:'EDIT'}]->(consumerOffice:Office) " +
+    "WITH workpack, plan, originOffice, collect(DISTINCT consumerOffice) AS consumerOffices " +
+    "OPTIONAL MATCH (workpack)-[:BELONGS_TO {linked:true}]->(linkedPlan:Plan)-[:IS_ADOPTED_BY]->(linkedOffice:Office) " +
+    "WHERE linkedOffice IN consumerOffices " +
+    "WITH workpack, plan, originOffice, consumerOffices, collect(DISTINCT linkedPlan) AS linkedPlans " +
+    "OPTIONAL MATCH (workpack)-[:IS_IN*0..]->(parent:Workpack)-[parentBelongsTo:BELONGS_TO]->" +
+    "(parentPlan:Plan)-[:IS_ADOPTED_BY]->(parentOffice:Office) " +
+    "WHERE (parentPlan=plan AND parentBelongsTo.linked=false) OR parentOffice IN consumerOffices " +
+    "WITH workpack, plan, originOffice, consumerOffices, linkedPlans, collect(DISTINCT parent) + workpack AS workpacks " +
+    "MATCH (person:Person)-[:IS_CCB_MEMBER_FOR {active:true}]->(target) " +
+    "WHERE target IN workpacks OR target=plan OR target=originOffice " +
+    "OR target IN consumerOffices OR target IN linkedPlans " +
+    "OPTIONAL MATCH (person)-[:IS_IN_CONTACT_BOOK_OF]->(contactOffice:Office) " +
+    "WITH person, target, workpack, plan, originOffice, consumerOffices, linkedPlans, workpacks, " +
+    "collect(DISTINCT contactOffice) AS contactOffices " +
+    "UNWIND [originOffice] + consumerOffices AS office " +
+    "WITH person, target, workpack, plan, originOffice, linkedPlans, workpacks, contactOffices, office " +
+    "WHERE target=office OR (target=plan AND office=originOffice) " +
+    "OR (target IN linkedPlans AND (target)-[:IS_ADOPTED_BY]->(office)) " +
+    "OR (target IN workpacks AND (office IN contactOffices " +
+    "OR (target<>workpack AND (target)-[:BELONGS_TO]->(:Plan)-[:IS_ADOPTED_BY]->(office)) " +
+    "OR (target=workpack AND office=originOffice AND size(contactOffices)=0))) " +
+    "RETURN DISTINCT id(person) AS idPerson, id(office) AS idOffice"
+  )
+  List<BaselineOfficeMember> findOfficeMembersOfBaseline(Long idBaseline);
 
   @Query("MATCH (person:Person)-[ccbMember:IS_CCB_MEMBER_FOR]->(workpack:Workpack) " +
          "WHERE id(person)=$idPerson AND id(workpack)=$idWorkpack " +
@@ -182,8 +235,9 @@ public interface IsCCBMemberRepository extends Neo4jRepository<IsCCBMemberFor, L
    
   @Query(
     "MATCH (w:Workpack) WHERE id(w) = $workpackId " +
-    "MATCH (w)-[:BELONGS_TO]->(plan:Plan) " +
-    "OPTIONAL MATCH (plan)-[:IS_ADOPTED_BY]->(office:Office) " +
+    "MATCH (w)-[belongsTo:BELONGS_TO]->(plan:Plan)-[:IS_ADOPTED_BY]->(office:Office) " +
+    "WHERE belongsTo.linked=false OR (belongsTo.linked=true " +
+    "AND (w)-[:IS_SHARED_WITH {permissionLevel:'EDIT'}]->(office)) " +
     "OPTIONAL MATCH (p1:Person)-[c1:IS_CCB_MEMBER_FOR]->(plan) " +
     "WITH plan, office, collect(DISTINCT {idPerson: id(p1), person: p1, role: c1.inRole, workLocation: c1.workLocation, active: c1.active, level: 'PLAN', idLevel: id(plan), levelName: plan.name}) AS planMembers " +
     "OPTIONAL MATCH (p2:Person)-[c2:IS_CCB_MEMBER_FOR]->(office) " +
@@ -194,4 +248,14 @@ public interface IsCCBMemberRepository extends Neo4jRepository<IsCCBMemberFor, L
     "       result.active AS active, result.level AS level, result.idLevel AS idLevel, result.levelName AS levelName"
   )
   List<CCBMemberLevelResult> findAllPlanAndOfficeMembersByWorkpackId(Long workpackId);
+
+  @Query(
+    "MATCH (w:Workpack)-[:IS_SHARED_WITH {permissionLevel:'EDIT'}]->(office:Office) " +
+    "WHERE id(w)=$workpackId " +
+    "MATCH (person:Person)-[ccb:IS_CCB_MEMBER_FOR]->(office) " +
+    "RETURN id(person) AS idPerson, person AS person, ccb.inRole AS role, " +
+    "ccb.workLocation AS workLocation, ccb.active AS active, 'OFFICE' AS level, " +
+    "id(office) AS idLevel, office.name AS levelName"
+  )
+  List<CCBMemberLevelResult> findAllSharedOfficeMembersByWorkpackId(Long workpackId);
 }

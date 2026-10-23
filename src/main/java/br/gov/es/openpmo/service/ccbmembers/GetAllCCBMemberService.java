@@ -5,6 +5,7 @@ import br.gov.es.openpmo.dto.ccbmembers.CCBMemberResponse;
 import br.gov.es.openpmo.dto.ccbmembers.MemberAs;
 import br.gov.es.openpmo.model.relations.IsCCBMemberFor;
 import br.gov.es.openpmo.repository.IsCCBMemberRepository;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -30,8 +31,9 @@ public class GetAllCCBMemberService implements IGetAllCCBMemberService {
 
   @Override
   public List<CCBMemberResponse> getAll(final Long workpackId) {
-    final List<CCBMemberLevelResult> planAndOfficeResults =
-      this.ccbMemberRepository.findAllPlanAndOfficeMembersByWorkpackId(workpackId);
+    final List<CCBMemberLevelResult> planAndOfficeResults = new ArrayList<>(
+      this.ccbMemberRepository.findAllPlanAndOfficeMembersByWorkpackId(workpackId));
+    planAndOfficeResults.addAll(this.ccbMemberRepository.findAllSharedOfficeMembersByWorkpackId(workpackId));
 
     final List<CCBMemberResponse> workpackMembers = this.findAllCCBMmembersByWorkpackId(workpackId)
       .stream()
