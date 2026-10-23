@@ -25,6 +25,8 @@ public class GetAllCCBMemberServiceTest {
   public void setUp() {
     this.repository = mock(IsCCBMemberRepository.class);
     this.service = new GetAllCCBMemberService(this.repository);
+    when(this.repository.findAllSharedOfficeMembersByWorkpackId(org.mockito.ArgumentMatchers.anyLong()))
+      .thenReturn(Collections.emptyList());
   }
 
   @Test
@@ -60,6 +62,24 @@ public class GetAllCCBMemberServiceTest {
     assertEquals(1, result.size());
     assertEquals(1, result.get(0).getMemberAs().size());
     assertTrue(result.get(0).getMemberAs().get(0).getActive());
+  }
+
+  @Test
+  public void shouldIncludeOfficeMemberFromEditShareWithoutLinkedPlan() {
+    final Long workpackId = 2572L;
+    final CCBMemberLevelResult officeMember = levelResult(11L, "OFFICE", 30L, true);
+
+    when(this.repository.findAllByWorkpackId(workpackId)).thenReturn(Collections.emptyList());
+    when(this.repository.findAllPlanAndOfficeMembersByWorkpackId(workpackId))
+      .thenReturn(Collections.emptyList());
+    when(this.repository.findAllSharedOfficeMembersByWorkpackId(workpackId))
+      .thenReturn(Collections.singletonList(officeMember));
+
+    final List<CCBMemberResponse> result = this.service.getAll(workpackId);
+
+    assertEquals(1, result.size());
+    assertEquals(Long.valueOf(11L), result.get(0).getPersonId());
+    assertEquals("OFFICE", result.get(0).getMemberAs().get(0).getLevel());
   }
 
   private static CCBMemberLevelResult levelResult(
