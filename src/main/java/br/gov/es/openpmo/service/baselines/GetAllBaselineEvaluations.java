@@ -3,7 +3,6 @@ package br.gov.es.openpmo.service.baselines;
 import br.gov.es.openpmo.dto.baselines.EvaluationItem;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.relations.IsEvaluatedBy;
-import br.gov.es.openpmo.repository.IsCCBMemberRepository;
 import br.gov.es.openpmo.repository.IsEvaluatedByRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -16,16 +15,16 @@ import java.util.stream.Collectors;
 @Component
 public class GetAllBaselineEvaluations implements IGetAllBaselineEvaluations {
 
-  private final IsCCBMemberRepository isCCBMemberRepository;
+  private final BaselineApprovalMembersService approvalMembersService;
 
   private final IsEvaluatedByRepository evaluatedByRepository;
 
   @Autowired
   public GetAllBaselineEvaluations(
-    final IsCCBMemberRepository isCCBMemberRepository,
+    final BaselineApprovalMembersService approvalMembersService,
     final IsEvaluatedByRepository evaluatedByRepository
   ) {
-    this.isCCBMemberRepository = isCCBMemberRepository;
+    this.approvalMembersService = approvalMembersService;
     this.evaluatedByRepository = evaluatedByRepository;
   }
 
@@ -54,7 +53,7 @@ public class GetAllBaselineEvaluations implements IGetAllBaselineEvaluations {
   }
 
   private Set<Person> getMembers(final Long idBaseline) {
-    final Set<Person> activeMembersOfBaseline = this.isCCBMemberRepository.findAllActiveMembersOfBaseline(idBaseline);
+    final Set<Person> activeMembersOfBaseline = this.approvalMembersService.findActiveMembers(idBaseline);
     final Set<Person> evaluators = this.evaluatedByRepository.findEvaluators(idBaseline);
     activeMembersOfBaseline.addAll(evaluators);
     return activeMembersOfBaseline;

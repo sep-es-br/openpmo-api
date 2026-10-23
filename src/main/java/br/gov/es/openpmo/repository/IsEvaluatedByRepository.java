@@ -34,39 +34,6 @@ public interface IsEvaluatedByRepository extends Neo4jRepository<IsEvaluatedBy, 
          "RETURN person, isEvaluatedBy, baseline, isBaselinedBy, workpack")
   Set<Person> findEvaluators(Long idBaseline);
 
-  @Query(
-       "MATCH (workpack:Workpack)-[:IS_BASELINED_BY]->(baseline:Baseline) " +
-       "WHERE id(baseline) = $idBaseline " +
-   
-       "MATCH (workpack)-[:BELONGS_TO {linked:false}]->(plan:Plan) " +
-   
-       "OPTIONAL MATCH (workpack)-[:IS_IN*0..]->(parent:Workpack)-[:BELONGS_TO {linked:false}]->(plan) " +
-       "WITH baseline, plan, collect(DISTINCT parent) + workpack AS workpacks " +
-   
-       "OPTIONAL MATCH (memberWp:Person)-[:IS_CCB_MEMBER_FOR {active:true}]->(wp) " +
-       "WHERE wp IN workpacks " +
-   
-       "OPTIONAL MATCH (memberPlan:Person)-[:IS_CCB_MEMBER_FOR {active:true}]->(plan) " +
-   
-       "OPTIONAL MATCH (memberOffice:Person)-[:IS_CCB_MEMBER_FOR {active:true}]->(office:Office)<-[:IS_ADOPTED_BY]-(plan) " +
-   
-       "OPTIONAL MATCH (evaluator:Person)<-[:IS_EVALUATED_BY]-(baseline) " +
-   
-       "WITH " +
-       "collect(memberWp) + " +
-       "collect(memberPlan) + " +
-       "collect(memberOffice) AS allMembers, " +
-       "collect(DISTINCT evaluator) AS evaluators " +
-   
-       "UNWIND allMembers AS member " +
-   
-       "WITH collect(DISTINCT member) AS members, evaluators " +
-   
-       "RETURN size(members) > 0 " +
-       "AND all(m IN members WHERE m IN evaluators) AS allCCBMembersEvaluated"
-   )
-   boolean wasEvaluatedByAllMembers(Long idBaseline);
-
   @Query("MATCH (p:Person), (b:Baseline) " +
           "WHERE id(p) = $personId AND id(b) = $baselineId " +
           "CREATE (b)-[r:IS_EVALUATED_BY {decision: $decision, inRoleWorkLocation: $inRoleWorkLocation, when: $when, comment: $comment}]->(p) " +

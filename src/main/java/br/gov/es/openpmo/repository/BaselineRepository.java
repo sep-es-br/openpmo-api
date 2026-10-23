@@ -23,6 +23,20 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, CustomRepository {
+  String CCB_MEMBER_SCOPE =
+    "MATCH (w)-[:BELONGS_TO {linked:false}]->(plan:Plan)-[:IS_ADOPTED_BY]->(originOffice:Office) " +
+    "OPTIONAL MATCH (w)-[:IS_SHARED_WITH {permissionLevel:'EDIT'}]->(consumerOffice:Office) " +
+    "WITH w, b, ii, p, plan, originOffice, collect(DISTINCT consumerOffice) AS consumerOffices " +
+    "OPTIONAL MATCH (w)-[:BELONGS_TO {linked:true}]->(linkedPlan:Plan)-[:IS_ADOPTED_BY]->(linkedOffice:Office) " +
+    "WHERE linkedOffice IN consumerOffices " +
+    "WITH w, b, ii, p, plan, originOffice, consumerOffices, collect(DISTINCT linkedPlan) AS linkedPlans " +
+    "OPTIONAL MATCH (w)-[:IS_IN*0..]->(parent:Workpack)-[parentBelongsTo:BELONGS_TO]->" +
+    "(parentPlan:Plan)-[:IS_ADOPTED_BY]->(parentOffice:Office) " +
+    "WHERE (parentPlan=plan AND parentBelongsTo.linked=false) OR parentOffice IN consumerOffices " +
+    "WITH w, b, ii, p, plan, originOffice, consumerOffices, linkedPlans, collect(DISTINCT parent) + w AS workpacks " +
+    "MATCH (p)-[c:IS_CCB_MEMBER_FOR{active:true}]->(target) " +
+    "WHERE target IN workpacks OR target=originOffice OR target IN consumerOffices " +
+    "OR target=plan OR target IN linkedPlans ";
   @Query(
     "MATCH (w:Workpack{deleted:false})-[ibb:IS_BASELINED_BY]->(b:Baseline) " +
     "WHERE id(b)=$idBaseline " +
@@ -324,14 +338,7 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
     "MATCH (w:Workpack{deleted: false})-[ii:IS_BASELINED_BY]->(b:Baseline) " +
     "MATCH (p:Person) WHERE id(p)=$personId " +
   
-    "MATCH (w)-[:BELONGS_TO {linked:false}]->(plan:Plan) " +
-    "OPTIONAL MATCH (w)-[:IS_IN*0..]->(parent:Workpack)-[:BELONGS_TO {linked:false}]->(plan) " +
-    "WITH w, b, ii, p, plan, collect(DISTINCT parent) + w AS workpacks " +
-  
-    "MATCH (p)-[c:IS_CCB_MEMBER_FOR{active:true}]->(target) " +
-    "WHERE target IN workpacks " +
-    "   OR target = plan " +
-    "   OR (target:Office AND (target)<-[:IS_ADOPTED_BY]-(plan)) " +
+    CCB_MEMBER_SCOPE +
   
     "WITH DISTINCT w, b, ii, p, c, " +
     "apoc.text.levenshteinSimilarity(apoc.text.clean(b.name), apoc.text.clean($term)) AS nameScore, " +
@@ -350,14 +357,7 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
     "MATCH (w:Workpack{deleted: false})-[ii:IS_BASELINED_BY]->(b:Baseline) " +
     "MATCH (p:Person) WHERE id(p)=$personId " +
   
-    "MATCH (w)-[:BELONGS_TO {linked:false}]->(plan:Plan) " +
-    "OPTIONAL MATCH (w)-[:IS_IN*0..]->(parent:Workpack)-[:BELONGS_TO {linked:false}]->(plan) " +
-    "WITH w, b, ii, p, plan, collect(DISTINCT parent) + w AS workpacks " +
-  
-    "MATCH (p)-[c:IS_CCB_MEMBER_FOR{active:true}]->(target) " +
-    "WHERE target IN workpacks " +
-    "   OR target = plan " +
-    "   OR (target:Office AND (target)<-[:IS_ADOPTED_BY]-(plan)) " +
+    CCB_MEMBER_SCOPE +
   
     "WITH DISTINCT w, b, ii, p, c, " +
     "apoc.text.levenshteinSimilarity(apoc.text.clean(b.name), apoc.text.clean($term)) AS nameScore, " +
@@ -376,14 +376,7 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
     "MATCH (w:Workpack{deleted: false})-[ii:IS_BASELINED_BY]->(b:Baseline) " +
     "MATCH (p:Person) WHERE id(p)=$personId " +
   
-    "MATCH (w)-[:BELONGS_TO {linked:false}]->(plan:Plan) " +
-    "OPTIONAL MATCH (w)-[:IS_IN*0..]->(parent:Workpack)-[:BELONGS_TO {linked:false}]->(plan) " +
-    "WITH w, b, ii, p, plan, collect(DISTINCT parent) + w AS workpacks " +
-  
-    "MATCH (p)-[c:IS_CCB_MEMBER_FOR{active:true}]->(target) " +
-    "WHERE target IN workpacks " +
-    "   OR target = plan " +
-    "   OR (target:Office AND (target)<-[:IS_ADOPTED_BY]-(plan)) " +
+    CCB_MEMBER_SCOPE +
   
     "WITH DISTINCT w, b, ii, p, c, " +
     "apoc.text.levenshteinSimilarity(apoc.text.clean(b.name), apoc.text.clean($term)) AS nameScore, " +
@@ -402,14 +395,7 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
     "MATCH (w:Workpack{deleted: false})-[ii:IS_BASELINED_BY]->(b:Baseline) " +
     "MATCH (p:Person) WHERE id(p)=$personId " +
   
-    "MATCH (w)-[:BELONGS_TO {linked:false}]->(plan:Plan) " +
-    "OPTIONAL MATCH (w)-[:IS_IN*0..]->(parent:Workpack)-[:BELONGS_TO {linked:false}]->(plan) " +
-    "WITH w, b, ii, p, plan, collect(DISTINCT parent) + w AS workpacks " +
-  
-    "MATCH (p)-[c:IS_CCB_MEMBER_FOR{active:true}]->(target) " +
-    "WHERE target IN workpacks " +
-    "   OR target = plan " +
-    "   OR (target:Office AND (target)<-[:IS_ADOPTED_BY]-(plan)) " +
+    CCB_MEMBER_SCOPE +
   
     "WITH DISTINCT w, b, ii, p, c, " +
     "apoc.text.levenshteinSimilarity(apoc.text.clean(b.name), apoc.text.clean($term)) AS nameScore, " +
@@ -624,8 +610,11 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
     "OPTIONAL MATCH (n)<-[:IS_IN*0..]-(project2:Project {canceled:false, deleted:false}) " +
     "OPTIONAL MATCH (n)<-[:BELONGS_TO {linked:false}]-(project3:Project {canceled:false, deleted:false}) " +
     "OPTIONAL MATCH (n)<-[:IS_ADOPTED_BY]-(plan:Plan)<-[:BELONGS_TO {linked:false}]-(project4:Project {canceled:false, deleted:false}) " +
+    "OPTIONAL MATCH (n)<-[:IS_SHARED_WITH {permissionLevel:'EDIT'}]-(project5:Project {canceled:false, deleted:false}) " +
+    "OPTIONAL MATCH (n)-[:IS_ADOPTED_BY]->(sharedOffice:Office)<-[:IS_SHARED_WITH {permissionLevel:'EDIT'}]-" +
+    "(project6:Project {canceled:false, deleted:false})-[:BELONGS_TO {linked:true}]->(n) " +
   
-    "WITH [project, project2, project3, project4] AS all " +
+    "WITH [project, project2, project3, project4, project5, project6] AS all " +
     "UNWIND all AS p " +
     "WITH DISTINCT p WHERE p IS NOT NULL " +
   

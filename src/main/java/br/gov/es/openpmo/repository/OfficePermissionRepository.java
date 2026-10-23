@@ -66,18 +66,20 @@ public interface OfficePermissionRepository extends Neo4jRepository<CanAccessOff
 
   @Query("MATCH (p:Person) WHERE id(p) = $personId " +
           "MATCH (o:Office) WHERE id(o) = $officeId " +
-          "CREATE (p)-[r:CAN_ACCESS_OFFICE {organization: $organization, permitedRole: $role, permissionLevel: $permissionLevel}]->(o) " +
+          "CREATE (p)-[r:CAN_ACCESS_OFFICE {organization: $organization, permitedRole: $role, roleGuid: $roleGuid, permissionLevel: $permissionLevel}]->(o) " +
           "RETURN r")
   CanAccessOffice createCanAccessOffice(@Param("personId") Long personId,
                                                     @Param("officeId") Long officeId,
                                                     @Param("organization") String organization,
                                                     @Param("role") String role,
+                                                    @Param("roleGuid") String roleGuid,
                                                     @Param("permissionLevel") PermissionLevelEnum permissionLevel);
 
   @Query("MATCH (p:Person)-[r:CAN_ACCESS_OFFICE]-(o:Office) WHERE id(p) = $personId AND id(o) = $officeId AND id(r) = $relationId " +
           "SET r.organization = $organization, " +
           "r.permitedRole = $role, " +
+          "r.roleGuid = $roleGuid, " +
           "r.permissionLevel = $permissionLevel " +
           "RETURN r")
-  CanAccessOffice updateCanAccessOffice(Long personId, Long officeId, Long relationId, String organization, String role, PermissionLevelEnum permissionLevel);
+  CanAccessOffice updateCanAccessOffice(Long personId, Long officeId, Long relationId, String organization, String role, String roleGuid, PermissionLevelEnum permissionLevel);
 }

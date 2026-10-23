@@ -350,6 +350,7 @@ public class OfficePermissionService {
     );
     final Office office = this.officeService.findById(request.getIdOffice());
     final List<CanAccessOffice> officesPermissionsDataBase = this.findByOfficeAndPerson(office.getId(), target.getId());
+    this.roleService.fillMissingRoleGuids(author.getId(), request.getKey(), request.getPermissions(), officesPermissionsDataBase);
 
     officesPermissionsDataBase.forEach(permissionDatabase -> {
       if (request.getPermissions() == null || request.getPermissions().stream().noneMatch(
@@ -390,6 +391,7 @@ public class OfficePermissionService {
                   officePermission.getId(),
                   officePermission.getOrganization(),
                   officePermission.getRole(),
+                  officePermission.getRoleGuid(),
                   officePermission.getPermissionLevel());
           return;
         }
@@ -402,6 +404,7 @@ public class OfficePermissionService {
                   officePermission.getId(),
                   officePermission.getOrganization(),
                   officePermission.getRole(),
+                  officePermission.getRoleGuid(),
                   officePermission.getPermissionLevel());
         }
       });
@@ -466,6 +469,7 @@ public class OfficePermissionService {
             officePermission.getOffice().getId(),
             officePermission.getOrganization(),
             officePermission.getRole(),
+            officePermission.getRoleGuid(),
             officePermission.getPermissionLevel());
   }
 
@@ -475,7 +479,9 @@ public class OfficePermissionService {
     final PermissionDto request,
     final Long id
   ) {
-    return new CanAccessOffice(id, "", request.getRole(), request.getLevel(), person, office);
+    final CanAccessOffice permission = new CanAccessOffice(id, "", request.getRole(), request.getLevel(), person, office);
+    permission.setRoleGuid(request.getRoleGuid());
+    return permission;
   }
 
   private Person storePerson(
@@ -512,6 +518,7 @@ public class OfficePermissionService {
     );
     final Office office = this.officeService.findById(request.getIdOffice());
     final List<CanAccessOffice> canAccessOffices = this.findByOfficeAndPerson(office.getId(), target.getId());
+    this.roleService.fillMissingRoleGuids(author.getId(), request.getKey(), request.getPermissions(), canAccessOffices);
     request.getPermissions().forEach(permission -> {
       if (PermissionLevelEnum.NONE.equals(permission.getLevel())) {
         return;

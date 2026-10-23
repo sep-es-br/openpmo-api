@@ -3,7 +3,9 @@ package br.gov.es.openpmo.service.permissions;
 import br.gov.es.openpmo.apis.acessocidadao.IAcessoCidadaoApi;
 import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentResponse;
 import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentRoleResponse;
+import br.gov.es.openpmo.dto.permission.PermissionDto;
 import br.gov.es.openpmo.dto.person.RoleResource;
+import br.gov.es.openpmo.enumerator.PermissionLevelEnum;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.relations.CanAccessOffice;
 import br.gov.es.openpmo.model.relations.CanAccessPlan;
@@ -67,6 +69,61 @@ public class RoleService {
       final HasRole first,
       final HasRole second) {
     return first.getRole().compareToIgnoreCase(second.getRole());
+  }
+
+  public void fillMissingRoleGuids(
+      final Long idAuthor,
+      final String key,
+      final Collection<PermissionDto> permissions,
+      final Collection<? extends HasRole> existingPermissions) {
+    if (permissions == null) {
+      return;
+    }
+
+    for (final PermissionDto permission : permissions) {
+      if (permission.getRoleGuid() == null) {
+        existingPermissions.stream()
+            .filter(existing -> Objects.equals(existing.getRole(), permission.getRole()))
+            .map(HasRole::getRoleGuid)
+            .filter(Objects::nonNull)
+            .findFirst()
+            .ifPresent(permission::setRoleGuid);
+      }
+    }
+
+    if (!this.isAuthenticatedByService.isCitizenServerAuthentication()
+        || key == null
+        || permissions.stream().noneMatch(permission -> needsRoleGuid(permission))) {
+      return;
+    }
+
+    final List<PublicAgentRoleResponse> remoteRoles;
+    try {
+      remoteRoles = this.getAgentRolesResponseByKey(idAuthor, key);
+    } catch (final RuntimeException exception) {
+      LOGGER.warn("Could not resolve role GUIDs for permission update", exception);
+      return;
+    }
+    if (remoteRoles == null) {
+      return;
+    }
+    for (final PermissionDto permission : permissions) {
+      if (needsRoleGuid(permission)) {
+        remoteRoles.stream()
+            .filter(role -> Objects.equals(role.getName(), permission.getRole()))
+            .map(PublicAgentRoleResponse::getGuid)
+            .filter(Objects::nonNull)
+            .findFirst()
+            .ifPresent(permission::setRoleGuid);
+      }
+    }
+  }
+
+  private static boolean needsRoleGuid(final PermissionDto permission) {
+    return permission.getRoleGuid() == null
+        && permission.getRole() != null
+        && !CITIZEN.equalsIgnoreCase(permission.getRole())
+        && permission.getLevel() != PermissionLevelEnum.NONE;
   }
 
   @Transactional
@@ -154,16 +211,7 @@ public class RoleService {
       final Collection<? extends HasRole> roles) {
     if (CITIZEN.equals(permission.getRole()))
       return false;
-    return roles.stream().noneMatch(role -> this.isRoleEquals(role, permission));
-  }
-
-  private boolean isRoleEquals(
-      final HasRole role1,
-      final HasRole role2) {
-    if (role1.getRoleGuid() != null || role2.getRoleGuid() != null) {
-      return Objects.equals(role1.getRoleGuid(), role2.getRoleGuid());
-    }
-    return Objects.equals(role1.getRole(), role2.getRole());
+    return roles.stream().noneMatch(role -> HasRole.sameRole(role, permission));
   }
 
   private List<PublicAgentRoleResponse> getAgentRolesResponseByKey(
