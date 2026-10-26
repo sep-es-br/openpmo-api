@@ -1,1 +1,3 @@
 rootProject.name = 'open-pmo'
+includeBuild('../openpmo-plugin-strategic-planning-interface')
+includeBuild('../openpmo-plugin-strategic-planning')

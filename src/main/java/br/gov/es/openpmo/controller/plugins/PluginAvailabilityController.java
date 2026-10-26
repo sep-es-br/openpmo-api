@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import br.gov.es.openpmo.service.strategicplanning.StrategicPlanningProviderService;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -23,19 +24,21 @@ public class PluginAvailabilityController {
   private final ObligationProviderService obligationProviderService;
   private final AdministrativeProcessProviderService administrativeProcessProviderService;
   private final IndicatorProviderService indicatorProviderService;
+  private final StrategicPlanningProviderService strategicPlanningProviderService;
 
   public PluginAvailabilityController(
-    final AgreementProviderService agreementProviderService,
-    final ProcurementProviderService procurementProviderService,
-    final ObligationProviderService obligationProviderService,
-    final AdministrativeProcessProviderService administrativeProcessProviderService,
-    final IndicatorProviderService indicatorProviderService
-  ) {
+      final AgreementProviderService agreementProviderService,
+      final ProcurementProviderService procurementProviderService,
+      final ObligationProviderService obligationProviderService,
+      final AdministrativeProcessProviderService administrativeProcessProviderService,
+      final IndicatorProviderService indicatorProviderService,
+      final StrategicPlanningProviderService strategicPlanningProviderService) {
     this.agreementProviderService = agreementProviderService;
     this.procurementProviderService = procurementProviderService;
     this.obligationProviderService = obligationProviderService;
     this.administrativeProcessProviderService = administrativeProcessProviderService;
     this.indicatorProviderService = indicatorProviderService;
+    this.strategicPlanningProviderService = strategicPlanningProviderService;
   }
 
   @GetMapping("/availability")
@@ -46,6 +49,7 @@ public class PluginAvailabilityController {
     availability.put("obligations", this.obligationProviderService.isAvailable());
     availability.put("edocs", this.administrativeProcessProviderService.isAvailable());
     availability.put("indicators", this.indicatorProviderService.isAvailable());
+    availability.put("strategicPlanning", strategicPlanningProviderService.isAvailable());
     return ResponseEntity.ok(ResponseBase.of(availability));
   }
 }

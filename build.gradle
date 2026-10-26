@@ -68,7 +68,8 @@ dependencies {
     implementation 'io.springfox:springfox-swagger-ui:2.9.2'
     implementation 'io.springfox:springfox-bean-validators:2.9.2'
 
-
+    implementation 'com.github.sep-es-br:openpmo-plugin-strategic-planning-interface:1.0.0'
+    implementation 'com.github.sep-es-br:openpmo-plugin-strategic-planning:1.0.0'
 
     implementation 'com.github.sep-es-br:pmo-core-identity-parser:1.0.6'
     implementation props['app.parser.repository']
