@@ -1,7 +1,10 @@
 package br.gov.es.openpmo.service.workpack;
 
+import br.gov.es.openpmo.exception.NegocioException;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
+import br.gov.es.openpmo.model.workpacks.models.WorkpackModelClassification;
 import br.gov.es.openpmo.repository.WorkpackModelRepository;
+import br.gov.es.openpmo.utils.ApplicationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +38,10 @@ public class WorkpackModelDeleteService {
   }
 
   private void deleteWorkpackModel(WorkpackModel workpackModel, Long idParentModel) {
+    if (workpackModel.getClassification() == WorkpackModelClassification.TRANSVERSAL
+      && this.workpackModelRepository.hasTransversalViewLinks(workpackModel.getId())) {
+      throw new NegocioException(ApplicationMessage.TRANSVERSAL_VIEW_DELETE_RELATIONSHIP_ERROR);
+    }
     if (workpackModel.hasMoreThanOneParent()) {
       this.workpackModelRepository.deleteRelationshipBetween(workpackModel.getId(), idParentModel);
       final WorkpackModel parent = getParent(workpackModel, idParentModel);

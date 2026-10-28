@@ -1318,6 +1318,9 @@ public class WorkpackService {
   }
 
   public void delete(final Workpack workpack) {
+    if (this.workpackRepository.hasTransversalProgramLinks(workpack.getId())) {
+      throw new NegocioException(ApplicationMessage.TRANSVERSAL_VIEW_DELETE_RELATIONSHIP_ERROR);
+    }
     if (workpack.getChildren() != null && !(workpack.getChildren()).isEmpty()) {
       throw new NegocioException(WORKPACK_DELETE_RELATIONSHIP_ERROR);
     }

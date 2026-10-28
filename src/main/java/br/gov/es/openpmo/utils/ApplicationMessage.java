@@ -31,6 +31,7 @@ public class ApplicationMessage {
   public static final String WORKPACK_MODEL_USES_TARGET_NOT_STRUCTURAL = "workpackModel.uses.target.not.structural";
   public static final String WORKPACK_MODEL_USES_DIFFERENT_PLAN = "workpackModel.uses.different.plan";
   public static final String WORKPACK_MODEL_USES_SELF = "workpackModel.uses.self";
+  public static final String TRANSVERSAL_VIEW_DELETE_RELATIONSHIP_ERROR = "transversal.view.delete.relationship.error";
   public static final String TRANSVERSAL_VIEW_SELECTION_INVALID = "transversal.view.selection.invalid";
   public static final String TRANSVERSAL_PRINCIPAL_PROGRAM_NOT_SELECTED = "transversal.principal.program.not.selected";
   public static final String TRANSVERSAL_PROGRAM_CONTEXT_INVALID = "transversal.program.context.invalid";

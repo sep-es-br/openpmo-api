@@ -631,6 +631,13 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
   void setWorkpackDeleted(
       @Param("idWorkpack") Long idWorkpack);
 
+  @Query("MATCH (program:Program)-[:IS_INSTANCE_BY]->(programModel:ProgramModel) "
+      + "WHERE id(program) = $idProgram AND programModel.classification = 'TRANSVERSAL' "
+      + "AND (EXISTS((program)-[:INCLUDES]->(:Workpack)) "
+      + "OR EXISTS((child:Program)-[:IS_IN]->(program))) "
+      + "RETURN count(program) > 0")
+  boolean hasTransversalProgramLinks(@Param("idProgram") Long idProgram);
+
   @Query("MATCH (w:Workpack) " +
       "WHERE id(w) IN $idsWorkpacks " +
       "SET w.canceled = $canceled")

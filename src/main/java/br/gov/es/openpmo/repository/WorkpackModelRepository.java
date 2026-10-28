@@ -163,6 +163,13 @@ public interface WorkpackModelRepository extends Neo4jRepository<WorkpackModel, 
     + "DELETE uses")
   void deleteUses(@Param("sourceId") Long sourceId);
 
+  @Query("MATCH (view:WorkpackModel {classification:'TRANSVERSAL'}) "
+    + "WHERE id(view) = $viewId "
+    + "OPTIONAL MATCH (view)-[:USES]->(structural:WorkpackModel) "
+    + "OPTIONAL MATCH (child:WorkpackModel {classification:'TRANSVERSAL'})-[:IS_IN]->(view) "
+    + "RETURN count(DISTINCT structural) > 0 OR count(DISTINCT child) > 0")
+  boolean hasTransversalViewLinks(@Param("viewId") Long viewId);
+
   @Query("MATCH (w:WorkpackModel)-[wp:BELONGS_TO]->(pm:PlanModel) "
           + "WHERE id(w) = $id "
           + "RETURN w, wp, pm, "
