@@ -79,6 +79,12 @@ public class AuthenticationService {
     if (person.isPresent()) {
         final Person user = person.get();
 
+        final boolean administrator = this.administrators.contains(email) || user.getAdministrator();
+        if (user.getAdministrator() != administrator) {
+          user.setAdministrator(administrator);
+          this.personService.save(user);
+        }
+
         IsAuthenticatedBy authRelationship = user.getAuthentications().stream().findFirst().orElse(null);
         if (authRelationship != null) {
             this.isAuthenticatedByService.updateCredentials(

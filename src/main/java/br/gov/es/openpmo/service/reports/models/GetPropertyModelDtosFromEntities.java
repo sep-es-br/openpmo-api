@@ -21,9 +21,15 @@ public class GetPropertyModelDtosFromEntities {
     }
     final List<PropertyModelDto> result = new ArrayList<>();
     for (PropertyModel propertyModel : properties) {
-      result.add(this.getPropertyModelDtoFromEntity.execute(propertyModel));
+      final PropertyModelDto dto = this.getPropertyModelDtoFromEntity.execute(propertyModel);
+      if (dto != null) {
+        result.add(dto);
+      }
     }
-    result.sort(Comparator.comparing(PropertyModelDto::getSortIndex));
+    result.sort(Comparator.comparing(
+      PropertyModelDto::getSortIndex,
+      Comparator.nullsLast(Comparator.naturalOrder())
+    ));
     return result;
   }
 
