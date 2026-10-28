@@ -3,6 +3,7 @@ package br.gov.es.openpmo.service.indicators;
 import br.gov.es.pmo.indicator_interface.model.ChallengeDto;
 import br.gov.es.pmo.indicator_interface.model.IIndicatorProvider;
 import br.gov.es.pmo.indicator_interface.model.IndicatorDto;
+import br.gov.es.pmo.indicator_interface.model.StrategicIndicatorDto;
 import org.junit.Test;
 import org.springframework.beans.factory.ObjectProvider;
 
@@ -24,6 +25,7 @@ public class IndicatorProviderServiceTest {
         assertFalse(service.isAvailable());
         assertTrue(service.getIndicators().isEmpty());
         assertTrue(service.getChallenges().isEmpty());
+        assertTrue(service.getStrategicIndicators().isEmpty());
     }
 
     @Test
@@ -42,5 +44,10 @@ public class IndicatorProviderServiceTest {
         assertTrue(service.isAvailable());
         assertEquals(Arrays.asList(ods), service.getIndicators());
         assertEquals(Arrays.asList(challenge, challenge), service.getChallenges());
+
+        final StrategicIndicatorDto strategicIndicator = new StrategicIndicatorDto();
+        strategicIndicator.setIndicatorId(155);
+        when(plugin.getStrategicIndicators()).thenReturn(Arrays.asList(strategicIndicator));
+        assertEquals(Arrays.asList(strategicIndicator), service.getStrategicIndicators());
     }
 }

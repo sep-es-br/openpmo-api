@@ -19,14 +19,34 @@ sourceCompatibility = '11'
 
 repositories {
     mavenCentral()
-    exclusiveContent {
-        forRepositories(
-            maven {
-                url 'https://jitpack.io'
+    if (project.hasProperty('localIndicatorPlugins')) {
+        def localIndicatorArtifacts = mavenLocal {
+            content {
+                includeModule 'com.github.sep-es-br', 'openpmo-plugin-indicator-interface'
+                includeModule 'com.github.sep-es-br', 'openpmo-plugin-indicator'
             }
-        )
-        filter {
-            includeGroup 'com.github.sep-es-br'
+        }
+        exclusiveContent {
+            forRepositories(
+                localIndicatorArtifacts,
+                maven {
+                    url 'https://jitpack.io'
+                }
+            )
+            filter {
+                includeGroup 'com.github.sep-es-br'
+            }
+        }
+    } else {
+        exclusiveContent {
+            forRepositories(
+                maven {
+                    url 'https://jitpack.io'
+                }
+            )
+            filter {
+                includeGroup 'com.github.sep-es-br'
+            }
         }
     }
     maven {
@@ -82,7 +102,8 @@ dependencies {
     implementation 'com.github.sep-es-br:openpmo-plugin-procurement-interface:1.0.0'
     implementation 'com.github.sep-es-br:openpmo-plugin-obligation-interface:1.0.0'
     implementation 'com.github.sep-es-br:openpmo-plugin-administrative-process-interface:1.0.0'
-    implementation 'com.github.sep-es-br:openpmo-plugin-indicator-interface:1.0.0'
+    implementation 'com.github.sep-es-br:openpmo-plugin-indicator-interface:1.2.0'
+    implementation 'com.github.sep-es-br:openpmo-plugin-strategic-planning-interface:1.0.0'
     implementation 'com.github.sep-es-br:openpmo-plugin-user-a-identify-goves:v2.2.0'
 
     if (props.containsKey('app.agreement.parser.repository') &&
@@ -109,10 +130,18 @@ dependencies {
         implementation props['app.edocs.plugin.repository']
     }
 
-    if (props.containsKey('app.indicator.parser.repository') &&
+    if (project.hasProperty('localIndicatorPlugins')) {
+        implementation 'com.github.sep-es-br:openpmo-plugin-indicator:1.2.0'
+    } else if (props.containsKey('app.indicator.parser.repository') &&
         props['app.indicator.parser.repository'] != null &&
         !props['app.indicator.parser.repository'].trim().isEmpty()) {
         implementation props['app.indicator.parser.repository']
+    }
+
+    if (props.containsKey('app.strategic.planning.plugin.repository') &&
+        props['app.strategic.planning.plugin.repository'] != null &&
+        !props['app.strategic.planning.plugin.repository'].trim().isEmpty()) {
+        implementation props['app.strategic.planning.plugin.repository']
     }
 
 

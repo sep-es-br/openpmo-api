@@ -19,6 +19,8 @@ import br.gov.es.openpmo.service.workpack.GetWorkpackPermissions;
 import br.gov.es.openpmo.service.workpack.WorkpackPermissionVerifier;
 import br.gov.es.pmo.indicator_interface.model.ChallengeDto;
 import br.gov.es.pmo.indicator_interface.model.IndicatorDto;
+import br.gov.es.pmo.indicator_interface.model.StrategicIndicatorDetailDto;
+import br.gov.es.pmo.indicator_interface.model.StrategicIndicatorDto;
 import io.swagger.annotations.Api;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -68,6 +70,24 @@ public class IndicatorController {
     ) {
         this.tokenService.getUserId(authorization);
         return ResponseEntity.ok(ResponseBase.of(this.indicatorProviderService.getChallenges()));
+    }
+
+    @GetMapping("/strategic")
+    public ResponseEntity<ResponseBase<List<StrategicIndicatorDto>>> getStrategicIndicators(
+        @Authorization final String authorization
+    ) {
+        this.tokenService.getUserId(authorization);
+        return ResponseEntity.ok(ResponseBase.of(this.indicatorProviderService.getStrategicIndicators()));
+    }
+
+    @GetMapping("/strategic/details")
+    public ResponseEntity<ResponseBase<List<StrategicIndicatorDetailDto>>> getStrategicIndicatorDetails(
+        @RequestParam("indicatorIds") final List<Integer> indicatorIds,
+        @Authorization final String authorization
+    ) {
+        this.tokenService.getUserId(authorization);
+        return ResponseEntity.ok(ResponseBase.of(
+            this.indicatorProviderService.getStrategicIndicatorDetails(indicatorIds)));
     }
 
     @GetMapping

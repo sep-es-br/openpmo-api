@@ -3,6 +3,7 @@ package br.gov.es.openpmo.controller.plugins;
 import br.gov.es.openpmo.dto.ResponseBase;
 import br.gov.es.openpmo.service.agreements.AgreementProviderService;
 import br.gov.es.openpmo.service.indicators.IndicatorProviderService;
+import br.gov.es.openpmo.service.indicators.StrategicPlanningProviderService;
 import br.gov.es.openpmo.service.obligations.ObligationProviderService;
 import br.gov.es.openpmo.service.procurements.ProcurementProviderService;
 import br.gov.es.openpmo.service.process.AdministrativeProcessProviderService;
@@ -23,19 +24,22 @@ public class PluginAvailabilityController {
   private final ObligationProviderService obligationProviderService;
   private final AdministrativeProcessProviderService administrativeProcessProviderService;
   private final IndicatorProviderService indicatorProviderService;
+  private final StrategicPlanningProviderService strategicPlanningProviderService;
 
   public PluginAvailabilityController(
     final AgreementProviderService agreementProviderService,
     final ProcurementProviderService procurementProviderService,
     final ObligationProviderService obligationProviderService,
     final AdministrativeProcessProviderService administrativeProcessProviderService,
-    final IndicatorProviderService indicatorProviderService
+    final IndicatorProviderService indicatorProviderService,
+    final StrategicPlanningProviderService strategicPlanningProviderService
   ) {
     this.agreementProviderService = agreementProviderService;
     this.procurementProviderService = procurementProviderService;
     this.obligationProviderService = obligationProviderService;
     this.administrativeProcessProviderService = administrativeProcessProviderService;
     this.indicatorProviderService = indicatorProviderService;
+    this.strategicPlanningProviderService = strategicPlanningProviderService;
   }
 
   @GetMapping("/availability")
@@ -46,6 +50,7 @@ public class PluginAvailabilityController {
     availability.put("obligations", this.obligationProviderService.isAvailable());
     availability.put("edocs", this.administrativeProcessProviderService.isAvailable());
     availability.put("indicators", this.indicatorProviderService.isAvailable());
+    availability.put("strategicPlanning", this.strategicPlanningProviderService.isAvailable());
     return ResponseEntity.ok(ResponseBase.of(availability));
   }
 }

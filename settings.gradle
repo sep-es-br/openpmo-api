@@ -1,1 +1,11 @@
 rootProject.name = 'open-pmo'
+
+def strategicPlanningInterfaceProject = file('../../openpmo-plugin-strategic-planning-interface')
+if (new File(strategicPlanningInterfaceProject, 'settings.gradle').isFile()) {
+    includeBuild(strategicPlanningInterfaceProject)
+}
+
+def strategicPlanningPluginProject = file('../../openpmo-plugin-strategic-planning')
+if (new File(strategicPlanningPluginProject, 'settings.gradle').isFile()) {
+    includeBuild(strategicPlanningPluginProject)
+}
