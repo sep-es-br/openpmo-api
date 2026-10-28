@@ -142,6 +142,8 @@ dependencies {
         props['app.strategic.planning.plugin.repository'] != null &&
         !props['app.strategic.planning.plugin.repository'].trim().isEmpty()) {
         implementation props['app.strategic.planning.plugin.repository']
+    } else {
+        implementation 'com.github.sep-es-br:openpmo-plugin-strategic-planning:1.0.1'
     }
 
 
