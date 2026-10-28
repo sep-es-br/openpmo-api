@@ -161,34 +161,32 @@ public interface ScheduleRepository extends Neo4jRepository<Schedule, Long> {
     "WHERE id(md) = $idWorkpack " +
     "OPTIONAL MATCH (md)<-[:FEATURES]-(msc:Schedule) " +
     "OPTIONAL MATCH (msc)<-[:COMPOSES]-(mst:Step) " +
-    "WHERE msc IS NOT NULL AND mst IS NOT NULL AND mst.periodFromStart IS NOT NULL AND msc.start IS NOT NULL " +
+    "WITH msc, mst WHERE mst.periodFromStart IS NOT NULL AND msc.start IS NOT NULL " +
     "WITH id(msc) as mscId, " +
-    "     (toInteger((mst.periodFromStart + toInteger(split(msc.start,'-')[1]))/12.1) + toInteger(split(msc.start,'-')[0])) * 100 + " +
-    "     ((mst.periodFromStart + toInteger(split(msc.start,'-')[1])) - (toInteger((mst.periodFromStart + toInteger(split(msc.start,'-')[1]))/12.1)*12)) as stepDate, " +
+    "     date(msc.start) + duration({months: mst.periodFromStart}) as stepDateValue, " +
     "     id(mst) as mstId, " +
     "     null as sstId, " +
     "     null as sscId, " +
     "     toFloat(mst.actualWork) as aWork, " +
     "     toFloat(mst.plannedWork) as mpWork, " +
     "     toFloat(0) as spWork " +
-    "RETURN stepDate, mscId, mstId, sstId, sscId, aWork, mpWork, spWork " +
+    "RETURN stepDateValue.year * 100 + stepDateValue.month as stepDate, mscId, mstId, sstId, sscId, aWork, mpWork, spWork " +
     "UNION ALL " +
     "MATCH (md:Deliverable) " +
     "WHERE id(md) = $idWorkpack " +
     "OPTIONAL MATCH (md)<-[:IS_SNAPSHOT_OF]-(sd:Deliverable)-[:COMPOSES]-(bl:Baseline {active:TRUE}) " +
     "OPTIONAL MATCH (sd)<-[:FEATURES]-(ssc:Schedule) " +
     "OPTIONAL MATCH (ssc)<-[:COMPOSES]-(sst:Step) " +
-    "WHERE ssc IS NOT NULL AND sst IS NOT NULL AND sst.periodFromStart IS NOT NULL AND ssc.start IS NOT NULL " +
+    "WITH ssc, sst WHERE sst.periodFromStart IS NOT NULL AND ssc.start IS NOT NULL " +
     "WITH null as mscId, " +
-    "     (toInteger((sst.periodFromStart + toInteger(split(ssc.start,'-')[1]))/12.1) + toInteger(split(ssc.start,'-')[0])) * 100 + " +
-    "     ((sst.periodFromStart + toInteger(split(ssc.start,'-')[1])) - (toInteger((sst.periodFromStart + toInteger(split(ssc.start,'-')[1]))/12.1)*12)) as stepDate, " +
+    "     date(ssc.start) + duration({months: sst.periodFromStart}) as stepDateValue, " +
     "     null as mstId, " +
     "     id(sst) as sstId, " +
     "     id(ssc) as sscId, " +
     "     toFloat(0) as aWork, " +
     "     toFloat(0) as mpWork, " +
     "     toFloat(sst.plannedWork) as spWork " +
-    "RETURN stepDate, mscId, mstId, sstId, sscId, aWork, mpWork, spWork \n" +
+    "RETURN stepDateValue.year * 100 + stepDateValue.month as stepDate, mscId, mstId, sstId, sscId, aWork, mpWork, spWork \n" +
     "} \n" +
     "WITH stepDate, mscId, mstId, sstId, sscId, aWork, mpWork, spWork \n" +
     "RETURN \n" +
