@@ -25,7 +25,7 @@ import org.springframework.stereotype.Repository;
 public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, CustomRepository {
   String CCB_MEMBER_SCOPE =
     "MATCH (w)-[:BELONGS_TO {linked:false}]->(plan:Plan)-[:IS_ADOPTED_BY]->(originOffice:Office) " +
-    "OPTIONAL MATCH (w)-[:IS_IN*0..]->(:Workpack)-[:IS_SHARED_WITH {permissionLevel:'EDIT'}]->(consumerOffice:Office) " +
+    "OPTIONAL MATCH (w)-[:IS_SHARED_WITH {permissionLevel:'EDIT'}]->(consumerOffice:Office) " +
     "WITH w, b, ii, p, plan, originOffice, collect(DISTINCT consumerOffice) AS consumerOffices " +
     "OPTIONAL MATCH (w)-[:BELONGS_TO {linked:true}]->(linkedPlan:Plan)-[:IS_ADOPTED_BY]->(linkedOffice:Office) " +
     "WHERE linkedOffice IN consumerOffices " +
@@ -610,9 +610,9 @@ public interface BaselineRepository extends Neo4jRepository<Baseline, Long>, Cus
     "OPTIONAL MATCH (n)<-[:IS_IN*0..]-(project2:Project {canceled:false, deleted:false}) " +
     "OPTIONAL MATCH (n)<-[:BELONGS_TO {linked:false}]-(project3:Project {canceled:false, deleted:false}) " +
     "OPTIONAL MATCH (n)<-[:IS_ADOPTED_BY]-(plan:Plan)<-[:BELONGS_TO {linked:false}]-(project4:Project {canceled:false, deleted:false}) " +
-    "OPTIONAL MATCH (n)<-[:IS_SHARED_WITH {permissionLevel:'EDIT'}]-(:Workpack)<-[:IS_IN*0..]-(project5:Project {canceled:false, deleted:false}) " +
+    "OPTIONAL MATCH (n)<-[:IS_SHARED_WITH {permissionLevel:'EDIT'}]-(project5:Project {canceled:false, deleted:false}) " +
     "OPTIONAL MATCH (n)-[:IS_ADOPTED_BY]->(sharedOffice:Office)<-[:IS_SHARED_WITH {permissionLevel:'EDIT'}]-" +
-    "(:Workpack)<-[:IS_IN*0..]-(project6:Project {canceled:false, deleted:false})-[:BELONGS_TO {linked:true}]->(n) " +
+    "(project6:Project {canceled:false, deleted:false})-[:BELONGS_TO {linked:true}]->(n) " +
   
     "WITH [project, project2, project3, project4, project5, project6] AS all " +
     "UNWIND all AS p " +
