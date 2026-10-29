@@ -1,6 +1,5 @@
 package br.gov.es.openpmo.service.permissions;
 
-import br.gov.es.openpmo.configuration.properties.AppProperties;
 import br.gov.es.openpmo.dto.ccbmembers.MemberAs;
 import br.gov.es.openpmo.dto.officepermission.OfficePermissionDto;
 import br.gov.es.openpmo.dto.officepermission.OfficePermissionParamDto;
@@ -33,7 +32,6 @@ import br.gov.es.openpmo.service.journals.JournalCreator;
 import br.gov.es.openpmo.service.office.OfficeService;
 import br.gov.es.openpmo.service.publicidentity.PublicIdentityValidationService;
 import br.gov.es.openpmo.utils.ApplicationMessage;
-import br.gov.es.openpmo.utils.TextSimilarityScore;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,14 +39,13 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -79,10 +76,6 @@ public class OfficePermissionService {
 
   private final RoleService roleService;
 
-  private final AppProperties appProperties;
-
-  private final TextSimilarityScore textSimilarityScore;
-
   private final JournalCreator journalCreator;
 
   private final TokenService tokenService;
@@ -105,8 +98,6 @@ public class OfficePermissionService {
     final IsAuthenticatedByService isAuthenticatedByService,
     final IRemoteRolesFetcher remoteRolesFetcher,
     final RoleService roleService,
-    final AppProperties appProperties,
-    final TextSimilarityScore textSimilarityScore,
     final JournalCreator journalCreator,
     final TokenService tokenService,
     final IsCCBMemberRepository isCCBMemberRepository,
@@ -123,8 +114,6 @@ public class OfficePermissionService {
     this.isAuthenticatedByService = isAuthenticatedByService;
     this.remoteRolesFetcher = remoteRolesFetcher;
     this.roleService = roleService;
-    this.appProperties = appProperties;
-    this.textSimilarityScore = textSimilarityScore;
     this.journalCreator = journalCreator;
     this.tokenService = tokenService;
     this.isCCBMemberRepository = isCCBMemberRepository;
@@ -187,12 +176,20 @@ public class OfficePermissionService {
 
     final Office office = this.officeService.findById(idOffice);
 
-    final List<Person> listPerson = new ArrayList<>(this.personService.personInCanAccessOffice(idOffice));
+    final List<Person> people = new ArrayList<>(this.personService.personInCanAccessOffice(idOffice));
     this.isCCBMemberRepository.findAllPersonsByOfficeId(idOffice).forEach(ccmPerson -> {
-      if (listPerson.stream().noneMatch(person -> person.getId().equals(ccmPerson.getId()))) {
-        listPerson.add(ccmPerson);
+      if (people.stream().noneMatch(person -> person.getId().equals(ccmPerson.getId()))) {
+        people.add(ccmPerson);
       }
     });
+
+    final List<Person> listPerson = StringUtils.isBlank(term)
+      ? people
+      : this.personService.findAllByIdsMatchingNameTerms(
+        people.stream().map(Person::getId).collect(Collectors.toList()),
+        Arrays.asList(term.trim().split("\\s+")),
+        term
+      );
 
     final List<CanAccessOffice> listOfficesPermission = this.listOfficesPermissions(office, key, idFilter);
 
@@ -206,28 +203,20 @@ public class OfficePermissionService {
         && !this.isCCBMemberRepository.existsCCMForPersonAndTarget(person.getId(), idOffice)) {
         continue;
       }
-      this.fillPersonDto(idOffice, person, officePermissionItem, roles, term);
+      this.fillPersonDto(idOffice, person, officePermissionItem, roles);
       officePermissionItem.setIdOffice(idOffice);
       this.fillPermissions(officePermissionItem, permissionsFilteredByPerson, person.getId(), idOffice);
       allPermissionsOfOffice.add(officePermissionItem);
     }
-
-    allPermissionsOfOffice.removeIf(dto -> {
-      if (StringUtils.isBlank(term)) return false;
-      return dto.getPerson().getScore() < this.appProperties.getSearchCutOffScore();
-    });
 
     allPermissionsOfOffice.removeIf(permission -> permission.getPerson().getKey() == null);
 
     if (key != null) {
       return allPermissionsOfOffice.stream()
         .filter(permission -> key.equals(permission.getPerson().getKey()))
-        .sorted(Comparator.comparing(p -> p.getPerson().getScore()))
         .collect(Collectors.toList());
     }
-    return allPermissionsOfOffice.stream()
-      .sorted(Comparator.comparing(p -> p.getPerson().getScore()))
-      .collect(Collectors.toList());
+    return allPermissionsOfOffice;
   }
 
   private List<CanAccessOffice> listOfficesPermissions(
@@ -261,8 +250,7 @@ public class OfficePermissionService {
     final Long idOffice,
     final Person person,
     final OfficePermissionDto officePermissionDto,
-    final Collection<RoleResource> roles,
-    final String term
+    final Collection<RoleResource> roles
   ) {
     final Optional<IsInContactBookOf> maybeContact =
       this.isInContactBookOfService.findContactInformationUsingPersonIdAndOffice(person.getId(), idOffice);
@@ -273,16 +261,6 @@ public class OfficePermissionService {
       maybeContact,
       maybeAuthenticatedBy
     );
-    if (Objects.nonNull(term)) {
-      final double nameScore = person.getName() == null
-        ? 0.0
-        : this.textSimilarityScore.execute(person.getName(), term);
-      final double fullNameScore = person.getFullName() == null
-        ? 0.0
-        : this.textSimilarityScore.execute(person.getFullName(), term);
-      final double score = Math.max(nameScore, fullNameScore);
-      personDto.setScore(score);
-    }
     personDto.addAllRoles(roles);
     officePermissionDto.setPerson(personDto);
   }
@@ -564,7 +542,7 @@ public class OfficePermissionService {
     final List<RoleResource> roles = this.isAuthenticatedByService.isCitizenServerAuthentication()
       ? this.roleService.getRolesByKey(idPerson, key)
       : Collections.emptyList();
-    this.fillPersonDto(idOffice, person, officePermissionDto, roles, null);
+    this.fillPersonDto(idOffice, person, officePermissionDto, roles);
     this.fillPermissions(officePermissionDto, permissions, person.getId(), idOffice);
     this.fillPersonRoles(officePermissionDto, person.getId());
 

@@ -47,6 +47,25 @@ public interface PersonRepository extends Neo4jRepository<Person, Long> {
   )
   List<Person> findByIdOfficeReturnDistinctPerson(@Param("idOffice") Long idOffice);
 
+  @Query("MATCH (p:Person) " +
+         "WHERE id(p) IN $personIds " +
+         "WITH p, [term IN $terms WHERE apoc.text.clean(term) <> '' | apoc.text.clean(term)] AS terms " +
+         "WHERE size(terms) > 0 AND all(term IN terms WHERE " +
+         "apoc.text.clean(coalesce(p.name, '')) CONTAINS term OR " +
+         "apoc.text.clean(coalesce(p.fullName, '')) CONTAINS term) " +
+         "RETURN p " +
+         "ORDER BY CASE " +
+         "WHEN apoc.text.clean(coalesce(p.name, '')) = apoc.text.clean($searchText) THEN 0 " +
+         "WHEN apoc.text.clean(coalesce(p.fullName, '')) = apoc.text.clean($searchText) THEN 1 " +
+         "WHEN apoc.text.clean(coalesce(p.name, '')) STARTS WITH apoc.text.clean($searchText) THEN 2 " +
+         "WHEN apoc.text.clean(coalesce(p.fullName, '')) STARTS WITH apoc.text.clean($searchText) THEN 3 " +
+         "ELSE 4 END")
+  List<Person> findAllByIdsMatchingNameTerms(
+    @Param("personIds") List<Long> personIds,
+    @Param("terms") List<String> terms,
+    @Param("searchText") String searchText
+  );
+
   @Query("MATCH (p:Person)-[:IS_IN_CONTACT_BOOK_OF| CAN_ACCESS_OFFICE|CAN_ACCESS_PLAN|CAN_ACCESS_WORKPACK|IS_STAKEHOLDER_IN|IS_CCB_MEMBER_FOR]->()-[:`FOR`|IS_IN|BELONGS_TO|IS_ADOPTED_BY*0..]->(e) " +
    "WHERE id(e) in $list " +
    "and ($name is null or " +
