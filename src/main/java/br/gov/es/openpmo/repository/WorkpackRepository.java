@@ -669,6 +669,15 @@ public interface WorkpackRepository extends Neo4jRepository<Workpack, Long>, Cus
     boolean existsActiveRootWorkpackByPlanId(
             @Param("id") Long id);
 
+    @Query("MATCH (w:Workpack)-[:BELONGS_TO]->(p:Plan) " +
+            "WHERE id(p)=$idPlan AND NOT (w)-[:IS_IN]->(:Workpack) " +
+            "AND coalesce(w.deleted, false) = false RETURN count(w)>0")
+    boolean existsAnyActiveRootWorkpackByPlanId(@Param("idPlan") Long idPlan);
+
+    @Query("MATCH (w:Workpack)-[:BELONGS_TO]->(p:Plan) " +
+            "WHERE id(p)=$idPlan AND NOT (w)-[:IS_IN]->(:Workpack) RETURN count(w)>0")
+    boolean existsAnyRootWorkpackByPlanId(@Param("idPlan") Long idPlan);
+
     @Query("MATCH (w:Workpack)<-[:IS_IN*]-(v:Workpack{deleted:false}) " +
             "WHERE id(w)=$id " +
             "WITH collect(v) AS children " +
