@@ -130,6 +130,15 @@ public class PersonService {
     return this.repository.findByIdOfficeReturnDistinctPerson(idOffice);
   }
 
+  public List<Person> findAllByIdsMatchingNameTerms(
+    final List<Long> personIds,
+    final List<String> terms,
+    final String searchText
+  ) {
+    if (personIds == null || personIds.isEmpty()) return Collections.emptyList();
+    return this.repository.findAllByIdsMatchingNameTerms(personIds, terms, searchText);
+  }
+
   public Person save(final Person person) {
     return this.repository.save(person);
   }
