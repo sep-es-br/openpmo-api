@@ -16,7 +16,6 @@ import static br.gov.es.openpmo.model.relations.IsEvaluatedBy.fromMemberEvaluati
 import br.gov.es.openpmo.model.workpacks.Deliverable;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.repository.BaselineRepository;
-import br.gov.es.openpmo.repository.IsCCBMemberRepository;
 import br.gov.es.openpmo.repository.IsEvaluatedByRepository;
 import br.gov.es.openpmo.repository.JournalRepository;
 import br.gov.es.openpmo.repository.WorkpackRepository;
@@ -54,7 +53,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
 
   private final WorkpackRepository workpackRepository;
 
-  private final IsCCBMemberRepository ccbMemberRepository;
+  private final BaselineApprovalMembersService approvalMembersService;
 
   private final IsEvaluatedByRepository evaluatedByRepository;
 
@@ -69,7 +68,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     final BaselineRepository repository,
     final WorkpackService workpackService,
     final WorkpackRepository workpackRepository,
-    final IsCCBMemberRepository ccbMemberRepository,
+    final BaselineApprovalMembersService approvalMembersService,
     final IsEvaluatedByRepository evaluatedByRepository,
     final JournalCreator journalCreator,
     final JournalRepository journalRepository,
@@ -80,7 +79,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
     this.repository = repository;
     this.workpackService = workpackService;
     this.workpackRepository = workpackRepository;
-    this.ccbMemberRepository = ccbMemberRepository;
+    this.approvalMembersService = approvalMembersService;
     this.evaluatedByRepository = evaluatedByRepository;
     this.journalCreator = journalCreator;
     this.journalRepository = journalRepository;
@@ -126,7 +125,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
       return;
     }
 
-    final boolean hasEvaluationsRemain = !this.evaluatedByRepository.wasEvaluatedByAllMembers(idBaseline);
+    final boolean hasEvaluationsRemain = !this.approvalMembersService.hasAllRequiredApprovals(idBaseline);
 
     if(hasEvaluationsRemain) {
       return;
@@ -319,7 +318,7 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
   }
 
   private Set<Person> findAllActiveMembersOfBaseline(final Long idBaseline) {
-    return this.ccbMemberRepository.findAllActiveMembersOfBaseline(idBaseline);
+    return this.approvalMembersService.findActiveMembers(idBaseline);
   }
 
   private void inactivateBaselineIfHasPrevious(final Baseline baseline) {
@@ -346,8 +345,8 @@ public class EvaluateBaselineService implements IEvaluateBaselineService {
 
       throwExceptionIfBaselineIsNotProposedOrReject(baseline);
 
-      final boolean allEvaluated  =
-              this.evaluatedByRepository.wasEvaluatedByAllMembers(idBaseline);
+      final boolean allEvaluated =
+              this.approvalMembersService.hasAllRequiredApprovals(idBaseline);
 
       if (!allEvaluated) {
           continue;

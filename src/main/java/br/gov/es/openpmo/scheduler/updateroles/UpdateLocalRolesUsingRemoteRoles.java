@@ -2,6 +2,7 @@ package br.gov.es.openpmo.scheduler.updateroles;
 
 import br.gov.es.openpmo.apis.acessocidadao.IAcessoCidadaoApi;
 import br.gov.es.openpmo.apis.acessocidadao.response.PublicAgentRoleResponse;
+import br.gov.es.openpmo.dto.person.RoleResource;
 import br.gov.es.openpmo.model.actors.Person;
 import br.gov.es.openpmo.model.relations.CanAccessOffice;
 import br.gov.es.openpmo.model.relations.CanAccessPlan;
@@ -83,7 +84,7 @@ public class UpdateLocalRolesUsingRemoteRoles {
     for(final IsAuthenticatedBy userAuth : allUserAuthentications) {
       if(userAuth.getGuid() == null) continue;
 
-      final List<String> roles = this.fetchRoles(userAuth);
+      final List<RoleResource> roles = this.fetchRoles(userAuth);
 
       LOGGER.info("Found {} roles for user {}", roles.size(), userAuth.getIdPerson());
 
@@ -120,7 +121,7 @@ public class UpdateLocalRolesUsingRemoteRoles {
   }
 
   private static <T extends HasRole> void deleteRolesNotFound(
-    final List<String> roles,
+    final Collection<? extends HasRole> roles,
     final Consumer<? super List<T>> deleteMethod,
     final Collection<? extends T> permissions
   ) {
@@ -135,11 +136,11 @@ public class UpdateLocalRolesUsingRemoteRoles {
   }
 
   private static <T extends HasRole> List<T> extractRemovedPermission(
-    final List<String> roles,
+    final Collection<? extends HasRole> roles,
     final Collection<? extends T> permissions
   ) {
     return permissions.stream()
-      .filter(permission -> !roles.contains(permission.getRole()))
+      .filter(permission -> roles.stream().noneMatch(role -> HasRole.sameRole(role, permission)))
       .collect(Collectors.toList());
   }
 
@@ -147,9 +148,9 @@ public class UpdateLocalRolesUsingRemoteRoles {
     return this.workpackPermissionRepository.findAllPermissionsOfPerson(person.getId());
   }
 
-  private List<String> fetchRoles(final IsAuthenticatedBy userAuth) {
+  private List<RoleResource> fetchRoles(final IsAuthenticatedBy userAuth) {
     return this.acessoCidadaoApi.findRoles(userAuth.getGuid(), null).stream()
-      .map(PublicAgentRoleResponse::getName)
+      .map(role -> new RoleResource(role.getName(), null, role.getGuid()))
       .collect(Collectors.toList());
   }
 

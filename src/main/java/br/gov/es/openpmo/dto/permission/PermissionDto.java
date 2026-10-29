@@ -11,6 +11,7 @@ public class PermissionDto {
 
   private Long id;
   private String role;
+  private String roleGuid; // add
   private PermissionLevelEnum level;
   private boolean ccmMember;
   private String inheritedFrom;
@@ -21,27 +22,24 @@ public class PermissionDto {
   }
 
   public PermissionDto(
-    final PermissionLevelEnum level
-  ) {
+      final PermissionLevelEnum level) {
     this.level = level;
   }
 
   public PermissionDto(
-    final Long id,
-    final String role,
-    final PermissionLevelEnum level
-  ) {
+      final Long id,
+      final String role,
+      final PermissionLevelEnum level) {
     this.id = id;
     this.role = role;
     this.level = level;
   }
 
   public PermissionDto(
-    final Long id,
-    final String role,
-    final PermissionLevelEnum level,
-    final boolean ccmMember
-  ) {
+      final Long id,
+      final String role,
+      final PermissionLevelEnum level,
+      final boolean ccmMember) {
     this.id = id;
     this.role = role;
     this.level = level;
@@ -52,6 +50,7 @@ public class PermissionDto {
     final PermissionDto permissionDto = new PermissionDto();
     permissionDto.setId(canAccessWorkpack.getId());
     permissionDto.setRole(canAccessWorkpack.getRole());
+    permissionDto.setRoleGuid(canAccessWorkpack.getRoleGuid());
     permissionDto.setLevel(canAccessWorkpack.getPermissionLevel());
     permissionDto.setIdPlan(canAccessWorkpack.getIdPlan());
     return permissionDto;
@@ -61,9 +60,9 @@ public class PermissionDto {
     PermissionDto dto = new PermissionDto(
         canAccessPlan.getId(),
         canAccessPlan.getRole(),
-        canAccessPlan.getPermissionLevel()
-    );
+        canAccessPlan.getPermissionLevel());
     dto.setIdPlan(canAccessPlan.getIdPlan());
+    dto.setRoleGuid(canAccessPlan.getRoleGuid());
     return dto;
   }
 
@@ -94,11 +93,12 @@ public class PermissionDto {
   }
 
   public static PermissionDto of(final CanAccessOffice canAccessOffice) {
-    return new PermissionDto(
-      canAccessOffice.getId(),
-      canAccessOffice.getRole(),
-      canAccessOffice.getPermissionLevel()
-    );
+    final PermissionDto dto = new PermissionDto(
+        canAccessOffice.getId(),
+        canAccessOffice.getRole(),
+        canAccessOffice.getPermissionLevel());
+    dto.setRoleGuid(canAccessOffice.getRoleGuid());
+    return dto;
   }
 
   public Long getIdPlan() {
@@ -149,4 +149,11 @@ public class PermissionDto {
     this.ccmMember = ccmMember;
   }
 
+  public String getRoleGuid() {
+    return this.roleGuid;
+  }
+
+  public void setRoleGuid(final String roleGuid) {
+    this.roleGuid = roleGuid;
+  }
 }

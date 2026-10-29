@@ -9,6 +9,7 @@ import br.gov.es.openpmo.model.relations.IsSharedWith;
 import br.gov.es.openpmo.model.workpacks.Workpack;
 import br.gov.es.openpmo.model.workpacks.models.WorkpackModel;
 import br.gov.es.openpmo.repository.WorkpackSharedRepository;
+import br.gov.es.openpmo.service.baselines.EvaluateBaselineService;
 import br.gov.es.openpmo.service.office.OfficeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,18 +40,21 @@ public class WorkpackSharedService {
   private final WorkpackModelService workpackModelService;
 
   private final OfficeService officeService;
+  private final EvaluateBaselineService evaluateBaselineService;
 
   @Autowired
   public WorkpackSharedService(
     final WorkpackSharedRepository repository,
     final WorkpackService workpackService,
     final WorkpackModelService workpackModelService,
-    final OfficeService officeService
+    final OfficeService officeService,
+    final EvaluateBaselineService evaluateBaselineService
   ) {
     this.repository = repository;
     this.workpackService = workpackService;
     this.workpackModelService = workpackModelService;
     this.officeService = officeService;
+    this.evaluateBaselineService = evaluateBaselineService;
   }
 
   private static boolean validStructure(
@@ -161,11 +165,13 @@ public class WorkpackSharedService {
   ) {
     if(idSharedWith == null) {
       this.revokePublicAccess(idWorkpack);
+      this.evaluateBaselineService.handlePostMemberDeletion(idWorkpack);
       return;
     }
     final IsSharedWith isSharedWith = this.findById(idSharedWith);
     final Long idOffice = isSharedWith.getOfficeId();
     this.deleteSharedRelationship(idWorkpack, idOffice, idSharedWith);
+    this.evaluateBaselineService.handlePostMemberDeletion(idWorkpack);
   }
 
   private void createSharedRelationship(
@@ -200,10 +206,12 @@ public class WorkpackSharedService {
 
     if(workpackPublic) {
       this.repository.deleteAll(isSharedWiths);
+      this.evaluateBaselineService.handlePostMemberDeletion(idWorkpack);
       return;
     }
 
     request.forEach(item -> this.createIsSharedRelationship(workpack, isSharedWiths, item));
+    this.evaluateBaselineService.handlePostMemberDeletion(idWorkpack);
   }
 
   private void createIsSharedRelationship(

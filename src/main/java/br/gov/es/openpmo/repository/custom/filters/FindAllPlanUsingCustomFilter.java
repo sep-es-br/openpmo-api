@@ -37,14 +37,20 @@ public class FindAllPlanUsingCustomFilter extends FindAllUsingCustomFilterBuilde
   }
 
   @Override
-  public void buildWhereClause(
-    final CustomFilter filter,
-    final StringBuilder query
-  ) {
-    query.append("WHERE ID(o)=$idOffice").append(" ");
-    String complementWITH = ", r, o, sb, pm";
-    buildFilterBySimilarity(filter, query, complementWITH);
-  }
+public void buildWhereClause(
+  final CustomFilter filter,
+  final StringBuilder query
+) {
+  query.append("WHERE ID(o)=$idOffice ")
+    .append("AND (NOT EXISTS(")
+    .append(this.nodeName)
+    .append(".deleted) OR ")
+    .append(this.nodeName)
+    .append(".deleted = false) ");
+
+  String complementWITH = ", r, o, sb, pm";
+  buildFilterBySimilarity(filter, query, complementWITH);
+}
 
   @Override
   public void buildReturnClause(final StringBuilder query) {
